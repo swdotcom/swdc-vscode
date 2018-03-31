@@ -99,10 +99,12 @@ export class KeystrokeCount {
         const projectName = (payload.project && payload.project.directory)
             ? payload.project.directory : 'null';
         
+        // commented out so we can send raw json source items
+        //
         // go through the source items and stringify them
-        payload.source = payload.source.map((item) => {
-            return JSON.stringify(item);
-        });
+        // payload.source = payload.source.map((item) => {
+        //     return JSON.stringify(item);
+        // });
         
         // Null out the project if the project's name is 'null'
         if (projectName === 'null') {
