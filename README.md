@@ -1,2 +1,3 @@
-# swdc-vscode
-public plugin for the vscode plugin
+# Software.com for Visual Studio Code
+
+Software is currently in private alpha.  To use this plugin, please join the wait list at https://software.com.
