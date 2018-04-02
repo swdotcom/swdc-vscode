@@ -40,18 +40,15 @@ function nowInSecs () {
 // This will return the object in an object array
 // based on a key and the key's value
 //
-function findObjectInObjectArray (objArray, filenameToMatch) {
-    for (let i = 0; i < objArray.length; i++) {
-        const fileInfo = objArray[i];
-        if (fileInfo[filenameToMatch]) {
-            return fileInfo;
-        }
+function findFileInfoInSource (source, filenameToMatch) {
+    if (source[filenameToMatch] !== undefined && source[filenameToMatch] !== null) {
+        return source[filenameToMatch]
     }
     return null;
 }
 
 export class KeystrokeCount {
-    public source: Array<{}>;
+    public source: {};
     public type: String;
     public data: Number
     public start: Number;
@@ -63,7 +60,7 @@ export class KeystrokeCount {
     constructor (project: Project) {
         const now = nowInSecs();
 
-        this.source = new Array(),
+        this.source = {},
         this.type = 'Events',
         this.data = 0,
         this.start = now,
@@ -74,19 +71,14 @@ export class KeystrokeCount {
     }
 
     hasData() {
-        for (let i = 0; i < this.source.length; i++) {
-            const fileInfo = this.source[i];
-            if (fileInfo) {
-                for (const key of Object.keys(fileInfo)) {
-                    const fileInfoData = fileInfo[key];
-                    // check if any of the metric values has data
-                    if (fileInfoData &&
-                        (fileInfoData.keys > 0 || fileInfoData.paste > 0 ||
-                            fileInfoData.open > 0 || fileInfoData.close > 0 ||
-                            fileInfoData.delete > 0)) {
-                        return true;
-                    }
-                }
+        for (const fileName of Object.keys(this.source)) {
+            const fileInfoData = this.source[fileName];
+            // check if any of the metric values has data
+            if (fileInfoData &&
+                (fileInfoData.keys > 0 || fileInfoData.paste > 0 ||
+                    fileInfoData.open > 0 || fileInfoData.close > 0 ||
+                    fileInfoData.delete > 0)) {
+                return true;
             }
         }
         return false;
@@ -98,13 +90,6 @@ export class KeystrokeCount {
 
         const projectName = (payload.project && payload.project.directory)
             ? payload.project.directory : 'null';
-        
-        // commented out so we can send raw json source items
-        //
-        // go through the source items and stringify them
-        // payload.source = payload.source.map((item) => {
-        //     return JSON.stringify(item);
-        // });
         
         // Null out the project if the project's name is 'null'
         if (projectName === 'null') {
@@ -123,7 +108,7 @@ export class KeystrokeCount {
             if (!wasMessageShown) {
                 window.showErrorMessage(
                     'We are having trouble sending data to Software.com. ' +
-                    'Please make sure the Plugin Manager is on and logged in.', {
+                    'Please make sure the Plugin Manager is running and logged in.', {
                         modal: true
                 });
                 console.error(`Software.com: Unable to send KPM information: ${err}`);
@@ -187,7 +172,7 @@ class KeystrokeCountController {
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
 
-        fileInfo[filename].close = fileInfo[filename].close + 1;
+        fileInfo.close = fileInfo.close + 1;
         console.log('Software.com: File closed: ' + filename);
     }
 
@@ -196,7 +181,7 @@ class KeystrokeCountController {
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
 
-        fileInfo[filename].open = fileInfo[filename].open + 1;
+        fileInfo.open = fileInfo.open + 1;
         console.log('Software.com: File opened: ' + filename);
     }
 
@@ -234,14 +219,14 @@ class KeystrokeCountController {
             //
             // it's a copy and past event
             //
-            fileInfo[filename].paste = fileInfo[filename].paste + newCount;
+            fileInfo.paste = fileInfo.paste + newCount;
             console.log('Software.com: Copy+Paste Incremented');
         } else if (newCount < 0) {
-            fileInfo[filename].delete = fileInfo[filename].delete + Math.abs(newCount);
+            fileInfo.delete = fileInfo.delete + Math.abs(newCount);
             console.log('Software.com: Delete Incremented');
         } else {
             // update the data for this fileInfo keys count
-            fileInfo[filename].keys = fileInfo[filename].keys + 1;
+            fileInfo.keys = fileInfo.keys + 1;
 
             // update the overall count
             keystrokeCount.data = keystrokeCount.data + 1;
@@ -278,11 +263,10 @@ class KeystrokeCountController {
             // Look for an existing file source. create it if it doesn't exist
             // or use it if it does and increment it's data value
             //
-            fileInfo = findObjectInObjectArray(keystrokeCount.source, filename);
+            fileInfo = findFileInfoInSource(keystrokeCount.source, filename);
             if (!fileInfo) {
                 // initialize and add it
-                fileInfo = {};
-                fileInfo[filename] = {
+                fileInfo = {
                     keys: 0,
                     paste: 0,
                     open: 0,
@@ -290,7 +274,7 @@ class KeystrokeCountController {
                     delete: 0,
                     length: 0
                 };
-                keystrokeCount.source.push(fileInfo);
+                keystrokeCount.source[filename] = fileInfo;
             }
         }
 
