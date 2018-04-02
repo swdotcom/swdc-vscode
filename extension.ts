@@ -9,7 +9,7 @@ import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, EPROTONOSUPPORT } from '
 // ? marks that the parameter is optional
 type Project = {directory: String, name?: String};
 
-const VERSION = '0.1.1';
+const VERSION = '0.1.2';
 const PM_URL = 'http://localhost:19234';
 const DEFAULT_DURATION = 60;
 const api = axios.create({
