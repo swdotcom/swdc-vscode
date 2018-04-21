@@ -9,7 +9,7 @@ import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, EPROTONOSUPPORT } from '
 // ? marks that the parameter is optional
 type Project = {directory: String, name?: String};
 
-const VERSION = '0.1.2';
+const VERSION = '0.1.3';
 const PM_URL = 'http://localhost:19234';
 const DEFAULT_DURATION = 60;
 const api = axios.create({
@@ -38,7 +38,7 @@ function nowInSecs () {
 
 //
 // This will return the object in an object array
-// based on a key and the key's value
+// based on a key and the key's value.
 //
 function findFileInfoInSource (source, filenameToMatch) {
     if (source[filenameToMatch] !== undefined && source[filenameToMatch] !== null) {
@@ -168,6 +168,9 @@ class KeystrokeCountController {
     }
 
     private _onCloseHandler(event) {
+        if (!this.isTrueEventFile(event)) {
+            return;
+        }
         const filename = event.fileName || 'None';
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
@@ -177,6 +180,9 @@ class KeystrokeCountController {
     }
 
     private _onOpenHandler(event) {
+        if (!this.isTrueEventFile(event)) {
+            return;
+        }
         const filename = event.fileName || 'None';
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
@@ -185,7 +191,28 @@ class KeystrokeCountController {
         console.log('Software.com: File opened: ' + filename);
     }
 
+    /**
+     * This will return true if it's a true file. we don't
+     * want to send events for .git or other event triggers
+     * such as extension.js.map events
+     */
+    private isTrueEventFile(event) {
+        if (event && event.document) {
+            if (event.document.isUntitled !== undefined
+                    && event.document.isUntitled !== null
+                    && event.document.isUntitled === true) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     private _onEventHandler(event) {
+        if (!this.isTrueEventFile(event)) {
+            return;
+        }
+
         let filename = event.document.fileName || 'None';
         
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
