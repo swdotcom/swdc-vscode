@@ -5,11 +5,14 @@ import {window, workspace, Disposable, ExtensionContext, TextDocument} from 'vsc
 import axios from 'axios';
 import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, EPROTONOSUPPORT } from 'constants';
 
+const fs = require('fs');
+
 
 // ? marks that the parameter is optional
 type Project = {directory: String, name?: String};
 
-const VERSION = '0.1.3';
+const NO_NAME_FILE = 'Untitled';
+const VERSION = '0.1.4';
 const PM_URL = 'http://localhost:19234';
 const DEFAULT_DURATION = 60;
 const api = axios.create({
@@ -108,7 +111,7 @@ export class KeystrokeCount {
             if (!wasMessageShown) {
                 window.showErrorMessage(
                     'We are having trouble sending data to Software.com. ' +
-                    'Please make sure the Plugin Manager is running and logged in.', {
+                    'Please make sure the Plugin Manager is running and logged on.', {
                         modal: true
                 });
                 console.error(`Software.com: Unable to send KPM information: ${err}`);
@@ -171,9 +174,11 @@ class KeystrokeCountController {
         if (!this.isTrueEventFile(event)) {
             return;
         }
-        const filename = event.fileName || 'None';
+        const filename = event.fileName || NO_NAME_FILE;
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
+
+        this.updateFileInfoLength(filename, fileInfo);
 
         fileInfo.close = fileInfo.close + 1;
         console.log('Software.com: File closed: ' + filename);
@@ -183,9 +188,11 @@ class KeystrokeCountController {
         if (!this.isTrueEventFile(event)) {
             return;
         }
-        const filename = event.fileName || 'None';
+        const filename = event.fileName || NO_NAME_FILE;
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
+
+        this.updateFileInfoLength(filename, fileInfo);
 
         fileInfo.open = fileInfo.open + 1;
         console.log('Software.com: File opened: ' + filename);
@@ -208,14 +215,26 @@ class KeystrokeCountController {
         return false;
     }
 
+    private updateFileInfoLength(filename, fileInfo) {
+        if (filename !== NO_NAME_FILE) {
+            fs.stat(filename, function(err, stats) {
+                if (stats && stats["size"]) {
+                    fileInfo.length = stats["size"];
+                }
+            });
+        }
+    }
+
     private _onEventHandler(event) {
         if (!this.isTrueEventFile(event)) {
             return;
         }
 
-        let filename = event.document.fileName || 'None';
+        let filename = event.document.fileName || NO_NAME_FILE;
         
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(filename);
+
+        this.updateFileInfoLength(filename, fileInfo);
 
         //
         // Map all of the contentChanges objets then use the
@@ -280,7 +299,7 @@ class KeystrokeCountController {
             keystrokeCount = new KeystrokeCount({
                 // project.directory is used as an object key, must be string
                 directory: rootPath,
-                name: workspace.name || null
+                name: workspace.name || rootPath
             });
         }
 
