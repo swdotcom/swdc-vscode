@@ -12,7 +12,7 @@ const fs = require('fs');
 type Project = {directory: String, name?: String};
 
 const NO_NAME_FILE = 'Untitled';
-const VERSION = '0.1.4';
+const VERSION = '0.1.5';
 const PM_URL = 'http://localhost:19234';
 const DEFAULT_DURATION = 60;
 const api = axios.create({
@@ -29,7 +29,7 @@ export function activate(ctx: ExtensionContext) {
 
     //
     // Add the keystroke controller to the ext ctx, which
-    // will then listen for text document changes
+    // will then listen for text document changes.
     //
     const controller = new KeystrokeCountController();
     ctx.subscriptions.push(controller);
@@ -90,6 +90,11 @@ export class KeystrokeCount {
     postToPM() {
         const payload = JSON.parse(JSON.stringify(this));
         payload.data = String(payload.data);
+
+        // ensure the start and end are exactly DEFAULT_DURATION apart
+        const now = nowInSecs();
+        payload.start = now - DEFAULT_DURATION;
+        payload.end = now;
 
         const projectName = (payload.project && payload.project.directory)
             ? payload.project.directory : 'null';
