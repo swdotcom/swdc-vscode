@@ -39,6 +39,7 @@
 		"vscode": "^1.1.10"
 	},
 	"dependencies": {
-		"axios": "^0.17.1"
+		"axios": "^0.17.1",
+		"open": "^0.0.5"
 	}
 }
