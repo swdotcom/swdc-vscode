@@ -26,7 +26,7 @@ type Project = { directory: String; name?: String };
 
 const DOWNLOAD_NOW_LABEL = "Download";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.1.6";
+const VERSION = "0.1.7";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -191,13 +191,13 @@ export class KeystrokeCount {
     public version: String;
 
     constructor(project: Project) {
-        const now = nowInSecs();
+        const startOfEvent = nowInSecs() - DEFAULT_DURATION;
 
         (this.source = {}),
             (this.type = "Events"),
             (this.data = 0),
-            (this.start = now),
-            (this.end = now + DEFAULT_DURATION),
+            (this.start = startOfEvent),
+            (this.end = startOfEvent + 60),
             (this.project = project),
             (this.pluginId = 2);
         this.version = VERSION;
@@ -290,7 +290,7 @@ export class KeystrokeCount {
                     // show the download popup
                     downloadWindow = window
                         .showInformationMessage(
-                            "The Plugin Manager does not look like it was installed. Would you like to download it now?",
+                            "We are having trouble sending data to Software.com. The Plugin Manager may not be installed. Would you like to download it now?",
                             { modal: true },
                             ...[DOWNLOAD_NOW_LABEL, "Not now"]
                         )
