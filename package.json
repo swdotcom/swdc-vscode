@@ -17,8 +17,12 @@
         "type": "git",
         "url": "https://github.com/swdotcom/swdc-vscode"
     },
-    "categories": ["Other"],
-    "activationEvents": ["*"],
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
     "engines": {
         "vscode": "^1.19.0"
     },
@@ -36,7 +40,6 @@
     },
     "dependencies": {
         "axios": "^0.17.1",
-        "fetch": "^1.1.0",
         "open": "^0.0.5"
     }
 }
