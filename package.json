@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Software.com",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "publisher": "softwaredotcom",
     "description": "Software.com VSCode - Insights into how you code.",
     "author": {
@@ -36,6 +36,7 @@
     },
     "dependencies": {
         "axios": "^0.17.1",
+        "fetch": "^1.1.0",
         "open": "^0.0.5"
     }
 }

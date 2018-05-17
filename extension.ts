@@ -26,7 +26,7 @@ type Project = { directory: String; name?: String };
 
 const DOWNLOAD_NOW_LABEL = "Download";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.1.7";
+const VERSION = "0.1.8";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -35,6 +35,8 @@ const api = axios.create({
 });
 
 const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
+
+let pmName = "software";
 let wasMessageShown = false;
 let checkedForPmInstallation = false;
 let lastMillisCheckedForPmInstallation = 0;
@@ -112,6 +114,57 @@ function isMac() {
     return process.platform.indexOf("darwin") !== -1;
 }
 
+async function getLatestPmName() {
+    console.log("fetching latest pm name");
+    const ymlUrl = pmBucket + "latest.yml";
+    const ymlFile = os.homedir() + "/latest.yml";
+
+    let options = { url: ymlUrl };
+    let req = request.get(options);
+    let out = fs.createWriteStream(ymlFile);
+
+    req.pipe(out);
+
+    /**
+     * example content:
+     *  version: 0.5.5
+        files:
+        - url: software-plugin-manager-0.5.5.exe
+            sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
+            size: 39836352
+        path: software-plugin-manager-0.5.5.exe
+        sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
+        sha2: 9fad7b5634c38203a74d89b02e7e52c2bc1f723297d511c4532072279334a0aa
+        releaseDate: '2018-04-12T17:00:54.727Z'
+     */
+    req.on("end", function() {
+        // read file
+        fs.readFile(ymlFile, (err, data) => {
+            if (err) throw err;
+            let content = data.toString();
+            content = content.split("\n");
+
+            // get the path name, sans the extension
+            let nameSansExt = content
+                .find(s => s.includes("path:"))
+                .replace(/\s+/g, "")
+                .split("path:")[1]
+                .split(".exe")[0];
+
+            if (nameSansExt) {
+                pmName = nameSansExt;
+            }
+        });
+
+        // delete file
+        fs.unlink(ymlFile, function(error) {
+            if (error) {
+                throw error;
+            }
+        });
+    });
+}
+
 function downloadPM() {
     downloadingNow = true;
     let homedir = os.homedir();
@@ -127,8 +180,8 @@ function downloadPM() {
         homedir += "/Desktop/";
     }
 
-    let pmBinary = homedir + "software-plugin-manager" + pmExtension;
-    let file_url = pmBucket + "software-plugin-manager" + pmExtension;
+    let pmBinary = homedir + pmName + pmExtension;
+    let file_url = pmBucket + pmName + pmExtension;
 
     // Save variable to know progress
     var received_bytes = 0;
@@ -143,7 +196,7 @@ function downloadPM() {
     req.pipe(out);
     req.on("response", function(data) {
         if (data && data.statusCode === 200) {
-            statusBarItem.text = "Starting Plugin Manager download.";
+            statusBarItem.text = "Downloading Software plugin manager...";
         } else {
             downloadingNow = false;
         }
@@ -162,7 +215,7 @@ function downloadPM() {
         downloadingNow = false;
 
         // show the final message in the status bar
-        statusBarItem.text = "Completed Plugin Manager download";
+        statusBarItem.text = "Completed Software plugin manager download";
 
         // install the plugin manager
         open(pmBinary);
@@ -177,7 +230,7 @@ function downloadPM() {
 function showProgress(received, total, statusBarItem) {
     const percent = Math.ceil(Math.max(received * 100 / total, 2));
     // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    statusBarItem.text = `Downloading Plugin Manager: ${percent}%`;
+    statusBarItem.text = `Downloading Software plugin manager: ${percent}%`;
 }
 
 export class KeystrokeCount {
@@ -257,16 +310,12 @@ export class KeystrokeCount {
                 // first check if the pm has been installed or not
                 const homedir = os.homedir();
                 let installDir;
-                let pmBinary = homedir;
                 if (isMac()) {
                     installDir = "/Applications";
-                    pmBinary += "/Desktop/software-plugin-manager.dmg";
                 } else if (isWindows()) {
-                    installDir = os.homedir() + "\\AppData\\Programs";
-                    pmBinary += "\\Desktop\\software-plugin-manager.exe";
+                    installDir = os.homedir() + "\\AppData\\Local\\Programs";
                 } else {
                     installDir = "/usr/lib/";
-                    pmBinary += "/Desktop/software-plugin-manager.deb";
                 }
 
                 // check if we have the plugin installed
