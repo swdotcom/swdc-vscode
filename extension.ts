@@ -1,4 +1,5 @@
 // Copyright (c) 2018 Software.co Technologies, Inc. All Rights Reserved.
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {
@@ -26,7 +27,7 @@ type Project = { directory: String; name?: String };
 
 const DOWNLOAD_NOW_LABEL = "Download";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.1.9";
+const VERSION = "0.2.0";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -413,7 +414,8 @@ class KeystrokeCountController {
         if (activeKeystrokeCountMap) {
             for (const key of Object.keys(activeKeystrokeCountMap)) {
                 const keystrokeCount = activeKeystrokeCountMap[key];
-                if (keystrokeCount.hasData()) {
+                const hasData = keystrokeCount.hasData();
+                if (hasData) {
                     // send the payload
                     setTimeout(() => keystrokeCount.postToPM(), 0);
                 } else {
