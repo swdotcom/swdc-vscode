@@ -27,7 +27,7 @@ type Project = { directory: String; name?: String };
 
 const DOWNLOAD_NOW_LABEL = "Download";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
