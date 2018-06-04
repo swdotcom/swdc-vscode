@@ -35,12 +35,13 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.3";
+const VERSION = "0.2.4";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 const MILLIS_PER_HOUR = 1000 * 60 * 60;
-const THRESHOLD_HOURS = 12;
+const LONG_THRESHOLD_HOURS = 12;
+const SHORT_THRESHOLD_HOURS = 1;
 const pmApi = axios.create({
     baseURL: `${PM_URL}/api/v1/`
 });
@@ -820,11 +821,10 @@ function chekUserAuthenticationStatus() {
                 confirmWindowOpen = true;
                 let infoMsg =
                     "To see your coding data, please log in at software.com.";
-
                 if (existingJwt) {
                     // they have an existing jwt, show the re-login message
                     infoMsg =
-                        "We are having trouble sending data to Software.com, would you like to try logging in again?";
+                        "We are having trouble sending data to Software.com, please log in to see insights into how you code.";
                 }
 
                 confirmWindow = window
@@ -847,13 +847,19 @@ function chekUserAuthenticationStatus() {
     );
 }
 
+/**
+ * Checks the last time we've updated the session info
+ */
 function isPastTimeThreshold() {
-    // get the last time we created the token. if it's older than
-    // 1 hour, go ahead and perform the ping
+    const existingJwt = getItem("jwt");
+    const thresholdHoursBeforeCheckingAgain = !existingJwt
+        ? SHORT_THRESHOLD_HOURS
+        : LONG_THRESHOLD_HOURS;
     const lastUpdateTime = getItem("lastUpdateTime");
     if (
         lastUpdateTime &&
-        Date.now() - lastUpdateTime < MILLIS_PER_HOUR * THRESHOLD_HOURS
+        Date.now() - lastUpdateTime <
+            MILLIS_PER_HOUR * thresholdHoursBeforeCheckingAgain
     ) {
         return false;
     }
