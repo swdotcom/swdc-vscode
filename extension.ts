@@ -8,48 +8,79 @@ import {
     Disposable,
     ExtensionContext,
     TextDocument,
-    StatusBarAlignment
+    StatusBarAlignment,
+    ViewColumn,
+    Selection,
+    commands
 } from "vscode";
 import axios from "axios";
 import {
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
     EPROTONOSUPPORT
 } from "constants";
+import { settings } from "cluster";
 
 const request = require("request");
 const fs = require("fs");
+const readline = require("readline");
 const open = require("open");
-const path = require("path");
 const os = require("os");
+const cp = require("child_process");
+const crypto = require("crypto");
 
 // ? marks that the parameter is optional
 type Project = { directory: String; name?: String };
 
 const DOWNLOAD_NOW_LABEL = "Download";
+const NOT_NOW_LABEL = "Not now";
+const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.1";
+const VERSION = "0.2.3";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
-const api = axios.create({
+const MILLIS_PER_HOUR = 1000 * 60 * 60;
+const THRESHOLD_HOURS = 12;
+const pmApi = axios.create({
     baseURL: `${PM_URL}/api/v1/`
+});
+const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+const TEST_API_ENDPOINT = "http://localhost:5000";
+const TEST_URL = "http://localhost:3000";
+
+const PROD_API_ENDPOINT = "https://api.software.com";
+const PROD_URL = "https://alpha.software.com";
+
+const beApi = axios.create({
+    baseURL: `${PROD_API_ENDPOINT}`
 });
 
 const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
 
 let pmName = "software";
-let wasMessageShown = false;
-let checkedForPmInstallation = false;
-let lastMillisCheckedForPmInstallation = 0;
 let downloadingNow = false;
-let downloadWindow = null;
-let progressWindow = null;
+let statusBarItem = null;
+let confirmWindow = null;
+let confirmWindowOpen = false;
 
 // Available to the KeystrokeCount and the KeystrokeCountController
 let activeKeystrokeCountMap = {};
+let kpmInfo = {};
 
 export function activate(ctx: ExtensionContext) {
     console.log(`Software.com: Loaded v${VERSION}`);
+
+    statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
+    statusBarItem.tooltip = "Click to see more from Software.com";
+    statusBarItem.command = "extension.kpmClicked";
+    statusBarItem.show();
+    showStatus(`Software.com`);
+
+    // clear the last update time
+    setItem("lastUpdateTime", "");
+    // check if the user is authenticated with what is saved in the software config
+    chekUserAuthenticationStatus();
 
     //
     // Add the keystroke controller to the ext ctx, which
@@ -57,181 +88,21 @@ export function activate(ctx: ExtensionContext) {
     //
     const controller = new KeystrokeCountController();
     ctx.subscriptions.push(controller);
-}
 
-function nowInSecs() {
-    return Math.round(Date.now() / 1000);
-}
-
-//
-// This will return the object in an object array
-// based on a key and the key's value.
-//
-function findFileInfoInSource(source, filenameToMatch) {
-    if (
-        source[filenameToMatch] !== undefined &&
-        source[filenameToMatch] !== null
-    ) {
-        return source[filenameToMatch];
-    }
-    return null;
-}
-
-/**
- * mac: /Applications/Software.app/Contents/Info.plist
- * example info
- * Bundle version: 0.5.6-staging.2750
- * Bundle version string, short: 0.5.6-staging
- * Bundle display name: Software
- *
- * win: C:\Users\<username>\AppData\Local\Programs\software-plugin-manager\Software.exe
- *
- * Find all files recursively in specific folder with specific extension, e.g:
- * findFilesInDir('./project/src', '.html') ==> ['./project/src/a.html','./project/src/build/index.html']
- * @param  {String} startPath    Path relative to this file or other file which requires this files
- * @param  {String} filter       Extension name, e.g: '.html'
- * @return {Array}               Result files with path string in an array
- */
-function hasPluginInstalled(startPath) {
-    const dirFiles = fs.readdirSync(startPath);
-
-    for (let i in dirFiles) {
-        if (dirFiles[i].toLowerCase().indexOf("software") === 0) {
-            return true;
-        }
-    }
-
-    console.log(`Unable to locate the Plugin Manager within ${startPath}`);
-    return false;
-}
-
-// process.platform return the following...
-//   -> 'darwin', 'freebsd', 'linux', 'sunos' or 'win32'
-function isWindows() {
-    return process.platform.indexOf("win32") !== -1;
-}
-
-function isMac() {
-    return process.platform.indexOf("darwin") !== -1;
-}
-
-async function getLatestPmName() {
-    console.log("fetching latest pm name");
-    const ymlUrl = pmBucket + "latest.yml";
-    const ymlFile = os.homedir() + "/latest.yml";
-
-    let options = { url: ymlUrl };
-    let req = request.get(options);
-    let out = fs.createWriteStream(ymlFile);
-
-    req.pipe(out);
-
-    /**
-     * example content:
-     *  version: 0.5.5
-        files:
-        - url: software-plugin-manager-0.5.5.exe
-            sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
-            size: 39836352
-        path: software-plugin-manager-0.5.5.exe
-        sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
-        sha2: 9fad7b5634c38203a74d89b02e7e52c2bc1f723297d511c4532072279334a0aa
-        releaseDate: '2018-04-12T17:00:54.727Z'
-     */
-    req.on("end", function() {
-        // read file
-        fs.readFile(ymlFile, (err, data) => {
-            if (err) throw err;
-            let content = data.toString();
-            content = content.split("\n");
-
-            // get the path name, sans the extension
-            let nameSansExt = content
-                .find(s => s.includes("path:"))
-                .replace(/\s+/g, "")
-                .split("path:")[1]
-                .split(".exe")[0];
-
-            if (nameSansExt) {
-                pmName = nameSansExt;
-            }
-        });
-
-        // delete file
-        fs.unlink(ymlFile, function(error) {
-            if (error) {
-                throw error;
-            }
-        });
+    var disposable = commands.registerCommand("extension.kpmClicked", args => {
+        launchWebUrl(PROD_URL);
     });
-}
+    ctx.subscriptions.push(disposable);
 
-function downloadPM() {
-    downloadingNow = true;
-    let homedir = os.homedir();
+    setInterval(() => {
+        fetchDailyKpmSessionInfo();
+    }, 1000 * 60);
 
-    let pmExtension = ".dmg";
-    if (isMac()) {
-        homedir += "/Desktop/";
-    } else if (isWindows()) {
-        pmExtension = ".exe";
-        homedir += "\\Desktop\\";
-    } else if (!isMac()) {
-        pmExtension = ".deb";
-        homedir += "/Desktop/";
-    }
-
-    let pmBinary = homedir + pmName + pmExtension;
-    let file_url = pmBucket + pmName + pmExtension;
-
-    // Save variable to know progress
-    var received_bytes = 0;
-    var total_bytes = 0;
-    let options = { url: file_url };
-    let req = request.get(options);
-    let out = fs.createWriteStream(pmBinary);
-
-    let statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right);
-    statusBarItem.show();
-
-    req.pipe(out);
-    req.on("response", function(data) {
-        if (data && data.statusCode === 200) {
-            statusBarItem.text = "Downloading Software plugin manager...";
-        } else {
-            downloadingNow = false;
-        }
-
-        // Change the total bytes value to get progress later.
-        total_bytes = parseInt(data.headers["content-length"]);
-    });
-
-    req.on("data", function(chunk) {
-        // Update the received bytes
-        received_bytes += chunk.length;
-        showProgress(received_bytes, total_bytes, statusBarItem);
-    });
-
-    req.on("end", function() {
-        downloadingNow = false;
-
-        // show the final message in the status bar
-        statusBarItem.text = "Completed Software plugin manager download";
-
-        // install the plugin manager
-        open(pmBinary);
-
-        setTimeout(() => {
-            statusBarItem.hide();
-            statusBarItem = null;
-        }, 5000);
-    });
-}
-
-function showProgress(received, total, statusBarItem) {
-    const percent = Math.ceil(Math.max(received * 100 / total, 2));
-    // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    statusBarItem.text = `Downloading Software plugin manager: ${percent}%`;
+    // send any offline data
+    setTimeout(() => {
+        fetchDailyKpmSessionInfo();
+        sendOfflineData();
+    }, 5000);
 }
 
 export class KeystrokeCount {
@@ -294,93 +165,25 @@ export class KeystrokeCount {
             payload.project = null;
         }
 
+        sendOfflineData();
+
         console.error(`Software.com: sending ${JSON.stringify(payload)}`);
 
         // POST the kpm to the PluginManager
-        return api
+        beApi.defaults.headers.common["Authorization"] = getItem("jwt");
+        return beApi
             .post("/data", payload)
             .then(response => {
                 // everything is fine, remove this one from the map
                 delete activeKeystrokeCountMap[projectName];
             })
             .catch(err => {
-                if (downloadWindow) {
-                    return;
-                }
-
-                // first check if the pm has been installed or not
-                const homedir = os.homedir();
-                let installDir;
-                if (isMac()) {
-                    installDir = "/Applications";
-                } else if (isWindows()) {
-                    installDir = os.homedir() + "\\AppData\\Local\\Programs";
-                } else {
-                    installDir = "/usr/lib/";
-                }
-
-                // check if we have the plugin installed
-                const foundPath = hasPluginInstalled(installDir);
-                if (foundPath) {
-                    // update checkedForPmInstallation to true
-                    checkedForPmInstallation = true;
-                } else if (
-                    !foundPath &&
-                    checkedForPmInstallation &&
-                    lastMillisCheckedForPmInstallation > 0 &&
-                    Date.now() - lastMillisCheckedForPmInstallation >
-                        MILLIS_PER_DAY
-                ) {
-                    // it's been over a day since we've asked the user to download the
-                    // pm that we're unable to locate, update the checked flag to false
-                    checkedForPmInstallation = false;
-                }
-
-                if (!checkedForPmInstallation && !foundPath) {
-                    // show the download popup
-                    downloadWindow = window
-                        .showInformationMessage(
-                            "We are having trouble sending data to Software.com. The Plugin Manager may not be installed. Would you like to download it now?",
-                            { modal: true },
-                            ...[DOWNLOAD_NOW_LABEL, "Not now"]
-                        )
-                        .then(selection => {
-                            checkedForPmInstallation = true;
-                            if (selection === DOWNLOAD_NOW_LABEL) {
-                                // start the download process
-                                downloadPM();
-                            }
-                            downloadWindow = null;
-                            lastMillisCheckedForPmInstallation = Date.now();
-                        });
-
-                    return;
-                }
-
-                if (downloadingNow && checkedForPmInstallation && !foundPath) {
-                    // don't message the user, it's downloading now
-                    return;
-                }
-
-                //
-                // Send a one time messager that we're unable to communicate with the Plugin Manager
-                // and that the user should make sure its running.
-                //
-                if (!wasMessageShown && checkedForPmInstallation && foundPath) {
-                    // still not sending data and we completed PM install check
-                    window.showErrorMessage(
-                        "We are having trouble sending data to Software.com. " +
-                            "Please make sure the Plugin Manager is running and logged on.",
-                        {
-                            modal: true
-                        }
-                    );
-                    console.error(
-                        `Software.com: Unable to send KPM information: ${err}`
-                    );
-                    wasMessageShown = true;
-                }
-                // remove this project from the map
+                // store the payload offline
+                console.log(
+                    "Software.com: Error sending data, saving kpm info offline"
+                );
+                storePayload(payload);
+                chekUserAuthenticationStatus();
                 delete activeKeystrokeCountMap[projectName];
             });
     }
@@ -393,6 +196,7 @@ class KeystrokeCountController {
 
     constructor() {
         let subscriptions: Disposable[] = [];
+
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
@@ -511,7 +315,7 @@ class KeystrokeCountController {
         this.updateFileInfoLength(filename, fileInfo);
 
         //
-        // Map all of the contentChanges objets then use the
+        // Map all of the contentChanges objects then use the
         // reduce function to add up all of the lengths from each
         // contentChanges.text.length value, but only if the text
         // has a length.
@@ -608,4 +412,619 @@ class KeystrokeCountController {
         clearInterval(this._sendDataInterval);
         this._disposable.dispose();
     }
+}
+
+function nowInSecs() {
+    return Math.round(Date.now() / 1000);
+}
+
+//
+// This will return the object in an object array
+// based on a key and the key's value.
+//
+function findFileInfoInSource(source, filenameToMatch) {
+    if (
+        source[filenameToMatch] !== undefined &&
+        source[filenameToMatch] !== null
+    ) {
+        return source[filenameToMatch];
+    }
+    return null;
+}
+
+/**
+ * mac: /Applications/Software.app/Contents/Info.plist
+ * example info
+ * Bundle version: 0.5.6-staging.2750
+ * Bundle version string, short: 0.5.6-staging
+ * Bundle display name: Software
+ *
+ * win: C:\Users\<username>\AppData\Local\Programs\software-plugin-manager\Software.exe
+ *
+ * Find all files recursively in specific folder with specific extension, e.g:
+ * findFilesInDir('./project/src', '.html') ==> ['./project/src/a.html','./project/src/build/index.html']
+ * @param  {String} startPath    Path relative to this file or other file which requires this files
+ * @param  {String} filter       Extension name, e.g: '.html'
+ * @return {Array}               Result files with path string in an array
+ */
+function getPluginManagerAppFile() {
+    const startPath = getInstallDir();
+    const dirFiles = fs.readdirSync(startPath);
+
+    for (let i in dirFiles) {
+        const file = dirFiles[i];
+        if (file.toLowerCase().indexOf("software") === 0) {
+            return file;
+        }
+    }
+
+    console.log(
+        `Software.com: Unable to locate Software Desktop within ${startPath}`
+    );
+    return null;
+}
+
+// process.platform return the following...
+//   -> 'darwin', 'freebsd', 'linux', 'sunos' or 'win32'
+function isWindows() {
+    return process.platform.indexOf("win32") !== -1;
+}
+
+function isMac() {
+    return process.platform.indexOf("darwin") !== -1;
+}
+
+async function getLatestPmName() {
+    const ymlUrl = pmBucket + "latest.yml";
+    const ymlFile = os.homedir() + "/latest.yml";
+
+    let options = { url: ymlUrl };
+    let req = request.get(options);
+    let out = fs.createWriteStream(ymlFile);
+
+    req.pipe(out);
+
+    /**
+     * example content:
+     *  version: 0.5.5
+        files:
+        - url: software-plugin-manager-0.5.5.exe
+            sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
+            size: 39836352
+        path: software-plugin-manager-0.5.5.exe
+        sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
+        sha2: 9fad7b5634c38203a74d89b02e7e52c2bc1f723297d511c4532072279334a0aa
+        releaseDate: '2018-04-12T17:00:54.727Z'
+     */
+    req.on("end", function() {
+        // read file
+        fs.readFile(ymlFile, (err, data) => {
+            if (err) throw err;
+            let content = data.toString();
+            content = content.split("\n");
+
+            // get the path name, sans the extension
+            let nameSansExt = content
+                .find(s => s.includes("path:"))
+                .replace(/\s+/g, "")
+                .split("path:")[1]
+                .split(".exe")[0];
+
+            if (nameSansExt) {
+                pmName = nameSansExt;
+            }
+        });
+
+        // delete file
+        fs.unlink(ymlFile, function(error) {
+            if (error) {
+                throw error;
+            }
+        });
+    });
+}
+
+function getSoftwareDir() {
+    const homedir = os.homedir();
+    let softwareDataDir = homedir;
+    if (isWindows()) {
+        softwareDataDir += "\\.software";
+    } else {
+        softwareDataDir += "/.software";
+    }
+
+    if (!fs.existsSync(softwareDataDir)) {
+        fs.mkdirSync(softwareDataDir).toString();
+    }
+
+    return softwareDataDir;
+}
+
+function getSoftwareSessionFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\session.json";
+    } else {
+        file += "/session.json";
+    }
+    return file;
+}
+
+function getSoftwareDataStoreFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\data.json";
+    } else {
+        file += "/data.json";
+    }
+    return file;
+}
+
+function getInstallDir() {
+    // first check if the pm has been installed or not
+    const homedir = os.homedir();
+    let installDir;
+    if (isMac()) {
+        installDir = "/Applications";
+    } else if (isWindows()) {
+        installDir = os.homedir() + "\\AppData\\Local\\Programs";
+    } else {
+        installDir = "/usr/lib/";
+    }
+    return installDir;
+}
+
+function getPmExtension() {
+    let pmExtension = ".dmg";
+    if (isWindows()) {
+        pmExtension = ".exe";
+    } else if (!isMac()) {
+        pmExtension = ".deb";
+    }
+
+    return pmExtension;
+}
+
+function getPmBinaryTarget() {
+    let homedir = os.homedir();
+
+    if (isMac()) {
+        homedir += "/Desktop/";
+    } else if (isWindows()) {
+        homedir += "\\Desktop\\";
+    } else if (!isMac()) {
+        homedir += "/Desktop/";
+    }
+
+    let pmBinary = homedir + pmName + getPmExtension();
+
+    return pmBinary;
+}
+
+function downloadPM() {
+    downloadingNow = true;
+
+    let pmBinary = getPmBinaryTarget();
+    let file_url = pmBucket + pmName + getPmExtension();
+
+    // Save variable to know progress
+    var received_bytes = 0;
+    var total_bytes = 0;
+    let options = { url: file_url };
+    let req = request.get(options);
+    let out = fs.createWriteStream(pmBinary);
+
+    req.pipe(out);
+    req.on("response", function(data) {
+        if (data && data.statusCode === 200) {
+            showStatus("Downloading Software Desktop");
+        } else {
+            downloadingNow = false;
+        }
+
+        // Change the total bytes value to get progress later.
+        total_bytes = parseInt(data.headers["content-length"]);
+    });
+
+    req.on("data", function(chunk) {
+        // Update the received bytes
+        received_bytes += chunk.length;
+        showProgress(received_bytes, total_bytes);
+    });
+
+    req.on("end", function() {
+        downloadingNow = false;
+
+        // show the final message in the status bar
+        showStatus("Completed Software Desktop");
+
+        // install the plugin manager
+        open(pmBinary);
+
+        setTimeout(() => {
+            showStatus("");
+        }, 5000);
+    });
+}
+
+function showProgress(received, total) {
+    const percent = Math.ceil(Math.max(received * 100 / total, 2));
+    // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
+    showStatus(`Downloading Software Desktop: ${percent}%`);
+}
+
+async function serverIsAvailable() {
+    return await checkOnline();
+}
+
+/**
+ * User session will have...
+ * { user: user, jwt: jwt }
+ */
+async function isAuthenticated() {
+    const tokenVal = getItem("token");
+    if (!tokenVal) {
+        return false;
+    }
+
+    // since we do have a token value, ping the backend using authentication
+    // in case they need to re-authenticate
+    beApi.defaults.headers.common["Authorization"] = getItem("jwt");
+    const authenticated = await beApi
+        .get("/users/ping/")
+        .then(() => {
+            return true;
+        })
+        .catch(() => {
+            console.log(
+                "Software.com: The user is not authenticated with the current authentication token"
+            );
+            return false;
+        });
+
+    return authenticated;
+}
+
+async function checkOnline() {
+    // non-authenticated ping, no need to set the Authorization header
+    const isOnline = await beApi
+        .get("/ping")
+        .then(() => {
+            return true;
+        })
+        .catch(() => {
+            console.log("Software.com: Server not reachable");
+            return false;
+        });
+    return isOnline;
+}
+
+function storePayload(payload) {
+    fs.appendFile(
+        getSoftwareDataStoreFile(),
+        JSON.stringify(payload) + os.EOL,
+        err => {
+            if (err)
+                console.log(
+                    "Software.com: Error appending to the Software data store file: ",
+                    err.message
+                );
+        }
+    );
+}
+
+function sendOfflineData() {
+    const dataStoreFile = getSoftwareDataStoreFile();
+    if (fs.existsSync(dataStoreFile)) {
+        const content = fs.readFileSync(dataStoreFile).toString();
+        if (content) {
+            console.error(`Software.com: sending batch payloads: ${content}`);
+            const payloads = content
+                .split(/\r?\n/)
+                .map(item => {
+                    let obj = null;
+                    if (item) {
+                        try {
+                            obj = JSON.parse(item);
+                        } catch (e) {
+                            //
+                        }
+                    }
+                    if (obj) {
+                        return obj;
+                    }
+                })
+                .filter(item => item);
+            // POST the kpm to the PluginManager
+            beApi.defaults.headers.common["Authorization"] = getItem("jwt");
+            return beApi
+                .post("/data/batch", payloads)
+                .then(response => {
+                    // everything is fine, delete the offline data file
+                    deleteFile(getSoftwareDataStoreFile());
+                })
+                .catch(err => {
+                    console.log(
+                        "Software.com: Unable to send offline data: ",
+                        err.message
+                    );
+                });
+        }
+    }
+}
+
+function setItem(key, value) {
+    const jsonObj = getSoftwareSessionAsJson();
+    jsonObj[key] = value;
+
+    const content = JSON.stringify(jsonObj);
+
+    const sessionFile = getSoftwareSessionFile();
+    fs.writeFileSync(sessionFile, content, err => {
+        if (err)
+            console.log(
+                "Software.com: Error writing to the Software session file: ",
+                err.message
+            );
+    });
+}
+
+function getItem(key) {
+    const jsonObj = getSoftwareSessionAsJson();
+
+    return jsonObj[key] || null;
+}
+
+function getSoftwareSessionAsJson() {
+    let data = null;
+
+    const sessionFile = getSoftwareSessionFile();
+    if (fs.existsSync(sessionFile)) {
+        const content = fs.readFileSync(sessionFile).toString();
+        if (content) {
+            data = JSON.parse(content);
+        }
+    }
+    return data ? data : {};
+}
+
+function deleteFile(file) {
+    // if the file exists, get it
+    if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+    }
+}
+
+function chekUserAuthenticationStatus() {
+    const serverAvailablePromise = serverIsAvailable();
+    const isAuthenticatedPromise = isAuthenticated();
+    const pastThresholdTime = isPastTimeThreshold();
+    const existingJwt = getItem("jwt");
+
+    Promise.all([serverAvailablePromise, isAuthenticatedPromise]).then(
+        values => {
+            const serverAvailable = values[0];
+            const isAuthenticated = values[1];
+            //
+            // Show the dialog if the user is not authenticated but online,
+            // and it's past the threshold time and the confirm window is null
+            //
+            if (
+                serverAvailable &&
+                !isAuthenticated &&
+                pastThresholdTime &&
+                !confirmWindowOpen
+            ) {
+                // set the last update time so we don't try to ask too frequently
+                setItem("lastUpdateTime", Date.now());
+                confirmWindowOpen = true;
+                let infoMsg =
+                    "To see your coding data, please log in at software.com.";
+
+                if (existingJwt) {
+                    // they have an existing jwt, show the re-login message
+                    infoMsg =
+                        "We are having trouble sending data to Software.com, would you like to try logging in again?";
+                }
+
+                confirmWindow = window
+                    .showInformationMessage(
+                        infoMsg,
+                        ...[NOT_NOW_LABEL, LOGIN_LABEL]
+                    )
+                    .then(selection => {
+                        if (selection === LOGIN_LABEL) {
+                            const tokenVal = randomCode();
+                            // update the .software data with the token we've just created
+                            setItem("token", tokenVal);
+                            launchWebUrl(`${PROD_URL}/login?token=${tokenVal}`);
+                        }
+                        confirmWindowOpen = false;
+                        confirmWindow = null;
+                    });
+            }
+        }
+    );
+}
+
+function isPastTimeThreshold() {
+    // get the last time we created the token. if it's older than
+    // 1 hour, go ahead and perform the ping
+    const lastUpdateTime = getItem("lastUpdateTime");
+    if (
+        lastUpdateTime &&
+        Date.now() - lastUpdateTime < MILLIS_PER_HOUR * THRESHOLD_HOURS
+    ) {
+        return false;
+    }
+    return true;
+}
+
+function randomCode() {
+    return crypto
+        .randomBytes(16)
+        .map(value => alpha.charCodeAt(Math.floor(value * alpha.length / 256)))
+        .toString();
+}
+
+function checkTokenAvailability() {
+    const tokenVal = getItem("token");
+
+    // ned to get back...
+    // response.data.user, response.data.jwt
+    // non-authorization API
+    beApi
+        .get(`/users/plugin/confirm?token=${tokenVal}`)
+        .then(response => {
+            if (response.data) {
+                setItem("jwt", response.data.jwt);
+                setItem("user", response.data.user);
+                setItem("lastUpdateTime", Date.now());
+            }
+        })
+        .catch(err => {
+            console.log(
+                "Software.com: unable to obtain session token: ",
+                err.message
+            );
+            // try again in 1 minute
+            setTimeout(() => {
+                checkTokenAvailability();
+            }, 1000 * 60);
+        });
+}
+
+function launchWebUrl(url) {
+    let open = "open";
+    let args = [`${url}`];
+    if (isWindows()) {
+        open = "cmd";
+        // adds the following args to the beginning of the array
+        args.unshift("/c", "start", '""');
+    } else if (!isMac()) {
+        open = "xdg-open";
+    }
+
+    let process = cp.execFile(open, args, (error, stdout, stderr) => {
+        if (error != null) {
+            if (stderr && stderr.toString() != "")
+                console.log(
+                    "Software.com: stderr Error launching Software authentication: ",
+                    stderr.toString()
+                );
+            if (stdout && stdout.toString() != "")
+                console.log(
+                    "Software.com: stdout Error launching Software authentication: ",
+                    stdout.toString()
+                );
+            console.log(
+                "Software.com: Error launching Software authentication: ",
+                error.toString()
+            );
+        } else {
+            // check if the token is available in 30 seconds
+            setTimeout(() => {
+                checkTokenAvailability();
+            }, 1000 * 30);
+        }
+    });
+}
+
+async function fetchDailyKpmSessionInfo() {
+    if (await !isAuthenticated()) {
+        console.log("Software.com: not authenticated, trying again later");
+        return;
+    }
+    /**
+     * http://localhost:5000/sessions?from=1527724925&summary=true
+     * [
+            {
+                "to": "1527788100",
+                "from": "1527782400",
+                "minutesTotal": 95,
+                "kpm": 108,
+                "plugins": [
+                    {
+                        "name": "keystrokes",
+                        "data": [
+                            {
+                                "values": [],
+                                "average": {
+                                    "value": 109.787001477105,
+                                    "daysHistory": 1
+                                },
+                                "interval": 1,
+                                "type": "keystrokes",
+                                "intervalUnit": "minute"
+                            }
+                        ]
+                    }
+                ],
+                "projectInfo": {}
+            }
+        ]
+     */
+
+    const fromSeconds = nowInSecs();
+    beApi.defaults.headers.common["Authorization"] = getItem("jwt");
+    beApi
+        .get(`/sessions?from=${fromSeconds}&summary=true`)
+        .then(response => {
+            const sessions = response.data;
+            let totalKpm = 0;
+            let totalMin = 0;
+            let counter = 0;
+            let sessionLen = sessions && sessions.length ? sessions.length : 0;
+
+            if (sessions && sessions.length > 0) {
+                for (let i = 0; i < sessions.length; i++) {
+                    totalKpm += sessions[i].kpm;
+                    totalMin += sessions[i].minutesTotal;
+                }
+                // totalKpm = sessions
+                //     .map(session => {
+                //         return session.kpm;
+                //     })
+                //     .reduce((prev, curr) => prev + curr);
+            }
+            let sessionTime = "";
+            if (totalMin === 60) {
+                sessionTime = "1 hour";
+            } else if (totalMin > 60) {
+                sessionTime = Math.floor(totalMin / 60).toFixed(2) + " hours";
+            } else if (totalMin === 1) {
+                sessionTime = "1 minute";
+            } else {
+                sessionTime = totalMin + " minutes";
+            }
+            const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
+            kpmInfo["kpmAvg"] =
+                avgKpm > 0 ? avgKpm.toFixed(0) : avgKpm.toFixed(2);
+            kpmInfo["sessionTime"] = sessionTime;
+            if (avgKpm > 0 || totalMin > 0) {
+                showStatus(
+                    `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`
+                );
+            } else {
+                showStatus("Software.com");
+            }
+        })
+        .catch(err => {
+            console.log(
+                "Software.com: error getting session information: ",
+                err.message
+            );
+            chekUserAuthenticationStatus();
+        });
+}
+
+function getSelectedKpm() {
+    if (kpmInfo["kpmAvg"]) {
+        return `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`;
+    }
+    return "";
+}
+
+function showStatus(msg) {
+    statusBarItem.text = `$(flame) ${msg}`;
 }
