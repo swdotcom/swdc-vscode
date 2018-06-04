@@ -35,7 +35,7 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.6";
+const VERSION = "0.2.7";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -877,7 +877,7 @@ function checkTokenAvailability() {
     // response.data.user, response.data.jwt
     // non-authorization API
     beApi
-        .get(`/users/plugin/confirm?token=${tokenVal}`)
+        .get(`/plugin/confirm?token=${tokenVal}`)
         .then(response => {
             if (response.data) {
                 setItem("jwt", response.data.jwt);
