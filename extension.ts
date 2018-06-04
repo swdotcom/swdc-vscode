@@ -35,7 +35,7 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.5";
+const VERSION = "0.2.6";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -72,17 +72,6 @@ let kpmInfo = {};
 export function activate(ctx: ExtensionContext) {
     console.log(`Software.com: Loaded v${VERSION}`);
 
-    statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
-    statusBarItem.tooltip = "Click to see more from Software.com";
-    statusBarItem.command = "extension.kpmClicked";
-    statusBarItem.show();
-    showStatus(`Software.com`);
-
-    // clear the last update time
-    setItem("lastUpdateTime", "");
-    // check if the user is authenticated with what is saved in the software config
-    chekUserAuthenticationStatus();
-
     //
     // Add the keystroke controller to the ext ctx, which
     // will then listen for text document changes.
@@ -90,10 +79,16 @@ export function activate(ctx: ExtensionContext) {
     const controller = new KeystrokeCountController();
     ctx.subscriptions.push(controller);
 
-    var disposable = commands.registerCommand("extension.kpmClicked", args => {
+    var disposable = commands.registerCommand("extension.kpmClicked", () => {
         launchWebUrl(PROD_URL);
     });
     ctx.subscriptions.push(disposable);
+
+    statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
+    statusBarItem.tooltip = "Click to see more from Software.com";
+    statusBarItem.command = "extension.kpmClicked";
+    statusBarItem.show();
+    showStatus(`Software.com`);
 
     setInterval(() => {
         fetchDailyKpmSessionInfo();
@@ -101,6 +96,8 @@ export function activate(ctx: ExtensionContext) {
 
     // send any offline data
     setTimeout(() => {
+        // check if the user is authenticated with what is saved in the software config
+        chekUserAuthenticationStatus();
         fetchDailyKpmSessionInfo();
         sendOfflineData();
     }, 5000);
@@ -649,7 +646,7 @@ function downloadPM() {
 }
 
 function showProgress(received, total) {
-    const percent = Math.ceil(Math.max(received * 100 / total, 2));
+    const percent = Math.ceil(Math.max((received * 100) / total, 2));
     // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
     showStatus(`Downloading Software Desktop: ${percent}%`);
 }
@@ -677,9 +674,7 @@ async function isAuthenticated() {
             return true;
         })
         .catch(() => {
-            console.log(
-                "Software.com: The user is not authenticated with the current authentication token"
-            );
+            console.log("Software.com: The user is not authenticated");
             return false;
         });
 
@@ -869,7 +864,9 @@ function isPastTimeThreshold() {
 function randomCode() {
     return crypto
         .randomBytes(16)
-        .map(value => alpha.charCodeAt(Math.floor(value * alpha.length / 256)))
+        .map(value =>
+            alpha.charCodeAt(Math.floor((value * alpha.length) / 256))
+        )
         .toString();
 }
 
