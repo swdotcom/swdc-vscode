@@ -35,11 +35,12 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.7";
+const VERSION = "0.2.9";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 const MILLIS_PER_HOUR = 1000 * 60 * 60;
+const SECONDS_PER_HALF_HOUR = 60 * 30;
 const LONG_THRESHOLD_HOURS = 12;
 const SHORT_THRESHOLD_HOURS = 1;
 const pmApi = axios.create({
@@ -80,7 +81,7 @@ export function activate(ctx: ExtensionContext) {
     ctx.subscriptions.push(controller);
 
     var disposable = commands.registerCommand("extension.kpmClicked", () => {
-        launchWebUrl(PROD_URL);
+        handleKpmClickedEvent();
     });
     ctx.subscriptions.push(disposable);
 
@@ -815,11 +816,11 @@ function chekUserAuthenticationStatus() {
                 setItem("lastUpdateTime", Date.now());
                 confirmWindowOpen = true;
                 let infoMsg =
-                    "To see your coding data, please log in at software.com.";
+                    "To see insights into how you code, please sign in to Software.com.";
                 if (existingJwt) {
                     // they have an existing jwt, show the re-login message
                     infoMsg =
-                        "We are having trouble sending data to Software.com, please log in to see insights into how you code.";
+                        "We are having trouble sending data to Software.com, please sign in to see insights into how you code.";
                 }
 
                 confirmWindow = window
@@ -877,7 +878,7 @@ function checkTokenAvailability() {
     // response.data.user, response.data.jwt
     // non-authorization API
     beApi
-        .get(`/plugin/confirm?token=${tokenVal}`)
+        .get(`/users/plugin/confirm?token=${tokenVal}`)
         .then(response => {
             if (response.data) {
                 setItem("jwt", response.data.jwt);
@@ -968,39 +969,26 @@ async function fetchDailyKpmSessionInfo() {
         ]
      */
 
-    const fromSeconds = nowInSecs();
+    const toSeconds = nowInSecs() + 1;
+    const fromSeconds = toSeconds - (SECONDS_PER_HALF_HOUR + 1);
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
         .get(`/sessions?from=${fromSeconds}&summary=true`)
         .then(response => {
             const sessions = response.data;
-            let totalKpm = 0;
-            let totalMin = 0;
-            let counter = 0;
-            let sessionLen = sessions && sessions.length ? sessions.length : 0;
-
-            if (sessions && sessions.length > 0) {
-                for (let i = 0; i < sessions.length; i++) {
-                    totalKpm += sessions[i].kpm;
-                    totalMin += sessions[i].minutesTotal;
-                }
-                // totalKpm = sessions
-                //     .map(session => {
-                //         return session.kpm;
-                //     })
-                //     .reduce((prev, curr) => prev + curr);
-            }
+            let avgKpm = sessions.kpm;
+            let totalMin = sessions.minutesTotal;
             let sessionTime = "";
             if (totalMin === 60) {
-                sessionTime = "1 hour";
+                sessionTime = "1 hr";
             } else if (totalMin > 60) {
-                sessionTime = Math.floor(totalMin / 60).toFixed(2) + " hours";
+                sessionTime = Math.floor(totalMin / 60).toFixed(0) + " hrs";
             } else if (totalMin === 1) {
-                sessionTime = "1 minute";
+                sessionTime = "1 min";
             } else {
-                sessionTime = totalMin + " minutes";
+                sessionTime = totalMin + " min";
             }
-            const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
+            // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
             kpmInfo["kpmAvg"] =
                 avgKpm > 0 ? avgKpm.toFixed(0) : avgKpm.toFixed(2);
             kpmInfo["sessionTime"] = sessionTime;
@@ -1028,6 +1016,21 @@ function getSelectedKpm() {
     return "";
 }
 
+function handleKpmClickedEvent() {
+    // check if we've successfully logged in as this user yet
+    const existingJwt = getItem("jwt");
+
+    let webUrl = PROD_URL;
+    if (!existingJwt) {
+        const tokenVal = randomCode();
+        // update the .software data with the token we've just created
+        setItem("token", tokenVal);
+        webUrl = `${PROD_URL}/login?token=${tokenVal}`;
+    }
+
+    launchWebUrl(webUrl);
+}
+
 function showStatus(msg) {
-    statusBarItem.text = `$(flame) ${msg}`;
+    statusBarItem.text = `$(flame)${msg}`;
 }
