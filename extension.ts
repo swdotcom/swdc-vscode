@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Software.co Technologies, Inc. All Rights Reserved.
+// Copyright (c) 2018 Software. All Rights Reserved.
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
