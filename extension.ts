@@ -35,7 +35,7 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.2.9";
+const VERSION = "0.3.0";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -55,7 +55,7 @@ const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
 const beApi = axios.create({
-    baseURL: `${PROD_API_ENDPOINT}`
+    baseURL: `${TEST_API_ENDPOINT}`
 });
 
 const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
@@ -833,7 +833,7 @@ function chekUserAuthenticationStatus() {
                             const tokenVal = randomCode();
                             // update the .software data with the token we've just created
                             setItem("token", tokenVal);
-                            launchWebUrl(`${PROD_URL}/login?token=${tokenVal}`);
+                            launchWebUrl(`${TEST_URL}/login?token=${tokenVal}`);
                         }
                         confirmWindowOpen = false;
                         confirmWindow = null;
@@ -976,7 +976,7 @@ async function fetchDailyKpmSessionInfo() {
         .get(`/sessions?from=${fromSeconds}&summary=true`)
         .then(response => {
             const sessions = response.data;
-            let avgKpm = sessions.kpm;
+            let avgKpm = sessions.kpm ? parseInt(sessions.kpm, 10) : 0;
             let totalMin = sessions.minutesTotal;
             let sessionTime = "";
             if (totalMin === 60) {
@@ -1020,12 +1020,12 @@ function handleKpmClickedEvent() {
     // check if we've successfully logged in as this user yet
     const existingJwt = getItem("jwt");
 
-    let webUrl = PROD_URL;
+    let webUrl = TEST_URL;
     if (!existingJwt) {
         const tokenVal = randomCode();
         // update the .software data with the token we've just created
         setItem("token", tokenVal);
-        webUrl = `${PROD_URL}/login?token=${tokenVal}`;
+        webUrl = `${TEST_URL}/login?token=${tokenVal}`;
     }
 
     launchWebUrl(webUrl);
