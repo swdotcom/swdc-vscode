@@ -35,12 +35,10 @@ const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.3.0";
+const VERSION = "0.3.1";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
-const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 const MILLIS_PER_HOUR = 1000 * 60 * 60;
-const SECONDS_PER_HALF_HOUR = 60 * 30;
 const LONG_THRESHOLD_HOURS = 12;
 const SHORT_THRESHOLD_HOURS = 1;
 const pmApi = axios.create({
@@ -55,7 +53,7 @@ const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
 const beApi = axios.create({
-    baseURL: `${TEST_API_ENDPOINT}`
+    baseURL: `${PROD_API_ENDPOINT}`
 });
 
 const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
@@ -833,7 +831,7 @@ function chekUserAuthenticationStatus() {
                             const tokenVal = randomCode();
                             // update the .software data with the token we've just created
                             setItem("token", tokenVal);
-                            launchWebUrl(`${TEST_URL}/login?token=${tokenVal}`);
+                            launchWebUrl(`${PROD_URL}/login?token=${tokenVal}`);
                         }
                         confirmWindowOpen = false;
                         confirmWindow = null;
@@ -1004,12 +1002,12 @@ function handleKpmClickedEvent() {
     // check if we've successfully logged in as this user yet
     const existingJwt = getItem("jwt");
 
-    let webUrl = TEST_URL;
+    let webUrl = PROD_URL;
     if (!existingJwt) {
         const tokenVal = randomCode();
         // update the .software data with the token we've just created
         setItem("token", tokenVal);
-        webUrl = `${TEST_URL}/login?token=${tokenVal}`;
+        webUrl = `${PROD_URL}/login?token=${tokenVal}`;
     }
 
     launchWebUrl(webUrl);
