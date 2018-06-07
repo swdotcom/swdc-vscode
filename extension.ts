@@ -813,7 +813,7 @@ function chekUserAuthenticationStatus() {
                 !confirmWindowOpen
             ) {
                 // set the last update time so we don't try to ask too frequently
-                setItem("lastUpdateTime", Date.now());
+                setItem("vscode_lastUpdateTime", Date.now());
                 confirmWindowOpen = true;
                 let infoMsg =
                     "To see insights into how you code, please sign in to Software.com.";
@@ -851,7 +851,7 @@ function isPastTimeThreshold() {
     const thresholdHoursBeforeCheckingAgain = !existingJwt
         ? SHORT_THRESHOLD_HOURS
         : LONG_THRESHOLD_HOURS;
-    const lastUpdateTime = getItem("lastUpdateTime");
+    const lastUpdateTime = getItem("vscode_lastUpdateTime");
     if (
         lastUpdateTime &&
         Date.now() - lastUpdateTime <
@@ -883,7 +883,7 @@ function checkTokenAvailability() {
             if (response.data) {
                 setItem("jwt", response.data.jwt);
                 setItem("user", response.data.user);
-                setItem("lastUpdateTime", Date.now());
+                setItem("vscode_lastUpdateTime", Date.now());
             }
         })
         .catch(err => {
@@ -911,25 +911,10 @@ function launchWebUrl(url) {
 
     let process = cp.execFile(open, args, (error, stdout, stderr) => {
         if (error != null) {
-            if (stderr && stderr.toString() != "")
-                console.log(
-                    "Software.com: stderr Error launching Software authentication: ",
-                    stderr.toString()
-                );
-            if (stdout && stdout.toString() != "")
-                console.log(
-                    "Software.com: stdout Error launching Software authentication: ",
-                    stdout.toString()
-                );
             console.log(
                 "Software.com: Error launching Software authentication: ",
                 error.toString()
             );
-        } else {
-            // check if the token is available in 30 seconds
-            setTimeout(() => {
-                checkTokenAvailability();
-            }, 1000 * 30);
         }
     });
 }
@@ -969,8 +954,7 @@ async function fetchDailyKpmSessionInfo() {
         ]
      */
 
-    const toSeconds = nowInSecs() + 1;
-    const fromSeconds = toSeconds - (SECONDS_PER_HALF_HOUR + 1);
+    const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
         .get(`/sessions?from=${fromSeconds}&summary=true`)
