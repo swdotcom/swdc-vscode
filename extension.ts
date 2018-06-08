@@ -31,7 +31,6 @@ const crypto = require("crypto");
 // ? marks that the parameter is optional
 type Project = { directory: String; name?: String };
 
-const DOWNLOAD_NOW_LABEL = "Download";
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
@@ -52,8 +51,13 @@ const TEST_URL = "http://localhost:3000";
 const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
+// set the api endpoint to use
+const api_endpoint = PROD_API_ENDPOINT;
+// set the launch url to use
+const launch_url = PROD_URL;
+
 const beApi = axios.create({
-    baseURL: `${PROD_API_ENDPOINT}`
+    baseURL: `${api_endpoint}`
 });
 
 const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
@@ -831,7 +835,9 @@ function chekUserAuthenticationStatus() {
                             const tokenVal = randomCode();
                             // update the .software data with the token we've just created
                             setItem("token", tokenVal);
-                            launchWebUrl(`${PROD_URL}/login?token=${tokenVal}`);
+                            launchWebUrl(
+                                `${launch_url}/login?token=${tokenVal}`
+                            );
                         }
                         confirmWindowOpen = false;
                         confirmWindow = null;
@@ -964,7 +970,7 @@ async function fetchDailyKpmSessionInfo() {
             if (totalMin === 60) {
                 sessionTime = "1 hr";
             } else if (totalMin > 60) {
-                sessionTime = Math.floor(totalMin / 60).toFixed(0) + " hrs";
+                sessionTime = (totalMin / 60).toFixed(2) + " hrs";
             } else if (totalMin === 1) {
                 sessionTime = "1 min";
             } else {
@@ -1002,12 +1008,12 @@ function handleKpmClickedEvent() {
     // check if we've successfully logged in as this user yet
     const existingJwt = getItem("jwt");
 
-    let webUrl = PROD_URL;
+    let webUrl = launch_url;
     if (!existingJwt) {
         const tokenVal = randomCode();
         // update the .software data with the token we've just created
         setItem("token", tokenVal);
-        webUrl = `${PROD_URL}/login?token=${tokenVal}`;
+        webUrl = `${launch_url}/login?token=${tokenVal}`;
     }
 
     launchWebUrl(webUrl);
