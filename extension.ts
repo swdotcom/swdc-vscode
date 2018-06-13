@@ -11,7 +11,8 @@ import {
     StatusBarAlignment,
     ViewColumn,
     Selection,
-    commands
+    commands,
+    extensions
 } from "vscode";
 import axios from "axios";
 import {
@@ -34,7 +35,6 @@ type Project = { directory: String; name?: String };
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Login";
 const NO_NAME_FILE = "Untitled";
-const VERSION = "0.3.2";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_HOUR = 1000 * 60 * 60;
@@ -71,9 +71,14 @@ let confirmWindowOpen = false;
 // Available to the KeystrokeCount and the KeystrokeCountController
 let activeKeystrokeCountMap = {};
 let kpmInfo = {};
+let extensionVersion;
 
 export function activate(ctx: ExtensionContext) {
-    console.log(`Software.com: Loaded v${VERSION}`);
+    const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
+        .packageJSON;
+
+    extensionVersion = extension.version;
+    console.log(`Software.com: Loaded v${extensionVersion}`);
 
     //
     // Add the keystroke controller to the ext ctx, which
@@ -126,7 +131,7 @@ export class KeystrokeCount {
             (this.end = startOfEvent + 60),
             (this.project = project),
             (this.pluginId = 2);
-        this.version = VERSION;
+        this.version = extensionVersion;
     }
 
     hasData() {
@@ -838,6 +843,10 @@ function chekUserAuthenticationStatus() {
                             launchWebUrl(
                                 `${launch_url}/login?token=${tokenVal}`
                             );
+
+                            setTimeout(() => {
+                                checkTokenAvailability();
+                            }, 1000 * 30);
                         }
                         confirmWindowOpen = false;
                         confirmWindow = null;
