@@ -16,6 +16,7 @@
 3. Install
 4. Restart VS Code
 ```
+![Install](https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-install.gif)
 
 ### Uninstall
 
