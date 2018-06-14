@@ -96,7 +96,7 @@ export function activate(ctx: ExtensionContext) {
     statusBarItem.tooltip = "Click to see more from Software.com";
     statusBarItem.command = "extension.kpmClicked";
     statusBarItem.show();
-    showStatus(`Software.com`);
+    showStatus("flame", "Software.com", null);
 
     setInterval(() => {
         fetchDailyKpmSessionInfo();
@@ -313,6 +313,8 @@ class KeystrokeCountController {
         }
 
         let filename = event.document.fileName || NO_NAME_FILE;
+        let languageId = event.document.languageId || "";
+        let lines = event.document.lineCount || 0;
 
         let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(
             filename
@@ -366,6 +368,21 @@ class KeystrokeCountController {
             console.log("Software.com: KPM incremented");
         }
 
+        // set the linesAdded: 0, linesRemoved: 0, syntax: ""
+        if (!fileInfo.syntax) {
+            fileInfo.syntax = languageId;
+        }
+        let diff = 0;
+        if (fileInfo.lines && fileInfo.lines >= 0) {
+            diff = lines - fileInfo.lines;
+        }
+        fileInfo.lines = lines;
+        if (diff < 0) {
+            fileInfo.linesRemoved += fileInfo.linesRemoved + Math.abs(diff);
+        } else if (diff > 0) {
+            fileInfo.linesAdded += fileInfo.linesAdded + diff;
+        }
+
         // update the map containing the keystroke count
         activeKeystrokeCountMap[rootPath] = keystrokeCount;
     }
@@ -405,7 +422,11 @@ class KeystrokeCountController {
                     open: 0,
                     close: 0,
                     delete: 0,
-                    length: 0
+                    length: 0,
+                    lines: 0,
+                    linesAdded: 0,
+                    linesRemoved: 0,
+                    syntax: ""
                 };
                 keystrokeCount.source[filename] = fileInfo;
             }
@@ -623,7 +644,7 @@ function downloadPM() {
     req.pipe(out);
     req.on("response", function(data) {
         if (data && data.statusCode === 200) {
-            showStatus("Downloading Software Desktop");
+            showStatus("flame", "Downloading Software Desktop", null);
         } else {
             downloadingNow = false;
         }
@@ -642,13 +663,13 @@ function downloadPM() {
         downloadingNow = false;
 
         // show the final message in the status bar
-        showStatus("Completed Software Desktop");
+        showStatus("flame", "Completed Software Desktop", null);
 
         // install the plugin manager
         open(pmBinary);
 
         setTimeout(() => {
-            showStatus("");
+            showStatus("flame", "Software.com", null);
         }, 5000);
     });
 }
@@ -656,7 +677,7 @@ function downloadPM() {
 function showProgress(received, total) {
     const percent = Math.ceil(Math.max((received * 100) / total, 2));
     // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    showStatus(`Downloading Software Desktop: ${percent}%`);
+    showStatus("flame", `Downloading Software Desktop: ${percent}%`, null);
 }
 
 async function serverIsAvailable() {
@@ -821,36 +842,36 @@ function chekUserAuthenticationStatus() {
             ) {
                 // set the last update time so we don't try to ask too frequently
                 setItem("vscode_lastUpdateTime", Date.now());
-                confirmWindowOpen = true;
+
                 let infoMsg =
                     "To see insights into how you code, please sign in to Software.com.";
                 if (existingJwt) {
-                    // they have an existing jwt, show the re-login message
-                    infoMsg =
-                        "We are having trouble sending data to Software.com, please sign in to see insights into how you code.";
+                    // continue to show the status bar
+                    showStatus("alert", "Software.com", infoMsg);
+                } else {
+                    confirmWindowOpen = true;
+                    confirmWindow = window
+                        .showInformationMessage(
+                            infoMsg,
+                            ...[NOT_NOW_LABEL, LOGIN_LABEL]
+                        )
+                        .then(selection => {
+                            if (selection === LOGIN_LABEL) {
+                                const tokenVal = randomCode();
+                                // update the .software data with the token we've just created
+                                setItem("token", tokenVal);
+                                launchWebUrl(
+                                    `${launch_url}/login?token=${tokenVal}`
+                                );
+
+                                setTimeout(() => {
+                                    checkTokenAvailability();
+                                }, 1000 * 30);
+                            }
+                            confirmWindowOpen = false;
+                            confirmWindow = null;
+                        });
                 }
-
-                confirmWindow = window
-                    .showInformationMessage(
-                        infoMsg,
-                        ...[NOT_NOW_LABEL, LOGIN_LABEL]
-                    )
-                    .then(selection => {
-                        if (selection === LOGIN_LABEL) {
-                            const tokenVal = randomCode();
-                            // update the .software data with the token we've just created
-                            setItem("token", tokenVal);
-                            launchWebUrl(
-                                `${launch_url}/login?token=${tokenVal}`
-                            );
-
-                            setTimeout(() => {
-                                checkTokenAvailability();
-                            }, 1000 * 30);
-                        }
-                        confirmWindowOpen = false;
-                        confirmWindow = null;
-                    });
             }
         }
     );
@@ -937,35 +958,6 @@ async function fetchDailyKpmSessionInfo() {
         console.log("Software.com: not authenticated, trying again later");
         return;
     }
-    /**
-     * http://localhost:5000/sessions?from=1527724925&summary=true
-     * [
-            {
-                "to": "1527788100",
-                "from": "1527782400",
-                "minutesTotal": 95,
-                "kpm": 108,
-                "plugins": [
-                    {
-                        "name": "keystrokes",
-                        "data": [
-                            {
-                                "values": [],
-                                "average": {
-                                    "value": 109.787001477105,
-                                    "daysHistory": 1
-                                },
-                                "interval": 1,
-                                "type": "keystrokes",
-                                "intervalUnit": "minute"
-                            }
-                        ]
-                    }
-                ],
-                "projectInfo": {}
-            }
-        ]
-     */
 
     const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
@@ -991,10 +983,12 @@ async function fetchDailyKpmSessionInfo() {
             kpmInfo["sessionTime"] = sessionTime;
             if (avgKpm > 0 || totalMin > 0) {
                 showStatus(
-                    `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`
+                    "flame",
+                    `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`,
+                    null
                 );
             } else {
-                showStatus("Software.com");
+                showStatus("flame", "Software.com", null);
             }
         })
         .catch(err => {
@@ -1028,6 +1022,11 @@ function handleKpmClickedEvent() {
     launchWebUrl(webUrl);
 }
 
-function showStatus(msg) {
-    statusBarItem.text = `$(flame)${msg}`;
+function showStatus(icon, msg, tooltip) {
+    if (!tooltip) {
+        statusBarItem.tooltip = "Click to see more from Software.com";
+    } else {
+        statusBarItem.tooltip = tooltip;
+    }
+    statusBarItem.text = `$(${icon})${msg}`;
 }
