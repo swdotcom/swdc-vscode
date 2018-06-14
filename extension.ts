@@ -863,15 +863,15 @@ function chekUserAuthenticationStatus() {
                                 launchWebUrl(
                                     `${launch_url}/login?token=${tokenVal}`
                                 );
-
-                                setTimeout(() => {
-                                    checkTokenAvailability();
-                                }, 1000 * 30);
                             }
                             confirmWindowOpen = false;
                             confirmWindow = null;
                         });
                 }
+
+                setTimeout(() => {
+                    checkTokenAvailability();
+                }, 1000 * 30);
             }
         }
     );
