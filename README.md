@@ -14,7 +14,7 @@
 2. Search for **"Software.com"**
 3. **Install** *Software*
 4. **Restart** Visual Studio Code
-5. **Authorize** your account by clicking the IDE prompt (only required for the first plugin you install)
+5. **Authenticate** your account by clicking the IDE prompt (only required for the first plugin you install)
 
 ![Install](https://user-images.githubusercontent.com/27828739/41394854-62d67c0e-6f60-11e8-84ec-20e91ad2d3a4.gif)
 

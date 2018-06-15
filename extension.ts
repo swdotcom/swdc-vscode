@@ -33,7 +33,7 @@ const crypto = require("crypto");
 type Project = { directory: String; name?: String };
 
 const NOT_NOW_LABEL = "Not now";
-const LOGIN_LABEL = "Authorize";
+const LOGIN_LABEL = "Authenticate";
 const NO_NAME_FILE = "Untitled";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
@@ -844,7 +844,7 @@ function chekUserAuthenticationStatus() {
                 setItem("vscode_lastUpdateTime", Date.now());
 
                 let infoMsg =
-                    "To see your coding data in Software.com, please authorize your account.";
+                    "To see your coding data in Software.com, please authenticate your account.";
                 if (existingJwt) {
                     // continue to show the status bar
                     showStatus("alert", "Software.com", infoMsg);
