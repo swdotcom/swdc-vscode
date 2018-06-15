@@ -33,7 +33,7 @@ const crypto = require("crypto");
 type Project = { directory: String; name?: String };
 
 const NOT_NOW_LABEL = "Not now";
-const LOGIN_LABEL = "Sign up";
+const LOGIN_LABEL = "Sign in";
 const NO_NAME_FILE = "Untitled";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
@@ -974,6 +974,10 @@ async function fetchDailyKpmSessionInfo() {
         .get(`/sessions?from=${fromSeconds}&summary=true`)
         .then(response => {
             const sessions = response.data;
+            const inFlow =
+                sessions.inFlow !== undefined && sessions.inFlow !== null
+                    ? sessions.inFlow
+                    : true;
             let avgKpm = sessions.kpm ? parseInt(sessions.kpm, 10) : 0;
             let totalMin = sessions.minutesTotal;
             let sessionTime = "";
@@ -993,7 +997,7 @@ async function fetchDailyKpmSessionInfo() {
                     : avgKpm.toFixed(2);
             kpmInfo["sessionTime"] = sessionTime;
             if (avgKpm > 0 || totalMin > 0) {
-                let icon = (avgKpm > 0) ? "rocket" : "flame";
+                let icon = avgKpm <= 0 || !inFlow ? "flame" : "rocket";
                 showStatus(
                     icon,
                     `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`,
