@@ -33,7 +33,7 @@ const crypto = require("crypto");
 type Project = { directory: String; name?: String };
 
 const NOT_NOW_LABEL = "Not now";
-const LOGIN_LABEL = "Authenticate";
+const LOGIN_LABEL = "Sign up";
 const NO_NAME_FILE = "Untitled";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
@@ -52,9 +52,9 @@ const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
 // set the api endpoint to use
-const api_endpoint = PROD_API_ENDPOINT;
+const api_endpoint = TEST_API_ENDPOINT;
 // set the launch url to use
-const launch_url = PROD_URL;
+const launch_url = TEST_URL;
 
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
@@ -96,7 +96,7 @@ export function activate(ctx: ExtensionContext) {
     statusBarItem.tooltip = "Click to see more from Software.com";
     statusBarItem.command = "extension.kpmClicked";
     statusBarItem.show();
-    showStatus("flame", "Software.com", null);
+    showStatus("pulse", "Software.com", null);
 
     setInterval(() => {
         fetchDailyKpmSessionInfo();
@@ -644,7 +644,7 @@ function downloadPM() {
     req.pipe(out);
     req.on("response", function(data) {
         if (data && data.statusCode === 200) {
-            showStatus("flame", "Downloading Software Desktop", null);
+            showStatus("pulse", "Downloading Software Desktop", null);
         } else {
             downloadingNow = false;
         }
@@ -663,13 +663,13 @@ function downloadPM() {
         downloadingNow = false;
 
         // show the final message in the status bar
-        showStatus("flame", "Completed Software Desktop", null);
+        showStatus("pulse", "Completed Software Desktop", null);
 
         // install the plugin manager
         open(pmBinary);
 
         setTimeout(() => {
-            showStatus("flame", "Software.com", null);
+            showStatus("pulse", "Software.com", null);
         }, 5000);
     });
 }
@@ -677,7 +677,7 @@ function downloadPM() {
 function showProgress(received, total) {
     const percent = Math.ceil(Math.max((received * 100) / total, 2));
     // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    showStatus("flame", `Downloading Software Desktop: ${percent}%`, null);
+    showStatus("pulse", `Downloading Software Desktop: ${percent}%`, null);
 }
 
 async function serverIsAvailable() {
@@ -703,7 +703,11 @@ async function isAuthenticated() {
             return true;
         })
         .catch(() => {
-            console.log("Software.com: The user is not authenticated");
+            console.log("Software.com: The user is not signed in");
+            const existingJwt = getItem("jwt");
+            if (existingJwt) {
+                setItem("jwt", null);
+            }
             return false;
         });
 
@@ -834,6 +838,9 @@ function chekUserAuthenticationStatus() {
             // Show the dialog if the user is not authenticated but online,
             // and it's past the threshold time and the confirm window is null
             //
+            let infoMsg =
+                "To see your coding data in Software.com, please sign in to your account.";
+
             if (
                 serverAvailable &&
                 !isAuthenticated &&
@@ -843,8 +850,6 @@ function chekUserAuthenticationStatus() {
                 // set the last update time so we don't try to ask too frequently
                 setItem("vscode_lastUpdateTime", Date.now());
 
-                let infoMsg =
-                    "To see your coding data in Software.com, please authenticate your account.";
                 if (existingJwt) {
                     // continue to show the status bar
                     showStatus("alert", "Software.com", infoMsg);
@@ -868,7 +873,11 @@ function chekUserAuthenticationStatus() {
                             confirmWindow = null;
                         });
                 }
+            } else if (!isAuthenticated) {
+                showStatus("alert", "Software.com", infoMsg);
+            }
 
+            if (!isAuthenticated && !existingJwt) {
                 setTimeout(() => {
                     checkTokenAvailability();
                 }, 1000 * 30);
@@ -975,20 +984,23 @@ async function fetchDailyKpmSessionInfo() {
             } else if (totalMin === 1) {
                 sessionTime = "1 min";
             } else {
-                sessionTime = totalMin + " min";
+                sessionTime = totalMin.toFixed(0) + " min";
             }
             // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
             kpmInfo["kpmAvg"] =
-                avgKpm > 0 ? avgKpm.toFixed(0) : avgKpm.toFixed(2);
+                avgKpm > 0 || avgKpm === 0
+                    ? avgKpm.toFixed(0)
+                    : avgKpm.toFixed(2);
             kpmInfo["sessionTime"] = sessionTime;
             if (avgKpm > 0 || totalMin > 0) {
+                let icon = (avgKpm > 0) ? "rocket" : "flame";
                 showStatus(
-                    "flame",
+                    icon,
                     `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`,
                     null
                 );
             } else {
-                showStatus("flame", "Software.com", null);
+                showStatus("pulse", "Software.com", null);
             }
         })
         .catch(err => {
@@ -1018,6 +1030,7 @@ function handleKpmClickedEvent() {
         setItem("token", tokenVal);
         webUrl = `${launch_url}/login?token=${tokenVal}`;
     }
+    console.log("web url, existing token: ", webUrl, existingJwt);
 
     launchWebUrl(webUrl);
 }
@@ -1028,5 +1041,5 @@ function showStatus(icon, msg, tooltip) {
     } else {
         statusBarItem.tooltip = tooltip;
     }
-    statusBarItem.text = `$(${icon})${msg}`;
+    statusBarItem.text = `$(${icon}) ${msg}`;
 }
