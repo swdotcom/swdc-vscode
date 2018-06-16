@@ -52,9 +52,9 @@ const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
 // set the api endpoint to use
-const api_endpoint = TEST_API_ENDPOINT;
+const api_endpoint = PROD_API_ENDPOINT;
 // set the launch url to use
-const launch_url = TEST_URL;
+const launch_url = PROD_URL;
 
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
