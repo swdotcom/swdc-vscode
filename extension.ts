@@ -357,16 +357,24 @@ class KeystrokeCountController {
             fileInfo.paste = fileInfo.paste + newCount;
             console.log("Software.com: Copy+Paste Incremented");
         } else if (newCount < 0) {
-            fileInfo.delete = fileInfo.delete + Math.abs(newCount);
+            const deleteCount = Math.abs(newCount);
+            fileInfo.delete = fileInfo.delete + deleteCount;
+            // update the overall count
+            keystrokeCount.data = keystrokeCount.data + deleteCount;
             console.log("Software.com: Delete Incremented");
         } else {
             // update the data for this fileInfo keys count
-            fileInfo.keys = fileInfo.keys + 1;
+            fileInfo.add = fileInfo.add + 1;
 
             // update the overall count
             keystrokeCount.data = keystrokeCount.data + 1;
             console.log("Software.com: KPM incremented");
         }
+
+        // "netkeys" = add - delete
+        // "keys" = add + delete
+        fileInfo.netkeys = fileInfo.add - fileInfo.delete;
+        fileInfo.keys = fileInfo.add + fileInfo.delete;
 
         // set the linesAdded: 0, linesRemoved: 0, syntax: ""
         if (!fileInfo.syntax) {
@@ -414,10 +422,16 @@ class KeystrokeCountController {
             // or use it if it does and increment it's data value
             //
             fileInfo = findFileInfoInSource(keystrokeCount.source, filename);
+            // "add" = additive keystrokes
+            // "netkeys" = add - delete
+            // "keys" = add + delete
+            // "delete" = delete keystrokes
             if (!fileInfo) {
                 // initialize and add it
                 fileInfo = {
                     keys: 0,
+                    add: 0,
+                    netkeys: 0,
                     paste: 0,
                     open: 0,
                     close: 0,
