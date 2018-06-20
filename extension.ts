@@ -140,7 +140,7 @@ export class KeystrokeCount {
             // check if any of the metric values has data
             if (
                 fileInfoData &&
-                (fileInfoData.keys > 0 ||
+                (fileInfoData.add > 0 ||
                     fileInfoData.paste > 0 ||
                     fileInfoData.open > 0 ||
                     fileInfoData.close > 0 ||
