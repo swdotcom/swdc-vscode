@@ -96,7 +96,7 @@ export function activate(ctx: ExtensionContext) {
     statusBarItem.tooltip = "Click to see more from Software.com";
     statusBarItem.command = "extension.kpmClicked";
     statusBarItem.show();
-    showStatus("pulse", "Software.com", null);
+    showStatus("", "Software.com", null);
 
     setInterval(() => {
         fetchDailyKpmSessionInfo();
@@ -644,7 +644,7 @@ function downloadPM() {
     req.pipe(out);
     req.on("response", function(data) {
         if (data && data.statusCode === 200) {
-            showStatus("pulse", "Downloading Software Desktop", null);
+            showStatus("", "Downloading Software Desktop", null);
         } else {
             downloadingNow = false;
         }
@@ -663,13 +663,13 @@ function downloadPM() {
         downloadingNow = false;
 
         // show the final message in the status bar
-        showStatus("pulse", "Completed Software Desktop", null);
+        showStatus("", "Completed Software Desktop", null);
 
         // install the plugin manager
         open(pmBinary);
 
         setTimeout(() => {
-            showStatus("pulse", "Software.com", null);
+            showStatus("", "Software.com", null);
         }, 5000);
     });
 }
@@ -677,7 +677,7 @@ function downloadPM() {
 function showProgress(received, total) {
     const percent = Math.ceil(Math.max((received * 100) / total, 2));
     // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    showStatus("pulse", `Downloading Software Desktop: ${percent}%`, null);
+    showStatus("", `Downloading Software Desktop: ${percent}%`, null);
 }
 
 async function serverIsAvailable() {
@@ -691,6 +691,11 @@ async function serverIsAvailable() {
 async function isAuthenticated() {
     const tokenVal = getItem("token");
     if (!tokenVal) {
+        showStatus(
+            "alert",
+            "Software.com",
+            "To see your coding data in Software.com, please sign in to your account."
+        );
         return false;
     }
 
@@ -710,6 +715,14 @@ async function isAuthenticated() {
             }
             return false;
         });
+
+    if (!authenticated) {
+        showStatus(
+            "alert",
+            "Software.com",
+            "To see your coding data in Software.com, please sign in to your account."
+        );
+    }
 
     return authenticated;
 }
@@ -866,15 +879,13 @@ function chekUserAuthenticationStatus() {
                                 // update the .software data with the token we've just created
                                 setItem("token", tokenVal);
                                 launchWebUrl(
-                                    `${launch_url}/login?token=${tokenVal}`
+                                    `${launch_url}/onboarding?token=${tokenVal}`
                                 );
                             }
                             confirmWindowOpen = false;
                             confirmWindow = null;
                         });
                 }
-            } else if (!isAuthenticated) {
-                showStatus("alert", "Software.com", infoMsg);
             }
 
             if (!isAuthenticated && !existingJwt) {
@@ -997,14 +1008,14 @@ async function fetchDailyKpmSessionInfo() {
                     : avgKpm.toFixed(2);
             kpmInfo["sessionTime"] = sessionTime;
             if (avgKpm > 0 || totalMin > 0) {
-                let icon = avgKpm <= 0 || !inFlow ? "flame" : "rocket";
+                let icon = avgKpm <= 0 || !inFlow ? "" : "rocket";
                 showStatus(
                     icon,
                     `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`,
                     null
                 );
             } else {
-                showStatus("pulse", "Software.com", null);
+                showStatus("", "Software.com", null);
             }
         })
         .catch(err => {
@@ -1032,7 +1043,7 @@ function handleKpmClickedEvent() {
         const tokenVal = randomCode();
         // update the .software data with the token we've just created
         setItem("token", tokenVal);
-        webUrl = `${launch_url}/login?token=${tokenVal}`;
+        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
     }
     console.log("web url, existing token: ", webUrl, existingJwt);
 
@@ -1045,5 +1056,9 @@ function showStatus(icon, msg, tooltip) {
     } else {
         statusBarItem.tooltip = tooltip;
     }
-    statusBarItem.text = `$(${icon}) ${msg}`;
+    if (icon) {
+        statusBarItem.text = `$(${icon}) ${msg}`;
+    } else {
+        statusBarItem.text = `${msg}`;
+    }
 }
