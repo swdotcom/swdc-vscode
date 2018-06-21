@@ -905,7 +905,7 @@ function chekUserAuthenticationStatus() {
             if (!isAuthenticated && !existingJwt) {
                 setTimeout(() => {
                     checkTokenAvailability();
-                }, 1000 * 30);
+                }, 1000 * 60);
             }
         }
     );
@@ -941,6 +941,10 @@ function randomCode() {
 
 function checkTokenAvailability() {
     const tokenVal = getItem("token");
+    
+    if (!tokenVal) {
+        return;
+    }
 
     // ned to get back...
     // response.data.user, response.data.jwt
@@ -962,7 +966,7 @@ function checkTokenAvailability() {
             // try again in 1 minute
             setTimeout(() => {
                 checkTokenAvailability();
-            }, 1000 * 60);
+            }, 1000 * 120);
         });
 }
 
