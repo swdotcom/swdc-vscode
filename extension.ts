@@ -87,14 +87,9 @@ export function activate(ctx: ExtensionContext) {
     const controller = new KeystrokeCountController();
     ctx.subscriptions.push(controller);
 
-    var disposable = commands.registerCommand("extension.kpmClicked", () => {
-        handleKpmClickedEvent();
-    });
-    ctx.subscriptions.push(disposable);
-
     statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
     statusBarItem.tooltip = "Click to see more from Software.com";
-    statusBarItem.command = "extension.kpmClicked";
+    statusBarItem.command = "extension.kpmDashboard";
     statusBarItem.show();
     showStatus("", "Software.com", null);
 
@@ -109,6 +104,12 @@ export function activate(ctx: ExtensionContext) {
         fetchDailyKpmSessionInfo();
         sendOfflineData();
     }, 5000);
+
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.kpmDashboard", () => {
+            handleKpmClickedEvent();
+        })
+    );
 }
 
 export class KeystrokeCount {
@@ -941,7 +942,7 @@ function randomCode() {
 
 function checkTokenAvailability() {
     const tokenVal = getItem("token");
-    
+
     if (!tokenVal) {
         return;
     }
@@ -1063,7 +1064,6 @@ function handleKpmClickedEvent() {
         setItem("token", tokenVal);
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
     }
-    console.log("web url, existing token: ", webUrl, existingJwt);
 
     launchWebUrl(webUrl);
 }

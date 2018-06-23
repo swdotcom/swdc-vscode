@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Software.com",
-    "version": "0.3.14",
+    "version": "0.3.15",
     "publisher": "softwaredotcom",
     "description": "Software.com VS Code - It's Code Time",
     "author": {
@@ -35,8 +35,9 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.kpmClicked",
-                "title": "Software.com KPM Information"
+                "command": "extension.kpmDashboard",
+                "title": "Software.com KPM Information",
+                "category": "KPM"
             }
         ]
     },
