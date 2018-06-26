@@ -7,9 +7,7 @@ import {
     workspace,
     Disposable,
     ExtensionContext,
-    TextDocument,
     StatusBarAlignment,
-    ViewColumn,
     Selection,
     commands,
     extensions
@@ -33,7 +31,7 @@ const crypto = require("crypto");
 type Project = { directory: String; name?: String };
 
 const NOT_NOW_LABEL = "Not now";
-const LOGIN_LABEL = "Sign in";
+const LOGIN_LABEL = "Log in";
 const NO_NAME_FILE = "Untitled";
 const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
@@ -44,9 +42,6 @@ const pmApi = axios.create({
     baseURL: `${PM_URL}/api/v1/`
 });
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-const TEST_API_ENDPOINT = "http://localhost:5000";
-const TEST_URL = "http://localhost:3000";
 
 const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
@@ -709,7 +704,7 @@ async function isAuthenticated() {
         showStatus(
             "alert",
             "Software.com",
-            "To see your coding data in Software.com, please sign in to your account."
+            "To see your coding data in Software.com, please log in to your account."
         );
         return false;
     }
@@ -735,7 +730,7 @@ async function isAuthenticated() {
         showStatus(
             "alert",
             "Software.com",
-            "To see your coding data in Software.com, please sign in to your account."
+            "To see your coding data in Software.com, please log in to your account."
         );
     }
 
@@ -867,7 +862,7 @@ function chekUserAuthenticationStatus() {
             // and it's past the threshold time and the confirm window is null
             //
             let infoMsg =
-                "To see your coding data in Software.com, please sign in to your account.";
+                "To see your coding data in Software.com, please log in to your account.";
 
             if (
                 serverAvailable &&
