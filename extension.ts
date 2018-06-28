@@ -47,9 +47,9 @@ const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
 
 // set the api endpoint to use
-const api_endpoint = PROD_API_ENDPOINT;
+const api_endpoint = "http://localhost:5000";
 // set the launch url to use
-const launch_url = PROD_URL;
+const launch_url = "http://localhost:3000";
 
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
@@ -718,7 +718,7 @@ async function isAuthenticated() {
             return true;
         })
         .catch(() => {
-            console.log("Software.com: The user is not signed in");
+            console.log("Software.com: The user is not logged in");
             const existingJwt = getItem("jwt");
             if (existingJwt) {
                 setItem("jwt", null);
