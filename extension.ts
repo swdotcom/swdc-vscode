@@ -45,6 +45,8 @@ const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://alpha.software.com";
+const LOCAL_API_ENDPOINT = "http://localhost:5000";
+const LOCAL_URL = "http://localhost:3000";
 
 // set the api endpoint to use
 const api_endpoint = PROD_API_ENDPOINT;
@@ -885,9 +887,13 @@ function chekUserAuthenticationStatus() {
                         )
                         .then(selection => {
                             if (selection === LOGIN_LABEL) {
-                                const tokenVal = randomCode();
-                                // update the .software data with the token we've just created
-                                setItem("token", tokenVal);
+                                let tokenVal = getItem("token");
+                                if (!tokenVal) {
+                                    tokenVal = randomCode();
+
+                                    // update the .software data with the token we've just created
+                                    setItem("token", tokenVal);
+                                }
                                 launchWebUrl(
                                     `${launch_url}/onboarding?token=${tokenVal}`
                                 );
@@ -1054,9 +1060,13 @@ function handleKpmClickedEvent() {
 
     let webUrl = launch_url;
     if (!existingJwt) {
-        const tokenVal = randomCode();
-        // update the .software data with the token we've just created
-        setItem("token", tokenVal);
+        let tokenVal = getItem("token");
+        if (!tokenVal) {
+            tokenVal = randomCode();
+
+            // update the .software data with the token we've just created
+            setItem("token", tokenVal);
+        }
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
     }
 
