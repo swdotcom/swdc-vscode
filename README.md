@@ -8,6 +8,8 @@
 
 *Software* is installed and uninstalled via the VS Code marketplace.
 
+<!--- Begin: setup --->
+
 ### Install
 
 1. Navigate to **View** > **Extensions**
@@ -24,6 +26,8 @@
 2. Search for **"Software.com"**
 3. Click on **Settings** 
 4. **Uninstall** *Software*
+
+<!--- End: setup --->
 
 ## Privacy
 
