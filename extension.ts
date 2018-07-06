@@ -44,7 +44,7 @@ const pmApi = axios.create({
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 const PROD_API_ENDPOINT = "https://api.software.com";
-const PROD_URL = "https://alpha.software.com";
+const PROD_URL = "https://app.software.com";
 const LOCAL_API_ENDPOINT = "http://localhost:5000";
 const LOCAL_URL = "http://localhost:3000";
 
