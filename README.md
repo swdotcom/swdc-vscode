@@ -18,7 +18,7 @@
 4. **Restart** Visual Studio Code
 5. **Authenticate** your account by clicking the IDE prompt (only required for the first plugin you install)
 
-![Install](https://user-images.githubusercontent.com/27828739/42613369-6ce10bf0-8555-11e8-9017-6282c3d40005.gif)
+![Install](https://user-images.githubusercontent.com/27828739/42645871-03ea0660-85b4-11e8-98c8-cade773d91c5.gif)
 
 ### Uninstall
 
