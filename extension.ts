@@ -833,11 +833,6 @@ function launchWebUrl(url) {
 }
 
 async function fetchDailyKpmSessionInfo() {
-    if (await !isAuthenticated()) {
-        console.log("Software.com: not authenticated, trying again later");
-        return;
-    }
-
     const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
