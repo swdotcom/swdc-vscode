@@ -8,7 +8,6 @@ import {
     Disposable,
     ExtensionContext,
     StatusBarAlignment,
-    Selection,
     commands,
     extensions
 } from "vscode";
@@ -17,12 +16,8 @@ import {
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
     EPROTONOSUPPORT
 } from "constants";
-import { settings } from "cluster";
 
-const request = require("request");
 const fs = require("fs");
-const readline = require("readline");
-const open = require("open");
 const os = require("os");
 const cp = require("child_process");
 const crypto = require("crypto");
@@ -33,20 +28,16 @@ type Project = { directory: String; name?: String };
 const NOT_NOW_LABEL = "Not now";
 const LOGIN_LABEL = "Log in";
 const NO_NAME_FILE = "Untitled";
-const PM_URL = "http://localhost:19234";
 const DEFAULT_DURATION = 60;
 const MILLIS_PER_HOUR = 1000 * 60 * 60;
+const MILLIS_PER_MINUTE = 1000 * 60;
 const LONG_THRESHOLD_HOURS = 12;
 const SHORT_THRESHOLD_HOURS = 1;
-const pmApi = axios.create({
-    baseURL: `${PM_URL}/api/v1/`
-});
+
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 const PROD_API_ENDPOINT = "https://api.software.com";
 const PROD_URL = "https://app.software.com";
-const LOCAL_API_ENDPOINT = "http://localhost:5000";
-const LOCAL_URL = "http://localhost:3000";
 
 // set the api endpoint to use
 const api_endpoint = PROD_API_ENDPOINT;
@@ -57,13 +48,10 @@ const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
 
-const pmBucket = "https://s3-us-west-1.amazonaws.com/swdc-plugin-manager/";
-
-let pmName = "software";
-let downloadingNow = false;
 let statusBarItem = null;
 let confirmWindow = null;
 let confirmWindowOpen = false;
+let lastAuthenticationCheckTime = -1;
 
 // Available to the KeystrokeCount and the KeystrokeCountController
 let activeKeystrokeCountMap = {};
@@ -84,12 +72,19 @@ export function activate(ctx: ExtensionContext) {
     const controller = new KeystrokeCountController();
     ctx.subscriptions.push(controller);
 
-    statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
-    statusBarItem.tooltip = "Click to see more from Software.com";
-    statusBarItem.command = "extension.kpmDashboard";
-    statusBarItem.show();
-    showStatus("", "Software.com", null);
+    setTimeout(() => {
+        statusBarItem = window.createStatusBarItem(
+            StatusBarAlignment.Right,
+            10
+        );
+        statusBarItem.tooltip = "Click to see more from Software.com";
+        statusBarItem.command = "extension.kpmDashboard";
+        statusBarItem.show();
 
+        showStatus("", "Software.com", null);
+    }, 100);
+
+    // 1 minute interval to fetch daily kpm info
     setInterval(() => {
         fetchDailyKpmSessionInfo();
     }, 1000 * 60);
@@ -97,8 +92,6 @@ export function activate(ctx: ExtensionContext) {
     // send any offline data
     setTimeout(() => {
         // check if the user is authenticated with what is saved in the software config
-        chekUserAuthenticationStatus();
-        fetchDailyKpmSessionInfo();
         sendOfflineData();
     }, 5000);
 
@@ -471,38 +464,6 @@ function findFileInfoInSource(source, filenameToMatch) {
     return null;
 }
 
-/**
- * mac: /Applications/Software.app/Contents/Info.plist
- * example info
- * Bundle version: 0.5.6-staging.2750
- * Bundle version string, short: 0.5.6-staging
- * Bundle display name: Software
- *
- * win: C:\Users\<username>\AppData\Local\Programs\software-plugin-manager\Software.exe
- *
- * Find all files recursively in specific folder with specific extension, e.g:
- * findFilesInDir('./project/src', '.html') ==> ['./project/src/a.html','./project/src/build/index.html']
- * @param  {String} startPath    Path relative to this file or other file which requires this files
- * @param  {String} filter       Extension name, e.g: '.html'
- * @return {Array}               Result files with path string in an array
- */
-function getPluginManagerAppFile() {
-    const startPath = getInstallDir();
-    const dirFiles = fs.readdirSync(startPath);
-
-    for (let i in dirFiles) {
-        const file = dirFiles[i];
-        if (file.toLowerCase().indexOf("software") === 0) {
-            return file;
-        }
-    }
-
-    console.log(
-        `Software.com: Unable to locate Software Desktop within ${startPath}`
-    );
-    return null;
-}
-
 // process.platform return the following...
 //   -> 'darwin', 'freebsd', 'linux', 'sunos' or 'win32'
 function isWindows() {
@@ -511,56 +472,6 @@ function isWindows() {
 
 function isMac() {
     return process.platform.indexOf("darwin") !== -1;
-}
-
-async function getLatestPmName() {
-    const ymlUrl = pmBucket + "latest.yml";
-    const ymlFile = os.homedir() + "/latest.yml";
-
-    let options = { url: ymlUrl };
-    let req = request.get(options);
-    let out = fs.createWriteStream(ymlFile);
-
-    req.pipe(out);
-
-    /**
-     * example content:
-     *  version: 0.5.5
-        files:
-        - url: software-plugin-manager-0.5.5.exe
-            sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
-            size: 39836352
-        path: software-plugin-manager-0.5.5.exe
-        sha512: Zo8SfVtfuXST0y/IhfQORU2knk2qwX+2hC3OHnlDLzbiblae1YJO0zPjOq5aXdLPM/fK9PgrVT0FDe3izSupJw==
-        sha2: 9fad7b5634c38203a74d89b02e7e52c2bc1f723297d511c4532072279334a0aa
-        releaseDate: '2018-04-12T17:00:54.727Z'
-     */
-    req.on("end", function() {
-        // read file
-        fs.readFile(ymlFile, (err, data) => {
-            if (err) throw err;
-            let content = data.toString();
-            content = content.split("\n");
-
-            // get the path name, sans the extension
-            let nameSansExt = content
-                .find(s => s.includes("path:"))
-                .replace(/\s+/g, "")
-                .split("path:")[1]
-                .split(".exe")[0];
-
-            if (nameSansExt) {
-                pmName = nameSansExt;
-            }
-        });
-
-        // delete file
-        fs.unlink(ymlFile, function(error) {
-            if (error) {
-                throw error;
-            }
-        });
-    });
 }
 
 function getSoftwareDir() {
@@ -599,20 +510,6 @@ function getSoftwareDataStoreFile() {
     return file;
 }
 
-function getInstallDir() {
-    // first check if the pm has been installed or not
-    const homedir = os.homedir();
-    let installDir;
-    if (isMac()) {
-        installDir = "/Applications";
-    } else if (isWindows()) {
-        installDir = os.homedir() + "\\AppData\\Local\\Programs";
-    } else {
-        installDir = "/usr/lib/";
-    }
-    return installDir;
-}
-
 function getPmExtension() {
     let pmExtension = ".dmg";
     if (isWindows()) {
@@ -622,74 +519,6 @@ function getPmExtension() {
     }
 
     return pmExtension;
-}
-
-function getPmBinaryTarget() {
-    let homedir = os.homedir();
-
-    if (isMac()) {
-        homedir += "/Desktop/";
-    } else if (isWindows()) {
-        homedir += "\\Desktop\\";
-    } else if (!isMac()) {
-        homedir += "/Desktop/";
-    }
-
-    let pmBinary = homedir + pmName + getPmExtension();
-
-    return pmBinary;
-}
-
-function downloadPM() {
-    downloadingNow = true;
-
-    let pmBinary = getPmBinaryTarget();
-    let file_url = pmBucket + pmName + getPmExtension();
-
-    // Save variable to know progress
-    var received_bytes = 0;
-    var total_bytes = 0;
-    let options = { url: file_url };
-    let req = request.get(options);
-    let out = fs.createWriteStream(pmBinary);
-
-    req.pipe(out);
-    req.on("response", function(data) {
-        if (data && data.statusCode === 200) {
-            showStatus("", "Downloading Software Desktop", null);
-        } else {
-            downloadingNow = false;
-        }
-
-        // Change the total bytes value to get progress later.
-        total_bytes = parseInt(data.headers["content-length"]);
-    });
-
-    req.on("data", function(chunk) {
-        // Update the received bytes
-        received_bytes += chunk.length;
-        showProgress(received_bytes, total_bytes);
-    });
-
-    req.on("end", function() {
-        downloadingNow = false;
-
-        // show the final message in the status bar
-        showStatus("", "Completed Software Desktop", null);
-
-        // install the plugin manager
-        open(pmBinary);
-
-        setTimeout(() => {
-            showStatus("", "Software.com", null);
-        }, 5000);
-    });
-}
-
-function showProgress(received, total) {
-    const percent = Math.ceil(Math.max((received * 100) / total, 2));
-    // let message = `Downloaded ${percent}% | ${received} bytes out of ${total} bytes`;
-    showStatus("", `Downloading Software Desktop: ${percent}%`, null);
 }
 
 async function serverIsAvailable() {
@@ -850,6 +679,16 @@ function deleteFile(file) {
 }
 
 function chekUserAuthenticationStatus() {
+    let nowMillis = Date.now();
+    if (
+        lastAuthenticationCheckTime !== -1 &&
+        nowMillis - lastAuthenticationCheckTime < MILLIS_PER_MINUTE * 5
+    ) {
+        // it's less than 5 minutes, wait until the threshold has passed until we try again
+        return;
+    }
+    lastAuthenticationCheckTime = nowMillis;
+
     const serverAvailablePromise = serverIsAvailable();
     const isAuthenticatedPromise = isAuthenticated();
     const pastThresholdTime = isPastTimeThreshold();
@@ -1045,13 +884,6 @@ async function fetchDailyKpmSessionInfo() {
             );
             chekUserAuthenticationStatus();
         });
-}
-
-function getSelectedKpm() {
-    if (kpmInfo["kpmAvg"]) {
-        return `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`;
-    }
-    return "";
 }
 
 function handleKpmClickedEvent() {
