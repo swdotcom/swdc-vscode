@@ -950,10 +950,12 @@ function humanizeMinutes(min) {
 
 function handlePauseMetricsEvent() {
     TELEMETRY_ON = false;
+    showStatus("Paused", "Enable metrics to resume");
 }
 
 function handleEnableMetricsEvent() {
     TELEMETRY_ON = true;
+    showStatus("Software.com", null);
 }
 
 function handleKpmClickedEvent() {
