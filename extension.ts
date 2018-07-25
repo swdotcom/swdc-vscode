@@ -890,13 +890,13 @@ async function fetchDailyKpmSessionInfo() {
             let sessionTimeIcon = "";
             if (sessionMinGoalPercent > 0) {
                 if (sessionMinGoalPercent < 0.45) {
-                    sessionTimeIcon = "arrow-small-down";
+                    sessionTimeIcon = '❍';
                 } else if (sessionMinGoalPercent < 0.7) {
-                    sessionTimeIcon = "octicon-arrow-small-up";
+                    sessionTimeIcon = '◒';
                 } else if (sessionMinGoalPercent < 0.95) {
-                    sessionTimeIcon = "arrow-up";
+                    sessionTimeIcon = '◍';
                 } else {
-                    sessionTimeIcon = "primitive-dot";
+                    sessionTimeIcon = '●';
                 }
             }
             // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
@@ -911,13 +911,11 @@ async function fetchDailyKpmSessionInfo() {
 
                 // if inFlow then show the rocket
                 if (inFlow) {
-                    kpmMsg = `$(${"rocket"}) ${kpmInfo["kpmAvg"]} KPM`;
+                    kpmMsg = '🚀' + " " + kpmMsg;
                 }
                 // if we have session avg percent info, show the icon that corresponds
                 if (sessionTimeIcon) {
-                    sessionMsg = `$(${sessionTimeIcon}) ${
-                        kpmInfo["sessionTime"]
-                    }`;
+                    sessionMsg = sessionTimeIcon +  " " + sessionMsg;
                 }
 
                 let fullMsg = kpmMsg + ", " + sessionMsg;
