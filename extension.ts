@@ -91,11 +91,19 @@ export function activate(ctx: ExtensionContext) {
         fetchDailyKpmSessionInfo();
     }, 1000 * 60);
 
-    // send any offline data
+    // initiate kpm fetch
+    fetchDailyKpmSessionInfo();
+
     setTimeout(() => {
         // check if the user is authenticated with what is saved in the software config
-        sendOfflineData();
+        chekUserAuthenticationStatus();
     }, 5000);
+
+    // send any offline data
+    setTimeout(() => {
+        // send any offline data
+        sendOfflineData();
+    }, 10000);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -856,6 +864,7 @@ async function fetchDailyKpmSessionInfo() {
         // telemetry is paused
         return;
     }
+    console.log("fetching kpm session info");
     const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
@@ -868,19 +877,16 @@ async function fetchDailyKpmSessionInfo() {
                     : true;
             let avgKpm = sessions.kpm ? parseInt(sessions.kpm, 10) : 0;
             let totalMin = sessions.minutesTotal;
-            let sessionTime = "";
+            let sessionMinAvg = sessions.sessionMinAvg
+                ? parseInt(sessions.sessionMinAvg, 10)
+                : 0;
+
+            let sessionTime = humanizeMinutes(totalMin);
+
             let sessionMinGoalPercent = sessions.sessionMinGoalPercent
                 ? parseFloat(sessions.sessionMinGoalPercent)
                 : 0;
-            if (totalMin === 60) {
-                sessionTime = "1 hr";
-            } else if (totalMin > 60) {
-                sessionTime = (totalMin / 60).toFixed(2) + " hrs";
-            } else if (totalMin === 1) {
-                sessionTime = "1 min";
-            } else {
-                sessionTime = totalMin.toFixed(0) + " min";
-            }
+
             let sessionTimeIcon = "";
             if (sessionMinGoalPercent > 0) {
                 if (sessionMinGoalPercent < 0.45) {
@@ -902,6 +908,7 @@ async function fetchDailyKpmSessionInfo() {
             if (avgKpm > 0 || totalMin > 0) {
                 let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
                 let sessionMsg = `${kpmInfo["sessionTime"]}`;
+
                 // if inFlow then show the rocket
                 if (inFlow) {
                     kpmMsg = `$(${"rocket"}) ${kpmInfo["kpmAvg"]} KPM`;
@@ -925,6 +932,22 @@ async function fetchDailyKpmSessionInfo() {
                 err.message
             );
         });
+}
+
+function humanizeMinutes(min) {
+    min = parseInt(min, 0) || 0;
+    let str = "";
+    if (min === 60) {
+        str = "1 hr";
+    } else if (min > 60) {
+        str = (min / 60).toFixed(2) + " hrs";
+    } else if (min === 1) {
+        str = "1 min";
+    } else {
+        // less than 60 seconds
+        str = min.toFixed(0) + " min";
+    }
+    return str;
 }
 
 function handlePauseMetricsEvent() {
