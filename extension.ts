@@ -44,6 +44,8 @@ const api_endpoint = PROD_API_ENDPOINT;
 // set the launch url to use
 const launch_url = PROD_URL;
 
+let TELEMETRY_ON = true;
+
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
@@ -78,10 +80,10 @@ export function activate(ctx: ExtensionContext) {
             10
         );
         statusBarItem.tooltip = "Click to see more from Software.com";
-        statusBarItem.command = "extension.kpmDashboard";
+        statusBarItem.command = "extension.softwareKpmDashboard";
         statusBarItem.show();
 
-        showStatus("", "Software.com", null);
+        showStatus("Software.com", null);
     }, 100);
 
     // 1 minute interval to fetch daily kpm info
@@ -96,8 +98,18 @@ export function activate(ctx: ExtensionContext) {
     }, 5000);
 
     ctx.subscriptions.push(
-        commands.registerCommand("extension.kpmDashboard", () => {
+        commands.registerCommand("extension.softwareKpmDashboard", () => {
             handleKpmClickedEvent();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.pauseSoftwareMetrics", () => {
+            handlePauseMetricsEvent();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.enableSoftwareMetrics", () => {
+            handleEnableMetricsEvent();
         })
     );
 }
@@ -143,7 +155,7 @@ export class KeystrokeCount {
         return false;
     }
 
-    postToPM() {
+    postData() {
         const payload = JSON.parse(JSON.stringify(this));
         payload.data = String(payload.data);
 
@@ -160,6 +172,14 @@ export class KeystrokeCount {
         // Null out the project if the project's name is 'null'
         if (projectName === "null") {
             payload.project = null;
+        }
+
+        if (!TELEMETRY_ON) {
+            storePayload(payload);
+            console.log(
+                "Software metrics are currently paused. Enable metrics to view your KPM info."
+            );
+            return;
         }
 
         sendOfflineData();
@@ -180,8 +200,8 @@ export class KeystrokeCount {
                     "Software.com: Error sending data, saving kpm info offline"
                 );
                 storePayload(payload);
-                chekUserAuthenticationStatus();
                 delete activeKeystrokeCountMap[projectName];
+                chekUserAuthenticationStatus();
             });
     }
 }
@@ -218,7 +238,7 @@ class KeystrokeCountController {
                 const hasData = keystrokeCount.hasData();
                 if (hasData) {
                     // send the payload
-                    setTimeout(() => keystrokeCount.postToPM(), 0);
+                    setTimeout(() => keystrokeCount.postData(), 0);
                 } else {
                     // remove it
                     delete activeKeystrokeCountMap[key];
@@ -530,11 +550,15 @@ async function serverIsAvailable() {
  * { user: user, jwt: jwt }
  */
 async function isAuthenticated() {
+    if (!TELEMETRY_ON) {
+        return true;
+    }
+
     const tokenVal = getItem("token");
     if (!tokenVal) {
+        let fullMsg = `$(${"alert"}) ${"Software.com"}`;
         showStatus(
-            "alert",
-            "Software.com",
+            fullMsg,
             "To see your coding data in Software.com, please log in to your account."
         );
         return false;
@@ -558,9 +582,9 @@ async function isAuthenticated() {
         });
 
     if (!authenticated) {
+        let fullMsg = `$(${"alert"}) ${"Software.com"}`;
         showStatus(
-            "alert",
-            "Software.com",
+            fullMsg,
             "To see your coding data in Software.com, please log in to your account."
         );
     }
@@ -569,6 +593,9 @@ async function isAuthenticated() {
 }
 
 async function checkOnline() {
+    if (!TELEMETRY_ON) {
+        return true;
+    }
     // non-authenticated ping, no need to set the Authorization header
     const isOnline = await beApi
         .get("/ping")
@@ -597,6 +624,9 @@ function storePayload(payload) {
 }
 
 function sendOfflineData() {
+    if (!TELEMETRY_ON) {
+        return;
+    }
     const dataStoreFile = getSoftwareDataStoreFile();
     if (fs.existsSync(dataStoreFile)) {
         const content = fs.readFileSync(dataStoreFile).toString();
@@ -682,9 +712,9 @@ function chekUserAuthenticationStatus() {
     let nowMillis = Date.now();
     if (
         lastAuthenticationCheckTime !== -1 &&
-        nowMillis - lastAuthenticationCheckTime < MILLIS_PER_MINUTE * 5
+        nowMillis - lastAuthenticationCheckTime < MILLIS_PER_MINUTE * 3
     ) {
-        // it's less than 5 minutes, wait until the threshold has passed until we try again
+        // it's less than 3 minutes, wait until the threshold has passed until we try again
         return;
     }
     lastAuthenticationCheckTime = nowMillis;
@@ -716,7 +746,8 @@ function chekUserAuthenticationStatus() {
 
                 if (existingJwt) {
                     // continue to show the status bar
-                    showStatus("alert", "Software.com", infoMsg);
+                    let fullMsg = `$(${"alert"}) ${"Software.com"}`;
+                    showStatus(fullMsg, infoMsg);
                 } else {
                     confirmWindowOpen = true;
                     confirmWindow = window
@@ -726,27 +757,12 @@ function chekUserAuthenticationStatus() {
                         )
                         .then(selection => {
                             if (selection === LOGIN_LABEL) {
-                                let tokenVal = getItem("token");
-                                if (!tokenVal) {
-                                    tokenVal = randomCode();
-
-                                    // update the .software data with the token we've just created
-                                    setItem("token", tokenVal);
-                                }
-                                launchWebUrl(
-                                    `${launch_url}/onboarding?token=${tokenVal}`
-                                );
+                                handleKpmClickedEvent();
                             }
                             confirmWindowOpen = false;
                             confirmWindow = null;
                         });
                 }
-            }
-
-            if (!isAuthenticated && !existingJwt) {
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 1000 * 60);
             }
         }
     );
@@ -781,13 +797,16 @@ function randomCode() {
 }
 
 function checkTokenAvailability() {
+    if (!TELEMETRY_ON) {
+        return;
+    }
     const tokenVal = getItem("token");
 
     if (!tokenVal) {
         return;
     }
 
-    // ned to get back...
+    // need to get back...
     // response.data.user, response.data.jwt
     // non-authorization API
     beApi
@@ -804,7 +823,7 @@ function checkTokenAvailability() {
                 "Software.com: unable to obtain session token: ",
                 err.message
             );
-            // try again in 1 minute
+            // try again in 2 minutes
             setTimeout(() => {
                 checkTokenAvailability();
             }, 1000 * 120);
@@ -833,6 +852,10 @@ function launchWebUrl(url) {
 }
 
 async function fetchDailyKpmSessionInfo() {
+    if (!TELEMETRY_ON) {
+        // telemetry is paused
+        return;
+    }
     const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
@@ -846,6 +869,9 @@ async function fetchDailyKpmSessionInfo() {
             let avgKpm = sessions.kpm ? parseInt(sessions.kpm, 10) : 0;
             let totalMin = sessions.minutesTotal;
             let sessionTime = "";
+            let sessionMinGoalPercent = sessions.sessionMinGoalPercent
+                ? parseFloat(sessions.sessionMinGoalPercent)
+                : 0;
             if (totalMin === 60) {
                 sessionTime = "1 hr";
             } else if (totalMin > 60) {
@@ -855,6 +881,18 @@ async function fetchDailyKpmSessionInfo() {
             } else {
                 sessionTime = totalMin.toFixed(0) + " min";
             }
+            let sessionTimeIcon = "";
+            if (sessionMinGoalPercent > 0) {
+                if (sessionMinGoalPercent < 0.45) {
+                    sessionTimeIcon = "arrow-small-down";
+                } else if (sessionMinGoalPercent < 0.7) {
+                    sessionTimeIcon = "octicon-arrow-small-up";
+                } else if (sessionMinGoalPercent < 0.95) {
+                    sessionTimeIcon = "arrow-up";
+                } else {
+                    sessionTimeIcon = "primitive-dot";
+                }
+            }
             // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
             kpmInfo["kpmAvg"] =
                 avgKpm > 0 || avgKpm === 0
@@ -862,14 +900,23 @@ async function fetchDailyKpmSessionInfo() {
                     : avgKpm.toFixed(2);
             kpmInfo["sessionTime"] = sessionTime;
             if (avgKpm > 0 || totalMin > 0) {
-                let icon = avgKpm <= 0 || !inFlow ? "" : "rocket";
-                showStatus(
-                    icon,
-                    `${kpmInfo["kpmAvg"]} KPM, ${kpmInfo["sessionTime"]}`,
-                    null
-                );
+                let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
+                let sessionMsg = `${kpmInfo["sessionTime"]}`;
+                // if inFlow then show the rocket
+                if (inFlow) {
+                    kpmMsg = `$(${"rocket"}) ${kpmInfo["kpmAvg"]} KPM`;
+                }
+                // if we have session avg percent info, show the icon that corresponds
+                if (sessionTimeIcon) {
+                    sessionMsg = `$(${sessionTimeIcon}) ${
+                        kpmInfo["sessionTime"]
+                    }`;
+                }
+
+                let fullMsg = kpmMsg + ", " + sessionMsg;
+                showStatus(fullMsg, null);
             } else {
-                showStatus("", "Software.com", null);
+                showStatus("Software.com", null);
             }
         })
         .catch(err => {
@@ -877,38 +924,52 @@ async function fetchDailyKpmSessionInfo() {
                 "Software.com: error getting session information: ",
                 err.message
             );
-            chekUserAuthenticationStatus();
         });
+}
+
+function handlePauseMetricsEvent() {
+    TELEMETRY_ON = false;
+}
+
+function handleEnableMetricsEvent() {
+    TELEMETRY_ON = true;
 }
 
 function handleKpmClickedEvent() {
     // check if we've successfully logged in as this user yet
     const existingJwt = getItem("jwt");
+    let tokenVal = getItem("token");
 
     let webUrl = launch_url;
-    if (!existingJwt) {
-        let tokenVal = getItem("token");
-        if (!tokenVal) {
-            tokenVal = randomCode();
 
-            // update the .software data with the token we've just created
-            setItem("token", tokenVal);
-        }
+    let addedToken = false;
+
+    if (!tokenVal) {
+        tokenVal = randomCode();
+        addedToken = true;
+        setItem("token", tokenVal);
+    } else if (!existingJwt) {
+        addedToken = true;
+    }
+
+    // add the token to the launch url
+    if (addedToken) {
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+
+        // check for the jwt in a minute
+        setTimeout(() => {
+            checkTokenAvailability();
+        }, 1000 * 60);
     }
 
     launchWebUrl(webUrl);
 }
 
-function showStatus(icon, msg, tooltip) {
+function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         statusBarItem.tooltip = "Click to see more from Software.com";
     } else {
         statusBarItem.tooltip = tooltip;
     }
-    if (icon) {
-        statusBarItem.text = `$(${icon}) ${msg}`;
-    } else {
-        statusBarItem.text = `${msg}`;
-    }
+    statusBarItem.text = `${fullMsg}`;
 }
