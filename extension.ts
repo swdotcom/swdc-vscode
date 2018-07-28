@@ -36,13 +36,10 @@ const SHORT_THRESHOLD_HOURS = 1;
 
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-const PROD_API_ENDPOINT = "https://api.software.com";
-const PROD_URL = "https://app.software.com";
-
 // set the api endpoint to use
-const api_endpoint = PROD_API_ENDPOINT;
+const api_endpoint = "https://api.software.com";
 // set the launch url to use
-const launch_url = PROD_URL;
+const launch_url = "https://app.software.com";
 
 let TELEMETRY_ON = true;
 
@@ -564,11 +561,7 @@ async function isAuthenticated() {
 
     const tokenVal = getItem("token");
     if (!tokenVal) {
-        let fullMsg = `$(${"alert"}) ${"Software.com"}`;
-        showStatus(
-            fullMsg,
-            "To see your coding data in Software.com, please log in to your account."
-        );
+        this.showErrorStatus();
         return false;
     }
 
@@ -580,24 +573,25 @@ async function isAuthenticated() {
         .then(() => {
             return true;
         })
-        .catch(() => {
+        .catch(async () => {
             console.log("Software.com: The user is not logged in");
-            const existingJwt = getItem("jwt");
-            if (existingJwt) {
-                setItem("jwt", null);
-            }
+            showErrorStatus();
             return false;
         });
 
     if (!authenticated) {
-        let fullMsg = `$(${"alert"}) ${"Software.com"}`;
-        showStatus(
-            fullMsg,
-            "To see your coding data in Software.com, please log in to your account."
-        );
+        this.showErrorStatus();
     }
 
     return authenticated;
+}
+
+function showErrorStatus() {
+    let fullMsg = `$(${"alert"}) ${"Software.com"}`;
+    showStatus(
+        fullMsg,
+        "To see your coding data in Software.com, please log in to your account."
+    );
 }
 
 async function checkOnline() {
@@ -754,8 +748,7 @@ function chekUserAuthenticationStatus() {
 
                 if (existingJwt) {
                     // continue to show the status bar
-                    let fullMsg = `$(${"alert"}) ${"Software.com"}`;
-                    showStatus(fullMsg, infoMsg);
+                    this.showErrorStatus();
                 } else {
                     confirmWindowOpen = true;
                     confirmWindow = window
@@ -890,13 +883,13 @@ async function fetchDailyKpmSessionInfo() {
             let sessionTimeIcon = "";
             if (sessionMinGoalPercent > 0) {
                 if (sessionMinGoalPercent < 0.45) {
-                    sessionTimeIcon = '❍';
+                    sessionTimeIcon = "❍";
                 } else if (sessionMinGoalPercent < 0.7) {
-                    sessionTimeIcon = '◒';
+                    sessionTimeIcon = "◒";
                 } else if (sessionMinGoalPercent < 0.95) {
-                    sessionTimeIcon = '◍';
+                    sessionTimeIcon = "◍";
                 } else {
-                    sessionTimeIcon = '●';
+                    sessionTimeIcon = "●";
                 }
             }
             // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
@@ -911,11 +904,11 @@ async function fetchDailyKpmSessionInfo() {
 
                 // if inFlow then show the rocket
                 if (inFlow) {
-                    kpmMsg = '🚀' + " " + kpmMsg;
+                    kpmMsg = "🚀" + " " + kpmMsg;
                 }
                 // if we have session avg percent info, show the icon that corresponds
                 if (sessionTimeIcon) {
-                    sessionMsg = sessionTimeIcon +  " " + sessionMsg;
+                    sessionMsg = sessionTimeIcon + " " + sessionMsg;
                 }
 
                 let fullMsg = kpmMsg + ", " + sessionMsg;
@@ -958,7 +951,7 @@ function handleEnableMetricsEvent() {
     showStatus("Software.com", null);
 }
 
-function handleKpmClickedEvent() {
+async function handleKpmClickedEvent() {
     // check if we've successfully logged in as this user yet
     const existingJwt = getItem("jwt");
     let tokenVal = getItem("token");
@@ -972,6 +965,8 @@ function handleKpmClickedEvent() {
         addedToken = true;
         setItem("token", tokenVal);
     } else if (!existingJwt) {
+        addedToken = true;
+    } else if (!(await isAuthenticated())) {
         addedToken = true;
     }
 
