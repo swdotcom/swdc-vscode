@@ -83,6 +83,8 @@ export function activate(ctx: ExtensionContext) {
         showStatus("Software.com", null);
     }, 100);
 
+    // getSoftwareDir();
+
     // 1 minute interval to fetch daily kpm info
     setInterval(() => {
         fetchDailyKpmSessionInfo();
@@ -509,7 +511,7 @@ function getSoftwareDir() {
     }
 
     if (!fs.existsSync(softwareDataDir)) {
-        fs.mkdirSync(softwareDataDir).toString();
+        fs.mkdirSync(softwareDataDir);
     }
 
     return softwareDataDir;
@@ -533,17 +535,6 @@ function getSoftwareDataStoreFile() {
         file += "/data.json";
     }
     return file;
-}
-
-function getPmExtension() {
-    let pmExtension = ".dmg";
-    if (isWindows()) {
-        pmExtension = ".exe";
-    } else if (!isMac()) {
-        pmExtension = ".deb";
-    }
-
-    return pmExtension;
 }
 
 async function serverIsAvailable() {
@@ -745,25 +736,19 @@ function chekUserAuthenticationStatus() {
             ) {
                 // set the last update time so we don't try to ask too frequently
                 setItem("vscode_lastUpdateTime", Date.now());
-
-                if (existingJwt) {
-                    // continue to show the status bar
-                    this.showErrorStatus();
-                } else {
-                    confirmWindowOpen = true;
-                    confirmWindow = window
-                        .showInformationMessage(
-                            infoMsg,
-                            ...[NOT_NOW_LABEL, LOGIN_LABEL]
-                        )
-                        .then(selection => {
-                            if (selection === LOGIN_LABEL) {
-                                handleKpmClickedEvent();
-                            }
-                            confirmWindowOpen = false;
-                            confirmWindow = null;
-                        });
-                }
+                confirmWindowOpen = true;
+                confirmWindow = window
+                    .showInformationMessage(
+                        infoMsg,
+                        ...[NOT_NOW_LABEL, LOGIN_LABEL]
+                    )
+                    .then(selection => {
+                        if (selection === LOGIN_LABEL) {
+                            handleKpmClickedEvent();
+                        }
+                        confirmWindowOpen = false;
+                        confirmWindow = null;
+                    });
             }
         }
     );
