@@ -12,10 +12,6 @@ import {
     extensions
 } from "vscode";
 import axios from "axios";
-import {
-    SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
-    EPROTONOSUPPORT
-} from "constants";
 
 const fs = require("fs");
 const os = require("os");
@@ -49,7 +45,6 @@ const beApi = axios.create({
 
 let statusBarItem = null;
 let confirmWindow = null;
-let confirmWindowOpen = false;
 let lastAuthenticationCheckTime = -1;
 
 // Available to the KeystrokeCount and the KeystrokeCountController
@@ -717,7 +712,7 @@ async function chekUserAuthenticationStatus() {
         serverAvailable &&
         !authenticated &&
         pastThresholdTime &&
-        !confirmWindowOpen
+        !confirmWindow
     ) {
         //
         // Show the dialog if the user is not authenticated but online,
@@ -727,14 +722,12 @@ async function chekUserAuthenticationStatus() {
             "To see your coding data in Software.com, please log in to your account.";
         // set the last update time so we don't try to ask too frequently
         setItem("vscode_lastUpdateTime", Date.now());
-        confirmWindowOpen = true;
         confirmWindow = window
             .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])
             .then(selection => {
                 if (selection === LOGIN_LABEL) {
                     handleKpmClickedEvent();
                 }
-                confirmWindowOpen = false;
                 confirmWindow = null;
             });
     } else if (!authenticated) {
