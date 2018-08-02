@@ -16,7 +16,6 @@ import {
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
     EPROTONOSUPPORT
 } from "constants";
-import { resolve } from "dns";
 
 const fs = require("fs");
 const os = require("os");
@@ -710,8 +709,6 @@ async function chekUserAuthenticationStatus() {
     const serverAvailablePromise = serverIsAvailable();
     const isAuthenticatedPromise = isAuthenticated();
     const pastThresholdTime = isPastTimeThreshold();
-    const existingJwt = getItem("jwt");
-    const existingToken = getItem("token");
 
     const serverAvailable = await serverAvailablePromise;
     const authenticated = await isAuthenticatedPromise;
@@ -720,8 +717,7 @@ async function chekUserAuthenticationStatus() {
         serverAvailable &&
         !authenticated &&
         pastThresholdTime &&
-        !confirmWindowOpen &&
-        !existingToken
+        !confirmWindowOpen
     ) {
         //
         // Show the dialog if the user is not authenticated but online,
