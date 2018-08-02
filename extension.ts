@@ -16,6 +16,7 @@ import {
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
     EPROTONOSUPPORT
 } from "constants";
+import { resolve } from "dns";
 
 const fs = require("fs");
 const os = require("os");
@@ -82,8 +83,6 @@ export function activate(ctx: ExtensionContext) {
 
         showStatus("Software.com", null);
     }, 100);
-
-    // getSoftwareDir();
 
     // 1 minute interval to fetch daily kpm info
     setInterval(() => {
@@ -552,14 +551,16 @@ async function isAuthenticated() {
 
     const tokenVal = getItem("token");
     if (!tokenVal) {
-        this.showErrorStatus();
-        return false;
+        showErrorStatus();
+        return await new Promise((resolve, reject) => {
+            resolve(false);
+        });
     }
 
     // since we do have a token value, ping the backend using authentication
     // in case they need to re-authenticate
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
-    const authenticated = await beApi
+    return await beApi
         .get("/users/ping/")
         .then(() => {
             return true;
@@ -569,12 +570,6 @@ async function isAuthenticated() {
             showErrorStatus();
             return false;
         });
-
-    if (!authenticated) {
-        this.showErrorStatus();
-    }
-
-    return authenticated;
 }
 
 function showErrorStatus() {
@@ -701,7 +696,7 @@ function deleteFile(file) {
     }
 }
 
-function chekUserAuthenticationStatus() {
+async function chekUserAuthenticationStatus() {
     let nowMillis = Date.now();
     if (
         lastAuthenticationCheckTime !== -1 &&
@@ -716,42 +711,39 @@ function chekUserAuthenticationStatus() {
     const isAuthenticatedPromise = isAuthenticated();
     const pastThresholdTime = isPastTimeThreshold();
     const existingJwt = getItem("jwt");
+    const existingToken = getItem("token");
 
-    Promise.all([serverAvailablePromise, isAuthenticatedPromise]).then(
-        values => {
-            const serverAvailable = values[0];
-            const isAuthenticated = values[1];
-            //
-            // Show the dialog if the user is not authenticated but online,
-            // and it's past the threshold time and the confirm window is null
-            //
-            let infoMsg =
-                "To see your coding data in Software.com, please log in to your account.";
+    const serverAvailable = await serverAvailablePromise;
+    const authenticated = await isAuthenticatedPromise;
 
-            if (
-                serverAvailable &&
-                !isAuthenticated &&
-                pastThresholdTime &&
-                !confirmWindowOpen
-            ) {
-                // set the last update time so we don't try to ask too frequently
-                setItem("vscode_lastUpdateTime", Date.now());
-                confirmWindowOpen = true;
-                confirmWindow = window
-                    .showInformationMessage(
-                        infoMsg,
-                        ...[NOT_NOW_LABEL, LOGIN_LABEL]
-                    )
-                    .then(selection => {
-                        if (selection === LOGIN_LABEL) {
-                            handleKpmClickedEvent();
-                        }
-                        confirmWindowOpen = false;
-                        confirmWindow = null;
-                    });
-            }
-        }
-    );
+    if (
+        serverAvailable &&
+        !authenticated &&
+        pastThresholdTime &&
+        !confirmWindowOpen &&
+        !existingToken
+    ) {
+        //
+        // Show the dialog if the user is not authenticated but online,
+        // and it's past the threshold time and the confirm window is null
+        //
+        let infoMsg =
+            "To see your coding data in Software.com, please log in to your account.";
+        // set the last update time so we don't try to ask too frequently
+        setItem("vscode_lastUpdateTime", Date.now());
+        confirmWindowOpen = true;
+        confirmWindow = window
+            .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])
+            .then(selection => {
+                if (selection === LOGIN_LABEL) {
+                    handleKpmClickedEvent();
+                }
+                confirmWindowOpen = false;
+                confirmWindow = null;
+            });
+    } else if (!authenticated) {
+        showErrorStatus();
+    }
 }
 
 /**
@@ -842,7 +834,6 @@ async function fetchDailyKpmSessionInfo() {
         // telemetry is paused
         return;
     }
-    console.log("fetching kpm session info");
     const fromSeconds = nowInSecs();
     beApi.defaults.headers.common["Authorization"] = getItem("jwt");
     beApi
