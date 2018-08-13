@@ -833,37 +833,32 @@ async function fetchDailyKpmSessionInfo() {
                 sessions.inFlow !== undefined && sessions.inFlow !== null
                     ? sessions.inFlow
                     : true;
-            let avgKpm = sessions.kpm ? parseInt(sessions.kpm, 10) : 0;
-            let totalMin = sessions.minutesTotal;
-            let sessionMinAvg = sessions.sessionMinAvg
-                ? parseInt(sessions.sessionMinAvg, 10)
+            let currentSessionKpm = sessions.currentSessionKpm
+                ? parseInt(sessions.currentSessionKpm, 10)
                 : 0;
+            let currentSessionMinutes = sessions.currentSessionMinutes;
+            let sessionTime = humanizeMinutes(currentSessionMinutes);
 
-            let sessionTime = humanizeMinutes(totalMin);
-
-            let sessionMinGoalPercent = sessions.sessionMinGoalPercent
-                ? parseFloat(sessions.sessionMinGoalPercent)
+            let currentSessionGoalPercent = sessions.currentSessionGoalPercent
+                ? parseFloat(sessions.currentSessionGoalPercent)
                 : 0;
 
             let sessionTimeIcon = "";
-            if (sessionMinGoalPercent > 0) {
-                if (sessionMinGoalPercent < 0.45) {
+            if (currentSessionGoalPercent > 0) {
+                if (currentSessionGoalPercent < 0.45) {
                     sessionTimeIcon = "❍";
-                } else if (sessionMinGoalPercent < 0.7) {
+                } else if (currentSessionGoalPercent < 0.7) {
                     sessionTimeIcon = "◒";
-                } else if (sessionMinGoalPercent < 0.95) {
+                } else if (currentSessionGoalPercent < 0.95) {
                     sessionTimeIcon = "◍";
                 } else {
                     sessionTimeIcon = "●";
                 }
             }
             // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
-            kpmInfo["kpmAvg"] =
-                avgKpm > 0 || avgKpm === 0
-                    ? avgKpm.toFixed(0)
-                    : avgKpm.toFixed(2);
+            kpmInfo["kpmAvg"] = currentSessionKpm.toFixed(0);
             kpmInfo["sessionTime"] = sessionTime;
-            if (avgKpm > 0 || totalMin > 0) {
+            if (currentSessionKpm > 0 || currentSessionMinutes > 0) {
                 let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
                 let sessionMsg = `${kpmInfo["sessionTime"]}`;
 
