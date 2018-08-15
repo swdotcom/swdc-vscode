@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Software.com",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "publisher": "softwaredotcom",
     "description": "Software.com for VS Code - It's Code Time",
     "author": {
@@ -74,8 +74,9 @@
     },
     "dependencies": {
         "axios": "^0.17.1",
-        "jquery": "^3.3.1",
+        "itunes-node-applescript": "^0.3.5",
         "open": "^0.0.5",
+        "spotify-node-applescript": "1.1.1",
         "vscode": "^1.1.10"
     }
 }
