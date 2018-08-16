@@ -153,7 +153,8 @@ export async function getCurrentMusicTrackId() {
             trackInfo = {
                 id: spotifyTrack.id,
                 name: spotifyTrack.name,
-                artist: spotifyTrack.artist
+                artist: spotifyTrack.artist,
+                genre: "" // spotify doesn't provide genre from their app
             };
         }
     } else if (await isItunesRunningPromise()) {
@@ -162,7 +163,8 @@ export async function getCurrentMusicTrackId() {
             trackInfo = {
                 id: itunesTrackInfo.id,
                 name: itunesTrackInfo.name,
-                artist: itunesTrackInfo.artist
+                artist: itunesTrackInfo.artist,
+                genre: itunesTrackInfo.genre
             };
         }
     }
@@ -260,6 +262,9 @@ async function getItunesTrackPromise() {
             } else {
                 let trackInfo = {};
                 if (track) {
+                    if (track.length > 0) {
+                        trackInfo["genre"] = track[0];
+                    }
                     if (track.length >= 1) {
                         trackInfo["artist"] = track[1];
                     }
