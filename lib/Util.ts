@@ -144,59 +144,34 @@ export function deleteFile(file) {
 }
 
 export async function getCurrentMusicTrackId() {
-    // const spotifyState = await getSpotifyStatePromise();
     let trackInfo = {};
 
-    if (await getSpotifyRunningPromise()) {
-        const spotifyTrack = await getSpotifyTrackPromise();
-        if (spotifyTrack) {
-            trackInfo = {
-                id: spotifyTrack.id,
-                name: spotifyTrack.name,
-                artist: spotifyTrack.artist,
-                genre: "" // spotify doesn't provide genre from their app
-            };
+    let isSpotifyRunning = await getSpotifyRunningPromise();
+    let isItunesRunning = await isItunesRunningPromise();
+
+    if (isSpotifyRunning) {
+        trackInfo = await getSpotifyTrackPromise();
+        if (!trackInfo && isItunesRunning) {
+            // get that track data.
+            trackInfo = await getItunesTrackPromise();
         }
-    } else if (await isItunesRunningPromise()) {
-        const itunesTrackInfo = await getItunesTrackPromise();
-        if (itunesTrackInfo) {
-            trackInfo = {
-                id: itunesTrackInfo.id,
-                name: itunesTrackInfo.name,
-                artist: itunesTrackInfo.artist,
-                genre: itunesTrackInfo.genre
-            };
-        }
+    } else if (isItunesRunning) {
+        trackInfo = await getItunesTrackPromise();
     }
 
-    return trackInfo;
+    return trackInfo || {};
 }
 
 /**
- * returns true or an error
+ * returns true or an error.
  */
 function getSpotifyRunningPromise() {
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         spotify.isRunning((err, isRunning) => {
             if (err) {
-                reject(err);
+                resolve(false);
             } else {
                 resolve(isRunning);
-            }
-        });
-    });
-}
-
-/**
- * returns i.e. {position:75, state:"playing", track_id:"spotify:track:4dHuU8wSvtek4sxRGoDLpf", volume:100}
- */
-function getSpotifyStatePromise() {
-    return new Promise<spotify.State>((resolve, reject) => {
-        spotify.getState((err, state) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(state);
             }
         });
     });
@@ -221,12 +196,18 @@ function getSpotifyStatePromise() {
     }
  */
 function getSpotifyTrackPromise() {
-    return new Promise<spotify.State>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         spotify.getTrack((err, track) => {
-            if (err) {
-                reject(err);
+            if (err || !track) {
+                resolve(null);
             } else {
-                resolve(track);
+                let trackInfo = {
+                    id: track.id,
+                    name: track.name,
+                    artist: track.artist,
+                    genre: "" // spotify doesn't provide genre from their app.
+                };
+                resolve(trackInfo);
             }
         });
     });
@@ -236,7 +217,7 @@ function isItunesRunningPromise() {
     return new Promise((resolve, reject) => {
         itunes.isRunning((err, isRunning) => {
             if (err) {
-                reject(err);
+                resolve(false);
             } else {
                 resolve(isRunning);
             }
@@ -254,26 +235,24 @@ function isItunesRunningPromise() {
     5:"High on Life (feat. Bonn)"
     6:"3:50"
  */
-async function getItunesTrackPromise() {
-    return new Promise<itunes.any>((resolve, reject) => {
+function getItunesTrackPromise() {
+    return new Promise((resolve, reject) => {
         itunes.track((err, track) => {
-            if (err) {
-                reject(err);
+            if (err || !track) {
+                resolve(null);
             } else {
                 let trackInfo = {};
-                if (track) {
-                    if (track.length > 0) {
-                        trackInfo["genre"] = track[0];
-                    }
-                    if (track.length >= 1) {
-                        trackInfo["artist"] = track[1];
-                    }
-                    if (track.length >= 3) {
-                        trackInfo["id"] = track[3];
-                    }
-                    if (track.length >= 5) {
-                        trackInfo["name"] = track[5];
-                    }
+                if (track.length > 0) {
+                    trackInfo["genre"] = track[0];
+                }
+                if (track.length >= 1) {
+                    trackInfo["artist"] = track[1];
+                }
+                if (track.length >= 3) {
+                    trackInfo["id"] = `itunes:track:${track[3]}`;
+                }
+                if (track.length >= 5) {
+                    trackInfo["name"] = track[5];
                 }
                 resolve(trackInfo);
             }

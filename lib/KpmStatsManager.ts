@@ -125,21 +125,28 @@ export function checkTokenAvailability() {
     // need to get back...
     // response.data.user, response.data.jwt
     // non-authorization API
-    softwareGet(`/users/plugin/confirm?token=${tokenVal}`, null).then(resp => {
-        if (isResponseOk(resp)) {
-            if (resp.data) {
-                setItem("jwt", resp.data.jwt);
-                setItem("user", resp.data.user);
-                setItem("vscode_lastUpdateTime", Date.now());
+    softwareGet(`/users/plugin/confirm?token=${tokenVal}`, null)
+        .then(resp => {
+            if (isResponseOk(resp)) {
+                if (resp.data) {
+                    setItem("jwt", resp.data.jwt);
+                    setItem("user", resp.data.user);
+                    setItem("vscode_lastUpdateTime", Date.now());
+                }
+            } else {
+                console.log("Software.com: unable to obtain session token");
+                // try again in 2 minutes
+                setTimeout(() => {
+                    checkTokenAvailability();
+                }, 1000 * 120);
             }
-        } else {
-            console.log("Software.com: unable to obtain session token");
-            // try again in 2 minutes
-            setTimeout(() => {
-                checkTokenAvailability();
-            }, 1000 * 120);
-        }
-    });
+        })
+        .catch(err => {
+            console.log(
+                "Software.com: error confirming plugin token: ",
+                err.message
+            );
+        });
 }
 
 export function launchWebUrl(url) {
@@ -170,63 +177,67 @@ export function fetchDailyKpmSessionInfo() {
     }
 
     const fromSeconds = nowInSecs();
-    softwareGet(
-        `/sessions?from=${fromSeconds}&summary=true`,
-        getItem("jwt")
-    ).then(resp => {
-        if (isResponseOk(resp)) {
-            const sessions = resp.data;
-            const inFlow =
-                sessions.inFlow !== undefined && sessions.inFlow !== null
-                    ? sessions.inFlow
-                    : true;
-            let currentSessionKpm = sessions.currentSessionKpm
-                ? parseInt(sessions.currentSessionKpm, 10)
-                : 0;
-            let currentSessionMinutes = sessions.currentSessionMinutes;
-            let sessionTime = humanizeMinutes(currentSessionMinutes);
+    softwareGet(`/sessions?from=${fromSeconds}&summary=true`, getItem("jwt"))
+        .then(resp => {
+            if (isResponseOk(resp)) {
+                const sessions = resp.data;
+                const inFlow =
+                    sessions.inFlow !== undefined && sessions.inFlow !== null
+                        ? sessions.inFlow
+                        : true;
+                let currentSessionKpm = sessions.currentSessionKpm
+                    ? parseInt(sessions.currentSessionKpm, 10)
+                    : 0;
+                let currentSessionMinutes = sessions.currentSessionMinutes;
+                let sessionTime = humanizeMinutes(currentSessionMinutes);
 
-            let currentSessionGoalPercent = sessions.currentSessionGoalPercent
-                ? parseFloat(sessions.currentSessionGoalPercent)
-                : 0;
+                let currentSessionGoalPercent = sessions.currentSessionGoalPercent
+                    ? parseFloat(sessions.currentSessionGoalPercent)
+                    : 0;
 
-            let sessionTimeIcon = "";
-            if (currentSessionGoalPercent > 0) {
-                if (currentSessionGoalPercent < 0.45) {
-                    sessionTimeIcon = "❍";
-                } else if (currentSessionGoalPercent < 0.7) {
-                    sessionTimeIcon = "◒";
-                } else if (currentSessionGoalPercent < 0.95) {
-                    sessionTimeIcon = "◍";
+                let sessionTimeIcon = "";
+                if (currentSessionGoalPercent > 0) {
+                    if (currentSessionGoalPercent < 0.45) {
+                        sessionTimeIcon = "❍";
+                    } else if (currentSessionGoalPercent < 0.7) {
+                        sessionTimeIcon = "◒";
+                    } else if (currentSessionGoalPercent < 0.95) {
+                        sessionTimeIcon = "◍";
+                    } else {
+                        sessionTimeIcon = "●";
+                    }
+                }
+                // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
+                kpmInfo["kpmAvg"] = currentSessionKpm.toFixed(0);
+                kpmInfo["sessionTime"] = sessionTime;
+                if (currentSessionKpm > 0 || currentSessionMinutes > 0) {
+                    let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
+                    let sessionMsg = `${kpmInfo["sessionTime"]}`;
+
+                    // if inFlow then show the rocket
+                    if (inFlow) {
+                        kpmMsg = "🚀" + " " + kpmMsg;
+                    }
+                    // if we have session avg percent info, show the icon that corresponds
+                    if (sessionTimeIcon) {
+                        sessionMsg = sessionTimeIcon + " " + sessionMsg;
+                    }
+
+                    let fullMsg = kpmMsg + ", " + sessionMsg;
+                    showStatus(fullMsg, null);
                 } else {
-                    sessionTimeIcon = "●";
+                    showStatus("Software.com", null);
                 }
-            }
-            // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
-            kpmInfo["kpmAvg"] = currentSessionKpm.toFixed(0);
-            kpmInfo["sessionTime"] = sessionTime;
-            if (currentSessionKpm > 0 || currentSessionMinutes > 0) {
-                let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
-                let sessionMsg = `${kpmInfo["sessionTime"]}`;
-
-                // if inFlow then show the rocket
-                if (inFlow) {
-                    kpmMsg = "🚀" + " " + kpmMsg;
-                }
-                // if we have session avg percent info, show the icon that corresponds
-                if (sessionTimeIcon) {
-                    sessionMsg = sessionTimeIcon + " " + sessionMsg;
-                }
-
-                let fullMsg = kpmMsg + ", " + sessionMsg;
-                showStatus(fullMsg, null);
             } else {
-                showStatus("Software.com", null);
+                chekUserAuthenticationStatus();
             }
-        } else {
-            chekUserAuthenticationStatus();
-        }
-    });
+        })
+        .catch(err => {
+            console.log(
+                "Software.com: error fetching session kpm info: ",
+                err.message
+            );
+        });
 }
 
 function humanizeMinutes(min) {

@@ -43,11 +43,13 @@ export async function softwarePost(api, payload, jwt) {
 
 export function isResponseOk(resp) {
     if (
+        (!resp.response && resp.errno) ||
         (resp.response &&
             resp.response.status &&
             resp.response.status >= 400) ||
         (resp.status && resp.status >= 400) ||
-        (resp.code && resp.code === "ECONNREFUSED")
+        (resp.code &&
+            (resp.code === "ECONNREFUSED" || resp.code === "ENOTFOUND"))
     ) {
         return false;
     }
