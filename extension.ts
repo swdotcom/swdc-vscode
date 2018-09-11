@@ -110,7 +110,7 @@ export function activate(ctx: ExtensionContext) {
 
 function handlePauseMetricsEvent() {
     TELEMETRY_ON = false;
-    showStatus("Paused", "Enable metrics to resume");
+    showStatus("<S> Paused", "Enable metrics to resume");
 }
 
 function handleEnableMetricsEvent() {

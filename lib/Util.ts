@@ -8,8 +8,6 @@ const crypto = require("crypto");
 
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-let lastStatusMsg = "";
-
 export function setItem(key, value) {
     const jsonObj = getSoftwareSessionAsJson();
     jsonObj[key] = value;
@@ -46,7 +44,6 @@ export function showStatus(fullMsg, tooltip) {
     } else {
         getStatusBarItem().tooltip = tooltip;
     }
-    lastStatusMsg = fullMsg;
     getStatusBarItem().text = fullMsg;
 }
 

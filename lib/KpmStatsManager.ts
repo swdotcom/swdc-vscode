@@ -223,7 +223,7 @@ export function fetchDailyKpmSessionInfo() {
                         sessionMsg = sessionTimeIcon + " " + sessionMsg;
                     }
 
-                    let fullMsg = kpmMsg + ", " + sessionMsg;
+                    let fullMsg = "<S> " + kpmMsg + ", " + sessionMsg;
                     showStatus(fullMsg, null);
                 } else {
                     showStatus("Software.com", null);

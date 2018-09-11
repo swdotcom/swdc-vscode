@@ -146,8 +146,25 @@ export class KpmController {
         // has a length.
         //
 
+        // let newCount = event.contentChanges
+        //     .map(cc => (cc.text && cc.text.length > 0 ? cc.text.length : 0))
+        //     .reduce((prev, curr) => prev + curr, 0);
+
+        let isNewLine = false;
+        let hasNonNewLineData = false;
         let newCount = event.contentChanges
-            .map(cc => (cc.text && cc.text.length > 0 ? cc.text.length : 0))
+            .map(cc => {
+                if (cc && cc.text && cc.text.length > 0) {
+                    if (cc.text.match(/[\n\r]/g)) {
+                        // only return a keystroke of 1 if it's a new line event
+                        isNewLine = true;
+                        return 1;
+                    }
+                    hasNonNewLineData = true;
+                    return cc.text.length;
+                }
+                return 0;
+            })
             .reduce((prev, curr) => prev + curr, 0);
 
         // first check if there's a rangeLength, and if so it's character deletion
@@ -176,22 +193,20 @@ export class KpmController {
             //
             // it's a copy and paste event
             //
-            fileInfo.paste = fileInfo.paste + newCount;
+            fileInfo.paste += newCount;
             console.log("Software.com: Copy+Paste Incremented");
         } else if (newCount < 0) {
-            const deleteCount = Math.abs(newCount);
-            fileInfo.delete = fileInfo.delete + deleteCount;
+            fileInfo.delete += Math.abs(newCount);
             // update the overall count
-            keystrokeCount.data = keystrokeCount.data + 1;
             console.log("Software.com: Delete Incremented");
-        } else {
+        } else if (hasNonNewLineData) {
             // update the data for this fileInfo keys count
-            fileInfo.add = fileInfo.add + 1;
-
+            fileInfo.add += 1;
             // update the overall count
-            keystrokeCount.data = keystrokeCount.data + 1;
             console.log("Software.com: KPM incremented");
         }
+        // increment data by 1
+        keystrokeCount.data += 1;
 
         // "netkeys" = add - delete
         // "keys" = add + delete
@@ -208,9 +223,12 @@ export class KpmController {
         }
         fileInfo.lines = lines;
         if (diff < 0) {
-            fileInfo.linesRemoved += fileInfo.linesRemoved + Math.abs(diff);
+            fileInfo.linesRemoved += Math.abs(diff);
         } else if (diff > 0) {
-            fileInfo.linesAdded += fileInfo.linesAdded + diff;
+            fileInfo.linesAdded += diff;
+        }
+        if (fileInfo.linesAdded === 0 && isNewLine) {
+            fileInfo.linesAdded = 1;
         }
 
         // update the map containing the keystroke count
