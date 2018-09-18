@@ -290,18 +290,35 @@ export async function getResourceInfo(projectDir) {
     }
 
     let identifier = null;
-    try {
-        identifier = await execPromise("git config --get remote.origin.url", {
-            cwd: projectDir
-        });
-    } catch (e) {
-        // console.error(e.message);
-        identifier = null;
+    if (branch) {
+        try {
+            identifier = await execPromise(
+                "git config --get remote.origin.url",
+                {
+                    cwd: projectDir
+                }
+            );
+        } catch (e) {
+            // console.error(e.message);
+            identifier = null;
+        }
+    }
+
+    let email = null;
+    if (identifier) {
+        try {
+            email = await execPromise("git config user.email", {
+                cwd: projectDir
+            });
+        } catch (e) {
+            // console.error(e.message);
+            email = null;
+        }
     }
 
     // both should be valid to return the resource info
     if (branch && identifier) {
-        return { branch, identifier };
+        return { branch, identifier, email };
     }
     // we don't have git info, return an empty object
     return {};

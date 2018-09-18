@@ -195,7 +195,11 @@ export class KpmController {
             (!keystrokeCount.project.resource ||
                 isEmptyObj(keystrokeCount.project.resource))
         ) {
-            keystrokeCount.project.resource = await getResourceInfo(rootPath);
+            let resourceInfo = await getResourceInfo(rootPath);
+            if (resourceInfo && resourceInfo.identifier) {
+                keystrokeCount.project.resource = resourceInfo;
+                keystrokeCount.project.identifier = resourceInfo.identifier;
+            }
         }
 
         if (newCount > 1) {
@@ -261,6 +265,7 @@ export class KpmController {
                 // project.directory is used as an object key, must be string
                 directory: rootPath,
                 name: workspace.name || rootPath,
+                identifier: "",
                 resource: {}
             });
         }
