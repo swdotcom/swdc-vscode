@@ -275,50 +275,37 @@ function execPromise(command, opts) {
     });
 }
 
-//
-// use "git symbolic-ref --short HEAD" to get the git branch
-// use "git config --get remote.origin.url" to get the remote url
-export async function getResourceInfo(projectDir) {
-    let branch = null;
+async function wrapExecPromise(cmd, projectDir) {
+    let prop = null;
     try {
-        branch = await execPromise("git symbolic-ref --short HEAD", {
+        prop = await execPromise(cmd, {
             cwd: projectDir
         });
     } catch (e) {
         // console.error(e.message);
-        branch = null;
+        prop = null;
     }
+    return prop;
+}
 
-    let identifier = null;
-    if (branch) {
-        try {
-            identifier = await execPromise(
-                "git config --get remote.origin.url",
-                {
-                    cwd: projectDir
-                }
-            );
-        } catch (e) {
-            // console.error(e.message);
-            identifier = null;
-        }
-    }
-
-    let email = null;
-    if (identifier) {
-        try {
-            email = await execPromise("git config user.email", {
-                cwd: projectDir
-            });
-        } catch (e) {
-            // console.error(e.message);
-            email = null;
-        }
-    }
+//
+// use "git symbolic-ref --short HEAD" to get the git branch
+// use "git config --get remote.origin.url" to get the remote url
+export async function getResourceInfo(projectDir) {
+    let branch = await wrapExecPromise(
+        "git symbolic-ref --short HEAD",
+        projectDir
+    );
+    let identifier = await wrapExecPromise(
+        "git config --get remote.origin.url",
+        projectDir
+    );
+    let email = await wrapExecPromise("git config user.email", projectDir);
+    let tag = await wrapExecPromise("git describe --all", projectDir);
 
     // both should be valid to return the resource info
     if (branch && identifier) {
-        return { branch, identifier, email };
+        return { branch, identifier, email, tag };
     }
     // we don't have git info, return an empty object
     return {};
