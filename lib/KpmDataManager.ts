@@ -6,7 +6,7 @@ import { deleteProjectNameFromMap } from "./KpmController";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 
 // ? marks that the parameter is optional
-type Project = { directory: String; name?: String };
+type Project = { directory: String; name?: String; resource: {} };
 
 export class KpmDataManager {
     public source: {};

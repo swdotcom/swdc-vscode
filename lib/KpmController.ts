@@ -2,7 +2,7 @@ import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
-import { getCurrentMusicTrackId } from "./Util";
+import { getCurrentMusicTrackId, getResourceInfo, isEmptyObj } from "./Util";
 
 const fs = require("fs");
 
@@ -184,9 +184,18 @@ export class KpmController {
             return;
         }
 
-        if (!fileInfo.trackInfo.hasOwnProperty("id")) {
+        if (isEmptyObj(fileInfo.trackInfo)) {
             // check to see if the user has any music playing
             fileInfo.trackInfo = await getCurrentMusicTrackId();
+        }
+
+        // get the repo info if we don't already have it for the project
+        if (
+            keystrokeCount.project &&
+            (!keystrokeCount.project.resource ||
+                isEmptyObj(keystrokeCount.project.resource))
+        ) {
+            keystrokeCount.project.resource = await getResourceInfo(rootPath);
         }
 
         if (newCount > 1) {
@@ -251,7 +260,8 @@ export class KpmController {
             keystrokeCount = new KpmDataManager({
                 // project.directory is used as an object key, must be string
                 directory: rootPath,
-                name: workspace.name || rootPath
+                name: workspace.name || rootPath,
+                resource: {}
             });
         }
 

@@ -1,6 +1,7 @@
 import { getStatusBarItem } from "../extension";
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
+const { exec } = require("child_process");
 
 const fs = require("fs");
 const os = require("os");
@@ -45,6 +46,10 @@ export function showStatus(fullMsg, tooltip) {
         getStatusBarItem().tooltip = tooltip;
     }
     getStatusBarItem().text = fullMsg;
+}
+
+export function isEmptyObj(obj) {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
 // process.platform return the following...
@@ -255,4 +260,49 @@ function getItunesTrackPromise() {
             }
         });
     });
+}
+
+function execPromise(command, opts) {
+    return new Promise(function(resolve, reject) {
+        exec(command, opts, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            resolve(stdout.trim());
+        });
+    });
+}
+
+//
+// use "git symbolic-ref --short HEAD" to get the git branch
+// use "git config --get remote.origin.url" to get the remote url
+export async function getResourceInfo(projectDir) {
+    let branch = null;
+    try {
+        branch = await execPromise("git symbolic-ref --short HEAD", {
+            cwd: projectDir
+        });
+    } catch (e) {
+        // console.error(e.message);
+        branch = null;
+    }
+
+    let identifier = null;
+    try {
+        identifier = await execPromise("git config --get remote.origin.url", {
+            cwd: projectDir
+        });
+    } catch (e) {
+        // console.error(e.message);
+        identifier = null;
+    }
+
+    // both should be valid to return the resource info
+    if (branch && identifier) {
+        return { branch, identifier };
+    }
+    // we don't have git info, return an empty object
+    return {};
 }
