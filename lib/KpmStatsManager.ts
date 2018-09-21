@@ -86,6 +86,9 @@ export async function chekUserAuthenticationStatus() {
                     handleKpmClickedEvent();
                 }
                 confirmWindow = null;
+                setTimeout(() => {
+                    checkTokenAvailability();
+                }, 15000);
             });
     } else if (!authenticated) {
         showErrorStatus();
@@ -134,12 +137,16 @@ export function checkTokenAvailability() {
                     setItem("user", resp.data.user);
                     setItem("vscode_lastUpdateTime", Date.now());
                 }
+                // fetch kpm data
+                setTimeout(() => {
+                    fetchDailyKpmSessionInfo();
+                }, 1000);
             } else {
                 console.log("Software.com: unable to obtain session token");
                 // try again in 2 minutes
                 setTimeout(() => {
                     checkTokenAvailability();
-                }, 1000 * 120);
+                }, 1000 * 45);
             }
         })
         .catch(err => {
@@ -230,7 +237,7 @@ export function fetchDailyKpmSessionInfo() {
                     showStatus("Software.com", null);
                 }
             } else {
-                chekUserAuthenticationStatus();
+                checkTokenAvailability();
             }
         })
         .catch(err => {
