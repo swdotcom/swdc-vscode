@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Software.com",
-    "version": "0.5.10",
+    "version": "0.5.11",
     "publisher": "softwaredotcom",
     "description": "Software.com for VS Code - It's Code Time",
     "author": {

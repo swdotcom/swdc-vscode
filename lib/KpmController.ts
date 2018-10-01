@@ -146,10 +146,6 @@ export class KpmController {
         // has a length.
         //
 
-        // let newCount = event.contentChanges
-        //     .map(cc => (cc.text && cc.text.length > 0 ? cc.text.length : 0))
-        //     .reduce((prev, curr) => prev + curr, 0);
-
         let isNewLine = false;
         let hasNonNewLineData = false;
         let newCount = event.contentChanges
@@ -206,10 +202,10 @@ export class KpmController {
             //
             // it's a copy and paste event
             //
-            fileInfo.paste += newCount;
+            fileInfo.paste += 1;
             console.log("Software.com: Copy+Paste Incremented");
         } else if (newCount < 0) {
-            fileInfo.delete += Math.abs(newCount);
+            fileInfo.delete += 1;
             // update the overall count
             console.log("Software.com: Delete Incremented");
         } else if (hasNonNewLineData) {
@@ -218,13 +214,11 @@ export class KpmController {
             // update the overall count
             console.log("Software.com: KPM incremented");
         }
-        // increment data by 1
-        keystrokeCount.data += 1;
+        // increment keystrokes by 1
+        keystrokeCount.keystrokes += 1;
 
         // "netkeys" = add - delete
-        // "keys" = add + delete
         fileInfo.netkeys = fileInfo.add - fileInfo.delete;
-        fileInfo.keys = fileInfo.add + fileInfo.delete;
 
         // set the linesAdded: 0, linesRemoved: 0, syntax: ""
         if (!fileInfo.syntax) {
@@ -279,12 +273,10 @@ export class KpmController {
             fileInfo = findFileInfoInSource(keystrokeCount.source, filename);
             // "add" = additive keystrokes
             // "netkeys" = add - delete
-            // "keys" = add + delete
             // "delete" = delete keystrokes
             if (!fileInfo) {
                 // initialize and add it
                 fileInfo = {
-                    keys: 0,
                     add: 0,
                     netkeys: 0,
                     paste: 0,

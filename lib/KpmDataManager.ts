@@ -1,6 +1,6 @@
-import { nowInSecs, storePayload, getItem } from "./Util";
+import { storePayload, getItem } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
-import { DEFAULT_DURATION } from "./Constants";
+import { DEFAULT_DURATION, DEFAULT_DURATION_MILLIS } from "./Constants";
 import { getVersion, isTelemetryOn, sendOfflineData } from "../extension";
 import { deleteProjectNameFromMap } from "./KpmController";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
@@ -16,27 +16,27 @@ type Project = {
 export class KpmDataManager {
     public source: {};
     public type: String;
-    public data: Number;
+    public keystrokes: Number;
     public start: Number;
-    public end: Number;
+    public startDate: Object;
+    public timezone: String;
     public project: Project;
     public pluginId: Number;
     public version: String;
 
     constructor(project: Project) {
-        const startOfEvent = nowInSecs() - DEFAULT_DURATION;
-
         (this.source = {}),
             (this.type = "Events"),
-            (this.data = 0),
-            (this.start = startOfEvent),
-            (this.end = startOfEvent + 60),
+            (this.keystrokes = 0),
             (this.project = project),
             (this.pluginId = 2);
         this.version = getVersion();
     }
 
     hasData() {
+        if ((this.keystrokes, 10 > 0)) {
+            return true;
+        }
         for (const fileName of Object.keys(this.source)) {
             const fileInfoData = this.source[fileName];
             // check if any of the metric values has data
@@ -56,12 +56,17 @@ export class KpmDataManager {
 
     postData() {
         const payload = JSON.parse(JSON.stringify(this));
-        payload.data = String(payload.data);
+        payload.keystrokes = String(payload.keystrokes);
 
         // ensure the start and end are exactly DEFAULT_DURATION apart
-        const now = nowInSecs();
-        payload.start = now - DEFAULT_DURATION;
-        payload.end = now;
+        let d = new Date();
+        d = new Date(d.getTime() - DEFAULT_DURATION_MILLIS);
+        const offset = d.getTimezoneOffset();
+        const offset_sec = offset * 60;
+        payload.start = Math.round(d.getTime() / 1000);
+        // subtract the offset_sec (it'll be positive before utc and negative after utc)
+        payload.local_start = payload.start - offset_sec;
+        payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
         const projectName =
             payload.project && payload.project.directory
