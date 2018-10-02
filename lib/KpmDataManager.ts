@@ -18,7 +18,7 @@ export class KpmDataManager {
     public type: String;
     public keystrokes: Number;
     public start: Number;
-    public startDate: Object;
+    public local_start: Number;
     public timezone: String;
     public project: Project;
     public pluginId: Number;
