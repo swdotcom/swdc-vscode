@@ -193,8 +193,8 @@ export function fetchDailyKpmSessionInfo() {
                     sessions.inFlow !== undefined && sessions.inFlow !== null
                         ? sessions.inFlow
                         : true;
-                let currentSessionKpm = sessions.currentSessionKpm
-                    ? parseInt(sessions.currentSessionKpm, 10)
+                let lastKpm = sessions.lastKpm
+                    ? parseInt(sessions.lastKpm, 10)
                     : 0;
                 let currentSessionMinutes = sessions.currentSessionMinutes;
                 let sessionTime = humanizeMinutes(currentSessionMinutes);
@@ -216,9 +216,9 @@ export function fetchDailyKpmSessionInfo() {
                     }
                 }
                 // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
-                kpmInfo["kpmAvg"] = currentSessionKpm.toFixed(0);
+                kpmInfo["kpmAvg"] = lastKpm.toFixed(0);
                 kpmInfo["sessionTime"] = sessionTime;
-                if (currentSessionKpm > 0 || currentSessionMinutes > 0) {
+                if (lastKpm > 0 || currentSessionMinutes > 0) {
                     let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
                     let sessionMsg = `${kpmInfo["sessionTime"]}`;
 

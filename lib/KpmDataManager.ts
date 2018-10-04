@@ -62,6 +62,7 @@ export class KpmDataManager {
         // ensure the start and end are exactly DEFAULT_DURATION apart
         let d = new Date();
         d = new Date(d.getTime() - DEFAULT_DURATION_MILLIS);
+        // offset is the minutes from GMT. it's positive if it's before, and negative after
         const offset = d.getTimezoneOffset();
         const offset_sec = offset * 60;
         payload.start = Math.round(d.getTime() / 1000);
