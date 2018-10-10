@@ -207,7 +207,9 @@ function getSpotifyTrackPromise() {
                     id: track.id,
                     name: track.name,
                     artist: track.artist,
-                    genre: "" // spotify doesn't provide genre from their app.
+                    genre: "", // spotify doesn't provide genre from their app.
+                    start: 0,
+                    end: 0
                 };
                 resolve(trackInfo);
             }
@@ -243,7 +245,14 @@ function getItunesTrackPromise() {
             if (err || !track) {
                 resolve(null);
             } else {
-                let trackInfo = {};
+                let trackInfo = {
+                    id: "",
+                    name: "",
+                    artist: "",
+                    genre: "", // spotify doesn't provide genre from their app.
+                    start: 0,
+                    end: 0
+                };
                 if (track.length > 0) {
                     trackInfo["genre"] = track[0];
                 }

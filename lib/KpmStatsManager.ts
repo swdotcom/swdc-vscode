@@ -205,14 +205,16 @@ export function fetchDailyKpmSessionInfo() {
 
                 let sessionTimeIcon = "";
                 if (currentSessionGoalPercent > 0) {
-                    if (currentSessionGoalPercent < 0.45) {
-                        sessionTimeIcon = "❍";
+                    if (currentSessionGoalPercent < 0.4) {
+                        sessionTimeIcon = "🌘";
                     } else if (currentSessionGoalPercent < 0.7) {
-                        sessionTimeIcon = "◒";
-                    } else if (currentSessionGoalPercent < 0.95) {
-                        sessionTimeIcon = "◍";
+                        sessionTimeIcon = "🌗";
+                    } else if (currentSessionGoalPercent < 0.93) {
+                        sessionTimeIcon = "🌖";
+                    } else if (currentSessionGoalPercent < 1.3) {
+                        sessionTimeIcon = "🌕";
                     } else {
-                        sessionTimeIcon = "●";
+                        sessionTimeIcon = "🌔";
                     }
                 }
                 // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
