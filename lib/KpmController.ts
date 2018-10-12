@@ -6,12 +6,7 @@ import { getCurrentMusicTrackId, getResourceInfo, isEmptyObj } from "./Util";
 
 const fs = require("fs");
 
-// Available to the KpmDataManager and the KpmController
-let activeKeystrokeCountMap = {};
-
-export function deleteProjectNameFromMap(projectName) {
-    delete activeKeystrokeCountMap[projectName];
-}
+let _keystrokeMap = {};
 
 export class KpmController {
     private _disposable: Disposable;
@@ -38,16 +33,16 @@ export class KpmController {
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
-        if (activeKeystrokeCountMap) {
-            for (const key of Object.keys(activeKeystrokeCountMap)) {
-                const keystrokeCount = activeKeystrokeCountMap[key];
+        if (_keystrokeMap) {
+            for (const key of Object.keys(_keystrokeMap)) {
+                const keystrokeCount = _keystrokeMap[key];
                 const hasData = keystrokeCount.hasData();
                 if (hasData) {
                     // send the payload
                     setTimeout(() => keystrokeCount.postData(), 0);
                 } else {
                     // remove it
-                    delete activeKeystrokeCountMap[key];
+                    delete _keystrokeMap[key];
                 }
             }
         }
@@ -63,35 +58,39 @@ export class KpmController {
         return rootPath;
     }
 
-    private _onCloseHandler(event) {
+    private async _onCloseHandler(event) {
         if (!this.isTrueEventFile(event)) {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
+        let rootPath = this.getRootPath();
 
-        let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(
-            filename
+        await this.initializeKeystrokesCount(filename);
+
+        this.updateFileInfoLength(
+            filename,
+            _keystrokeMap[rootPath].source[filename]
         );
 
-        this.updateFileInfoLength(filename, fileInfo);
-
-        fileInfo.close = fileInfo.close + 1;
+        _keystrokeMap[rootPath].source[filename].close += 1;
         console.log("Software.com: File closed: " + filename);
     }
 
-    private _onOpenHandler(event) {
+    private async _onOpenHandler(event) {
         if (!this.isTrueEventFile(event)) {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
+        let rootPath = this.getRootPath();
 
-        let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(
-            filename
+        await this.initializeKeystrokesCount(filename);
+
+        this.updateFileInfoLength(
+            filename,
+            _keystrokeMap[rootPath].source[filename]
         );
 
-        this.updateFileInfoLength(filename, fileInfo);
-
-        fileInfo.open = fileInfo.open + 1;
+        _keystrokeMap[rootPath].source[filename].open += 1;
         console.log("Software.com: File opened: " + filename);
     }
 
@@ -129,15 +128,24 @@ export class KpmController {
             return;
         }
 
+        this.updateEventInfo(event);
+    }
+
+    private async updateEventInfo(event) {
         let filename = event.document.fileName || NO_NAME_FILE;
         let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
-        let [keystrokeCount, fileInfo, rootPath] = this.getFileInfoDatam(
-            filename
-        );
+        let rootPath = this.getRootPath();
 
-        this.updateFileInfoLength(filename, fileInfo);
+        await this.initializeKeystrokesCount(filename);
+
+        // let fileInfo = _keystrokeMap[rootPath].source[filename];
+
+        this.updateFileInfoLength(
+            filename,
+            _keystrokeMap[rootPath].source[filename]
+        );
 
         //
         // Map all of the contentChanges objects then use the
@@ -188,21 +196,24 @@ export class KpmController {
             return;
         }
 
-        if (isEmptyObj(fileInfo.trackInfo)) {
+        if (isEmptyObj(_keystrokeMap[rootPath].source[filename].trackInfo)) {
             // check to see if the user has any music playing
-            fileInfo.trackInfo = await getCurrentMusicTrackId();
+            _keystrokeMap[rootPath].source[
+                filename
+            ].trackInfo = await getCurrentMusicTrackId();
         }
 
         // get the repo info if we don't already have it for the project
         if (
-            keystrokeCount.project &&
-            (!keystrokeCount.project.resource ||
-                isEmptyObj(keystrokeCount.project.resource))
+            _keystrokeMap[rootPath].project &&
+            (!_keystrokeMap[rootPath].project.resource ||
+                isEmptyObj(_keystrokeMap[rootPath].project.resource))
         ) {
-            let resourceInfo = await getResourceInfo(rootPath);
+            let resourceInfo = await getResourceInfo(this.getRootPath());
             if (resourceInfo && resourceInfo.identifier) {
-                keystrokeCount.project.resource = resourceInfo;
-                keystrokeCount.project.identifier = resourceInfo.identifier;
+                _keystrokeMap[rootPath].project.resource = resourceInfo;
+                _keystrokeMap[rootPath].project.identifier =
+                    resourceInfo.identifier;
             }
         }
 
@@ -210,50 +221,60 @@ export class KpmController {
             //
             // it's a copy and paste event
             //
-            fileInfo.paste += 1;
+            _keystrokeMap[rootPath].source[filename].paste += 1;
             console.log("Software.com: Copy+Paste Incremented");
         } else if (newCount < 0) {
-            fileInfo.delete += 1;
+            _keystrokeMap[rootPath].source[filename].delete += 1;
             // update the overall count
             console.log("Software.com: Delete Incremented");
         } else if (hasNonNewLineData) {
             // update the data for this fileInfo keys count
-            fileInfo.add += 1;
+            _keystrokeMap[rootPath].source[filename].add += 1;
             // update the overall count
             console.log("Software.com: KPM incremented");
         }
         // increment keystrokes by 1
-        keystrokeCount.keystrokes += 1;
+        _keystrokeMap[rootPath].keystrokes += 1;
 
         // "netkeys" = add - delete
-        fileInfo.netkeys = fileInfo.add - fileInfo.delete;
+        _keystrokeMap[rootPath].source[filename].netkeys =
+            _keystrokeMap[rootPath].source[filename].add -
+            _keystrokeMap[rootPath].source[filename].delete;
 
         // set the linesAdded: 0, linesRemoved: 0, syntax: ""
-        if (!fileInfo.syntax) {
-            fileInfo.syntax = languageId;
+        if (!_keystrokeMap[rootPath].source[filename].syntax) {
+            _keystrokeMap[rootPath].source[filename].syntax = languageId;
         }
         let diff = 0;
-        if (fileInfo.lines && fileInfo.lines >= 0) {
-            diff = lines - fileInfo.lines;
+        if (
+            _keystrokeMap[rootPath].source[filename].lines &&
+            _keystrokeMap[rootPath].source[filename].lines >= 0
+        ) {
+            diff = lines - _keystrokeMap[rootPath].source[filename].lines;
         }
-        fileInfo.lines = lines;
+        _keystrokeMap[rootPath].source[filename].lines = lines;
         if (diff < 0) {
-            fileInfo.linesRemoved += Math.abs(diff);
+            _keystrokeMap[rootPath].source[filename].linesRemoved += Math.abs(
+                diff
+            );
             console.log("Software.com: Increment lines removed");
         } else if (diff > 0) {
-            fileInfo.linesAdded += diff;
+            _keystrokeMap[rootPath].source[filename].linesAdded += diff;
             console.log("Software.com: Increment lines added");
         }
-        if (fileInfo.linesAdded === 0 && isNewLine) {
-            fileInfo.linesAdded = 1;
+        if (
+            _keystrokeMap[rootPath].source[filename].linesAdded === 0 &&
+            isNewLine
+        ) {
+            _keystrokeMap[rootPath].source[filename].linesAdded = 1;
             console.log("Software.com: Increment lines added");
         }
 
         // update the map containing the keystroke count
-        activeKeystrokeCountMap[rootPath] = keystrokeCount;
+        // _keystrokeMap[this.getRootPath()] = keystrokeCount;
     }
 
-    private getFileInfoDatam(filename) {
+    private initializeKeystrokesCount(filename) {
         //
         // get the root path
         //
@@ -261,19 +282,27 @@ export class KpmController {
 
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || "None";
-        let keystrokeCount = activeKeystrokeCountMap[rootPath];
-        if (!keystrokeCount) {
-            //
-            // Create the keystroke count and add it to the map
-            //
-            keystrokeCount = new KpmDataManager({
-                // project.directory is used as an object key, must be string
-                directory: rootPath,
-                name: workspace.name || rootPath,
-                identifier: "",
-                resource: {}
-            });
+        if (!_keystrokeMap) {
+            _keystrokeMap = {};
         }
+
+        let keystrokeCount = _keystrokeMap[rootPath];
+
+        if (keystrokeCount) {
+            return;
+        }
+
+        //
+        // Create the keystroke count and add it to the map
+        //
+        keystrokeCount = new KpmDataManager({
+            // project.directory is used as an object key, must be string
+            directory: rootPath,
+            name: workspace.name || rootPath,
+            identifier: "",
+            resource: {}
+        });
+        keystrokeCount["keystrokes"] = 0;
 
         let fileInfo = null;
         if (filename) {
@@ -305,7 +334,7 @@ export class KpmController {
             }
         }
 
-        return [keystrokeCount, fileInfo, rootPath];
+        _keystrokeMap[rootPath] = keystrokeCount;
     }
 
     public dispose() {

@@ -2,7 +2,6 @@ import { storePayload, getItem } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION, DEFAULT_DURATION_MILLIS } from "./Constants";
 import { getVersion, isTelemetryOn, sendOfflineData } from "../extension";
-import { deleteProjectNameFromMap } from "./KpmController";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 
 // ? marks that the parameter is optional
@@ -95,7 +94,6 @@ export class KpmDataManager {
 
         // POST the kpm to the PluginManager
         softwarePost("/data", payload, getItem("jwt")).then(resp => {
-            deleteProjectNameFromMap(projectName);
             if (!isResponseOk(resp)) {
                 storePayload(payload);
                 chekUserAuthenticationStatus();
