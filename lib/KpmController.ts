@@ -148,24 +148,32 @@ export class KpmController {
 
         let isNewLine = false;
         let hasNonNewLineData = false;
-        let newCount = event.contentChanges
-            .map(cc => {
-                if (cc && cc.text && cc.text.length > 0) {
-                    if (cc.text.match(/[\n\r]/g)) {
-                        // only return a keystroke of 1 if it's a new line event
-                        isNewLine = true;
-                        return 1;
-                    }
-                    hasNonNewLineData = true;
-                    return cc.text.length;
-                }
-                return 0;
-            })
-            .reduce((prev, curr) => prev + curr, 0);
 
-        // first check if there's a rangeLength, and if so it's character deletion
+        // get the content changes text
+        let text = "";
+
+        if (event && event.contentChanges) {
+            for (let i = 0; i < event.contentChanges.length; i++) {
+                let el = event.contentChanges[i];
+                if (el.text) {
+                    text = el.text;
+                    break;
+                }
+            }
+        }
+
+        // check if the text has a new line
+        if (text && text.match(/[\n\r]/g)) {
+            isNewLine = true;
+        } else if (text && text.length > 0) {
+            hasNonNewLineData = true;
+        }
+
+        let newCount = text ? text.length : 0;
+
+        // check if its a character deletion
         if (
-            newCount == 0 &&
+            newCount === 0 &&
             event.contentChanges &&
             event.contentChanges.length > 0 &&
             event.contentChanges[0].rangeLength &&
@@ -198,7 +206,7 @@ export class KpmController {
             }
         }
 
-        if (newCount > 1) {
+        if (newCount > 8) {
             //
             // it's a copy and paste event
             //
@@ -231,11 +239,14 @@ export class KpmController {
         fileInfo.lines = lines;
         if (diff < 0) {
             fileInfo.linesRemoved += Math.abs(diff);
+            console.log("Software.com: Increment lines removed");
         } else if (diff > 0) {
             fileInfo.linesAdded += diff;
+            console.log("Software.com: Increment lines added");
         }
         if (fileInfo.linesAdded === 0 && isNewLine) {
             fileInfo.linesAdded = 1;
+            console.log("Software.com: Increment lines added");
         }
 
         // update the map containing the keystroke count

@@ -91,7 +91,7 @@ export class KpmDataManager {
 
         sendOfflineData();
 
-        console.error(`Software.com: sending ${JSON.stringify(payload)}`);
+        console.log(`Software.com: sending ${JSON.stringify(payload)}`);
 
         // POST the kpm to the PluginManager
         softwarePost("/data", payload, getItem("jwt")).then(resp => {

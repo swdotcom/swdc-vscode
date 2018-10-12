@@ -187,7 +187,7 @@ export function sendOfflineData() {
     if (fs.existsSync(dataStoreFile)) {
         const content = fs.readFileSync(dataStoreFile).toString();
         if (content) {
-            console.error(`Software.com: sending batch payloads: ${content}`);
+            console.log(`Software.com: sending batch payloads: ${content}`);
             const payloads = content
                 .split(/\r?\n/)
                 .map(item => {

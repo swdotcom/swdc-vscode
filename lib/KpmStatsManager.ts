@@ -184,6 +184,7 @@ export function fetchDailyKpmSessionInfo() {
         return;
     }
 
+    // fetch the kpm summary
     const fromSeconds = nowInSecs();
     softwareGet(`/sessions?from=${fromSeconds}&summary=true`, getItem("jwt"))
         .then(resp => {
@@ -217,6 +218,7 @@ export function fetchDailyKpmSessionInfo() {
                         sessionTimeIcon = "🌔";
                     }
                 }
+
                 // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
                 kpmInfo["kpmAvg"] = lastKpm.toFixed(0);
                 kpmInfo["sessionTime"] = sessionTime;
