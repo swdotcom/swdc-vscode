@@ -40,10 +40,8 @@ export class KpmController {
                 if (hasData) {
                     // send the payload
                     setTimeout(() => keystrokeCount.postData(), 0);
-                } else {
-                    // remove it
-                    delete _keystrokeMap[key];
                 }
+                delete _keystrokeMap[key];
             }
         }
     }
