@@ -14,11 +14,9 @@ type Project = {
 
 export class KpmDataManager {
     public source: {};
-    public type: String;
     public keystrokes: Number;
     public start: Number;
     public local_start: Number;
-    public offset: Number;
     public timezone: String;
     public project: Project;
     public pluginId: Number;
@@ -26,7 +24,6 @@ export class KpmDataManager {
 
     constructor(project: Project) {
         (this.source = {}),
-            (this.type = "Events"),
             (this.keystrokes = 0),
             (this.project = project),
             (this.pluginId = 2);
@@ -68,7 +65,6 @@ export class KpmDataManager {
         // subtract the offset_sec (it'll be positive before utc and negative after utc)
         payload.local_start = payload.start - offset_sec;
         payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        payload.offset = offset;
 
         const projectName =
             payload.project && payload.project.directory

@@ -65,10 +65,11 @@ export class KpmController {
 
         await this.initializeKeystrokesCount(filename);
 
-        this.updateFileInfoLength(
-            filename,
-            _keystrokeMap[rootPath].source[filename]
-        );
+        if (event.document && event.document.getText()) {
+            _keystrokeMap[rootPath].source[
+                filename
+            ].length = event.document.getText().length;
+        }
 
         _keystrokeMap[rootPath].source[filename].close += 1;
         console.log("Software.com: File closed: " + filename);
@@ -83,10 +84,11 @@ export class KpmController {
 
         await this.initializeKeystrokesCount(filename);
 
-        this.updateFileInfoLength(
-            filename,
-            _keystrokeMap[rootPath].source[filename]
-        );
+        if (event.document && event.document.getText()) {
+            _keystrokeMap[rootPath].source[
+                filename
+            ].length = event.document.getText().length;
+        }
 
         _keystrokeMap[rootPath].source[filename].open += 1;
         console.log("Software.com: File opened: " + filename);
@@ -111,16 +113,6 @@ export class KpmController {
         return false;
     }
 
-    private updateFileInfoLength(filename, fileInfo) {
-        if (filename !== NO_NAME_FILE) {
-            fs.stat(filename, function(err, stats) {
-                if (stats && stats["size"]) {
-                    fileInfo.length = stats["size"];
-                }
-            });
-        }
-    }
-
     private async _onEventHandler(event) {
         if (!this.isTrueEventFile(event)) {
             return;
@@ -140,10 +132,11 @@ export class KpmController {
 
         // let fileInfo = _keystrokeMap[rootPath].source[filename];
 
-        this.updateFileInfoLength(
-            filename,
-            _keystrokeMap[rootPath].source[filename]
-        );
+        if (event.document && event.document.getText()) {
+            _keystrokeMap[rootPath].source[
+                filename
+            ].length = event.document.getText().length;
+        }
 
         //
         // Map all of the contentChanges objects then use the
@@ -158,14 +151,12 @@ export class KpmController {
         // get the content changes text
         let text = "";
 
-        if (event && event.contentChanges) {
-            for (let i = 0; i < event.contentChanges.length; i++) {
-                let el = event.contentChanges[i];
-                if (el.text) {
-                    text = el.text;
-                    break;
-                }
-            }
+        let hasCotentText =
+            event.contentChanges && event.contentChanges.length === 1
+                ? true
+                : false;
+        if (hasCotentText) {
+            text = event.contentChanges[0].text || "";
         }
 
         // check if the text has a new line
@@ -181,7 +172,7 @@ export class KpmController {
         if (
             newCount === 0 &&
             event.contentChanges &&
-            event.contentChanges.length > 0 &&
+            event.contentChanges.length === 1 &&
             event.contentChanges[0].rangeLength &&
             event.contentChanges[0].rangeLength > 0
         ) {
