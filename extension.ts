@@ -22,14 +22,15 @@ import {
     setItem,
     randomCode,
     getSoftwareDataStoreFile,
-    deleteFile
+    deleteFile,
+    launchWebUrl
 } from "./lib/Util";
 import {
     fetchDailyKpmSessionInfo,
     chekUserAuthenticationStatus,
-    launchWebUrl,
     checkTokenAvailability
 } from "./lib/KpmStatsManager";
+import { fetchTacoChoices } from "./lib/KpmGrubManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -97,6 +98,11 @@ export function activate(ctx: ExtensionContext) {
         })
     );
     ctx.subscriptions.push(
+        commands.registerCommand("extension.orderGrubCommand", () => {
+            orderGrubCommandEvent();
+        })
+    );
+    ctx.subscriptions.push(
         commands.registerCommand("extension.pauseSoftwareMetrics", () => {
             handlePauseMetricsEvent();
         })
@@ -116,6 +122,10 @@ function handlePauseMetricsEvent() {
 function handleEnableMetricsEvent() {
     TELEMETRY_ON = true;
     showStatus("Software.com", null);
+}
+
+export async function orderGrubCommandEvent() {
+    fetchTacoChoices();
 }
 
 export async function handleKpmClickedEvent() {
@@ -144,7 +154,7 @@ export async function handleKpmClickedEvent() {
         // check for the jwt in a minute
         setTimeout(() => {
             checkTokenAvailability();
-        }, 1000 * 60);
+        }, 1000 * 45);
     }
 
     launchWebUrl(webUrl);

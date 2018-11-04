@@ -1,4 +1,6 @@
 export const NOT_NOW_LABEL = "Not now";
+export const OK_LABEL = "Ok";
+export const YES_LABEL = "Yes";
 export const LOGIN_LABEL = "Log in";
 export const NO_NAME_FILE = "Untitled";
 export const DEFAULT_DURATION = 60;

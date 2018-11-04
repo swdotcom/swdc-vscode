@@ -5,6 +5,7 @@ const { exec } = require("child_process");
 
 const fs = require("fs");
 const os = require("os");
+const cp = require("child_process");
 const crypto = require("crypto");
 
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -41,11 +42,25 @@ export function showErrorStatus() {
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
-        getStatusBarItem().tooltip = "Click to see more from Software.com";
-    } else {
-        getStatusBarItem().tooltip = tooltip;
+        tooltip = "Click to see more from Software.com";
     }
-    getStatusBarItem().text = fullMsg;
+    if (getStatusBarItem().command === "extension.orderGrubCommand") {
+        // add a taco to the full msg and keep the grub command intact
+        fullMsg += " 🌮";
+    } else {
+        getStatusBarItem().command = "extension.softwareKpmDashboard";
+    }
+    updateStatusBar(fullMsg, tooltip);
+}
+
+export function showTacoTimeStatus(fullMsg, tooltip) {
+    getStatusBarItem().command = "extension.orderGrubCommand";
+    updateStatusBar(fullMsg, tooltip);
+}
+
+function updateStatusBar(msg, tooltip) {
+    getStatusBarItem().tooltip = tooltip;
+    getStatusBarItem().text = msg;
 }
 
 export function isEmptyObj(obj) {
@@ -318,4 +333,25 @@ export async function getResourceInfo(projectDir) {
     }
     // we don't have git info, return an empty object
     return {};
+}
+
+export function launchWebUrl(url) {
+    let open = "open";
+    let args = [`${url}`];
+    if (isWindows()) {
+        open = "cmd";
+        // adds the following args to the beginning of the array
+        args.unshift("/c", "start", '""');
+    } else if (!isMac()) {
+        open = "xdg-open";
+    }
+
+    let process = cp.execFile(open, args, (error, stdout, stderr) => {
+        if (error != null) {
+            console.log(
+                "Software.com: Error launching Software web url: ",
+                error.toString()
+            );
+        }
+    });
 }

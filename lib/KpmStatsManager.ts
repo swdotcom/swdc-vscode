@@ -17,10 +17,12 @@ import {
     showStatus,
     getSoftwareSessionFile
 } from "./Util";
+import { showTacoTime, isTacoTime } from "./KpmGrubManager";
 import {
     isTelemetryOn,
     isAuthenticated,
-    handleKpmClickedEvent
+    handleKpmClickedEvent,
+    getStatusBarItem
 } from "../extension";
 import { isResponseOk, softwareGet } from "./HttpClient";
 
@@ -157,27 +159,6 @@ export function checkTokenAvailability() {
         });
 }
 
-export function launchWebUrl(url) {
-    let open = "open";
-    let args = [`${url}`];
-    if (isWindows()) {
-        open = "cmd";
-        // adds the following args to the beginning of the array
-        args.unshift("/c", "start", '""');
-    } else if (!isMac()) {
-        open = "xdg-open";
-    }
-
-    let process = cp.execFile(open, args, (error, stdout, stderr) => {
-        if (error != null) {
-            console.log(
-                "Software.com: Error launching Software authentication: ",
-                error.toString()
-            );
-        }
-    });
-}
-
 export function fetchDailyKpmSessionInfo() {
     if (!isTelemetryOn()) {
         // telemetry is paused
@@ -237,6 +218,20 @@ export function fetchDailyKpmSessionInfo() {
 
                     let fullMsg = "<S> " + kpmMsg + ", " + sessionMsg;
                     showStatus(fullMsg, null);
+
+                    if (lastKpm > 0) {
+                        // the user has kpm activity, is it lunch or dinner time?
+                        setTimeout(() => {
+                            // is it taco time?
+                            if (isTacoTime()) {
+                                showTacoTime();
+                            } else {
+                                // make sure the command is set to "extension.softwareKpmDashboard"
+                                getStatusBarItem().command =
+                                    "extension.softwareKpmDashboard";
+                            }
+                        }, 5000);
+                    }
                 } else {
                     showStatus("Software.com", null);
                 }
@@ -250,6 +245,13 @@ export function fetchDailyKpmSessionInfo() {
                 err.message
             );
         });
+
+    setTimeout(() => {
+        // is it taco time?
+        if (isTacoTime()) {
+            showTacoTime();
+        }
+    }, 5000);
 }
 
 function humanizeMinutes(min) {
