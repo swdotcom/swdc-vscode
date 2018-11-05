@@ -15,7 +15,7 @@ export async function softwareGet(api, jwt) {
         })
         .catch(err => {
             console.log(
-                `Softare.com: error fetching data for ${api}, message: ${
+                `Software.com: error fetching data for ${api}, message: ${
                     err.message
                 }`
             );
@@ -33,7 +33,7 @@ export async function softwarePost(api, payload, jwt) {
         })
         .catch(err => {
             console.log(
-                `Softare.com: error posting data for ${api}, message: ${
+                `Software.com: error posting data for ${api}, message: ${
                     err.message
                 }`
             );
