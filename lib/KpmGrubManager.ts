@@ -5,8 +5,8 @@ import { isResponseOk } from "./HttpClient";
 import { NOT_NOW_LABEL, YES_LABEL, OK_LABEL } from "./Constants";
 
 let tacoTimeMap = {
-    lunch: 0,
-    dinner: 0
+    count: 0,
+    activated: false
 };
 
 // 11am
@@ -48,17 +48,17 @@ function renderTacoTimeMessage(count) {
     }
 
     if (hourOfDay === lunchHour) {
-        if (tacoTimeMap.lunch >= maxTacos) {
+        if (tacoTimeMap.count >= maxTacos) {
             showTacoTimeStatus("Software 🌮", "Is it taco time?");
             return;
         }
-        tacoTimeMap.lunch += 1;
+        tacoTimeMap.count += 1;
     } else {
-        if (tacoTimeMap.dinner >= maxTacos) {
+        if (tacoTimeMap.count >= maxTacos) {
             showTacoTimeStatus("Software 🌮", "Is it taco time?");
             return;
         }
-        tacoTimeMap.dinner += 1;
+        tacoTimeMap.count += 1;
     }
 
     setTimeout(() => {
@@ -67,26 +67,30 @@ function renderTacoTimeMessage(count) {
 }
 
 export function fetchTacoChoices() {
-    tacoTimeMap.lunch = maxTacos;
-    tacoTimeMap.dinner = maxTacos;
-    if (!grubWindow) {
-        /**
+    if (tacoTimeMap.activated) {
+        showQuickPick();
+    } else {
+        tacoTimeMap.count = maxTacos;
+        tacoTimeMap.activated = true;
+        if (!grubWindow) {
+            /**
          * Grubhub, Doordash, UberEats
          * others we can show..
             Postmates, Delivery.com, Yelp Eat 24, Foodler
          */
-        grubWindow = window
-            .showInformationMessage(
-                "Would you like to order tacos now?",
-                ...[NOT_NOW_LABEL, YES_LABEL]
-            )
-            .then(selection => {
-                grubWindow = null;
-                if (selection === YES_LABEL) {
-                    // open the input options box
-                    showQuickPick();
-                }
-            });
+            grubWindow = window
+                .showInformationMessage(
+                    "Would you like to order tacos now?",
+                    ...[NOT_NOW_LABEL, YES_LABEL]
+                )
+                .then(selection => {
+                    grubWindow = null;
+                    if (selection === YES_LABEL) {
+                        // open the input options box
+                        showQuickPick();
+                    }
+                });
+        }
     }
 }
 
@@ -98,7 +102,7 @@ export function isTacoTime() {
     // 0 = sun, 6 = sat
     let day = d.getDay();
 
-    let isWeekday = day >= 1 && day <= 5 ? true : false;
+    let isWeekday = day >= 0 && day <= 5 ? true : false;
     let isLunchOrDinner =
         hour === lunchHour || hour === dinnerHour ? true : false;
     let isPastMinutesThreshold = minutes >= minutesOfHour ? true : false;
@@ -106,18 +110,10 @@ export function isTacoTime() {
     // as long as it's a weekday and the hour is 11 or 5 and
     // it's past 30 minutes after the hour it's taco time
     if (isWeekday && isLunchOrDinner && isPastMinutesThreshold) {
-        if (hour === lunchHour) {
-            if (tacoTimeMap.lunch === 0) {
-                return true;
-            }
-        } else {
-            if (tacoTimeMap.dinner === 0) {
-                return true;
-            }
-        }
+        return true;
     } else {
         // clear the map altogether
-        this.resetTacoTimeMap();
+        resetTacoTimeMap();
     }
     return false;
 }
@@ -195,7 +191,7 @@ export function showQuickPick() {
 
 function resetTacoTimeMap() {
     tacoTimeMap = {
-        lunch: 0,
-        dinner: 0
+        count: 0,
+        activated: false
     };
 }

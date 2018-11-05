@@ -1,6 +1,7 @@
 import { getStatusBarItem } from "../extension";
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
+import { isTacoTime } from "./KpmGrubManager";
 const { exec } = require("child_process");
 
 const fs = require("fs");
@@ -44,9 +45,9 @@ export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip = "Click to see more from Software.com";
     }
-    if (getStatusBarItem().command === "extension.orderGrubCommand") {
-        // add a taco to the full msg and keep the grub command intact
+    if (isTacoTime()) {
         fullMsg += " 🌮";
+        getStatusBarItem().command === "extension.orderGrubCommand";
     } else {
         getStatusBarItem().command = "extension.softwareKpmDashboard";
     }

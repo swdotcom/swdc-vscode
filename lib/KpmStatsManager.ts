@@ -225,10 +225,6 @@ export function fetchDailyKpmSessionInfo() {
                             // is it taco time?
                             if (isTacoTime()) {
                                 showTacoTime();
-                            } else {
-                                // make sure the command is set to "extension.softwareKpmDashboard"
-                                getStatusBarItem().command =
-                                    "extension.softwareKpmDashboard";
                             }
                         }, 5000);
                     }

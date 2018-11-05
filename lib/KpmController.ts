@@ -128,7 +128,16 @@ export class KpmController {
 
         let rootPath = this.getRootPath();
 
+        if (!filename || !rootPath || filename.indexOf(rootPath) === -1) {
+            return;
+        }
+
         await this.initializeKeystrokesCount(filename);
+
+        if (!_keystrokeMap[rootPath].source[filename]) {
+            // it's undefined, it wasn't created
+            return;
+        }
 
         // let fileInfo = _keystrokeMap[rootPath].source[filename];
 
