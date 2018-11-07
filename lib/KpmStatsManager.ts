@@ -133,12 +133,16 @@ export function checkTokenAvailability() {
     // non-authorization API
     softwareGet(`/users/plugin/confirm?token=${tokenVal}`, null)
         .then(resp => {
-            if (isResponseOk(resp)) {
-                if (resp.data) {
-                    setItem("jwt", resp.data.jwt);
-                    setItem("user", resp.data.user);
-                    setItem("vscode_lastUpdateTime", Date.now());
-                }
+            if (
+                isResponseOk(resp) &&
+                resp.data &&
+                resp.data.jwt &&
+                resp.data.user
+            ) {
+                setItem("jwt", resp.data.jwt);
+                setItem("user", resp.data.user);
+                setItem("vscode_lastUpdateTime", Date.now());
+
                 // fetch kpm data
                 setTimeout(() => {
                     fetchDailyKpmSessionInfo();

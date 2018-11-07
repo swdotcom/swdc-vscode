@@ -21,7 +21,7 @@ const maxTacos = 15;
 let grubWindow = null;
 
 export function showTacoTime() {
-    if (getStatusBarItem().command === "extension.orderGrubCommand") {
+    if (tacoTimeMap.count > 0) {
         return;
     }
     renderTacoTimeMessage(1);
