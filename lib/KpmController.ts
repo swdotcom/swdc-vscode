@@ -2,7 +2,7 @@ import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
-import { getCurrentMusicTrackId, getResourceInfo, isEmptyObj } from "./Util";
+import { getResourceInfo, isEmptyObj } from "./Util";
 
 const fs = require("fs");
 
@@ -194,13 +194,6 @@ export class KpmController {
             return;
         }
 
-        if (isEmptyObj(_keystrokeMap[rootPath].source[filename].trackInfo)) {
-            // check to see if the user has any music playing
-            _keystrokeMap[rootPath].source[
-                filename
-            ].trackInfo = await getCurrentMusicTrackId();
-        }
-
         // get the repo info if we don't already have it for the project
         if (
             _keystrokeMap[rootPath].project &&
@@ -325,8 +318,7 @@ export class KpmController {
                     lines: 0,
                     linesAdded: 0,
                     linesRemoved: 0,
-                    syntax: "",
-                    trackInfo: {}
+                    syntax: ""
                 };
                 keystrokeCount.source[filename] = fileInfo;
             }

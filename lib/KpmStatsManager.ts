@@ -11,20 +11,18 @@ import {
     getItem,
     setItem,
     showErrorStatus,
-    isWindows,
-    isMac,
-    nowInSecs,
     showStatus,
-    getSoftwareSessionFile
+    getSoftwareSessionFile,
+    getTrackInfo,
+    isEmptyObj
 } from "./Util";
 import { showTacoTime, isTacoTime } from "./KpmGrubManager";
 import {
     isTelemetryOn,
     isAuthenticated,
-    handleKpmClickedEvent,
-    getStatusBarItem
+    handleKpmClickedEvent
 } from "../extension";
-import { isResponseOk, softwareGet } from "./HttpClient";
+import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
 
 const cp = require("child_process");
 const fs = require("fs");
@@ -32,6 +30,7 @@ const fs = require("fs");
 let confirmWindow = null;
 let lastAuthenticationCheckTime = -1;
 let kpmInfo = {};
+let trackInfo = {};
 
 async function serverIsAvailable() {
     return await checkOnline();
@@ -163,6 +162,21 @@ export function checkTokenAvailability() {
         });
 }
 
+function sendMusicData(trackData) {
+    // add the "local_start", "start", and "end"
+    // POST the kpm to the PluginManager
+    return softwarePost("/data/music", trackData, getItem("jwt"))
+        .then(resp => {
+            if (!isResponseOk(resp)) {
+                return { status: "fail" };
+            }
+            return { status: "ok" };
+        })
+        .catch(e => {
+            return { status: "fail" };
+        });
+}
+
 export function fetchDailyKpmSessionInfo() {
     if (!isTelemetryOn()) {
         // telemetry is paused
@@ -257,6 +271,61 @@ export function fetchDailyKpmSessionInfo() {
             showTacoTime();
         }
     }, 5000);
+}
+
+export function gatherMusicInfo() {
+    const trackInfoDataP = getTrackInfo();
+    trackInfoDataP
+        .then(trackInfoData => {
+            let d = new Date();
+            // offset is the minutes from GMT. it's positive if it's before, and negative after
+            const offset = d.getTimezoneOffset();
+            const offset_sec = offset * 60;
+            let nowInSec = Math.round(d.getTime() / 1000);
+            // subtract the offset_sec (it'll be positive before utc and negative after utc)
+            let localNowInSec = nowInSec - offset_sec;
+
+            if (trackInfoData && trackInfoData["id"]) {
+                // check if we have this track already in "trackInfo"
+                if (
+                    !isEmptyObj(trackInfo) &&
+                    trackInfo["id"] !== trackInfoData["id"]
+                ) {
+                    // this means a new song has started, send a payload to complete
+                    // the 1st one and another to start the next one
+                    trackInfo["end"] = nowInSec - 1;
+                    sendMusicData(trackInfo).then(result => {
+                        // send the next payload starting the next song
+                        trackInfo = {};
+                        trackInfo = { ...trackInfoData };
+                        trackInfo["start"] = nowInSec;
+                        trackInfo["local_start"] = localNowInSec;
+                        sendMusicData(trackInfo);
+                    });
+                } else if (isEmptyObj(trackInfo)) {
+                    // no previous track played, send this one to start it
+                    trackInfo = { ...trackInfoData };
+                    trackInfo["start"] = nowInSec;
+                    trackInfo["local_start"] = localNowInSec;
+                    sendMusicData(trackInfo);
+                } else if (trackInfo["state"] !== trackInfoData["state"]) {
+                    // update the track info state
+                    trackInfo["state"] = trackInfoData["state"];
+                    sendMusicData(trackInfo);
+                }
+            } else if (!isEmptyObj(trackInfo)) {
+                // end this song since we're not getting a current track
+                // and the trackInfo is not empty
+                trackInfo["end"] = nowInSec;
+                sendMusicData(trackInfo).then(result => {
+                    // clear out the trackInfo
+                    trackInfo = {};
+                });
+            }
+        })
+        .catch(err => {
+            //
+        });
 }
 
 function humanizeMinutes(min) {

@@ -161,7 +161,7 @@ export function deleteFile(file) {
     }
 }
 
-export async function getCurrentMusicTrackId() {
+export async function getTrackInfo() {
     let trackInfo = {};
 
     let isSpotifyRunning = await getSpotifyRunningPromise();
@@ -225,7 +225,9 @@ function getSpotifyTrackPromise() {
                     artist: track.artist,
                     genre: "", // spotify doesn't provide genre from their app.
                     start: 0,
-                    end: 0
+                    end: 0,
+                    state: "playing",
+                    duration: track.duration
                 };
                 resolve(trackInfo);
             }
@@ -247,6 +249,7 @@ function isItunesRunningPromise() {
 
 /**
  * returns an array of data, i.e.
+ * { genre, artist, album, id, index, name, time }
  * 0:"Dance"
     1:"Martin Garrix"
     2:"High on Life (feat. Bonn) - Single"
@@ -261,13 +264,16 @@ function getItunesTrackPromise() {
             if (err || !track) {
                 resolve(null);
             } else {
+                itunes.isPaused;
                 let trackInfo = {
                     id: "",
                     name: "",
                     artist: "",
                     genre: "", // spotify doesn't provide genre from their app.
                     start: 0,
-                    end: 0
+                    end: 0,
+                    state: "playing",
+                    duration: 0
                 };
                 if (track.length > 0) {
                     trackInfo["genre"] = track[0];
@@ -281,6 +287,17 @@ function getItunesTrackPromise() {
                 if (track.length >= 5) {
                     trackInfo["name"] = track[5];
                 }
+                if (track.length >= 6) {
+                    // get the duration "4:41"
+                    let durationParts = track[6].split(":");
+                    if (durationParts && durationParts.length === 2) {
+                        let durationInMin =
+                            parseInt(durationParts[0], 10) * 60 +
+                            parseInt(durationParts[1]);
+                        trackInfo["duration"] = durationInMin;
+                    }
+                }
+                // stopped/‌playing/‌paused
                 resolve(trackInfo);
             }
         });

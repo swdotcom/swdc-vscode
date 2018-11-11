@@ -27,6 +27,7 @@ import {
 } from "./lib/Util";
 import {
     fetchDailyKpmSessionInfo,
+    gatherMusicInfo,
     chekUserAuthenticationStatus,
     checkTokenAvailability
 } from "./lib/KpmStatsManager";
@@ -80,6 +81,11 @@ export function activate(ctx: ExtensionContext) {
     setInterval(() => {
         fetchDailyKpmSessionInfo();
     }, 1000 * 60);
+
+    // 15 second interval to check music info
+    setInterval(() => {
+        gatherMusicInfo();
+    }, 1000 * 15);
 
     setTimeout(() => {
         // check if the user is authenticated with what is saved in the software config
