@@ -227,7 +227,8 @@ function getSpotifyTrackPromise() {
                     start: 0,
                     end: 0,
                     state: "playing",
-                    duration: track.duration
+                    duration: track.duration,
+                    type: "spotify"
                 };
                 resolve(trackInfo);
             }
@@ -273,7 +274,8 @@ function getItunesTrackPromise() {
                     start: 0,
                     end: 0,
                     state: "playing",
-                    duration: 0
+                    duration: 0,
+                    type: "itunes"
                 };
                 if (track.length > 0) {
                     trackInfo["genre"] = track[0];
