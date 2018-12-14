@@ -51,6 +51,16 @@ export class KpmDataManager {
         return false;
     }
 
+    /**
+     * Get the true timezone offset
+     * @param d
+     */
+    stdTimezoneOffset(d) {
+        var jan = new Date(d.getFullYear(), 0, 1);
+        var jul = new Date(d.getFullYear(), 6, 1);
+        return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    }
+
     postData() {
         const payload = JSON.parse(JSON.stringify(this));
         payload.keystrokes = String(payload.keystrokes);
@@ -58,8 +68,9 @@ export class KpmDataManager {
         // ensure the start and end are exactly DEFAULT_DURATION apart
         let d = new Date();
         d = new Date(d.getTime() - DEFAULT_DURATION_MILLIS);
-        // offset is the minutes from GMT. it's positive if it's before, and negative after
-        const offset = d.getTimezoneOffset();
+        // offset is the minutes from GMT.
+        // it's positive if it's before, and negative after
+        const offset = this.stdTimezoneOffset(d);
         const offset_sec = offset * 60;
         payload.start = Math.round(d.getTime() / 1000);
         // subtract the offset_sec (it'll be positive before utc and negative after utc)
