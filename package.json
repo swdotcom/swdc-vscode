@@ -1,17 +1,17 @@
 {
     "name": "swdc-vscode",
-    "displayName": "Software.com",
+    "displayName": "Software",
     "version": "0.5.29",
     "publisher": "softwaredotcom",
-    "description": "Software.com for VS Code - It's Code Time",
+    "description": "Track your programming activity in real-time in Visual Studio Code. Analyze your coding data to increase flow, decrease interrupts, achieve work-life balance, and more.",
     "author": {
         "name": "Software.com"
     },
-    "license": "SEE https://software.com/eula",
+    "license": "SEE LICENSE IN LICENSE",
     "icon": "images/icon.png",
     "galleryBanner": {
-        "color": "#03bdf2",
-        "theme": "dark"
+        "color": "#fff",
+        "theme": "light"
     },
     "repository": {
         "type": "git",
@@ -19,6 +19,13 @@
     },
     "categories": [
         "Other"
+    ],
+    "keywords": [
+        "software.com",
+        "productivity",
+        "time tracking",
+        "javascript",
+        "tools"
     ],
     "activationEvents": [
         "*"
