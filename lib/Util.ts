@@ -2,6 +2,8 @@ import { getStatusBarItem } from "../extension";
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
 import { isTacoTime } from "./KpmGrubManager";
+import { workspace } from "vscode";
+import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
 const { exec } = require("child_process");
 
 const fs = require("fs");
@@ -10,6 +12,16 @@ const cp = require("child_process");
 const crypto = require("crypto");
 
 const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+export function getRootPath() {
+    let rootPath =
+        workspace.workspaceFolders &&
+        workspace.workspaceFolders[0] &&
+        workspace.workspaceFolders[0].uri &&
+        workspace.workspaceFolders[0].uri.fsPath;
+
+    return rootPath;
+}
 
 export function setItem(key, value) {
     const jsonObj = getSoftwareSessionAsJson();
@@ -319,7 +331,7 @@ function execPromise(command, opts) {
     });
 }
 
-async function wrapExecPromise(cmd, projectDir) {
+export async function wrapExecPromise(cmd, projectDir) {
     let prop = null;
     try {
         prop = await execPromise(cmd, {
@@ -330,29 +342,6 @@ async function wrapExecPromise(cmd, projectDir) {
         prop = null;
     }
     return prop;
-}
-
-//
-// use "git symbolic-ref --short HEAD" to get the git branch
-// use "git config --get remote.origin.url" to get the remote url
-export async function getResourceInfo(projectDir) {
-    let branch = await wrapExecPromise(
-        "git symbolic-ref --short HEAD",
-        projectDir
-    );
-    let identifier = await wrapExecPromise(
-        "git config --get remote.origin.url",
-        projectDir
-    );
-    let email = await wrapExecPromise("git config user.email", projectDir);
-    let tag = await wrapExecPromise("git describe --all", projectDir);
-
-    // both should be valid to return the resource info
-    if (branch && identifier) {
-        return { branch, identifier, email, tag };
-    }
-    // we don't have git info, return an empty object
-    return {};
 }
 
 export function launchWebUrl(url) {

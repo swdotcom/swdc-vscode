@@ -1,8 +1,9 @@
 import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
-import { DEFAULT_DURATION } from "./Constants";
-import { getResourceInfo, isEmptyObj } from "./Util";
+import { DEFAULT_DURATION, MILLIS_PER_MINUTE } from "./Constants";
+import { isEmptyObj, getRootPath } from "./Util";
+import { getResourceInfo } from "./KpmRepoManager";
 
 const fs = require("fs");
 
@@ -46,22 +47,12 @@ export class KpmController {
         }
     }
 
-    private getRootPath() {
-        let rootPath =
-            workspace.workspaceFolders &&
-            workspace.workspaceFolders[0] &&
-            workspace.workspaceFolders[0].uri &&
-            workspace.workspaceFolders[0].uri.fsPath;
-
-        return rootPath;
-    }
-
     private async _onCloseHandler(event) {
         if (!this.isTrueEventFile(event)) {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
-        let rootPath = this.getRootPath();
+        let rootPath = getRootPath();
 
         await this.initializeKeystrokesCount(filename);
 
@@ -80,7 +71,7 @@ export class KpmController {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
-        let rootPath = this.getRootPath();
+        let rootPath = getRootPath();
 
         await this.initializeKeystrokesCount(filename);
 
@@ -126,7 +117,7 @@ export class KpmController {
         let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
-        let rootPath = this.getRootPath();
+        let rootPath = getRootPath();
 
         if (!filename || !rootPath || filename.indexOf(rootPath) === -1) {
             return;
@@ -200,7 +191,7 @@ export class KpmController {
             (!_keystrokeMap[rootPath].project.resource ||
                 isEmptyObj(_keystrokeMap[rootPath].project.resource))
         ) {
-            let resourceInfo = await getResourceInfo(this.getRootPath());
+            let resourceInfo = await getResourceInfo(rootPath);
             if (resourceInfo && resourceInfo.identifier) {
                 _keystrokeMap[rootPath].project.resource = resourceInfo;
                 _keystrokeMap[rootPath].project.identifier =
@@ -269,7 +260,7 @@ export class KpmController {
         //
         // get the root path
         //
-        let rootPath = this.getRootPath();
+        let rootPath = getRootPath();
 
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || "None";

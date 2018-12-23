@@ -23,8 +23,10 @@ import {
     randomCode,
     getSoftwareDataStoreFile,
     deleteFile,
-    launchWebUrl
+    launchWebUrl,
+    getRootPath
 } from "./lib/Util";
+import { getRepoUsers } from "./lib/KpmRepoManager";
 import {
     fetchDailyKpmSessionInfo,
     gatherMusicInfo,
@@ -97,6 +99,17 @@ export function activate(ctx: ExtensionContext) {
         // send any offline data
         sendOfflineData();
     }, 10000);
+
+    // every 2 hours look for repo members
+    let repoJobInterval = 1000 * 60 * 60 * 2;
+    setInterval(() => {
+        getRepoUsers(getRootPath());
+    }, repoJobInterval);
+
+    // fire it off once in 2 minutes
+    setTimeout(() => {
+        getRepoUsers(getRootPath());
+    }, 1000 * 60 * 2);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {

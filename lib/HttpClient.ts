@@ -6,6 +6,12 @@ const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
 
+/**
+ * Response returns a paylod with the following...
+ * data: <payload>, status: 200, statusText: "OK", config: Object
+ * @param api
+ * @param jwt
+ */
 export async function softwareGet(api, jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
     return await beApi
