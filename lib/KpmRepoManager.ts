@@ -1,5 +1,5 @@
 import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
-import { wrapExecPromise, getItem } from "./Util";
+import { wrapExecPromise, getItem, isWindows } from "./Util";
 
 //
 // use "git symbolic-ref --short HEAD" to get the git branch
@@ -37,11 +37,14 @@ export async function getRepoUsers(projectDir) {
         let branch = resourceInfo.branch;
 
         let members = [];
+        // windows doesn't support the "uniq" command, so
+        // we'll just go through all of them if it's windows
+        let cmd = `git log --pretty="%an,%ae" | sort`;
+        if (!isWindows()) {
+            cmd += " | uniq";
+        }
         // get the author name and email
-        let devOutput = await wrapExecPromise(
-            "git log --pretty='%an, %ae' | sort | uniq",
-            projectDir
-        );
+        let devOutput = await wrapExecPromise(cmd, projectDir);
         // will look like this...
         // <name1>, <email1>
         // <name2>, <email2>
@@ -50,6 +53,7 @@ export async function getRepoUsers(projectDir) {
             .replace(/\n/g, "\r")
             .split(/\r/);
 
+        let map = {};
         if (devList && devList.length > 0) {
             for (let i = 0; i < devList.length; i++) {
                 let devInfo = devList[i];
@@ -59,7 +63,10 @@ export async function getRepoUsers(projectDir) {
                         name: devInfos[0].trim(),
                         email: devInfos[1].trim()
                     };
-                    members.push(devInfoObj);
+                    if (!map[devInfoObj.email]) {
+                        members.push(devInfoObj);
+                    }
+                    map[devInfoObj.email] = devInfoObj;
                 }
             }
             let repoData = {

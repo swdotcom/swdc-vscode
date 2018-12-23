@@ -100,8 +100,8 @@ export function activate(ctx: ExtensionContext) {
         sendOfflineData();
     }, 10000);
 
-    // every 2 hours look for repo members
-    let repoJobInterval = 1000 * 60 * 60 * 2;
+    // every hour, look for repo members
+    let repoJobInterval = 1000 * 60 * 60;
     setInterval(() => {
         getRepoUsers(getRootPath());
     }, repoJobInterval);
@@ -109,7 +109,7 @@ export function activate(ctx: ExtensionContext) {
     // fire it off once in 2 minutes
     setTimeout(() => {
         getRepoUsers(getRootPath());
-    }, 1000 * 60 * 2);
+    }, 1000 * 60);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
