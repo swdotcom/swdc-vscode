@@ -118,9 +118,12 @@ async function getLastCommit(projectDir) {
         key = buildRepoKey(identifier, branch, tag);
 
         if (!latestCommitMap[key]) {
+            let encodedIdentifier = encodeURIComponent(identifier);
+            let encodedTag = encodeURIComponent(tag);
+            let encodedBranch = encodeURIComponent(branch);
             // call the app
             await softwareGet(
-                `/commits/latest?identifier=${identifier}&tag=${tag}&branch=${branch}`,
+                `/commits/latest?identifier=${encodedIdentifier}&tag=${encodedTag}&branch=${encodedBranch}`,
                 getItem("jwt")
             ).then(resp => {
                 if (isResponseOk(resp)) {
