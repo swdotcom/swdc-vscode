@@ -134,6 +134,13 @@ export function getSoftwareSessionAsJson() {
         const content = fs.readFileSync(sessionFile).toString();
         if (content) {
             data = JSON.parse(content);
+            let keysLen = data ? Object.keys(data).length : 0;
+            let dataLen = data && keysLen === 0 ? data.length : 0;
+            if (data && keysLen === 0 && dataLen > 0) {
+                // re-create the session file, it's corrupt without any keys but has a length
+                deleteFile(sessionFile);
+                data = {};
+            }
         }
     }
     return data ? data : {};
@@ -345,6 +352,7 @@ export async function wrapExecPromise(cmd, projectDir) {
 }
 
 export function launchWebUrl(url) {
+    console.log("launching url: ", url);
     let open = "open";
     let args = [`${url}`];
     if (isWindows()) {

@@ -26,7 +26,7 @@ import {
     launchWebUrl,
     getRootPath
 } from "./lib/Util";
-import { getRepoUsers } from "./lib/KpmRepoManager";
+import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
     fetchDailyKpmSessionInfo,
     gatherMusicInfo,
@@ -65,6 +65,8 @@ export function activate(ctx: ExtensionContext) {
     const controller = new KpmController();
     ctx.subscriptions.push(controller);
 
+    let one_min = 1000 * 60;
+
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
             StatusBarAlignment.Right,
@@ -82,7 +84,7 @@ export function activate(ctx: ExtensionContext) {
     // 1 minute interval to fetch daily kpm info
     setInterval(() => {
         fetchDailyKpmSessionInfo();
-    }, 1000 * 60);
+    }, one_min);
 
     // 15 second interval to check music info
     setInterval(() => {
@@ -101,15 +103,25 @@ export function activate(ctx: ExtensionContext) {
     }, 10000);
 
     // every hour, look for repo members
-    let repoJobInterval = 1000 * 60 * 60;
+    let hourly_interval = 1000 * 60 * 60;
     setInterval(() => {
         getRepoUsers(getRootPath());
-    }, repoJobInterval);
+    }, hourly_interval);
 
-    // fire it off once in 2 minutes
+    // fire it off once in 1 minutes
     setTimeout(() => {
         getRepoUsers(getRootPath());
-    }, 1000 * 60);
+    }, one_min);
+
+    // check on new commits once an hour
+    setInterval(() => {
+        getHistoricalCommits(getRootPath());
+    }, hourly_interval + one_min);
+
+    // fire off the commit gathering in a couple of minutes
+    setTimeout(() => {
+        getHistoricalCommits(getRootPath());
+    }, one_min * 2);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
