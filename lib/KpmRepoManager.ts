@@ -167,7 +167,7 @@ export async function getHistoricalCommits(projectDir) {
 
         // git log --stat --pretty="COMMIT:%H, %ct, %cI, %s, %ae"
         let commitHistory = await wrapExecPromise(
-            `git log --stat --pretty='COMMIT:%H,%ct,%cI,%s' --author=${
+            `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${
                 resourceInfo.email
             }${sinceOption}`,
             projectDir
@@ -258,30 +258,31 @@ export async function getHistoricalCommits(projectDir) {
             }
 
             if (commits && commits.length > 0) {
-                let commitData = {
-                    commits,
-                    identifier,
-                    tag,
-                    branch
-                };
-
-                // send this to the backend
-                softwarePost("/commits", commitData, getItem("jwt")).then(
-                    resp => {
-                        if (isResponseOk(resp)) {
-                            if (resp.data) {
-                                console.log(
-                                    `Software.com: ${resp.data.message}`
-                                );
-                            } else {
-                                // everything is fine, delete the offline data file
-                                console.log(
-                                    "Software.com: repo membership updated"
-                                );
-                            }
-                        }
+                let batchCommits = [];
+                for (let i = 0; i < commits.length; i++) {
+                    batchCommits.push(commits[i]);
+                    if (i > 0 && i % 100 === 0) {
+                        let commitData = {
+                            commits: batchCommits,
+                            identifier,
+                            tag,
+                            branch
+                        };
+                        await sendCommits(commitData);
+                        batchCommits = [];
                     }
-                );
+                }
+
+                if (batchCommits.length > 0) {
+                    let commitData = {
+                        commits: batchCommits,
+                        identifier,
+                        tag,
+                        branch
+                    };
+                    await sendCommits(commitData);
+                    batchCommits = [];
+                }
             }
         }
 
@@ -296,5 +297,19 @@ export async function getHistoricalCommits(projectDir) {
             backend/app/lib/sessions.js     | 25 +++++++++++++++----------
             4 files changed, 25 insertions(+), 38 deletions(-)
         */
+    }
+
+    function sendCommits(commitData) {
+        // send this to the backend
+        softwarePost("/commits", commitData, getItem("jwt")).then(resp => {
+            if (isResponseOk(resp)) {
+                if (resp.data) {
+                    console.log(`Software.com: ${resp.data.message}`);
+                } else {
+                    // everything is fine, delete the offline data file
+                    console.log("Software.com: repo commits updated");
+                }
+            }
+        });
     }
 }
