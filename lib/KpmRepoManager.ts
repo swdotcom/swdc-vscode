@@ -227,27 +227,36 @@ export async function getHistoricalCommits(projectDir) {
                         // get the file and changes
                         // i.e. backend/app.js                | 20 +++++++++-----------
                         line = line.replace(/ +/g, " ");
-                        let fileInfos = line.split(" ");
-                        if (fileInfos && fileInfos.length > 3) {
-                            let file = fileInfos[0].trim();
-                            let changes = parseInt(fileInfos[2].trim(), 10);
-                            let addAndDeletes = fileInfos[3].trim();
-                            // count the number of plus signs and negative signs to find
-                            // out how many additions and deletions per file
-                            let len = addAndDeletes.length;
-                            let lastPlusIdx = addAndDeletes.lastIndexOf("+");
-                            let insertions = 0;
-                            let deletions = 0;
-                            if (lastPlusIdx !== -1) {
-                                insertions = lastPlusIdx + 1;
-                                deletions = len - insertions;
-                            } else if (len > 0) {
-                                // all deletions
-                                deletions = len;
+                        // split by the pipe
+                        let lineInfos = line.split("|");
+                        if (lineInfos && lineInfos.length > 1) {
+                            let file = lineInfos[0].trim();
+                            let metricsLine = lineInfos[1].trim();
+                            let metricsInfos = metricsLine.split(" ");
+                            if (metricsInfos && metricsInfos.length > 1) {
+                                let addAndDeletes = metricsInfos[1].trim();
+                                // count the number of plus signs and negative signs to find
+                                // out how many additions and deletions per file
+                                let len = addAndDeletes.length;
+                                let lastPlusIdx = addAndDeletes.lastIndexOf(
+                                    "+"
+                                );
+                                let insertions = 0;
+                                let deletions = 0;
+                                if (lastPlusIdx !== -1) {
+                                    insertions = lastPlusIdx + 1;
+                                    deletions = len - insertions;
+                                } else if (len > 0) {
+                                    // all deletions
+                                    deletions = len;
+                                }
+                                commit.changes[file] = {
+                                    insertions,
+                                    deletions
+                                };
+                                commit.changes.__sftwTotal__.insertions += insertions;
+                                commit.changes.__sftwTotal__.deletions += deletions;
                             }
-                            commit.changes[file] = { insertions, deletions };
-                            commit.changes.__sftwTotal__.insertions += insertions;
-                            commit.changes.__sftwTotal__.deletions += deletions;
                         }
                     }
                 }
