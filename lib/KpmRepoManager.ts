@@ -1,10 +1,6 @@
 import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
 import { wrapExecPromise, getItem, isWindows } from "./Util";
 
-// this will contain the latest commit per repo/branch/tag
-// i.e. repo1_branch1_tag1 => {commitId, timestamp, email}
-let latestCommitMap = {};
-
 //
 // use "git symbolic-ref --short HEAD" to get the git branch
 // use "git config --get remote.origin.url" to get the remote url
@@ -105,44 +101,38 @@ function buildRepoKey(identifier, branch, tag) {
 async function getLastCommit(projectDir) {
     // get the repo info to get the last commit from the app
     if (!projectDir || projectDir === "") {
-        return;
+        return null;
     }
 
     // get the repo url, branch, and tag
     let resourceInfo = await getResourceInfo(projectDir);
     let key = null;
+    let commit = null;
     if (resourceInfo && resourceInfo.identifier) {
         let identifier = resourceInfo.identifier;
         let tag = resourceInfo.tag;
         let branch = resourceInfo.branch;
         key = buildRepoKey(identifier, branch, tag);
 
-        if (!latestCommitMap[key]) {
-            let encodedIdentifier = encodeURIComponent(identifier);
-            let encodedTag = encodeURIComponent(tag);
-            let encodedBranch = encodeURIComponent(branch);
-            // call the app
-            await softwareGet(
-                `/commits/latest?identifier=${encodedIdentifier}&tag=${encodedTag}&branch=${encodedBranch}`,
-                getItem("jwt")
-            ).then(resp => {
-                if (isResponseOk(resp)) {
-                    // will get a single commit object back with the following attributes
-                    // commitId, message, changes, email, timestamp
-                    let commit =
-                        resp.data && resp.data.commit ? resp.data.commit : null;
-                    if (commit) {
-                        latestCommitMap[key] = commit;
-                    }
-                }
-            });
-        }
+        let encodedIdentifier = encodeURIComponent(identifier);
+        let encodedTag = encodeURIComponent(tag);
+        let encodedBranch = encodeURIComponent(branch);
+        // call the app
+        commit = await softwareGet(
+            `/commits/latest?identifier=${encodedIdentifier}&tag=${encodedTag}&branch=${encodedBranch}`,
+            getItem("jwt")
+        ).then(resp => {
+            if (isResponseOk(resp)) {
+                // will get a single commit object back with the following attributes
+                // commitId, message, changes, email, timestamp
+                let commit =
+                    resp.data && resp.data.commit ? resp.data.commit : null;
+                return commit;
+            }
+        });
     }
 
-    if (key && !latestCommitMap[key]) {
-        return latestCommitMap[key];
-    }
-    return null;
+    return commit;
 }
 
 export async function getHistoricalCommits(projectDir) {
@@ -158,9 +148,7 @@ export async function getHistoricalCommits(projectDir) {
         let branch = resourceInfo.branch;
         let key = buildRepoKey(identifier, branch, tag);
 
-        await getLastCommit(projectDir);
-
-        let latestCommit = latestCommitMap[key];
+        let latestCommit = await getLastCommit(projectDir);
         let sinceOption = latestCommit
             ? ` --since=${parseInt(latestCommit.timestamp, 10)}`
             : "";
