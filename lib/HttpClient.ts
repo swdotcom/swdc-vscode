@@ -47,6 +47,23 @@ export async function softwarePost(api, payload, jwt) {
         });
 }
 
+export async function softwareDelete(api, jwt) {
+    beApi.defaults.headers.common["Authorization"] = jwt;
+    return beApi
+        .delete(api)
+        .then(resp => {
+            return resp;
+        })
+        .catch(err => {
+            console.log(
+                `Software.com: error with delete request for ${api}, message: ${
+                    err.message
+                }`
+            );
+            return err;
+        });
+}
+
 export function isResponseOk(resp) {
     if (
         (!resp.response && resp.errno) ||

@@ -13,8 +13,13 @@ import {
 const fs = require("fs");
 
 import { KpmController } from "./lib/KpmController";
-import { softwareGet, isResponseOk, softwarePost } from "./lib/HttpClient";
-import { launch_url } from "./lib/Constants";
+import {
+    softwareGet,
+    isResponseOk,
+    softwarePost,
+    softwareDelete
+} from "./lib/HttpClient";
+import { launch_url, PLUGIN_ID } from "./lib/Constants";
 import {
     showStatus,
     showErrorStatus,
@@ -49,6 +54,21 @@ export function getStatusBarItem() {
 
 export function getVersion() {
     return extensionVersion;
+}
+
+export function deactivate(ctx: ExtensionContext) {
+    console.log("Software.com: deactivating the plugin");
+    softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
+        if (isResponseOk(resp)) {
+            if (resp.data) {
+                console.log(`Software.com: Uninstalled plugin`);
+            } else {
+                console.log(
+                    "Software.com: Failed to update Software.com about the uninstall event"
+                );
+            }
+        }
+    });
 }
 
 export function activate(ctx: ExtensionContext) {
