@@ -1,7 +1,6 @@
 import { window, QuickPickOptions } from "vscode";
 import { showTacoTimeStatus, launchWebUrl } from "./Util";
 import { getStatusBarItem, handleKpmClickedEvent } from "../extension";
-import { isResponseOk } from "./HttpClient";
 import { NOT_NOW_LABEL, YES_LABEL, OK_LABEL } from "./Constants";
 
 let tacoTimeMap = {

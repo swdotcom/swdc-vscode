@@ -3,7 +3,6 @@ import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
 import { isTacoTime } from "./KpmGrubManager";
 import { workspace } from "vscode";
-import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
 const { exec } = require("child_process");
 
 const fs = require("fs");

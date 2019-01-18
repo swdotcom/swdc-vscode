@@ -16,6 +16,7 @@ import { KpmController } from "./lib/KpmController";
 import {
     softwareGet,
     isResponseOk,
+    isUserDeactivated,
     softwarePost,
     softwareDelete
 } from "./lib/HttpClient";
@@ -266,7 +267,7 @@ export function sendOfflineData() {
                 })
                 .filter(item => item);
             softwarePost("/data/batch", payloads, getItem("jwt")).then(resp => {
-                if (isResponseOk(resp)) {
+                if (isResponseOk(resp) || isUserDeactivated(resp)) {
                     // everything is fine, delete the offline data file
                     deleteFile(getSoftwareDataStoreFile());
                 }

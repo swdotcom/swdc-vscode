@@ -22,7 +22,12 @@ import {
     isAuthenticated,
     handleKpmClickedEvent
 } from "../extension";
-import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
+import {
+    isResponseOk,
+    isUserDeactivated,
+    softwareGet,
+    softwarePost
+} from "./HttpClient";
 
 const cp = require("child_process");
 const fs = require("fs");
@@ -146,12 +151,18 @@ export function checkTokenAvailability() {
                 setTimeout(() => {
                     fetchDailyKpmSessionInfo();
                 }, 1000);
-            } else {
+            } else if (!isUserDeactivated(resp)) {
                 console.log("Software.com: unable to obtain session token");
-                // try again in 2 minutes
+                // try again in 45 seconds
                 setTimeout(() => {
                     checkTokenAvailability();
                 }, 1000 * 45);
+            } else if (isUserDeactivated(resp)) {
+                console.log("Software.com: unable to obtain session token");
+                // try again in a day
+                setTimeout(() => {
+                    checkTokenAvailability();
+                }, 1000 * 60 * 60 * 24);
             }
         })
         .catch(err => {
@@ -254,7 +265,7 @@ export function fetchDailyKpmSessionInfo() {
                 } else {
                     showStatus("Software.com", null);
                 }
-            } else {
+            } else if (!isUserDeactivated(resp)) {
                 checkTokenAvailability();
             }
         })
