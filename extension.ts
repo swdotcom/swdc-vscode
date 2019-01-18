@@ -234,6 +234,8 @@ export async function isAuthenticated() {
     const resp = await softwareGet("/users/ping", getItem("jwt"));
     if (isResponseOk(resp)) {
         return true;
+    } else if (isUserDeactivated(resp)) {
+        return false;
     } else {
         console.log("Software.com: The user is not logged in");
         showErrorStatus(null);

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { api_endpoint } from "./Constants";
-import { showErrorStatus } from "./Util";
+import { showErrorStatus, getItem } from "./Util";
 
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
@@ -80,9 +80,36 @@ export function isResponseOk(resp) {
     return true;
 }
 
-export function isUserDeactivated(resp) {
+export async function isUserDeactivated(resp) {
     if (!isResponseOk(resp)) {
-        let code = resp.code || "";
+        if (isUnauthenticatedAndDeactivated(resp)) {
+            showErrorStatus(
+                "To see your coding data in Software.com, please reactivate your account."
+            );
+            return true;
+        } else {
+            resp = await softwareGet("/users/ping", getItem("jwt"));
+            if (isUnauthenticatedAndDeactivated(resp)) {
+                showErrorStatus(
+                    "To see your coding data in Software.com, please reactivate your account."
+                );
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function isUnauthenticatedAndDeactivated(resp) {
+    if (
+        resp &&
+        resp.response &&
+        resp.response.status &&
+        resp.response.status >= 400 &&
+        resp.response.data
+    ) {
+        // check if we have the data object
+        let code = resp.response.data.code || "";
         if (code === "DEACTIVATED") {
             showErrorStatus(
                 "To see your coding data in Software.com, please reactivate your account."
