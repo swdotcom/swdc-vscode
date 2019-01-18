@@ -44,12 +44,13 @@ export function getItem(key) {
     return jsonObj[key] || null;
 }
 
-export function showErrorStatus() {
+export function showErrorStatus(errorTooltip) {
     let fullMsg = `$(${"alert"}) ${"Software.com"}`;
-    showStatus(
-        fullMsg,
-        "To see your coding data in Software.com, please log in to your account."
-    );
+    if (!errorTooltip) {
+        errorTooltip =
+            "To see your coding data in Software.com, please log in to your account.";
+    }
+    showStatus(fullMsg, errorTooltip);
 }
 
 export function showStatus(fullMsg, tooltip) {

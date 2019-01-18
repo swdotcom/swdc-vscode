@@ -97,7 +97,7 @@ export async function chekUserAuthenticationStatus() {
                 }, 15000);
             });
     } else if (!authenticated) {
-        showErrorStatus();
+        showErrorStatus(null);
         checkTokenAvailability();
     }
 }

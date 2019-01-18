@@ -223,7 +223,7 @@ export async function isAuthenticated() {
 
     const tokenVal = getItem("token");
     if (!tokenVal) {
-        showErrorStatus();
+        showErrorStatus(null);
         return await new Promise((resolve, reject) => {
             resolve(false);
         });
@@ -236,7 +236,7 @@ export async function isAuthenticated() {
         return true;
     } else {
         console.log("Software.com: The user is not logged in");
-        showErrorStatus();
+        showErrorStatus(null);
         return false;
     }
 }

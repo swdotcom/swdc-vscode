@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { api_endpoint } from "./Constants";
-import { showStatus } from "./Util";
+import { showErrorStatus } from "./Util";
 
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
@@ -84,8 +84,7 @@ export function isUserDeactivated(resp) {
     if (!isResponseOk(resp)) {
         let code = resp.code || "";
         if (code === "DEACTIVATED") {
-            showStatus(
-                "⚠ Software.com",
+            showErrorStatus(
                 "To see your coding data in Software.com, please reactivate your account."
             );
             return true;

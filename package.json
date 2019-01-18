@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Software",
-    "version": "0.5.38",
+    "version": "0.5.39",
     "publisher": "softwaredotcom",
     "description": "Track your programming activity in real-time in Visual Studio Code. Analyze your coding data to increase flow, decrease interrupts, achieve work-life balance, and more.",
     "author": {
