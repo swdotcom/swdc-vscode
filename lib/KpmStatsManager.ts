@@ -14,7 +14,8 @@ import {
     showStatus,
     getSoftwareSessionFile,
     getTrackInfo,
-    isEmptyObj
+    isEmptyObj,
+    humanizeMinutes
 } from "./Util";
 import { showTacoTime, isTacoTime } from "./KpmGrubManager";
 import {
@@ -37,7 +38,7 @@ let lastAuthenticationCheckTime = -1;
 let kpmInfo = {};
 let trackInfo = {};
 
-async function serverIsAvailable() {
+export async function serverIsAvailable() {
     return await checkOnline();
 }
 
@@ -337,20 +338,4 @@ export function gatherMusicInfo() {
         .catch(err => {
             //
         });
-}
-
-function humanizeMinutes(min) {
-    min = parseInt(min, 0) || 0;
-    let str = "";
-    if (min === 60) {
-        str = "1 hr";
-    } else if (min > 60) {
-        str = (min / 60).toFixed(2) + " hrs";
-    } else if (min === 1) {
-        str = "1 min";
-    } else {
-        // less than 60 seconds
-        str = min.toFixed(0) + " min";
-    }
-    return str;
 }

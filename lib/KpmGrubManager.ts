@@ -1,7 +1,15 @@
-import { window, QuickPickOptions } from "vscode";
-import { showTacoTimeStatus, launchWebUrl } from "./Util";
+import { window, QuickPickOptions, Uri } from "vscode";
+import {
+    getItem,
+    setItem,
+    randomCode,
+    getUriKey,
+    showTacoTimeStatus,
+    launchWebUrl
+} from "./Util";
 import { getStatusBarItem, handleKpmClickedEvent } from "../extension";
-import { NOT_NOW_LABEL, YES_LABEL, OK_LABEL } from "./Constants";
+import { NOT_NOW_LABEL, YES_LABEL, OK_LABEL, launch_url } from "./Constants";
+import { showQuickPick } from "./MenuManager";
 
 let tacoTimeMap = {
     count: 0,
@@ -67,7 +75,7 @@ function renderTacoTimeMessage(count) {
 
 export function fetchTacoChoices() {
     if (tacoTimeMap.activated) {
-        showQuickPick();
+        showTacoQuickPick();
     } else {
         tacoTimeMap.count = maxTacos;
         tacoTimeMap.activated = true;
@@ -86,7 +94,7 @@ export function fetchTacoChoices() {
                     grubWindow = null;
                     if (selection === YES_LABEL) {
                         // open the input options box
-                        showQuickPick();
+                        showTacoQuickPick();
                     }
                 });
         }
@@ -117,75 +125,84 @@ export function isTacoTime() {
     return false;
 }
 
-export function showQuickPick() {
-    // The code you place here will be executed every time your command is executed
-    let items = [
-        {
-            id: 0,
-            description:
-                "Get your favorite tacos delivered fast to your door with Doordash. No Minimum Order Size.",
-            detail: "⭐⭐⭐⭐",
-            label: "Doordash"
-        },
-        {
-            id: 1,
-            description:
-                "Taco delivery, and much more, near you from Grubhub. Browse, Select, & Submit Your Order.",
-            detail: "⭐⭐⭐⭐",
-            label: "Grubhub"
-        },
-        {
-            id: 2,
-            description:
-                "Get tacos deliverd at Uber Speed. Food Delivery by Uber",
-            detail: "⭐⭐⭐⭐",
-            label: "UberEats"
-        },
-        {
-            id: 3,
-            description:
-                "Hungry for taco delivery? Order Eat24 today. Delivery menus, ratings and reviews, coupons, and more",
-            detail: "⭐⭐⭐⭐",
-            label: "Eat24"
-        },
-        {
-            id: 4,
-            description: "Go to software.com",
-            detail: "View your KPM activity",
-            label: "Software.com"
-        }
-    ];
-    let options: QuickPickOptions = {
-        onDidSelectItem: item => {
-            window.setStatusBarMessage(item["label"]);
-        },
-        matchOnDescription: false,
-        matchOnDetail: false,
-        placeHolder: "Doordash"
-    };
-    window.showQuickPick(items, options).then(item => {
-        let id = item.id;
-        let weburl = "";
-        if (id === 0) {
-            weburl = "https://www.doordash.com/?query=tacos";
-        } else if (id === 1) {
-            weburl =
-                "https://www.grubhub.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&latitude=37.41455459&longitude=-122.1899643&facet=open_now%3Atrue&variationId=otter&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true";
-        } else if (id === 2) {
-            weburl = "https://www.ubereats.com/en-US/search/?q=Tacos";
-        } else if (id === 3) {
-            weburl =
-                "https://www.eat24.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&facet=open_now%3Atrue&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true";
-        }
+export function showTacoQuickPick() {
+    // check if we've successfully logged in as this user yet
+    const existingJwt = getItem("jwt");
+    let tokenVal = getItem("token");
 
-        if (id === 4) {
-            // it's the software dashboard selection
-            handleKpmClickedEvent();
-        } else {
-            // it's a food order app item selection
-            launchWebUrl(weburl);
-        }
-    });
+    let webUrl = launch_url;
+
+    let addedToken = false;
+
+    let appDashboardDetail = "Click to see more from Software.com";
+    if (!tokenVal) {
+        tokenVal = randomCode();
+        addedToken = true;
+        setItem("token", tokenVal);
+    } else if (!existingJwt) {
+        addedToken = true;
+    }
+
+    // add the token to the launch url
+    if (addedToken) {
+        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+
+        appDashboardDetail = `$(alert) To see your coding data in Software.com, please log in to your account.`;
+    }
+
+    let uriKey = getUriKey();
+    let dashboardURI = Uri.parse(`${uriKey}://Software/SoftwareDashboard`);
+
+    // {placeholder, items: [{label, description, url, details, tooltip},...]}
+    let kpmMenuOptions = {
+        placeholder: "Software.com: dashboard",
+        items: [
+            {
+                label: "Software.com: web app",
+                description: "",
+                detail: appDashboardDetail,
+                url: webUrl
+            },
+            {
+                label: "Software.com: dashboard",
+                description: "",
+                detail: "📊 View your latest metrics",
+                url: null,
+                uri: dashboardURI
+            },
+            {
+                description:
+                    "Get your favorite tacos delivered fast to your door with Doordash. No Minimum Order Size.",
+                detail: "⭐⭐⭐⭐ ",
+                label: "Doordash",
+                url: "https://www.doordash.com/?query=tacos"
+            },
+            {
+                description:
+                    "Taco delivery, and much more, near you from Grubhub. Browse, Select, & Submit Your Order.",
+                detail: "⭐⭐⭐⭐ ",
+                label: "Grubhub",
+                url:
+                    "https://www.grubhub.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&latitude=37.41455459&longitude=-122.1899643&facet=open_now%3Atrue&variationId=otter&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true"
+            },
+            {
+                description:
+                    "Get tacos deliverd at Uber Speed. Food Delivery by Uber",
+                detail: "⭐⭐⭐⭐ ",
+                label: "UberEats",
+                url: "https://www.ubereats.com/en-US/search/?q=Tacos"
+            },
+            {
+                description:
+                    "Hungry for taco delivery? Order Eat24 today. Delivery menus, ratings and reviews, coupons, and more",
+                detail: "⭐⭐⭐⭐ ",
+                label: "Eat24",
+                url:
+                    "https://www.eat24.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&facet=open_now%3Atrue&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true"
+            }
+        ]
+    };
+    showQuickPick(kpmMenuOptions);
 }
 
 function resetTacoTimeMap() {

@@ -3,6 +3,7 @@ import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
 import { isTacoTime } from "./KpmGrubManager";
 import { workspace } from "vscode";
+import { connect } from "net";
 const { exec } = require("child_process");
 
 const fs = require("fs");
@@ -10,7 +11,18 @@ const os = require("os");
 const cp = require("child_process");
 const crypto = require("crypto");
 
-const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const DASHBOARD_LABEL_WIDTH = 23;
+export const DASHBOARD_VALUE_WIDTH = 25;
+
+let uriKey = "";
+
+export function getUriKey() {
+    return uriKey;
+}
+export function updateUriKey(uri) {
+    uriKey = uri;
+}
 
 export function getRootPath() {
     let rootPath =
@@ -371,4 +383,89 @@ export function launchWebUrl(url) {
             );
         }
     });
+}
+
+export function getDashboardLabel(label) {
+    return getDashboardDataDisplay(DASHBOARD_LABEL_WIDTH, label);
+}
+
+export function getDashboardValue(value) {
+    return getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
+}
+
+export function getBarChartRow(label, value) {
+    let content = `${getDashboardLabel(label)} : ${value}\n`;
+    return content;
+}
+
+export function getDashboardRow(label, value) {
+    let content = `${getDashboardLabel(label)} : ${getDashboardValue(value)}\n`;
+    return content;
+}
+
+export function getSectionHeader(label) {
+    let content = `${label}\n`;
+    // add 3 to account for the " : " between the columns
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 3;
+    for (let i = 0; i < dashLen; i++) {
+        content += "-";
+    }
+    content += "\n";
+    return content;
+}
+
+export function getGraphBar(width) {
+    let content = "";
+    width = parseInt(width, 10);
+    for (let i = 0; i < width; i++) {
+        content += "▯";
+    }
+    return content;
+}
+
+export function getGitStackedGraphBar(additionsWidth, deletionsWidth) {
+    let content = "";
+    let totalWidth = additionsWidth + deletionsWidth;
+    for (let i = 1; i <= totalWidth; i++) {
+        // add i > additions width, start showing the deletion chars
+        if (i > additionsWidth) {
+            content += "-";
+        } else {
+            content += "+";
+        }
+    }
+    return content;
+}
+
+export function getDashboardDataDisplay(widthLen, data) {
+    let len =
+        data.constructor === String
+            ? widthLen - data.length
+            : widthLen - String(data).length;
+    let content = "";
+    for (let i = 0; i < len; i++) {
+        content += " ";
+    }
+    return `${content}${data}`;
+}
+
+export function humanizeMinutes(min) {
+    min = parseInt(min, 0) || 0;
+    let str = "";
+    if (min === 60) {
+        str = "1 hr";
+    } else if (min > 60) {
+        let hrs = parseFloat(min) / 60;
+        if (hrs % 1 === 0) {
+            str = hrs.toFixed(0) + " hrs";
+        } else {
+            str = hrs.toFixed(2) + " hrs";
+        }
+    } else if (min === 1) {
+        str = "1 min";
+    } else {
+        // less than 60 seconds
+        str = min.toFixed(0) + " min";
+    }
+    return str;
 }

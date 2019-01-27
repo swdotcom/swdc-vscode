@@ -185,20 +185,6 @@ export class KpmController {
             return;
         }
 
-        // get the repo info if we don't already have it for the project
-        if (
-            _keystrokeMap[rootPath].project &&
-            (!_keystrokeMap[rootPath].project.resource ||
-                isEmptyObj(_keystrokeMap[rootPath].project.resource))
-        ) {
-            let resourceInfo = await getResourceInfo(rootPath);
-            if (resourceInfo && resourceInfo.identifier) {
-                _keystrokeMap[rootPath].project.resource = resourceInfo;
-                _keystrokeMap[rootPath].project.identifier =
-                    resourceInfo.identifier;
-            }
-        }
-
         if (newCount > 8) {
             //
             // it's a copy and paste event

@@ -1,3 +1,4 @@
+import { Uri } from "vscode";
 export const NOT_NOW_LABEL = "Not now";
 export const OK_LABEL = "Ok";
 export const YES_LABEL = "Yes";
@@ -17,3 +18,5 @@ export const api_endpoint = "https://api.software.com";
 // set the launch url to use
 // "http://localhost:3000", "https://staging.software.com", "https://app.software.com"
 export const launch_url = "https://app.software.com";
+
+// export const dashboard_uri = Uri.parse("swdc://Software/SoftwareDashboard");

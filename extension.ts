@@ -4,14 +4,15 @@
 // Import the module and reference it with the alias vscode in your code below
 import {
     window,
+    workspace,
     ExtensionContext,
     StatusBarAlignment,
     commands,
-    extensions
+    extensions,
+    Uri
 } from "vscode";
 
 const fs = require("fs");
-
 import { KpmController } from "./lib/KpmController";
 import {
     softwareGet,
@@ -29,15 +30,19 @@ import {
     randomCode,
     getSoftwareDataStoreFile,
     deleteFile,
-    launchWebUrl,
-    getRootPath
+    getRootPath,
+    updateUriKey,
+    getUriKey
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
+import { showQuickPick } from "./lib/MenuManager";
+import DashboardContentProvider from "./lib/DashboardContentProvider";
 import {
     fetchDailyKpmSessionInfo,
     gatherMusicInfo,
     chekUserAuthenticationStatus,
-    checkTokenAvailability
+    checkTokenAvailability,
+    serverIsAvailable
 } from "./lib/KpmStatsManager";
 import { fetchTacoChoices } from "./lib/KpmGrubManager";
 
@@ -86,6 +91,17 @@ export function activate(ctx: ExtensionContext) {
     const controller = new KpmController();
     ctx.subscriptions.push(controller);
 
+    // register the dashboard content provider
+    const seconds = Math.round(new Date().getTime() / 1000);
+    let uriKey = `swdc-${seconds}`;
+    updateUriKey(uriKey);
+    const dashboardContentProvider = new DashboardContentProvider(uriKey);
+    ctx.subscriptions.push(dashboardContentProvider);
+
+    ctx.subscriptions.push(
+        workspace.onDidChangeConfiguration(e => configUpdated(ctx))
+    );
+
     let one_min = 1000 * 60;
 
     setTimeout(() => {
@@ -115,7 +131,7 @@ export function activate(ctx: ExtensionContext) {
     setTimeout(() => {
         // check if the user is authenticated with what is saved in the software config
         chekUserAuthenticationStatus();
-    }, 5000);
+    }, 12000);
 
     // send any offline data
     setTimeout(() => {
@@ -166,6 +182,28 @@ export function activate(ctx: ExtensionContext) {
     );
 }
 
+function configUpdated(ctx) {
+    let dashboardIdx = -1;
+    for (let i = 0; i < ctx.subscriptions.length; i++) {
+        let subscription = ctx.subscriptions[i];
+        let dashboardContent = subscription._dashboardContent;
+        if (dashboardContent) {
+            // subscription.getDashboardContent();
+            // remove this subscription and add it back anew
+            dashboardIdx = i;
+            break;
+        }
+    }
+    if (dashboardIdx > -1) {
+        ctx.subscriptions.splice(dashboardIdx, 1);
+        const seconds = Math.round(new Date().getTime() / 1000);
+        let uriKey = `swdc-${seconds}`;
+        updateUriKey(uriKey);
+        const dashboardContentProvider = new DashboardContentProvider(uriKey);
+        ctx.subscriptions.push(dashboardContentProvider);
+    }
+}
+
 function handlePauseMetricsEvent() {
     TELEMETRY_ON = false;
     showStatus("<S> Paused", "Enable metrics to resume");
@@ -189,6 +227,7 @@ export async function handleKpmClickedEvent() {
 
     let addedToken = false;
 
+    let appDashboardDetail = "📆 Click to see more from Software.com";
     if (!tokenVal) {
         tokenVal = randomCode();
         addedToken = true;
@@ -203,13 +242,37 @@ export async function handleKpmClickedEvent() {
     if (addedToken) {
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
 
+        appDashboardDetail = `$(alert) To see your coding data in Software.com, please log in to your account.`;
+
         // check for the jwt in a minute
         setTimeout(() => {
             checkTokenAvailability();
         }, 1000 * 45);
     }
 
-    launchWebUrl(webUrl);
+    let uriKey = getUriKey();
+    let dashboardURI = Uri.parse(`${uriKey}://Software/SoftwareDashboard`);
+
+    // {placeholder, items: [{label, description, url, details, tooltip},...]}
+    let kpmMenuOptions = {
+        placeholder: "Software.com: dashboard",
+        items: [
+            {
+                label: "Software.com: web app",
+                description: "",
+                detail: appDashboardDetail,
+                url: webUrl
+            },
+            {
+                label: "Software.com: dashboard",
+                description: "",
+                detail: "📊 View your latest metrics",
+                url: null,
+                uri: dashboardURI
+            }
+        ]
+    };
+    showQuickPick(kpmMenuOptions);
 }
 
 /**
@@ -234,8 +297,6 @@ export async function isAuthenticated() {
     const resp = await softwareGet("/users/ping", getItem("jwt"));
     if (isResponseOk(resp)) {
         return true;
-    } else if (isUserDeactivated(resp)) {
-        return false;
     } else {
         console.log("Software.com: The user is not logged in");
         showErrorStatus(null);
@@ -268,12 +329,17 @@ export function sendOfflineData() {
                     }
                 })
                 .filter(item => item);
-            softwarePost("/data/batch", payloads, getItem("jwt")).then(resp => {
-                if (isResponseOk(resp) || isUserDeactivated(resp)) {
-                    // everything is fine, delete the offline data file
-                    deleteFile(getSoftwareDataStoreFile());
+            softwarePost("/data/batch", payloads, getItem("jwt")).then(
+                async resp => {
+                    if (isResponseOk(resp) || isUserDeactivated(resp)) {
+                        const serverAvailablePromise = await serverIsAvailable();
+                        if (serverAvailablePromise) {
+                            // everything is fine, delete the offline data file
+                            deleteFile(getSoftwareDataStoreFile());
+                        }
+                    }
                 }
-            });
+            );
         }
     }
 }
