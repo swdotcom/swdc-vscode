@@ -48,7 +48,7 @@ export async function getUserRankings() {
             // skip showing this
             return "";
         }
-        content += getDashboardRow("Rank", `${currentPercentile}%`);
+        content += getBarChartRow("Rank", `${currentPercentile}%`);
         let len = userRankingsData.items.length;
         for (let i = len - 1; i >= 0; i--) {
             let entry = userRankingsData.items[i];
@@ -61,7 +61,10 @@ export async function getUserRankings() {
                 percentileMinutesMax,
                 minutesStr
             );
-            content += getBarChartRow(entry.percentile, minutesBar);
+            let percentStr = `${(parseFloat(entry.percentile) * 100).toFixed(
+                0
+            )}%`;
+            content += getBarChartRow(percentStr, minutesBar);
         }
     }
     content += "\n";

@@ -390,7 +390,13 @@ export function getDashboardLabel(label) {
 }
 
 export function getDashboardValue(value) {
-    return getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
+    let valueContent = getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
+    let paddedContent = "";
+    for (let i = 0; i < 11; i++) {
+        paddedContent += " ";
+    }
+    paddedContent += valueContent;
+    return paddedContent;
 }
 
 export function getBarChartRow(label, value) {
@@ -406,7 +412,7 @@ export function getDashboardRow(label, value) {
 export function getSubSectionHeader(label) {
     let content = `  ${label}\n`;
     // add 3 to account for the " : " between the columns
-    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 1;
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 12;
     content += "  ";
     for (let i = 0; i < dashLen; i++) {
         content += "-";
@@ -418,7 +424,7 @@ export function getSubSectionHeader(label) {
 export function getSectionHeader(label) {
     let content = `${label}\n`;
     // add 3 to account for the " : " between the columns
-    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 3;
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 15;
     for (let i = 0; i < dashLen; i++) {
         content += "-";
     }
@@ -430,11 +436,11 @@ export function getGraphBar(width, value, valueStr) {
     let content = "";
     width = parseInt(width, 10);
     for (let i = 0; i < width; i++) {
-        content += "|";
+        content += "=";
     }
     if (content.length < 2 && value > 0) {
         // show at least 1 bar
-        content += "||";
+        content += "=";
     }
     content += ` ${valueStr}`;
     return content;
