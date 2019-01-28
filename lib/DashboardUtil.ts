@@ -43,13 +43,26 @@ export async function getUserRankings() {
     if (userRankings && userRankings.data && userRankings.data.items) {
         let userRankingsData = userRankings.data;
         let currentPercentile = userRankingsData.userRank.percentile * 100;
-        let activeUsers = parseInt(userRankingsData.activeUsers, 10);
+        let maxTotal = parseInt(userRankingsData.max, 10);
         if (currentPercentile < 0.5) {
             // skip showing this
             return "";
         }
         content += getDashboardRow("Rank", `${currentPercentile}%`);
-        content += getDashboardRow("Active users", formatNumber(activeUsers));
+        let len = userRankingsData.items.length;
+        for (let i = len - 1; i >= 0; i--) {
+            let entry = userRankingsData.items[i];
+            let percentileMinutesMax = parseInt(entry.maxMinutes, 10);
+            let minutesTotalPercent = percentileMinutesMax / maxTotal;
+            let minutesWidth = DASHBOARD_VALUE_WIDTH * minutesTotalPercent;
+            let minutesStr = humanizeMinutes(percentileMinutesMax);
+            let minutesBar = getGraphBar(
+                minutesWidth,
+                percentileMinutesMax,
+                minutesStr
+            );
+            content += getBarChartRow(entry.percentile, minutesBar);
+        }
     }
     content += "\n";
     return content;
