@@ -38,7 +38,7 @@ const ONE_DAY_SECONDS = 60 * 60 * 24;
  */
 export async function getUserRankings() {
     // /users/rankings
-    let content = await getSubSectionHeader("User rankings");
+    let content = await getSubSectionHeader("🏅 User rankings");
     let userRankings = await softwareGet(`/users/rankings`, getItem("jwt"));
     if (userRankings && userRankings.data && userRankings.data.items) {
         let userRankingsData = userRankings.data;
@@ -75,7 +75,7 @@ export async function getWeeklyTopProjects() {
     // { entries: projectListSorted, totalMinutes, maxMinutes }
     // entries: {directory, linesAdded, linesRemoved, minutesTotal, name, projectId}
     // /projects/summary
-    let content = await getSubSectionHeader("Weekly top projects");
+    let content = await getSubSectionHeader("📂 Weekly top projects");
     let weeklyTopProjects = await softwareGet(
         `/projects/summary`,
         getItem("jwt")
@@ -129,7 +129,7 @@ export async function getWeeklyTopProjects() {
  */
 export async function getTopCommitFiles() {
     // /commits/topfiles
-    let content = await getSubSectionHeader("Weekly top commit files");
+    let content = await getSubSectionHeader("🚀 Weekly top commit files");
     let weeklyTopFiles = await softwareGet(`/commits/topfiles`, getItem("jwt"));
     if (
         weeklyTopFiles &&
@@ -174,7 +174,7 @@ export async function getTopCommitFiles() {
 }
  */
 export async function getGenreSummary() {
-    let content = await getSubSectionHeader("Code time by genre");
+    let content = await getSubSectionHeader("🎸 Code time by genre");
     let genreSumary = await softwareGet(`/music/genre`, getItem("jwt"));
     if (
         genreSumary &&
@@ -283,7 +283,7 @@ export async function getCodeTimeSummary() {
 
         content += getDashboardRow("Hours coded today", hoursCodedToday);
         content += getDashboardRow(
-            "Session Time",
+            "Current session time",
             `${sessionTimeIcon} ${sessionTime}`
         );
         let lastKpmStr = inFlow ? `🚀 ${lastKpm}` : `${lastKpm}`;

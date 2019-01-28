@@ -436,11 +436,11 @@ export function getGraphBar(width, value, valueStr) {
     let content = "";
     width = parseInt(width, 10);
     for (let i = 0; i < width; i++) {
-        content += "=";
+        content += "▮";
     }
     if (content.length < 2 && value > 0) {
         // show at least 1 bar
-        content += "=";
+        content += "▮";
     }
     content += ` ${valueStr}`;
     return content;

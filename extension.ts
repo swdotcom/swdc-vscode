@@ -227,7 +227,7 @@ export async function handleKpmClickedEvent() {
 
     let addedToken = false;
 
-    let appDashboardDetail = "📆 Click to see more from Software.com";
+    let appDashboardDetail = "Click to see more from Software.com";
     if (!tokenVal) {
         tokenVal = randomCode();
         addedToken = true;
@@ -258,17 +258,17 @@ export async function handleKpmClickedEvent() {
         placeholder: "Software.com: dashboard",
         items: [
             {
+                label: "Software.com: dashboard",
+                description: "",
+                detail: "View your latest coding metrics",
+                url: null,
+                uri: dashboardURI
+            },
+            {
                 label: "Software.com: web app",
                 description: "",
                 detail: appDashboardDetail,
                 url: webUrl
-            },
-            {
-                label: "Software.com: dashboard",
-                description: "",
-                detail: "📊 View your latest metrics",
-                url: null,
-                uri: dashboardURI
             }
         ]
     };

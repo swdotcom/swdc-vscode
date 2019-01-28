@@ -157,17 +157,17 @@ export function showTacoQuickPick() {
         placeholder: "Software.com: dashboard",
         items: [
             {
+                label: "Software.com: dashboard",
+                description: "",
+                detail: "View your latest coding metrics",
+                url: null,
+                uri: dashboardURI
+            },
+            {
                 label: "Software.com: web app",
                 description: "",
                 detail: appDashboardDetail,
                 url: webUrl
-            },
-            {
-                label: "Software.com: dashboard",
-                description: "",
-                detail: "📊 View your latest metrics",
-                url: null,
-                uri: dashboardURI
             },
             {
                 description:
