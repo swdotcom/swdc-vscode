@@ -403,6 +403,18 @@ export function getDashboardRow(label, value) {
     return content;
 }
 
+export function getSubSectionHeader(label) {
+    let content = `  ${label}\n`;
+    // add 3 to account for the " : " between the columns
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 1;
+    content += "  ";
+    for (let i = 0; i < dashLen; i++) {
+        content += "-";
+    }
+    content += "\n";
+    return content;
+}
+
 export function getSectionHeader(label) {
     let content = `${label}\n`;
     // add 3 to account for the " : " between the columns
@@ -414,12 +426,17 @@ export function getSectionHeader(label) {
     return content;
 }
 
-export function getGraphBar(width) {
+export function getGraphBar(width, value, valueStr) {
     let content = "";
     width = parseInt(width, 10);
     for (let i = 0; i < width; i++) {
-        content += "▯";
+        content += "|";
     }
+    if (content.length < 2 && value > 0) {
+        // show at least 1 bar
+        content += "||";
+    }
+    content += ` ${valueStr}`;
     return content;
 }
 
@@ -447,6 +464,19 @@ export function getDashboardDataDisplay(widthLen, data) {
         content += " ";
     }
     return `${content}${data}`;
+}
+
+export function formatNumber(num) {
+    let str = "";
+    num = num ? parseFloat(num) : 0;
+    if (num >= 1000) {
+        str = num.toLocaleString();
+    } else if (parseInt(num, 10) == num) {
+        str = num.toFixed(0);
+    } else {
+        str = num.toFixed(2);
+    }
+    return str;
 }
 
 export function humanizeMinutes(min) {

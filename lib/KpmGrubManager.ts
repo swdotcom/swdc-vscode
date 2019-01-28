@@ -146,7 +146,6 @@ export function showTacoQuickPick() {
     // add the token to the launch url
     if (addedToken) {
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
-
         appDashboardDetail = `$(alert) To see your coding data in Software.com, please log in to your account.`;
     }
 

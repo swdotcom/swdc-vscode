@@ -8,13 +8,16 @@ import {
     TextDocumentContentProvider
 } from "vscode";
 import {
-    getTodaysCodeTimeStats,
     getLastWeekCodeTimeStats,
     getLastMonthCodeTimeStats,
     getCodeTimeSummary,
     getGenreSummary,
-    getTopCommitFiles
+    getTopCommitFiles,
+    getWeeklyTopProjects,
+    getYesterdayCodeTimeStats,
+    getUserRankings
 } from "./DashboardUtil";
+import { getSectionHeader } from "./Util";
 
 export default class DashboardContentProvider
     implements TextDocumentContentProvider {
@@ -49,27 +52,52 @@ export default class DashboardContentProvider
             .get("showGitMetrics");
 
         let codeTimeSummaryP = getCodeTimeSummary();
-        let todaysCodeTimeStatsP = getTodaysCodeTimeStats();
+        let weeklyTopProjectsP = getWeeklyTopProjects();
+        // let todaysCodeTimeStatsP = getTodaysCodeTimeStats();
         let genreSummaryP = showMusicMetrics ? getGenreSummary() : null;
         let topCommitFilesP = showGitMetrics ? getTopCommitFiles() : null;
-        let getLastWeekCodeTimeStatsP = getLastWeekCodeTimeStats();
+        let yesterdayCodeTimeStatsP = getYesterdayCodeTimeStats();
+        let lastWeekCodeTimeStatsP = getLastWeekCodeTimeStats();
         let lastMonthsCodeTimeStatsP = getLastMonthCodeTimeStats();
+        let userRankingsP = getUserRankings();
 
-        this._dashboardContent = "SOFTWARE METRICs\n\n";
-        this._dashboardContent += `TODAY'S SUMMARY (${new Date().toLocaleDateString()})\n\n`;
+        this._dashboardContent = "SOFTWARE.COM DASHBOARD\n\n";
+
+        // today
+        let today = new Date();
+        this._dashboardContent += getSectionHeader(
+            `Today (${today.toLocaleDateString()})`
+        );
+
         this._dashboardContent += await codeTimeSummaryP;
-        this._dashboardContent += await todaysCodeTimeStatsP;
 
-        this._dashboardContent += "LAST WEEK'S SUMMARY\n\n";
-        this._dashboardContent += await getLastWeekCodeTimeStatsP;
+        // yesterday
+        let yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        this._dashboardContent += getSectionHeader(
+            `Yesterday (${yesterday.toLocaleDateString()})`
+        );
+        this._dashboardContent += await yesterdayCodeTimeStatsP;
+
+        // last week
+        let lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        this._dashboardContent += getSectionHeader(
+            `Last week (${lastWeek.toLocaleDateString()} - ${today.toLocaleDateString()})`
+        );
+        this._dashboardContent += await lastWeekCodeTimeStatsP;
         if (genreSummaryP) {
             this._dashboardContent += await genreSummaryP;
         }
         if (topCommitFilesP) {
             this._dashboardContent += await topCommitFilesP;
         }
+        this._dashboardContent += await weeklyTopProjectsP;
+        this._dashboardContent += await userRankingsP;
 
-        this._dashboardContent += `LAST MONTH'S SUMMARY\n\n`;
+        this._dashboardContent += getSectionHeader(
+            `All-time (${lastWeek.toLocaleDateString()} - ${today.toLocaleDateString()})`
+        );
         this._dashboardContent += await lastMonthsCodeTimeStatsP;
         this._dashboardContent += "\n";
 

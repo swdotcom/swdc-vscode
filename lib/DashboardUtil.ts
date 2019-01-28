@@ -5,7 +5,8 @@ import {
     getDashboardRow,
     getBarChartRow,
     getGraphBar,
-    getSectionHeader,
+    formatNumber,
+    getSubSectionHeader,
     getGitStackedGraphBar,
     DASHBOARD_VALUE_WIDTH
 } from "./Util";
@@ -13,25 +14,106 @@ import {
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 
 /**
+ * max,
+        userRank: {
+            percentile: 0.75,
+            totalMinutes: 0,
+            kpm: 0,
+        },
+        totalMinutes: 0,
+        items: [
+            {
+            "maxMinutes": 4,
+            "totalMinutes": 6,
+            "kpm": 0,
+            "count": 3,
+            "percentile": 0.05
+            }
+        ],
+        activeUsers,
+        averageMinutes: 0,
+    
+    items contains...
+    {maxMinutes, totalMinutes, kpm, count: 1, percentile}
+ */
+export async function getUserRankings() {
+    // /users/rankings
+    let content = await getSubSectionHeader("User rankings");
+    let userRankings = await softwareGet(`/users/rankings`, getItem("jwt"));
+    if (userRankings && userRankings.data && userRankings.data.items) {
+        let userRankingsData = userRankings.data;
+        let currentPercentile = userRankingsData.userRank.percentile * 100;
+        let activeUsers = parseInt(userRankingsData.activeUsers, 10);
+        if (currentPercentile < 0.5) {
+            // skip showing this
+            return "";
+        }
+        content += getDashboardRow("Rank", `${currentPercentile}%`);
+        content += getDashboardRow("Active users", formatNumber(activeUsers));
+    }
+    content += "\n";
+    return content;
+}
+
+export async function getWeeklyTopProjects() {
+    // { entries: projectListSorted, totalMinutes, maxMinutes }
+    // entries: {directory, linesAdded, linesRemoved, minutesTotal, name, projectId}
+    // /projects/summary
+    let content = await getSubSectionHeader("Weekly top projects");
+    let weeklyTopProjects = await softwareGet(
+        `/projects/summary`,
+        getItem("jwt")
+    );
+    if (
+        weeklyTopProjects &&
+        weeklyTopProjects.data &&
+        weeklyTopProjects.data.entries.length > 0
+    ) {
+        let weeklyTopProjectsData = weeklyTopProjects.data;
+        let maxTotal = weeklyTopProjectsData.maxMinutes;
+        let len = weeklyTopProjectsData.entries.length;
+        for (let i = 0; i < len; i++) {
+            let entry = weeklyTopProjectsData.entries[i];
+            let name = entry.name;
+            let minutesTotal = parseInt(entry.minutesTotal, 10);
+            let minutesStr = humanizeMinutes(minutesTotal);
+
+            let minutesTotalPercent = minutesTotal / maxTotal;
+            let minutesWidth = DASHBOARD_VALUE_WIDTH * minutesTotalPercent;
+            let minutesBar = getGraphBar(
+                minutesWidth,
+                minutesTotal,
+                minutesStr
+            );
+            content += getBarChartRow(name, minutesBar);
+        }
+    } else {
+        content += "  No weekly top projects available\n";
+    }
+    content += "\n";
+    return content;
+}
+
+/**
  * {
  *    maxAdditions, maxDeletions, maxTotal,
  * entries: [
  * {
  * fileIdentifier: n,
-            repo: filesObj[n].repo,
-            branch: filesObj[n].branch,
-            tag: filesObj[n].tag,
-            fileName: filesObj[n].fileName,
-            Additions: filesObj[n].Additions,
-            Deletions: filesObj[n].Deletions,
-            total: filesObj[n].total
+    repo: filesObj[n].repo,
+    branch: filesObj[n].branch,
+    tag: filesObj[n].tag,
+    fileName: filesObj[n].fileName,
+    Additions: filesObj[n].Additions,
+    Deletions: filesObj[n].Deletions,
+    total: filesObj[n].total
 }
  * ]
 * }
  */
 export async function getTopCommitFiles() {
     // /commits/topfiles
-    let content = await getSectionHeader("Weekly top files");
+    let content = await getSubSectionHeader("Weekly top commit files");
     let weeklyTopFiles = await softwareGet(`/commits/topfiles`, getItem("jwt"));
     if (
         weeklyTopFiles &&
@@ -57,7 +139,7 @@ export async function getTopCommitFiles() {
             content += getBarChartRow(fileName, stackedBar);
         }
     } else {
-        content += "No weekly top files available\n";
+        content += "  No weekly top commit files available\n";
     }
     content += "\n";
     return content;
@@ -76,7 +158,7 @@ export async function getTopCommitFiles() {
 }
  */
 export async function getGenreSummary() {
-    let content = await getSectionHeader("Code time by genre");
+    let content = await getSubSectionHeader("Code time by genre");
     let genreSumary = await softwareGet(`/music/genre`, getItem("jwt"));
     if (
         genreSumary &&
@@ -92,24 +174,26 @@ export async function getGenreSummary() {
             let genre = entry.genre;
             let kpmBarWidthPercent = entry.kpmAverage / maxKpmScale;
             let kpmWidth = DASHBOARD_VALUE_WIDTH * kpmBarWidthPercent;
-            let kpmBar = getGraphBar(kpmWidth);
-            let minutesBarWidthPercent = entry.totalMinutes / maxMinutesScale;
+
+            let totalMinutes = parseInt(entry.totalMinutes, 10);
+            let minutesBarWidthPercent = totalMinutes / maxMinutesScale;
             let minutesWidth = DASHBOARD_VALUE_WIDTH * minutesBarWidthPercent;
-            let minutesBar = getGraphBar(minutesWidth);
-            let kpmStr = "";
-            if (entry.kpmAverage >= 1000) {
-                kpmStr = entry.kpmAverage.toLocaleString();
-            } else if (parseInt(entry.kpmAverage, 10) == entry.kpmAverage) {
-                kpmStr = entry.kpmAverage.toFixed(0);
-            } else {
-                kpmStr = entry.kpmAverage.toFixed(2);
-            }
-            let minutesStr = humanizeMinutes(entry.totalMinutes);
-            content += getBarChartRow(genre, `${kpmBar} ${kpmStr} KPM`);
-            content += getBarChartRow("", `${minutesBar} ${minutesStr}`);
+
+            let kpmAverage = parseFloat(entry.kpmAverage);
+            let kpmStr = formatNumber(kpmAverage);
+
+            let kpmBar = getGraphBar(kpmWidth, kpmAverage, `${kpmStr} KPM`);
+            let minutesStr = humanizeMinutes(totalMinutes);
+            let minutesBar = getGraphBar(
+                minutesWidth,
+                totalMinutes,
+                minutesStr
+            );
+            content += getBarChartRow(genre, kpmBar);
+            content += getBarChartRow("", minutesBar);
         }
     } else {
-        content += "No code time by genre available\n";
+        content += "  No code time by genre available\n";
     }
     content += "\n";
     return content;
@@ -136,13 +220,14 @@ totalKeystrokes: 244002
 totalMinutes: 21400.950000000077
 */
 export async function getCodeTimeSummary() {
-    let content = await getSectionHeader("Code time summary");
+    let content = "";
     let start = new Date();
     // set it to the beginning of the day
     start.setHours(0, 0, 0, 0);
     const fromSeconds = Math.round(start.getTime() / 1000);
+    const endSeconds = Math.round(new Date().getTime() / 1000);
     let codeTimeSummary = await softwareGet(
-        `/sessions?from=${fromSeconds}&summary=true`,
+        `/sessions?start=${fromSeconds}&end=${endSeconds}&summary=true`,
         getItem("jwt")
     );
     if (codeTimeSummary && codeTimeSummary.data) {
@@ -157,6 +242,9 @@ export async function getCodeTimeSummary() {
             : 0;
         let currentSessionMinutes = codeTimeSummaryData.currentSessionMinutes;
         let sessionTime = humanizeMinutes(currentSessionMinutes);
+
+        let currentDayMinutes = codeTimeSummaryData.currentDayMinutes;
+        let hoursCodedToday = humanizeMinutes(currentDayMinutes);
 
         let currentSessionGoalPercent = codeTimeSummaryData.currentSessionGoalPercent
             ? parseFloat(codeTimeSummaryData.currentSessionGoalPercent)
@@ -177,6 +265,7 @@ export async function getCodeTimeSummary() {
             }
         }
 
+        content += getDashboardRow("Hours coded today", hoursCodedToday);
         content += getDashboardRow(
             "Session Time",
             `${sessionTimeIcon} ${sessionTime}`
@@ -184,7 +273,7 @@ export async function getCodeTimeSummary() {
         let lastKpmStr = inFlow ? `🚀 ${lastKpm}` : `${lastKpm}`;
         content += getDashboardRow("Last KPM", lastKpmStr);
     } else {
-        content += "No code time summary available\n";
+        content += "  No code time summary available\n";
     }
     content += "\n";
     return content;
@@ -209,7 +298,18 @@ export async function getTodaysCodeTimeStats() {
     // set it to the beginning of the day
     today.setHours(0, 0, 0, 0);
     const fromSeconds = Math.round(today.getTime() / 1000);
-    return await getCodeTimeStats(fromSeconds);
+    const toSeconds = fromSeconds + ONE_DAY_SECONDS;
+    return await getCodeTimeStats(fromSeconds, toSeconds);
+}
+
+export async function getYesterdayCodeTimeStats() {
+    let today = new Date();
+    // set it to the beginning of the day
+    today.setHours(0, 0, 0, 0);
+    today.setDate(today.getDate() - 1);
+    const fromSeconds = Math.round(today.getTime() / 1000);
+    const toSeconds = fromSeconds + ONE_DAY_SECONDS;
+    return await getCodeTimeStats(fromSeconds, toSeconds);
 }
 
 export async function getLastWeekCodeTimeStats() {
@@ -218,7 +318,9 @@ export async function getLastWeekCodeTimeStats() {
     today.setHours(0, 0, 0, 0);
     today.setDate(today.getDate() - 7);
     const fromSeconds = Math.round(today.getTime() / 1000);
-    return await getCodeTimeStats(fromSeconds);
+    const sevenDaysSeconds = ONE_DAY_SECONDS * 7;
+    const toSeconds = fromSeconds + sevenDaysSeconds;
+    return await getCodeTimeStats(fromSeconds, toSeconds);
 }
 
 export async function getLastMonthCodeTimeStats() {
@@ -227,18 +329,23 @@ export async function getLastMonthCodeTimeStats() {
     today.setHours(0, 0, 0, 0);
     today.setMonth(today.getMonth() - 1);
     const fromSeconds = Math.round(today.getTime() / 1000);
-    return await getCodeTimeStats(fromSeconds);
+
+    let endDate = new Date();
+    endDate.setHours(0, 0, 0, 0);
+    const toSeconds = Math.round(endDate.getTime() / 1000);
+    return await getCodeTimeStats(fromSeconds, toSeconds);
 }
 
-export async function getCodeTimeStats(fromSeconds) {
-    let content = await getSectionHeader("Code time stats");
-    // https://api.software.com/metrics?from=1540623600&to=1548489599
-    let today = new Date();
-    // set it to the beginning of the day
-    today.setHours(0, 0, 0, 0);
+export async function getAllTimeCodeTimeStats() {
+    let endDate = new Date();
+    endDate.setHours(0, 0, 0, 0);
+    const toSeconds = Math.round(endDate.getTime() / 1000);
+    return await getCodeTimeStats(-1, toSeconds);
+}
 
-    // set toSeconds to the end of the day
-    let toSeconds = fromSeconds + ONE_DAY_SECONDS;
+export async function getCodeTimeStats(fromSeconds, toSeconds) {
+    let content = "";
+    // https://api.software.com/metrics?from=1540623600&to=1548489599
     let codeTimeStats = await softwareGet(
         `/metrics?from=${fromSeconds}&to=${toSeconds}`,
         getItem("jwt")
@@ -249,18 +356,11 @@ export async function getCodeTimeStats(fromSeconds) {
         for (let i = 0; i < codeTimeStatsData.length; i++) {
             let stats = codeTimeStatsData[i];
             let total = stats.total || 0;
-            if (total >= 1000) {
-                content += getDashboardRow(stats.label, total.toLocaleString());
-            } else {
-                if (parseInt(total, 10) === total) {
-                    content += getDashboardRow(stats.label, total.toFixed(0));
-                } else {
-                    content += getDashboardRow(stats.label, total.toFixed(2));
-                }
-            }
+            let totalStr = formatNumber(total);
+            content += getDashboardRow(stats.label, totalStr);
         }
     } else {
-        content += "No code time stats available\n";
+        content += "  No code time stats available\n";
     }
     content += "\n";
     return content;
