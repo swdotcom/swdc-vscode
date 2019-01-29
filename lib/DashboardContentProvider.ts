@@ -15,7 +15,9 @@ import {
     getTopCommitFiles,
     getWeeklyTopProjects,
     getYesterdayCodeTimeStats,
-    getUserRankings
+    getUserRankings,
+    getAllTimeCodeTimeStatsData,
+    buildCodeTimeStatsFromData
 } from "./DashboardUtil";
 import { getSectionHeader } from "./Util";
 
@@ -59,6 +61,7 @@ export default class DashboardContentProvider
         let yesterdayCodeTimeStatsP = getYesterdayCodeTimeStats();
         let lastWeekCodeTimeStatsP = getLastWeekCodeTimeStats();
         let lastMonthsCodeTimeStatsP = getLastMonthCodeTimeStats();
+        let allTimeCodeTimeStatsP = getAllTimeCodeTimeStatsData();
         let userRankingsP = getUserRankings();
 
         this._dashboardContent = "SOFTWARE.COM DASHBOARD\n\n";
@@ -95,10 +98,27 @@ export default class DashboardContentProvider
         this._dashboardContent += await weeklyTopProjectsP;
         this._dashboardContent += await userRankingsP;
 
-        this._dashboardContent += getSectionHeader(
-            `All-time (${lastWeek.toLocaleDateString()} - ${today.toLocaleDateString()})`
-        );
-        this._dashboardContent += await lastMonthsCodeTimeStatsP;
+        let allTimeCodeTimeStats = await allTimeCodeTimeStatsP;
+
+        // get the "from" time from one of the items
+        if (
+            allTimeCodeTimeStats &&
+            allTimeCodeTimeStats.data &&
+            allTimeCodeTimeStats.data.length > 0
+        ) {
+            let from = parseInt(allTimeCodeTimeStats.data[0].from, 10) * 1000;
+            let fromDate = new Date(from);
+            this._dashboardContent += getSectionHeader(
+                `All-time (${fromDate.toLocaleDateString()} - ${today.toLocaleDateString()})`
+            );
+            this._dashboardContent += await buildCodeTimeStatsFromData(
+                allTimeCodeTimeStats.data
+            );
+        } else {
+            this._dashboardContent += getSectionHeader(`All-time`);
+            this._dashboardContent +=
+                "  No all-time code time stats available\n";
+        }
         this._dashboardContent += "\n";
 
         return this._dashboardContent;

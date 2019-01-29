@@ -352,11 +352,32 @@ export async function getLastMonthCodeTimeStats() {
     return await getCodeTimeStats(fromSeconds, toSeconds);
 }
 
-export async function getAllTimeCodeTimeStats() {
+export async function getAllTimeCodeTimeStatsData() {
     let endDate = new Date();
     endDate.setHours(0, 0, 0, 0);
     const toSeconds = Math.round(endDate.getTime() / 1000);
-    return await getCodeTimeStats(-1, toSeconds);
+    let codeTimeStats = await softwareGet(
+        `/metrics?from=-1&to=${toSeconds}`,
+        getItem("jwt")
+    );
+    return codeTimeStats;
+}
+
+export async function buildCodeTimeStatsFromData(data) {
+    let content = "";
+
+    if (data) {
+        for (let i = 0; i < data.length; i++) {
+            let stats = data[i];
+            let total = stats.total || 0;
+            let totalStr = formatNumber(total);
+            content += getDashboardRow(stats.label, totalStr);
+        }
+    } else {
+        content += "  No code time stats available\n";
+    }
+    content += "\n";
+    return content;
 }
 
 export async function getCodeTimeStats(fromSeconds, toSeconds) {
@@ -368,13 +389,7 @@ export async function getCodeTimeStats(fromSeconds, toSeconds) {
     );
 
     if (codeTimeStats && codeTimeStats.data) {
-        let codeTimeStatsData = codeTimeStats.data;
-        for (let i = 0; i < codeTimeStatsData.length; i++) {
-            let stats = codeTimeStatsData[i];
-            let total = stats.total || 0;
-            let totalStr = formatNumber(total);
-            content += getDashboardRow(stats.label, totalStr);
-        }
+        return buildCodeTimeStatsFromData(codeTimeStats.data);
     } else {
         content += "  No code time stats available\n";
     }
