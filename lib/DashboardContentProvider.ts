@@ -7,19 +7,8 @@ import {
     EventEmitter,
     TextDocumentContentProvider
 } from "vscode";
-import {
-    getLastWeekCodeTimeStats,
-    getLastMonthCodeTimeStats,
-    getCodeTimeSummary,
-    getGenreSummary,
-    getTopCommitFiles,
-    getWeeklyTopProjects,
-    getYesterdayCodeTimeStats,
-    getUserRankings,
-    getAllTimeCodeTimeStatsData,
-    buildCodeTimeStatsFromData
-} from "./DashboardUtil";
-import { getSectionHeader } from "./Util";
+import { softwareGet } from "./HttpClient";
+import { getItem } from "./Util";
 
 export default class DashboardContentProvider
     implements TextDocumentContentProvider {
@@ -53,75 +42,16 @@ export default class DashboardContentProvider
             .getConfiguration("feature")
             .get("showGitMetrics");
 
-        let codeTimeSummaryP = getCodeTimeSummary();
-        let weeklyTopProjectsP = getWeeklyTopProjects();
-        // let todaysCodeTimeStatsP = getTodaysCodeTimeStats();
-        let genreSummaryP = showMusicMetrics ? getGenreSummary() : null;
-        let topCommitFilesP = showGitMetrics ? getTopCommitFiles() : null;
-        let yesterdayCodeTimeStatsP = getYesterdayCodeTimeStats();
-        let lastWeekCodeTimeStatsP = getLastWeekCodeTimeStats();
-        let lastMonthsCodeTimeStatsP = getLastMonthCodeTimeStats();
-        let allTimeCodeTimeStatsP = getAllTimeCodeTimeStatsData();
-        let userRankingsP = getUserRankings();
+        const NO_DATA = "SOFTWARE.COM DASHBOARD\n\n No data available\n";
 
-        this._dashboardContent = "SOFTWARE.COM DASHBOARD\n\n";
-
-        // today
-        let today = new Date();
-        this._dashboardContent += getSectionHeader(
-            `Today (${today.toLocaleDateString()})`
+        const dashboardSummary = await softwareGet(
+            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
+            getItem("jwt")
         );
-
-        this._dashboardContent += await codeTimeSummaryP;
-
-        // yesterday
-        let yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        this._dashboardContent += getSectionHeader(
-            `Yesterday (${yesterday.toLocaleDateString()})`
-        );
-        this._dashboardContent += await yesterdayCodeTimeStatsP;
-
-        // last week
-        let lastWeek = new Date();
-        lastWeek.setDate(lastWeek.getDate() - 7);
-        this._dashboardContent += getSectionHeader(
-            `Last week (${lastWeek.toLocaleDateString()} - ${today.toLocaleDateString()})`
-        );
-        this._dashboardContent += await lastWeekCodeTimeStatsP;
-        if (genreSummaryP) {
-            this._dashboardContent += await genreSummaryP;
-        }
-        if (topCommitFilesP) {
-            this._dashboardContent += await topCommitFilesP;
-        }
-        this._dashboardContent += await weeklyTopProjectsP;
-        this._dashboardContent += await userRankingsP;
-
-        let allTimeCodeTimeStats = await allTimeCodeTimeStatsP;
-
-        // get the "from" time from one of the items
-        if (
-            allTimeCodeTimeStats &&
-            allTimeCodeTimeStats.data &&
-            allTimeCodeTimeStats.data.length > 0
-        ) {
-            let from = parseInt(allTimeCodeTimeStats.data[0].from, 10) * 1000;
-            let fromDate = new Date(from);
-            this._dashboardContent += getSectionHeader(
-                `All-time (${fromDate.toLocaleDateString()} - ${today.toLocaleDateString()})`
-            );
-            this._dashboardContent += await buildCodeTimeStatsFromData(
-                allTimeCodeTimeStats.data
-            );
-        } else {
-            this._dashboardContent += getSectionHeader(`All-time`);
-            this._dashboardContent +=
-                "  No all-time code time stats available\n";
-        }
-        this._dashboardContent += "\n";
-
-        return this._dashboardContent;
+        return (this._dashboardContent =
+            dashboardSummary && dashboardSummary.data
+                ? dashboardSummary.data
+                : NO_DATA);
     }
 
     public async provideTextDocumentContent(uri: Uri): Promise<string> {
