@@ -36,7 +36,11 @@ import {
     getDashboardFile
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
-import { showQuickPick } from "./lib/MenuManager";
+import {
+    showQuickPick,
+    displayCodeTimeMetricsDashboard,
+    showMenuOptions
+} from "./lib/MenuManager";
 import DashboardContentProvider from "./lib/DashboardContentProvider";
 import {
     fetchDailyKpmSessionInfo,
@@ -181,6 +185,11 @@ export function activate(ctx: ExtensionContext) {
             handleEnableMetricsEvent();
         })
     );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.codeTimeDashboard", () => {
+            handleCodeTimeDashboardEvent();
+        })
+    );
 }
 
 function configUpdated(ctx) {
@@ -207,7 +216,7 @@ function configUpdated(ctx) {
 
 function handlePauseMetricsEvent() {
     TELEMETRY_ON = false;
-    showStatus("<S> Paused", "Enable metrics to resume");
+    showStatus("Code Time Paused", "Enable metrics to resume");
 }
 
 function handleEnableMetricsEvent() {
@@ -215,65 +224,16 @@ function handleEnableMetricsEvent() {
     showStatus("Code Time", null);
 }
 
+function handleCodeTimeDashboardEvent() {
+    displayCodeTimeMetricsDashboard();
+}
+
 export async function orderGrubCommandEvent() {
     fetchTacoChoices();
 }
 
 export async function handleKpmClickedEvent() {
-    // check if we've successfully logged in as this user yet
-    const existingJwt = getItem("jwt");
-    let tokenVal = getItem("token");
-
-    let webUrl = launch_url;
-
-    let addedToken = false;
-
-    let appDashboardDetail = "Click to see more from Code Time";
-    if (!tokenVal) {
-        tokenVal = randomCode();
-        addedToken = true;
-        setItem("token", tokenVal);
-    } else if (!existingJwt) {
-        addedToken = true;
-    } else if (!(await isAuthenticated())) {
-        addedToken = true;
-    }
-
-    // add the token to the launch url
-    if (addedToken) {
-        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
-
-        appDashboardDetail = `$(alert) To see your coding data in Code Time, please log in to your account.`;
-
-        // check for the jwt in a minute
-        setTimeout(() => {
-            checkTokenAvailability();
-        }, 1000 * 45);
-    }
-
-    let filePath = getDashboardFile();
-    // let uriKey = getUriKey();
-    // let dashboardURI = Uri.parse(`swdc://Software/CodeTime`);
-
-    // {placeholder, items: [{label, description, url, details, tooltip},...]}
-    let kpmMenuOptions = {
-        items: [
-            {
-                label: "Code time metrics",
-                description: "",
-                detail: "View your latest coding metrics",
-                url: null,
-                uri: filePath
-            },
-            {
-                label: "Software.com",
-                description: "",
-                detail: appDashboardDetail,
-                url: webUrl
-            }
-        ]
-    };
-    showQuickPick(kpmMenuOptions);
+    showMenuOptions(false /*showSoftwareGrubOptions*/);
 }
 
 /**

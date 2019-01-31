@@ -13,10 +13,10 @@ import {
     showErrorStatus,
     showStatus,
     getSoftwareSessionFile,
-    getTrackInfo,
     isEmptyObj,
     humanizeMinutes
 } from "./Util";
+import { getTrackInfo } from "./MusicManager";
 import { showTacoTime, isTacoTime } from "./KpmGrubManager";
 import {
     isTelemetryOn,
@@ -273,33 +273,36 @@ export function gatherMusicInfo() {
             let nowInSec = Math.round(d.getTime() / 1000);
             // subtract the offset_sec (it'll be positive before utc and negative after utc)
             let localNowInSec = nowInSec - offset_sec;
+            let state = trackInfoData["state"] || "playing";
+            let isPaused =
+                state.toLowerCase().indexOf("pause") !== -1 ? true : false;
 
             if (trackInfoData && trackInfoData["id"]) {
                 // check if we have this track already in "trackInfo"
                 if (
                     !isEmptyObj(trackInfo) &&
-                    trackInfo["id"] !== trackInfoData["id"]
+                    (trackInfo["id"] !== trackInfoData["id"] || isPaused)
                 ) {
                     // this means a new song has started, send a payload to complete
                     // the 1st one and another to start the next one
                     trackInfo["end"] = nowInSec - 1;
                     sendMusicData(trackInfo).then(result => {
-                        // send the next payload starting the next song
-                        trackInfo = {};
-                        trackInfo = { ...trackInfoData };
-                        trackInfo["start"] = nowInSec;
-                        trackInfo["local_start"] = localNowInSec;
-                        sendMusicData(trackInfo);
+                        if (!isPaused) {
+                            // send the next payload starting the next song
+                            trackInfo = {};
+                            trackInfo = { ...trackInfoData };
+                            trackInfo["start"] = nowInSec;
+                            trackInfo["local_start"] = localNowInSec;
+                            sendMusicData(trackInfo);
+                        } else {
+                            trackInfo = {};
+                        }
                     });
-                } else if (isEmptyObj(trackInfo)) {
+                } else if (isEmptyObj(trackInfo) && !isPaused) {
                     // no previous track played, send this one to start it
                     trackInfo = { ...trackInfoData };
                     trackInfo["start"] = nowInSec;
                     trackInfo["local_start"] = localNowInSec;
-                    sendMusicData(trackInfo);
-                } else if (trackInfo["state"] !== trackInfoData["state"]) {
-                    // update the track info state
-                    trackInfo["state"] = trackInfoData["state"];
                     sendMusicData(trackInfo);
                 }
             } else if (!isEmptyObj(trackInfo)) {
