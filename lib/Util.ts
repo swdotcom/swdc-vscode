@@ -102,6 +102,16 @@ export function isMac() {
     return process.platform.indexOf("darwin") !== -1;
 }
 
+export function getDashboardFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\CodeTime";
+    } else {
+        file += "/CodeTime";
+    }
+    return file;
+}
+
 export function getSoftwareDir() {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

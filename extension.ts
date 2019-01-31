@@ -32,7 +32,8 @@ import {
     deleteFile,
     getRootPath,
     updateUriKey,
-    getUriKey
+    getUriKey,
+    getDashboardFile
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import { showQuickPick } from "./lib/MenuManager";
@@ -183,25 +184,25 @@ export function activate(ctx: ExtensionContext) {
 }
 
 function configUpdated(ctx) {
-    let dashboardIdx = -1;
-    for (let i = 0; i < ctx.subscriptions.length; i++) {
-        let subscription = ctx.subscriptions[i];
-        let dashboardContent = subscription._dashboardContent;
-        if (dashboardContent) {
-            // subscription.getDashboardContent();
-            // remove this subscription and add it back anew
-            dashboardIdx = i;
-            break;
-        }
-    }
-    if (dashboardIdx > -1) {
-        ctx.subscriptions.splice(dashboardIdx, 1);
-        const seconds = Math.round(new Date().getTime() / 1000);
-        let uriKey = `swdc-${seconds}`;
-        updateUriKey(uriKey);
-        const dashboardContentProvider = new DashboardContentProvider(uriKey);
-        ctx.subscriptions.push(dashboardContentProvider);
-    }
+    // let dashboardIdx = -1;
+    // for (let i = 0; i < ctx.subscriptions.length; i++) {
+    //     let subscription = ctx.subscriptions[i];
+    //     let dashboardContent = subscription._dashboardContent;
+    //     if (dashboardContent) {
+    //         // subscription.getDashboardContent();
+    //         // remove this subscription and add it back anew
+    //         dashboardIdx = i;
+    //         break;
+    //     }
+    // }
+    // if (dashboardIdx > -1) {
+    //     ctx.subscriptions.splice(dashboardIdx, 1);
+    //     const seconds = Math.round(new Date().getTime() / 1000);
+    //     let uriKey = `swdc-${seconds}`;
+    //     updateUriKey(uriKey);
+    //     const dashboardContentProvider = new DashboardContentProvider(uriKey);
+    //     ctx.subscriptions.push(dashboardContentProvider);
+    // }
 }
 
 function handlePauseMetricsEvent() {
@@ -250,8 +251,9 @@ export async function handleKpmClickedEvent() {
         }, 1000 * 45);
     }
 
-    let uriKey = getUriKey();
-    let dashboardURI = Uri.parse(`${uriKey}://Software/CodeTime`);
+    let filePath = getDashboardFile();
+    // let uriKey = getUriKey();
+    // let dashboardURI = Uri.parse(`swdc://Software/CodeTime`);
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -261,7 +263,7 @@ export async function handleKpmClickedEvent() {
                 description: "",
                 detail: "View your latest coding metrics",
                 url: null,
-                uri: dashboardURI
+                uri: filePath
             },
             {
                 label: "Software.com",
