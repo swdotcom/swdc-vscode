@@ -42,7 +42,7 @@ export default class DashboardContentProvider
             .getConfiguration("feature")
             .get("showGitMetrics");
 
-        const NO_DATA = "SOFTWARE.COM DASHBOARD\n\n No data available\n";
+        const NO_DATA = "CODE TIME\n\nNo data available\n";
 
         const dashboardSummary = await softwareGet(
             `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,

@@ -22,7 +22,7 @@ export async function softwareGet(api, jwt) {
         })
         .catch(err => {
             console.log(
-                `Software.com: error fetching data for ${api}, message: ${
+                `Code Time: error fetching data for ${api}, message: ${
                     err.message
                 }`
             );
@@ -40,7 +40,7 @@ export async function softwarePost(api, payload, jwt) {
         })
         .catch(err => {
             console.log(
-                `Software.com: error posting data for ${api}, message: ${
+                `Code Time: error posting data for ${api}, message: ${
                     err.message
                 }`
             );
@@ -57,7 +57,7 @@ export async function softwareDelete(api, jwt) {
         })
         .catch(err => {
             console.log(
-                `Software.com: error with delete request for ${api}, message: ${
+                `Code Time: error with delete request for ${api}, message: ${
                     err.message
                 }`
             );
@@ -84,14 +84,14 @@ export async function isUserDeactivated(resp) {
     if (!isResponseOk(resp)) {
         if (isUnauthenticatedAndDeactivated(resp)) {
             showErrorStatus(
-                "To see your coding data in Software.com, please reactivate your account."
+                "To see your coding data in Code Time, please reactivate your account."
             );
             return true;
         } else {
             resp = await softwareGet("/users/ping", getItem("jwt"));
             if (isUnauthenticatedAndDeactivated(resp)) {
                 showErrorStatus(
-                    "To see your coding data in Software.com, please reactivate your account."
+                    "To see your coding data in Code Time, please reactivate your account."
                 );
                 return true;
             }
@@ -112,7 +112,7 @@ function isUnauthenticatedAndDeactivated(resp) {
         let code = resp.response.data.code || "";
         if (code === "DEACTIVATED") {
             showErrorStatus(
-                "To see your coding data in Software.com, please reactivate your account."
+                "To see your coding data in Code Time, please reactivate your account."
             );
             return true;
         }

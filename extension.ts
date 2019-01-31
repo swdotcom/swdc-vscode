@@ -63,14 +63,14 @@ export function getVersion() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
-    console.log("Software.com: deactivating the plugin");
+    console.log("Code Time: deactivating the plugin");
     softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
         if (isResponseOk(resp)) {
             if (resp.data) {
-                console.log(`Software.com: Uninstalled plugin`);
+                console.log(`Code Time: Uninstalled plugin`);
             } else {
                 console.log(
-                    "Software.com: Failed to update Software.com about the uninstall event"
+                    "Code Time: Failed to update Code Time about the uninstall event"
                 );
             }
         }
@@ -82,7 +82,7 @@ export function activate(ctx: ExtensionContext) {
         .packageJSON;
 
     extensionVersion = extension.version;
-    console.log(`Software.com: Loaded v${extensionVersion}`);
+    console.log(`Code Time: Loaded v${extensionVersion}`);
 
     //
     // Add the keystroke controller to the ext ctx, which
@@ -109,11 +109,11 @@ export function activate(ctx: ExtensionContext) {
             StatusBarAlignment.Right,
             10
         );
-        statusBarItem.tooltip = "Click to see more from Software.com";
+        statusBarItem.tooltip = "Click to see more from Code Time";
         statusBarItem.command = "extension.softwareKpmDashboard";
         statusBarItem.show();
 
-        showStatus("Software.com", null);
+        showStatus("Code Time", null);
         // initiate kpm fetch
         fetchDailyKpmSessionInfo();
     }, 100);
@@ -211,7 +211,7 @@ function handlePauseMetricsEvent() {
 
 function handleEnableMetricsEvent() {
     TELEMETRY_ON = true;
-    showStatus("Software.com", null);
+    showStatus("Code Time", null);
 }
 
 export async function orderGrubCommandEvent() {
@@ -227,7 +227,7 @@ export async function handleKpmClickedEvent() {
 
     let addedToken = false;
 
-    let appDashboardDetail = "Click to see more from Software.com";
+    let appDashboardDetail = "Click to see more from Code Time";
     if (!tokenVal) {
         tokenVal = randomCode();
         addedToken = true;
@@ -242,7 +242,7 @@ export async function handleKpmClickedEvent() {
     if (addedToken) {
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
 
-        appDashboardDetail = `$(alert) To see your coding data in Software.com, please log in to your account.`;
+        appDashboardDetail = `$(alert) To see your coding data in Code Time, please log in to your account.`;
 
         // check for the jwt in a minute
         setTimeout(() => {
@@ -255,17 +255,16 @@ export async function handleKpmClickedEvent() {
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
-        placeholder: "Software.com: dashboard",
         items: [
             {
-                label: "Software.com: dashboard",
+                label: "Code time report",
                 description: "",
                 detail: "View your latest coding metrics",
                 url: null,
                 uri: dashboardURI
             },
             {
-                label: "Software.com: web app",
+                label: "Software.com",
                 description: "",
                 detail: appDashboardDetail,
                 url: webUrl
@@ -298,7 +297,7 @@ export async function isAuthenticated() {
     if (isResponseOk(resp)) {
         return true;
     } else {
-        console.log("Software.com: The user is not logged in");
+        console.log("Code Time: The user is not logged in");
         showErrorStatus(null);
         return false;
     }
@@ -312,7 +311,7 @@ export function sendOfflineData() {
     if (fs.existsSync(dataStoreFile)) {
         const content = fs.readFileSync(dataStoreFile).toString();
         if (content) {
-            console.log(`Software.com: sending batch payloads: ${content}`);
+            console.log(`Code Time: sending batch payloads: ${content}`);
             const payloads = content
                 .split(/\r?\n/)
                 .map(item => {

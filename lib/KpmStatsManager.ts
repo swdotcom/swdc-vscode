@@ -83,7 +83,7 @@ export async function chekUserAuthenticationStatus() {
         // and it's past the threshold time and the confirm window is null
         //
         let infoMsg =
-            "To see your coding data in Software.com, please log in to your account.";
+            "To see your coding data in Code Time, please log in to your account.";
         // set the last update time so we don't try to ask too frequently
         setItem("vscode_lastUpdateTime", Date.now());
         confirmWindow = window
@@ -153,13 +153,13 @@ export function checkTokenAvailability() {
                     fetchDailyKpmSessionInfo();
                 }, 1000);
             } else if (!isUserDeactivated(resp)) {
-                console.log("Software.com: unable to obtain session token");
+                console.log("Code Time: unable to obtain session token");
                 // try again in 45 seconds
                 setTimeout(() => {
                     checkTokenAvailability();
                 }, 1000 * 45);
             } else if (isUserDeactivated(resp)) {
-                console.log("Software.com: unable to obtain session token");
+                console.log("Code Time: unable to obtain session token");
                 // try again in a day
                 setTimeout(() => {
                     checkTokenAvailability();
@@ -168,7 +168,7 @@ export function checkTokenAvailability() {
         })
         .catch(err => {
             console.log(
-                "Software.com: error confirming plugin token: ",
+                "Code Time: error confirming plugin token: ",
                 err.message
             );
         });
@@ -220,6 +220,13 @@ export function fetchDailyKpmSessionInfo() {
                     ? parseFloat(sessions.currentSessionGoalPercent)
                     : 0;
 
+                let currentDayMinutes = sessions.currentDayMinutes;
+                let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
+                let averageDailyMinutes = sessions.averageDailyMinutes;
+                let averageDailyMinutesTime = humanizeMinutes(
+                    averageDailyMinutes
+                );
+
                 let sessionTimeIcon = "";
                 if (currentSessionGoalPercent > 0) {
                     if (currentSessionGoalPercent < 0.4) {
@@ -235,44 +242,20 @@ export function fetchDailyKpmSessionInfo() {
                     }
                 }
 
-                // const avgKpm = totalKpm > 0 ? totalKpm / sessionLen : 0;
-                kpmInfo["kpmAvg"] = lastKpm.toFixed(0);
-                kpmInfo["sessionTime"] = sessionTime;
-                if (lastKpm > 0 || currentSessionMinutes > 0) {
-                    let kpmMsg = `${kpmInfo["kpmAvg"]} KPM`;
-                    let sessionMsg = `${kpmInfo["sessionTime"]}`;
-
-                    // if inFlow then show the rocket
-                    if (inFlow) {
-                        kpmMsg = "🚀" + " " + kpmMsg;
-                    }
-                    // if we have session avg percent info, show the icon that corresponds
-                    if (sessionTimeIcon) {
-                        sessionMsg = sessionTimeIcon + " " + sessionMsg;
-                    }
-
-                    let fullMsg = "<S> " + kpmMsg + ", " + sessionMsg;
-                    showStatus(fullMsg, null);
-
-                    if (lastKpm > 0) {
-                        // the user has kpm activity, is it lunch or dinner time?
-                        setTimeout(() => {
-                            // is it taco time?
-                            if (isTacoTime()) {
-                                showTacoTime();
-                            }
-                        }, 5000);
-                    }
-                } else {
-                    showStatus("Software.com", null);
+                let inFlowIcon =
+                    currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
+                let msg = `Code time today: ${inFlowIcon}${currentDayMinutesTime}`;
+                if (averageDailyMinutes > 0) {
+                    msg += ` | Avg: ${averageDailyMinutesTime}`;
                 }
+                showStatus(msg, null);
             } else if (!isUserDeactivated(resp)) {
                 checkTokenAvailability();
             }
         })
         .catch(err => {
             console.log(
-                "Software.com: error fetching session kpm info: ",
+                "Code Time: error fetching session kpm info: ",
                 err.message
             );
         });

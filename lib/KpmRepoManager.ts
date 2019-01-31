@@ -86,7 +86,7 @@ export async function getRepoUsers(projectDir) {
                 resp => {
                     if (isResponseOk(resp)) {
                         // everything is fine, delete the offline data file
-                        console.log("Software.com: repo membership updated");
+                        console.log("Code Time: repo membership updated");
                     }
                 }
             );
@@ -301,10 +301,10 @@ export async function getHistoricalCommits(projectDir) {
         softwarePost("/commits", commitData, getItem("jwt")).then(resp => {
             if (isResponseOk(resp)) {
                 if (resp.data) {
-                    console.log(`Software.com: ${resp.data.message}`);
+                    console.log(`Code Time: ${resp.data.message}`);
                 } else {
                     // everything is fine, delete the offline data file
-                    console.log("Software.com: repo commits updated");
+                    console.log("Code Time: repo commits updated");
                 }
             }
         });

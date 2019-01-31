@@ -134,7 +134,7 @@ export function showTacoQuickPick() {
 
     let addedToken = false;
 
-    let appDashboardDetail = "Click to see more from Software.com";
+    let appDashboardDetail = "Click to see more from Code Time";
     if (!tokenVal) {
         tokenVal = randomCode();
         addedToken = true;
@@ -146,7 +146,7 @@ export function showTacoQuickPick() {
     // add the token to the launch url
     if (addedToken) {
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
-        appDashboardDetail = `$(alert) To see your coding data in Software.com, please log in to your account.`;
+        appDashboardDetail = `$(alert) To see your coding data in Code Time, please log in to your account.`;
     }
 
     let uriKey = getUriKey();
@@ -154,17 +154,16 @@ export function showTacoQuickPick() {
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
-        placeholder: "Software.com: dashboard",
         items: [
             {
-                label: "Software.com: dashboard",
+                label: "Code time report",
                 description: "",
                 detail: "View your latest coding metrics",
                 url: null,
                 uri: dashboardURI
             },
             {
-                label: "Software.com: web app",
+                label: "Software.com",
                 description: "",
                 detail: appDashboardDetail,
                 url: webUrl

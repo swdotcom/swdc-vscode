@@ -44,7 +44,7 @@ export function setItem(key, value) {
     fs.writeFileSync(sessionFile, content, err => {
         if (err)
             console.log(
-                "Software.com: Error writing to the Software session file: ",
+                "Code Time: Error writing to the Software session file: ",
                 err.message
             );
     });
@@ -57,17 +57,17 @@ export function getItem(key) {
 }
 
 export function showErrorStatus(errorTooltip) {
-    let fullMsg = `$(${"alert"}) ${"Software.com"}`;
+    let fullMsg = `$(${"alert"}) ${"Code Time"}`;
     if (!errorTooltip) {
         errorTooltip =
-            "To see your coding data in Software.com, please log in to your account.";
+            "To see your coding data in Code Time, please log in to your account.";
     }
     showStatus(fullMsg, errorTooltip);
 }
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
-        tooltip = "Click to see more from Software.com";
+        tooltip = "Click to see more from Code Time";
     }
     if (isTacoTime()) {
         fullMsg += " 🌮";
@@ -169,7 +169,7 @@ export function storePayload(payload) {
         err => {
             if (err)
                 console.log(
-                    "Software.com: Error appending to the Software data store file: ",
+                    "Code Time: Error appending to the Software data store file: ",
                     err.message
                 );
         }
@@ -378,7 +378,7 @@ export function launchWebUrl(url) {
     let process = cp.execFile(open, args, (error, stdout, stderr) => {
         if (error != null) {
             console.log(
-                "Software.com: Error launching Software web url: ",
+                "Code Time: Error launching Software web url: ",
                 error.toString()
             );
         }
