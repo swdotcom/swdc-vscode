@@ -202,7 +202,7 @@ export function fetchDailyKpmSessionInfo() {
     const fromSeconds = Math.round(start.getTime() / 1000);
 
     // make sure we send the beginning of the day
-    softwareGet(`/sessions?from=${fromSeconds}&summary=true`, getItem("jwt"))
+    softwareGet(`/sessions?start=${fromSeconds}&summary=true`, getItem("jwt"))
         .then(resp => {
             if (isResponseOk(resp)) {
                 const sessions = resp.data;

@@ -251,13 +251,13 @@ export async function handleKpmClickedEvent() {
     }
 
     let uriKey = getUriKey();
-    let dashboardURI = Uri.parse(`${uriKey}://Software/SoftwareDashboard`);
+    let dashboardURI = Uri.parse(`${uriKey}://Software/CodeTime`);
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
         items: [
             {
-                label: "Code time report",
+                label: "Code time metrics",
                 description: "",
                 detail: "View your latest coding metrics",
                 url: null,
