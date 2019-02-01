@@ -39,31 +39,42 @@ export function showQuickPick(pickOptions) {
     });
 }
 
-export async function showMenuOptions(showSoftwareGrubOptions) {
-    // check if we've successfully logged in as this user yet
+export async function userNeedsToken() {
+    let requiresToken = false;
     const existingJwt = getItem("jwt");
     let tokenVal = getItem("token");
+    if (!tokenVal || !existingJwt || !(await isAuthenticated())) {
+        requiresToken = true;
+    }
+    return requiresToken;
+}
 
+export async function buildLaunchUrl(requiresToken) {
     let webUrl = launch_url;
+    if (requiresToken) {
+        let tokenVal = getItem("token");
+        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+    }
 
-    let addedToken = false;
+    return webUrl;
+}
+
+export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
+    // check if we've successfully logged in as this user yet
+    let tokenVal = getItem("token");
 
     let appDashboardDetail = "Click to see more from Code Time";
     if (!tokenVal) {
         tokenVal = randomCode();
-        addedToken = true;
         setItem("token", tokenVal);
-    } else if (!existingJwt) {
-        addedToken = true;
-    } else if (!(await isAuthenticated())) {
-        addedToken = true;
     }
 
     // add the token to the launch url
-    if (addedToken) {
-        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+    if (requiresToken) {
         appDashboardDetail = `$(alert) To see your coding data in Code Time, please log in to your account.`;
     }
+
+    let webUrl = await buildLaunchUrl(requiresToken);
 
     // let uriKey = getUriKey();
     // let dashboardURI = Uri.parse(`${uriKey}://Software/SoftwareDashboard`);
@@ -75,7 +86,8 @@ export async function showMenuOptions(showSoftwareGrubOptions) {
                 "Get your favorite tacos delivered fast to your door with Doordash. No Minimum Order Size.",
             detail: "⭐⭐⭐⭐ ",
             label: "Doordash",
-            url: "https://www.doordash.com/?query=tacos"
+            url: "https://www.doordash.com/?query=tacos",
+            uri: null
         },
         {
             description:
@@ -83,14 +95,16 @@ export async function showMenuOptions(showSoftwareGrubOptions) {
             detail: "⭐⭐⭐⭐ ",
             label: "Grubhub",
             url:
-                "https://www.grubhub.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&latitude=37.41455459&longitude=-122.1899643&facet=open_now%3Atrue&variationId=otter&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true"
+                "https://www.grubhub.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&latitude=37.41455459&longitude=-122.1899643&facet=open_now%3Atrue&variationId=otter&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true",
+            uri: null
         },
         {
             description:
                 "Get tacos deliverd at Uber Speed. Food Delivery by Uber",
             detail: "⭐⭐⭐⭐ ",
             label: "UberEats",
-            url: "https://www.ubereats.com/en-US/search/?q=Tacos"
+            url: "https://www.ubereats.com/en-US/search/?q=Tacos",
+            uri: null
         },
         {
             description:
@@ -98,7 +112,8 @@ export async function showMenuOptions(showSoftwareGrubOptions) {
             detail: "⭐⭐⭐⭐ ",
             label: "Eat24",
             url:
-                "https://www.eat24.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&facet=open_now%3Atrue&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true"
+                "https://www.eat24.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&facet=open_now%3Atrue&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true",
+            uri: null
         }
     ];
 
@@ -106,20 +121,23 @@ export async function showMenuOptions(showSoftwareGrubOptions) {
     let kpmMenuOptions = {
         items: [
             {
-                label: "Code time report",
-                description: "",
-                detail: "View your latest coding metrics",
-                url: null,
-                uri: filePath
-            },
-            {
                 label: "Software.com",
                 description: "",
                 detail: appDashboardDetail,
-                url: webUrl
+                url: webUrl,
+                uri: null
             }
         ]
     };
+    if (!requiresToken) {
+        kpmMenuOptions.items.unshift({
+            label: "Code time report",
+            description: "",
+            detail: "View your latest coding metrics",
+            url: null,
+            uri: filePath
+        });
+    }
     if (showSoftwareGrubOptions) {
         kpmMenuOptions.items.push(...grubOptions);
     }

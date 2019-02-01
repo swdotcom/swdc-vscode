@@ -21,32 +21,29 @@ import {
     softwarePost,
     softwareDelete
 } from "./lib/HttpClient";
-import { launch_url, PLUGIN_ID } from "./lib/Constants";
+import { PLUGIN_ID } from "./lib/Constants";
 import {
     showStatus,
     showErrorStatus,
     getItem,
-    setItem,
-    randomCode,
     getSoftwareDataStoreFile,
     deleteFile,
     getRootPath,
     updateUriKey,
-    getUriKey,
-    getDashboardFile
+    launchWebUrl
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
-    showQuickPick,
     displayCodeTimeMetricsDashboard,
-    showMenuOptions
+    showMenuOptions,
+    userNeedsToken,
+    buildLaunchUrl
 } from "./lib/MenuManager";
 import DashboardContentProvider from "./lib/DashboardContentProvider";
 import {
     fetchDailyKpmSessionInfo,
     gatherMusicInfo,
     chekUserAuthenticationStatus,
-    checkTokenAvailability,
     serverIsAvailable
 } from "./lib/KpmStatsManager";
 import { fetchTacoChoices } from "./lib/KpmGrubManager";
@@ -233,7 +230,13 @@ export async function orderGrubCommandEvent() {
 }
 
 export async function handleKpmClickedEvent() {
-    showMenuOptions(false /*showSoftwareGrubOptions*/);
+    let requiresToken = await userNeedsToken();
+    if (requiresToken) {
+        let url = await buildLaunchUrl(requiresToken);
+        launchWebUrl(url);
+    } else {
+        showMenuOptions(requiresToken, false /*showSoftwareGrubOptions*/);
+    }
 }
 
 /**
