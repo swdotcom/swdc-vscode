@@ -1,13 +1,7 @@
 import { window } from "vscode";
-import {
-    getItem,
-    setItem,
-    randomCode,
-    showTacoTimeStatus,
-    getDashboardFile
-} from "./Util";
+import { showTacoTimeStatus } from "./Util";
 import { NOT_NOW_LABEL, YES_LABEL, OK_LABEL, launch_url } from "./Constants";
-import { showMenuOptions } from "./MenuManager";
+import { showMenuOptions, userNeedsToken } from "./MenuManager";
 
 let tacoTimeMap = {
     count: 0,
@@ -88,14 +82,18 @@ export function fetchTacoChoices() {
                     "Would you like to order tacos now?",
                     ...[NOT_NOW_LABEL, YES_LABEL]
                 )
-                .then(selection => {
+                .then(async selection => {
                     grubWindow = null;
                     if (selection === YES_LABEL) {
                         // open the input options box
                         showTacoQuickPick();
                     } else {
+                        let requiresToken = await userNeedsToken();
                         // show the full menu
-                        showMenuOptions(true /*showSoftwareGrubOptions*/);
+                        showMenuOptions(
+                            requiresToken,
+                            true /*showSoftwareGrubOptions*/
+                        );
                     }
                 });
         }
@@ -126,8 +124,9 @@ export function isTacoTime() {
     return false;
 }
 
-export function showTacoQuickPick() {
-    showMenuOptions(true /*showSoftwareGrubOptions*/);
+export async function showTacoQuickPick() {
+    let requiresToken = await userNeedsToken();
+    showMenuOptions(requiresToken, true /*showSoftwareGrubOptions*/);
 }
 
 function resetTacoTimeMap() {
