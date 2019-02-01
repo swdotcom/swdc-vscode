@@ -2,8 +2,14 @@ import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
 import { wrapExecPromise } from "./Util";
 
-export async function getTrackState() {
+export async function getItunesTrackState() {
     let command = `osascript -e \'tell application "iTunes" to get player state\'`;
+    let result = await wrapExecPromise(command, null);
+    return result;
+}
+
+export async function getSpotifyTrackState() {
+    let command = `osascript -e \'tell application "Spotify" to get player state\'`;
     let result = await wrapExecPromise(command, null);
     return result;
 }
@@ -61,7 +67,7 @@ function getSpotifyRunningPromise() {
     }
  */
 async function getSpotifyTrackPromise() {
-    let state = await getTrackState();
+    let state = await getSpotifyTrackState();
     return new Promise((resolve, reject) => {
         spotify.getTrack((err, track) => {
             if (err || !track) {
@@ -108,7 +114,7 @@ function isItunesRunningPromise() {
     6:"3:50"
  */
 async function getItunesTrackPromise() {
-    let state = await getTrackState();
+    let state = await getItunesTrackState();
     return new Promise((resolve, reject) => {
         itunes.track((err, track) => {
             if (err || !track) {
