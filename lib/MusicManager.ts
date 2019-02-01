@@ -1,13 +1,11 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
+import { wrapExecPromise } from "./Util";
 
-const scripts = {
-    isPaused: 'tell application "iTunes" to get player state'
-};
-
-export async function executeApplescript(scriptId, callback) {
-    let trackScript = scripts[scriptId];
-    // applescript.execString(trackScript, callback);
+export async function getTrackState() {
+    let command = `osascript -e \'tell application "iTunes" to get player state\'`;
+    let result = await wrapExecPromise(command, null);
+    return result;
 }
 
 export async function getTrackInfo() {
@@ -62,9 +60,9 @@ function getSpotifyRunningPromise() {
         spotify_url: 'spotify:track:3AhXZa8sUQht0UEdBJgpGc' }
     }
  */
-function getSpotifyTrackPromise() {
+async function getSpotifyTrackPromise() {
+    let state = await getTrackState();
     return new Promise((resolve, reject) => {
-        // executeApplescript("isPaused", (err, state) => {
         spotify.getTrack((err, track) => {
             if (err || !track) {
                 resolve(null);
@@ -76,14 +74,13 @@ function getSpotifyTrackPromise() {
                     genre: "", // spotify doesn't provide genre from their app.
                     start: 0,
                     end: 0,
-                    state: "playing",
+                    state,
                     duration: track.duration,
                     type: "spotify"
                 };
                 resolve(trackInfo);
             }
         });
-        // });
     });
 }
 
@@ -110,9 +107,9 @@ function isItunesRunningPromise() {
     5:"High on Life (feat. Bonn)"
     6:"3:50"
  */
-function getItunesTrackPromise() {
+async function getItunesTrackPromise() {
+    let state = await getTrackState();
     return new Promise((resolve, reject) => {
-        // executeApplescript("isPaused", (err, state) => {
         itunes.track((err, track) => {
             if (err || !track) {
                 resolve(null);
@@ -125,7 +122,7 @@ function getItunesTrackPromise() {
                     genre: "", // spotify doesn't provide genre from their app.
                     start: 0,
                     end: 0,
-                    state: "playing",
+                    state,
                     duration: 0,
                     type: "itunes"
                 };
@@ -155,6 +152,5 @@ function getItunesTrackPromise() {
                 resolve(trackInfo);
             }
         });
-        // });
     });
 }

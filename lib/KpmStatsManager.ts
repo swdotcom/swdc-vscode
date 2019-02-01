@@ -279,10 +279,15 @@ export function gatherMusicInfo() {
 
             if (trackInfoData && trackInfoData["id"]) {
                 // check if we have this track already in "trackInfo"
-                if (
-                    !isEmptyObj(trackInfo) &&
-                    (trackInfo["id"] !== trackInfoData["id"] || isPaused)
-                ) {
+                let hasExistingTrackInfo = !isEmptyObj(trackInfo)
+                    ? true
+                    : false;
+                let matchingTracks =
+                    hasExistingTrackInfo &&
+                    trackInfo["id"] === trackInfoData["id"]
+                        ? true
+                        : false;
+                if (hasExistingTrackInfo && (!matchingTracks || isPaused)) {
                     // this means a new song has started, send a payload to complete
                     // the 1st one and another to start the next one
                     trackInfo["end"] = nowInSec - 1;
@@ -298,7 +303,7 @@ export function gatherMusicInfo() {
                             trackInfo = {};
                         }
                     });
-                } else if (isEmptyObj(trackInfo) && !isPaused) {
+                } else if (!hasExistingTrackInfo && !isPaused) {
                     // no previous track played, send this one to start it
                     trackInfo = { ...trackInfoData };
                     trackInfo["start"] = nowInSec;
