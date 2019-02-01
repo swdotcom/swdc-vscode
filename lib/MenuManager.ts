@@ -53,6 +53,10 @@ export async function buildLaunchUrl(requiresToken) {
     let webUrl = launch_url;
     if (requiresToken) {
         let tokenVal = getItem("token");
+        if (!tokenVal) {
+            tokenVal = randomCode();
+            setItem("token", tokenVal);
+        }
         webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
     }
 
@@ -64,10 +68,6 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
     let tokenVal = getItem("token");
 
     let appDashboardDetail = "Click to see more from Code Time";
-    if (!tokenVal) {
-        tokenVal = randomCode();
-        setItem("token", tokenVal);
-    }
 
     // add the token to the launch url
     if (requiresToken) {
