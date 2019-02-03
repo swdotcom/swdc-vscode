@@ -1,6 +1,8 @@
 import { getStatusBarItem } from "../extension";
 import { isTacoTime } from "./KpmGrubManager";
+import { checkTokenAvailability } from "./KpmStatsManager";
 import { workspace } from "vscode";
+import { userNeedsToken } from "./MenuManager";
 const { exec } = require("child_process");
 
 const fs = require("fs");
@@ -230,7 +232,6 @@ export async function wrapExecPromise(cmd, projectDir) {
 }
 
 export function launchWebUrl(url) {
-    console.log("launching url: ", url);
     let open = "open";
     let args = [`${url}`];
     if (isWindows()) {

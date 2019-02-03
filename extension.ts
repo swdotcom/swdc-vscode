@@ -133,7 +133,7 @@ export function activate(ctx: ExtensionContext) {
     setTimeout(() => {
         // check if the user is authenticated with what is saved in the software config
         chekUserAuthenticationStatus();
-    }, 12000);
+    }, 5000);
 
     // send any offline data
     setTimeout(() => {

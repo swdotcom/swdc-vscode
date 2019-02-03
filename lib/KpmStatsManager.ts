@@ -95,11 +95,13 @@ export async function chekUserAuthenticationStatus() {
                 confirmWindow = null;
                 setTimeout(() => {
                     checkTokenAvailability();
-                }, 15000);
+                }, 20000);
             });
     } else if (!authenticated) {
         showErrorStatus(null);
-        checkTokenAvailability();
+        setTimeout(() => {
+            checkTokenAvailability();
+        }, 10000);
     }
 }
 
@@ -171,6 +173,9 @@ export function checkTokenAvailability() {
                 "Code Time: error confirming plugin token: ",
                 err.message
             );
+            setTimeout(() => {
+                checkTokenAvailability();
+            }, 1000 * 45);
         });
 }
 
