@@ -221,24 +221,9 @@ export function fetchDailyKpmSessionInfo() {
                     averageDailyMinutes
                 );
 
-                let sessionTimeIcon = "";
-                if (currentSessionGoalPercent > 0) {
-                    if (currentSessionGoalPercent < 0.4) {
-                        sessionTimeIcon = "🌘";
-                    } else if (currentSessionGoalPercent < 0.7) {
-                        sessionTimeIcon = "🌗";
-                    } else if (currentSessionGoalPercent < 0.93) {
-                        sessionTimeIcon = "🌖";
-                    } else if (currentSessionGoalPercent < 1.3) {
-                        sessionTimeIcon = "🌕";
-                    } else {
-                        sessionTimeIcon = "🌔";
-                    }
-                }
-
                 let inFlowIcon =
                     currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-                let msg = `Code time today: ${inFlowIcon}${currentDayMinutesTime}`;
+                let msg = `Code time: ${inFlowIcon}${currentDayMinutesTime}`;
                 if (averageDailyMinutes > 0) {
                     msg += ` | Avg: ${averageDailyMinutesTime}`;
                 }
@@ -273,9 +258,12 @@ export function gatherMusicInfo() {
             let nowInSec = Math.round(d.getTime() / 1000);
             // subtract the offset_sec (it'll be positive before utc and negative after utc)
             let localNowInSec = nowInSec - offset_sec;
-            let state = trackInfoData["state"] || "playing";
+            let state = "stopped";
+            if (trackInfoData) {
+                state = trackInfoData["state"] || "playing";
+            }
             let isPaused =
-                state.toLowerCase().indexOf("pause") !== -1 ? true : false;
+                state.toLowerCase().indexOf("playing") !== -1 ? false : true;
 
             if (trackInfoData && trackInfoData["id"]) {
                 // check if we have this track already in "trackInfo"

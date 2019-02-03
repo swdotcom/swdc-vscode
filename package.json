@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "0.5.55",
+    "version": "0.5.56",
     "publisher": "softwaredotcom",
     "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
@@ -63,43 +63,25 @@
         },
         "commands": [
             {
-                "command": "extension.codeTimeDashboard",
-                "title": "Code time report",
-                "category": "Software.com"
+                "command": "extension.codeTimeMetrics",
+                "title": "Code time metrics",
+                "category": "Code Time"
             },
             {
                 "command": "extension.softwareKpmDashboard",
                 "title": "Go to software.com",
-                "category": "Software.com"
-            },
-            {
-                "command": "extension.pauseSoftwareMetrics",
-                "title": "Pause metrics",
-                "category": "Software.com"
-            },
-            {
-                "command": "extension.enableSoftwareMetrics",
-                "title": "Enable metrics",
-                "category": "Software.com"
+                "category": "Code Time"
             }
         ],
         "menus": {
             "view/item/context": [
                 {
-                    "command": "extension.codeTimeDashboard",
-                    "group": "Code time report"
+                    "command": "extension.codeTimeMetrics",
+                    "group": "Code Time"
                 },
                 {
                     "command": "extension.softwareKpmDashboard",
-                    "group": "Software.com"
-                },
-                {
-                    "command": "extension.pauseSoftwareMetrics",
-                    "group": "Software.com"
-                },
-                {
-                    "command": "extension.enableSoftwareMetrics",
-                    "group": "Software.com"
+                    "group": "Code Time"
                 }
             ]
         }

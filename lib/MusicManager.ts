@@ -1,11 +1,25 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise } from "./Util";
+import { wrapExecPromise, isWindows } from "./Util";
+
+export async function isItunesRunning() {
+    // String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
+    let command = "ps -ef | grep iTunes";
+    let result = await wrapExecPromise(command, null);
+    return result != null && result.indexOf("iTunes.app") != -1 ? true : false;
+}
 
 export async function getItunesTrackState() {
     let command = `osascript -e \'tell application "iTunes" to get player state\'`;
     let result = await wrapExecPromise(command, null);
     return result;
+}
+
+export async function isSpotifyRunning() {
+    // String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
+    let command = "ps -ef | grep Spotify";
+    let result = await wrapExecPromise(command, null);
+    return result != null && result.indexOf("Spotify.app") != -1 ? true : false;
 }
 
 export async function getSpotifyTrackState() {
@@ -17,12 +31,22 @@ export async function getSpotifyTrackState() {
 export async function getTrackInfo() {
     let trackInfo = {};
 
-    let isSpotifyRunning = await getSpotifyRunningPromise();
-    let isItunesRunning = await isItunesRunningPromise();
+    if (isWindows()) {
+        return trackInfo;
+    }
+
+    //await getSpotifyRunningPromise();
+    let isSpotifyRunning = await this.isSpotifyRunning();
+    //await isItunesRunningPromise();
+    let isItunesRunning = await this.isItunesRunning();
 
     if (isSpotifyRunning) {
         trackInfo = await getSpotifyTrackPromise();
-        if (!trackInfo && isItunesRunning) {
+        let spotifyStopped =
+            !trackInfo || (trackInfo && trackInfo["state"] !== "playing")
+                ? true
+                : false;
+        if ((!trackInfo || spotifyStopped) && isItunesRunning) {
             // get that track data.
             trackInfo = await getItunesTrackPromise();
         }
@@ -73,6 +97,8 @@ async function getSpotifyTrackPromise() {
             if (err || !track) {
                 resolve(null);
             } else {
+                // convert the duration to seconds
+                let duration = Math.round(track.duration / 1000);
                 let trackInfo = {
                     id: track.id,
                     name: track.name,
@@ -81,7 +107,7 @@ async function getSpotifyTrackPromise() {
                     start: 0,
                     end: 0,
                     state,
-                    duration: track.duration,
+                    duration,
                     type: "spotify"
                 };
                 resolve(trackInfo);
@@ -120,7 +146,6 @@ async function getItunesTrackPromise() {
             if (err || !track) {
                 resolve(null);
             } else {
-                itunes.isPaused;
                 let trackInfo = {
                     id: "",
                     name: "",
@@ -148,10 +173,10 @@ async function getItunesTrackPromise() {
                     // get the duration "4:41"
                     let durationParts = track[6].split(":");
                     if (durationParts && durationParts.length === 2) {
-                        let durationInMin =
+                        let durationInSec =
                             parseInt(durationParts[0], 10) * 60 +
                             parseInt(durationParts[1]);
-                        trackInfo["duration"] = durationInMin;
+                        trackInfo["duration"] = durationInSec;
                     }
                 }
                 // stopped/‌playing/‌paused

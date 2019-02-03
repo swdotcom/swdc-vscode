@@ -172,18 +172,18 @@ export function activate(ctx: ExtensionContext) {
             orderGrubCommandEvent();
         })
     );
+    // ctx.subscriptions.push(
+    //     commands.registerCommand("extension.pauseCodeTimeMetrics", () => {
+    //         handlePauseMetricsEvent();
+    //     })
+    // );
+    // ctx.subscriptions.push(
+    //     commands.registerCommand("extension.enableCodeTimeMetrics", () => {
+    //         handleEnableMetricsEvent();
+    //     })
+    // );
     ctx.subscriptions.push(
-        commands.registerCommand("extension.pauseSoftwareMetrics", () => {
-            handlePauseMetricsEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.enableSoftwareMetrics", () => {
-            handleEnableMetricsEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeDashboard", () => {
+        commands.registerCommand("extension.codeTimeMetrics", () => {
             handleCodeTimeDashboardEvent();
         })
     );
