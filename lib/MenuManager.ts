@@ -14,6 +14,8 @@ const fs = require("fs");
 
 const NO_DATA = "CODE TIME\n\nNo data available\n";
 
+let reportInterval = null;
+
 /**
  * Pass in the following array of objects
  * options: {placeholder, items: [{label, description, url, detail, tooltip},...]}
@@ -144,6 +146,13 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
     showQuickPick(kpmMenuOptions);
 }
 
+export async function cancelCodeTimeMetricsFetch() {
+    if (reportInterval) {
+        clearInterval(reportInterval);
+        reportInterval = null;
+    }
+}
+
 export async function displayCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
     let showMusicMetrics = workspace
@@ -166,4 +175,8 @@ export async function displayCodeTimeMetricsDashboard() {
     workspace.openTextDocument(filePath).then(doc => {
         window.showTextDocument(doc);
     });
+
+    reportInterval = setInterval(() => {
+        displayCodeTimeMetricsDashboard();
+    }, 1000 * 60);
 }

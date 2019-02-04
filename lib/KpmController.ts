@@ -1,9 +1,9 @@
 import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
-import { DEFAULT_DURATION, MILLIS_PER_MINUTE } from "./Constants";
-import { isEmptyObj, getRootPath } from "./Util";
-import { getResourceInfo } from "./KpmRepoManager";
+import { DEFAULT_DURATION } from "./Constants";
+import { getRootPath } from "./Util";
+import { cancelCodeTimeMetricsFetch } from "./MenuManager";
 
 const fs = require("fs");
 
@@ -48,10 +48,21 @@ export class KpmController {
     }
 
     private async _onCloseHandler(event) {
-        if (!this.isTrueEventFile(event)) {
+        if (!event) {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
+        // chec for the code time filename
+        // fileName:"/Users/xavierluiz/.software/CodeTime.git"
+        let codeTimeIdx = filename.indexOf(".software/CodeTime");
+        if (codeTimeIdx !== -1) {
+            cancelCodeTimeMetricsFetch();
+        }
+
+        if (!this.isTrueEventFile(event)) {
+            return;
+        }
+
         let rootPath = getRootPath();
 
         await this.initializeKeystrokesCount(filename);
