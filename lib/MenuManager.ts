@@ -147,10 +147,10 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
 }
 
 export async function cancelCodeTimeMetricsFetch() {
-    if (reportInterval) {
-        clearInterval(reportInterval);
-        reportInterval = null;
-    }
+    // if (reportInterval) {
+    //     clearInterval(reportInterval);
+    //     reportInterval = null;
+    // }
 }
 
 export async function displayCodeTimeMetricsDashboard() {
@@ -176,7 +176,7 @@ export async function displayCodeTimeMetricsDashboard() {
         window.showTextDocument(doc);
     });
 
-    reportInterval = setInterval(() => {
-        displayCodeTimeMetricsDashboard();
-    }, 1000 * 60);
+    // reportInterval = setInterval(() => {
+    //     displayCodeTimeMetricsDashboard();
+    // }, 1000 * 60);
 }
