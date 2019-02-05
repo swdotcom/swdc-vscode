@@ -92,10 +92,20 @@ export class KpmController {
     }
 
     private async _onOpenHandler(event) {
-        if (!this.isTrueEventFile(event)) {
+        if (!event) {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
+        // chec for the code time filename
+        // fileName:"/Users/xavierluiz/.software/CodeTime.git"
+        let codeTimeIdx = filename.indexOf(".software/CodeTime");
+        if (codeTimeIdx !== -1) {
+            updateDashboardIsOpen(true);
+        }
+        if (!this.isTrueEventFile(event)) {
+            return;
+        }
+
         let rootPath = getRootPath();
 
         await this.initializeKeystrokesCount(filename);

@@ -236,6 +236,7 @@ export function fetchDailyKpmSessionInfo() {
                 showStatus(msg, null);
 
                 if (isDashboardOpen()) {
+                    // it currently focuses the tab, comment out until update this to not focus the tab
                     displayCodeTimeMetricsDashboard();
                 }
             } else if (!isUserDeactivated(resp)) {

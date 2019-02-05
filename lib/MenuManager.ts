@@ -1,11 +1,12 @@
-import { window, workspace, QuickPickOptions } from "vscode";
+import { window, workspace, QuickPickOptions, ViewColumn } from "vscode";
 import {
     launchWebUrl,
     getItem,
     getDashboardFile,
     setItem,
     randomCode,
-    updateDashboardIsOpen
+    updateDashboardIsOpen,
+    isDashboardOpen
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import { isAuthenticated } from "../extension";
@@ -161,7 +162,9 @@ export async function displayCodeTimeMetricsDashboard() {
 
     fs.writeFileSync(filePath, content, "UTF8");
     workspace.openTextDocument(filePath).then(doc => {
+        // only focus if it's not already open
+        let focus = isDashboardOpen() ? false : true;
         updateDashboardIsOpen(true);
-        window.showTextDocument(doc);
+        window.showTextDocument(doc, ViewColumn.One, focus);
     });
 }
