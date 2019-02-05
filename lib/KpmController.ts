@@ -2,8 +2,7 @@ import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
-import { getRootPath } from "./Util";
-import { cancelCodeTimeMetricsFetch } from "./MenuManager";
+import { getRootPath, updateDashboardIsOpen } from "./Util";
 
 const fs = require("fs");
 
@@ -15,6 +14,21 @@ export class KpmController {
 
     constructor() {
         let subscriptions: Disposable[] = [];
+
+        if (workspace.textDocuments && workspace.textDocuments.length > 0) {
+            // check if the .software/CodeTime has already been opened
+            for (let i = 0; i < workspace.textDocuments.length; i++) {
+                let docObj = workspace.textDocuments[i];
+                if (docObj.fileName) {
+                    let fileName = docObj.fileName;
+                    let codeTimeIdx = fileName.indexOf(".software/CodeTime");
+                    if (codeTimeIdx !== -1) {
+                        updateDashboardIsOpen(true);
+                        break;
+                    }
+                }
+            }
+        }
 
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
@@ -56,7 +70,7 @@ export class KpmController {
         // fileName:"/Users/xavierluiz/.software/CodeTime.git"
         let codeTimeIdx = filename.indexOf(".software/CodeTime");
         if (codeTimeIdx !== -1) {
-            cancelCodeTimeMetricsFetch();
+            updateDashboardIsOpen(false);
         }
 
         if (!this.isTrueEventFile(event)) {

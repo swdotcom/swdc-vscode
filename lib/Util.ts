@@ -14,15 +14,21 @@ export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const DASHBOARD_LABEL_WIDTH = 23;
 export const DASHBOARD_VALUE_WIDTH = 25;
 
-const NO_DATA = "CODE TIME\n\nNo data available\n";
-
 let uriKey = "";
+let dashboardOpen = false;
 
 export function getUriKey() {
     return uriKey;
 }
 export function updateUriKey(uri) {
     uriKey = uri;
+}
+
+export function updateDashboardIsOpen(isOpen) {
+    dashboardOpen = isOpen;
+}
+export function isDashboardOpen() {
+    return dashboardOpen;
 }
 
 export function getRootPath() {
@@ -70,12 +76,12 @@ export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip = "Click to see more from Code Time";
     }
-    if (isTacoTime()) {
-        fullMsg += " 🌮";
-        getStatusBarItem().command === "extension.orderGrubCommand";
-    } else {
-        getStatusBarItem().command = "extension.softwareKpmDashboard";
-    }
+    // if (isTacoTime()) {
+    //     fullMsg += " 🌮";
+    //     getStatusBarItem().command === "extension.orderGrubCommand";
+    // } else {
+    //     getStatusBarItem().command = "extension.softwareKpmDashboard";
+    // }
     updateStatusBar(fullMsg, tooltip);
 }
 

@@ -14,10 +14,11 @@ import {
     showStatus,
     getSoftwareSessionFile,
     isEmptyObj,
-    humanizeMinutes
+    humanizeMinutes,
+    isDashboardOpen
 } from "./Util";
 import { getTrackInfo } from "./MusicManager";
-import { showTacoTime, isTacoTime } from "./KpmGrubManager";
+import { displayCodeTimeMetricsDashboard } from "./MenuManager";
 import {
     isTelemetryOn,
     isAuthenticated,
@@ -233,6 +234,10 @@ export function fetchDailyKpmSessionInfo() {
                     msg += ` | Avg: ${averageDailyMinutesTime}`;
                 }
                 showStatus(msg, null);
+
+                if (isDashboardOpen()) {
+                    displayCodeTimeMetricsDashboard();
+                }
             } else if (!isUserDeactivated(resp)) {
                 checkTokenAvailability();
             }
@@ -244,12 +249,12 @@ export function fetchDailyKpmSessionInfo() {
             );
         });
 
-    setTimeout(() => {
-        // is it taco time?
-        if (isTacoTime()) {
-            showTacoTime();
-        }
-    }, 5000);
+    // setTimeout(() => {
+    //     // is it taco time?
+    //     if (isTacoTime()) {
+    //         showTacoTime();
+    //     }
+    // }, 5000);
 }
 
 export function gatherMusicInfo() {

@@ -39,7 +39,6 @@ import {
     userNeedsToken,
     buildLaunchUrl
 } from "./lib/MenuManager";
-import DashboardContentProvider from "./lib/DashboardContentProvider";
 import {
     fetchDailyKpmSessionInfo,
     gatherMusicInfo,
@@ -92,13 +91,6 @@ export function activate(ctx: ExtensionContext) {
     //
     const controller = new KpmController();
     ctx.subscriptions.push(controller);
-
-    // register the dashboard content provider
-    const seconds = Math.round(new Date().getTime() / 1000);
-    let uriKey = `swdc-${seconds}`;
-    updateUriKey(uriKey);
-    const dashboardContentProvider = new DashboardContentProvider(uriKey);
-    ctx.subscriptions.push(dashboardContentProvider);
 
     ctx.subscriptions.push(
         workspace.onDidChangeConfiguration(e => configUpdated(ctx))
@@ -190,25 +182,7 @@ export function activate(ctx: ExtensionContext) {
 }
 
 function configUpdated(ctx) {
-    // let dashboardIdx = -1;
-    // for (let i = 0; i < ctx.subscriptions.length; i++) {
-    //     let subscription = ctx.subscriptions[i];
-    //     let dashboardContent = subscription._dashboardContent;
-    //     if (dashboardContent) {
-    //         // subscription.getDashboardContent();
-    //         // remove this subscription and add it back anew
-    //         dashboardIdx = i;
-    //         break;
-    //     }
-    // }
-    // if (dashboardIdx > -1) {
-    //     ctx.subscriptions.splice(dashboardIdx, 1);
-    //     const seconds = Math.round(new Date().getTime() / 1000);
-    //     let uriKey = `swdc-${seconds}`;
-    //     updateUriKey(uriKey);
-    //     const dashboardContentProvider = new DashboardContentProvider(uriKey);
-    //     ctx.subscriptions.push(dashboardContentProvider);
-    // }
+    // the software settings were updated, take action here
 }
 
 function handlePauseMetricsEvent() {
