@@ -36,9 +36,9 @@ export async function getTrackInfo() {
     }
 
     //await getSpotifyRunningPromise();
-    let isSpotifyRunning = await this.isSpotifyRunning();
+    let isSpotifyRunning = await this.isItunesRunningPromise();
     //await isItunesRunningPromise();
-    let isItunesRunning = await this.isItunesRunning();
+    let isItunesRunning = await this.isItunesRunningPromise();
 
     if (isSpotifyRunning) {
         trackInfo = await getSpotifyTrackPromise();

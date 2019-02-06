@@ -72,6 +72,7 @@ export function isResponseOk(resp) {
             resp.response.status &&
             resp.response.status >= 400) ||
         (resp.status && resp.status >= 400) ||
+        (resp.message && resp.message === "Network Error") ||
         (resp.code &&
             (resp.code === "ECONNREFUSED" || resp.code === "ENOTFOUND"))
     ) {
