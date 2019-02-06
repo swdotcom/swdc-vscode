@@ -2,24 +2,10 @@ import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
 import { wrapExecPromise, isWindows } from "./Util";
 
-export async function isItunesRunning() {
-    // String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
-    let command = "ps -ef | grep iTunes";
-    let result = await wrapExecPromise(command, null);
-    return result != null && result.indexOf("iTunes.app") != -1 ? true : false;
-}
-
 export async function getItunesTrackState() {
     let command = `osascript -e \'tell application "iTunes" to get player state\'`;
     let result = await wrapExecPromise(command, null);
     return result;
-}
-
-export async function isSpotifyRunning() {
-    // String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
-    let command = "ps -ef | grep Spotify";
-    let result = await wrapExecPromise(command, null);
-    return result != null && result.indexOf("Spotify.app") != -1 ? true : false;
 }
 
 export async function getSpotifyTrackState() {
@@ -35,9 +21,7 @@ export async function getTrackInfo() {
         return trackInfo;
     }
 
-    //await getSpotifyRunningPromise();
     let isSpotifyRunning = await this.isItunesRunningPromise();
-    //await isItunesRunningPromise();
     let isItunesRunning = await this.isItunesRunningPromise();
 
     if (isSpotifyRunning) {

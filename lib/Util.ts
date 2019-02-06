@@ -1,10 +1,8 @@
 import { getStatusBarItem } from "../extension";
-import { isTacoTime } from "./KpmGrubManager";
-import { checkTokenAvailability } from "./KpmStatsManager";
 import { workspace } from "vscode";
-import { userNeedsToken } from "./MenuManager";
-const { exec } = require("child_process");
+import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 
+const { exec } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const cp = require("child_process");
@@ -16,6 +14,8 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 
 let uriKey = "";
 let dashboardOpen = false;
+let lastMsg = "";
+let lastTooltip = "";
 
 export function getUriKey() {
     return uriKey;
@@ -69,19 +69,31 @@ export function showErrorStatus(errorTooltip) {
         errorTooltip =
             "To see your coding data in Code Time, please log in to your account.";
     }
+    lastMsg = fullMsg;
+    lastTooltip = errorTooltip;
     showStatus(fullMsg, errorTooltip);
+}
+
+export function showLoading() {
+    let loadingMsg = "⏳ code time metrics";
+    updateStatusBar(loadingMsg, "");
+}
+
+export function showLastStatus() {
+    if (lastMsg && lastMsg !== "") {
+        updateStatusBar(lastMsg, lastTooltip);
+    } else {
+        // make a /session fetch
+        fetchDailyKpmSessionInfo();
+    }
 }
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip = "Click to see more from Code Time";
     }
-    // if (isTacoTime()) {
-    //     fullMsg += " 🌮";
-    //     getStatusBarItem().command === "extension.orderGrubCommand";
-    // } else {
-    //     getStatusBarItem().command = "extension.softwareKpmDashboard";
-    // }
+    lastMsg = fullMsg;
+    lastTooltip = tooltip;
     updateStatusBar(fullMsg, tooltip);
 }
 
@@ -258,19 +270,6 @@ export function launchWebUrl(url) {
     });
 }
 
-export function formatNumber(num) {
-    let str = "";
-    num = num ? parseFloat(num) : 0;
-    if (num >= 1000) {
-        str = num.toLocaleString();
-    } else if (parseInt(num, 10) == num) {
-        str = num.toFixed(0);
-    } else {
-        str = num.toFixed(2);
-    }
-    return str;
-}
-
 export function humanizeMinutes(min) {
     min = parseInt(min, 0) || 0;
     let str = "";
@@ -281,7 +280,7 @@ export function humanizeMinutes(min) {
         if (hrs % 1 === 0) {
             str = hrs.toFixed(0) + " hrs";
         } else {
-            str = hrs.toFixed(2) + " hrs";
+            str = (Math.round(hrs * 10) / 10).toFixed(1) + " hrs";
         }
     } else if (min === 1) {
         str = "1 min";

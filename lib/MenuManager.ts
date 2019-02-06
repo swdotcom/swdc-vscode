@@ -6,7 +6,9 @@ import {
     setItem,
     randomCode,
     updateDashboardIsOpen,
-    isDashboardOpen
+    isDashboardOpen,
+    showLoading,
+    showLastStatus
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import { isAuthenticated } from "../extension";
@@ -66,9 +68,6 @@ export async function buildLaunchUrl(requiresToken) {
 }
 
 export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
-    // check if we've successfully logged in as this user yet
-    let tokenVal = getItem("token");
-
     let appDashboardDetail = "Click to see more from Code Time";
 
     // add the token to the launch url
@@ -77,43 +76,7 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
     }
 
     let webUrl = await buildLaunchUrl(requiresToken);
-
-    // let uriKey = getUriKey();
-    // let dashboardURI = Uri.parse(`${uriKey}://Software/SoftwareDashboard`);
     let filePath = getDashboardFile();
-
-    let grubOptions = [
-        // {
-        //     description:
-        //         "Get your favorite tacos delivered fast to your door with Doordash. No Minimum Order Size.",
-        //     label: "Doordash",
-        //     url: "https://www.doordash.com/?query=tacos",
-        //     uri: null
-        // },
-        // {
-        //     description:
-        //         "Taco delivery, and much more, near you from Grubhub. Browse, Select, & Submit Your Order.",
-        //     label: "Grubhub",
-        //     url:
-        //         "https://www.grubhub.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&latitude=37.41455459&longitude=-122.1899643&facet=open_now%3Atrue&variationId=otter&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true",
-        //     uri: null
-        // },
-        // {
-        //     description:
-        //         "Get tacos deliverd at Uber Speed. Food Delivery by Uber",
-        //     label: "UberEats",
-        //     url: "https://www.ubereats.com/en-US/search/?q=Tacos",
-        //     uri: null
-        // },
-        // {
-        //     description:
-        //         "Hungry for taco delivery? Order Eat24 today. Delivery menus, ratings and reviews, coupons, and more",
-        //     label: "Eat24",
-        //     url:
-        //         "https://www.eat24.com/search?orderMethod=delivery&locationMode=DELIVERY&facetSet=umamiV2&pageSize=20&hideHateos=true&searchMetrics=true&queryText=tacos&facet=open_now%3Atrue&sortSetId=umamiV2&sponsoredSize=3&countOmittingTimes=true",
-        //     uri: null
-        // }
-    ];
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -136,13 +99,14 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
             uri: filePath
         });
     }
-    if (showSoftwareGrubOptions) {
-        kpmMenuOptions.items.push(...grubOptions);
-    }
     showQuickPick(kpmMenuOptions);
 }
 
 export async function displayCodeTimeMetricsDashboard() {
+    let focus = isDashboardOpen() ? false : true;
+    if (focus) {
+        showLoading();
+    }
     let filePath = getDashboardFile();
     let showMusicMetrics = workspace
         .getConfiguration("feature")
@@ -163,8 +127,9 @@ export async function displayCodeTimeMetricsDashboard() {
     fs.writeFileSync(filePath, content, "UTF8");
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
-        let focus = isDashboardOpen() ? false : true;
         updateDashboardIsOpen(true);
-        window.showTextDocument(doc, ViewColumn.One, focus);
+        window.showTextDocument(doc, ViewColumn.One, focus).then(e => {
+            showLastStatus();
+        });
     });
 }

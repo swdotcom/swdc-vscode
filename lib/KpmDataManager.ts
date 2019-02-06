@@ -1,10 +1,6 @@
 import { storePayload, getItem } from "./Util";
 import { softwarePost, isResponseOk, isUserDeactivated } from "./HttpClient";
-import {
-    DEFAULT_DURATION,
-    DEFAULT_DURATION_MILLIS,
-    PLUGIN_ID
-} from "./Constants";
+import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 import { getVersion, isTelemetryOn, sendOfflineData } from "../extension";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 

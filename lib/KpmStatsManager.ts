@@ -32,12 +32,10 @@ import {
     softwarePost
 } from "./HttpClient";
 
-const cp = require("child_process");
 const fs = require("fs");
 
 let confirmWindow = null;
 let lastAuthenticationCheckTime = -1;
-let kpmInfo = {};
 let trackInfo = {};
 
 export async function serverIsAvailable() {
@@ -196,31 +194,30 @@ function sendMusicData(trackData) {
         });
 }
 
-export function fetchDailyKpmSessionInfo() {
+export async function fetchDailyKpmSessionInfo() {
     if (!isTelemetryOn()) {
         // telemetry is paused
         return;
     }
 
     // make sure we send the beginning of the day
-    softwareGet(`/sessions?summary=true`, getItem("jwt"))
+    let result = await getSessionStatus();
+
+    if (result === "ok") {
+        if (!isWindows() && isDashboardOpen()) {
+            // it currently focuses the tab, comment out until update this to not focus the tab
+            displayCodeTimeMetricsDashboard();
+        }
+    } else if (result === "notok") {
+        checkTokenAvailability();
+    }
+}
+
+async function getSessionStatus() {
+    let result = await softwareGet(`/sessions?summary=true`, getItem("jwt"))
         .then(resp => {
             if (isResponseOk(resp)) {
                 const sessions = resp.data;
-                const inFlow =
-                    sessions.inFlow !== undefined && sessions.inFlow !== null
-                        ? sessions.inFlow
-                        : true;
-                let lastKpm = sessions.lastKpm
-                    ? parseInt(sessions.lastKpm, 10)
-                    : 0;
-                let currentSessionMinutes = sessions.currentSessionMinutes;
-                let sessionTime = humanizeMinutes(currentSessionMinutes);
-
-                let currentSessionGoalPercent = sessions.currentSessionGoalPercent
-                    ? parseFloat(sessions.currentSessionGoalPercent)
-                    : 0;
-
                 let currentDayMinutes = sessions.currentDayMinutes;
                 let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
                 let averageDailyMinutes = sessions.averageDailyMinutes;
@@ -240,23 +237,20 @@ export function fetchDailyKpmSessionInfo() {
                     // it currently focuses the tab, comment out until update this to not focus the tab
                     displayCodeTimeMetricsDashboard();
                 }
+                return "ok";
             } else if (!isUserDeactivated(resp)) {
                 checkTokenAvailability();
             }
+            return "notok";
         })
         .catch(err => {
             console.log(
                 "Code Time: error fetching session kpm info: ",
                 err.message
             );
+            return "error";
         });
-
-    // setTimeout(() => {
-    //     // is it taco time?
-    //     if (isTacoTime()) {
-    //         showTacoTime();
-    //     }
-    // }, 5000);
+    return result;
 }
 
 export function gatherMusicInfo() {

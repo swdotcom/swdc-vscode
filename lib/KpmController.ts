@@ -272,9 +272,6 @@ export class KpmController {
             _keystrokeMap[rootPath].source[filename].linesAdded = 1;
             console.log("Code Time: Increment lines added");
         }
-
-        // update the map containing the keystroke count
-        // _keystrokeMap[this.getRootPath()] = keystrokeCount;
     }
 
     private initializeKeystrokesCount(filename) {
