@@ -15,7 +15,8 @@ import {
     getSoftwareSessionFile,
     isEmptyObj,
     humanizeMinutes,
-    isDashboardOpen
+    isDashboardOpen,
+    isWindows
 } from "./Util";
 import { getTrackInfo } from "./MusicManager";
 import { displayCodeTimeMetricsDashboard } from "./MenuManager";
@@ -235,7 +236,7 @@ export function fetchDailyKpmSessionInfo() {
                 }
                 showStatus(msg, null);
 
-                if (isDashboardOpen()) {
+                if (!isWindows() && isDashboardOpen()) {
                     // it currently focuses the tab, comment out until update this to not focus the tab
                     displayCodeTimeMetricsDashboard();
                 }
