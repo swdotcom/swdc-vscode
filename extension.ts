@@ -237,7 +237,6 @@ export async function isAuthenticated() {
         return true;
     } else {
         console.log("Code Time: The user is not logged in");
-        showErrorStatus(null);
         return false;
     }
 }
