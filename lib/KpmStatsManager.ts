@@ -125,13 +125,14 @@ function isPastTimeThreshold() {
     return true;
 }
 
-export function checkTokenAvailability() {
+export async function checkTokenAvailability() {
     if (!isTelemetryOn()) {
         return;
     }
     const tokenVal = getItem("token");
+    const alreadyAuthenticated = await isAuthenticated();
 
-    if (!tokenVal) {
+    if (!tokenVal || alreadyAuthenticated) {
         return;
     }
 
@@ -209,7 +210,7 @@ export async function fetchDailyKpmSessionInfo() {
             displayCodeTimeMetricsDashboard();
         }
     } else if (result === "notok") {
-        checkTokenAvailability();
+        chekUserAuthenticationStatus();
     }
 }
 
