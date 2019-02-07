@@ -204,7 +204,7 @@ export async function fetchDailyKpmSessionInfo() {
     let result = await getSessionStatus();
 
     if (result === "ok") {
-        if (!isWindows() && isDashboardOpen()) {
+        if (isDashboardOpen()) {
             // it currently focuses the tab, comment out until update this to not focus the tab
             displayCodeTimeMetricsDashboard();
         }

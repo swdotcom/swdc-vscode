@@ -2,7 +2,7 @@ import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
-import { getRootPath, updateDashboardIsOpen } from "./Util";
+import { getRootPath, updateDashboardIsOpen, isCodeTimeMetricsFile } from "./Util";
 
 const fs = require("fs");
 
@@ -21,8 +21,7 @@ export class KpmController {
                 let docObj = workspace.textDocuments[i];
                 if (docObj.fileName) {
                     let fileName = docObj.fileName;
-                    let codeTimeIdx = fileName.indexOf(".software/CodeTime");
-                    if (codeTimeIdx !== -1) {
+                    if (isCodeTimeMetricsFile(fileName)) {
                         updateDashboardIsOpen(true);
                         break;
                     }
@@ -66,10 +65,9 @@ export class KpmController {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
-        // chec for the code time filename
+        // check for the code time filename
         // fileName:"/Users/xavierluiz/.software/CodeTime.git"
-        let codeTimeIdx = filename.indexOf(".software/CodeTime");
-        if (codeTimeIdx !== -1) {
+        if (isCodeTimeMetricsFile(filename)) {
             updateDashboardIsOpen(false);
         }
 
@@ -98,9 +96,11 @@ export class KpmController {
         const filename = event.fileName || NO_NAME_FILE;
         // chec for the code time filename
         // fileName:"/Users/xavierluiz/.software/CodeTime.git"
-        let codeTimeIdx = filename.indexOf(".software/CodeTime");
-        if (codeTimeIdx !== -1) {
+        if (isCodeTimeMetricsFile(filename)) {
             updateDashboardIsOpen(true);
+        } else {
+            // just update dashboardIsOpen to false since we're going to a new tab
+            updateDashboardIsOpen(false);
         }
         if (!this.isTrueEventFile(event)) {
             return;

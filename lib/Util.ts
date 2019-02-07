@@ -25,10 +25,22 @@ export function updateUriKey(uri) {
 }
 
 export function updateDashboardIsOpen(isOpen) {
+    console.log("updating isDashboardOpen to: ", isOpen);
     dashboardOpen = isOpen;
 }
 export function isDashboardOpen() {
+    console.log("returning isDashboardOpen: ", dashboardOpen);
     return dashboardOpen;
+}
+
+export function isCodeTimeMetricsFile(fileName) {
+    if (!fileName) {
+        return false;
+    }
+    if (fileName.includes(".software") && fileName.includes("CodeTime")) {
+        return true;
+    }
+    return false;
 }
 
 export function getRootPath() {
