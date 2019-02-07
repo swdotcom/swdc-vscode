@@ -25,11 +25,9 @@ export function updateUriKey(uri) {
 }
 
 export function updateDashboardIsOpen(isOpen) {
-    console.log("updating isDashboardOpen to: ", isOpen);
     dashboardOpen = isOpen;
 }
 export function isDashboardOpen() {
-    console.log("returning isDashboardOpen: ", dashboardOpen);
     return dashboardOpen;
 }
 
