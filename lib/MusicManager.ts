@@ -1,6 +1,9 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise, isWindows } from "./Util";
+import { wrapExecPromise, isWindows, getItem } from "./Util";
+import { softwareGet, isResponseOk } from "./HttpClient";
+
+const WINDOWS_SPOTIFY_TRACK_FIND = "tasklist /fi \"imagename eq Spotify.exe\" /fo list /v | find \" - \"";
 
 export async function getItunesTrackState() {
     let command = `osascript -e \'tell application "iTunes" to get player state\'`;
@@ -17,43 +20,52 @@ export async function getSpotifyTrackState() {
 export async function getTrackInfo() {
     let trackInfo = {};
 
-    if (isWindows()) {
-        return trackInfo;
-    }
+    let spotifyRunning = await isSpotifyRunning();
+    let itunesRunning = await isItunesRunning();
 
-    let isSpotifyRunning = await this.getSpotifyRunningPromise();
-    let isItunesRunning = await this.isItunesRunningPromise();
-
-    if (isSpotifyRunning) {
+    if (spotifyRunning) {
         trackInfo = await getSpotifyTrackPromise();
         let spotifyStopped =
             !trackInfo || (trackInfo && trackInfo["state"] !== "playing")
                 ? true
                 : false;
-        if ((!trackInfo || spotifyStopped) && isItunesRunning) {
+        if ((!trackInfo || spotifyStopped) && itunesRunning) {
             // get that track data.
             trackInfo = await getItunesTrackPromise();
         }
-    } else if (isItunesRunning) {
+    } else if (itunesRunning) {
         trackInfo = await getItunesTrackPromise();
     }
 
     return trackInfo || {};
 }
 
-/**
- * returns true or an error.
- */
-function getSpotifyRunningPromise() {
-    return new Promise((resolve, reject) => {
-        spotify.isRunning((err, isRunning) => {
-            if (err) {
-                resolve(false);
-            } else {
-                resolve(isRunning);
-            }
+function isSpotifyRunning() {
+    if (isWindows()) {
+        /**
+         * tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
+            Window Title: Dexys Midnight Runners - Come On Eileen
+         */
+        return new Promise((resolve, reject) => {
+            wrapExecPromise(WINDOWS_SPOTIFY_TRACK_FIND, null).then(result => {
+                if (result && result.toLowerCase().includes("title")) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
         });
-    });
+    } else {
+        return new Promise((resolve, reject) => {
+            spotify.isRunning((err, isRunning) => {
+                if (err) {
+                    resolve(false);
+                } else {
+                    resolve(isRunning);
+                }
+            });
+        });
+    }
 }
 
 /**
@@ -75,32 +87,63 @@ function getSpotifyRunningPromise() {
     }
  */
 async function getSpotifyTrackPromise() {
-    let state = await getSpotifyTrackState();
-    return new Promise((resolve, reject) => {
-        spotify.getTrack((err, track) => {
-            if (err || !track) {
-                resolve(null);
-            } else {
-                // convert the duration to seconds
-                let duration = Math.round(track.duration / 1000);
-                let trackInfo = {
-                    id: track.id,
-                    name: track.name,
-                    artist: track.artist,
-                    genre: "", // spotify doesn't provide genre from their app.
-                    start: 0,
-                    end: 0,
-                    state,
-                    duration,
-                    type: "spotify"
-                };
-                resolve(trackInfo);
-            }
+    if (isWindows()) {
+        let windowTitleStr = "Window Title:";
+        // get the artist - song name from the command result, then get the rest of the info from spotify
+        let songInfo = await wrapExecPromise(WINDOWS_SPOTIFY_TRACK_FIND, null);
+        if (!songInfo || !songInfo.includes(windowTitleStr)) {
+            // it must have paused, or an ad, or it was closed
+            return null;
+        }
+        // fetch it from spotify
+        // result will be something like: "Window Title: Dexys Midnight Runners - Come On Eileen"
+        songInfo = songInfo.substring(windowTitleStr.length);
+        let artistSong = songInfo.split("-");
+        let artist = artistSong[0].trim();
+        let song = artistSong[1].trim();
+        let resp = await softwareGet(`/music/track?artist=${artist}&name=${song}`, getItem("jwt"));
+        let trackInfo = null;
+        if (isResponseOk(resp) && resp.data && resp.data.id) {
+            trackInfo = resp.data;
+            // set the other attributes like start and type
+            trackInfo["type"] = "spotify";
+            trackInfo["state"] = "playing";
+            trackInfo["start"] = 0;
+            trackInfo["end"] = 0;
+            trackInfo["genre"] = "";
+        }
+        return trackInfo;
+    } else {
+        let state = await getSpotifyTrackState();
+        return new Promise((resolve, reject) => {
+            spotify.getTrack((err, track) => {
+                if (err || !track) {
+                    resolve(null);
+                } else {
+                    // convert the duration to seconds
+                    let duration = Math.round(track.duration / 1000);
+                    let trackInfo = {
+                        id: track.id,
+                        name: track.name,
+                        artist: track.artist,
+                        genre: "", // spotify doesn't provide genre from their app.
+                        start: 0,
+                        end: 0,
+                        state,
+                        duration,
+                        type: "spotify"
+                    };
+                    resolve(trackInfo);
+                }
+            });
         });
-    });
+    }
 }
 
-function isItunesRunningPromise() {
+function isItunesRunning() {
+    if (isWindows()) {
+        return false;
+    }
     return new Promise((resolve, reject) => {
         itunes.isRunning((err, isRunning) => {
             if (err) {
