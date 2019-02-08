@@ -120,14 +120,14 @@ export async function displayCodeTimeMetricsDashboard() {
             `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
             getItem("jwt")
         );
+        // get the content
         let content =
             dashboardSummary && dashboardSummary.data
                 ? dashboardSummary.data
                 : NO_DATA;
 
-        fs.chmodSync(filePath, "644");
         // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
-        fs.writeFileSync(filePath, content, "UTF8");
+        fs.writeFileSync(filePath, content, "UTF8", "666");
         workspace.openTextDocument(filePath).then(doc => {
             // only focus if it's not already open
             updateDashboardIsOpen(true);
