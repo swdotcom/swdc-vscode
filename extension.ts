@@ -28,8 +28,6 @@ import {
     getItem,
     getSoftwareDataStoreFile,
     deleteFile,
-    getRootPath,
-    updateUriKey,
     launchWebUrl
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
@@ -136,22 +134,22 @@ export function activate(ctx: ExtensionContext) {
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
     setInterval(() => {
-        getRepoUsers(getRootPath());
+        getRepoUsers();
     }, hourly_interval);
 
     // fire it off once in 1 minutes
     setTimeout(() => {
-        getRepoUsers(getRootPath());
+        getRepoUsers();
     }, one_min);
 
     // check on new commits once an hour
     setInterval(() => {
-        getHistoricalCommits(getRootPath());
+        getHistoricalCommits();
     }, hourly_interval + one_min);
 
     // fire off the commit gathering in a couple of minutes
     setTimeout(() => {
-        getHistoricalCommits(getRootPath());
+        getHistoricalCommits();
     }, one_min * 2);
 
     ctx.subscriptions.push(

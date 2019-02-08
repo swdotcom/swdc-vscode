@@ -107,31 +107,37 @@ export async function displayCodeTimeMetricsDashboard() {
     if (focus) {
         showLoading();
     }
-    let filePath = getDashboardFile();
-    let showMusicMetrics = workspace
-        .getConfiguration("feature")
-        .get("showMusicMetrics");
-    let showGitMetrics = workspace
-        .getConfiguration("feature")
-        .get("showGitMetrics");
+    try {
+        let filePath = getDashboardFile();
+        let showMusicMetrics = workspace
+            .getConfiguration("feature")
+            .get("showMusicMetrics");
+        let showGitMetrics = workspace
+            .getConfiguration("feature")
+            .get("showGitMetrics");
 
-    const dashboardSummary = await softwareGet(
-        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
-        getItem("jwt")
-    );
-    let content =
-        dashboardSummary && dashboardSummary.data
-            ? dashboardSummary.data
-            : NO_DATA;
+        const dashboardSummary = await softwareGet(
+            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
+            getItem("jwt")
+        );
+        let content =
+            dashboardSummary && dashboardSummary.data
+                ? dashboardSummary.data
+                : NO_DATA;
 
-    fs.chmodSync(filePath, 755);
-    // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
-    fs.writeFileSync(filePath, content, "UTF8");
-    workspace.openTextDocument(filePath).then(doc => {
-        // only focus if it's not already open
-        updateDashboardIsOpen(true);
-        window.showTextDocument(doc, ViewColumn.One, focus).then(e => {
-            showLastStatus();
+        fs.chmodSync(filePath, "644");
+        // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
+        fs.writeFileSync(filePath, content, "UTF8");
+        workspace.openTextDocument(filePath).then(doc => {
+            // only focus if it's not already open
+            updateDashboardIsOpen(true);
+            window.showTextDocument(doc, ViewColumn.One, focus).then(e => {
+                showLastStatus();
+            });
         });
-    });
+    } catch (err) {
+        if (focus) {
+            showLastStatus();
+        }
+    }
 }

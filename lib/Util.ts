@@ -41,14 +41,33 @@ export function isCodeTimeMetricsFile(fileName) {
     return false;
 }
 
-export function getRootPath() {
-    let rootPath =
-        workspace.workspaceFolders &&
-        workspace.workspaceFolders[0] &&
-        workspace.workspaceFolders[0].uri &&
-        workspace.workspaceFolders[0].uri.fsPath;
+export function getRootPaths() {
+    let paths = [];
+    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+        for (let i = 0; i < workspace.workspaceFolders.length; i++) {
+            let folderUri = workspace.workspaceFolders[i].uri;
+            if (folderUri && folderUri.fsPath) {
+                paths.push(folderUri.fsPath);
+            }
+        }
+    }
+    return paths;
+}
 
-    return rootPath;
+export function getRootPathForFile(fileName) {
+    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+        for (let i = 0; i < workspace.workspaceFolders.length; i++) {
+            let folderUri = workspace.workspaceFolders[i].uri;
+            if (
+                folderUri &&
+                folderUri.fsPath &&
+                fileName.includes(folderUri.fsPath)
+            ) {
+                return folderUri.fsPath;
+            }
+        }
+    }
+    return null;
 }
 
 export function setItem(key, value) {

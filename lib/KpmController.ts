@@ -2,7 +2,11 @@ import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
-import { getRootPath, updateDashboardIsOpen, isCodeTimeMetricsFile } from "./Util";
+import {
+    getRootPathForFile,
+    updateDashboardIsOpen,
+    isCodeTimeMetricsFile
+} from "./Util";
 
 const fs = require("fs");
 
@@ -75,7 +79,7 @@ export class KpmController {
             return;
         }
 
-        let rootPath = getRootPath();
+        let rootPath = getRootPathForFile(filename);
 
         await this.initializeKeystrokesCount(filename);
 
@@ -106,7 +110,7 @@ export class KpmController {
             return;
         }
 
-        let rootPath = getRootPath();
+        let rootPath = getRootPathForFile(filename);
 
         await this.initializeKeystrokesCount(filename);
 
@@ -152,7 +156,7 @@ export class KpmController {
         let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
-        let rootPath = getRootPath();
+        let rootPath = getRootPathForFile(filename);
 
         if (!filename || !rootPath || filename.indexOf(rootPath) === -1) {
             return;
@@ -278,7 +282,7 @@ export class KpmController {
         //
         // get the root path
         //
-        let rootPath = getRootPath();
+        let rootPath = getRootPathForFile(filename);
 
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || "None";
