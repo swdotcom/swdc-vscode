@@ -12,31 +12,39 @@ export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const DASHBOARD_LABEL_WIDTH = 23;
 export const DASHBOARD_VALUE_WIDTH = 25;
 
-let uriKey = "";
-let dashboardOpen = false;
 let lastMsg = "";
 let lastTooltip = "";
+let codeTimeMetricsIsFocused = false;
 
-export function getUriKey() {
-    return uriKey;
-}
-export function updateUriKey(uri) {
-    uriKey = uri;
+export function isCodeTimeMetricsFocused() {
+    return codeTimeMetricsIsFocused;
 }
 
-export function updateDashboardIsOpen(isOpen) {
-    dashboardOpen = isOpen;
-}
-export function isDashboardOpen() {
-    return dashboardOpen;
+export function updateCodeTimeMetricsFileFocus(isFocused) {
+    codeTimeMetricsIsFocused = isFocused;
 }
 
 export function isCodeTimeMetricsFile(fileName) {
-    if (!fileName) {
-        return false;
-    }
+    fileName = fileName || "";
     if (fileName.includes(".software") && fileName.includes("CodeTime")) {
         return true;
+    }
+    return false;
+}
+
+export function isCodeTimeMetricsFileOpen() {
+    if (workspace.textDocuments && workspace.textDocuments.length > 0) {
+        // check if the .software/CodeTime has already been opened
+        for (let i = 0; i < workspace.textDocuments.length; i++) {
+            let docObj = workspace.textDocuments[i];
+            if (docObj.fileName) {
+                let fileName = docObj.fileName;
+                let matchesFile = isCodeTimeMetricsFile(fileName);
+                if (matchesFile) {
+                    return true;
+                }
+            }
+        }
     }
     return false;
 }

@@ -5,10 +5,10 @@ import {
     getDashboardFile,
     setItem,
     randomCode,
-    updateDashboardIsOpen,
-    isDashboardOpen,
+    isCodeTimeMetricsFileOpen,
     showLoading,
-    showLastStatus
+    showLastStatus,
+    isCodeTimeMetricsFocused
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import { isAuthenticated } from "../extension";
@@ -103,8 +103,8 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
 }
 
 export async function displayCodeTimeMetricsDashboard() {
-    let focus = isDashboardOpen() ? false : true;
-    if (focus) {
+    let alreadyOpen = isCodeTimeMetricsFileOpen();
+    if (!alreadyOpen) {
         showLoading();
     }
     try {
@@ -130,13 +130,16 @@ export async function displayCodeTimeMetricsDashboard() {
         fs.writeFileSync(filePath, content, "UTF8", "666");
         workspace.openTextDocument(filePath).then(doc => {
             // only focus if it's not already open
-            updateDashboardIsOpen(true);
-            window.showTextDocument(doc, ViewColumn.One, focus).then(e => {
-                showLastStatus();
-            });
+            if (!alreadyOpen || isCodeTimeMetricsFocused()) {
+                window
+                    .showTextDocument(doc, ViewColumn.Active, true)
+                    .then(e => {
+                        showLastStatus();
+                    });
+            }
         });
     } catch (err) {
-        if (focus) {
+        if (!alreadyOpen) {
             showLastStatus();
         }
     }

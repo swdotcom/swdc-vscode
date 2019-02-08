@@ -4,13 +4,16 @@ import { NO_NAME_FILE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
 import {
     getRootPathForFile,
-    updateDashboardIsOpen,
-    isCodeTimeMetricsFile
+    updateCodeTimeMetricsFileFocus,
+    isCodeTimeMetricsFile,
+    isEmptyObj
 } from "./Util";
+import * as vsls from "vsls/vscode";
 
-const fs = require("fs");
+const NO_PROJ_NAME = "Unnamed";
 
 let _keystrokeMap = {};
+let _ls = null;
 
 export class KpmController {
     private _disposable: Disposable;
@@ -18,20 +21,6 @@ export class KpmController {
 
     constructor() {
         let subscriptions: Disposable[] = [];
-
-        if (workspace.textDocuments && workspace.textDocuments.length > 0) {
-            // check if the .software/CodeTime has already been opened
-            for (let i = 0; i < workspace.textDocuments.length; i++) {
-                let docObj = workspace.textDocuments[i];
-                if (docObj.fileName) {
-                    let fileName = docObj.fileName;
-                    if (isCodeTimeMetricsFile(fileName)) {
-                        updateDashboardIsOpen(true);
-                        break;
-                    }
-                }
-            }
-        }
 
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
@@ -44,6 +33,35 @@ export class KpmController {
             this.sendKeystrokeDataIntervalHandler,
             DEFAULT_DURATION * 1000
         );
+
+        this.initializeLiveshare();
+    }
+
+    private async initializeLiveshare() {
+        const liveshare = await vsls.getApi();
+        if (liveshare) {
+            /**
+                // live share session
+                access:255
+                id:"999D3F4A40D262E9B210629AA69C7A649076"
+                peerNumber:1
+                role:1
+                user:null
+
+                // live share session ended
+                access:0
+                id:null
+                peerNumber:0
+                role:0
+                user:null
+             */
+            console.log(
+                `Code Time: liveshare version - ${liveshare["apiVersion"]}`
+            );
+            liveshare.onDidChangeSession(event => {
+                _ls = event;
+            });
+        }
     }
 
     private sendKeystrokeDataIntervalHandler() {
@@ -51,16 +69,53 @@ export class KpmController {
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
-        if (_keystrokeMap) {
+        let inLsSession = _ls && _ls.session && _ls.session.id ? true : false;
+        if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
             for (const key of Object.keys(_keystrokeMap)) {
                 const keystrokeCount = _keystrokeMap[key];
-                const hasData = keystrokeCount.hasData();
+
+                const hasData =
+                    keystrokeCount.hasData() || inLsSession ? true : false;
+
+                // update the liveshare attribute if the user is in session
+                if (inLsSession) {
+                    keystrokeCount["liveshare"] = 1;
+                }
+
                 if (hasData) {
                     // send the payload
                     setTimeout(() => keystrokeCount.postData(), 0);
                 }
                 delete _keystrokeMap[key];
             }
+        } else if (inLsSession) {
+            let keystrokeCount = new KpmDataManager({
+                // project.directory is used as an object key, must be string
+                directory: NO_PROJ_NAME,
+                name: NO_PROJ_NAME,
+                identifier: "",
+                resource: {}
+            });
+            keystrokeCount["keystrokes"] = 0;
+            // liveshare number (minutes)
+            keystrokeCount["liveshare"] = 1;
+
+            let fileInfo = {
+                add: 0,
+                netkeys: 0,
+                paste: 0,
+                open: 0,
+                close: 0,
+                delete: 0,
+                length: 0,
+                lines: 0,
+                linesAdded: 0,
+                linesRemoved: 0,
+                syntax: ""
+            };
+            keystrokeCount.source[NO_PROJ_NAME] = fileInfo;
+            setTimeout(() => keystrokeCount.postData(), 0);
+            delete _keystrokeMap[NO_PROJ_NAME];
         }
     }
 
@@ -69,11 +124,8 @@ export class KpmController {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
-        // check for the code time filename
-        // fileName:"/Users/xavierluiz/.software/CodeTime.git"
-        if (isCodeTimeMetricsFile(filename)) {
-            updateDashboardIsOpen(false);
-        }
+
+        updateCodeTimeMetricsFileFocus(false);
 
         if (!this.isTrueEventFile(event)) {
             return;
@@ -98,13 +150,10 @@ export class KpmController {
             return;
         }
         const filename = event.fileName || NO_NAME_FILE;
-        // chec for the code time filename
-        // fileName:"/Users/xavierluiz/.software/CodeTime.git"
         if (isCodeTimeMetricsFile(filename)) {
-            updateDashboardIsOpen(true);
+            updateCodeTimeMetricsFileFocus(true);
         } else {
-            // just update dashboardIsOpen to false since we're going to a new tab
-            updateDashboardIsOpen(false);
+            updateCodeTimeMetricsFileFocus(false);
         }
         if (!this.isTrueEventFile(event)) {
             return;
@@ -285,7 +334,7 @@ export class KpmController {
         let rootPath = getRootPathForFile(filename);
 
         // the rootPath (directory) is used as the map key, must be a string
-        rootPath = rootPath || "None";
+        rootPath = rootPath || NO_PROJ_NAME;
         if (!_keystrokeMap) {
             _keystrokeMap = {};
         }
@@ -307,6 +356,8 @@ export class KpmController {
             resource: {}
         });
         keystrokeCount["keystrokes"] = 0;
+        // liveshare number (minutes)
+        keystrokeCount["liveshare"] = 0;
 
         let fileInfo = null;
         if (filename) {

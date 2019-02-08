@@ -15,8 +15,7 @@ import {
     getSoftwareSessionFile,
     isEmptyObj,
     humanizeMinutes,
-    isDashboardOpen,
-    isWindows
+    isCodeTimeMetricsFileOpen
 } from "./Util";
 import { getTrackInfo } from "./MusicManager";
 import { displayCodeTimeMetricsDashboard } from "./MenuManager";
@@ -205,7 +204,7 @@ export async function fetchDailyKpmSessionInfo() {
     let result = await getSessionStatus();
 
     if (result === "ok") {
-        if (isDashboardOpen()) {
+        if (isCodeTimeMetricsFileOpen()) {
             // it currently focuses the tab, comment out until update this to not focus the tab
             displayCodeTimeMetricsDashboard();
         }
@@ -233,11 +232,6 @@ async function getSessionStatus() {
                     msg += ` | Avg: ${averageDailyMinutesTime}`;
                 }
                 showStatus(msg, null);
-
-                if (!isWindows() && isDashboardOpen()) {
-                    // it currently focuses the tab, comment out until update this to not focus the tab
-                    displayCodeTimeMetricsDashboard();
-                }
                 return "ok";
             } else if (!isUserDeactivated(resp)) {
                 checkTokenAvailability();
