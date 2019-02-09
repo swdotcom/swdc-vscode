@@ -206,6 +206,10 @@ export async function handleKpmClickedEvent() {
     if (requiresToken) {
         let url = await buildLaunchUrl(requiresToken);
         launchWebUrl(url);
+
+        setTimeout(() => {
+            chekUserAuthenticationStatus();
+        }, 1000 * 30);
     } else {
         showMenuOptions(requiresToken, false /*showSoftwareGrubOptions*/);
     }

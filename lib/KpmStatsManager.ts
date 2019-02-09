@@ -15,7 +15,7 @@ import {
     getSoftwareSessionFile,
     isEmptyObj,
     humanizeMinutes,
-    isCodeTimeMetricsFileOpen
+    isCodeTimeMetricsFocused
 } from "./Util";
 import { getTrackInfo } from "./MusicManager";
 import { displayCodeTimeMetricsDashboard } from "./MenuManager";
@@ -204,7 +204,8 @@ export async function fetchDailyKpmSessionInfo() {
     let result = await getSessionStatus();
 
     if (result === "ok") {
-        if (isCodeTimeMetricsFileOpen()) {
+        let alreadyFocused = isCodeTimeMetricsFocused();
+        if (alreadyFocused) {
             // it currently focuses the tab, comment out until update this to not focus the tab
             displayCodeTimeMetricsDashboard();
         }

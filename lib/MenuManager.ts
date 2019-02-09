@@ -5,8 +5,7 @@ import {
     getDashboardFile,
     setItem,
     randomCode,
-    isCodeTimeMetricsFileOpen,
-    showLoading,
+    isCodeTimeMetricsClosed,
     showLastStatus,
     isCodeTimeMetricsFocused
 } from "./Util";
@@ -103,44 +102,35 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
 }
 
 export async function displayCodeTimeMetricsDashboard() {
-    let alreadyOpen = isCodeTimeMetricsFileOpen();
-    if (!alreadyOpen) {
-        showLoading();
-    }
-    try {
-        let filePath = getDashboardFile();
-        let showMusicMetrics = workspace
-            .getConfiguration("feature")
-            .get("showMusicMetrics");
-        let showGitMetrics = workspace
-            .getConfiguration("feature")
-            .get("showGitMetrics");
+    let alreadyFocused = isCodeTimeMetricsFocused();
+    let isClosed = isCodeTimeMetricsClosed();
 
-        const dashboardSummary = await softwareGet(
-            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
-            getItem("jwt")
-        );
-        // get the content
-        let content =
-            dashboardSummary && dashboardSummary.data
-                ? dashboardSummary.data
-                : NO_DATA;
+    let filePath = getDashboardFile();
+    let showMusicMetrics = workspace
+        .getConfiguration("feature")
+        .get("showMusicMetrics");
+    let showGitMetrics = workspace
+        .getConfiguration("feature")
+        .get("showGitMetrics");
 
-        // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
-        fs.writeFileSync(filePath, content, "UTF8", "666");
-        workspace.openTextDocument(filePath).then(doc => {
-            // only focus if it's not already open
-            if (!alreadyOpen || isCodeTimeMetricsFocused()) {
-                window
-                    .showTextDocument(doc, ViewColumn.Active, true)
-                    .then(e => {
-                        showLastStatus();
-                    });
-            }
-        });
-    } catch (err) {
-        if (!alreadyOpen) {
-            showLastStatus();
+    const dashboardSummary = await softwareGet(
+        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
+        getItem("jwt")
+    );
+    // get the content
+    let content =
+        dashboardSummary && dashboardSummary.data
+            ? dashboardSummary.data
+            : NO_DATA;
+
+    // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
+    fs.writeFileSync(filePath, content, "UTF8", "666");
+    workspace.openTextDocument(filePath).then(doc => {
+        // only focus if it's not already open
+        if (alreadyFocused || isClosed) {
+            window.showTextDocument(doc, ViewColumn.Active, true).then(e => {
+                showLastStatus();
+            });
         }
-    }
+    });
 }

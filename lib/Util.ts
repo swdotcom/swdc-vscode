@@ -15,36 +15,28 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 let lastMsg = "";
 let lastTooltip = "";
 let codeTimeMetricsIsFocused = false;
+let codeTimeMetricsIsClosed = true;
 
 export function isCodeTimeMetricsFocused() {
     return codeTimeMetricsIsFocused;
+}
+
+export function isCodeTimeMetricsClosed() {
+    return codeTimeMetricsIsClosed;
 }
 
 export function updateCodeTimeMetricsFileFocus(isFocused) {
     codeTimeMetricsIsFocused = isFocused;
 }
 
+export function updateCodeTimeMetricsFileClosed(isClosed) {
+    codeTimeMetricsIsClosed = isClosed;
+}
+
 export function isCodeTimeMetricsFile(fileName) {
     fileName = fileName || "";
     if (fileName.includes(".software") && fileName.includes("CodeTime")) {
         return true;
-    }
-    return false;
-}
-
-export function isCodeTimeMetricsFileOpen() {
-    if (workspace.textDocuments && workspace.textDocuments.length > 0) {
-        // check if the .software/CodeTime has already been opened
-        for (let i = 0; i < workspace.textDocuments.length; i++) {
-            let docObj = workspace.textDocuments[i];
-            if (docObj.fileName) {
-                let fileName = docObj.fileName;
-                let matchesFile = isCodeTimeMetricsFile(fileName);
-                if (matchesFile) {
-                    return true;
-                }
-            }
-        }
     }
     return false;
 }
