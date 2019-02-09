@@ -129,9 +129,8 @@ export async function checkTokenAvailability() {
         return;
     }
     const tokenVal = getItem("token");
-    const alreadyAuthenticated = await isAuthenticated();
 
-    if (!tokenVal || alreadyAuthenticated) {
+    if (!tokenVal) {
         return;
     }
 

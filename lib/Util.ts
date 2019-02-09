@@ -220,6 +220,11 @@ export function nowInSecs() {
     return Math.round(Date.now() / 1000);
 }
 
+export function getOffsetSecends() {
+    let d = new Date();
+    return d.getTimezoneOffset() * 60;
+}
+
 export function storePayload(payload) {
     fs.appendFile(
         getSoftwareDataStoreFile(),

@@ -3,8 +3,12 @@ import * as itunes from "itunes-node-applescript";
 import { wrapExecPromise, isWindows, getItem } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 
-const WINDOWS_SPOTIFY_TRACK_FIND = "tasklist /fi \"imagename eq Spotify.exe\" /fo list /v | find \" - \"";
+const WINDOWS_SPOTIFY_TRACK_FIND =
+    'tasklist /fi "imagename eq Spotify.exe" /fo list /v | find " - "';
 
+/**
+ * get the itunes track
+ */
 export async function getItunesTrackState() {
     let command = `osascript -e \'tell application "iTunes" to get player state\'`;
     let result = await wrapExecPromise(command, null);
@@ -101,7 +105,10 @@ async function getSpotifyTrackPromise() {
         let artistSong = songInfo.split("-");
         let artist = artistSong[0].trim();
         let song = artistSong[1].trim();
-        let resp = await softwareGet(`/music/track?artist=${artist}&name=${song}`, getItem("jwt"));
+        let resp = await softwareGet(
+            `/music/track?artist=${artist}&name=${song}`,
+            getItem("jwt")
+        );
         let trackInfo = null;
         if (isResponseOk(resp) && resp.data && resp.data.id) {
             trackInfo = resp.data;

@@ -102,7 +102,7 @@ export function activate(ctx: ExtensionContext) {
             10
         );
         statusBarItem.tooltip = "Click to see more from Code Time";
-        statusBarItem.command = "extension.softwareKpmDashboard";
+        statusBarItem.command = "extension.softwarePaletteMenu";
         statusBarItem.show();
 
         showStatus("Code Time", null);
@@ -158,10 +158,15 @@ export function activate(ctx: ExtensionContext) {
         })
     );
     ctx.subscriptions.push(
-        commands.registerCommand("extension.orderGrubCommand", () => {
-            orderGrubCommandEvent();
+        commands.registerCommand("extension.softwarePaletteMenu", () => {
+            handlePaletteMenuEvent();
         })
     );
+    // ctx.subscriptions.push(
+    //     commands.registerCommand("extension.orderGrubCommand", () => {
+    //         orderGrubCommandEvent();
+    //     })
+    // );
     // ctx.subscriptions.push(
     //     commands.registerCommand("extension.pauseCodeTimeMetrics", () => {
     //         handlePauseMetricsEvent();
@@ -203,8 +208,19 @@ export async function orderGrubCommandEvent() {
 
 export async function handleKpmClickedEvent() {
     let requiresToken = await userNeedsToken();
+    let url = await buildLaunchUrl(requiresToken);
     if (requiresToken) {
-        let url = await buildLaunchUrl(requiresToken);
+        setTimeout(() => {
+            chekUserAuthenticationStatus();
+        }, 1000 * 30);
+    }
+    launchWebUrl(url);
+}
+
+export async function handlePaletteMenuEvent() {
+    let requiresToken = await userNeedsToken();
+    let url = await buildLaunchUrl(requiresToken);
+    if (requiresToken) {
         launchWebUrl(url);
 
         setTimeout(() => {

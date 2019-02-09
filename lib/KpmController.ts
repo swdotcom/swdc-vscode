@@ -7,8 +7,11 @@ import {
     updateCodeTimeMetricsFileFocus,
     updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
-    isEmptyObj
+    isEmptyObj,
+    nowInSecs,
+    getOffsetSecends
 } from "./Util";
+import { manageLiveshareSession } from "./LiveshareManager";
 import * as vsls from "vsls/vscode";
 
 const NO_PROJ_NAME = "Unnamed";
@@ -60,7 +63,25 @@ export class KpmController {
                 `Code Time: liveshare version - ${liveshare["apiVersion"]}`
             );
             liveshare.onDidChangeSession(event => {
-                _ls = event;
+                let nowSec = nowInSecs();
+                let offsetSec = getOffsetSecends();
+                let localNow = nowSec - offsetSec;
+                if (!_ls) {
+                    _ls = {
+                        ...event.session
+                    };
+                    _ls["apiVesion"] = liveshare["apiVersion"];
+                    _ls["start"] = nowSec;
+                    _ls["local_start"] = localNow;
+                    _ls["end"] = 0;
+
+                    manageLiveshareSession(_ls);
+                } else if (!event || !event["id"]) {
+                    // close the session on our end
+                    _ls["end"] = nowSec;
+                    _ls["local_end"] = localNow;
+                    manageLiveshareSession(_ls);
+                }
             });
         }
     }
@@ -70,18 +91,11 @@ export class KpmController {
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
-        let inLsSession = false; //_ls && _ls.session && _ls.session.id ? true : false;
         if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
             for (const key of Object.keys(_keystrokeMap)) {
                 const keystrokeCount = _keystrokeMap[key];
 
-                const hasData =
-                    keystrokeCount.hasData() || inLsSession ? true : false;
-
-                // update the liveshare attribute if the user is in session
-                if (inLsSession) {
-                    keystrokeCount["liveshare"] = 1;
-                }
+                const hasData = keystrokeCount.hasData();
 
                 if (hasData) {
                     // send the payload
@@ -89,34 +103,6 @@ export class KpmController {
                 }
                 delete _keystrokeMap[key];
             }
-        } else if (inLsSession) {
-            let keystrokeCount = new KpmDataManager({
-                // project.directory is used as an object key, must be string
-                directory: NO_PROJ_NAME,
-                name: NO_PROJ_NAME,
-                identifier: "",
-                resource: {}
-            });
-            keystrokeCount["keystrokes"] = 0;
-            // liveshare number (minutes)
-            keystrokeCount["liveshare"] = 1;
-
-            let fileInfo = {
-                add: 0,
-                netkeys: 0,
-                paste: 0,
-                open: 0,
-                close: 0,
-                delete: 0,
-                length: 0,
-                lines: 0,
-                linesAdded: 0,
-                linesRemoved: 0,
-                syntax: ""
-            };
-            keystrokeCount.source[NO_PROJ_NAME] = fileInfo;
-            setTimeout(() => keystrokeCount.postData(), 0);
-            delete _keystrokeMap[NO_PROJ_NAME];
         }
     }
 
