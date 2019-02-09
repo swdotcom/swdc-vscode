@@ -7,17 +7,12 @@ import {
     updateCodeTimeMetricsFileFocus,
     updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
-    isEmptyObj,
-    nowInSecs,
-    getOffsetSecends
+    isEmptyObj
 } from "./Util";
-import { manageLiveshareSession } from "./LiveshareManager";
-import * as vsls from "vsls/vscode";
 
 const NO_PROJ_NAME = "Unnamed";
 
 let _keystrokeMap = {};
-let _ls = null;
 
 export class KpmController {
     private _disposable: Disposable;
@@ -37,54 +32,6 @@ export class KpmController {
             this.sendKeystrokeDataIntervalHandler,
             DEFAULT_DURATION * 1000
         );
-
-        this.initializeLiveshare();
-    }
-
-    private async initializeLiveshare() {
-        const liveshare = await vsls.getApi();
-        if (liveshare) {
-            /**
-                // live share session
-                access:255
-                id:"999D3F4A40D262E9B210629AA69C7A649076"
-                peerNumber:1
-                role:1
-                user:null
-
-                // live share session ended
-                access:0
-                id:null
-                peerNumber:0
-                role:0
-                user:null
-             */
-            console.log(
-                `Code Time: liveshare version - ${liveshare["apiVersion"]}`
-            );
-            liveshare.onDidChangeSession(event => {
-                let nowSec = nowInSecs();
-                let offsetSec = getOffsetSecends();
-                let localNow = nowSec - offsetSec;
-                if (!_ls) {
-                    _ls = {
-                        ...event.session
-                    };
-                    _ls["apiVesion"] = liveshare["apiVersion"];
-                    _ls["start"] = nowSec;
-                    _ls["local_start"] = localNow;
-                    _ls["end"] = 0;
-
-                    manageLiveshareSession(_ls);
-                } else if (!event || !event["id"]) {
-                    // close the session on our end
-                    _ls["end"] = nowSec;
-                    _ls["local_end"] = localNow;
-                    manageLiveshareSession(_ls);
-                    _ls = null;
-                }
-            });
-        }
     }
 
     private sendKeystrokeDataIntervalHandler() {

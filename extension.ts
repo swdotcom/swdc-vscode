@@ -28,7 +28,9 @@ import {
     getItem,
     getSoftwareDataStoreFile,
     deleteFile,
-    launchWebUrl
+    launchWebUrl,
+    nowInSecs,
+    getOffsetSecends
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -44,10 +46,13 @@ import {
     serverIsAvailable
 } from "./lib/KpmStatsManager";
 import { fetchTacoChoices } from "./lib/KpmGrubManager";
+import { manageLiveshareSession } from "./lib/LiveshareManager";
+import * as vsls from "vsls/vscode";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let extensionVersion;
+let _ls = null;
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -62,18 +67,29 @@ export function getVersion() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
-    console.log("Code Time: deactivating the plugin");
-    softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
-        if (isResponseOk(resp)) {
-            if (resp.data) {
-                console.log(`Code Time: Uninstalled plugin`);
-            } else {
-                console.log(
-                    "Code Time: Failed to update Code Time about the uninstall event"
-                );
-            }
-        }
-    });
+    if (_ls && _ls.id) {
+        // the IDE is closing, send this off
+        let nowSec = nowInSecs();
+        let offsetSec = getOffsetSecends();
+        let localNow = nowSec - offsetSec;
+        // close the session on our end
+        _ls["end"] = nowSec;
+        _ls["local_end"] = localNow;
+        manageLiveshareSession(_ls);
+        _ls = null;
+    }
+    // console.log("Code Time: deactivating the plugin");
+    // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
+    //     if (isResponseOk(resp)) {
+    //         if (resp.data) {
+    //             console.log(`Code Time: Uninstalled plugin`);
+    //         } else {
+    //             console.log(
+    //                 "Code Time: Failed to update Code Time about the uninstall event"
+    //             );
+    //         }
+    //     }
+    // });
 }
 
 export function activate(ctx: ExtensionContext) {
@@ -182,6 +198,8 @@ export function activate(ctx: ExtensionContext) {
             handleCodeTimeDashboardEvent();
         })
     );
+
+    initializeLiveshare();
 }
 
 function configUpdated(ctx) {
@@ -200,6 +218,52 @@ function handleEnableMetricsEvent() {
 
 function handleCodeTimeDashboardEvent() {
     displayCodeTimeMetricsDashboard();
+}
+
+async function initializeLiveshare() {
+    const liveshare = await vsls.getApi();
+    if (liveshare) {
+        /**
+            // live share session
+            access:255
+            id:"999D3F4A40D262E9B210629AA69C7A649076"
+            peerNumber:1
+            role:1
+            user:null
+
+            // live share session ended
+            access:0
+            id:null
+            peerNumber:0
+            role:0
+            user:null
+         */
+        console.log(
+            `Code Time: liveshare version - ${liveshare["apiVersion"]}`
+        );
+        liveshare.onDidChangeSession(event => {
+            let nowSec = nowInSecs();
+            let offsetSec = getOffsetSecends();
+            let localNow = nowSec - offsetSec;
+            if (!_ls) {
+                _ls = {
+                    ...event.session
+                };
+                _ls["apiVesion"] = liveshare["apiVersion"];
+                _ls["start"] = nowSec;
+                _ls["local_start"] = localNow;
+                _ls["end"] = 0;
+
+                manageLiveshareSession(_ls);
+            } else if (_ls && (!event || !event["id"])) {
+                // close the session on our end
+                _ls["end"] = nowSec;
+                _ls["local_end"] = localNow;
+                manageLiveshareSession(_ls);
+                _ls = null;
+            }
+        });
+    }
 }
 
 export async function orderGrubCommandEvent() {
