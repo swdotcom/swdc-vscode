@@ -70,7 +70,7 @@ export class KpmController {
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
-        let inLsSession = _ls && _ls.session && _ls.session.id ? true : false;
+        let inLsSession = false; //_ls && _ls.session && _ls.session.id ? true : false;
         if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
             for (const key of Object.keys(_keystrokeMap)) {
                 const keystrokeCount = _keystrokeMap[key];
