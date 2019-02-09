@@ -81,6 +81,7 @@ export class KpmController {
                     _ls["end"] = nowSec;
                     _ls["local_end"] = localNow;
                     manageLiveshareSession(_ls);
+                    _ls = null;
                 }
             });
         }
