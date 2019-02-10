@@ -108,13 +108,16 @@ export async function displayCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
     let showMusicMetrics = workspace
         .getConfiguration("feature")
-        .get("showMusicMetrics");
+        .get("musicMetrics");
     let showGitMetrics = workspace
         .getConfiguration("feature")
-        .get("showGitMetrics");
+        .get("gitMetrics");
+    let showWeeklyRanking = workspace
+        .getConfiguration("feature")
+        .get("weeklyRanking");
 
     const dashboardSummary = await softwareGet(
-        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}`,
+        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}`,
         getItem("jwt")
     );
     // get the content
