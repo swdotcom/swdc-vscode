@@ -7,7 +7,8 @@ import {
     updateCodeTimeMetricsFileFocus,
     updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
-    isEmptyObj
+    isEmptyObj,
+    getProjectFolder
 } from "./Util";
 
 const NO_PROJ_NAME = "Unnamed";
@@ -279,10 +280,11 @@ export class KpmController {
         }
 
         let keystrokeCount = _keystrokeMap[rootPath];
-
         if (keystrokeCount) {
             return;
         }
+
+        let workspaceFolder = getProjectFolder(filename);
 
         //
         // Create the keystroke count and add it to the map
@@ -290,7 +292,7 @@ export class KpmController {
         keystrokeCount = new KpmDataManager({
             // project.directory is used as an object key, must be string
             directory: rootPath,
-            name: workspace.name || rootPath,
+            name: workspaceFolder.name || rootPath,
             identifier: "",
             resource: {}
         });

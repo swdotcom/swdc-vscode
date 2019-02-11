@@ -45,7 +45,8 @@ export function getRootPaths() {
     let paths = [];
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {
-            let folderUri = workspace.workspaceFolders[i].uri;
+            let workspaceFolder = workspace.workspaceFolders[i];
+            let folderUri = workspaceFolder.uri;
             if (folderUri && folderUri.fsPath) {
                 paths.push(folderUri.fsPath);
             }
@@ -55,17 +56,36 @@ export function getRootPaths() {
 }
 
 export function getRootPathForFile(fileName) {
+    let folder = getProjectFolder(fileName);
+    if (folder) {
+        return folder.uri.fsPath;
+    }
+    return null;
+}
+
+export function getProjectFolder(fileName) {
+    let liveshareFolder = null;
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {
-            let folderUri = workspace.workspaceFolders[i].uri;
-            if (
-                folderUri &&
-                folderUri.fsPath &&
-                fileName.includes(folderUri.fsPath)
-            ) {
-                return folderUri.fsPath;
+            let workspaceFolder = workspace.workspaceFolders[i];
+            if (workspaceFolder.uri) {
+                if (workspaceFolder.uri.scheme === "vsls") {
+                    liveshareFolder = workspaceFolder;
+                }
+                let folderUri = workspaceFolder.uri;
+                if (
+                    folderUri &&
+                    folderUri.fsPath &&
+                    folderUri.fsPath.includes(fileName)
+                ) {
+                    return workspaceFolder;
+                }
             }
         }
+    }
+    // wasn't found but if liveshareFolder was found, return that
+    if (liveshareFolder) {
+        return liveshareFolder;
     }
     return null;
 }
