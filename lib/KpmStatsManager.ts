@@ -13,41 +13,22 @@ import {
     showErrorStatus,
     showStatus,
     getSoftwareSessionFile,
-    isEmptyObj,
     humanizeMinutes,
     isCodeTimeMetricsFocused
 } from "./Util";
-import { getTrackInfo } from "./MusicManager";
 import { displayCodeTimeMetricsDashboard } from "./MenuManager";
+import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import {
-    isTelemetryOn,
     isAuthenticated,
-    handleKpmClickedEvent
-} from "../extension";
-import {
-    isResponseOk,
-    isUserDeactivated,
-    softwareGet,
-    softwarePost
-} from "./HttpClient";
+    serverIsAvailable,
+    checkTokenAvailability
+} from "./DataController";
+import { isResponseOk, isUserDeactivated, softwareGet } from "./HttpClient";
 
 const fs = require("fs");
 
 let confirmWindow = null;
 let lastAuthenticationCheckTime = -1;
-let trackInfo = {};
-
-export async function serverIsAvailable() {
-    return await checkOnline();
-}
-
-async function checkOnline() {
-    if (!isTelemetryOn()) {
-        return true;
-    }
-    // non-authenticated ping, no need to set the Authorization header
-    return isResponseOk(await softwareGet("/ping", null));
-}
 
 export async function chekUserAuthenticationStatus() {
     let nowMillis = Date.now();
@@ -124,75 +105,6 @@ function isPastTimeThreshold() {
     return true;
 }
 
-export async function checkTokenAvailability() {
-    if (!isTelemetryOn()) {
-        return;
-    }
-    const tokenVal = getItem("token");
-
-    if (!tokenVal) {
-        return;
-    }
-
-    // need to get back...
-    // response.data.user, response.data.jwt
-    // non-authorization API
-    softwareGet(`/users/plugin/confirm?token=${tokenVal}`, null)
-        .then(resp => {
-            if (
-                isResponseOk(resp) &&
-                resp.data &&
-                resp.data.jwt &&
-                resp.data.user
-            ) {
-                setItem("jwt", resp.data.jwt);
-                setItem("user", resp.data.user);
-                setItem("vscode_lastUpdateTime", Date.now());
-
-                // fetch kpm data
-                setTimeout(() => {
-                    fetchDailyKpmSessionInfo();
-                }, 1000);
-            } else if (!isUserDeactivated(resp)) {
-                console.log("Code Time: unable to obtain session token");
-                // try again in 45 seconds
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 1000 * 45);
-            } else if (isUserDeactivated(resp)) {
-                console.log("Code Time: unable to obtain session token");
-                // try again in a day
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 1000 * 60 * 60 * 24);
-            }
-        })
-        .catch(err => {
-            console.log(
-                "Code Time: error confirming plugin token: ",
-                err.message
-            );
-            setTimeout(() => {
-                checkTokenAvailability();
-            }, 1000 * 45);
-        });
-}
-
-function sendMusicData(trackData) {
-    // add the "local_start", "start", and "end"
-    // POST the kpm to the PluginManager
-    return softwarePost("/data/music", trackData, getItem("jwt"))
-        .then(resp => {
-            if (!isResponseOk(resp)) {
-                return { status: "fail" };
-            }
-            return { status: "ok" };
-        })
-        .catch(e => {
-            return { status: "fail" };
-        });
-}
-
 export async function fetchDailyKpmSessionInfo() {
     if (!isTelemetryOn()) {
         // telemetry is paused
@@ -246,70 +158,4 @@ async function getSessionStatus() {
             return "error";
         });
     return result;
-}
-
-export function gatherMusicInfo() {
-    const trackInfoDataP = getTrackInfo();
-    trackInfoDataP
-        .then(trackInfoData => {
-            let d = new Date();
-            // offset is the minutes from GMT. it's positive if it's before, and negative after
-            const offset = d.getTimezoneOffset();
-            const offset_sec = offset * 60;
-            let nowInSec = Math.round(d.getTime() / 1000);
-            // subtract the offset_sec (it'll be positive before utc and negative after utc)
-            let localNowInSec = nowInSec - offset_sec;
-            let state = "stopped";
-            if (trackInfoData) {
-                state = trackInfoData["state"] || "playing";
-            }
-            let isPaused =
-                state.toLowerCase().indexOf("playing") !== -1 ? false : true;
-
-            if (trackInfoData && trackInfoData["id"]) {
-                // check if we have this track already in "trackInfo"
-                let hasExistingTrackInfo = !isEmptyObj(trackInfo)
-                    ? true
-                    : false;
-                let matchingTracks =
-                    hasExistingTrackInfo &&
-                    trackInfo["id"] === trackInfoData["id"]
-                        ? true
-                        : false;
-                if (hasExistingTrackInfo && (!matchingTracks || isPaused)) {
-                    // this means a new song has started, send a payload to complete
-                    // the 1st one and another to start the next one
-                    trackInfo["end"] = nowInSec - 1;
-                    sendMusicData(trackInfo).then(result => {
-                        if (!isPaused) {
-                            // send the next payload starting the next song
-                            trackInfo = {};
-                            trackInfo = { ...trackInfoData };
-                            trackInfo["start"] = nowInSec;
-                            trackInfo["local_start"] = localNowInSec;
-                            sendMusicData(trackInfo);
-                        } else {
-                            trackInfo = {};
-                        }
-                    });
-                } else if (!hasExistingTrackInfo && !isPaused) {
-                    // no previous track played, send this one to start it
-                    trackInfo = { ...trackInfoData };
-                    trackInfo["start"] = nowInSec;
-                    trackInfo["local_start"] = localNowInSec;
-                    sendMusicData(trackInfo);
-                }
-            } else if (!isEmptyObj(trackInfo)) {
-                // end this song since we're not getting a current track
-                // and the trackInfo is not empty
-                trackInfo["end"] = nowInSec;
-                sendMusicData(trackInfo).then(result => {
-                    // clear out the trackInfo
-                    trackInfo = {};
-                });
-            }
-        })
-        .catch(err => {
-            //
-        });
 }

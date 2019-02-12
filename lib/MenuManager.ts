@@ -10,7 +10,7 @@ import {
     isCodeTimeMetricsFocused
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import { isAuthenticated } from "../extension";
+import { isAuthenticated } from "./DataController";
 import { launch_url } from "./Constants";
 
 const fs = require("fs");

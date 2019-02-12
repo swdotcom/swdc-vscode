@@ -1,4 +1,3 @@
-import { Uri } from "vscode";
 export const NOT_NOW_LABEL = "Not now";
 export const OK_LABEL = "Ok";
 export const YES_LABEL = "Yes";

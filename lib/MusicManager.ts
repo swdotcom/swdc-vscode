@@ -1,11 +1,79 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise, isWindows, getItem } from "./Util";
+import { wrapExecPromise, isWindows, getItem, isEmptyObj } from "./Util";
+import { sendMusicData } from "./DataController";
 import { softwareGet, isResponseOk } from "./HttpClient";
 
 const WINDOWS_SPOTIFY_TRACK_FIND =
     'tasklist /fi "imagename eq Spotify.exe" /fo list /v | find " - "';
 
+let trackInfo = {};
+
+export function gatherMusicInfo() {
+    const trackInfoDataP = getTrackInfo();
+    trackInfoDataP
+        .then(trackInfoData => {
+            let d = new Date();
+            // offset is the minutes from GMT. it's positive if it's before, and negative after
+            const offset = d.getTimezoneOffset();
+            const offset_sec = offset * 60;
+            let nowInSec = Math.round(d.getTime() / 1000);
+            // subtract the offset_sec (it'll be positive before utc and negative after utc)
+            let localNowInSec = nowInSec - offset_sec;
+            let state = "stopped";
+            if (trackInfoData) {
+                state = trackInfoData["state"] || "playing";
+            }
+            let isPaused =
+                state.toLowerCase().indexOf("playing") !== -1 ? false : true;
+
+            if (trackInfoData && trackInfoData["id"]) {
+                // check if we have this track already in "trackInfo"
+                let hasExistingTrackInfo = !isEmptyObj(trackInfo)
+                    ? true
+                    : false;
+                let matchingTracks =
+                    hasExistingTrackInfo &&
+                    trackInfo["id"] === trackInfoData["id"]
+                        ? true
+                        : false;
+                if (hasExistingTrackInfo && (!matchingTracks || isPaused)) {
+                    // this means a new song has started, send a payload to complete
+                    // the 1st one and another to start the next one
+                    trackInfo["end"] = nowInSec - 1;
+                    sendMusicData(trackInfo).then(result => {
+                        if (!isPaused) {
+                            // send the next payload starting the next song
+                            trackInfo = {};
+                            trackInfo = { ...trackInfoData };
+                            trackInfo["start"] = nowInSec;
+                            trackInfo["local_start"] = localNowInSec;
+                            sendMusicData(trackInfo);
+                        } else {
+                            trackInfo = {};
+                        }
+                    });
+                } else if (!hasExistingTrackInfo && !isPaused) {
+                    // no previous track played, send this one to start it
+                    trackInfo = { ...trackInfoData };
+                    trackInfo["start"] = nowInSec;
+                    trackInfo["local_start"] = localNowInSec;
+                    sendMusicData(trackInfo);
+                }
+            } else if (!isEmptyObj(trackInfo)) {
+                // end this song since we're not getting a current track
+                // and the trackInfo is not empty
+                trackInfo["end"] = nowInSec;
+                sendMusicData(trackInfo).then(result => {
+                    // clear out the trackInfo
+                    trackInfo = {};
+                });
+            }
+        })
+        .catch(err => {
+            //
+        });
+}
 /**
  * get the itunes track
  */

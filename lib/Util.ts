@@ -69,14 +69,17 @@ export function getProjectFolder(fileName) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {
             let workspaceFolder = workspace.workspaceFolders[i];
             if (workspaceFolder.uri) {
-                if (workspaceFolder.uri.scheme === "vsls") {
+                let isVslsScheme =
+                    workspaceFolder.uri.scheme === "vsls" ? true : false;
+                if (isVslsScheme) {
                     liveshareFolder = workspaceFolder;
                 }
                 let folderUri = workspaceFolder.uri;
                 if (
                     folderUri &&
                     folderUri.fsPath &&
-                    folderUri.fsPath.includes(fileName)
+                    !isVslsScheme &&
+                    fileName.includes(folderUri.fsPath)
                 ) {
                     return workspaceFolder;
                 }
