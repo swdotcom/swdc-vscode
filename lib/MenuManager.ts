@@ -127,7 +127,7 @@ export async function displayCodeTimeMetricsDashboard() {
             : NO_DATA;
 
     // Error: EPERM: operation not permitted, open 'C:\Users\Software\.software\CodeTime'
-    fs.writeFileSync(filePath, content, "UTF8", "666");
+    fs.writeFileSync(filePath, content, "UTF8", { mode: 0o755 });
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
         if (alreadyFocused || isClosed) {
