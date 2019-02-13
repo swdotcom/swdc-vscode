@@ -91,7 +91,7 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
     };
     if (!requiresToken) {
         kpmMenuOptions.items.unshift({
-            label: "Code time report",
+            label: "Code time dashboard",
             description: "",
             detail: "View your latest coding metrics",
             url: null,
@@ -136,4 +136,10 @@ export async function displayCodeTimeMetricsDashboard() {
             });
         }
     });
+
+    // remove the file without the extension if it exists
+    let legacyFile = filePath.substring(0, filePath.lastIndexOf("."));
+    if (fs.existsSync(legacyFile)) {
+        fs.unlinkSync(legacyFile);
+    }
 }

@@ -176,9 +176,9 @@ export function isMac() {
 export function getDashboardFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
-        file += "\\CodeTime";
+        file += "\\CodeTime.txt";
     } else {
-        file += "/CodeTime";
+        file += "/CodeTime.txt";
     }
     return file;
 }
