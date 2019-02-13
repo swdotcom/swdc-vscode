@@ -2,7 +2,7 @@
 
 # Code Time for Visual Studio Code
 
-> **Code Time** is an open source plugin that provides programming metrics right in your code editor.
+> Programming metrics right in VS Code.
 
 <p align="center" style="margin: 0 10%">
   <img src="https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-dashboard.gif" alt="Code Time for VS Code" />
@@ -52,6 +52,6 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 
 1. [Install the Code Time plugin](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) from the Visual Studio Code Marketplace.
 
-2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code, which will take you to the final step of setting up your account).
+2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code.
 
 <!--- End: setup --->
