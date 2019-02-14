@@ -167,6 +167,11 @@ export function activate(ctx: ExtensionContext) {
             handleCodeTimeDashboardEvent();
         })
     );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.viewSoftwareTop40", () => {
+            handleViewSoftwareTopSongsEvent();
+        })
+    );
 
     initializeLiveshare();
 }
@@ -187,6 +192,10 @@ function handleEnableMetricsEvent() {
 
 function handleCodeTimeDashboardEvent() {
     displayCodeTimeMetricsDashboard();
+}
+
+function handleViewSoftwareTopSongsEvent() {
+    launchWebUrl("https://api.software.com/music/top40");
 }
 
 async function initializeLiveshare() {

@@ -97,6 +97,14 @@ export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
             url: null,
             uri: filePath
         });
+        kpmMenuOptions.items.push({
+            label: "Software Top 40",
+            description: "",
+            detail:
+                "Top 40 most popular songs developers around the world listen to as they code.",
+            url: "https://api.software.com/music/top40",
+            uri: null
+        });
     }
     showQuickPick(kpmMenuOptions);
 }
