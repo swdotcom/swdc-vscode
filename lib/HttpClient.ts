@@ -66,16 +66,18 @@ export async function softwareDelete(api, jwt) {
 }
 
 export function isResponseOk(resp) {
-    if (
-        (!resp.response && resp.errno) ||
-        (resp.response &&
-            resp.response.status &&
-            resp.response.status >= 400) ||
-        (resp.status && resp.status >= 400) ||
-        (resp.message && resp.message === "Network Error") ||
-        (resp.code &&
-            (resp.code === "ECONNREFUSED" || resp.code === "ENOTFOUND"))
-    ) {
+    let status = resp && resp.status ? resp.status : null;
+    if (!status) {
+        status =
+            resp && resp.response && resp.response.status
+                ? resp.response.status
+                : null;
+    }
+    if (status && status === 200) {
+        return true;
+    }
+    let isNotOkStatus = (status && status >= 400) || !status ? true : false;
+    if (!isNotOkStatus) {
         return false;
     }
     return true;
