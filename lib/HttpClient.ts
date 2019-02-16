@@ -66,21 +66,11 @@ export async function softwareDelete(api, jwt) {
 }
 
 export function isResponseOk(resp) {
-    let status = resp && resp.status ? resp.status : null;
-    if (!status) {
-        status =
-            resp && resp.response && resp.response.status
-                ? resp.response.status
-                : null;
-    }
-    if (status && status === 200) {
+    let status = getResponseStatus(resp);
+    if (!resp || (status && status < 400)) {
         return true;
     }
-    let isNotOkStatus = (status && status >= 400) || !status ? true : false;
-    if (!isNotOkStatus) {
-        return false;
-    }
-    return true;
+    return false;
 }
 
 export async function isUserDeactivated(resp) {
@@ -103,16 +93,32 @@ export async function isUserDeactivated(resp) {
     return false;
 }
 
+function getResponseStatus(resp) {
+    let status = null;
+    if (resp && resp.status) {
+        status = resp.status;
+    } else if (resp && resp.response && resp.response.status) {
+        status = resp.response.status;
+    }
+    return status;
+}
+
+function getResponseData(resp) {
+    let data = null;
+    if (resp && resp.data) {
+        data = resp.data;
+    } else if (resp && resp.response && resp.response.data) {
+        data = resp.response.data;
+    }
+    return data;
+}
+
 function isUnauthenticatedAndDeactivated(resp) {
-    if (
-        resp &&
-        resp.response &&
-        resp.response.status &&
-        resp.response.status >= 400 &&
-        resp.response.data
-    ) {
+    let status = getResponseStatus(resp);
+    let data = getResponseData(resp);
+    if (status && status >= 400 && data) {
         // check if we have the data object
-        let code = resp.response.data.code || "";
+        let code = data.code || "";
         if (code === "DEACTIVATED") {
             showErrorStatus(
                 "To see your coding data in Code Time, please reactivate your account."
