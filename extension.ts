@@ -17,7 +17,9 @@ import {
     requiresUserCreation,
     isRegisteredUser,
     checkTokenAvailability,
-    serverIsAvailable
+    serverIsAvailable,
+    updatePreferences,
+    initializePreferences
 } from "./lib/DataController";
 import {
     showStatus,
@@ -197,10 +199,15 @@ export function activate(ctx: ExtensionContext) {
     initializeLiveshare();
 
     initializeUserInfo();
+
+    setTimeout(() => {
+        initializePreferences();
+    }, 1000);
 }
 
 function configUpdated(ctx) {
     // the software settings were updated, take action here
+    updatePreferences();
 }
 
 async function handleTokenAvailabilityCheck() {

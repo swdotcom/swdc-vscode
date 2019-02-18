@@ -1,8 +1,10 @@
+import { workspace, ConfigurationTarget } from "vscode";
 const fs = require("fs");
 const macaddress = require("getmac");
 
 import {
     softwareGet,
+    softwarePut,
     isResponseOk,
     isUserDeactivated,
     softwarePost
@@ -292,4 +294,130 @@ export async function isRegisteredUser() {
         }
     }
     return false;
+}
+
+export async function initializePreferences() {
+    let user = getItem("user");
+    let jwt = getItem("jwt");
+    let serverIsOnline = await serverIsAvailable();
+    if (jwt && serverIsOnline && user) {
+        let userObj = JSON.parse(user);
+
+        let api = `/users/${parseInt(userObj.id, 10)}`;
+        let resp = await softwareGet(api, jwt);
+        if (isResponseOk(resp)) {
+            if (
+                resp &&
+                resp.data &&
+                resp.data.data &&
+                resp.data.data.preferences
+            ) {
+                let prefs = resp.data.data.preferences;
+                let prefsShowMusic =
+                    prefs.showMusic !== null && prefs.showMusic !== undefined
+                        ? prefs.showMusic
+                        : null;
+                let prefsShowGit =
+                    prefs.showGit !== null && prefs.showGit !== undefined
+                        ? prefs.showGit
+                        : null;
+                let prefsShowRank =
+                    prefs.showRank !== null && prefs.showRank !== undefined
+                        ? prefs.showRank
+                        : null;
+
+                if (prefsShowMusic !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showMusicMetrics",
+                            false,
+                            ConfigurationTarget.Global
+                        );
+                }
+                if (prefsShowGit !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showGitMetrics",
+                            false,
+                            ConfigurationTarget.Global
+                        );
+                }
+                if (prefsShowRank !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showWeeklyRanking",
+                            false,
+                            ConfigurationTarget.Global
+                        );
+                }
+            }
+        }
+    }
+}
+
+export async function updatePreferences() {
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
+    let showWeeklyRanking = workspace
+        .getConfiguration()
+        .get("showWeeklyRanking");
+
+    // get the user's preferences and update them if they don't match what we have
+    let user = getItem("user");
+    let jwt = getItem("jwt");
+    let serverIsOnline = await serverIsAvailable();
+    if (jwt && serverIsOnline && user) {
+        let userObj = JSON.parse(user);
+
+        let api = `/users/${parseInt(userObj.id, 10)}`;
+        let resp = await softwareGet(api, jwt);
+        if (isResponseOk(resp)) {
+            if (
+                resp &&
+                resp.data &&
+                resp.data.data &&
+                resp.data.data.preferences
+            ) {
+                let prefs = resp.data.data.preferences;
+                let prefsShowMusic =
+                    prefs.showMusic !== null && prefs.showMusic !== undefined
+                        ? prefs.showMusic
+                        : null;
+                let prefsShowGit =
+                    prefs.showGit !== null && prefs.showGit !== undefined
+                        ? prefs.showGit
+                        : null;
+                let prefsShowRank =
+                    prefs.showRank !== null && prefs.showRank !== undefined
+                        ? prefs.showRank
+                        : null;
+
+                if (
+                    prefsShowMusic === null ||
+                    prefsShowGit === null ||
+                    prefsShowRank === null ||
+                    prefsShowMusic !== showMusicMetrics ||
+                    prefsShowGit !== showGitMetrics ||
+                    prefsShowRank !== showWeeklyRanking
+                ) {
+                    prefs["showMusic"] = showMusicMetrics;
+                    prefs["showGit"] = showGitMetrics;
+                    prefs["showRank"] = showWeeklyRanking;
+
+                    // update the preferences
+                    // /:id/preferences
+                    api = `/users/${parseInt(userObj.id, 10)}/preferences`;
+                    resp = await softwarePut(api, prefs, jwt);
+                    if (isResponseOk(resp)) {
+                        console.log(
+                            "Code Time: update user code time preferences"
+                        );
+                    }
+                }
+            }
+        }
+    }
 }

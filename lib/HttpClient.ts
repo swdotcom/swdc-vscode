@@ -34,6 +34,27 @@ export async function softwareGet(api, jwt) {
 }
 
 /**
+ * perform a put request
+ */
+export async function softwarePut(api, payload, jwt) {
+    // PUT the kpm to the PluginManager
+    beApi.defaults.headers.common["Authorization"] = jwt;
+    return beApi
+        .put(api, payload)
+        .then(resp => {
+            return resp;
+        })
+        .catch(err => {
+            console.log(
+                `Code Time: error posting data for ${api}, message: ${
+                    err.message
+                }`
+            );
+            return err;
+        });
+}
+
+/**
  * perform a post request
  */
 export async function softwarePost(api, payload, jwt) {

@@ -126,15 +126,11 @@ export async function displayCodeTimeMetricsDashboard() {
     let isClosed = isCodeTimeMetricsClosed();
 
     let filePath = getDashboardFile();
-    let showMusicMetrics = workspace
-        .getConfiguration("feature")
-        .get("musicMetrics");
-    let showGitMetrics = workspace
-        .getConfiguration("feature")
-        .get("gitMetrics");
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
-        .getConfiguration("feature")
-        .get("weeklyRanking");
+        .getConfiguration()
+        .get("showWeeklyRanking");
 
     const dashboardSummary = await softwareGet(
         `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}`,
