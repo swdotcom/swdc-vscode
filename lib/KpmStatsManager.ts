@@ -10,7 +10,6 @@ import {
 import {
     getItem,
     setItem,
-    showErrorStatus,
     showStatus,
     getSoftwareSessionFile,
     humanizeMinutes,
@@ -19,9 +18,10 @@ import {
 import { displayCodeTimeMetricsDashboard } from "./MenuManager";
 import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import {
-    isAuthenticated,
     serverIsAvailable,
-    checkTokenAvailability
+    checkTokenAvailability,
+    createAnonymousUser,
+    isRegisteredUser
 } from "./DataController";
 import { isResponseOk, isUserDeactivated, softwareGet } from "./HttpClient";
 
@@ -30,6 +30,9 @@ const fs = require("fs");
 let confirmWindow = null;
 let lastAuthenticationCheckTime = -1;
 
+/**
+ * check if the user needs to see the login prompt or not
+ */
 export async function chekUserAuthenticationStatus() {
     let nowMillis = Date.now();
     const sessionFile = getSoftwareSessionFile();
@@ -45,20 +48,17 @@ export async function chekUserAuthenticationStatus() {
     }
     lastAuthenticationCheckTime = nowMillis;
 
-    const serverAvailablePromise = serverIsAvailable();
-    const isAuthenticatedPromise = isAuthenticated();
-    const pastThresholdTime = isPastTimeThreshold();
-
-    const serverAvailable = await serverAvailablePromise;
-    const authenticated = await isAuthenticatedPromise;
+    const lastUpdateTime = getItem("vscode_lastUpdateTime");
+    const serverAvailable = await serverIsAvailable();
+    const registeredUser = await isRegisteredUser();
 
     if (
         serverAvailable &&
-        !authenticated &&
-        (pastThresholdTime || !hasSessionFile) &&
+        !lastUpdateTime &&
+        !registeredUser &&
         !confirmWindow
     ) {
-        //
+        //lkjflkjsdlkslksdlkfj
         // Show the dialog if the user is not authenticated but online,
         // and it's past the threshold time and the confirm window is null
         //
@@ -71,17 +71,12 @@ export async function chekUserAuthenticationStatus() {
             .then(selection => {
                 if (selection === LOGIN_LABEL) {
                     handleKpmClickedEvent();
+                    setTimeout(() => {
+                        checkTokenAvailability();
+                    }, 20000);
                 }
                 confirmWindow = null;
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 20000);
             });
-    } else if (!authenticated) {
-        showErrorStatus(null);
-        setTimeout(() => {
-            checkTokenAvailability();
-        }, 10000);
     }
 }
 
@@ -120,8 +115,6 @@ export async function fetchDailyKpmSessionInfo() {
             // it currently focuses the tab, comment out until update this to not focus the tab
             displayCodeTimeMetricsDashboard();
         }
-    } else if (result === "notok") {
-        chekUserAuthenticationStatus();
     }
 }
 

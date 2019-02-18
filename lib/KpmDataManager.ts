@@ -31,6 +31,9 @@ export class KpmDataManager {
         this.version = getVersion();
     }
 
+    /**
+     * check if the payload should be sent or not
+     */
     hasData() {
         if ((this.keystrokes, 10 > 0)) {
             return true;
@@ -52,6 +55,9 @@ export class KpmDataManager {
         return false;
     }
 
+    /**
+     * send the payload
+     */
     postData() {
         const payload = JSON.parse(JSON.stringify(this));
         payload.keystrokes = String(payload.keystrokes);
@@ -95,11 +101,6 @@ export class KpmDataManager {
             if (!isResponseOk(resp) && !isUserDeactivated(resp)) {
                 storePayload(payload);
                 chekUserAuthenticationStatus();
-            } else if (isUserDeactivated(resp)) {
-                // check in a day
-                setTimeout(() => {
-                    chekUserAuthenticationStatus();
-                }, 1000 * 60 * 60 * 24);
             }
         });
     }

@@ -3,6 +3,7 @@ import axios from "axios";
 import { api_endpoint } from "./Constants";
 import { showErrorStatus, getItem } from "./Util";
 
+// build the axios api base url
 const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
@@ -14,7 +15,9 @@ const beApi = axios.create({
  * @param jwt
  */
 export async function softwareGet(api, jwt) {
-    beApi.defaults.headers.common["Authorization"] = jwt;
+    if (jwt) {
+        beApi.defaults.headers.common["Authorization"] = jwt;
+    }
     return await beApi
         .get(api)
         .then(resp => {
@@ -30,6 +33,9 @@ export async function softwareGet(api, jwt) {
         });
 }
 
+/**
+ * perform a post request
+ */
 export async function softwarePost(api, payload, jwt) {
     // POST the kpm to the PluginManager
     beApi.defaults.headers.common["Authorization"] = jwt;
@@ -48,6 +54,9 @@ export async function softwarePost(api, payload, jwt) {
         });
 }
 
+/**
+ * perform a delete request
+ */
 export async function softwareDelete(api, jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
     return beApi
@@ -65,6 +74,9 @@ export async function softwareDelete(api, jwt) {
         });
 }
 
+/**
+ * check if the reponse is ok or not
+ */
 export function isResponseOk(resp) {
     let status = getResponseStatus(resp);
     if (!resp || (status && status < 400)) {
@@ -73,6 +85,9 @@ export function isResponseOk(resp) {
     return false;
 }
 
+/**
+ * check if the user has been deactived
+ */
 export async function isUserDeactivated(resp) {
     if (!isResponseOk(resp)) {
         if (isUnauthenticatedAndDeactivated(resp)) {
@@ -93,6 +108,9 @@ export async function isUserDeactivated(resp) {
     return false;
 }
 
+/**
+ * get the response http status code
+ */
 function getResponseStatus(resp) {
     let status = null;
     if (resp && resp.status) {
@@ -103,6 +121,9 @@ function getResponseStatus(resp) {
     return status;
 }
 
+/**
+ * get the request's response data
+ */
 function getResponseData(resp) {
     let data = null;
     if (resp && resp.data) {
@@ -113,6 +134,9 @@ function getResponseData(resp) {
     return data;
 }
 
+/**
+ * check if the response has the deactivated code
+ */
 function isUnauthenticatedAndDeactivated(resp) {
     let status = getResponseStatus(resp);
     let data = getResponseData(resp);

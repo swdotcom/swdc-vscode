@@ -12,6 +12,8 @@ export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const DASHBOARD_LABEL_WIDTH = 23;
 export const DASHBOARD_VALUE_WIDTH = 25;
 
+const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
+
 let lastMsg = "";
 let lastTooltip = "";
 let codeTimeMetricsIsFocused = false;
@@ -111,7 +113,6 @@ export function setItem(key, value) {
 
 export function getItem(key) {
     const jsonObj = getSoftwareSessionAsJson();
-
     return jsonObj[key] || null;
 }
 
@@ -289,6 +290,41 @@ function execPromise(command, opts) {
             resolve(stdout.trim());
         });
     });
+}
+
+export function normalizeGithubEmail(email) {
+    if (email) {
+        email = email.replace("users.noreply.", "");
+        if (NUMBER_IN_EMAIL_REGEX.test(email)) {
+            // take out the 1st part
+            email = email.substring(email.indexOf("+") + 1);
+        }
+    }
+    return email;
+}
+
+export async function getGitHubEmail() {
+    let projectDirs = getRootPaths();
+
+    if (!projectDirs || projectDirs.length === 0) {
+        return null;
+    }
+
+    for (let i = 0; i < projectDirs.length; i++) {
+        let projectDir = projectDirs[i];
+
+        let email = await wrapExecPromise("git config user.email", projectDir);
+        if (email) {
+            /**
+             * // normalize the email, possible github email types
+             * shupac@users.noreply.github.com
+             * 37358488+rick-software@users.noreply.github.com
+             */
+            email = normalizeGithubEmail(email);
+            return email;
+        }
+    }
+    return null;
 }
 
 export async function wrapExecPromise(cmd, projectDir) {

@@ -1,5 +1,11 @@
 import { isResponseOk, softwareGet, softwarePost } from "./HttpClient";
-import { wrapExecPromise, getItem, isWindows, getRootPaths } from "./Util";
+import {
+    wrapExecPromise,
+    getItem,
+    isWindows,
+    getRootPaths,
+    normalizeGithubEmail
+} from "./Util";
 
 //
 // use "git symbolic-ref --short HEAD" to get the git branch
@@ -14,6 +20,7 @@ export async function getResourceInfo(projectDir) {
         projectDir
     );
     let email = await wrapExecPromise("git config user.email", projectDir);
+    email = normalizeGithubEmail(email);
     let tag = await wrapExecPromise("git describe --all", projectDir);
 
     // both should be valid to return the resource info
@@ -24,6 +31,9 @@ export async function getResourceInfo(projectDir) {
     return {};
 }
 
+/**
+ * get the git repo users
+ */
 export async function getRepoUsers() {
     let projectDirs = getRootPaths();
 
@@ -103,6 +113,9 @@ function buildRepoKey(identifier, branch, tag) {
     return `${identifier}_${branch}_${tag}`;
 }
 
+/**
+ * get the last git commit from the app server
+ */
 async function getLastCommit(projectDir) {
     // get the repo info to get the last commit from the app
     if (!projectDir || projectDir === "") {
@@ -139,7 +152,9 @@ async function getLastCommit(projectDir) {
 
     return commit;
 }
-
+/**
+ * get the historical git commits
+ */
 export async function getHistoricalCommits() {
     let projectDirs = getRootPaths();
 

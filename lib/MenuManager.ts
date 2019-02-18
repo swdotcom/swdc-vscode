@@ -10,8 +10,12 @@ import {
     isCodeTimeMetricsFocused
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import { isAuthenticated } from "./DataController";
-import { launch_url } from "./Constants";
+import {
+    isAuthenticated,
+    isRegisteredUser,
+    getMacAddress
+} from "./DataController";
+import { launch_url, LOGIN_LABEL } from "./Constants";
 
 const fs = require("fs");
 
@@ -45,8 +49,7 @@ export function showQuickPick(pickOptions) {
 export async function userNeedsToken() {
     let requiresToken = false;
     const existingJwt = getItem("jwt");
-    let tokenVal = getItem("token");
-    if (!tokenVal || !existingJwt || !(await isAuthenticated())) {
+    if (!existingJwt || !(await isAuthenticated())) {
         requiresToken = true;
     }
     return requiresToken;
@@ -60,49 +63,58 @@ export async function buildLaunchUrl(requiresToken) {
             tokenVal = randomCode();
             setItem("token", tokenVal);
         }
-        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+        let macAddress = await getMacAddress();
+        webUrl = `${launch_url}/onboarding?token=${tokenVal}&addr=${encodeURIComponent(
+            macAddress
+        )}`;
     }
 
     return webUrl;
 }
 
-export async function showMenuOptions(requiresToken, showSoftwareGrubOptions) {
-    let appDashboardDetail = "Click to see more from Code Time";
-
-    // add the token to the launch url
-    if (requiresToken) {
-        appDashboardDetail = `$(alert) To see your coding data in Code Time, please log in to your account.`;
-    }
-
-    let webUrl = await buildLaunchUrl(requiresToken);
+export async function showMenuOptions() {
     let filePath = getDashboardFile();
+    let registeredUser = await isRegisteredUser();
+    let needsToken = await userNeedsToken();
+    let requiresToken = registeredUser && !needsToken ? false : true;
+    let webUrl = await buildLaunchUrl(requiresToken);
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
         items: [
             {
-                label: "Software.com",
+                label: "Code time dashboard",
                 description: "",
-                detail: appDashboardDetail,
-                url: webUrl,
-                uri: null
+                detail: "View your latest coding metrics",
+                url: null,
+                uri: filePath
             }
         ]
     };
-    if (!requiresToken) {
-        kpmMenuOptions.items.unshift({
-            label: "Code time dashboard",
-            description: "",
-            detail: "View your latest coding metrics",
-            url: null,
-            uri: filePath
-        });
+    if (registeredUser) {
         kpmMenuOptions.items.push({
-            label: "Software Top 40",
+            label: "Software.com",
+            description: "",
+            detail: "Click to see more from Code Time",
+            url: webUrl,
+            uri: null
+        });
+    }
+    kpmMenuOptions.items.push({
+        label: "Software Top 40",
+        description: "",
+        detail:
+            "Top 40 most popular songs developers around the world listen to as they code.",
+        url: "https://api.software.com/music/top40",
+        uri: null
+    });
+    if (!registeredUser) {
+        kpmMenuOptions.items.push({
+            label: LOGIN_LABEL,
             description: "",
             detail:
-                "Top 40 most popular songs developers around the world listen to as they code.",
-            url: "https://api.software.com/music/top40",
+                "To see rich data visualizations in our web app, please create an account.",
+            url: webUrl,
             uri: null
         });
     }

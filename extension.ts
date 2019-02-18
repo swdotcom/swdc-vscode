@@ -11,7 +11,14 @@ import {
     extensions
 } from "vscode";
 import { KpmController } from "./lib/KpmController";
-import { sendOfflineData } from "./lib/DataController";
+import {
+    sendOfflineData,
+    createAnonymousUser,
+    requiresUserCreation,
+    isRegisteredUser,
+    checkTokenAvailability,
+    serverIsAvailable
+} from "./lib/DataController";
 import {
     showStatus,
     launchWebUrl,
@@ -38,6 +45,12 @@ let statusBarItem = null;
 let extensionVersion;
 let _ls = null;
 
+let token_check_interval = null;
+let repo_user_interval = null;
+let historical_commits_interval = null;
+let gather_music_interval = null;
+let kpm_session_info_interval = null;
+
 export function isTelemetryOn() {
     return TELEMETRY_ON;
 }
@@ -62,6 +75,13 @@ export function deactivate(ctx: ExtensionContext) {
         manageLiveshareSession(_ls);
         _ls = null;
     }
+
+    clearInterval(repo_user_interval);
+    clearInterval(token_check_interval);
+    clearInterval(historical_commits_interval);
+    clearInterval(gather_music_interval);
+    clearInterval(kpm_session_info_interval);
+
     // console.log("Code Time: deactivating the plugin");
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
     //     if (isResponseOk(resp)) {
@@ -111,19 +131,14 @@ export function activate(ctx: ExtensionContext) {
     }, 100);
 
     // 1 minute interval to fetch daily kpm info
-    setInterval(() => {
+    kpm_session_info_interval = setInterval(() => {
         fetchDailyKpmSessionInfo();
     }, one_min);
 
     // 15 second interval to check music info
-    setInterval(() => {
+    gather_music_interval = setInterval(() => {
         gatherMusicInfo();
     }, 1000 * 15);
-
-    setTimeout(() => {
-        // check if the user is authenticated with what is saved in the software config
-        chekUserAuthenticationStatus();
-    }, 5000);
 
     // send any offline data
     setTimeout(() => {
@@ -133,7 +148,7 @@ export function activate(ctx: ExtensionContext) {
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
-    setInterval(() => {
+    repo_user_interval = setInterval(() => {
         getRepoUsers();
     }, hourly_interval);
 
@@ -143,7 +158,7 @@ export function activate(ctx: ExtensionContext) {
     }, one_min);
 
     // check on new commits once an hour
-    setInterval(() => {
+    historical_commits_interval = setInterval(() => {
         getHistoricalCommits();
     }, hourly_interval + one_min);
 
@@ -151,6 +166,12 @@ export function activate(ctx: ExtensionContext) {
     setTimeout(() => {
         getHistoricalCommits();
     }, one_min * 2);
+
+    // every 5 minutes, get the user's jwt if they've logged
+    // in if they're still not a registered user
+    token_check_interval = setInterval(() => {
+        handleTokenAvailabilityCheck();
+    }, one_min * 5);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -174,10 +195,23 @@ export function activate(ctx: ExtensionContext) {
     );
 
     initializeLiveshare();
+
+    initializeUserInfo();
 }
 
 function configUpdated(ctx) {
     // the software settings were updated, take action here
+}
+
+async function handleTokenAvailabilityCheck() {
+    const serverAvailable = await serverIsAvailable();
+    const registeredUser = await isRegisteredUser();
+    if (serverAvailable && !registeredUser) {
+        checkTokenAvailability();
+    } else if (serverAvailable && registeredUser) {
+        // kill the interval
+        clearInterval(token_check_interval);
+    }
 }
 
 function handlePauseMetricsEvent() {
@@ -196,6 +230,19 @@ function handleCodeTimeDashboardEvent() {
 
 function handleViewSoftwareTopSongsEvent() {
     launchWebUrl("https://api.software.com/music/top40");
+}
+
+async function initializeUserInfo() {
+    if (await requiresUserCreation()) {
+        await createAnonymousUser();
+    }
+
+    let registeredUser = await isRegisteredUser();
+    if (!registeredUser) {
+        setTimeout(() => {
+            chekUserAuthenticationStatus();
+        }, 6000);
+    }
 }
 
 async function initializeLiveshare() {
@@ -232,26 +279,24 @@ async function initializeLiveshare() {
 }
 
 export async function handleKpmClickedEvent() {
-    let requiresToken = await userNeedsToken();
-    let url = await buildLaunchUrl(requiresToken);
-    if (requiresToken) {
-        setTimeout(() => {
-            chekUserAuthenticationStatus();
-        }, 1000 * 30);
-    }
-    launchWebUrl(url);
+    let requiresToken = await requiresRegistration();
+    let webUrl = await buildLaunchUrl(requiresToken);
+    launchWebUrl(webUrl);
 }
 
 export async function handlePaletteMenuEvent() {
-    let requiresToken = await userNeedsToken();
-    let url = await buildLaunchUrl(requiresToken);
-    if (requiresToken) {
-        launchWebUrl(url);
-
+    let registrationRequired = await requiresRegistration();
+    if (registrationRequired) {
         setTimeout(() => {
             chekUserAuthenticationStatus();
-        }, 1000 * 30);
-    } else {
-        showMenuOptions(requiresToken, false /*showSoftwareGrubOptions*/);
+        }, 45000);
     }
+    showMenuOptions();
+}
+
+async function requiresRegistration() {
+    let registeredUser = await isRegisteredUser();
+    let needsToken = await userNeedsToken();
+    let requiresToken = registeredUser && !needsToken ? false : true;
+    return requiresToken;
 }

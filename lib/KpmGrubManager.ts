@@ -73,10 +73,10 @@ export function fetchTacoChoices() {
         tacoTimeMap.activated = true;
         if (!grubWindow) {
             /**
-         * Grubhub, Doordash, UberEats
-         * others we can show..
-            Postmates, Delivery.com, Yelp Eat 24, Foodler
-         */
+             * Grubhub, Doordash, UberEats
+             * others we can show..
+                Postmates, Delivery.com, Yelp Eat 24, Foodler
+            */
             grubWindow = window
                 .showInformationMessage(
                     "Would you like to order tacos now?",
@@ -88,12 +88,8 @@ export function fetchTacoChoices() {
                         // open the input options box
                         showTacoQuickPick();
                     } else {
-                        let requiresToken = await userNeedsToken();
                         // show the full menu
-                        showMenuOptions(
-                            requiresToken,
-                            true /*showSoftwareGrubOptions*/
-                        );
+                        showMenuOptions();
                     }
                 });
         }
@@ -125,8 +121,7 @@ export function isTacoTime() {
 }
 
 export async function showTacoQuickPick() {
-    let requiresToken = await userNeedsToken();
-    showMenuOptions(requiresToken, true /*showSoftwareGrubOptions*/);
+    showMenuOptions();
 }
 
 function resetTacoTimeMap() {
