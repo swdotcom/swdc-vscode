@@ -25,7 +25,10 @@ import {
     showStatus,
     launchWebUrl,
     nowInSecs,
-    getOffsetSecends
+    getOffsetSecends,
+    getItem,
+    getSoftwareSessionFile,
+    deleteFile
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -52,6 +55,8 @@ let repo_user_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let kpm_session_info_interval = null;
+
+const LEGACY_VIM_ID = "0q9p7n6m4k2j1VIM54t";
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -240,6 +245,14 @@ function handleViewSoftwareTopSongsEvent() {
 }
 
 async function initializeUserInfo() {
+    let tokenVal = getItem("token");
+    // vim plugin id check
+    if (tokenVal && tokenVal === LEGACY_VIM_ID) {
+        // delete the session json to re-establish a handshake without the vim token id
+        const sessionFile = getSoftwareSessionFile();
+        deleteFile(sessionFile);
+    }
+
     if (await requiresUserCreation()) {
         await createAnonymousUser();
     }
