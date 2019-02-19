@@ -1,12 +1,8 @@
 import { storePayload, getItem } from "./Util";
-import { softwarePost, isResponseOk, isUserDeactivated } from "./HttpClient";
+import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 import { getVersion, isTelemetryOn } from "../extension";
-import {
-    sendOfflineData,
-    requiresUserCreation,
-    createAnonymousUser
-} from "./DataController";
+import { sendOfflineData } from "./DataController";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 
 // ? marks that the parameter is optional

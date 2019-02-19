@@ -7,14 +7,11 @@ import {
     randomCode,
     isCodeTimeMetricsClosed,
     showLastStatus,
-    isCodeTimeMetricsFocused
+    isCodeTimeMetricsFocused,
+    getMacAddress
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import {
-    isAuthenticated,
-    isRegisteredUser,
-    getMacAddress
-} from "./DataController";
+import { isAuthenticated, isRegisteredUser } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
 
 const fs = require("fs");
@@ -63,10 +60,11 @@ export async function buildLaunchUrl(requiresToken) {
             tokenVal = randomCode();
             setItem("token", tokenVal);
         }
+        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
         let macAddress = await getMacAddress();
-        webUrl = `${launch_url}/onboarding?token=${tokenVal}&addr=${encodeURIComponent(
-            macAddress
-        )}`;
+        if (macAddress) {
+            webUrl += `&addr=${encodeURIComponent(macAddress)}`;
+        }
     }
 
     return webUrl;
@@ -87,7 +85,8 @@ export async function showMenuOptions() {
             {
                 label: "Code time dashboard",
                 description: "",
-                detail: "View your latest coding metrics",
+                detail:
+                    "View your latest coding metrics right here in your editor",
                 url: null,
                 uri: filePath
             }
@@ -107,7 +106,7 @@ export async function showMenuOptions() {
             label: "Software Top 40",
             description: "",
             detail:
-                "Top 40 most popular songs developers around the world listen to as they code.",
+                "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
             uri: null
         });
@@ -117,7 +116,7 @@ export async function showMenuOptions() {
             label: LOGIN_LABEL,
             description: "",
             detail:
-                "To see rich data visualizations in our web app, please create an account.",
+                "To see rich data visualizations and get weekly email reports, please log in to our web app",
             url: webUrl,
             uri: null
         });

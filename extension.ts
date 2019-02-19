@@ -137,10 +137,10 @@ export function activate(ctx: ExtensionContext) {
         fetchDailyKpmSessionInfo();
     }, 100);
 
-    // 1 minute interval to fetch daily kpm info
+    // 50 second interval to fetch daily kpm info
     kpm_session_info_interval = setInterval(() => {
         fetchDailyKpmSessionInfo();
-    }, one_min);
+    }, 1000 * 50);
 
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
@@ -318,5 +318,13 @@ async function requiresRegistration() {
     let registeredUser = await isRegisteredUser();
     let needsToken = await userNeedsToken();
     let requiresToken = registeredUser && !needsToken ? false : true;
+
+    if (needsToken) {
+        // check to see if we need to create the session.json info
+        if (await requiresUserCreation()) {
+            await createAnonymousUser();
+        }
+    }
+
     return requiresToken;
 }

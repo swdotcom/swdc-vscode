@@ -1,6 +1,7 @@
 import { getStatusBarItem } from "../extension";
 import { workspace } from "vscode";
 import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
+const macaddress = require("getmac");
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -382,4 +383,32 @@ export function humanizeMinutes(min) {
         str = min.toFixed(0) + " min";
     }
     return str;
+}
+
+/**
+ * get the mac address
+ */
+export async function getMacAddress() {
+    const homedir = os.homedir();
+    let createTimeMs = null;
+    if (fs.existsSync(homedir)) {
+        let folderStats = fs.statSync(homedir);
+        createTimeMs = folderStats.birthtimeMs;
+    }
+    const username = os.userInfo().username;
+    let macAddress = null;
+    let result = await new Promise(function(resolve, reject) {
+        macaddress.getMac(async (err, macAddress) => {
+            if (err) {
+                reject({ status: "failed", message: err.message });
+            } else {
+                resolve({ status: "success", macAddress });
+            }
+        });
+    });
+    if (result && result["status"] === "success" && createTimeMs && username) {
+        // return result["macAddress"];
+        macAddress = `${username}_${result["macAddress"]}_${createTimeMs}`;
+    }
+    return macAddress;
 }

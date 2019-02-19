@@ -1,6 +1,5 @@
 import { workspace, ConfigurationTarget } from "vscode";
 const fs = require("fs");
-const macaddress = require("getmac");
 
 import {
     softwareGet,
@@ -16,7 +15,7 @@ import {
     getSoftwareDataStoreFile,
     deleteFile,
     randomCode,
-    getGitHubEmail,
+    getMacAddress,
     getSoftwareSessionFile
 } from "./Util";
 
@@ -184,25 +183,6 @@ export function sendMusicData(trackData) {
 }
 
 /**
- * get the mac address
- */
-export async function getMacAddress() {
-    let result = await new Promise(function(resolve, reject) {
-        macaddress.getMac(async (err, macAddress) => {
-            if (err) {
-                reject({ status: "failed", message: err.message });
-            } else {
-                resolve({ status: "success", macAddress });
-            }
-        });
-    });
-    if (result && result["status"] === "success") {
-        return result["macAddress"];
-    }
-    return null;
-}
-
-/**
  * get the app jwt
  */
 export async function getAppJwt() {
@@ -234,7 +214,7 @@ export async function createAnonymousUser() {
     let appJwt = await getAppJwt();
     let jwt = await getItem("jwt");
     let macAddress = await getMacAddress();
-    if (appJwt && !jwt) {
+    if (appJwt && !jwt && macAddress) {
         let plugin_token = getItem("token");
         if (!plugin_token) {
             plugin_token = randomCode();
@@ -277,7 +257,7 @@ export async function isRegisteredUser() {
     let user = getItem("user");
     let serverIsOnline = await serverIsAvailable();
     let macAddress = await getMacAddress();
-    if (jwt && serverIsOnline && user) {
+    if (jwt && serverIsOnline && user && macAddress) {
         let userObj = JSON.parse(user);
 
         let api = `/users/${parseInt(userObj.id, 10)}`;
