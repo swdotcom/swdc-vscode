@@ -79,6 +79,8 @@ export async function showMenuOptions() {
     let requiresToken = registeredUser && !needsToken ? false : true;
     let webUrl = await buildLaunchUrl(requiresToken);
 
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
         items: [
@@ -100,14 +102,16 @@ export async function showMenuOptions() {
             uri: null
         });
     }
-    kpmMenuOptions.items.push({
-        label: "Software Top 40",
-        description: "",
-        detail:
-            "Top 40 most popular songs developers around the world listen to as they code.",
-        url: "https://api.software.com/music/top40",
-        uri: null
-    });
+    if (showMusicMetrics) {
+        kpmMenuOptions.items.push({
+            label: "Software Top 40",
+            description: "",
+            detail:
+                "Top 40 most popular songs developers around the world listen to as they code.",
+            url: "https://api.software.com/music/top40",
+            uri: null
+        });
+    }
     if (!registeredUser) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
