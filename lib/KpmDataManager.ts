@@ -102,11 +102,8 @@ export class KpmDataManager {
 
         // POST the kpm to the PluginManager
         softwarePost("/data", payload, getItem("jwt")).then(async resp => {
-            if (!isResponseOk(resp) && !isUserDeactivated(resp)) {
+            if (!isResponseOk(resp)) {
                 storePayload(payload);
-                if (await requiresUserCreation()) {
-                    await createAnonymousUser();
-                }
                 chekUserAuthenticationStatus();
             }
         });
