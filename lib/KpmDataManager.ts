@@ -2,7 +2,11 @@ import { storePayload, getItem } from "./Util";
 import { softwarePost, isResponseOk, isUserDeactivated } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 import { getVersion, isTelemetryOn } from "../extension";
-import { sendOfflineData } from "./DataController";
+import {
+    sendOfflineData,
+    requiresUserCreation,
+    createAnonymousUser
+} from "./DataController";
 import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 
 // ? marks that the parameter is optional
@@ -97,9 +101,12 @@ export class KpmDataManager {
         console.log(`Code Time: sending ${JSON.stringify(payload)}`);
 
         // POST the kpm to the PluginManager
-        softwarePost("/data", payload, getItem("jwt")).then(resp => {
+        softwarePost("/data", payload, getItem("jwt")).then(async resp => {
             if (!isResponseOk(resp) && !isUserDeactivated(resp)) {
                 storePayload(payload);
+                if (await requiresUserCreation()) {
+                    await createAnonymousUser();
+                }
                 chekUserAuthenticationStatus();
             }
         });

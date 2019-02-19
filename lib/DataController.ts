@@ -40,9 +40,9 @@ export async function requiresUserCreation() {
     const serverAvailable = await serverIsAvailable();
     const existingJwt = getItem("jwt");
 
-    // if (serverAvailable && (!existingJwt || !hasSessionFile)) {
-    //     return true;
-    // }
+    if (serverAvailable && (!existingJwt || !hasSessionFile)) {
+        return true;
+    }
     return false;
 }
 
