@@ -221,9 +221,6 @@ async function handleTokenAvailabilityCheck() {
     const registeredUser = await isRegisteredUser();
     if (serverAvailable && !registeredUser) {
         checkTokenAvailability();
-    } else if (serverAvailable && registeredUser) {
-        // kill the interval
-        clearInterval(token_check_interval);
     }
 }
 

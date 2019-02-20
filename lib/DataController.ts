@@ -139,18 +139,6 @@ export async function checkTokenAvailability() {
                 setTimeout(() => {
                     fetchDailyKpmSessionInfo();
                 }, 1000);
-            } else if (!isUserDeactivated(resp)) {
-                console.log("Code Time: unable to obtain session token");
-                // try again in 45 seconds
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 1000 * 50);
-            } else if (isUserDeactivated(resp)) {
-                console.log("Code Time: unable to obtain session token");
-                // try again in a day
-                setTimeout(() => {
-                    checkTokenAvailability();
-                }, 1000 * 60 * 60);
             }
         })
         .catch(err => {
@@ -158,9 +146,6 @@ export async function checkTokenAvailability() {
                 "Code Time: error confirming plugin token: ",
                 err.message
             );
-            setTimeout(() => {
-                checkTokenAvailability();
-            }, 1000 * 45);
         });
 }
 
