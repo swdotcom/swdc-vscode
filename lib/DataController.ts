@@ -120,10 +120,31 @@ export async function checkTokenAvailability() {
         return;
     }
 
+    let macAddress = await getMacAddress();
+
     // need to get back...
     // response.data.user, response.data.jwt
     // non-authorization API
-    softwareGet(`/users/plugin/confirm?token=${tokenVal}`, null)
+    let tokenCheckResult = await confirmUser(tokenVal);
+    if (!tokenCheckResult) {
+        tokenCheckResult = await confirmUser(macAddress);
+    }
+
+    if (tokenCheckResult && tokenCheckResult["status"] === "success") {
+        let data = tokenCheckResult["data"];
+        setItem("jwt", data.jwt);
+        setItem("user", data.user);
+        setItem("vscode_lastUpdateTime", Date.now());
+
+        // fetch kpm data
+        setTimeout(() => {
+            fetchDailyKpmSessionInfo();
+        }, 1000);
+    }
+}
+
+async function confirmUser(token) {
+    let result = softwareGet(`/users/plugin/confirm?token=${token}`, null)
         .then(resp => {
             if (
                 isResponseOk(resp) &&
@@ -131,22 +152,17 @@ export async function checkTokenAvailability() {
                 resp.data.jwt &&
                 resp.data.user
             ) {
-                setItem("jwt", resp.data.jwt);
-                setItem("user", resp.data.user);
-                setItem("vscode_lastUpdateTime", Date.now());
-
-                // fetch kpm data
-                setTimeout(() => {
-                    fetchDailyKpmSessionInfo();
-                }, 1000);
+                return { status: "success", data: resp.data };
             }
         })
         .catch(err => {
-            console.log(
-                "Code Time: error confirming plugin token: ",
-                err.message
-            );
+            return { status: "failed", message: err.message };
         });
+    if (result["status"] === "success") {
+        return result;
+    } else {
+        return null;
+    }
 }
 
 /**
