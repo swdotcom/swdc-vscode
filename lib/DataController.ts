@@ -150,7 +150,7 @@ export async function checkTokenAvailability() {
                 // try again in a day
                 setTimeout(() => {
                     checkTokenAvailability();
-                }, 1000 * 60 * 60 * 24);
+                }, 1000 * 60 * 60);
             }
         })
         .catch(err => {

@@ -152,6 +152,16 @@ export class KpmController {
 
     private async updateEventInfo(event) {
         let filename = event.document.fileName || NO_NAME_FILE;
+        if (
+            filename &&
+            filename.includes(".code-workspace") &&
+            filename.includes("vsliveshare") &&
+            filename.includes("tmp-")
+        ) {
+            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
+            // don't handle this event (it's a tmp file that may not bring back a real project name)
+            return;
+        }
         let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
@@ -307,8 +317,6 @@ export class KpmController {
             resource: {}
         });
         keystrokeCount["keystrokes"] = 0;
-        // liveshare number (minutes)
-        keystrokeCount["liveshare"] = 0;
 
         let fileInfo = null;
         if (filename) {

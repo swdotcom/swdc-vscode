@@ -20,10 +20,10 @@ import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import {
     serverIsAvailable,
     checkTokenAvailability,
-    createAnonymousUser,
-    isRegisteredUser
+    isRegisteredUser,
+    requiresUserCreation
 } from "./DataController";
-import { isResponseOk, isUserDeactivated, softwareGet } from "./HttpClient";
+import { isResponseOk, softwareGet } from "./HttpClient";
 
 const fs = require("fs");
 
@@ -73,7 +73,7 @@ export async function chekUserAuthenticationStatus() {
                     handleKpmClickedEvent();
                     setTimeout(() => {
                         checkTokenAvailability();
-                    }, 20000);
+                    }, 15000);
                 }
                 confirmWindow = null;
             });
@@ -138,8 +138,8 @@ async function getSessionStatus() {
                 }
                 showStatus(msg, null);
                 return "ok";
-            } else if (!isUserDeactivated(resp)) {
-                checkTokenAvailability();
+            } else {
+                requiresUserCreation();
             }
             return "notok";
         })

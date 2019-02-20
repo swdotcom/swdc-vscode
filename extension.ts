@@ -174,11 +174,12 @@ export function activate(ctx: ExtensionContext) {
         getHistoricalCommits();
     }, one_min * 2);
 
-    // every 5 minutes, get the user's jwt if they've logged
-    // in if they're still not a registered user
+    // every minutes, get the user's jwt if they've logged
+    // in if they're still not a registered user. once they're
+    // connected this interval will be cancelled
     token_check_interval = setInterval(() => {
         handleTokenAvailabilityCheck();
-    }, one_min * 5);
+    }, one_min);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -314,7 +315,7 @@ export async function handlePaletteMenuEvent() {
     showMenuOptions();
 }
 
-async function requiresRegistration() {
+export async function requiresRegistration() {
     let registeredUser = await isRegisteredUser();
     let needsToken = await userNeedsToken();
     let requiresToken = registeredUser && !needsToken ? false : true;
