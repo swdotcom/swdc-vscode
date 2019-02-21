@@ -291,7 +291,10 @@ export async function isLoggedIn(authAccounts) {
             let user = authAccounts[i];
             if (user.mac_addr === macAddress && user.email !== macAddress) {
                 let cachedUser = getItem("user");
-                cachedUser = cachedUser ? JSON.parse(cachedUser) : null;
+                if (cachedUser && !cachedUser.id) {
+                    // turn it into an object
+                    cachedUser = cachedUser ? JSON.parse(cachedUser) : null;
+                }
                 if (
                     cachedUser &&
                     parseInt(cachedUser.id, 10) !== parseInt(user.id, 10)
@@ -345,8 +348,11 @@ export async function initializePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
-        let userObj = JSON.parse(user);
-        let userId = parseInt(userObj.id, 10);
+        let cachedUser = user;
+        if (cachedUser && !cachedUser.id) {
+            cachedUser = JSON.parse(cachedUser);
+        }
+        let userId = parseInt(cachedUser.id, 10);
 
         let api = `/users/${userId}`;
         let resp = await softwareGet(api, jwt);
@@ -439,8 +445,11 @@ export async function updatePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
-        let userObj = JSON.parse(user);
-        let userId = parseInt(userObj.id, 10);
+        let cachedUser = user;
+        if (cachedUser && !cachedUser.id) {
+            cachedUser = JSON.parse(cachedUser);
+        }
+        let userId = parseInt(cachedUser.id, 10);
 
         let api = `/users/${userId}`;
         let resp = await softwareGet(api, jwt);
