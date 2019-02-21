@@ -174,11 +174,10 @@ export function activate(ctx: ExtensionContext) {
         getHistoricalCommits();
     }, one_min * 2);
 
-    // every minutes, get the user's jwt if they've logged
-    // in if they're still not a registered user. once they're
-    // connected this interval will be cancelled
+    // every minute, get the user's jwt if they've logged
+    // in if they're still not a registered user.
     token_check_interval = setInterval(() => {
-        handleTokenAvailabilityCheck();
+        isRegisteredUser();
     }, one_min);
 
     ctx.subscriptions.push(
@@ -210,14 +209,6 @@ export function activate(ctx: ExtensionContext) {
 function configUpdated(ctx) {
     // the software settings were updated, take action here
     updatePreferences();
-}
-
-async function handleTokenAvailabilityCheck() {
-    const serverAvailable = await serverIsAvailable();
-    const registeredUser = await isRegisteredUser();
-    if (serverAvailable && !registeredUser) {
-        checkTokenAvailability();
-    }
 }
 
 function handlePauseMetricsEvent() {

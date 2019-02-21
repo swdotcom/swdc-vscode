@@ -19,13 +19,9 @@ import {
     getSoftwareSessionFile,
     getGitEmail
 } from "./Util";
-import { runInDebugContext } from "vm";
 
-let rquiresSignup = true;
-
-export function userRequiresSignup() {
-    return rquiresSignup;
-}
+let registeredUser = null;
+let lastRegisterUserCheck = null;
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -287,23 +283,33 @@ export async function getAuthenticatedPluginAccounts() {
 export async function isLoggedIn(authAccounts) {
     let macAddress = await getMacAddress();
     if (authAccounts && authAccounts.length > 0) {
+        let foundUser = null;
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
+            let userId = parseInt(user.id, 10);
             if (user.mac_addr === macAddress && user.email !== macAddress) {
                 let cachedUser = getItem("user");
                 if (cachedUser && !cachedUser.id) {
                     // turn it into an object
                     cachedUser = cachedUser ? JSON.parse(cachedUser) : null;
                 }
-                if (
-                    cachedUser &&
-                    parseInt(cachedUser.id, 10) !== parseInt(user.id, 10)
-                ) {
-                    // update the user
-                    cachedUser.id = user.id;
-                    setItem("jwt", user.plugin_jwt);
-                    setItem("user", cachedUser);
+                let cachedUserId = cachedUser ? cachedUser.id : null;
+
+                if (cachedUser && userId !== cachedUserId) {
+                    foundUser = user;
+                } else if (cachedUser && userId === cachedUserId) {
+                    return true;
                 }
+            }
+
+            if (foundUser) {
+                // update the user
+                let foundUserObj = { id: foundUser.id };
+                setItem("jwt", foundUser.plugin_jwt);
+                setItem("user", foundUserObj);
+                setTimeout(() => {
+                    fetchDailyKpmSessionInfo();
+                }, 1000);
                 return true;
             }
         }
@@ -335,12 +341,22 @@ export async function hasPluginAccount(authAccounts) {
  * check if the user is registered or not
  */
 export async function isRegisteredUser() {
+    let nowMillis = Date.now();
+    if (registeredUser !== null && lastRegisterUserCheck !== null) {
+        if (nowMillis - lastRegisterUserCheck <= 3000) {
+            registeredUser;
+        }
+    }
+
     let authAccounts = await getAuthenticatedPluginAccounts();
     if (await isLoggedIn(authAccounts)) {
         initializePreferences();
-        return true;
+        registeredUser = true;
+    } else {
+        registeredUser = false;
     }
-    return false;
+    lastRegisterUserCheck = Date.now();
+    return registeredUser;
 }
 
 export async function initializePreferences() {
@@ -349,7 +365,7 @@ export async function initializePreferences() {
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
         let cachedUser = user;
-        if (cachedUser && !cachedUser.id) {
+        if (!cachedUser.id) {
             cachedUser = JSON.parse(cachedUser);
         }
         let userId = parseInt(cachedUser.id, 10);
@@ -446,7 +462,7 @@ export async function updatePreferences() {
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
         let cachedUser = user;
-        if (cachedUser && !cachedUser.id) {
+        if (!cachedUser.id) {
             cachedUser = JSON.parse(cachedUser);
         }
         let userId = parseInt(cachedUser.id, 10);
