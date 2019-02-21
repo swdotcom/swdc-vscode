@@ -158,9 +158,6 @@ export function showTacoTimeStatus(fullMsg, tooltip) {
 
 function updateStatusBar(msg, tooltip) {
     getStatusBarItem().tooltip = tooltip;
-    if (msg === "Code Time") {
-        msg = "Code Time 🎾";
-    }
     getStatusBarItem().text = msg;
 }
 
@@ -399,7 +396,7 @@ export async function getMacAddress() {
         createTimeMs = folderStats.birthtimeMs;
     }
     const username = os.userInfo().username;
-    let macAddress = null;
+    let macAddrId = null;
     let result = await new Promise(function(resolve, reject) {
         macaddress.getMac(async (err, macAddress) => {
             if (err) {
@@ -409,9 +406,20 @@ export async function getMacAddress() {
             }
         });
     });
-    if (result && result["status"] === "success" && createTimeMs && username) {
-        // return result["macAddress"];
-        macAddress = `${username}_${result["macAddress"]}_${createTimeMs}`;
+    let parts = [];
+    if (username) {
+        parts.push(username);
     }
-    return macAddress;
+    if (result && result["status"] === "success") {
+        parts.push(result["macAddress"]);
+    }
+    if (createTimeMs) {
+        parts.push(createTimeMs);
+    }
+
+    if (parts.length > 0) {
+        macAddrId = parts.join("_");
+    }
+
+    return macAddrId;
 }

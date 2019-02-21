@@ -19,6 +19,13 @@ import {
     getSoftwareSessionFile,
     getGitEmail
 } from "./Util";
+import { runInDebugContext } from "vm";
+
+let rquiresSignup = true;
+
+export function userRequiresSignup() {
+    return rquiresSignup;
+}
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -251,30 +258,84 @@ export async function createAnonymousUser() {
     }
 }
 
-/**
- * check if the user is registered or not
- */
-export async function isRegisteredUser() {
+export async function getAuthenticatedPluginAccounts() {
     let jwt = getItem("jwt");
-    let user = getItem("user");
     let serverIsOnline = await serverIsAvailable();
     let macAddress = await getMacAddress();
-    if (jwt && serverIsOnline && user && macAddress) {
-        let userObj = JSON.parse(user);
-
-        let api = `/users/${parseInt(userObj.id, 10)}`;
+    if (jwt && serverIsOnline && macAddress) {
+        let api = `/users/plugin/accounts?token=${encodeURIComponent(
+            macAddress
+        )}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (
                 resp &&
                 resp.data &&
-                resp.data.data &&
-                resp.data.data.email !== macAddress
+                resp.data.users &&
+                resp.data.users.length > 0
             ) {
-                initializePreferences();
+                for (let i = 0; i < resp.data.users.length; i++) {
+                    return resp.data.users;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+export async function isLoggedIn(authAccounts) {
+    let macAddress = await getMacAddress();
+    if (authAccounts && authAccounts.length > 0) {
+        for (let i = 0; i < authAccounts.length; i++) {
+            let user = authAccounts[i];
+            if (user.mac_addr === macAddress && user.email !== macAddress) {
+                let cachedUser = getItem("user");
+                cachedUser = cachedUser ? JSON.parse(cachedUser) : null;
+                if (
+                    cachedUser &&
+                    parseInt(cachedUser.id, 10) !== parseInt(user.id, 10)
+                ) {
+                    // update the user
+                    cachedUser.id = user.id;
+                    setItem("jwt", user.plugin_jwt);
+                    setItem("user", cachedUser);
+                }
                 return true;
             }
         }
+    }
+    return false;
+}
+
+export async function hasRegisteredAccounts(authAccounts) {
+    let macAddress = await getMacAddress();
+    if (authAccounts && authAccounts.length > 0) {
+        for (let i = 0; i < authAccounts.length; i++) {
+            let user = authAccounts[i];
+            if (user.email !== macAddress) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+export async function hasPluginAccount(authAccounts) {
+    if (authAccounts && authAccounts.length > 0) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * check if the user is registered or not
+ */
+export async function isRegisteredUser() {
+    let authAccounts = await getAuthenticatedPluginAccounts();
+    if (await isLoggedIn(authAccounts)) {
+        initializePreferences();
+        return true;
     }
     return false;
 }

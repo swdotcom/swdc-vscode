@@ -57,6 +57,12 @@ export async function userNeedsToken() {
     return requiresToken;
 }
 
+export async function buildLoginUrl() {
+    let mac_addr = await getMacAddress();
+    let loginUrl = `${launch_url}/login?addr=${mac_addr}`;
+    return loginUrl;
+}
+
 export async function buildLaunchUrl(requiresToken) {
     let webUrl = launch_url;
     if (requiresToken) {
@@ -77,9 +83,9 @@ export async function buildLaunchUrl(requiresToken) {
 
 export async function showMenuOptions() {
     let filePath = getDashboardFile();
-    let registeredUser = await isRegisteredUser();
+    let loggedOn = await isRegisteredUser();
     let needsToken = await userNeedsToken();
-    let requiresToken = registeredUser && !needsToken ? false : true;
+    let requiresToken = needsToken || !loggedOn ? true : false;
     let webUrl = await buildLaunchUrl(requiresToken);
 
     let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
@@ -91,37 +97,37 @@ export async function showMenuOptions() {
                 label: "Code time dashboard",
                 description: "",
                 detail:
-                    "View your latest coding metrics right here in your editor",
+                    "View your latest coding metrics right here in your editor.",
                 url: null,
                 uri: filePath
             }
         ]
     };
-    if (registeredUser) {
-        kpmMenuOptions.items.push({
-            label: "Software.com",
-            description: "",
-            detail: "Click to see more from Code Time",
-            url: webUrl,
-            uri: null
-        });
-    }
-    if (showMusicMetrics) {
+
+    kpmMenuOptions.items.push({
+        label: "Software.com",
+        description: "",
+        detail: "Click to see more from Code Time.",
+        url: webUrl,
+        uri: null
+    });
+
+    if (loggedOn && showMusicMetrics) {
         kpmMenuOptions.items.push({
             label: "Software Top 40",
             description: "",
             detail:
-                "Top 40 most popular songs developers around the world listen to as they code",
+                "Top 40 most popular songs developers around the world listen to as they code.",
             url: "https://api.software.com/music/top40",
             uri: null
         });
     }
-    if (!registeredUser) {
+    if (!loggedOn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             description: "",
             detail:
-                "To see rich data visualizations and get weekly email reports, please log in to our web app",
+                "To see rich data visualizations and get weekly email reports, please log in to our web app.",
             url: webUrl,
             uri: null
         });
