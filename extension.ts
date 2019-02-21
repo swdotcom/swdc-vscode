@@ -205,10 +205,6 @@ export function activate(ctx: ExtensionContext) {
     initializeLiveshare();
 
     initializeUserInfo();
-
-    setTimeout(() => {
-        initializePreferences();
-    }, 1000);
 }
 
 function configUpdated(ctx) {
@@ -257,6 +253,7 @@ async function initializeUserInfo() {
 
     let registeredUser = await isRegisteredUser();
     if (!registeredUser) {
+        initializePreferences();
         setTimeout(() => {
             chekUserAuthenticationStatus();
         }, 6000);

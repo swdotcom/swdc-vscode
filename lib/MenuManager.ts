@@ -24,6 +24,9 @@ const NO_DATA = "CODE TIME\n\nNo data available\n";
  */
 
 export function showQuickPick(pickOptions) {
+    if (!pickOptions || !pickOptions["items"]) {
+        return;
+    }
     let options: QuickPickOptions = {
         onDidSelectItem: item => {
             window.setStatusBarMessage(item["label"]);
@@ -33,12 +36,14 @@ export function showQuickPick(pickOptions) {
         placeHolder: pickOptions.placeholder || ""
     };
     window.showQuickPick(pickOptions.items, options).then(async item => {
-        let url = item["url"];
-        let uri = item["uri"];
-        if (url) {
-            launchWebUrl(url);
-        } else if (uri) {
-            displayCodeTimeMetricsDashboard();
+        if (item) {
+            let url = item["url"];
+            let uri = item["uri"];
+            if (url) {
+                launchWebUrl(url);
+            } else if (uri) {
+                displayCodeTimeMetricsDashboard();
+            }
         }
     });
 }

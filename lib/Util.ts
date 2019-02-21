@@ -158,6 +158,9 @@ export function showTacoTimeStatus(fullMsg, tooltip) {
 
 function updateStatusBar(msg, tooltip) {
     getStatusBarItem().tooltip = tooltip;
+    if (msg === "Code Time") {
+        msg = "Code Time 🎾";
+    }
     getStatusBarItem().text = msg;
 }
 
@@ -304,7 +307,7 @@ export function normalizeGithubEmail(email) {
     return email;
 }
 
-export async function getGitHubEmail() {
+export async function getGitEmail() {
     let projectDirs = getRootPaths();
 
     if (!projectDirs || projectDirs.length === 0) {

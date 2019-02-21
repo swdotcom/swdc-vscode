@@ -16,7 +16,8 @@ import {
     deleteFile,
     randomCode,
     getMacAddress,
-    getSoftwareSessionFile
+    getSoftwareSessionFile,
+    getGitEmail
 } from "./Util";
 
 export async function serverIsAvailable() {
@@ -222,7 +223,7 @@ export async function createAnonymousUser() {
             setItem("token", plugin_token);
         }
 
-        let email = null; //await getGitHubEmail();
+        let email = null; //await getGitEmail();
         if (!email) {
             email = macAddress;
         }
@@ -270,6 +271,7 @@ export async function isRegisteredUser() {
                 resp.data.data &&
                 resp.data.data.email !== macAddress
             ) {
+                initializePreferences();
                 return true;
             }
         }
@@ -283,8 +285,9 @@ export async function initializePreferences() {
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
         let userObj = JSON.parse(user);
+        let userId = parseInt(userObj.id, 10);
 
-        let api = `/users/${parseInt(userObj.id, 10)}`;
+        let api = `/users/${userId}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (
@@ -307,35 +310,59 @@ export async function initializePreferences() {
                         ? prefs.showRank
                         : null;
 
-                if (prefsShowMusic !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showMusicMetrics",
-                            false,
-                            ConfigurationTarget.Global
-                        );
-                }
-                if (prefsShowGit !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showGitMetrics",
-                            false,
-                            ConfigurationTarget.Global
-                        );
-                }
-                if (prefsShowRank !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showWeeklyRanking",
-                            false,
-                            ConfigurationTarget.Global
-                        );
+                if (!prefsShowMusic || !prefsShowGit || !prefsShowRank) {
+                    await sendPreferencesUpdate(userId, prefs);
+                } else {
+                    if (prefsShowMusic !== null) {
+                        await workspace
+                            .getConfiguration()
+                            .update(
+                                "showMusicMetrics",
+                                prefsShowMusic,
+                                ConfigurationTarget.Global
+                            );
+                    }
+                    if (prefsShowGit !== null) {
+                        await workspace
+                            .getConfiguration()
+                            .update(
+                                "showGitMetrics",
+                                prefsShowGit,
+                                ConfigurationTarget.Global
+                            );
+                    }
+                    if (prefsShowRank !== null) {
+                        await workspace
+                            .getConfiguration()
+                            .update(
+                                "showWeeklyRanking",
+                                prefsShowRank,
+                                ConfigurationTarget.Global
+                            );
+                    }
                 }
             }
         }
+    }
+}
+
+async function sendPreferencesUpdate(userId, userPrefs) {
+    let api = `/users/${userId}`;
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
+    let showWeeklyRanking = workspace
+        .getConfiguration()
+        .get("showWeeklyRanking");
+    userPrefs["showMusic"] = showMusicMetrics;
+    userPrefs["showGit"] = showGitMetrics;
+    userPrefs["showRank"] = showWeeklyRanking;
+
+    // update the preferences
+    // /:id/preferences
+    api = `/users/${userId}/preferences`;
+    let resp = await softwarePut(api, userPrefs, getItem("jwt"));
+    if (isResponseOk(resp)) {
+        console.log("Code Time: update user code time preferences");
     }
 }
 
@@ -352,8 +379,9 @@ export async function updatePreferences() {
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline && user) {
         let userObj = JSON.parse(user);
+        let userId = parseInt(userObj.id, 10);
 
-        let api = `/users/${parseInt(userObj.id, 10)}`;
+        let api = `/users/${userId}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (
@@ -384,19 +412,7 @@ export async function updatePreferences() {
                     prefsShowGit !== showGitMetrics ||
                     prefsShowRank !== showWeeklyRanking
                 ) {
-                    prefs["showMusic"] = showMusicMetrics;
-                    prefs["showGit"] = showGitMetrics;
-                    prefs["showRank"] = showWeeklyRanking;
-
-                    // update the preferences
-                    // /:id/preferences
-                    api = `/users/${parseInt(userObj.id, 10)}/preferences`;
-                    resp = await softwarePut(api, prefs, jwt);
-                    if (isResponseOk(resp)) {
-                        console.log(
-                            "Code Time: update user code time preferences"
-                        );
-                    }
+                    await sendPreferencesUpdate(userId, prefs);
                 }
             }
         }
