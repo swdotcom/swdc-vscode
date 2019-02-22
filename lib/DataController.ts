@@ -117,35 +117,35 @@ export function sendOfflineData() {
 /**
  * confirm the token that was saved in the app
  */
-export async function checkTokenAvailability() {
-    const tokenVal = getItem("token");
+// export async function checkTokenAvailability() {
+//     const tokenVal = getItem("token");
 
-    if (!tokenVal) {
-        return;
-    }
+//     if (!tokenVal) {
+//         return;
+//     }
 
-    let macAddress = await getMacAddress();
+//     let macAddress = await getMacAddress();
 
-    // need to get back...
-    // response.data.user, response.data.jwt
-    // non-authorization API
-    let tokenCheckResult = await confirmUser(tokenVal);
-    if (!tokenCheckResult) {
-        tokenCheckResult = await confirmUser(macAddress);
-    }
+//     // need to get back...
+//     // response.data.user, response.data.jwt
+//     // non-authorization API
+//     let tokenCheckResult = await confirmUser(tokenVal);
+//     if (!tokenCheckResult) {
+//         tokenCheckResult = await confirmUser(macAddress);
+//     }
 
-    if (tokenCheckResult && tokenCheckResult["status"] === "success") {
-        let data = tokenCheckResult["data"];
-        setItem("jwt", data.jwt);
-        setItem("user", data.user);
-        setItem("vscode_lastUpdateTime", Date.now());
+//     if (tokenCheckResult && tokenCheckResult["status"] === "success") {
+//         let data = tokenCheckResult["data"];
+//         setItem("jwt", data.jwt);
+//         setItem("user", data.user);
+//         setItem("vscode_lastUpdateTime", Date.now());
 
-        // fetch kpm data
-        setTimeout(() => {
-            fetchDailyKpmSessionInfo();
-        }, 1000);
-    }
-}
+//         // fetch kpm data
+//         setTimeout(() => {
+//             fetchDailyKpmSessionInfo();
+//         }, 1000);
+//     }
+// }
 
 async function confirmUser(token) {
     let result = softwareGet(`/users/plugin/confirm?token=${token}`, null)
@@ -245,6 +245,7 @@ export async function createAnonymousUser() {
         ) {
             setItem("jwt", resp.data.jwt);
             setItem("user", resp.data.user);
+            setItem("vscode_lastUpdateTime", Date.now());
         } else {
             console.log(
                 "Code Time: error confirming onboarding plugin token: ",
@@ -254,14 +255,20 @@ export async function createAnonymousUser() {
     }
 }
 
-export async function getAuthenticatedPluginAccounts() {
+async function getAuthenticatedPluginAccounts(token = null) {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
-    let macAddress = await getMacAddress();
+    let tokenQryStr = "";
+    if (!token) {
+        let macAddress = await getMacAddress();
+        tokenQryStr = `?token=${encodeURIComponent(macAddress)}`;
+    } else {
+        tokenQryStr = `?token=${token}`;
+    }
+
+    let macAddress = !token ? await getMacAddress() : token;
     if (jwt && serverIsOnline && macAddress) {
-        let api = `/users/plugin/accounts?token=${encodeURIComponent(
-            macAddress
-        )}`;
+        let api = `/users/plugin/accounts${tokenQryStr}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (
@@ -280,14 +287,18 @@ export async function getAuthenticatedPluginAccounts() {
     return null;
 }
 
-export async function isLoggedIn(authAccounts) {
+async function isLoggedIn(authAccounts) {
     let macAddress = await getMacAddress();
     if (authAccounts && authAccounts.length > 0) {
         let foundUser = null;
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
             let userId = parseInt(user.id, 10);
-            if (user.mac_addr === macAddress && user.email !== macAddress) {
+            let userMacAddr = user.mac_addr;
+            let userEmail = user.email;
+            if (userMacAddr === macAddress && userEmail !== macAddress) {
+                // having a mac_addr present and the email not equal to the mac address
+                // means they are logged in with this account
                 let cachedUser = getItem("user");
                 if (cachedUser && !cachedUser.id) {
                     // turn it into an object
@@ -296,28 +307,30 @@ export async function isLoggedIn(authAccounts) {
                 let cachedUserId = cachedUser ? cachedUser.id : null;
 
                 if (cachedUser && userId !== cachedUserId) {
+                    // save this user in case we don't find a matching userId
                     foundUser = user;
                 } else if (cachedUser && userId === cachedUserId) {
-                    return true;
+                    return user;
                 }
             }
 
             if (foundUser) {
-                // update the user
+                // update the user, they've switched accounts
                 let foundUserObj = { id: foundUser.id };
                 setItem("jwt", foundUser.plugin_jwt);
                 setItem("user", foundUserObj);
+                setItem("vscode_lastUpdateTime", Date.now());
                 setTimeout(() => {
                     fetchDailyKpmSessionInfo();
                 }, 1000);
-                return true;
+                return foundUser;
             }
         }
     }
-    return false;
+    return null;
 }
 
-export async function hasRegisteredAccounts(authAccounts) {
+async function hasRegisteredAccounts(authAccounts) {
     let macAddress = await getMacAddress();
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
@@ -330,7 +343,7 @@ export async function hasRegisteredAccounts(authAccounts) {
     return false;
 }
 
-export async function hasPluginAccount(authAccounts) {
+async function hasPluginAccount(authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         return true;
     }
@@ -339,24 +352,32 @@ export async function hasPluginAccount(authAccounts) {
 
 /**
  * check if the user is registered or not
+ * return {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false, email}
  */
-export async function isRegisteredUser() {
+export async function getUserStatus(token = null) {
     let nowMillis = Date.now();
     if (registeredUser !== null && lastRegisterUserCheck !== null) {
-        if (nowMillis - lastRegisterUserCheck <= 3000) {
+        if (nowMillis - lastRegisterUserCheck <= 2000) {
             registeredUser;
         }
     }
 
-    let authAccounts = await getAuthenticatedPluginAccounts();
-    if (await isLoggedIn(authAccounts)) {
-        initializePreferences();
-        registeredUser = true;
-    } else {
-        registeredUser = false;
-    }
+    let authAccounts = await getAuthenticatedPluginAccounts(token);
+    let loggedInP = isLoggedIn(authAccounts);
+    let hasAccountsP = hasPluginAccount(authAccounts);
+    let hasUserAccountsP = hasRegisteredAccounts(authAccounts);
+
+    let loggedInUser = await loggedInP;
+
+    let status = {
+        loggedIn: loggedInUser ? true : false,
+        email: loggedInUser ? loggedInUser.email : "",
+        hasAccounts: await hasAccountsP,
+        hasUserAccounts: await hasUserAccountsP
+    };
+
     lastRegisterUserCheck = Date.now();
-    return registeredUser;
+    return status;
 }
 
 export async function initializePreferences() {
@@ -502,5 +523,22 @@ export async function updatePreferences() {
                 }
             }
         }
+    }
+}
+
+export async function pluginLogout() {
+    let resp = await softwarePost("/users/plugin/logout", {}, getItem("jwt"));
+
+    if (isResponseOk(resp)) {
+        // delete the session.json file
+        const sessionFile = getSoftwareSessionFile();
+        if (fs.existsSync(sessionFile)) {
+            deleteFile(sessionFile);
+        }
+        if (await requiresUserCreation()) {
+            await createAnonymousUser();
+        }
+    } else {
+        console.log("error logging out");
     }
 }

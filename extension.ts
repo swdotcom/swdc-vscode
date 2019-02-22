@@ -15,9 +15,7 @@ import {
     sendOfflineData,
     createAnonymousUser,
     requiresUserCreation,
-    isRegisteredUser,
-    checkTokenAvailability,
-    serverIsAvailable,
+    getUserStatus,
     updatePreferences,
     initializePreferences
 } from "./lib/DataController";
@@ -177,7 +175,7 @@ export function activate(ctx: ExtensionContext) {
     // every minute, get the user's jwt if they've logged
     // in if they're still not a registered user.
     token_check_interval = setInterval(() => {
-        isRegisteredUser();
+        getUserStatus();
     }, one_min);
 
     ctx.subscriptions.push(
@@ -242,9 +240,11 @@ async function initializeUserInfo() {
         await createAnonymousUser();
     }
 
-    let registeredUser = await isRegisteredUser();
-    if (!registeredUser) {
+    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    let userStatus = await getUserStatus();
+    if (userStatus.loggedIn) {
         initializePreferences();
+    } else {
         setTimeout(() => {
             chekUserAuthenticationStatus();
         }, 6000);
@@ -285,32 +285,14 @@ async function initializeLiveshare() {
 }
 
 export async function handleKpmClickedEvent() {
-    let requiresToken = await requiresRegistration();
+    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    let userStatus = await getUserStatus();
+    let needsToken = await userNeedsToken();
+    let requiresToken = needsToken || !userStatus.loggedIn ? true : false;
     let webUrl = await buildLaunchUrl(requiresToken);
     launchWebUrl(webUrl);
 }
 
 export async function handlePaletteMenuEvent() {
-    let registrationRequired = await requiresRegistration();
-    if (registrationRequired) {
-        setTimeout(() => {
-            chekUserAuthenticationStatus();
-        }, 45000);
-    }
     showMenuOptions();
-}
-
-export async function requiresRegistration() {
-    let registeredUser = await isRegisteredUser();
-    let needsToken = await userNeedsToken();
-    let requiresToken = registeredUser && !needsToken ? false : true;
-
-    if (needsToken) {
-        // check to see if we need to create the session.json info
-        if (await requiresUserCreation()) {
-            await createAnonymousUser();
-        }
-    }
-
-    return requiresToken;
 }

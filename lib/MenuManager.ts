@@ -11,8 +11,13 @@ import {
     getMacAddress
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import { isAuthenticated, isRegisteredUser } from "./DataController";
-import { launch_url, LOGIN_LABEL } from "./Constants";
+import { isAuthenticated, getUserStatus, pluginLogout } from "./DataController";
+import {
+    launch_url,
+    LOGIN_LABEL,
+    LOGOUT_LABEL,
+    SIGNUP_LABEL
+} from "./Constants";
 
 const fs = require("fs");
 
@@ -39,10 +44,13 @@ export function showQuickPick(pickOptions) {
         if (item) {
             let url = item["url"];
             let uri = item["uri"];
+            let cb = item["cb"];
             if (url) {
                 launchWebUrl(url);
             } else if (uri) {
                 displayCodeTimeMetricsDashboard();
+            } else if (cb) {
+                cb();
             }
         }
     });
@@ -58,9 +66,15 @@ export async function userNeedsToken() {
 }
 
 export async function buildLoginUrl() {
-    let mac_addr = await getMacAddress();
-    let loginUrl = `${launch_url}/login?addr=${mac_addr}`;
+    let macAddress = await getMacAddress();
+    let loginUrl = `${launch_url}/login?addr=${macAddress}`;
     return loginUrl;
+}
+
+export async function buildSignupUrl() {
+    let macAddress = await getMacAddress();
+    let signupUrl = `${launch_url}/onboarding?addr=${macAddress}`;
+    return signupUrl;
 }
 
 export async function buildLaunchUrl(requiresToken) {
@@ -74,7 +88,9 @@ export async function buildLaunchUrl(requiresToken) {
 
         let macAddress = await getMacAddress();
         if (macAddress) {
-            webUrl += `/onboarding?addr=${encodeURIComponent(macAddress)}&token=${tokenVal}`;
+            webUrl += `/onboarding?addr=${encodeURIComponent(
+                macAddress
+            )}&token=${tokenVal}`;
         } else {
             webUrl += `/onboarding?token=${tokenVal}`;
         }
@@ -85,53 +101,80 @@ export async function buildLaunchUrl(requiresToken) {
 
 export async function showMenuOptions() {
     let filePath = getDashboardFile();
-    let loggedOn = await isRegisteredUser();
+    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    let userStatus = await getUserStatus();
+
     let needsToken = await userNeedsToken();
-    let requiresToken = needsToken || !loggedOn ? true : false;
-    let webUrl = await buildLaunchUrl(requiresToken);
+    // let requiresToken = needsToken || !userStatus.loggedIn ? true : false;
+    let webUrl = await buildLaunchUrl(!userStatus.loggedIn);
+    let loginUrl = await buildLoginUrl();
+    let signupUrl = await buildSignupUrl();
 
     let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
-        items: [
-            {
-                label: "Code time dashboard",
-                description: "",
-                detail:
-                    "View your latest coding metrics right here in your editor.",
-                url: null,
-                uri: filePath
-            }
-        ]
+        items: []
     };
 
-    kpmMenuOptions.items.push({
-        label: "Software.com",
-        description: "",
-        detail: "Click to see more from Code Time.",
-        url: webUrl,
-        uri: null
-    });
+    if (userStatus.loggedIn || !needsToken) {
+        kpmMenuOptions.items.push({
+            label: "Code time dashboard",
+            description: "",
+            detail:
+                "View your latest coding metrics right here in your editor.",
+            url: null,
+            uri: filePath,
+            cb: null
+        });
+        kpmMenuOptions.items.push({
+            label: "Software.com",
+            description: "",
+            detail: "Click to see more from Code Time.",
+            url: webUrl,
+            uri: null,
+            cb: null
+        });
+    }
 
-    if (loggedOn && showMusicMetrics) {
+    if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
             label: "Software Top 40",
             description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code.",
             url: "https://api.software.com/music/top40",
-            uri: null
+            uri: null,
+            cb: null
         });
     }
-    if (!loggedOn) {
+    if (!userStatus.loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             description: "",
             detail:
-                "To see rich data visualizations and get weekly email reports, please log in to our web app.",
-            url: webUrl,
-            uri: null
+                "To see your coding data in Code Time, please log in to your account.",
+            url: loginUrl,
+            uri: null,
+            cb: null
+        });
+        kpmMenuOptions.items.push({
+            label: SIGNUP_LABEL,
+            description: "",
+            detail:
+                "To see rich data visualizations and get weekly email reports, please sign in to our web app.",
+            url: signupUrl,
+            uri: null,
+            cb: null
+        });
+    } else {
+        kpmMenuOptions.items.push({
+            label: LOGOUT_LABEL,
+            description: "",
+            detail: `Log out from Code Time (${userStatus.email}).`,
+            url: null,
+            uri: null,
+            cb: pluginLogout
         });
     }
     showQuickPick(kpmMenuOptions);

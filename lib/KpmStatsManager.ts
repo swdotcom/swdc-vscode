@@ -19,8 +19,7 @@ import { displayCodeTimeMetricsDashboard } from "./MenuManager";
 import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import {
     serverIsAvailable,
-    checkTokenAvailability,
-    isRegisteredUser,
+    getUserStatus,
     requiresUserCreation
 } from "./DataController";
 import { isResponseOk, softwareGet } from "./HttpClient";
@@ -35,9 +34,6 @@ let lastAuthenticationCheckTime = -1;
  */
 export async function chekUserAuthenticationStatus() {
     let nowMillis = Date.now();
-    const sessionFile = getSoftwareSessionFile();
-    // set the last auth check time to -1 if the sesison file doesn't yet exist
-    const hasSessionFile = fs.existsSync(sessionFile);
 
     if (
         lastAuthenticationCheckTime !== -1 &&
@@ -48,14 +44,21 @@ export async function chekUserAuthenticationStatus() {
     }
     lastAuthenticationCheckTime = nowMillis;
 
+    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    let userStatus = await getUserStatus();
+    let tokenVal = getItem("token");
+    if (!userStatus.loggedIn && !userStatus.hasUserAccounts && tokenVal) {
+        // not logged in, no user accounts, check by token
+        userStatus = await getUserStatus(tokenVal);
+    }
+
     const lastUpdateTime = getItem("vscode_lastUpdateTime");
     const serverAvailable = await serverIsAvailable();
-    const registeredUser = await isRegisteredUser();
 
     if (
         serverAvailable &&
         !lastUpdateTime &&
-        !registeredUser &&
+        !userStatus.hasUserAccounts &&
         !confirmWindow
     ) {
         //lkjflkjsdlkslksdlkfj
@@ -72,7 +75,7 @@ export async function chekUserAuthenticationStatus() {
                 if (selection === LOGIN_LABEL) {
                     handleKpmClickedEvent();
                     setTimeout(() => {
-                        checkTokenAvailability();
+                        getUserStatus();
                     }, 15000);
                 }
                 confirmWindow = null;

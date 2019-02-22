@@ -3,7 +3,6 @@ import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 import { getVersion, isTelemetryOn } from "../extension";
 import { sendOfflineData } from "./DataController";
-import { chekUserAuthenticationStatus } from "./KpmStatsManager";
 
 // ? marks that the parameter is optional
 type Project = {
@@ -100,7 +99,6 @@ export class KpmDataManager {
         softwarePost("/data", payload, getItem("jwt")).then(async resp => {
             if (!isResponseOk(resp)) {
                 storePayload(payload);
-                chekUserAuthenticationStatus();
             }
         });
     }
