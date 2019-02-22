@@ -127,14 +127,6 @@ export async function showMenuOptions() {
             uri: filePath,
             cb: null
         });
-        kpmMenuOptions.items.push({
-            label: "Software.com",
-            description: "",
-            detail: "Click to see more from Code Time.",
-            url: webUrl,
-            uri: null,
-            cb: null
-        });
     }
 
     if (userStatus.loggedIn && showMusicMetrics) {
@@ -168,6 +160,14 @@ export async function showMenuOptions() {
             cb: null
         });
     } else {
+        kpmMenuOptions.items.push({
+            label: "Software.com",
+            description: "",
+            detail: "Click to see more from Code Time.",
+            url: webUrl,
+            uri: null,
+            cb: null
+        });
         kpmMenuOptions.items.push({
             label: LOGOUT_LABEL,
             description: "",
