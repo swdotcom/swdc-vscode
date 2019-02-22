@@ -71,10 +71,12 @@ export async function buildLaunchUrl(requiresToken) {
             tokenVal = randomCode();
             setItem("token", tokenVal);
         }
-        webUrl = `${launch_url}/onboarding?token=${tokenVal}`;
+
         let macAddress = await getMacAddress();
         if (macAddress) {
-            webUrl += `&addr=${encodeURIComponent(macAddress)}`;
+            webUrl += `/onboarding?addr=${encodeURIComponent(macAddress)}&token=${tokenVal}`;
+        } else {
+            webUrl += `/onboarding?token=${tokenVal}`;
         }
     }
 
