@@ -7,12 +7,13 @@ import { softwareGet, isResponseOk } from "./HttpClient";
 const WINDOWS_SPOTIFY_TRACK_FIND =
     'tasklist /fi "imagename eq Spotify.exe" /fo list /v | find " - "';
 
-let trackInfo = {};
+let existingTrack = {};
+let lastTimeSent = null;
 
 export function gatherMusicInfo() {
     const trackInfoDataP = getTrackInfo();
     trackInfoDataP
-        .then(trackInfoData => {
+        .then(playingTrack => {
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after
             const offset = d.getTimezoneOffset();
@@ -21,53 +22,77 @@ export function gatherMusicInfo() {
             // subtract the offset_sec (it'll be positive before utc and negative after utc)
             let localNowInSec = nowInSec - offset_sec;
             let state = "stopped";
-            if (trackInfoData) {
-                state = trackInfoData["state"] || "playing";
+            if (playingTrack) {
+                state = playingTrack["state"] || "playing";
             }
             let isPaused =
                 state.toLowerCase().indexOf("playing") !== -1 ? false : true;
 
-            if (trackInfoData && trackInfoData["id"]) {
-                // check if we have this track already in "trackInfo"
-                let hasExistingTrackInfo = !isEmptyObj(trackInfo)
-                    ? true
-                    : false;
-                let matchingTracks =
-                    hasExistingTrackInfo &&
-                    trackInfo["id"] === trackInfoData["id"]
-                        ? true
-                        : false;
-                if (hasExistingTrackInfo && (!matchingTracks || isPaused)) {
-                    // this means a new song has started, send a payload to complete
-                    // the 1st one and another to start the next one
-                    trackInfo["end"] = nowInSec - 1;
-                    sendMusicData(trackInfo).then(result => {
-                        if (!isPaused) {
-                            // send the next payload starting the next song
-                            trackInfo = {};
-                            trackInfo = { ...trackInfoData };
-                            trackInfo["start"] = nowInSec;
-                            trackInfo["local_start"] = localNowInSec;
-                            sendMusicData(trackInfo);
-                        } else {
-                            trackInfo = {};
-                        }
-                    });
-                } else if (!hasExistingTrackInfo && !isPaused) {
-                    // no previous track played, send this one to start it
-                    trackInfo = { ...trackInfoData };
-                    trackInfo["start"] = nowInSec;
-                    trackInfo["local_start"] = localNowInSec;
-                    sendMusicData(trackInfo);
-                }
-            } else if (!isEmptyObj(trackInfo)) {
-                // end this song since we're not getting a current track
-                // and the trackInfo is not empty
-                trackInfo["end"] = nowInSec;
-                sendMusicData(trackInfo).then(result => {
+            let playingTrackId = playingTrack["id"] || null;
+            let existingTrackId = existingTrack["id"] || null;
+            let playingTrackDuration = playingTrackId
+                ? parseInt(playingTrack["duration"], 10)
+                : null;
+
+            if (!playingTrack && existingTrackId) {
+                // we don't have a track playing and we have an existing one, close it out
+                existingTrack["end"] = nowInSec;
+                sendMusicData(existingTrack).then(result => {
                     // clear out the trackInfo
-                    trackInfo = {};
+                    existingTrack = {};
+                    lastTimeSent = null;
                 });
+            } else if (playingTrackId && !existingTrackId) {
+                // this means we don't have an existing track, the playing track will be our new existing track
+                // it doesn't matter if it's paused or not since we don't have an existing track
+                existingTrack = {};
+                existingTrack = { ...playingTrack };
+                existingTrack["start"] = nowInSec;
+                existingTrack["local_start"] = localNowInSec;
+                sendMusicData(existingTrack);
+                lastTimeSent = nowInSec;
+            } else if (playingTrackId && existingTrackId) {
+                // we have a playing track and an existing track, are they the same ones?
+                if (playingTrackId !== existingTrackId) {
+                    // send the existing song now
+                    existingTrack["end"] = nowInSec - 1;
+                    sendMusicData(existingTrack).then(result => {
+                        // clear out the trackInfo
+                        existingTrack = {};
+                        // start the new song
+                        existingTrack = { ...playingTrack };
+                        existingTrack["start"] = nowInSec;
+                        existingTrack["local_start"] = localNowInSec;
+                        sendMusicData(existingTrack);
+                        lastTimeSent = nowInSec;
+                    });
+                } else {
+                    // it's the same trackId, but we may need to send it again
+                    // if the song is on repeat. the only way to find out is to check
+                    // if it's not paused and the last time we sent this is longer than
+                    // the duration.
+                    // check if it's not paused and is beyond the track duration
+                    let diffInSec = lastTimeSent ? nowInSec - lastTimeSent : 0;
+                    if (
+                        !isPaused &&
+                        playingTrackDuration &&
+                        lastTimeSent &&
+                        diffInSec > playingTrackDuration
+                    ) {
+                        // it's on repeat, send it and start the next one
+                        existingTrack["end"] = nowInSec - 1;
+                        sendMusicData(existingTrack).then(result => {
+                            // clear out the trackInfo
+                            existingTrack = {};
+                            // start the new song
+                            existingTrack = { ...playingTrack };
+                            existingTrack["start"] = nowInSec;
+                            existingTrack["local_start"] = localNowInSec;
+                            sendMusicData(existingTrack);
+                            lastTimeSent = nowInSec;
+                        });
+                    }
+                }
             }
         })
         .catch(err => {

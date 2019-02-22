@@ -206,7 +206,7 @@ export async function displayCodeTimeMetricsDashboard() {
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
         if (alreadyFocused || isClosed) {
-            window.showTextDocument(doc, ViewColumn.One, true).then(e => {
+            window.showTextDocument(doc, ViewColumn.Active, true).then(e => {
                 showLastStatus();
             });
         }
