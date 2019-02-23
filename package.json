@@ -1,114 +1,114 @@
 {
-  "name": "swdc-vscode",
-  "displayName": "Code Time",
-  "version": "0.7.0",
-  "publisher": "softwaredotcom",
-  "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
-  "author": {
-    "name": "Software.com"
-  },
-  "license": "SEE LICENSE IN LICENSE",
-  "icon": "images/app-icon-blue.png",
-  "galleryBanner": {
-    "color": "#384356",
-    "theme": "dark"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/swdotcom/swdc-vscode"
-  },
-  "categories": [
-    "Other"
-  ],
-  "keywords": [
-    "time tracking",
-    "productivity",
-    "timer",
-    "git",
-    "spotify"
-  ],
-  "activationEvents": [
-    "*"
-  ],
-  "engines": {
-    "vscode": "^1.19.0"
-  },
-  "main": "./out/extension",
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
-  "contributes": {
-    "configuration": {
-      "type": "object",
-      "title": "Code Time",
-      "properties": {
-        "showMusicMetrics": {
-          "type": "boolean",
-          "default": false,
-          "description": "Music metrics"
-        },
-        "showGitMetrics": {
-          "type": "boolean",
-          "default": false,
-          "description": "Git metrics"
-        },
-        "showWeeklyRanking": {
-          "type": "boolean",
-          "default": false,
-          "description": "Weekly Ranking"
-        }
-      }
+    "name": "swdc-vscode",
+    "displayName": "Code Time",
+    "version": "0.7.1",
+    "publisher": "softwaredotcom",
+    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
+    "author": {
+        "name": "Software.com"
     },
-    "commands": [
-      {
-        "command": "extension.codeTimeMetrics",
-        "title": "Dashboard",
-        "category": "Code Time"
-      },
-      {
-        "command": "extension.softwareKpmDashboard",
-        "title": "Go to software.com",
-        "category": "Code Time"
-      },
-      {
-        "command": "extension.viewSoftwareTop40",
-        "title": "Software Top 40",
-        "category": "Code Time"
-      }
+    "license": "SEE LICENSE IN LICENSE",
+    "icon": "images/app-icon-blue.png",
+    "galleryBanner": {
+        "color": "#384356",
+        "theme": "dark"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/swdotcom/swdc-vscode"
+    },
+    "categories": [
+        "Other"
     ],
-    "menus": {
-      "view/item/context": [
-        {
-          "command": "extension.codeTimeMetrics",
-          "group": "Code Time"
+    "keywords": [
+        "time tracking",
+        "productivity",
+        "timer",
+        "git",
+        "spotify"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "engines": {
+        "vscode": "^1.19.0"
+    },
+    "main": "./out/extension",
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Code Time",
+            "properties": {
+                "showMusicMetrics": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Music metrics"
+                },
+                "showGitMetrics": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Git metrics"
+                },
+                "showWeeklyRanking": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Weekly Ranking"
+                }
+            }
         },
-        {
-          "command": "extension.softwareKpmDashboard",
-          "group": "Code Time"
-        },
-        {
-          "command": "extension.viewSoftwareTop40",
-          "group": "Code Time"
+        "commands": [
+            {
+                "command": "extension.codeTimeMetrics",
+                "title": "Dashboard",
+                "category": "Code Time"
+            },
+            {
+                "command": "extension.softwareKpmDashboard",
+                "title": "Go to software.com",
+                "category": "Code Time"
+            },
+            {
+                "command": "extension.viewSoftwareTop40",
+                "title": "Software Top 40",
+                "category": "Code Time"
+            }
+        ],
+        "menus": {
+            "view/item/context": [
+                {
+                    "command": "extension.codeTimeMetrics",
+                    "group": "Code Time"
+                },
+                {
+                    "command": "extension.softwareKpmDashboard",
+                    "group": "Code Time"
+                },
+                {
+                    "command": "extension.viewSoftwareTop40",
+                    "group": "Code Time"
+                }
+            ]
         }
-      ]
+    },
+    "devDependencies": {
+        "@types/axios": "^0.14.0",
+        "@types/mocha": "^5.2.6",
+        "@types/node": "^9.4.0",
+        "mocha": "^6.0.0",
+        "typescript": "^2.8.3",
+        "vscode": "^1.1.28"
+    },
+    "dependencies": {
+        "axios": "^0.17.1",
+        "getmac": "^1.4.6",
+        "itunes-node-applescript": "0.3.5",
+        "open": "^0.0.5",
+        "spotify-node-applescript": "1.1.1",
+        "vsls": "^0.3.967"
     }
-  },
-  "devDependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/mocha": "^5.2.6",
-    "@types/node": "^9.4.0",
-    "mocha": "^6.0.0",
-    "typescript": "^2.8.3",
-    "vscode": "^1.1.28"
-  },
-  "dependencies": {
-    "axios": "^0.17.1",
-    "getmac": "^1.4.6",
-    "itunes-node-applescript": "0.3.5",
-    "open": "^0.0.5",
-    "spotify-node-applescript": "1.1.1",
-    "vsls": "^0.3.967"
-  }
 }
