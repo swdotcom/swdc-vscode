@@ -16,6 +16,7 @@ import {
     createAnonymousUser,
     requiresUserCreation,
     getUserStatus,
+    clearUserStatusCache,
     updatePreferences,
     initializePreferences
 } from "./lib/DataController";
@@ -175,6 +176,7 @@ export function activate(ctx: ExtensionContext) {
     // every minute, get the user's jwt if they've logged
     // in if they're still not a registered user.
     token_check_interval = setInterval(() => {
+        clearUserStatusCache();
         getUserStatus();
     }, one_min);
 

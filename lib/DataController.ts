@@ -16,12 +16,16 @@ import {
     deleteFile,
     randomCode,
     getMacAddress,
-    getSoftwareSessionFile,
-    getGitEmail
+    getSoftwareSessionFile
 } from "./Util";
+import { updateShowMusicMetrics } from "./MenuManager";
 
-let registeredUser = null;
+let userStatus = null;
 let lastRegisterUserCheck = null;
+
+export function clearUserStatusCache() {
+    lastRegisterUserCheck = null;
+}
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -356,9 +360,9 @@ async function hasPluginAccount(authAccounts) {
  */
 export async function getUserStatus(token = null) {
     let nowMillis = Date.now();
-    if (registeredUser !== null && lastRegisterUserCheck !== null) {
-        if (nowMillis - lastRegisterUserCheck <= 2000) {
-            registeredUser;
+    if (userStatus !== null && lastRegisterUserCheck !== null) {
+        if (nowMillis - lastRegisterUserCheck <= 20000) {
+            userStatus;
         }
     }
 
@@ -369,7 +373,7 @@ export async function getUserStatus(token = null) {
 
     let loggedInUser = await loggedInP;
 
-    let status = {
+    userStatus = {
         loggedIn: loggedInUser ? true : false,
         email: loggedInUser ? loggedInUser.email : "",
         hasAccounts: await hasAccountsP,
@@ -377,7 +381,7 @@ export async function getUserStatus(token = null) {
     };
 
     lastRegisterUserCheck = Date.now();
-    return status;
+    return userStatus;
 }
 
 export async function initializePreferences() {
@@ -425,6 +429,7 @@ export async function initializePreferences() {
                                 prefsShowMusic,
                                 ConfigurationTarget.Global
                             );
+                        updateShowMusicMetrics(prefsShowMusic);
                     }
                     if (prefsShowGit !== null) {
                         await workspace
@@ -461,6 +466,8 @@ async function sendPreferencesUpdate(userId, userPrefs) {
     userPrefs["showGit"] = showGitMetrics;
     userPrefs["showRank"] = showWeeklyRanking;
 
+    updateShowMusicMetrics(showMusicMetrics);
+
     // update the preferences
     // /:id/preferences
     api = `/users/${userId}/preferences`;
@@ -476,6 +483,8 @@ export async function updatePreferences() {
     let showWeeklyRanking = workspace
         .getConfiguration()
         .get("showWeeklyRanking");
+
+    updateShowMusicMetrics(showMusicMetrics);
 
     // get the user's preferences and update them if they don't match what we have
     let user = getItem("user");
@@ -528,6 +537,9 @@ export async function updatePreferences() {
 
 export async function pluginLogout() {
     let resp = await softwarePost("/users/plugin/logout", {}, getItem("jwt"));
+
+    clearUserStatusCache();
+    getUserStatus();
 
     if (isResponseOk(resp)) {
         // delete the session.json file

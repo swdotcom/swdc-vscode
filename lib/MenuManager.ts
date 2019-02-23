@@ -23,6 +23,12 @@ const fs = require("fs");
 
 const NO_DATA = "CODE TIME\n\nNo data available\n";
 
+let showMusicMetrics = false;
+
+export function updateShowMusicMetrics(val) {
+    showMusicMetrics = val;
+}
+
 /**
  * Pass in the following array of objects
  * options: {placeholder, items: [{label, description, url, detail, tooltip},...]}
@@ -49,7 +55,8 @@ export function showQuickPick(pickOptions) {
                 launchWebUrl(url);
             } else if (uri) {
                 displayCodeTimeMetricsDashboard();
-            } else if (cb) {
+            }
+            if (cb) {
                 cb();
             }
         }
@@ -109,8 +116,6 @@ export async function showMenuOptions() {
     let webUrl = await buildLaunchUrl(!userStatus.loggedIn);
     let loginUrl = await buildLoginUrl();
     let signupUrl = await buildSignupUrl();
-
-    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -185,7 +190,6 @@ export async function displayCodeTimeMetricsDashboard() {
     let isClosed = isCodeTimeMetricsClosed();
 
     let filePath = getDashboardFile();
-    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
         .getConfiguration()
