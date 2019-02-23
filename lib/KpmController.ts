@@ -1,6 +1,6 @@
 import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
-import { NO_NAME_FILE } from "./Constants";
+import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
 import {
     getRootPathForFile,
@@ -66,10 +66,10 @@ export class KpmController {
     }
 
     private async _onCloseHandler(event) {
-        if (!event) {
+        if (!event || !event.fileNme) {
             return;
         }
-        const filename = event.fileName || NO_NAME_FILE;
+        const filename = event.fileName;
 
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(false);
@@ -82,7 +82,11 @@ export class KpmController {
 
         let rootPath = getRootPathForFile(filename);
 
-        await this.initializeKeystrokesCount(filename);
+        if (!rootPath) {
+            rootPath = UNTITLED;
+        }
+
+        await this.initializeKeystrokesCount(filename, rootPath);
 
         if (event.document && event.document.getText()) {
             _keystrokeMap[rootPath].source[
@@ -95,10 +99,10 @@ export class KpmController {
     }
 
     private async _onOpenHandler(event) {
-        if (!event) {
+        if (!event || !event.fileName) {
             return;
         }
-        const filename = event.fileName || NO_NAME_FILE;
+        const filename = event.fileName;
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(true);
             updateCodeTimeMetricsFileClosed(false);
@@ -111,7 +115,11 @@ export class KpmController {
 
         let rootPath = getRootPathForFile(filename);
 
-        await this.initializeKeystrokesCount(filename);
+        if (!rootPath) {
+            rootPath = UNTITLED;
+        }
+
+        await this.initializeKeystrokesCount(filename, rootPath);
 
         if (event.document && event.document.getText()) {
             _keystrokeMap[rootPath].source[
@@ -129,17 +137,22 @@ export class KpmController {
      * such as extension.js.map events
      */
     private isTrueEventFile(event) {
-        if (event && event.document) {
-            if (
-                event.document.isUntitled !== undefined &&
-                event.document.isUntitled !== null &&
-                event.document.isUntitled === true
-            ) {
-                return false;
-            }
-            return true;
+        let filename =
+            event && event.document && event.document.fileName
+                ? event.document.fileName
+                : null;
+        if (
+            !filename ||
+            (filename &&
+                filename.includes(".code-workspace") &&
+                filename.includes("vsliveshare") &&
+                filename.includes("tmp-"))
+        ) {
+            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
+            // don't handle this event (it's a tmp file that may not bring back a real project name)
+            return false;
         }
-        return false;
+        return true;
     }
 
     private async _onEventHandler(event) {
@@ -147,31 +160,18 @@ export class KpmController {
             return;
         }
 
-        this.updateEventInfo(event);
-    }
+        let filename = event.document.fileName;
 
-    private async updateEventInfo(event) {
-        let filename = event.document.fileName || NO_NAME_FILE;
-        if (
-            filename &&
-            filename.includes(".code-workspace") &&
-            filename.includes("vsliveshare") &&
-            filename.includes("tmp-")
-        ) {
-            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
-            // don't handle this event (it's a tmp file that may not bring back a real project name)
-            return;
-        }
         let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
         let rootPath = getRootPathForFile(filename);
 
-        if (!filename || !rootPath || filename.indexOf(rootPath) === -1) {
-            return;
+        if (!rootPath) {
+            rootPath = UNTITLED;
         }
 
-        await this.initializeKeystrokesCount(filename);
+        await this.initializeKeystrokesCount(filename, rootPath);
 
         if (!_keystrokeMap[rootPath].source[filename]) {
             // it's undefined, it wasn't created
@@ -287,12 +287,7 @@ export class KpmController {
         }
     }
 
-    private initializeKeystrokesCount(filename) {
-        //
-        // get the root path
-        //
-        let rootPath = getRootPathForFile(filename);
-
+    private async initializeKeystrokesCount(filename, rootPath) {
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || NO_PROJ_NAME;
         if (!_keystrokeMap) {
@@ -305,6 +300,7 @@ export class KpmController {
         }
 
         let workspaceFolder = getProjectFolder(filename);
+        let name = workspaceFolder ? workspaceFolder.name : UNTITLED_WORKSPACE;
 
         //
         // Create the keystroke count and add it to the map
@@ -312,7 +308,7 @@ export class KpmController {
         keystrokeCount = new KpmDataManager({
             // project.directory is used as an object key, must be string
             directory: rootPath,
-            name: workspaceFolder.name || rootPath,
+            name,
             identifier: "",
             resource: {}
         });

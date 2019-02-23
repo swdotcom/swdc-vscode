@@ -118,39 +118,6 @@ export function sendOfflineData() {
     }
 }
 
-/**
- * confirm the token that was saved in the app
- */
-// export async function checkTokenAvailability() {
-//     const tokenVal = getItem("token");
-
-//     if (!tokenVal) {
-//         return;
-//     }
-
-//     let macAddress = await getMacAddress();
-
-//     // need to get back...
-//     // response.data.user, response.data.jwt
-//     // non-authorization API
-//     let tokenCheckResult = await confirmUser(tokenVal);
-//     if (!tokenCheckResult) {
-//         tokenCheckResult = await confirmUser(macAddress);
-//     }
-
-//     if (tokenCheckResult && tokenCheckResult["status"] === "success") {
-//         let data = tokenCheckResult["data"];
-//         setItem("jwt", data.jwt);
-//         setItem("user", data.user);
-//         setItem("vscode_lastUpdateTime", Date.now());
-
-//         // fetch kpm data
-//         setTimeout(() => {
-//             fetchDailyKpmSessionInfo();
-//         }, 1000);
-//     }
-// }
-
 async function confirmUser(token) {
     let result = softwareGet(`/users/plugin/confirm?token=${token}`, null)
         .then(resp => {
