@@ -11,7 +11,13 @@ import {
     getMacAddress
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import { isAuthenticated, getUserStatus, pluginLogout } from "./DataController";
+import {
+    isAuthenticated,
+    clearUserStatusCache,
+    getUserStatus,
+    pluginLogout,
+    refetchUserStatusLazily
+} from "./DataController";
 import {
     launch_url,
     LOGIN_LABEL,
@@ -56,6 +62,9 @@ export function showQuickPick(pickOptions) {
             let cb = item["cb"];
             if (url) {
                 launchWebUrl(url);
+                if (url.includes("?")) {
+                    refetchUserStatusLazily();
+                }
             } else if (uri) {
                 displayCodeTimeMetricsDashboard();
             }

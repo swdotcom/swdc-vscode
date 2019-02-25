@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget } from "vscode";
+import { workspace, commands, ConfigurationTarget } from "vscode";
 const fs = require("fs");
 
 import {
@@ -115,28 +115,6 @@ export function sendOfflineData() {
         }
     } catch (e) {
         //
-    }
-}
-
-async function confirmUser(token) {
-    let result = softwareGet(`/users/plugin/confirm?token=${token}`, null)
-        .then(resp => {
-            if (
-                isResponseOk(resp) &&
-                resp.data &&
-                resp.data.jwt &&
-                resp.data.user
-            ) {
-                return { status: "success", data: resp.data };
-            }
-        })
-        .catch(err => {
-            return { status: "failed", message: err.message };
-        });
-    if (result["status"] === "success") {
-        return result;
-    } else {
-        return null;
     }
 }
 
@@ -347,6 +325,12 @@ export async function getUserStatus(token = null) {
         hasUserAccounts: await hasUserAccountsP
     };
 
+    commands.executeCommand(
+        "setContext",
+        "codetime:loggedIn",
+        userStatus.loggedIn
+    );
+
     lastRegisterUserCheck = Date.now();
     return userStatus;
 }
@@ -502,6 +486,13 @@ export async function updatePreferences() {
     }
 }
 
+export async function refetchUserStatusLazily() {
+    setTimeout(() => {
+        clearUserStatusCache();
+        getUserStatus();
+    }, 8000);
+}
+
 export async function pluginLogout() {
     let resp = await softwarePost("/users/plugin/logout", {}, getItem("jwt"));
 
@@ -517,6 +508,10 @@ export async function pluginLogout() {
         if (await requiresUserCreation()) {
             await createAnonymousUser();
         }
+
+        setTimeout(() => {
+            fetchDailyKpmSessionInfo();
+        }, 1000);
     } else {
         console.log("error logging out");
     }

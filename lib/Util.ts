@@ -354,8 +354,6 @@ export function launchWebUrl(url) {
         open = "xdg-open";
     }
 
-    console.log("args: ", args);
-
     let process = cp.execFile(open, args, (error, stdout, stderr) => {
         if (error != null) {
             console.log(

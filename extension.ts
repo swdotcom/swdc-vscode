@@ -18,7 +18,9 @@ import {
     getUserStatus,
     clearUserStatusCache,
     updatePreferences,
-    initializePreferences
+    initializePreferences,
+    pluginLogout,
+    refetchUserStatusLazily
 } from "./lib/DataController";
 import {
     showStatus,
@@ -34,7 +36,9 @@ import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions,
     userNeedsToken,
-    buildLaunchUrl
+    buildLaunchUrl,
+    buildSignupUrl,
+    buildLoginUrl
 } from "./lib/MenuManager";
 import { gatherMusicInfo } from "./lib/MusicManager";
 import {
@@ -186,6 +190,11 @@ export function activate(ctx: ExtensionContext) {
         })
     );
     ctx.subscriptions.push(
+        commands.registerCommand("codeTime.superDashboard", () => {
+            handleCodeTimeDashboardEvent();
+        })
+    );
+    ctx.subscriptions.push(
         commands.registerCommand("extension.softwarePaletteMenu", () => {
             handlePaletteMenuEvent();
         })
@@ -198,6 +207,21 @@ export function activate(ctx: ExtensionContext) {
     ctx.subscriptions.push(
         commands.registerCommand("extension.viewSoftwareTop40", () => {
             handleViewSoftwareTopSongsEvent();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.codeTimeLogout", () => {
+            handleCodeTimeLogout();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.codeTimeSignup", () => {
+            handleCodeTimeSignup();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.codeTimeLogin", () => {
+            handleCodeTimeLogin();
         })
     );
 
@@ -227,6 +251,22 @@ function handleCodeTimeDashboardEvent() {
 
 function handleViewSoftwareTopSongsEvent() {
     launchWebUrl("https://api.software.com/music/top40");
+}
+
+function handleCodeTimeLogout() {
+    pluginLogout();
+}
+
+async function handleCodeTimeSignup() {
+    let signupUrl = await buildSignupUrl();
+    launchWebUrl(signupUrl);
+    refetchUserStatusLazily();
+}
+
+async function handleCodeTimeLogin() {
+    let loginUrl = await buildLoginUrl();
+    launchWebUrl(loginUrl);
+    refetchUserStatusLazily();
 }
 
 async function initializeUserInfo() {
