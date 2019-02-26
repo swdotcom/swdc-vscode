@@ -178,9 +178,9 @@ export async function showMenuOptions() {
         });
     } else {
         kpmMenuOptions.items.push({
-            label: "Software.com",
+            label: "Web dashboard",
             description: "",
-            detail: "Click to see more from Code Time.",
+            detail: "See rich data visualizations in the web app.",
             url: webUrl,
             uri: null,
             cb: null
@@ -197,10 +197,7 @@ export async function showMenuOptions() {
     showQuickPick(kpmMenuOptions);
 }
 
-export async function displayCodeTimeMetricsDashboard() {
-    let alreadyFocused = isCodeTimeMetricsFocused();
-    let isClosed = isCodeTimeMetricsClosed();
-
+export async function fetchCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
@@ -225,13 +222,16 @@ export async function displayCodeTimeMetricsDashboard() {
             );
         }
     });
+}
+
+export async function displayCodeTimeMetricsDashboard() {
+    let filePath = getDashboardFile();
+    await fetchCodeTimeMetricsDashboard();
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
-        if (alreadyFocused || isClosed) {
-            window.showTextDocument(doc, ViewColumn.Active, true).then(e => {
-                showLastStatus();
-            });
-        }
+        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+            showLastStatus();
+        });
     });
 }

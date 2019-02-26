@@ -7,15 +7,8 @@ import {
     LONG_THRESHOLD_HOURS,
     MILLIS_PER_HOUR
 } from "./Constants";
-import {
-    getItem,
-    setItem,
-    showStatus,
-    getSoftwareSessionFile,
-    humanizeMinutes,
-    isCodeTimeMetricsFocused
-} from "./Util";
-import { displayCodeTimeMetricsDashboard } from "./MenuManager";
+import { getItem, setItem, showStatus, humanizeMinutes } from "./Util";
+import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import {
     serverIsAvailable,
@@ -113,11 +106,7 @@ export async function fetchDailyKpmSessionInfo() {
     let result = await getSessionStatus();
 
     if (result === "ok") {
-        let alreadyFocused = isCodeTimeMetricsFocused();
-        if (alreadyFocused) {
-            // it currently focuses the tab, comment out until update this to not focus the tab
-            displayCodeTimeMetricsDashboard();
-        }
+        fetchCodeTimeMetricsDashboard();
     }
 }
 
