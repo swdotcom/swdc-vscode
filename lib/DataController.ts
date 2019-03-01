@@ -46,8 +46,11 @@ export async function requiresUserCreation() {
     const hasSessionFile = fs.existsSync(sessionFile);
     const serverAvailable = await serverIsAvailable();
     const existingJwt = getItem("jwt");
+    const existingAppJwt = getItem("app_jwt");
 
-    if (serverAvailable && (!existingJwt || !hasSessionFile)) {
+    let authenticatingJwt = existingJwt ? existingJwt : existingAppJwt;
+
+    if (serverAvailable && (!authenticatingJwt || !hasSessionFile)) {
         return true;
     }
     return false;
@@ -206,6 +209,7 @@ export async function createAnonymousUser() {
 
 async function getAuthenticatedPluginAccounts(token = null) {
     let jwt = getItem("jwt");
+    let appJwt = getItem("app_jwt");
     let serverIsOnline = await serverIsAvailable();
     let tokenQryStr = "";
     if (!token) {
@@ -215,10 +219,12 @@ async function getAuthenticatedPluginAccounts(token = null) {
         tokenQryStr = `?token=${token}`;
     }
 
+    let authenticatingJwt = jwt ? jwt : appJwt;
+
     let macAddress = !token ? await getMacAddress() : token;
-    if (jwt && serverIsOnline && macAddress) {
+    if (authenticatingJwt && serverIsOnline && macAddress) {
         let api = `/users/plugin/accounts${tokenQryStr}`;
-        let resp = await softwareGet(api, jwt);
+        let resp = await softwareGet(api, authenticatingJwt);
         if (isResponseOk(resp)) {
             if (
                 resp &&

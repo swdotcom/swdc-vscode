@@ -1,6 +1,5 @@
 import { window } from "vscode";
 import {
-    MILLIS_PER_MINUTE,
     NOT_NOW_LABEL,
     LOGIN_LABEL,
     SHORT_THRESHOLD_HOURS,
@@ -10,17 +9,12 @@ import {
 import { getItem, setItem, showStatus, humanizeMinutes } from "./Util";
 import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
-import {
-    serverIsAvailable,
-    getUserStatus,
-    requiresUserCreation
-} from "./DataController";
+import { serverIsAvailable, getUserStatus } from "./DataController";
 import { isResponseOk, softwareGet } from "./HttpClient";
 
 const fs = require("fs");
 
 let confirmWindow = null;
-let lastAuthenticationCheckTime = -1;
 
 /**
  * check if the user needs to see the login prompt or not
