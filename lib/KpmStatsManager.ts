@@ -26,17 +26,6 @@ let lastAuthenticationCheckTime = -1;
  * check if the user needs to see the login prompt or not
  */
 export async function chekUserAuthenticationStatus() {
-    let nowMillis = Date.now();
-
-    if (
-        lastAuthenticationCheckTime !== -1 &&
-        nowMillis - lastAuthenticationCheckTime < MILLIS_PER_MINUTE * 2
-    ) {
-        // it's less than 3 minutes, wait until the threshold has passed until we try again
-        return;
-    }
-    lastAuthenticationCheckTime = nowMillis;
-
     // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
     let tokenVal = getItem("token");
@@ -130,8 +119,6 @@ async function getSessionStatus() {
                 }
                 showStatus(msg, null);
                 return "ok";
-            } else {
-                requiresUserCreation();
             }
             return "notok";
         })

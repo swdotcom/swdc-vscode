@@ -289,7 +289,7 @@ async function initializeUserInfo() {
     } else {
         setTimeout(() => {
             chekUserAuthenticationStatus();
-        }, 6000);
+        }, 8000);
     }
 }
 

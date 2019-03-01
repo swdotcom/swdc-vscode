@@ -269,9 +269,6 @@ async function isLoggedIn(authAccounts) {
                 setItem("jwt", foundUser.plugin_jwt);
                 setItem("user", foundUserObj);
                 setItem("vscode_lastUpdateTime", Date.now());
-                setTimeout(() => {
-                    fetchDailyKpmSessionInfo();
-                }, 1000);
                 return foundUser;
             }
         }
@@ -369,7 +366,11 @@ export async function initializePreferences() {
                         ? prefs.showRank
                         : null;
 
-                if (!prefsShowMusic || !prefsShowGit || !prefsShowRank) {
+                if (
+                    prefsShowMusic === null ||
+                    prefsShowGit === null ||
+                    prefsShowRank === null
+                ) {
                     await sendPreferencesUpdate(userId, prefs);
                 } else {
                     if (prefsShowMusic !== null) {

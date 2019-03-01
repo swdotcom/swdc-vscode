@@ -199,6 +199,8 @@ export async function showMenuOptions() {
 
 export async function fetchCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
+
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
         .getConfiguration()
