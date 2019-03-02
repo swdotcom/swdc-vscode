@@ -309,8 +309,8 @@ async function hasPluginAccount(authAccounts) {
 export async function getUserStatus(token = null) {
     let nowMillis = Date.now();
     if (userStatus !== null && lastRegisterUserCheck !== null) {
-        if (nowMillis - lastRegisterUserCheck <= 20000) {
-            userStatus;
+        if (nowMillis - lastRegisterUserCheck <= 10000) {
+            return userStatus;
         }
     }
 
