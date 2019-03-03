@@ -6,7 +6,14 @@ import {
     LONG_THRESHOLD_HOURS,
     MILLIS_PER_HOUR
 } from "./Constants";
-import { getItem, setItem, showStatus, humanizeMinutes } from "./Util";
+import {
+    getItem,
+    setItem,
+    showStatus,
+    humanizeMinutes,
+    getDashboardFile,
+    isFileOpen
+} from "./Util";
 import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import { serverIsAvailable, getUserStatus } from "./DataController";
@@ -89,7 +96,10 @@ export async function fetchDailyKpmSessionInfo() {
     let result = await getSessionStatus();
 
     if (result === "ok") {
-        fetchCodeTimeMetricsDashboard();
+        let filePath = getDashboardFile();
+        if (isFileOpen(filePath)) {
+            fetchCodeTimeMetricsDashboard();
+        }
     }
 }
 
