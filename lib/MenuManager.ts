@@ -5,15 +5,13 @@ import {
     getDashboardFile,
     setItem,
     randomCode,
-    isCodeTimeMetricsClosed,
     showLastStatus,
-    isCodeTimeMetricsFocused,
-    getMacAddress
+    getMacAddress,
+    isFileOpen
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
     isAuthenticated,
-    clearUserStatusCache,
     getUserStatus,
     pluginLogout,
     refetchUserStatusLazily
@@ -199,6 +197,10 @@ export async function showMenuOptions() {
 
 export async function fetchCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
+
+    if (!isFileOpen(filePath)) {
+        return;
+    }
 
     let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");

@@ -58,6 +58,24 @@ export function getRootPaths() {
     return paths;
 }
 
+export function isFileOpen(fileName) {
+    if (
+        workspace.workspaceFolders &&
+        workspace.workspaceFolders.length > 0 &&
+        workspace.textDocuments &&
+        workspace.textDocuments.length > 0
+    ) {
+        // check if the .software/CodeTime has already been opened
+        for (let i = 0; i < workspace.textDocuments.length; i++) {
+            let docObj = workspace.textDocuments[i];
+            if (docObj.fileName && docObj.fileName === fileName) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 export function getRootPathForFile(fileName) {
     let folder = getProjectFolder(fileName);
     if (folder) {

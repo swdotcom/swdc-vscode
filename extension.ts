@@ -177,12 +177,13 @@ export function activate(ctx: ExtensionContext) {
         getHistoricalCommits();
     }, one_min * 2);
 
-    // every minute, get the user's jwt if they've logged
+    // every minute and a half, get the user's jwt if they've logged
     // in if they're still not a registered user.
+    let ninetysec = one_min + 30;
     token_check_interval = setInterval(() => {
         clearUserStatusCache();
         getUserStatus();
-    }, one_min);
+    }, ninetysec);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -266,7 +267,8 @@ async function handleCodeTimeSignup() {
 async function handleCodeTimeLogin() {
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
-    refetchUserStatusLazily();
+    // retry 6 times, each retry is 10 seconds long
+    refetchUserStatusLazily(6);
 }
 
 async function initializeUserInfo() {

@@ -493,11 +493,18 @@ export async function updatePreferences() {
     }
 }
 
-export async function refetchUserStatusLazily() {
-    setTimeout(() => {
+export async function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
+    setTimeout(async () => {
         clearUserStatusCache();
-        getUserStatus();
-    }, 8000);
+        let userStatus = await getUserStatus();
+        if (!userStatus.loggedIn) {
+            // try again if the count is not zero
+            if (tryCountUntilFoundUser > 0) {
+                tryCountUntilFoundUser -= 1;
+                refetchUserStatusLazily(tryCountUntilFoundUser);
+            }
+        }
+    }, 10000);
 }
 
 export async function pluginLogout() {
@@ -511,9 +518,6 @@ export async function pluginLogout() {
         const sessionFile = getSoftwareSessionFile();
         if (fs.existsSync(sessionFile)) {
             deleteFile(sessionFile);
-        }
-        if (await requiresUserCreation()) {
-            await createAnonymousUser();
         }
 
         setTimeout(() => {
