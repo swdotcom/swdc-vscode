@@ -8,10 +8,8 @@ import {
     updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
     isEmptyObj,
-    getProjectFolder,
-    getItem
+    getProjectFolder
 } from "./Util";
-import { requiresUserCreation, createAnonymousUser } from "./DataController";
 
 const NO_PROJ_NAME = "Unnamed";
 
@@ -38,14 +36,6 @@ export class KpmController {
     }
 
     private async sendKeystrokeDataIntervalHandler() {
-        // check if we've lost the jwt for some reason
-        let jwt = getItem("jwt");
-        if (!jwt) {
-            if (await requiresUserCreation()) {
-                await createAnonymousUser();
-            }
-        }
-
         //
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
