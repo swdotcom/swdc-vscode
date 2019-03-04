@@ -1,7 +1,7 @@
 import { storePayload, getItem } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
-import { getVersion, isTelemetryOn } from "../extension";
+import { getVersion, getOs, isTelemetryOn } from "../extension";
 import { sendOfflineData } from "./DataController";
 
 // ? marks that the parameter is optional
@@ -21,6 +21,7 @@ export class KpmDataManager {
     public project: Project;
     public pluginId: Number;
     public version: String;
+    public os: String;
 
     constructor(project: Project) {
         (this.source = {}),
@@ -28,6 +29,7 @@ export class KpmDataManager {
             (this.project = project),
             (this.pluginId = PLUGIN_ID);
         this.version = getVersion();
+        this.os = getOs();
     }
 
     /**

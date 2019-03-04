@@ -48,6 +48,8 @@ import {
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 
+const os = require("os");
+
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let extensionVersion;
@@ -71,6 +73,26 @@ export function getStatusBarItem() {
 
 export function getVersion() {
     return extensionVersion;
+}
+
+export function getOs() {
+    let parts = [];
+    let osType = os.type();
+    if (osType) {
+        parts.push(osType);
+    }
+    let osRelease = os.release();
+    if (osRelease) {
+        parts.push(osRelease);
+    }
+    let platform = os.platform();
+    if (platform) {
+        parts.push(platform);
+    }
+    if (parts.length > 0) {
+        return parts.join("_");
+    }
+    return "";
 }
 
 export function deactivate(ctx: ExtensionContext) {

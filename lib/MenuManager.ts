@@ -131,17 +131,14 @@ export async function showMenuOptions() {
         items: []
     };
 
-    if (userStatus.loggedIn || !needsToken) {
-        kpmMenuOptions.items.push({
-            label: "Code time dashboard",
-            description: "",
-            detail:
-                "View your latest coding metrics right here in your editor.",
-            url: null,
-            uri: filePath,
-            cb: null
-        });
-    }
+    kpmMenuOptions.items.push({
+        label: "Code time dashboard",
+        description: "",
+        detail: "View your latest coding metrics right here in your editor.",
+        url: null,
+        uri: filePath,
+        cb: null
+    });
 
     if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
