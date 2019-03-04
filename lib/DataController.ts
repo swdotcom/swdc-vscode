@@ -245,41 +245,48 @@ async function getAuthenticatedPluginAccounts(token = null) {
 async function isLoggedIn(authAccounts) {
     let macAddress = await getMacAddress();
     if (authAccounts && authAccounts.length > 0) {
-        let foundUser = null;
+        let loggedInUser = null;
+        let secondaryUser = null;
+        let anonAccount = null;
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
-            let userId = parseInt(user.id, 10);
             let userMacAddr = user.mac_addr;
             let userEmail = user.email;
-            if (userMacAddr === macAddress && userEmail !== macAddress) {
-                // having a mac_addr present and the email not equal to the mac address
-                // means they are logged in with this account
-                let cachedUser = getItem("user");
-                if (cachedUser && !cachedUser.id) {
-                    // turn it into an object
-                    cachedUser = cachedUser ? JSON.parse(cachedUser) : null;
-                }
-                let cachedUserId = cachedUser ? cachedUser.id : null;
-
-                if (cachedUser && userId !== cachedUserId) {
-                    // save this user in case we don't find a matching userId
-                    foundUser = user;
-                } else if (cachedUser && userId === cachedUserId) {
-                    return user;
-                }
+            if (
+                userMacAddr &&
+                userEmail &&
+                userEmail !== userMacAddr &&
+                userMacAddr === macAddress
+            ) {
+                loggedInUser = user;
+                break;
+            } else if (userEmail !== userMacAddr) {
+                secondaryUser = user;
+            } else if (
+                !anonAccount &&
+                (userEmail === userMacAddr || userEmail === macAddress)
+            ) {
+                anonAccount = user;
             }
-
-            if (foundUser) {
-                // update the user, they've switched accounts
-                let foundUserObj = { id: foundUser.id };
-                setItem("jwt", foundUser.plugin_jwt);
-                setItem("user", foundUserObj);
-                setItem("vscode_lastUpdateTime", Date.now());
-                return foundUser;
-            }
+        }
+        if (loggedInUser) {
+            // update the session.json
+            updateSessionUserInfo(loggedInUser);
+            return loggedInUser;
+        } else if (anonAccount) {
+            updateSessionUserInfo(anonAccount);
+        } else if (secondaryUser) {
+            updateSessionUserInfo(secondaryUser);
         }
     }
     return null;
+}
+
+function updateSessionUserInfo(user) {
+    let userObj = { id: user.id };
+    setItem("jwt", user.plugin_jwt);
+    setItem("user", userObj);
+    setItem("vscode_lastUpdateTime", Date.now());
 }
 
 async function hasRegisteredAccounts(authAccounts) {
