@@ -29,7 +29,8 @@ import {
     getOffsetSecends,
     getItem,
     getSoftwareSessionFile,
-    deleteFile
+    deleteFile,
+    getDashboardFile
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -48,6 +49,7 @@ import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 
 const os = require("os");
+const fs = require("fs");
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -282,12 +284,22 @@ function handleCodeTimeLogout() {
 async function handleCodeTimeSignup() {
     let signupUrl = await buildSignupUrl();
     launchWebUrl(signupUrl);
+    // delete the session.json file
+    const dashboardFile = getDashboardFile();
+    if (fs.existsSync(dashboardFile)) {
+        deleteFile(dashboardFile);
+    }
     refetchUserStatusLazily();
 }
 
 async function handleCodeTimeLogin() {
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
+    // delete the session.json file
+    const dashboardFile = getDashboardFile();
+    if (fs.existsSync(dashboardFile)) {
+        deleteFile(dashboardFile);
+    }
     // retry 6 times, each retry is 10 seconds long
     refetchUserStatusLazily(6);
 }

@@ -16,7 +16,8 @@ import {
     deleteFile,
     randomCode,
     getMacAddress,
-    getSoftwareSessionFile
+    getSoftwareSessionFile,
+    getDashboardFile
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 
@@ -511,6 +512,10 @@ export async function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
                 tryCountUntilFoundUser -= 1;
                 refetchUserStatusLazily(tryCountUntilFoundUser);
             }
+        } else {
+            setTimeout(() => {
+                fetchDailyKpmSessionInfo();
+            }, 1000);
         }
     }, 10000);
 }
@@ -519,19 +524,16 @@ export async function pluginLogout() {
     let resp = await softwarePost("/users/plugin/logout", {}, getItem("jwt"));
 
     clearUserStatusCache();
+
+    // delete the session.json file
+    const dashboardFile = getDashboardFile();
+    if (fs.existsSync(dashboardFile)) {
+        deleteFile(dashboardFile);
+    }
+
     getUserStatus();
 
-    if (isResponseOk(resp)) {
-        // delete the session.json file
-        const sessionFile = getSoftwareSessionFile();
-        if (fs.existsSync(sessionFile)) {
-            deleteFile(sessionFile);
-        }
-
-        setTimeout(() => {
-            fetchDailyKpmSessionInfo();
-        }, 1000);
-    } else {
-        console.log("error logging out");
-    }
+    setTimeout(() => {
+        fetchDailyKpmSessionInfo();
+    }, 1000);
 }
