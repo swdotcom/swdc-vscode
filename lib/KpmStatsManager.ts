@@ -19,8 +19,7 @@ import { isTelemetryOn, handleKpmClickedEvent } from "../extension";
 import { serverIsAvailable, getUserStatus } from "./DataController";
 import { isResponseOk, softwareGet } from "./HttpClient";
 
-const fs = require("fs");
-
+const ten_sec_in_millis = 1000 * 10;
 let confirmWindow = null;
 
 /**
@@ -36,11 +35,15 @@ export async function chekUserAuthenticationStatus() {
     }
 
     const lastUpdateTime = getItem("vscode_lastUpdateTime");
+    let isInitialCheck = false;
+    if (!lastUpdateTime || Date.now() - lastUpdateTime < ten_sec_in_millis) {
+        isInitialCheck = true;
+    }
     const serverAvailable = await serverIsAvailable();
 
     if (
         serverAvailable &&
-        !lastUpdateTime &&
+        isInitialCheck &&
         !userStatus.hasUserAccounts &&
         !confirmWindow
     ) {

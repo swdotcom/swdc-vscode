@@ -1,7 +1,7 @@
 import { window } from "vscode";
 import { showTacoTimeStatus } from "./Util";
 import { NOT_NOW_LABEL, YES_LABEL } from "./Constants";
-import { showMenuOptions, userNeedsToken } from "./MenuManager";
+import { showMenuOptions } from "./MenuManager";
 
 let tacoTimeMap = {
     count: 0,

@@ -72,15 +72,6 @@ export function showQuickPick(pickOptions) {
     });
 }
 
-export async function userNeedsToken() {
-    let requiresToken = false;
-    const existingJwt = getItem("jwt");
-    if (!existingJwt || !(await isAuthenticated())) {
-        requiresToken = true;
-    }
-    return requiresToken;
-}
-
 export async function buildLoginUrl() {
     let macAddress = await getMacAddress();
     let loginUrl = `${launch_url}/login?addr=${macAddress}`;
@@ -119,9 +110,6 @@ export async function showMenuOptions() {
     let filePath = getDashboardFile();
     // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
-
-    let needsToken = await userNeedsToken();
-    // let requiresToken = needsToken || !userStatus.loggedIn ? true : false;
     let webUrl = await buildLaunchUrl(!userStatus.loggedIn);
     let loginUrl = await buildLoginUrl();
     let signupUrl = await buildSignupUrl();

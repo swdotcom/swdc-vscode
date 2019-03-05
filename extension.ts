@@ -35,7 +35,6 @@ import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions,
-    userNeedsToken,
     buildLaunchUrl,
     buildSignupUrl,
     buildLoginUrl
@@ -353,9 +352,12 @@ async function initializeLiveshare() {
 export async function handleKpmClickedEvent() {
     // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
-    let needsToken = await userNeedsToken();
-    let requiresToken = needsToken || !userStatus.loggedIn ? true : false;
-    let webUrl = await buildLaunchUrl(requiresToken);
+    let webUrl = await buildLaunchUrl(false);
+    if (!userStatus.loggedIn && userStatus.hasUserAccounts) {
+        webUrl = await buildLoginUrl();
+    } else if (!userStatus.loggedIn) {
+        webUrl = await buildLaunchUrl(!userStatus.loggedIn);
+    }
     launchWebUrl(webUrl);
 }
 
