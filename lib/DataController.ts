@@ -252,6 +252,7 @@ async function isLoggedIn(authAccounts) {
             let user = authAccounts[i];
             let userMacAddr = user.mac_addr;
             let userEmail = user.email;
+            let userMacAddrShare = user.mac_addr_share;
             if (
                 userMacAddr &&
                 userEmail &&
@@ -260,7 +261,7 @@ async function isLoggedIn(authAccounts) {
             ) {
                 loggedInUser = user;
                 break;
-            } else if (userEmail !== userMacAddr) {
+            } else if (userEmail !== userMacAddrShare) {
                 secondaryUser = user;
             } else if (
                 !anonAccount &&
