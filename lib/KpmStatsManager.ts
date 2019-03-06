@@ -26,7 +26,7 @@ let confirmWindow = null;
  * check if the user needs to see the login prompt or not
  */
 export async function chekUserAuthenticationStatus() {
-    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    // {loggedIn: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
     let tokenVal = getItem("token");
     if (!userStatus.loggedIn && !userStatus.hasUserAccounts && tokenVal) {

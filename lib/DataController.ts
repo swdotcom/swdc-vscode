@@ -168,7 +168,7 @@ export async function getAppJwt() {
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser() {
+export async function createAnonymousUser(updateJson) {
     let appJwt = await getAppJwt();
     let jwt = await getItem("jwt");
     let macAddress = await getMacAddress();
@@ -194,7 +194,8 @@ export async function createAnonymousUser() {
             isResponseOk(resp) &&
             resp.data &&
             resp.data.jwt &&
-            resp.data.user
+            resp.data.user &&
+            updateJson
         ) {
             setItem("jwt", resp.data.jwt);
             setItem("user", resp.data.user);
@@ -208,14 +209,13 @@ export async function createAnonymousUser() {
     }
 }
 
-async function getAuthenticatedPluginAccounts(token = null) {
+async function getAuthenticatedPluginAccounts(macAddr, token = null) {
     let jwt = getItem("jwt");
     let appJwt = getItem("app_jwt");
     let serverIsOnline = await serverIsAvailable();
     let tokenQryStr = "";
-    let macAddress = await getMacAddress();
     if (!token) {
-        tokenQryStr = `?token=${encodeURIComponent(macAddress)}`;
+        tokenQryStr = `?token=${encodeURIComponent(macAddr)}`;
     } else {
         tokenQryStr = `?token=${token}`;
     }
@@ -241,42 +241,40 @@ async function getAuthenticatedPluginAccounts(token = null) {
     return null;
 }
 
-async function isLoggedIn(authAccounts) {
-    let macAddress = await getMacAddress();
+function getLoggedInUser(macAddr, authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
-        let loggedInUser = null;
-        let secondaryUser = null;
-        let anonAccount = null;
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
             let userMacAddr = user.mac_addr;
             let userEmail = user.email;
             let userMacAddrShare = user.mac_addr_share;
             if (
-                userMacAddr &&
-                userEmail &&
                 userEmail !== userMacAddr &&
-                userMacAddr === macAddress
+                userEmail !== macAddr &&
+                userEmail !== userMacAddrShare &&
+                userMacAddr === macAddr
             ) {
-                loggedInUser = user;
-                break;
-            } else if (userEmail !== userMacAddrShare) {
-                secondaryUser = user;
-            } else if (
-                !anonAccount &&
-                (userEmail === userMacAddr || userEmail === macAddress)
-            ) {
-                anonAccount = user;
+                return user;
             }
         }
-        if (loggedInUser) {
-            // update the session.json
-            updateSessionUserInfo(loggedInUser);
-            return loggedInUser;
-        } else if (anonAccount) {
-            updateSessionUserInfo(anonAccount);
-        } else if (secondaryUser) {
-            updateSessionUserInfo(secondaryUser);
+    }
+    return null;
+}
+
+function getAnonymousUser(macAddr, authAccounts) {
+    if (authAccounts && authAccounts.length > 0) {
+        for (let i = 0; i < authAccounts.length; i++) {
+            let user = authAccounts[i];
+            let userMacAddr = user.mac_addr;
+            let userEmail = user.email;
+            let userMacAddrShare = user.mac_addr_share;
+            if (
+                userEmail === userMacAddr ||
+                userEmail === macAddr ||
+                userEmail === userMacAddrShare
+            ) {
+                return user;
+            }
         }
     }
     return null;
@@ -289,50 +287,35 @@ function updateSessionUserInfo(user) {
     setItem("vscode_lastUpdateTime", Date.now());
 }
 
-async function hasRegisteredAccounts(authAccounts) {
-    let macAddress = await getMacAddress();
-    if (authAccounts && authAccounts.length > 0) {
-        for (let i = 0; i < authAccounts.length; i++) {
-            let user = authAccounts[i];
-            if (user.email !== macAddress && user.email !== user.mac_addr) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-async function hasPluginAccount(authAccounts) {
-    if (authAccounts && authAccounts.length > 0) {
-        return true;
-    }
-    return false;
-}
-
 /**
  * check if the user is registered or not
- * return {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false, email}
+ * return {loggedIn: true|false, asUserAccounts: true|false, email}
  */
 export async function getUserStatus(token = null) {
-    let nowMillis = Date.now();
-    if (userStatus !== null && lastRegisterUserCheck !== null) {
-        if (nowMillis - lastRegisterUserCheck <= 10000) {
-            return userStatus;
-        }
+    let macAddress = await getMacAddress();
+
+    let authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
+    let loggedInUser = getLoggedInUser(macAddress, authAccounts);
+    let anonUser = getAnonymousUser(macAddress, authAccounts);
+    if (!anonUser) {
+        let updateJson = !loggedInUser ? true : false;
+        // create the anonymous user
+        await createAnonymousUser(updateJson);
+        authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
+        anonUser = getAnonymousUser(macAddress, authAccounts);
     }
+    let hasUserAccounts = loggedInUser ? true : false;
 
-    let authAccounts = await getAuthenticatedPluginAccounts(token);
-    let loggedInP = isLoggedIn(authAccounts);
-    let hasAccountsP = hasPluginAccount(authAccounts);
-    let hasUserAccountsP = hasRegisteredAccounts(authAccounts);
-
-    let loggedInUser = await loggedInP;
+    if (loggedInUser) {
+        updateSessionUserInfo(loggedInUser);
+    } else if (anonUser) {
+        updateSessionUserInfo(anonUser);
+    }
 
     userStatus = {
         loggedIn: loggedInUser ? true : false,
         email: loggedInUser ? loggedInUser.email : "",
-        hasAccounts: await hasAccountsP,
-        hasUserAccounts: await hasUserAccountsP
+        hasUserAccounts
     };
 
     commands.executeCommand(
@@ -341,7 +324,6 @@ export async function getUserStatus(token = null) {
         userStatus.loggedIn
     );
 
-    lastRegisterUserCheck = Date.now();
     return userStatus;
 }
 
@@ -523,13 +505,7 @@ export async function pluginLogout() {
 
     clearUserStatusCache();
 
-    // delete the session.json file
-    const dashboardFile = getDashboardFile();
-    if (fs.existsSync(dashboardFile)) {
-        deleteFile(dashboardFile);
-    }
-
-    getUserStatus();
+    await getUserStatus();
 
     setTimeout(() => {
         fetchDailyKpmSessionInfo();

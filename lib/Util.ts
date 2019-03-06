@@ -382,6 +382,9 @@ export function launchWebUrl(url) {
     });
 }
 
+/**
+ * humanize the minutes
+ */
 export function humanizeMinutes(min) {
     min = parseInt(min, 0) || 0;
     let str = "";

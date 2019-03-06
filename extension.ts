@@ -13,8 +13,6 @@ import {
 import { KpmController } from "./lib/KpmController";
 import {
     sendOfflineData,
-    createAnonymousUser,
-    requiresUserCreation,
     getUserStatus,
     clearUserStatusCache,
     updatePreferences,
@@ -313,11 +311,7 @@ async function initializeUserInfo() {
         deleteFile(sessionFile);
     }
 
-    if (await requiresUserCreation()) {
-        await createAnonymousUser();
-    }
-
-    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    // {loggedIn: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
     if (userStatus.loggedIn) {
         initializePreferences();
@@ -362,7 +356,7 @@ async function initializeLiveshare() {
 }
 
 export async function handleKpmClickedEvent() {
-    // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
+    // {loggedIn: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
     if (!userStatus.loggedIn && userStatus.hasUserAccounts) {
