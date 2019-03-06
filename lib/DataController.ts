@@ -213,17 +213,15 @@ async function getAuthenticatedPluginAccounts(token = null) {
     let appJwt = getItem("app_jwt");
     let serverIsOnline = await serverIsAvailable();
     let tokenQryStr = "";
+    let macAddress = await getMacAddress();
     if (!token) {
-        let macAddress = await getMacAddress();
         tokenQryStr = `?token=${encodeURIComponent(macAddress)}`;
     } else {
         tokenQryStr = `?token=${token}`;
     }
 
     let authenticatingJwt = jwt ? jwt : appJwt;
-
-    let macAddress = !token ? await getMacAddress() : token;
-    if (authenticatingJwt && serverIsOnline && macAddress) {
+    if (authenticatingJwt && serverIsOnline) {
         let api = `/users/plugin/accounts${tokenQryStr}`;
         let resp = await softwareGet(api, authenticatingJwt);
         if (isResponseOk(resp)) {
@@ -296,7 +294,7 @@ async function hasRegisteredAccounts(authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
-            if (user.email !== macAddress) {
+            if (user.email !== macAddress && user.email !== user.mac_addr) {
                 return true;
             }
         }

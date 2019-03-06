@@ -3,14 +3,11 @@ import {
     launchWebUrl,
     getItem,
     getDashboardFile,
-    setItem,
-    randomCode,
     showLastStatus,
     getMacAddress
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
-    isAuthenticated,
     getUserStatus,
     pluginLogout,
     refetchUserStatusLazily
@@ -84,25 +81,8 @@ export async function buildSignupUrl() {
     return signupUrl;
 }
 
-export async function buildLaunchUrl(requiresToken) {
+export async function buildWebDashboardUrl() {
     let webUrl = launch_url;
-    if (requiresToken) {
-        let tokenVal = getItem("token");
-        if (!tokenVal) {
-            tokenVal = randomCode();
-            setItem("token", tokenVal);
-        }
-
-        let macAddress = await getMacAddress();
-        if (macAddress) {
-            webUrl += `/onboarding?addr=${encodeURIComponent(
-                macAddress
-            )}&token=${tokenVal}`;
-        } else {
-            webUrl += `/onboarding?token=${tokenVal}`;
-        }
-    }
-
     return webUrl;
 }
 
@@ -110,7 +90,7 @@ export async function showMenuOptions() {
     let filePath = getDashboardFile();
     // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
-    let webUrl = await buildLaunchUrl(!userStatus.loggedIn);
+    let webUrl = await buildWebDashboardUrl();
     let loginUrl = await buildLoginUrl();
     let signupUrl = await buildSignupUrl();
 
@@ -122,7 +102,7 @@ export async function showMenuOptions() {
     kpmMenuOptions.items.push({
         label: "Code time dashboard",
         description: "",
-        detail: "View your latest coding metrics right here in your editor.",
+        detail: "View your latest coding metrics right here in your editor",
         url: null,
         uri: filePath,
         cb: null
@@ -133,7 +113,7 @@ export async function showMenuOptions() {
             label: "Software Top 40",
             description: "",
             detail:
-                "Top 40 most popular songs developers around the world listen to as they code.",
+                "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
             uri: null,
             cb: null
@@ -144,7 +124,7 @@ export async function showMenuOptions() {
             label: LOGIN_LABEL,
             description: "",
             detail:
-                "To see your coding data in Code Time, please log in to your account.",
+                "To see your coding data in Code Time, please log in to your account",
             url: loginUrl,
             uri: null,
             cb: null
@@ -153,7 +133,7 @@ export async function showMenuOptions() {
             label: SIGNUP_LABEL,
             description: "",
             detail:
-                "To see rich data visualizations and get weekly email reports, please sign in to our web app.",
+                "To see rich data visualizations and get weekly email reports, please sign in to our web app",
             url: signupUrl,
             uri: null,
             cb: null
@@ -162,7 +142,7 @@ export async function showMenuOptions() {
         kpmMenuOptions.items.push({
             label: "Web dashboard",
             description: "",
-            detail: "See rich data visualizations in the web app.",
+            detail: "See rich data visualizations in the web app",
             url: webUrl,
             uri: null,
             cb: null
@@ -170,7 +150,7 @@ export async function showMenuOptions() {
         kpmMenuOptions.items.push({
             label: LOGOUT_LABEL,
             description: "",
-            detail: `Log out from Code Time (${userStatus.email}).`,
+            detail: `Log out from Code Time (${userStatus.email})`,
             url: null,
             uri: null,
             cb: pluginLogout

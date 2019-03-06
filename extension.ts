@@ -36,7 +36,7 @@ import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions,
-    buildLaunchUrl,
+    buildWebDashboardUrl,
     buildSignupUrl,
     buildLoginUrl
 } from "./lib/MenuManager";
@@ -289,7 +289,7 @@ async function handleCodeTimeSignup() {
     if (fs.existsSync(dashboardFile)) {
         deleteFile(dashboardFile);
     }
-    refetchUserStatusLazily();
+    refetchUserStatusLazily(4);
 }
 
 async function handleCodeTimeLogin() {
@@ -300,8 +300,8 @@ async function handleCodeTimeLogin() {
     if (fs.existsSync(dashboardFile)) {
         deleteFile(dashboardFile);
     }
-    // retry 6 times, each retry is 10 seconds long
-    refetchUserStatusLazily(6);
+    // retry 8 times, each retry is 10 seconds long
+    refetchUserStatusLazily(8);
 }
 
 async function initializeUserInfo() {
@@ -364,11 +364,11 @@ async function initializeLiveshare() {
 export async function handleKpmClickedEvent() {
     // {loggedIn: true|false, hasAccounts: true|false, hasUserAccounts: true|false}
     let userStatus = await getUserStatus();
-    let webUrl = await buildLaunchUrl(false);
+    let webUrl = await buildWebDashboardUrl();
     if (!userStatus.loggedIn && userStatus.hasUserAccounts) {
         webUrl = await buildLoginUrl();
     } else if (!userStatus.loggedIn) {
-        webUrl = await buildLaunchUrl(!userStatus.loggedIn);
+        webUrl = await buildSignupUrl();
     }
     launchWebUrl(webUrl);
 }
