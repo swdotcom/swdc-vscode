@@ -292,6 +292,12 @@ function updateSessionUserInfo(user) {
  * return {loggedIn: true|false, asUserAccounts: true|false, email}
  */
 export async function getUserStatus(token = null) {
+    let nowMillis = Date.now();
+    if (userStatus !== null && lastRegisterUserCheck !== null) {
+        if (nowMillis - lastRegisterUserCheck <= 5000) {
+            return userStatus;
+        }
+    }
     let appJwt = await getAppJwt();
     let macAddress = await getMacAddress();
 
@@ -324,6 +330,8 @@ export async function getUserStatus(token = null) {
         "codetime:loggedIn",
         userStatus.loggedIn
     );
+
+    lastRegisterUserCheck = Date.now();
 
     return userStatus;
 }
