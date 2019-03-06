@@ -292,6 +292,7 @@ function updateSessionUserInfo(user) {
  * return {loggedIn: true|false, asUserAccounts: true|false, email}
  */
 export async function getUserStatus(token = null) {
+    let appJwt = await getAppJwt();
     let macAddress = await getMacAddress();
 
     let authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
