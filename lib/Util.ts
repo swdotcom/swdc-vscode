@@ -1,7 +1,6 @@
 import { getStatusBarItem } from "../extension";
 import { workspace } from "vscode";
 import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
-const macaddress = require("getmac");
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -14,6 +13,12 @@ export const DASHBOARD_LABEL_WIDTH = 23;
 export const DASHBOARD_VALUE_WIDTH = 25;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
+const MAC_PAIR_PATTERN = new RegExp(
+    "^([a-fA-F0-9]{2}[:\\.-]?){5}[a-fA-F0-9]{2}$"
+);
+const MAC_TRIPLE_PATTERN = new RegExp(
+    "^([a-fA-F0-9]{3}[:\\.-]?){3}[a-fA-F0-9]{3}$"
+);
 
 let lastMsg = "";
 let lastTooltip = "";
@@ -405,32 +410,49 @@ export function humanizeMinutes(min) {
     return str;
 }
 
-/**
- * get the mac address
- */
 export async function getIdentity() {
+    let macAddrId = "";
     const username = os.userInfo().username;
-    let macAddrId = null;
-    let result = await new Promise(function(resolve, reject) {
-        macaddress.getMac(async (err, macAddress) => {
-            if (err) {
-                reject({ status: "failed", message: err.message });
-            } else {
-                resolve({ status: "success", macAddress });
+    let content = "";
+    if (!isWindows()) {
+        content = await wrapExecPromise(
+            '/bin/sh -c ifconfig | grep "ether " | grep -v 127.0.0.1 | cut -d " " -f2',
+            null
+        );
+    } else {
+        // use the windows commmand
+        content = await wrapExecPromise("cmd /c wmic nic get MACAddress", null);
+    }
+
+    let contentList = content
+        .replace(/\r\n/g, "\r")
+        .replace(/\n/g, "\r")
+        .split(/\r/);
+
+    let foundIdentity = "";
+    if (contentList && contentList.length > 0) {
+        for (let i = 0; i < contentList.length; i++) {
+            let line = contentList[i].trim();
+            if (
+                line &&
+                line.length > 0 &&
+                (MAC_PAIR_PATTERN.test(line) || MAC_TRIPLE_PATTERN.test(line))
+            ) {
+                foundIdentity = line.trim();
+                break;
             }
-        });
-    });
+        }
+    }
+
     let parts = [];
     if (username) {
         parts.push(username);
     }
-    if (result && result["status"] === "success") {
-        parts.push(result["macAddress"]);
+    if (foundIdentity) {
+        parts.push(foundIdentity);
     }
 
-    if (parts.length > 0) {
-        macAddrId = parts.join("_");
-    }
+    macAddrId = parts.join("_");
 
     return macAddrId;
 }
