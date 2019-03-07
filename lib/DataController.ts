@@ -182,7 +182,7 @@ export async function createAnonymousUser(updateJson) {
         let resp = await softwarePost(
             `/data/onboard?addr=${encodeURIComponent(identityId)}`,
             { email, plugin_token, timezone },
-            getItem("app_jwt")
+            appJwt
         );
         if (
             isResponseOk(resp) &&
