@@ -261,6 +261,25 @@ function getLoggedInUser(macAddr, authAccounts) {
     return null;
 }
 
+function hasRegisteredUserAccount(macAddr, authAccounts) {
+    if (authAccounts && authAccounts.length > 0) {
+        for (let i = 0; i < authAccounts.length; i++) {
+            let user = authAccounts[i];
+            let userMacAddr = user.mac_addr;
+            let userEmail = user.email;
+            let userMacAddrShare = user.mac_addr_share;
+            if (
+                userEmail !== userMacAddr &&
+                userEmail !== macAddr &&
+                userEmail !== userMacAddrShare
+            ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function getAnonymousUser(macAddr, authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
@@ -311,7 +330,7 @@ export async function getUserStatus(token = null) {
         authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
         anonUser = getAnonymousUser(macAddress, authAccounts);
     }
-    let hasUserAccounts = loggedInUser ? true : false;
+    let hasUserAccounts = hasRegisteredUserAccount(macAddress, authAccounts);
 
     if (loggedInUser) {
         updateSessionUserInfo(loggedInUser);

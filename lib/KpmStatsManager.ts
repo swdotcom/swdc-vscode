@@ -36,7 +36,8 @@ export async function chekUserAuthenticationStatus() {
 
     const lastUpdateTime = getItem("vscode_lastUpdateTime");
     let isInitialCheck = false;
-    if (!lastUpdateTime || Date.now() - lastUpdateTime < ten_sec_in_millis) {
+    let nowMillis = Date.now();
+    if (!lastUpdateTime || nowMillis - lastUpdateTime < ten_sec_in_millis) {
         isInitialCheck = true;
     }
     const serverAvailable = await serverIsAvailable();
