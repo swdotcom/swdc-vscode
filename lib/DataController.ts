@@ -204,8 +204,6 @@ export async function createAnonymousUser(updateJson) {
 }
 
 async function getAuthenticatedPluginAccounts(macAddr, token = null) {
-    let jwt = getItem("jwt");
-    let appJwt = getItem("app_jwt");
     let serverIsOnline = await serverIsAvailable();
     let tokenQryStr = "";
     if (!token) {
@@ -214,10 +212,9 @@ async function getAuthenticatedPluginAccounts(macAddr, token = null) {
         tokenQryStr = `?token=${token}`;
     }
 
-    let authenticatingJwt = jwt ? jwt : appJwt;
-    if (authenticatingJwt && serverIsOnline) {
+    if (serverIsOnline) {
         let api = `/users/plugin/accounts${tokenQryStr}`;
-        let resp = await softwareGet(api, authenticatingJwt);
+        let resp = await softwareGet(api, null);
         if (isResponseOk(resp)) {
             if (
                 resp &&
