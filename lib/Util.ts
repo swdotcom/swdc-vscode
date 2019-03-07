@@ -355,7 +355,6 @@ export async function wrapExecPromise(cmd, projectDir) {
                 : {};
         result = await execPromise(cmd, opts);
     } catch (e) {
-        // console.error(e.message);
         result = null;
     }
     return result;
@@ -409,13 +408,7 @@ export function humanizeMinutes(min) {
 /**
  * get the mac address
  */
-export async function getMacAddress() {
-    const homedir = os.homedir();
-    let createTimeMs = null;
-    if (fs.existsSync(homedir)) {
-        let folderStats = fs.statSync(homedir);
-        createTimeMs = folderStats.birthtimeMs;
-    }
+export async function getIdentity() {
     const username = os.userInfo().username;
     let macAddrId = null;
     let result = await new Promise(function(resolve, reject) {
@@ -433,9 +426,6 @@ export async function getMacAddress() {
     }
     if (result && result["status"] === "success") {
         parts.push(result["macAddress"]);
-    }
-    if (createTimeMs) {
-        parts.push(createTimeMs);
     }
 
     if (parts.length > 0) {

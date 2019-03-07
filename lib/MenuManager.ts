@@ -4,7 +4,7 @@ import {
     getItem,
     getDashboardFile,
     showLastStatus,
-    getMacAddress
+    getIdentity
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
@@ -70,14 +70,14 @@ export function showQuickPick(pickOptions) {
 }
 
 export async function buildLoginUrl() {
-    let macAddress = await getMacAddress();
-    let loginUrl = `${launch_url}/login?addr=${macAddress}`;
+    let identity = await getIdentity();
+    let loginUrl = `${launch_url}/login?addr=${identity}`;
     return loginUrl;
 }
 
 export async function buildSignupUrl() {
-    let macAddress = await getMacAddress();
-    let signupUrl = `${launch_url}/onboarding?addr=${macAddress}`;
+    let identity = await getIdentity();
+    let signupUrl = `${launch_url}/onboarding?addr=${identity}`;
     return signupUrl;
 }
 

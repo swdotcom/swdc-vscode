@@ -15,9 +15,8 @@ import {
     getSoftwareDataStoreFile,
     deleteFile,
     randomCode,
-    getMacAddress,
-    getSoftwareSessionFile,
-    getDashboardFile
+    getIdentity,
+    getSoftwareSessionFile
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 
@@ -144,25 +143,24 @@ export function sendMusicData(trackData) {
  * get the app jwt
  */
 export async function getAppJwt() {
-    let appJwt = getItem("app_jwt");
+    setItem("app_jwt", null);
 
     let serverIsOnline = await serverIsAvailable();
 
-    if (!appJwt && serverIsOnline) {
-        let macAddress = await getMacAddress();
-        if (macAddress) {
+    if (serverIsOnline) {
+        let identity = await getIdentity();
+        if (identity) {
             // get the app jwt
             let resp = await softwareGet(
-                `/data/token?addr=${encodeURIComponent(macAddress)}`,
+                `/data/token?addr=${encodeURIComponent(identity)}`,
                 null
             );
             if (isResponseOk(resp)) {
-                appJwt = resp.data.jwt;
-                setItem("app_jwt", appJwt);
+                return resp.data.jwt;
             }
         }
     }
-    return getItem("app_jwt");
+    return null;
 }
 
 /**
@@ -170,23 +168,19 @@ export async function getAppJwt() {
  */
 export async function createAnonymousUser(updateJson) {
     let appJwt = await getAppJwt();
-    let jwt = await getItem("jwt");
-    let macAddress = await getMacAddress();
-    if (appJwt && !jwt && macAddress) {
+    let identityId = await getIdentity();
+    if (appJwt && identityId) {
         let plugin_token = getItem("token");
         if (!plugin_token) {
             plugin_token = randomCode();
             setItem("token", plugin_token);
         }
 
-        let email = null; //await getGitEmail();
-        if (!email) {
-            email = macAddress;
-        }
+        let email = identityId;
 
         let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         let resp = await softwarePost(
-            `/data/onboard?addr=${encodeURIComponent(macAddress)}`,
+            `/data/onboard?addr=${encodeURIComponent(identityId)}`,
             { email, plugin_token, timezone },
             getItem("app_jwt")
         );
@@ -317,20 +311,20 @@ export async function getUserStatus(token = null) {
             return userStatus;
         }
     }
-    let appJwt = await getAppJwt();
-    let macAddress = await getMacAddress();
 
-    let authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
-    let loggedInUser = getLoggedInUser(macAddress, authAccounts);
-    let anonUser = getAnonymousUser(macAddress, authAccounts);
+    let identity = await getIdentity();
+
+    let authAccounts = await getAuthenticatedPluginAccounts(identity, token);
+    let loggedInUser = getLoggedInUser(identity, authAccounts);
+    let anonUser = getAnonymousUser(identity, authAccounts);
     if (!anonUser) {
         let updateJson = !loggedInUser ? true : false;
         // create the anonymous user
         await createAnonymousUser(updateJson);
-        authAccounts = await getAuthenticatedPluginAccounts(macAddress, token);
-        anonUser = getAnonymousUser(macAddress, authAccounts);
+        authAccounts = await getAuthenticatedPluginAccounts(identity, token);
+        anonUser = getAnonymousUser(identity, authAccounts);
     }
-    let hasUserAccounts = hasRegisteredUserAccount(macAddress, authAccounts);
+    let hasUserAccounts = hasRegisteredUserAccount(identity, authAccounts);
 
     if (loggedInUser) {
         updateSessionUserInfo(loggedInUser);
