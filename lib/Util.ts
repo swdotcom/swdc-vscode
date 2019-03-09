@@ -19,6 +19,7 @@ const MAC_PAIR_PATTERN = new RegExp(
 const MAC_TRIPLE_PATTERN = new RegExp(
     "^([a-fA-F0-9]{3}[:\\.-]?){3}[a-fA-F0-9]{3}$"
 );
+const MAC_PATTERN = new RegExp("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$");
 
 let lastMsg = "";
 let lastTooltip = "";
@@ -410,9 +411,37 @@ export function humanizeMinutes(min) {
     return str;
 }
 
+export function isMacEmail(email) {
+    if (email.includes("_")) {
+        let parts = email.split("_");
+        for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            if (
+                MAC_PAIR_PATTERN.test(part) ||
+                MAC_TRIPLE_PATTERN.test(part) ||
+                MAC_PATTERN.test(part)
+            ) {
+                return true;
+            }
+        }
+    } else if (
+        MAC_PAIR_PATTERN.test(email) ||
+        MAC_TRIPLE_PATTERN.test(email) ||
+        MAC_PATTERN.test(email)
+    ) {
+        return true;
+    }
+    return false;
+}
+
+export function getOsUsername() {
+    const username = os.userInfo().username;
+    return username;
+}
+
 export async function getIdentity() {
     let macAddrId = "";
-    const username = os.userInfo().username;
+    const username = getOsUsername();
     let content = "";
     if (!isWindows()) {
         content = await wrapExecPromise(
@@ -432,14 +461,17 @@ export async function getIdentity() {
     let foundIdentity = "";
     if (contentList && contentList.length > 0) {
         for (let i = 0; i < contentList.length; i++) {
-            let line = contentList[i].trim();
-            if (
-                line &&
-                line.length > 0 &&
-                (MAC_PAIR_PATTERN.test(line) || MAC_TRIPLE_PATTERN.test(line))
-            ) {
-                foundIdentity = line.trim();
-                break;
+            let line = contentList[i];
+            if (line) {
+                line = line.trim();
+                if (
+                    MAC_PAIR_PATTERN.test(line) ||
+                    MAC_TRIPLE_PATTERN.test(line) ||
+                    MAC_PATTERN.test(line)
+                ) {
+                    foundIdentity = line;
+                    break;
+                }
             }
         }
     }

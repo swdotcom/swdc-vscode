@@ -16,7 +16,9 @@ import {
     deleteFile,
     randomCode,
     getIdentity,
-    getSoftwareSessionFile
+    getSoftwareSessionFile,
+    isMacEmail,
+    getOsUsername
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 
@@ -275,14 +277,7 @@ function getAnonymousUser(macAddr, authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
-            let userMacAddr = user.mac_addr;
-            let userEmail = user.email;
-            let userMacAddrShare = user.mac_addr_share;
-            if (
-                userEmail === userMacAddr ||
-                userEmail === macAddr ||
-                userEmail === userMacAddrShare
-            ) {
+            if (user.email && isMacEmail(user.email)) {
                 return user;
             }
         }
