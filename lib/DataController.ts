@@ -254,18 +254,11 @@ function getLoggedInUser(macAddr, authAccounts) {
     return null;
 }
 
-function hasRegisteredUserAccount(macAddr, authAccounts) {
+function hasRegisteredUserAccount(authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
-            let userMacAddr = user.mac_addr;
-            let userEmail = user.email;
-            let userMacAddrShare = user.mac_addr_share;
-            if (
-                userEmail !== userMacAddr &&
-                userEmail !== macAddr &&
-                userEmail !== userMacAddrShare
-            ) {
+            if (user.email && !isMacEmail(user.email)) {
                 return true;
             }
         }
@@ -273,7 +266,7 @@ function hasRegisteredUserAccount(macAddr, authAccounts) {
     return false;
 }
 
-function getAnonymousUser(macAddr, authAccounts) {
+function getAnonymousUser(authAccounts) {
     if (authAccounts && authAccounts.length > 0) {
         for (let i = 0; i < authAccounts.length; i++) {
             let user = authAccounts[i];
@@ -308,15 +301,15 @@ export async function getUserStatus(token = null) {
 
     let authAccounts = await getAuthenticatedPluginAccounts(identity, token);
     let loggedInUser = getLoggedInUser(identity, authAccounts);
-    let anonUser = getAnonymousUser(identity, authAccounts);
+    let anonUser = getAnonymousUser(authAccounts);
     if (!anonUser) {
         let updateJson = !loggedInUser ? true : false;
         // create the anonymous user
         await createAnonymousUser(updateJson);
         authAccounts = await getAuthenticatedPluginAccounts(identity, token);
-        anonUser = getAnonymousUser(identity, authAccounts);
+        anonUser = getAnonymousUser(authAccounts);
     }
-    let hasUserAccounts = hasRegisteredUserAccount(identity, authAccounts);
+    let hasUserAccounts = hasRegisteredUserAccount(authAccounts);
 
     if (loggedInUser) {
         updateSessionUserInfo(loggedInUser);
