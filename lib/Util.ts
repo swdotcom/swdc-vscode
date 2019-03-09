@@ -14,12 +14,12 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const MAC_PAIR_PATTERN = new RegExp(
-    "^([a-fA-F0-9]{2}[:\\.-]?){5}[a-fA-F0-9]{2}$"
+    "([a-fA-F0-9]{2}[:\\.-]?){5}[a-fA-F0-9]{2}"
 );
 const MAC_TRIPLE_PATTERN = new RegExp(
-    "^([a-fA-F0-9]{3}[:\\.-]?){3}[a-fA-F0-9]{3}$"
+    "([a-fA-F0-9]{3}[:\\.-]?){3}[a-fA-F0-9]{3}"
 );
-const MAC_PATTERN = new RegExp("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$");
+const MAC_PATTERN = new RegExp("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})");
 
 let lastMsg = "";
 let lastTooltip = "";

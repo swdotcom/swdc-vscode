@@ -17,8 +17,7 @@ import {
     randomCode,
     getIdentity,
     getSoftwareSessionFile,
-    isMacEmail,
-    getOsUsername
+    isMacEmail
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 
