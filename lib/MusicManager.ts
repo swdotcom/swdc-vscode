@@ -1,6 +1,6 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise, isWindows, getItem, isEmptyObj } from "./Util";
+import { wrapExecPromise, isWindows, getItem } from "./Util";
 import { sendMusicData } from "./DataController";
 import { softwareGet, isResponseOk } from "./HttpClient";
 

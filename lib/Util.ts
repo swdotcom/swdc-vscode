@@ -13,13 +13,6 @@ export const DASHBOARD_LABEL_WIDTH = 23;
 export const DASHBOARD_VALUE_WIDTH = 25;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
-const MAC_PAIR_PATTERN = new RegExp(
-    "([a-fA-F0-9]{2}[:\\.-]?){5}[a-fA-F0-9]{2}"
-);
-const MAC_TRIPLE_PATTERN = new RegExp(
-    "([a-fA-F0-9]{3}[:\\.-]?){3}[a-fA-F0-9]{3}"
-);
-const MAC_PATTERN = new RegExp("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})");
 
 let lastMsg = "";
 let lastTooltip = "";
@@ -197,6 +190,33 @@ export function isWindows() {
 
 export function isMac() {
     return process.platform.indexOf("darwin") !== -1;
+}
+
+export async function getOsUsername() {
+    let username = os.userInfo().username;
+    if (!username || username.trim() === "") {
+        let content = "";
+        if (isWindows()) {
+            content = await wrapExecPromise("cmd /c whoami", null);
+        } else {
+            // use the windows commmand
+            content = await wrapExecPromise("/bin/sh -c whoami", null);
+        }
+        let contentList = content
+            .replace(/\r\n/g, "\r")
+            .replace(/\n/g, "\r")
+            .split(/\r/);
+        if (contentList && contentList.length > 0) {
+            for (let i = 0; i < contentList.length; i++) {
+                let line = contentList[i];
+                if (line && line.trim().length > 0) {
+                    username = line.trim();
+                    break;
+                }
+            }
+        }
+    }
+    return username;
 }
 
 export function getDashboardFile() {
@@ -409,82 +429,4 @@ export function humanizeMinutes(min) {
         str = min.toFixed(0) + " min";
     }
     return str;
-}
-
-export function isMacEmail(email) {
-    if (email.includes("_")) {
-        let parts = email.split("_");
-        for (let i = 0; i < parts.length; i++) {
-            let part = parts[i];
-            if (
-                MAC_PAIR_PATTERN.test(part) ||
-                MAC_TRIPLE_PATTERN.test(part) ||
-                MAC_PATTERN.test(part)
-            ) {
-                return true;
-            }
-        }
-    } else if (
-        MAC_PAIR_PATTERN.test(email) ||
-        MAC_TRIPLE_PATTERN.test(email) ||
-        MAC_PATTERN.test(email)
-    ) {
-        return true;
-    }
-    return false;
-}
-
-export function getOsUsername() {
-    const username = os.userInfo().username;
-    return username;
-}
-
-export async function getIdentity() {
-    let macAddrId = "";
-    const username = getOsUsername();
-    let content = "";
-    if (!isWindows()) {
-        content = await wrapExecPromise(
-            '/bin/sh -c ifconfig | grep "ether " | grep -v 127.0.0.1 | cut -d " " -f2',
-            null
-        );
-    } else {
-        // use the windows commmand
-        content = await wrapExecPromise("cmd /c wmic nic get MACAddress", null);
-    }
-
-    let contentList = content
-        .replace(/\r\n/g, "\r")
-        .replace(/\n/g, "\r")
-        .split(/\r/);
-
-    let foundIdentity = "";
-    if (contentList && contentList.length > 0) {
-        for (let i = 0; i < contentList.length; i++) {
-            let line = contentList[i];
-            if (line) {
-                line = line.trim();
-                if (
-                    MAC_PAIR_PATTERN.test(line) ||
-                    MAC_TRIPLE_PATTERN.test(line) ||
-                    MAC_PATTERN.test(line)
-                ) {
-                    foundIdentity = line;
-                    break;
-                }
-            }
-        }
-    }
-
-    let parts = [];
-    if (username) {
-        parts.push(username);
-    }
-    if (foundIdentity) {
-        parts.push(foundIdentity);
-    }
-
-    macAddrId = parts.join("_");
-
-    return macAddrId;
 }

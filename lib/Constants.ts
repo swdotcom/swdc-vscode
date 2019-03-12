@@ -15,6 +15,8 @@ export const SHORT_THRESHOLD_HOURS = 1;
 export const PLUGIN_ID = 2;
 
 // set the api endpoint to use
+// lksdjflsjklkjsdf
+// lkjdsflkjsdflkjsdfklj
 // "http://localhost:5000", "https://stagingapi.software.com", "https://api.software.com"
 export const api_endpoint = "https://api.software.com";
 // set the launch url to use

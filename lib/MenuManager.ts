@@ -3,21 +3,11 @@ import {
     launchWebUrl,
     getItem,
     getDashboardFile,
-    showLastStatus,
-    getIdentity
+    showLastStatus
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import {
-    getUserStatus,
-    pluginLogout,
-    refetchUserStatusLazily
-} from "./DataController";
-import {
-    launch_url,
-    LOGIN_LABEL,
-    LOGOUT_LABEL,
-    SIGNUP_LABEL
-} from "./Constants";
+import { getUserStatus, refetchUserStatusLazily } from "./DataController";
+import { launch_url, LOGIN_LABEL } from "./Constants";
 
 const fs = require("fs");
 
@@ -70,15 +60,9 @@ export function showQuickPick(pickOptions) {
 }
 
 export async function buildLoginUrl() {
-    let identity = await getIdentity();
-    let loginUrl = `${launch_url}/login?addr=${identity}`;
+    let identity = getItem("jwt");
+    let loginUrl = `${launch_url}/onboarding?token=${identity}`;
     return loginUrl;
-}
-
-export async function buildSignupUrl() {
-    let identity = await getIdentity();
-    let signupUrl = `${launch_url}/onboarding?addr=${identity}`;
-    return signupUrl;
 }
 
 export async function buildWebDashboardUrl() {
@@ -92,7 +76,6 @@ export async function showMenuOptions() {
     let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
     let loginUrl = await buildLoginUrl();
-    let signupUrl = await buildSignupUrl();
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -129,15 +112,6 @@ export async function showMenuOptions() {
             uri: null,
             cb: null
         });
-        kpmMenuOptions.items.push({
-            label: SIGNUP_LABEL,
-            description: "",
-            detail:
-                "To see rich data visualizations and get weekly email reports, please sign in to our web app",
-            url: signupUrl,
-            uri: null,
-            cb: null
-        });
     } else {
         kpmMenuOptions.items.push({
             label: "Web dashboard",
@@ -146,14 +120,6 @@ export async function showMenuOptions() {
             url: webUrl,
             uri: null,
             cb: null
-        });
-        kpmMenuOptions.items.push({
-            label: LOGOUT_LABEL,
-            description: "",
-            detail: `Log out from Code Time (${userStatus.email})`,
-            url: null,
-            uri: null,
-            cb: pluginLogout
         });
     }
     showQuickPick(kpmMenuOptions);

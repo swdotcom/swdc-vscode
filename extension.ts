@@ -14,11 +14,10 @@ import { KpmController } from "./lib/KpmController";
 import {
     sendOfflineData,
     getUserStatus,
-    clearUserStatusCache,
     updatePreferences,
     initializePreferences,
-    pluginLogout,
-    refetchUserStatusLazily
+    refetchUserStatusLazily,
+    isAuthenticated
 } from "./lib/DataController";
 import {
     showStatus,
@@ -26,22 +25,19 @@ import {
     nowInSecs,
     getOffsetSecends,
     getItem,
-    getSoftwareSessionFile,
-    deleteFile,
-    getDashboardFile
+    setItem
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions,
     buildWebDashboardUrl,
-    buildSignupUrl,
     buildLoginUrl
 } from "./lib/MenuManager";
 import { gatherMusicInfo } from "./lib/MusicManager";
 import {
     fetchDailyKpmSessionInfo,
-    chekUserAuthenticationStatus
+    showLoginPrompt
 } from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
@@ -200,11 +196,10 @@ export function activate(ctx: ExtensionContext) {
 
     // every minute and a half, get the user's jwt if they've logged
     // in if they're still not a registered user.
-    let ninetysec = one_min + 30;
+    let twomin = one_min * 2;
     token_check_interval = setInterval(() => {
-        clearUserStatusCache();
         getUserStatus();
-    }, ninetysec);
+    }, twomin);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -229,16 +224,6 @@ export function activate(ctx: ExtensionContext) {
     ctx.subscriptions.push(
         commands.registerCommand("extension.viewSoftwareTop40", () => {
             handleViewSoftwareTopSongsEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeLogout", () => {
-            handleCodeTimeLogout();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeSignup", () => {
-            handleCodeTimeSignup();
         })
     );
     ctx.subscriptions.push(
@@ -275,50 +260,36 @@ function handleViewSoftwareTopSongsEvent() {
     launchWebUrl("https://api.software.com/music/top40");
 }
 
-function handleCodeTimeLogout() {
-    pluginLogout();
-}
-
-async function handleCodeTimeSignup() {
-    let signupUrl = await buildSignupUrl();
-    launchWebUrl(signupUrl);
-    // delete the session.json file
-    const dashboardFile = getDashboardFile();
-    if (fs.existsSync(dashboardFile)) {
-        deleteFile(dashboardFile);
-    }
-    refetchUserStatusLazily(4);
-}
-
 async function handleCodeTimeLogin() {
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
-    // delete the session.json file
-    const dashboardFile = getDashboardFile();
-    if (fs.existsSync(dashboardFile)) {
-        deleteFile(dashboardFile);
-    }
     // retry 8 times, each retry is 10 seconds long
     refetchUserStatusLazily(8);
 }
 
 async function initializeUserInfo() {
-    let tokenVal = getItem("token");
-    // vim plugin id check
-    if (tokenVal && tokenVal === LEGACY_VIM_ID) {
-        // delete the session json to re-establish a handshake without the vim token id
-        const sessionFile = getSoftwareSessionFile();
-        deleteFile(sessionFile);
+    // delete everything except for the jwt or app jwt
+    let user = getItem("user");
+    if (user) {
+        setItem("user", null);
+    }
+    let updateTime = getItem("vscode_lastUpdateTime");
+    if (updateTime) {
+        setItem("vscode_lastUpdateTime", null);
     }
 
-    // {loggedIn: true|false, hasUserAccounts: true|false}
+    let jwt = getItem("jwt");
+    let initializingPlugin = false;
+    if (!jwt) {
+        initializingPlugin = true;
+    }
+
+    // {loggedIn: true|false}
     let userStatus = await getUserStatus();
     if (userStatus.loggedIn) {
         initializePreferences();
-    } else {
-        setTimeout(() => {
-            chekUserAuthenticationStatus();
-        }, 8000);
+    } else if (initializingPlugin) {
+        showLoginPrompt();
     }
 }
 
@@ -356,13 +327,14 @@ async function initializeLiveshare() {
 }
 
 export async function handleKpmClickedEvent() {
-    // {loggedIn: true|false, hasUserAccounts: true|false}
+    // {loggedIn: true|false}
     let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
-    if (!userStatus.loggedIn && userStatus.hasUserAccounts) {
+
+    let authenticated = await isAuthenticated();
+    if (!authenticated) {
         webUrl = await buildLoginUrl();
-    } else if (!userStatus.loggedIn) {
-        webUrl = await buildSignupUrl();
+        refetchUserStatusLazily(8);
     }
     launchWebUrl(webUrl);
 }

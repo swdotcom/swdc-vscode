@@ -110,21 +110,20 @@ export function isResponseOk(resp) {
  * check if the user has been deactived
  */
 export async function isUserDeactivated(resp) {
-    if (!isResponseOk(resp)) {
+    if (resp && !isResponseOk(resp)) {
         if (isUnauthenticatedAndDeactivated(resp)) {
             showErrorStatus(
                 "To see your coding data in Code Time, please reactivate your account."
             );
             return true;
-        } else {
-            resp = await softwareGet("/users/ping", getItem("jwt"));
-            if (isUnauthenticatedAndDeactivated(resp)) {
-                showErrorStatus(
-                    "To see your coding data in Code Time, please reactivate your account."
-                );
-                return true;
-            }
         }
+    }
+    resp = await softwareGet("/users/ping", getItem("jwt"));
+    if (isUnauthenticatedAndDeactivated(resp)) {
+        showErrorStatus(
+            "To see your coding data in Code Time, please reactivate your account."
+        );
+        return true;
     }
     return false;
 }

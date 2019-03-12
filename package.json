@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "0.10.0",
+    "version": "0.10.1",
     "publisher": "softwaredotcom",
     "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
@@ -78,16 +78,6 @@
                 "category": "Code Time"
             },
             {
-                "command": "extension.codeTimeLogout",
-                "title": "Log out from Code Time",
-                "category": "Code Time"
-            },
-            {
-                "command": "extension.codeTimeSignup",
-                "title": "Sign up to see rich data visualizations and get weekly email reports",
-                "category": "Code Time"
-            },
-            {
                 "command": "extension.codeTimeLogin",
                 "title": "Log in to see your coding data in Code Time",
                 "category": "Code Time"
@@ -105,14 +95,6 @@
                 {
                     "command": "extension.viewSoftwareTop40",
                     "when": "config.showMusicMetrics"
-                },
-                {
-                    "command": "extension.codeTimeLogout",
-                    "when": "codetime:loggedIn"
-                },
-                {
-                    "command": "extension.codeTimeSignup",
-                    "when": "!codetime:loggedIn"
                 },
                 {
                     "command": "extension.codeTimeLogin",
