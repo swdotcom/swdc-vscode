@@ -72,7 +72,7 @@ export async function buildWebDashboardUrl() {
 
 export async function showMenuOptions() {
     let filePath = getDashboardFile();
-    // {loggedIn: true|false, hasUserAccounts: true|false}
+    // {loggedIn: true|false}
     let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
     let loginUrl = await buildLoginUrl();

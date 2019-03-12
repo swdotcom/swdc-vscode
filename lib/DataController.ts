@@ -173,14 +173,15 @@ async function isLoggedOn(serverIsOnline) {
  * check if the user is registered or not
  * return {loggedIn: true|false}
  */
-export async function getUserStatus(token = null) {
-    if (userStatus !== null && userStatus.loggedIn) {
+export async function getUserStatus() {
+    let jwt = getItem("jwt");
+    if (jwt && userStatus && userStatus.loggedIn) {
+        // the user is logged on, no need to cause api traffic
         return userStatus;
     }
 
     let serverIsOnline = await serverIsAvailable();
 
-    let jwt = getItem("jwt");
     let loggedIn = false;
     if (!jwt) {
         // create an anonymous user
