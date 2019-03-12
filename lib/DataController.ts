@@ -162,6 +162,14 @@ async function isLoggedOn(serverIsOnline) {
         if (isResponseOk(resp) && resp.data) {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
             if (resp.data.state === "OK") {
+                // check the jwt
+                if (resp.data.jwt) {
+                    let pluginJwt = resp.data.jwt;
+                    if (pluginJwt !== jwt) {
+                        // update it
+                        setItem("jwt", pluginJwt);
+                    }
+                }
                 return true;
             }
         }
