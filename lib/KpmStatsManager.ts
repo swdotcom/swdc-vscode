@@ -45,8 +45,7 @@ export async function fetchDailyKpmSessionInfo() {
     if (!serverIsOnline) {
         showStatus(
             "Code Time",
-            "The code time app is currently not available, we'll try retrieving your dashboard metrics again later.",
-            "#D29645"
+            "The code time app is currently not available, we'll try retrieving your dashboard metrics again later."
         );
         return;
     }

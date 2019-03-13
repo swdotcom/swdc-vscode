@@ -146,24 +146,31 @@ export function showLoading() {
     updateStatusBar(loadingMsg, "");
 }
 
-export function showStatus(fullMsg, tooltip, color = null) {
+export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip = "Click to see more from Code Time";
     }
-    updateStatusBar(fullMsg, tooltip, color);
+    updateStatusBar(fullMsg, tooltip);
 }
 
-export function showTacoTimeStatus(fullMsg, tooltip, color = null) {
+export function showTacoTimeStatus(fullMsg, tooltip) {
     getStatusBarItem().command = "extension.orderGrubCommand";
-    updateStatusBar(fullMsg, tooltip, color);
+    updateStatusBar(fullMsg, tooltip);
 }
 
-function updateStatusBar(msg, tooltip, color = null) {
+function updateStatusBar(msg, tooltip) {
+    let loggedInName = getItem("name");
+    let userInfo = "";
+    if (loggedInName && loggedInName !== "") {
+        userInfo = ` (${loggedInName})`;
+    }
+    if (tooltip) {
+        tooltip = `${tooltip}${userInfo}`;
+    } else {
+        tooltip = `Click to see more from Code Time${userInfo}`;
+    }
     getStatusBarItem().tooltip = tooltip;
     getStatusBarItem().text = msg;
-    if (color) {
-        getStatusBarItem().color = color;
-    }
 }
 
 export function isEmptyObj(obj) {

@@ -328,7 +328,7 @@ async function initializeLiveshare() {
 
 export async function handleKpmClickedEvent() {
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus();
+    await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
 
     let authenticated = await isAuthenticated();
