@@ -140,7 +140,7 @@ export async function createAnonymousUser(serverIsOnline) {
         let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         let resp = await softwarePost(
             "/data/onboard",
-            { timezone, mac_addr: username },
+            { timezone, username },
             appJwt
         );
         if (isResponseOk(resp) && resp.data && resp.data.jwt) {
