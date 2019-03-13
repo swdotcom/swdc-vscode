@@ -168,6 +168,8 @@ async function isLoggedOn(serverIsOnline) {
                     if (pluginJwt !== jwt) {
                         // update it
                         setItem("jwt", pluginJwt);
+                        // re-initialize preferences
+                        initializePreferences();
                     }
                 }
                 return true;
