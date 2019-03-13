@@ -9,8 +9,11 @@ import {
     launchWebUrl
 } from "./Util";
 import { fetchCodeTimeMetricsDashboard, buildLoginUrl } from "./MenuManager";
-import { isTelemetryOn } from "../extension";
-import { getUserStatus, refetchUserStatusLazily } from "./DataController";
+import {
+    getUserStatus,
+    refetchUserStatusLazily,
+    serverIsAvailable
+} from "./DataController";
 import { isResponseOk, softwareGet } from "./HttpClient";
 
 /**
@@ -38,8 +41,13 @@ export async function showLoginPrompt() {
 }
 
 export async function fetchDailyKpmSessionInfo() {
-    if (!isTelemetryOn()) {
-        // telemetry is paused
+    let serverIsOnline = await serverIsAvailable();
+    if (!serverIsOnline) {
+        showStatus(
+            "Code Time",
+            "The code time app is currently not available, we'll try retrieving your dashboard metrics again later.",
+            "#D29645"
+        );
         return;
     }
 

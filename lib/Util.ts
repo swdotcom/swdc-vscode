@@ -14,8 +14,6 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
-let lastMsg = "";
-let lastTooltip = "";
 let codeTimeMetricsIsFocused = false;
 let codeTimeMetricsIsClosed = true;
 
@@ -140,8 +138,6 @@ export function showErrorStatus(errorTooltip) {
         errorTooltip =
             "To see your coding data in Code Time, please log in to your account.";
     }
-    lastMsg = fullMsg;
-    lastTooltip = errorTooltip;
     showStatus(fullMsg, errorTooltip);
 }
 
@@ -150,32 +146,24 @@ export function showLoading() {
     updateStatusBar(loadingMsg, "");
 }
 
-export function showLastStatus() {
-    if (lastMsg && lastMsg !== "") {
-        updateStatusBar(lastMsg, lastTooltip);
-    } else {
-        // make a /session fetch
-        fetchDailyKpmSessionInfo();
-    }
-}
-
-export function showStatus(fullMsg, tooltip) {
+export function showStatus(fullMsg, tooltip, color = null) {
     if (!tooltip) {
         tooltip = "Click to see more from Code Time";
     }
-    lastMsg = fullMsg;
-    lastTooltip = tooltip;
-    updateStatusBar(fullMsg, tooltip);
+    updateStatusBar(fullMsg, tooltip, color);
 }
 
-export function showTacoTimeStatus(fullMsg, tooltip) {
+export function showTacoTimeStatus(fullMsg, tooltip, color = null) {
     getStatusBarItem().command = "extension.orderGrubCommand";
-    updateStatusBar(fullMsg, tooltip);
+    updateStatusBar(fullMsg, tooltip, color);
 }
 
-function updateStatusBar(msg, tooltip) {
+function updateStatusBar(msg, tooltip, color = null) {
     getStatusBarItem().tooltip = tooltip;
     getStatusBarItem().text = msg;
+    if (color) {
+        getStatusBarItem().color = color;
+    }
 }
 
 export function isEmptyObj(obj) {

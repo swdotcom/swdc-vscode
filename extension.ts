@@ -160,7 +160,7 @@ export function activate(ctx: ExtensionContext) {
     // 50 second interval to fetch daily kpm info
     kpm_session_info_interval = setInterval(() => {
         fetchDailyKpmSessionInfo();
-    }, 1000 * 50);
+    }, one_min);
 
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {

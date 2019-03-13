@@ -1,10 +1,5 @@
 import { window, workspace, QuickPickOptions, ViewColumn } from "vscode";
-import {
-    launchWebUrl,
-    getItem,
-    getDashboardFile,
-    showLastStatus
-} from "./Util";
+import { launchWebUrl, getItem, getDashboardFile } from "./Util";
 import { softwareGet } from "./HttpClient";
 import { getUserStatus, refetchUserStatusLazily } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
@@ -161,7 +156,7 @@ export async function displayCodeTimeMetricsDashboard() {
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
         window.showTextDocument(doc, ViewColumn.One, false).then(e => {
-            showLastStatus();
+            // done
         });
     });
 }
