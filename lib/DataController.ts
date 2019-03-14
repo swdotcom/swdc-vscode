@@ -20,6 +20,7 @@ import { updateShowMusicMetrics } from "./MenuManager";
 const fs = require("fs");
 
 let userStatus = null;
+let initializedPrefs = false;
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -165,14 +166,12 @@ async function isLoggedOn(serverIsOnline) {
                 let email = resp.data.email;
                 setItem("name", email);
                 // check the jwt
-                if (resp.data.jwt) {
-                    let pluginJwt = resp.data.jwt;
-                    if (pluginJwt !== jwt) {
-                        // update it
-                        setItem("jwt", pluginJwt);
-                        // re-initialize preferences
-                        initializePreferences();
-                    }
+                let pluginJwt = resp.data.jwt;
+                if (pluginJwt && pluginJwt !== jwt) {
+                    // update it
+                    setItem("jwt", pluginJwt);
+                    // re-initialize preferences
+                    initializedPrefs = false;
                 }
                 return true;
             }
@@ -191,13 +190,16 @@ export async function getUserStatus() {
 
     let serverIsOnline = await serverIsAvailable();
 
-    let loggedIn = false;
     if (!jwt) {
         // create an anonymous user
         await createAnonymousUser(serverIsOnline);
-    } else {
-        // check if we have a logged in user
-        loggedIn = await isLoggedOn(serverIsOnline);
+    }
+
+    let loggedIn = await isLoggedOn(serverIsOnline);
+
+    if (loggedIn && !initializedPrefs) {
+        initializePreferences();
+        initializedPrefs = true;
     }
 
     userStatus = {
@@ -363,18 +365,22 @@ export async function updatePreferences() {
 }
 
 export async function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
-    setTimeout(async () => {
-        let userStatus = await getUserStatus();
-        if (!userStatus.loggedIn) {
-            // try again if the count is not zero
-            if (tryCountUntilFoundUser > 0) {
-                tryCountUntilFoundUser -= 1;
-                refetchUserStatusLazily(tryCountUntilFoundUser);
-            }
-        } else {
-            setTimeout(() => {
-                fetchDailyKpmSessionInfo();
-            }, 1000);
-        }
+    setTimeout(() => {
+        userStatusFetchHandler(tryCountUntilFoundUser);
     }, 10000);
+}
+
+async function userStatusFetchHandler(tryCountUntilFoundUser) {
+    let userStatus = await getUserStatus();
+    if (!userStatus.loggedIn) {
+        // try again if the count is not zero
+        if (tryCountUntilFoundUser > 0) {
+            tryCountUntilFoundUser -= 1;
+            refetchUserStatusLazily(tryCountUntilFoundUser);
+        }
+    } else {
+        setTimeout(() => {
+            fetchDailyKpmSessionInfo();
+        }, 1000);
+    }
 }

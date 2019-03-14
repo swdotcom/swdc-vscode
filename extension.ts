@@ -15,7 +15,6 @@ import {
     sendOfflineData,
     getUserStatus,
     updatePreferences,
-    initializePreferences,
     refetchUserStatusLazily,
     isAuthenticated
 } from "./lib/DataController";
@@ -43,7 +42,6 @@ import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 
 const os = require("os");
-const fs = require("fs");
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -55,8 +53,6 @@ let repo_user_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let kpm_session_info_interval = null;
-
-const LEGACY_VIM_ID = "0q9p7n6m4k2j1VIM54t";
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -142,6 +138,7 @@ export function activate(ctx: ExtensionContext) {
     );
 
     let one_min = 1000 * 60;
+    let userStatusInterval = 1000 * 90;
 
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
@@ -153,8 +150,6 @@ export function activate(ctx: ExtensionContext) {
         statusBarItem.show();
 
         showStatus("Code Time", null);
-        // initiate kpm fetch
-        fetchDailyKpmSessionInfo();
     }, 100);
 
     // 50 second interval to fetch daily kpm info
@@ -196,10 +191,9 @@ export function activate(ctx: ExtensionContext) {
 
     // every minute and a half, get the user's jwt if they've logged
     // in if they're still not a registered user.
-    let twomin = one_min * 2;
     token_check_interval = setInterval(() => {
         getUserStatus();
-    }, twomin);
+    }, userStatusInterval);
 
     ctx.subscriptions.push(
         commands.registerCommand("extension.softwareKpmDashboard", () => {
@@ -233,7 +227,6 @@ export function activate(ctx: ExtensionContext) {
     );
 
     initializeLiveshare();
-
     initializeUserInfo();
 }
 
@@ -263,8 +256,8 @@ function handleViewSoftwareTopSongsEvent() {
 async function handleCodeTimeLogin() {
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
-    // retry 8 times, each retry is 10 seconds long
-    refetchUserStatusLazily(8);
+    // retry 10 times, each retry is 10 seconds long
+    refetchUserStatusLazily(10);
 }
 
 async function initializeUserInfo() {
@@ -285,19 +278,19 @@ async function initializeUserInfo() {
     }
 
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus();
-    if (userStatus.loggedIn) {
-        initializePreferences();
-    } else if (initializingPlugin) {
+    await getUserStatus();
+    if (initializingPlugin) {
         showLoginPrompt();
     }
+
+    // initiate kpm fetch
+    fetchDailyKpmSessionInfo();
 }
 
 async function initializeLiveshare() {
     const liveshare = await vsls.getApi();
     if (liveshare) {
         // {access: number, id: string, peerNumber: number, role: number, user: json}
-
         console.log(
             `Code Time: liveshare version - ${liveshare["apiVersion"]}`
         );
@@ -334,7 +327,7 @@ export async function handleKpmClickedEvent() {
     let authenticated = await isAuthenticated();
     if (!authenticated) {
         webUrl = await buildLoginUrl();
-        refetchUserStatusLazily(8);
+        refetchUserStatusLazily(10);
     }
     launchWebUrl(webUrl);
 }

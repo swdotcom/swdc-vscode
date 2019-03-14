@@ -32,7 +32,7 @@ export async function showLoginPrompt() {
             if (selection === LOGIN_LABEL) {
                 let loginUrl = await buildLoginUrl();
                 launchWebUrl(loginUrl);
-                refetchUserStatusLazily(8);
+                refetchUserStatusLazily(10);
                 setTimeout(() => {
                     getUserStatus();
                 }, 15000);
