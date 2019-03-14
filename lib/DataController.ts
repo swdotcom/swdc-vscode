@@ -146,11 +146,6 @@ export async function createAnonymousUser(serverIsOnline) {
         );
         if (isResponseOk(resp) && resp.data && resp.data.jwt) {
             setItem("jwt", resp.data.jwt);
-        } else {
-            console.log(
-                "Code Time: error confirming onboarding plugin token: ",
-                resp.message
-            );
         }
     }
 }
