@@ -168,7 +168,13 @@ async function isLoggedOn(serverIsOnline) {
                     initializedPrefs = false;
                 }
                 return true;
+            } else if (resp.data.state !== "ANONYMOUS") {
+                // wipe out the jwt so we can re-create the anonymous user
+                setItem("jwt", null);
             }
+        } else {
+            // wipe out the jwt so we can re-create the anonymous user
+            setItem("jwt", null);
         }
     }
     setItem("name", null);
@@ -192,6 +198,13 @@ export async function getUserStatus() {
     }
 
     let loggedIn = await isLoggedOn(serverIsOnline);
+
+    // the jwt may have been nulled out
+    jwt = getItem("jwt");
+    if (!jwt) {
+        // create an anonymous user
+        await createAnonymousUser(serverIsOnline);
+    }
 
     if (loggedIn && !initializedPrefs) {
         initializePreferences();
