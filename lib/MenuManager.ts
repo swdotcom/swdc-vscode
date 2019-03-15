@@ -55,8 +55,9 @@ export function showQuickPick(pickOptions) {
 }
 
 export async function buildLoginUrl() {
-    let identity = getItem("jwt");
-    let loginUrl = `${launch_url}/onboarding?token=${identity}`;
+    let jwt = getItem("jwt");
+    let encodedJwt = encodeURIComponent(jwt);
+    let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
     return loginUrl;
 }
 
