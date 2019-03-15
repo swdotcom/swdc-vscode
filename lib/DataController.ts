@@ -210,6 +210,22 @@ export async function getUserStatus() {
     return userStatus;
 }
 
+export async function getUserId() {
+    let jwt = getItem("jwt");
+    let serverIsOnline = await serverIsAvailable();
+    if (jwt && serverIsOnline) {
+        let api = `/users/me`;
+        let resp = await softwareGet(api, jwt);
+        if (isResponseOk(resp)) {
+            if (resp && resp.data && resp.data.data) {
+                let userId = parseInt(resp.data.data.id, 10);
+                return userId;
+            }
+        }
+    }
+    return null;
+}
+
 export async function initializePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
@@ -223,7 +239,7 @@ export async function initializePreferences() {
                 resp.data.data &&
                 resp.data.data.preferences
             ) {
-                let userId = parseInt(resp.data.data.id);
+                let userId = parseInt(resp.data.data.id, 10);
                 let prefs = resp.data.data.preferences;
                 let prefsShowMusic =
                     prefs.showMusic !== null && prefs.showMusic !== undefined
@@ -311,16 +327,10 @@ export async function updatePreferences() {
     updateShowMusicMetrics(showMusicMetrics);
 
     // get the user's preferences and update them if they don't match what we have
-    let user = getItem("user");
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
-    if (jwt && serverIsOnline && user) {
-        let cachedUser = user;
-        if (!cachedUser.id) {
-            cachedUser = JSON.parse(cachedUser);
-        }
-        let userId = parseInt(cachedUser.id, 10);
-
+    if (jwt && serverIsOnline) {
+        let userId = await getUserId();
         let api = `/users/${userId}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
