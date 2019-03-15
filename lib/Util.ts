@@ -111,6 +111,37 @@ export function getProjectFolder(fileName) {
     return null;
 }
 
+export function cleanSessionInfo() {
+    const jsonObj = getSoftwareSessionAsJson();
+    if (jsonObj) {
+        let keys = Object.keys(jsonObj);
+        let removedKeys = false;
+        if (keys) {
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                if (key !== "jwt" && key !== "name") {
+                    // remove  it
+                    delete jsonObj[key];
+                    removedKeys = true;
+                }
+            }
+        }
+
+        if (removedKeys) {
+            const content = JSON.stringify(jsonObj);
+
+            const sessionFile = getSoftwareSessionFile();
+            fs.writeFileSync(sessionFile, content, err => {
+                if (err)
+                    console.log(
+                        "Code Time: Error writing to the Software session file: ",
+                        err.message
+                    );
+            });
+        }
+    }
+}
+
 export function setItem(key, value) {
     const jsonObj = getSoftwareSessionAsJson();
     jsonObj[key] = value;
@@ -175,6 +206,10 @@ function updateStatusBar(msg, tooltip) {
 
 export function isEmptyObj(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
+
+export function isLinux() {
+    return isWindows() || isMac() ? false : true;
 }
 
 // process.platform return the following...

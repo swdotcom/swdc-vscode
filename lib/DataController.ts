@@ -14,12 +14,13 @@ import {
     getSoftwareDataStoreFile,
     deleteFile,
     nowInSecs,
-    getOsUsername
+    getOsUsername,
+    cleanSessionInfo
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 const fs = require("fs");
 
-let userStatus = null;
+let loggedInCacheState = false;
 let initializedPrefs = false;
 
 export async function serverIsAvailable() {
@@ -114,8 +115,6 @@ export function sendMusicData(trackData) {
  * get the app jwt
  */
 export async function getAppJwt() {
-    setItem("app_jwt", null);
-
     let serverIsOnline = await serverIsAvailable();
 
     if (serverIsOnline) {
@@ -181,6 +180,8 @@ async function isLoggedOn(serverIsOnline) {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus() {
+    cleanSessionInfo();
+
     let jwt = getItem("jwt");
 
     let serverIsOnline = await serverIsAvailable();
@@ -197,7 +198,7 @@ export async function getUserStatus() {
         initializedPrefs = true;
     }
 
-    userStatus = {
+    let userStatus = {
         loggedIn
     };
 
@@ -206,6 +207,14 @@ export async function getUserStatus() {
         "codetime:loggedIn",
         userStatus.loggedIn
     );
+
+    if (loggedInCacheState !== loggedIn) {
+        setTimeout(() => {
+            fetchDailyKpmSessionInfo();
+        }, 1000);
+    }
+
+    loggedInCacheState = loggedIn;
 
     return userStatus;
 }
@@ -383,9 +392,5 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
-    } else {
-        setTimeout(() => {
-            fetchDailyKpmSessionInfo();
-        }, 1000);
     }
 }

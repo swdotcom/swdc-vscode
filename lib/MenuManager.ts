@@ -1,5 +1,5 @@
 import { window, workspace, QuickPickOptions, ViewColumn } from "vscode";
-import { launchWebUrl, getItem, getDashboardFile } from "./Util";
+import { launchWebUrl, getItem, getDashboardFile, isLinux } from "./Util";
 import { softwareGet } from "./HttpClient";
 import { getUserStatus, refetchUserStatusLazily } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
@@ -130,7 +130,7 @@ export async function fetchCodeTimeMetricsDashboard() {
         .get("showWeeklyRanking");
 
     const dashboardSummary = await softwareGet(
-        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}`,
+        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
         getItem("jwt")
     );
     // get the content
