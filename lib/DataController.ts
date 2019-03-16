@@ -15,7 +15,8 @@ import {
     deleteFile,
     nowInSecs,
     getOsUsername,
-    cleanSessionInfo
+    cleanSessionInfo,
+    validateEmail
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 const fs = require("fs");
@@ -152,6 +153,13 @@ export async function createAnonymousUser(serverIsOnline) {
 async function isLoggedOn(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline) {
+        let user = await getUser();
+        if (user && validateEmail(user.email)) {
+            setItem("name", user.email);
+            setItem("jwt", user.jwt);
+            return true;
+        }
+
         let api = "/users/plugin/state";
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp) && resp.data) {
@@ -232,7 +240,7 @@ export async function getUserStatus() {
     return userStatus;
 }
 
-export async function getUserId() {
+export async function getUser() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
@@ -240,8 +248,7 @@ export async function getUserId() {
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (resp && resp.data && resp.data.data) {
-                let userId = parseInt(resp.data.data.id, 10);
-                return userId;
+                return resp.data.data;
             }
         }
     }
@@ -352,8 +359,11 @@ export async function updatePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
-        let userId = await getUserId();
-        let api = `/users/${userId}`;
+        let user = await getUser();
+        if (!user) {
+            return;
+        }
+        let api = `/users/${user.id}`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (
@@ -384,7 +394,7 @@ export async function updatePreferences() {
                     prefsShowGit !== showGitMetrics ||
                     prefsShowRank !== showWeeklyRanking
                 ) {
-                    await sendPreferencesUpdate(userId, prefs);
+                    await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
                 }
             }
         }
