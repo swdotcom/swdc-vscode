@@ -156,7 +156,7 @@ async function isLoggedOn(serverIsOnline) {
         let user = await getUser();
         if (user && validateEmail(user.email)) {
             setItem("name", user.email);
-            setItem("jwt", user.jwt);
+            setItem("jwt", user.plugin_jwt);
             return true;
         }
 
