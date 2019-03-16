@@ -115,9 +115,7 @@ export function sendMusicData(trackData) {
 /**
  * get the app jwt
  */
-export async function getAppJwt() {
-    let serverIsOnline = await serverIsAvailable();
-
+export async function getAppJwt(serverIsOnline) {
     if (serverIsOnline) {
         // get the app jwt
         let resp = await softwareGet(
@@ -135,7 +133,7 @@ export async function getAppJwt() {
  * create an anonymous user based on github email or mac addr
  */
 export async function createAnonymousUser(serverIsOnline) {
-    let appJwt = await getAppJwt();
+    let appJwt = await getAppJwt(serverIsOnline);
     if (appJwt && serverIsOnline) {
         let username = await getOsUsername();
         let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -153,7 +151,7 @@ export async function createAnonymousUser(serverIsOnline) {
 async function isLoggedOn(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline) {
-        let user = await getUser();
+        let user = await getUser(serverIsOnline);
         if (user && validateEmail(user.email)) {
             setItem("name", user.email);
             setItem("jwt", user.plugin_jwt);
@@ -240,9 +238,8 @@ export async function getUserStatus() {
     return userStatus;
 }
 
-export async function getUser() {
+export async function getUser(serverIsOnline) {
     let jwt = getItem("jwt");
-    let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
@@ -359,7 +356,7 @@ export async function updatePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
-        let user = await getUser();
+        let user = await getUser(serverIsOnline);
         if (!user) {
             return;
         }

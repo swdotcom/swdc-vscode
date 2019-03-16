@@ -261,16 +261,6 @@ async function handleCodeTimeLogin() {
 }
 
 async function initializeUserInfo() {
-    // delete everything except for the jwt or app jwt
-    let user = getItem("user");
-    if (user) {
-        setItem("user", null);
-    }
-    let updateTime = getItem("vscode_lastUpdateTime");
-    if (updateTime) {
-        setItem("vscode_lastUpdateTime", null);
-    }
-
     let jwt = getItem("jwt");
     let initializingPlugin = false;
     if (!jwt) {

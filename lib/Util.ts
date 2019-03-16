@@ -1,6 +1,5 @@
 import { getStatusBarItem } from "../extension";
 import { workspace } from "vscode";
-import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -112,7 +111,7 @@ export function getProjectFolder(fileName) {
 }
 
 export function validateEmail(email) {
-    var re = /\S+@\S+\.\S+/;
+    let re = /\S+@\S+\.\S+/;
     return re.test(email);
 }
 
