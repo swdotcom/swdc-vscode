@@ -410,7 +410,7 @@ export async function wrapExecPromise(cmd, projectDir) {
     let result = null;
     try {
         let opts =
-            projectDir !== undefined && projectDir != null
+            projectDir !== undefined && projectDir !== null
                 ? { cwd: projectDir }
                 : {};
         result = await execPromise(cmd, opts);
