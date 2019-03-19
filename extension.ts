@@ -53,6 +53,7 @@ let repo_user_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let kpm_session_info_interval = null;
+let kpmController = null;
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -130,8 +131,8 @@ export function activate(ctx: ExtensionContext) {
     // Add the keystroke controller to the ext ctx, which
     // will then listen for text document changes.
     //
-    const controller = new KpmController();
-    ctx.subscriptions.push(controller);
+    kpmController = new KpmController();
+    ctx.subscriptions.push(kpmController);
 
     ctx.subscriptions.push(
         workspace.onDidChangeConfiguration(e => configUpdated(ctx))
@@ -271,6 +272,9 @@ async function initializeUserInfo() {
     await getUserStatus();
     if (initializingPlugin) {
         showLoginPrompt();
+        if (kpmController) {
+            kpmController.buildBootstrapKpmPayload();
+        }
     }
 
     // initiate kpm fetch

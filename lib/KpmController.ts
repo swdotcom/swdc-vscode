@@ -8,7 +8,8 @@ import {
     updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
     isEmptyObj,
-    getProjectFolder
+    getProjectFolder,
+    getDashboardFile
 } from "./Util";
 
 const NO_PROJ_NAME = "Unnamed";
@@ -127,12 +128,16 @@ export class KpmController {
      * such as extension.js.map events
      */
     private isTrueEventFile(event) {
+        // if it's the dashboard file or a liveshare tmp file then
+        // skip event tracking
+        let dashboardFile = getDashboardFile();
         let filename =
             event && event.document && event.document.fileName
                 ? event.document.fileName
                 : null;
         if (
             !filename ||
+            filename === dashboardFile ||
             (filename &&
                 filename.includes(".code-workspace") &&
                 filename.includes("vsliveshare") &&
@@ -275,6 +280,37 @@ export class KpmController {
             _keystrokeMap[rootPath].source[filename].linesAdded = 1;
             console.log("Code Time: Increment lines added");
         }
+    }
+
+    public buildBootstrapKpmPayload() {
+        let rootPath = NO_PROJ_NAME;
+        let fileName = "Untitled";
+        let name = UNTITLED_WORKSPACE;
+
+        let keystrokeCount = new KpmDataManager({
+            // project.directory is used as an object key, must be string
+            directory: rootPath,
+            name,
+            identifier: "",
+            resource: {}
+        });
+        keystrokeCount["keystrokes"] = 1;
+        let fileInfo = {
+            add: 1,
+            netkeys: 0,
+            paste: 0,
+            open: 0,
+            close: 0,
+            delete: 0,
+            length: 0,
+            lines: 0,
+            linesAdded: 0,
+            linesRemoved: 0,
+            syntax: ""
+        };
+        keystrokeCount.source[fileName] = fileInfo;
+
+        setTimeout(() => keystrokeCount.postData(), 0);
     }
 
     private async initializeKeystrokesCount(filename, rootPath) {
