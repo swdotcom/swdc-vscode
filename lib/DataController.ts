@@ -35,22 +35,6 @@ export async function serverIsAvailable() {
 }
 
 /**
- * User session will have...
- * { user: user, jwt: jwt }
- */
-export async function isAuthenticated() {
-    // since we do have a token value, ping the backend using authentication
-    // in case they need to re-authenticate
-    const resp = await softwareGet("/users/ping", getItem("jwt"));
-    if (isResponseOk(resp)) {
-        return true;
-    } else {
-        console.log("Code Time: Currently not logged in");
-        return false;
-    }
-}
-
-/**
  * send the offline data
  */
 export function sendOfflineData() {
@@ -174,13 +158,10 @@ async function isLoggedOn(serverIsOnline) {
                     initializedPrefs = false;
                 }
                 return true;
-            } else if (resp.data.state !== "ANONYMOUS") {
-                // wipe out the jwt so we can re-create the anonymous user
+            } else if (resp.data.state === "NOT_FOUND") {
+                // User was not found and the response was ok
                 setItem("jwt", null);
             }
-        } else {
-            // wipe out the jwt so we can re-create the anonymous user
-            setItem("jwt", null);
         }
     }
     setItem("name", null);

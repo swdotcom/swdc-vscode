@@ -15,8 +15,7 @@ import {
     sendOfflineData,
     getUserStatus,
     updatePreferences,
-    refetchUserStatusLazily,
-    isAuthenticated
+    refetchUserStatusLazily
 } from "./lib/DataController";
 import {
     showStatus,
@@ -278,7 +277,9 @@ async function initializeUserInfo() {
     }
 
     // initiate kpm fetch
-    fetchDailyKpmSessionInfo();
+    setTimeout(() => {
+        fetchDailyKpmSessionInfo();
+    }, 2000);
 }
 
 async function initializeLiveshare() {
@@ -315,11 +316,10 @@ async function initializeLiveshare() {
 
 export async function handleKpmClickedEvent() {
     // {loggedIn: true|false}
-    await getUserStatus();
+    let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
 
-    let authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!userStatus.loggedIn) {
         webUrl = await buildLoginUrl();
         refetchUserStatusLazily(10);
     }
