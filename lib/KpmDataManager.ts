@@ -1,7 +1,7 @@
-import { storePayload, getItem } from "./Util";
+import { storePayload, getItem, getOs, getVersion } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
-import { getVersion, getOs, isTelemetryOn } from "../extension";
+import { isTelemetryOn } from "../extension";
 import { sendOfflineData } from "./DataController";
 
 // ? marks that the parameter is optional

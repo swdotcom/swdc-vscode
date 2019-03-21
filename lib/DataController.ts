@@ -16,9 +16,12 @@ import {
     nowInSecs,
     getOsUsername,
     cleanSessionInfo,
-    validateEmail
+    validateEmail,
+    getOs,
+    getVersion
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
+import { PLUGIN_ID } from "./Constants";
 const fs = require("fs");
 
 let loggedInCacheState = false;
@@ -393,5 +396,25 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
+    }
+}
+
+export async function sendHeartbeat() {
+    let serverIsOnline = await serverIsAvailable();
+    let jwt = getItem("jwt");
+    if (serverIsOnline && jwt) {
+        let osStr = getOs();
+        let heartbeat = {
+            pluginId: PLUGIN_ID,
+            os: osStr,
+            start: nowInSecs(),
+            version: getVersion()
+        };
+        let api = `/data/heartbeat`;
+        softwarePost(api, heartbeat, jwt).then(async resp => {
+            if (!isResponseOk(resp)) {
+                console.log("Code Time: unable to send heartbeat ping");
+            }
+        });
     }
 }

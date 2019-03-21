@@ -7,15 +7,15 @@ import {
     workspace,
     ExtensionContext,
     StatusBarAlignment,
-    commands,
-    extensions
+    commands
 } from "vscode";
 import { KpmController } from "./lib/KpmController";
 import {
     sendOfflineData,
     getUserStatus,
     updatePreferences,
-    refetchUserStatusLazily
+    refetchUserStatusLazily,
+    sendHeartbeat
 } from "./lib/DataController";
 import {
     showStatus,
@@ -23,7 +23,7 @@ import {
     nowInSecs,
     getOffsetSecends,
     getItem,
-    setItem
+    getVersion
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -40,11 +40,8 @@ import {
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 
-const os = require("os");
-
 let TELEMETRY_ON = true;
 let statusBarItem = null;
-let extensionVersion;
 let _ls = null;
 
 let token_check_interval = null;
@@ -60,30 +57,6 @@ export function isTelemetryOn() {
 
 export function getStatusBarItem() {
     return statusBarItem;
-}
-
-export function getVersion() {
-    return extensionVersion;
-}
-
-export function getOs() {
-    let parts = [];
-    let osType = os.type();
-    if (osType) {
-        parts.push(osType);
-    }
-    let osRelease = os.release();
-    if (osRelease) {
-        parts.push(osRelease);
-    }
-    let platform = os.platform();
-    if (platform) {
-        parts.push(platform);
-    }
-    if (parts.length > 0) {
-        return parts.join("_");
-    }
-    return "";
 }
 
 export function deactivate(ctx: ExtensionContext) {
@@ -120,11 +93,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export function activate(ctx: ExtensionContext) {
-    const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
-        .packageJSON;
-
-    extensionVersion = extension.version;
-    console.log(`Code Time: Loaded v${extensionVersion}`);
+    console.log(`Code Time: Loaded v${getVersion()}`);
 
     //
     // Add the keystroke controller to the ext ctx, which
@@ -170,23 +139,17 @@ export function activate(ctx: ExtensionContext) {
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
-    repo_user_interval = setInterval(() => {
-        getRepoUsers();
-    }, hourly_interval);
-
-    // fire it off once in 1 minutes
-    setTimeout(() => {
-        getRepoUsers();
-    }, one_min);
 
     // check on new commits once an hour
     historical_commits_interval = setInterval(() => {
-        getHistoricalCommits();
-    }, hourly_interval + one_min);
+        processHourlyJobs();
+    }, hourly_interval);
 
-    // fire off the commit gathering in a couple of minutes
+    // fire off the hourly jobs like
+    // commit gathering in a couple of minutes
+    // for initialization
     setTimeout(() => {
-        getHistoricalCommits();
+        processHourlyJobs();
     }, one_min * 2);
 
     // every minute and a half, get the user's jwt if they've logged
@@ -253,6 +216,18 @@ function handleViewSoftwareTopSongsEvent() {
     launchWebUrl("https://api.software.com/music/top40");
 }
 
+function processHourlyJobs() {
+    sendHeartbeat();
+
+    setTimeout(() => {
+        getHistoricalCommits();
+    }, 1000 * 5);
+
+    setTimeout(() => {
+        getRepoUsers();
+    }, 1000 * 60);
+}
+
 async function handleCodeTimeLogin() {
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
@@ -275,6 +250,9 @@ async function initializeUserInfo() {
             kpmController.buildBootstrapKpmPayload();
         }
     }
+
+    // send a heartbeat
+    sendHeartbeat();
 
     // initiate kpm fetch
     setTimeout(() => {

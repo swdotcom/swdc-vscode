@@ -1,5 +1,5 @@
 import { getStatusBarItem } from "../extension";
-import { workspace } from "vscode";
+import { workspace, extensions } from "vscode";
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -15,6 +15,12 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
 let codeTimeMetricsIsFocused = false;
 let codeTimeMetricsIsClosed = true;
+
+export function getVersion() {
+    const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
+        .packageJSON;
+    return extension.version;
+}
 
 export function isCodeTimeMetricsFocused() {
     return codeTimeMetricsIsFocused;
@@ -224,6 +230,26 @@ export function isWindows() {
 
 export function isMac() {
     return process.platform.indexOf("darwin") !== -1;
+}
+
+export function getOs() {
+    let parts = [];
+    let osType = os.type();
+    if (osType) {
+        parts.push(osType);
+    }
+    let osRelease = os.release();
+    if (osRelease) {
+        parts.push(osRelease);
+    }
+    let platform = os.platform();
+    if (platform) {
+        parts.push(platform);
+    }
+    if (parts.length > 0) {
+        return parts.join("_");
+    }
+    return "";
 }
 
 export async function getOsUsername() {
