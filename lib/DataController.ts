@@ -199,6 +199,7 @@ export async function getUserStatus() {
     if (loggedIn && !initializedPrefs) {
         initializePreferences();
         initializedPrefs = true;
+        sendHeartbeat();
     }
 
     let userStatus = {
