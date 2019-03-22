@@ -199,7 +199,6 @@ export async function getUserStatus() {
     if (loggedIn && !initializedPrefs) {
         initializePreferences();
         initializedPrefs = true;
-        sendHeartbeat();
     }
 
     let userStatus = {
@@ -213,6 +212,7 @@ export async function getUserStatus() {
     );
 
     if (loggedInCacheState !== loggedIn) {
+        sendHeartbeat();
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);

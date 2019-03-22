@@ -149,7 +149,7 @@ export function activate(ctx: ExtensionContext) {
     // commit gathering in a couple of minutes
     // for initialization
     setTimeout(() => {
-        processHourlyJobs();
+        processGitData();
     }, one_min * 2);
 
     // every minute and a half, get the user's jwt if they've logged
@@ -219,6 +219,10 @@ function handleViewSoftwareTopSongsEvent() {
 function processHourlyJobs() {
     sendHeartbeat();
 
+    processGitData();
+}
+
+function processGitData() {
     setTimeout(() => {
         getHistoricalCommits();
     }, 1000 * 5);
