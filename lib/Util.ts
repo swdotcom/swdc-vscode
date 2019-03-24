@@ -61,12 +61,7 @@ export function getRootPaths() {
 }
 
 export function isFileOpen(fileName) {
-    if (
-        workspace.workspaceFolders &&
-        workspace.workspaceFolders.length > 0 &&
-        workspace.textDocuments &&
-        workspace.textDocuments.length > 0
-    ) {
+    if (workspace.textDocuments && workspace.textDocuments.length > 0) {
         // check if the .software/CodeTime has already been opened
         for (let i = 0; i < workspace.textDocuments.length; i++) {
             let docObj = workspace.textDocuments[i];
