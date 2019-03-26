@@ -180,7 +180,7 @@ export async function getUserStatus() {
     let loggedIn = false;
     if (serverIsOnline) {
         // if no jwt create an anon user
-        if (!jwt) {
+        if (!jwt && !cachedJwt) {
             // create an anonymous user
             await createAnonymousUser(serverIsOnline);
         }
@@ -188,19 +188,19 @@ export async function getUserStatus() {
         // refetch the jwt then check if they're logged on
         jwt = getItem("jwt");
         let loggedInResp = await isLoggedOn(serverIsOnline, jwt);
-        loggedIn = loggedInResp.loggedOn;
-
         if (!loggedInResp.loggedOn && cachedJwt && jwt !== cachedJwt) {
             // not logged in and the jwt doesn't match the jwt, try the cached one
             loggedInResp = await isLoggedOn(serverIsOnline, cachedJwt);
         }
+        // set the loggedIn bool value
+        loggedIn = loggedInResp.loggedOn;
 
-        if (!loggedInResp.loggedOn && loggedInResp.state === "NOT_FOUND") {
-            // delete the jwt
-            setItem("jwt", null);
-            // create an anon user
-            await createAnonymousUser(serverIsOnline);
-        }
+        // if (!loggedInResp.loggedOn && loggedInResp.state === "NOT_FOUND") {
+        //     // delete the jwt
+        //     setItem("jwt", null);
+        //     // create an anon user
+        //     await createAnonymousUser(serverIsOnline);
+        // }
     }
 
     if (serverIsOnline && loggedIn && !initializedPrefs) {
