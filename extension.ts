@@ -217,7 +217,7 @@ function handleViewSoftwareTopSongsEvent() {
 }
 
 function processHourlyJobs() {
-    sendHeartbeat();
+    sendHeartbeat("HOURLY");
 
     processGitData();
 }
@@ -256,7 +256,7 @@ async function initializeUserInfo() {
     }
 
     // send a heartbeat
-    sendHeartbeat();
+    sendHeartbeat("INITIALIZE");
 
     // initiate kpm fetch
     setTimeout(() => {

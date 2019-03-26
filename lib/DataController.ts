@@ -124,16 +124,35 @@ export async function getAppJwt(serverIsOnline) {
 export async function createAnonymousUser(serverIsOnline) {
     let appJwt = await getAppJwt(serverIsOnline);
     if (appJwt && serverIsOnline) {
-        let username = await getOsUsername();
-        let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        let resp = await softwarePost(
-            "/data/onboard",
-            { timezone, username },
-            appJwt
-        );
-        if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-            setItem("jwt", resp.data.jwt);
-            cachedJwt = resp.data.jwt;
+        let jwt = getItem("jwt");
+        let anonUserCreationAnnotation = !jwt
+            ? "No JWT"
+            : !cachedJwt
+            ? "No Cached JWT"
+            : "";
+        if (!jwt && !cachedJwt) {
+            let username = await getOsUsername();
+            let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            let resp = await softwarePost(
+                "/data/onboard",
+                {
+                    timezone,
+                    username,
+                    creation_annotation: anonUserCreationAnnotation
+                },
+                appJwt
+            );
+            if (isResponseOk(resp) && resp.data && resp.data.jwt) {
+                setItem("jwt", resp.data.jwt);
+                cachedJwt = resp.data.jwt;
+            }
+        } else {
+            // something happened that we now have a jwt, just update the cached or the jwt
+            if (!jwt && cachedJwt) {
+                setItem("jwt", cachedJwt);
+            } else {
+                cachedJwt = jwt;
+            }
         }
     }
 }
@@ -194,13 +213,6 @@ export async function getUserStatus() {
         }
         // set the loggedIn bool value
         loggedIn = loggedInResp.loggedOn;
-
-        // if (!loggedInResp.loggedOn && loggedInResp.state === "NOT_FOUND") {
-        //     // delete the jwt
-        //     setItem("jwt", null);
-        //     // create an anon user
-        //     await createAnonymousUser(serverIsOnline);
-        // }
     }
 
     if (serverIsOnline && loggedIn && !initializedPrefs) {
@@ -224,7 +236,7 @@ export async function getUserStatus() {
     );
 
     if (serverIsOnline && loggedInCacheState !== loggedIn) {
-        sendHeartbeat();
+        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`);
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);
@@ -403,7 +415,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     }
 }
 
-export async function sendHeartbeat() {
+export async function sendHeartbeat(reason) {
     let serverIsOnline = await serverIsAvailable();
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
@@ -415,7 +427,8 @@ export async function sendHeartbeat() {
             version: getVersion(),
             hostname: await getHostname(),
             session_ctime: getSessionFileCreateTime(),
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            trigger_annotation: reason
         };
         let api = `/data/heartbeat`;
         softwarePost(api, heartbeat, jwt).then(async resp => {
