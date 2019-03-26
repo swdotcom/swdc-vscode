@@ -16,9 +16,10 @@ import {
     nowInSecs,
     getOsUsername,
     cleanSessionInfo,
-    validateEmail,
+    getSessionFileCreateTime,
     getOs,
-    getVersion
+    getVersion,
+    getHostname
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
@@ -26,6 +27,7 @@ const fs = require("fs");
 
 let loggedInCacheState = false;
 let initializedPrefs = false;
+let cachedJwt = null;
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -131,44 +133,38 @@ export async function createAnonymousUser(serverIsOnline) {
         );
         if (isResponseOk(resp) && resp.data && resp.data.jwt) {
             setItem("jwt", resp.data.jwt);
+            cachedJwt = resp.data.jwt;
         }
     }
 }
 
-async function isLoggedOn(serverIsOnline) {
-    let jwt = getItem("jwt");
+async function isLoggedOn(serverIsOnline, jwt) {
     if (serverIsOnline) {
-        let user = await getUser(serverIsOnline);
-        if (user && validateEmail(user.email)) {
-            setItem("name", user.email);
-            setItem("jwt", user.plugin_jwt);
-            return true;
-        }
-
         let api = "/users/plugin/state";
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp) && resp.data) {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
-            if (resp.data.state === "OK") {
+            let state = resp.data.state ? resp.data.state : "UNKNOWN";
+            if (state === "OK") {
                 let email = resp.data.email;
                 setItem("name", email);
                 // check the jwt
                 let pluginJwt = resp.data.jwt;
+                // update the cached jwt
+                cachedJwt = pluginJwt;
                 if (pluginJwt && pluginJwt !== jwt) {
                     // update it
                     setItem("jwt", pluginJwt);
                     // re-initialize preferences
                     initializedPrefs = false;
                 }
-                return true;
-            } else if (resp.data.state === "NOT_FOUND") {
-                // User was not found and the response was ok
-                setItem("jwt", null);
+                return { loggedOn: true, state };
             }
+            // return the state that is returned
+            return { loggedOn: false, state };
         }
     }
-    setItem("name", null);
-    return false;
+    return { loggedOn: false, state: "UNKNOWN" };
 }
 
 /**
@@ -181,22 +177,33 @@ export async function getUserStatus() {
     let jwt = getItem("jwt");
 
     let serverIsOnline = await serverIsAvailable();
+    let loggedIn = false;
+    if (serverIsOnline) {
+        // if no jwt create an anon user
+        if (!jwt) {
+            // create an anonymous user
+            await createAnonymousUser(serverIsOnline);
+        }
 
-    if (!jwt) {
-        // create an anonymous user
-        await createAnonymousUser(serverIsOnline);
+        // refetch the jwt then check if they're logged on
+        jwt = getItem("jwt");
+        let loggedInResp = await isLoggedOn(serverIsOnline, jwt);
+        loggedIn = loggedInResp.loggedOn;
+
+        if (!loggedInResp.loggedOn && cachedJwt && jwt !== cachedJwt) {
+            // not logged in and the jwt doesn't match the jwt, try the cached one
+            loggedInResp = await isLoggedOn(serverIsOnline, cachedJwt);
+        }
+
+        if (!loggedInResp.loggedOn && loggedInResp.state === "NOT_FOUND") {
+            // delete the jwt
+            setItem("jwt", null);
+            // create an anon user
+            await createAnonymousUser(serverIsOnline);
+        }
     }
 
-    let loggedIn = await isLoggedOn(serverIsOnline);
-
-    // the jwt may have been nulled out
-    jwt = getItem("jwt");
-    if (!jwt) {
-        // create an anonymous user
-        await createAnonymousUser(serverIsOnline);
-    }
-
-    if (loggedIn && !initializedPrefs) {
+    if (serverIsOnline && loggedIn && !initializedPrefs) {
         initializePreferences();
         initializedPrefs = true;
     }
@@ -205,13 +212,18 @@ export async function getUserStatus() {
         loggedIn
     };
 
+    if (!loggedIn) {
+        // make sure we don't show the name in the tooltip if they're not logged in
+        setItem("name", null);
+    }
+
     commands.executeCommand(
         "setContext",
         "codetime:loggedIn",
         userStatus.loggedIn
     );
 
-    if (loggedInCacheState !== loggedIn) {
+    if (serverIsOnline && loggedInCacheState !== loggedIn) {
         sendHeartbeat();
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
@@ -223,8 +235,7 @@ export async function getUserStatus() {
     return userStatus;
 }
 
-export async function getUser(serverIsOnline) {
-    let jwt = getItem("jwt");
+export async function getUser(serverIsOnline, jwt) {
     if (jwt && serverIsOnline) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
@@ -241,65 +252,57 @@ export async function initializePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
-        let api = `/users/me`;
-        let resp = await softwareGet(api, jwt);
-        if (isResponseOk(resp)) {
-            if (
-                resp &&
-                resp.data &&
-                resp.data.data &&
-                resp.data.data.preferences
-            ) {
-                let userId = parseInt(resp.data.data.id, 10);
-                let prefs = resp.data.data.preferences;
-                let prefsShowMusic =
-                    prefs.showMusic !== null && prefs.showMusic !== undefined
-                        ? prefs.showMusic
-                        : null;
-                let prefsShowGit =
-                    prefs.showGit !== null && prefs.showGit !== undefined
-                        ? prefs.showGit
-                        : null;
-                let prefsShowRank =
-                    prefs.showRank !== null && prefs.showRank !== undefined
-                        ? prefs.showRank
-                        : null;
+        let user = await getUser(serverIsOnline, jwt);
+        if (user && user.preferences) {
+            let userId = parseInt(user.id, 10);
+            let prefs = user.preferences;
+            let prefsShowMusic =
+                prefs.showMusic !== null && prefs.showMusic !== undefined
+                    ? prefs.showMusic
+                    : null;
+            let prefsShowGit =
+                prefs.showGit !== null && prefs.showGit !== undefined
+                    ? prefs.showGit
+                    : null;
+            let prefsShowRank =
+                prefs.showRank !== null && prefs.showRank !== undefined
+                    ? prefs.showRank
+                    : null;
 
-                if (
-                    prefsShowMusic === null ||
-                    prefsShowGit === null ||
-                    prefsShowRank === null
-                ) {
-                    await sendPreferencesUpdate(userId, prefs);
-                } else {
-                    if (prefsShowMusic !== null) {
-                        await workspace
-                            .getConfiguration()
-                            .update(
-                                "showMusicMetrics",
-                                prefsShowMusic,
-                                ConfigurationTarget.Global
-                            );
-                        updateShowMusicMetrics(prefsShowMusic);
-                    }
-                    if (prefsShowGit !== null) {
-                        await workspace
-                            .getConfiguration()
-                            .update(
-                                "showGitMetrics",
-                                prefsShowGit,
-                                ConfigurationTarget.Global
-                            );
-                    }
-                    if (prefsShowRank !== null) {
-                        await workspace
-                            .getConfiguration()
-                            .update(
-                                "showWeeklyRanking",
-                                prefsShowRank,
-                                ConfigurationTarget.Global
-                            );
-                    }
+            if (
+                prefsShowMusic === null ||
+                prefsShowGit === null ||
+                prefsShowRank === null
+            ) {
+                await sendPreferencesUpdate(userId, prefs);
+            } else {
+                if (prefsShowMusic !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showMusicMetrics",
+                            prefsShowMusic,
+                            ConfigurationTarget.Global
+                        );
+                    updateShowMusicMetrics(prefsShowMusic);
+                }
+                if (prefsShowGit !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showGitMetrics",
+                            prefsShowGit,
+                            ConfigurationTarget.Global
+                        );
+                }
+                if (prefsShowRank !== null) {
+                    await workspace
+                        .getConfiguration()
+                        .update(
+                            "showWeeklyRanking",
+                            prefsShowRank,
+                            ConfigurationTarget.Global
+                        );
                 }
             }
         }
@@ -341,7 +344,7 @@ export async function updatePreferences() {
     let jwt = getItem("jwt");
     let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
-        let user = await getUser(serverIsOnline);
+        let user = await getUser(serverIsOnline, jwt);
         if (!user) {
             return;
         }
@@ -409,7 +412,10 @@ export async function sendHeartbeat() {
             pluginId: PLUGIN_ID,
             os: osStr,
             start: nowInSecs(),
-            version: getVersion()
+            version: getVersion(),
+            hostname: await getHostname(),
+            session_ctime: getSessionFileCreateTime(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         };
         let api = `/data/heartbeat`;
         softwarePost(api, heartbeat, jwt).then(async resp => {

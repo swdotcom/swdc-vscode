@@ -46,6 +46,15 @@ export function isCodeTimeMetricsFile(fileName) {
     return false;
 }
 
+export function getSessionFileCreateTime() {
+    let sessionFile = getSoftwareSessionFile();
+    const stat = fs.statSync(sessionFile);
+    if (stat.birthtime) {
+        return stat.birthtime;
+    }
+    return stat.ctime;
+}
+
 export function getRootPaths() {
     let paths = [];
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
@@ -227,6 +236,11 @@ export function isMac() {
     return process.platform.indexOf("darwin") !== -1;
 }
 
+export async function getHostname() {
+    let hostname = await getCommandResult("hostname");
+    return hostname;
+}
+
 export function getOs() {
     let parts = [];
     let osType = os.type();
@@ -247,29 +261,35 @@ export function getOs() {
     return "";
 }
 
+export async function getCommandResult(cmd) {
+    let result = "";
+    let content = "";
+    if (isWindows()) {
+        content = await wrapExecPromise(`cmd /c ${cmd}`, null);
+    } else {
+        // use the windows commmand
+        content = await wrapExecPromise(`/bin/sh -c ${cmd}`, null);
+    }
+    let contentList = content
+        .replace(/\r\n/g, "\r")
+        .replace(/\n/g, "\r")
+        .split(/\r/);
+    if (contentList && contentList.length > 0) {
+        for (let i = 0; i < contentList.length; i++) {
+            let line = contentList[i];
+            if (line && line.trim().length > 0) {
+                result = line.trim();
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 export async function getOsUsername() {
     let username = os.userInfo().username;
     if (!username || username.trim() === "") {
-        let content = "";
-        if (isWindows()) {
-            content = await wrapExecPromise("cmd /c whoami", null);
-        } else {
-            // use the windows commmand
-            content = await wrapExecPromise("/bin/sh -c whoami", null);
-        }
-        let contentList = content
-            .replace(/\r\n/g, "\r")
-            .replace(/\n/g, "\r")
-            .split(/\r/);
-        if (contentList && contentList.length > 0) {
-            for (let i = 0; i < contentList.length; i++) {
-                let line = contentList[i];
-                if (line && line.trim().length > 0) {
-                    username = line.trim();
-                    break;
-                }
-            }
-        }
+        username = await getCommandResult("whoami");
     }
     return username;
 }
