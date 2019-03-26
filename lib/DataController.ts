@@ -125,12 +125,9 @@ export async function createAnonymousUser(serverIsOnline) {
     let appJwt = await getAppJwt(serverIsOnline);
     if (appJwt && serverIsOnline) {
         let jwt = getItem("jwt");
-        let anonUserCreationAnnotation = !jwt
-            ? "No JWT"
-            : !cachedJwt
-            ? "No Cached JWT"
-            : "";
+        // check one more time before creating the anon user
         if (!jwt && !cachedJwt) {
+            let creation_annotation = "No JWT";
             let username = await getOsUsername();
             let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             let resp = await softwarePost(
@@ -138,7 +135,7 @@ export async function createAnonymousUser(serverIsOnline) {
                 {
                     timezone,
                     username,
-                    creation_annotation: anonUserCreationAnnotation
+                    creation_annotation
                 },
                 appJwt
             );
@@ -147,11 +144,10 @@ export async function createAnonymousUser(serverIsOnline) {
                 cachedJwt = resp.data.jwt;
             }
         } else {
-            // something happened that we now have a jwt, just update the cached or the jwt
+            // something happened that we now have a jwt,
+            // just update the jwt to the cached jwt if we have it
             if (!jwt && cachedJwt) {
                 setItem("jwt", cachedJwt);
-            } else {
-                cachedJwt = jwt;
             }
         }
     }

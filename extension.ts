@@ -253,10 +253,13 @@ async function initializeUserInfo() {
         if (kpmController) {
             kpmController.buildBootstrapKpmPayload();
         }
+        // send a heartbeat that the plugin as been installed
+        // (or the user has deleted the session.json and restarted the IDE)
+        sendHeartbeat("INSTALLED");
+    } else {
+        // send a heartbeat
+        sendHeartbeat("INITIALIZED");
     }
-
-    // send a heartbeat
-    sendHeartbeat("INITIALIZE");
 
     // initiate kpm fetch
     setTimeout(() => {
