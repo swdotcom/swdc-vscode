@@ -127,7 +127,7 @@ export async function createAnonymousUser(serverIsOnline) {
         let jwt = getItem("jwt");
         // check one more time before creating the anon user
         if (!jwt && !cachedJwt) {
-            let creation_annotation = "No JWT";
+            let creation_annotation = "NO_JWT";
             let username = await getOsUsername();
             let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             let resp = await softwarePost(

@@ -1,14 +1,61 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise, isWindows, getItem } from "./Util";
+import { wrapExecPromise, isWindows, getItem, isEmptyObj } from "./Util";
 import { sendMusicData } from "./DataController";
 import { softwareGet, isResponseOk } from "./HttpClient";
+
+const applescript = require("applescript");
 
 const WINDOWS_SPOTIFY_TRACK_FIND =
     'tasklist /fi "imagename eq Spotify.exe" /fo list /v | find " - "';
 
 let existingTrack = {};
 let lastTimeSent = null;
+
+export async function isApplicationActive(appName: string, callback: any) {
+    let command = `on is_running(appName)
+                    tell application "System Events" to (name of processes) contains appName
+                end is_running
+                set appRunning to is_running("${appName}")
+                if appRunning then
+                    return "ACTIVE"
+                else
+                    return "NOT_ACTIVE"
+                end if`;
+    await applescript.execString(command, callback);
+}
+
+export async function isItunesActive() {
+    let state = await new Promise((resolve, reject) => {
+        isApplicationActive("iTunes", (err: any, result: any) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            return resolve(result);
+        });
+    });
+    if (state && state === "ACTIVE") {
+        return true;
+    }
+    return false;
+}
+
+export async function isSpotifyActive() {
+    let state = await new Promise((resolve, reject) => {
+        isApplicationActive("Spotify", (err: any, result: any) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            return resolve(result);
+        });
+    });
+    if (state && state === "ACTIVE") {
+        return true;
+    }
+    return false;
+}
 
 export function gatherMusicInfo() {
     const trackInfoDataP = getTrackInfo();
@@ -22,19 +69,19 @@ export function gatherMusicInfo() {
             // subtract the offset_sec (it'll be positive before utc and negative after utc)
             let localNowInSec = nowInSec - offset_sec;
             let state = "stopped";
-            if (playingTrack) {
+            let playingTrackId = playingTrack["id"] || null;
+            if (playingTrackId) {
                 state = playingTrack["state"] || "playing";
             }
             let isPaused =
                 state.toLowerCase().indexOf("playing") !== -1 ? false : true;
 
-            let playingTrackId = playingTrack["id"] || null;
             let existingTrackId = existingTrack["id"] || null;
             let playingTrackDuration = playingTrackId
                 ? parseInt(playingTrack["duration"], 10)
                 : null;
 
-            if (!playingTrack && existingTrackId) {
+            if (!playingTrackId && existingTrackId) {
                 // we don't have a track playing and we have an existing one, close it out
                 existingTrack["end"] = nowInSec;
                 sendMusicData(existingTrack).then(result => {
@@ -137,7 +184,7 @@ export async function getTrackInfo() {
     return trackInfo || {};
 }
 
-function isSpotifyRunning() {
+async function isSpotifyRunning() {
     if (isWindows()) {
         /**
          * tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
@@ -153,6 +200,10 @@ function isSpotifyRunning() {
             });
         });
     } else {
+        let isActive = await isSpotifyActive();
+        if (!isActive) {
+            return false;
+        }
         return new Promise((resolve, reject) => {
             spotify.isRunning((err, isRunning) => {
                 if (err) {
@@ -240,8 +291,12 @@ async function getSpotifyTrackPromise() {
     }
 }
 
-function isItunesRunning() {
+async function isItunesRunning() {
     if (isWindows()) {
+        return false;
+    }
+    let isActive = await isItunesActive();
+    if (!isActive) {
         return false;
     }
     return new Promise((resolve, reject) => {
