@@ -130,12 +130,14 @@ export async function createAnonymousUser(serverIsOnline) {
             let creation_annotation = "NO_JWT";
             let username = await getOsUsername();
             let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            let hostname = await getHostname();
             let resp = await softwarePost(
                 "/data/onboard",
                 {
                     timezone,
                     username,
-                    creation_annotation
+                    creation_annotation,
+                    hostname
                 },
                 appJwt
             );
@@ -415,10 +417,9 @@ export async function sendHeartbeat(reason) {
     let serverIsOnline = await serverIsAvailable();
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
-        let osStr = getOs();
         let heartbeat = {
             pluginId: PLUGIN_ID,
-            os: osStr,
+            os: getOs(),
             start: nowInSecs(),
             version: getVersion(),
             hostname: await getHostname(),
