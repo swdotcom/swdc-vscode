@@ -15,6 +15,7 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
 let codeTimeMetricsIsFocused = false;
 let codeTimeMetricsIsClosed = true;
+let cachedSessionKeys = {};
 
 export function getVersion() {
     const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
@@ -125,38 +126,10 @@ export function validateEmail(email) {
     return re.test(email);
 }
 
-export function cleanSessionInfo() {
-    const jsonObj = getSoftwareSessionAsJson();
-    if (jsonObj) {
-        let keys = Object.keys(jsonObj);
-        let removedKeys = false;
-        if (keys) {
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
-                if (key !== "jwt" && key !== "name") {
-                    // remove  it
-                    delete jsonObj[key];
-                    removedKeys = true;
-                }
-            }
-        }
-
-        if (removedKeys) {
-            const content = JSON.stringify(jsonObj);
-
-            const sessionFile = getSoftwareSessionFile();
-            fs.writeFileSync(sessionFile, content, err => {
-                if (err)
-                    console.log(
-                        "Code Time: Error writing to the Software session file: ",
-                        err.message
-                    );
-            });
-        }
-    }
-}
-
 export function setItem(key, value) {
+    // update the cached session key map
+    cachedSessionKeys[key] = value;
+
     const jsonObj = getSoftwareSessionAsJson();
     jsonObj[key] = value;
 
@@ -173,8 +146,15 @@ export function setItem(key, value) {
 }
 
 export function getItem(key) {
+    let cachedVal = cachedSessionKeys[key];
+    if (cachedVal) {
+        return cachedVal;
+    }
     const jsonObj = getSoftwareSessionAsJson();
-    return jsonObj[key] || null;
+    let val = jsonObj[key] || null;
+    // update the cache map
+    cachedSessionKeys[key] = val;
+    return val;
 }
 
 export function showErrorStatus(errorTooltip) {

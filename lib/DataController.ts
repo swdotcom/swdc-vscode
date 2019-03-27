@@ -15,7 +15,6 @@ import {
     deleteFile,
     nowInSecs,
     getOsUsername,
-    cleanSessionInfo,
     getSessionFileCreateTime,
     getOs,
     getVersion,
@@ -27,7 +26,6 @@ const fs = require("fs");
 
 let loggedInCacheState = false;
 let initializedPrefs = false;
-let cachedJwt = null;
 
 export async function serverIsAvailable() {
     return await softwareGet("/ping", null)
@@ -126,7 +124,7 @@ export async function createAnonymousUser(serverIsOnline) {
     if (appJwt && serverIsOnline) {
         let jwt = getItem("jwt");
         // check one more time before creating the anon user
-        if (!jwt && !cachedJwt) {
+        if (!jwt) {
             let creation_annotation = "NO_JWT";
             let username = await getOsUsername();
             let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -143,13 +141,6 @@ export async function createAnonymousUser(serverIsOnline) {
             );
             if (isResponseOk(resp) && resp.data && resp.data.jwt) {
                 setItem("jwt", resp.data.jwt);
-                cachedJwt = resp.data.jwt;
-            }
-        } else {
-            // something happened that we now have a jwt,
-            // just update the jwt to the cached jwt if we have it
-            if (!jwt && cachedJwt) {
-                setItem("jwt", cachedJwt);
             }
         }
     }
@@ -163,12 +154,13 @@ async function isLoggedOn(serverIsOnline, jwt) {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
             let state = resp.data.state ? resp.data.state : "UNKNOWN";
             if (state === "OK") {
+                let sessionEmail = getItem("name");
                 let email = resp.data.email;
-                setItem("name", email);
+                if (sessionEmail !== email) {
+                    setItem("name", email);
+                }
                 // check the jwt
                 let pluginJwt = resp.data.jwt;
-                // update the cached jwt
-                cachedJwt = pluginJwt;
                 if (pluginJwt && pluginJwt !== jwt) {
                     // update it
                     setItem("jwt", pluginJwt);
@@ -189,15 +181,13 @@ async function isLoggedOn(serverIsOnline, jwt) {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus() {
-    cleanSessionInfo();
-
     let jwt = getItem("jwt");
 
     let serverIsOnline = await serverIsAvailable();
     let loggedIn = false;
     if (serverIsOnline) {
         // if no jwt create an anon user
-        if (!jwt && !cachedJwt) {
+        if (!jwt) {
             // create an anonymous user
             await createAnonymousUser(serverIsOnline);
         }
@@ -205,10 +195,6 @@ export async function getUserStatus() {
         // refetch the jwt then check if they're logged on
         jwt = getItem("jwt");
         let loggedInResp = await isLoggedOn(serverIsOnline, jwt);
-        if (!loggedInResp.loggedOn && cachedJwt && jwt !== cachedJwt) {
-            // not logged in and the jwt doesn't match the jwt, try the cached one
-            loggedInResp = await isLoggedOn(serverIsOnline, cachedJwt);
-        }
         // set the loggedIn bool value
         loggedIn = loggedInResp.loggedOn;
     }
@@ -223,8 +209,11 @@ export async function getUserStatus() {
     };
 
     if (!loggedIn) {
-        // make sure we don't show the name in the tooltip if they're not logged in
-        setItem("name", null);
+        let name = getItem("name");
+        // only update the name if it's not null
+        if (name && name.length > 0) {
+            setItem("name", null);
+        }
     }
 
     commands.executeCommand(
