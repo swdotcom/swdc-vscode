@@ -54,7 +54,7 @@ let gather_music_interval = null;
 let kpm_session_info_interval = null;
 let kpmController = null;
 
-const check_online_interval_ms = 1000 * 10;
+const check_online_interval_ms = 1000 * 60 * 10;
 
 let retry_counter = 0;
 
