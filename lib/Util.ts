@@ -284,7 +284,7 @@ export function getDashboardFile() {
     return file;
 }
 
-export function getSoftwareDir() {
+export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;
     if (isWindows()) {
@@ -293,14 +293,21 @@ export function getSoftwareDir() {
         softwareDataDir += "/.software";
     }
 
-    if (!fs.existsSync(softwareDataDir)) {
+    if (autoCreate && !fs.existsSync(softwareDataDir)) {
         fs.mkdirSync(softwareDataDir);
     }
 
     return softwareDataDir;
 }
 
-export function getSoftwareSessionFile() {
+export function softwareSessionFileExists() {
+    // don't auto create the file
+    const file = getSoftwareSessionFile(false);
+    // check if it exists
+    return fs.existsSync(file);
+}
+
+export function getSoftwareSessionFile(autoCreate = true) {
     let file = getSoftwareDir();
     if (isWindows()) {
         file += "\\session.json";

@@ -15,7 +15,9 @@ import {
     getUserStatus,
     updatePreferences,
     refetchUserStatusLazily,
-    sendHeartbeat
+    sendHeartbeat,
+    createAnonymousUser,
+    serverIsAvailable
 } from "./lib/DataController";
 import {
     showStatus,
@@ -23,7 +25,8 @@ import {
     nowInSecs,
     getOffsetSecends,
     getItem,
-    getVersion
+    getVersion,
+    softwareSessionFileExists
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -50,6 +53,10 @@ let historical_commits_interval = null;
 let gather_music_interval = null;
 let kpm_session_info_interval = null;
 let kpmController = null;
+
+const check_online_interval_ms = 1000 * 10;
+
+let retry_counter = 0;
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -92,7 +99,41 @@ export function deactivate(ctx: ExtensionContext) {
     // });
 }
 
-export function activate(ctx: ExtensionContext) {
+export async function activate(ctx: ExtensionContext) {
+    // check session.json existence
+    const serverIsOnline = await serverIsAvailable();
+    if (!softwareSessionFileExists()) {
+        // session file doesn't exist
+        // check if the server is online before creating the anon user
+        if (!serverIsOnline) {
+            if (retry_counter === 0) {
+                showOfflinePrompt();
+            }
+            // call activate again later
+            setTimeout(() => {
+                retry_counter++;
+                activate(ctx);
+            }, check_online_interval_ms);
+        } else {
+            // create the anon user
+            const result = await createAnonymousUser(serverIsOnline);
+            if (!result) {
+                if (retry_counter === 0) {
+                    showOfflinePrompt();
+                }
+                // call activate again later
+                setTimeout(() => {
+                    retry_counter++;
+                    activate(ctx);
+                }, check_online_interval_ms);
+            } else {
+                intializePlugin(ctx);
+            }
+        }
+    }
+}
+
+export async function intializePlugin(ctx: ExtensionContext) {
     console.log(`Code Time: Loaded v${getVersion()}`);
 
     //
@@ -313,4 +354,12 @@ export async function handleKpmClickedEvent() {
 
 export async function handlePaletteMenuEvent() {
     showMenuOptions();
+}
+
+export async function showOfflinePrompt() {
+    // shows a prompt that we're not able to communicate with the app server
+    let infoMsg =
+        "Our service is temporarily unavailable. We will try to reconnect again in 10 minutes. Your status bar will not update at this time.";
+    // set the last update time so we don't try to ask too frequently
+    window.showInformationMessage(infoMsg, ...["OK"]);
 }

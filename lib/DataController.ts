@@ -122,13 +122,13 @@ export async function getAppJwt(serverIsOnline) {
 export async function createAnonymousUser(serverIsOnline) {
     let appJwt = await getAppJwt(serverIsOnline);
     if (appJwt && serverIsOnline) {
-        let jwt = getItem("jwt");
+        const jwt = getItem("jwt");
         // check one more time before creating the anon user
         if (!jwt) {
-            let creation_annotation = "NO_JWT";
-            let username = await getOsUsername();
-            let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            let hostname = await getHostname();
+            const creation_annotation = "NO_SESSION_FILE";
+            const username = await getOsUsername();
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const hostname = await getHostname();
             let resp = await softwarePost(
                 "/data/onboard",
                 {
@@ -141,9 +141,11 @@ export async function createAnonymousUser(serverIsOnline) {
             );
             if (isResponseOk(resp) && resp.data && resp.data.jwt) {
                 setItem("jwt", resp.data.jwt);
+                return resp.data.jwt;
             }
         }
     }
+    return null;
 }
 
 async function isLoggedOn(serverIsOnline, jwt) {
@@ -186,14 +188,7 @@ export async function getUserStatus() {
     let serverIsOnline = await serverIsAvailable();
     let loggedIn = false;
     if (serverIsOnline) {
-        // if no jwt create an anon user
-        if (!jwt) {
-            // create an anonymous user
-            await createAnonymousUser(serverIsOnline);
-        }
-
         // refetch the jwt then check if they're logged on
-        jwt = getItem("jwt");
         let loggedInResp = await isLoggedOn(serverIsOnline, jwt);
         // set the loggedIn bool value
         loggedIn = loggedInResp.loggedOn;
@@ -211,7 +206,7 @@ export async function getUserStatus() {
     if (!loggedIn) {
         let name = getItem("name");
         // only update the name if it's not null
-        if (name && name.length > 0) {
+        if (name) {
             setItem("name", null);
         }
     }
