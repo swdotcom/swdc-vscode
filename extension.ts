@@ -130,6 +130,8 @@ export async function activate(ctx: ExtensionContext) {
                 intializePlugin(ctx);
             }
         }
+    } else {
+        intializePlugin(ctx);
     }
 }
 
