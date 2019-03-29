@@ -18,7 +18,8 @@ import {
     getSessionFileCreateTime,
     getOs,
     getVersion,
-    getHostname
+    getHostname,
+    getEditorSessionToken
 } from "./Util";
 import { updateShowMusicMetrics } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
@@ -409,7 +410,8 @@ export async function sendHeartbeat(reason) {
             hostname: await getHostname(),
             session_ctime: getSessionFileCreateTime(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            trigger_annotation: reason
+            trigger_annotation: reason,
+            editor_token: getEditorSessionToken()
         };
         let api = `/data/heartbeat`;
         softwarePost(api, heartbeat, jwt).then(async resp => {

@@ -16,6 +16,14 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 let codeTimeMetricsIsFocused = false;
 let codeTimeMetricsIsClosed = true;
 let cachedSessionKeys = {};
+let editorSessiontoken = null;
+
+export function getEditorSessionToken() {
+    if (!editorSessiontoken) {
+        editorSessiontoken = randomCode();
+    }
+    return editorSessiontoken;
+}
 
 export function getVersion() {
     const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
