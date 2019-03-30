@@ -400,6 +400,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
 export async function sendHeartbeat(reason) {
     let serverIsOnline = await serverIsAvailable();
+    let username = await getOsUsername();
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let heartbeat = {

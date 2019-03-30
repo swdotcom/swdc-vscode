@@ -1,6 +1,6 @@
 import * as spotify from "spotify-node-applescript";
 import * as itunes from "itunes-node-applescript";
-import { wrapExecPromise, isWindows, getItem, isEmptyObj } from "./Util";
+import { wrapExecPromise, isWindows, getItem, getCommandResult } from "./Util";
 import { sendMusicData } from "./DataController";
 import { softwareGet, isResponseOk } from "./HttpClient";
 
@@ -12,46 +12,10 @@ const WINDOWS_SPOTIFY_TRACK_FIND =
 let existingTrack = {};
 let lastTimeSent = null;
 
-export async function isApplicationActive(appName: string, callback: any) {
-    let command = `on is_running(appName)
-                    tell application "System Events" to (name of processes) contains appName
-                end is_running
-                set appRunning to is_running("${appName}")
-                if appRunning then
-                    return "ACTIVE"
-                else
-                    return "NOT_ACTIVE"
-                end if`;
-    await applescript.execString(command, callback);
-}
-
-export async function isItunesActive() {
-    let state = await new Promise((resolve, reject) => {
-        isApplicationActive("iTunes", (err: any, result: any) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            return resolve(result);
-        });
-    });
-    if (state && state === "ACTIVE") {
-        return true;
-    }
-    return false;
-}
-
-export async function isSpotifyActive() {
-    let state = await new Promise((resolve, reject) => {
-        isApplicationActive("Spotify", (err: any, result: any) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            return resolve(result);
-        });
-    });
-    if (state && state === "ACTIVE") {
+export async function isMacMusicPlayerActive(player) {
+    const command = `pgrep -x ${player}`;
+    const result = await getCommandResult(command, 1);
+    if (result) {
         return true;
     }
     return false;
@@ -200,7 +164,7 @@ async function isSpotifyRunning() {
             });
         });
     } else {
-        let isActive = await isSpotifyActive();
+        let isActive = await isMacMusicPlayerActive("Spotify");
         if (!isActive) {
             return false;
         }
@@ -295,7 +259,7 @@ async function isItunesRunning() {
     if (isWindows()) {
         return false;
     }
-    let isActive = await isItunesActive();
+    let isActive = await isMacMusicPlayerActive("iTunes");
     if (!isActive) {
         return false;
     }

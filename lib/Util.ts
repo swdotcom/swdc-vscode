@@ -225,7 +225,7 @@ export function isMac() {
 }
 
 export async function getHostname() {
-    let hostname = await getCommandResult("hostname");
+    let hostname = await getCommandResult("hostname", 1);
     return hostname;
 }
 
@@ -249,21 +249,21 @@ export function getOs() {
     return "";
 }
 
-export async function getCommandResult(cmd) {
-    let result = "";
-    let content = "";
-    if (isWindows()) {
-        content = await wrapExecPromise(`cmd /c ${cmd}`, null);
-    } else {
-        // use the windows commmand
-        content = await wrapExecPromise(`/bin/sh -c ${cmd}`, null);
+export async function getCommandResult(cmd, maxLines: any = -1) {
+    let result = await wrapExecPromise(`${cmd}`, null);
+    if (!result) {
+        return "";
     }
-    let contentList = content
+    let contentList = result
         .replace(/\r\n/g, "\r")
         .replace(/\n/g, "\r")
         .split(/\r/);
     if (contentList && contentList.length > 0) {
-        for (let i = 0; i < contentList.length; i++) {
+        let len =
+            maxLines !== -1
+                ? Math.min(contentList.length, maxLines)
+                : contentList.length;
+        for (let i = 0; i < len; i++) {
             let line = contentList[i];
             if (line && line.trim().length > 0) {
                 result = line.trim();
@@ -277,7 +277,7 @@ export async function getCommandResult(cmd) {
 export async function getOsUsername() {
     let username = os.userInfo().username;
     if (!username || username.trim() === "") {
-        username = await getCommandResult("whoami");
+        username = await getCommandResult("whoami", 1);
     }
     return username;
 }

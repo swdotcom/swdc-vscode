@@ -131,6 +131,7 @@ export async function activate(ctx: ExtensionContext) {
             }
         }
     } else {
+        // has a session file, continue with initialization of the plugin
         intializePlugin(ctx);
     }
 }
