@@ -127,16 +127,19 @@ export async function activate(ctx: ExtensionContext) {
                     activate(ctx);
                 }, check_online_interval_ms);
             } else {
-                intializePlugin(ctx);
+                intializePlugin(ctx, true);
             }
         }
     } else {
         // has a session file, continue with initialization of the plugin
-        intializePlugin(ctx);
+        intializePlugin(ctx, false);
     }
 }
 
-export async function intializePlugin(ctx: ExtensionContext) {
+export async function intializePlugin(
+    ctx: ExtensionContext,
+    createdAnonUser: boolean
+) {
     console.log(`Code Time: Loaded v${getVersion()}`);
 
     //
@@ -234,7 +237,7 @@ export async function intializePlugin(ctx: ExtensionContext) {
     );
 
     initializeLiveshare();
-    initializeUserInfo();
+    initializeUserInfo(createdAnonUser);
 }
 
 function configUpdated(ctx) {
@@ -283,16 +286,10 @@ async function handleCodeTimeLogin() {
     refetchUserStatusLazily(10);
 }
 
-async function initializeUserInfo() {
-    let jwt = getItem("jwt");
-    let initializingPlugin = false;
-    if (!jwt) {
-        initializingPlugin = true;
-    }
-
+async function initializeUserInfo(createdAnonUser: boolean) {
     // {loggedIn: true|false}
     await getUserStatus();
-    if (initializingPlugin) {
+    if (createdAnonUser) {
         showLoginPrompt();
         if (kpmController) {
             kpmController.buildBootstrapKpmPayload();
