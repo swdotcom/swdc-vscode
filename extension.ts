@@ -57,6 +57,7 @@ let kpmController = null;
 const check_online_interval_ms = 1000 * 60 * 10;
 
 let retry_counter = 0;
+let secondary_window_activate_counter = 0;
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -100,24 +101,22 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-    // check session.json existence
-    const serverIsOnline = await serverIsAvailable();
-    if (!softwareSessionFileExists()) {
-        // session file doesn't exist
-        // check if the server is online before creating the anon user
-        if (!serverIsOnline) {
-            if (retry_counter === 0) {
-                showOfflinePrompt();
-            }
-            // call activate again later
-            setTimeout(() => {
-                retry_counter++;
-                activate(ctx);
-            }, check_online_interval_ms);
-        } else {
-            // create the anon user
-            const result = await createAnonymousUser(serverIsOnline);
-            if (!result) {
+    let windowState = window.state;
+    // check if window state is focused or not and the
+    // secondary_window_activate_counter is equal to zero
+    if (!windowState.focused && secondary_window_activate_counter === 0) {
+        // it's not focused, call activate in 1 minute
+        setTimeout(() => {
+            secondary_window_activate_counter++;
+            activate(ctx);
+        }, 1000 * 30);
+    } else {
+        // check session.json existence
+        const serverIsOnline = await serverIsAvailable();
+        if (!softwareSessionFileExists()) {
+            // session file doesn't exist
+            // check if the server is online before creating the anon user
+            if (!serverIsOnline) {
                 if (retry_counter === 0) {
                     showOfflinePrompt();
                 }
@@ -127,12 +126,25 @@ export async function activate(ctx: ExtensionContext) {
                     activate(ctx);
                 }, check_online_interval_ms);
             } else {
-                intializePlugin(ctx, true);
+                // create the anon user
+                const result = await createAnonymousUser(serverIsOnline);
+                if (!result) {
+                    if (retry_counter === 0) {
+                        showOfflinePrompt();
+                    }
+                    // call activate again later
+                    setTimeout(() => {
+                        retry_counter++;
+                        activate(ctx);
+                    }, check_online_interval_ms);
+                } else {
+                    intializePlugin(ctx, true);
+                }
             }
+        } else {
+            // has a session file, continue with initialization of the plugin
+            intializePlugin(ctx, false);
         }
-    } else {
-        // has a session file, continue with initialization of the plugin
-        intializePlugin(ctx, false);
     }
 }
 
