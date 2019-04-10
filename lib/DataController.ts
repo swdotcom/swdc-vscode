@@ -86,6 +86,7 @@ export function sendOfflineData() {
  * send any music tracks
  */
 export function sendMusicData(trackData) {
+    console.log(`Code Time: sending ${JSON.stringify(trackData)}`);
     // add the "local_start", "start", and "end"
     // POST the kpm to the PluginManager
     return softwarePost("/data/music", trackData, getItem("jwt"))
