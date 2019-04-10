@@ -255,6 +255,14 @@ export async function intializePlugin(
 function configUpdated(ctx) {
     // the software settings were updated, take action here
     updatePreferences();
+    handleHideStatusBar();
+}
+
+function handleHideStatusBar() {
+    let showStatusBar = workspace.getConfiguration().get("showStatusBar"); 
+    if (!showStatusBar){
+        showStatus("Code Time", "Update your settings to see metrics in your status bar.");
+    }
 }
 
 function handlePauseMetricsEvent() {

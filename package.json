@@ -58,6 +58,16 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Weekly Ranking"
+                },
+                "showStatusBar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show metrics in the status bar"
+                },
+                "showAverage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show your 90-day average code time in the status bar"
                 }
             }
         },

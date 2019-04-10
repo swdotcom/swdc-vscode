@@ -1,4 +1,4 @@
-import { window } from "vscode";
+import { window, workspace } from "vscode";
 import { NOT_NOW_LABEL, LOGIN_LABEL } from "./Constants";
 import {
     getItem,
@@ -76,10 +76,21 @@ async function getSessionStatus() {
                 let inFlowIcon =
                     currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
                 let msg = `Code time: ${inFlowIcon}${currentDayMinutesTime}`;
-                if (averageDailyMinutes > 0) {
+
+                // only show average in status bar if enabled in settings and its nonzero
+                let showAverage = workspace.getConfiguration().get("showAverage");
+                if (showAverage && averageDailyMinutes > 0) {
                     msg += ` | Avg: ${averageDailyMinutesTime}`;
                 }
-                showStatus(msg, null);
+
+                // only update status bar metrics updates if enabled in settings
+                let showStatusBar = workspace.getConfiguration().get("showStatusBar");
+                if (showStatusBar) {
+                    showStatus(msg, null);
+                } else {
+                    showStatus("Code Time", "Update your settings to see metrics in your status bar.");
+                }
+
                 return "ok";
             }
             return "notok";
