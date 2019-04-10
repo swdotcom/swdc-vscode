@@ -1,11 +1,5 @@
 import * as music from "cody-music";
-import {
-    wrapExecPromise,
-    isWindows,
-    isMac,
-    getItem,
-    getCommandResult
-} from "./Util";
+import { wrapExecPromise, isWindows, isMac, getItem } from "./Util";
 import { sendMusicData } from "./DataController";
 import { softwareGet, isResponseOk } from "./HttpClient";
 
@@ -35,13 +29,17 @@ export async function gatherMusicInfo() {
                 playingTrack = spotifyTrack;
             } else if (itunesTrack.state === "playing") {
                 playingTrack = itunesTrack;
+                type = "itunes";
             } else {
                 playingTrack = spotifyTrack;
+                type = "spotify";
             }
         } else if (spotifyTrack) {
             playingTrack = spotifyTrack;
+            type = "spotify";
         } else {
             playingTrack = itunesTrack;
+            type = "itunes";
         }
     } else if (isWindows()) {
         // supports only spotify for now
