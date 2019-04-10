@@ -112,11 +112,8 @@
         "vscode": "^1.1.28"
     },
     "dependencies": {
-        "applescript": "1.0.0",
         "axios": "^0.17.1",
-        "itunes-node-applescript": "0.3.5",
-        "open": "^0.0.5",
-        "spotify-node-applescript": "1.1.1",
+        "cody-music": "^1.0.0",
         "vsls": "^0.3.967"
     }
 }
