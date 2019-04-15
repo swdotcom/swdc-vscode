@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "0.14.6",
+    "version": "0.14.7",
     "publisher": "softwaredotcom",
     "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
@@ -43,8 +43,8 @@
         "keybindings": [
             {
                 "command": "extension.codeTimeStatusToggle",
-                "key": "ctrl+c ctrl+t",
-                "mac": "ctrl+c ctrl+t"
+                "key": "ctrl+t ctrl+t",
+                "mac": "ctrl+t ctrl+t"
             }
         ],
         "configuration": {
@@ -114,7 +114,7 @@
                 },
                 {
                     "command": "extension.codeTimeStatusToggle",
-                    "key": "ctrl+c ctrl+t"
+                    "key": "ctrl+t ctrl+t"
                 }
             ]
         }
