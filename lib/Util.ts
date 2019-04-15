@@ -17,6 +17,9 @@ let codeTimeMetricsIsFocused = false;
 let codeTimeMetricsIsClosed = true;
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
+let lastMsg = null;
+let lastTooltip = null;
+let showStatusBarText = true;
 
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
@@ -181,7 +184,8 @@ export function showLoading() {
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
-        tooltip = "Click to see more from Code Time";
+        tooltip =
+            "Code time today vs. your daily average. Click to see more from Code Time";
     }
     updateStatusBar(fullMsg, tooltip);
 }
@@ -191,19 +195,38 @@ export function showTacoTimeStatus(fullMsg, tooltip) {
     updateStatusBar(fullMsg, tooltip);
 }
 
+export function handleCodeTimeStatusToggle() {
+    toggleStatusBar();
+}
+
 function updateStatusBar(msg, tooltip) {
     let loggedInName = getItem("name");
     let userInfo = "";
     if (loggedInName && loggedInName !== "") {
         userInfo = ` (${loggedInName})`;
     }
-    if (tooltip) {
-        tooltip = `${tooltip}${userInfo}`;
-    } else {
-        tooltip = `Click to see more from Code Time${userInfo}`;
+    if (!tooltip) {
+        tooltip = `Click to see more from Code Time`;
     }
-    getStatusBarItem().tooltip = tooltip;
-    getStatusBarItem().text = msg;
+
+    if (!showStatusBarText) {
+        // add the message to the tooltip
+        tooltip = msg + " | " + tooltip;
+    } else {
+        lastTooltip = tooltip;
+        lastMsg = msg;
+    }
+    getStatusBarItem().tooltip = `${tooltip}${userInfo}`;
+    if (!showStatusBarText) {
+        getStatusBarItem().text = "$(clock)";
+    } else {
+        getStatusBarItem().text = msg;
+    }
+}
+
+export function toggleStatusBar() {
+    showStatusBarText = !showStatusBarText;
+    updateStatusBar(lastMsg, lastTooltip);
 }
 
 export function isEmptyObj(obj) {

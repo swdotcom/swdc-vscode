@@ -24,7 +24,7 @@ import {
     launchWebUrl,
     nowInSecs,
     getOffsetSecends,
-    getItem,
+    handleCodeTimeStatusToggle,
     getVersion,
     softwareSessionFileExists
 } from "./lib/Util";
@@ -245,6 +245,11 @@ export async function intializePlugin(
     ctx.subscriptions.push(
         commands.registerCommand("extension.codeTimeLogin", () => {
             handleCodeTimeLogin();
+        })
+    );
+    ctx.subscriptions.push(
+        commands.registerCommand("extension.codeTimeStatusToggle", () => {
+            handleCodeTimeStatusToggle();
         })
     );
 

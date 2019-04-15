@@ -75,9 +75,9 @@ async function getSessionStatus() {
 
                 let inFlowIcon =
                     currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-                let msg = `Code time: ${inFlowIcon}${currentDayMinutesTime}`;
+                let msg = `${inFlowIcon}${currentDayMinutesTime}`;
                 if (averageDailyMinutes > 0) {
-                    msg += ` | Avg: ${averageDailyMinutesTime}`;
+                    msg += ` | ${averageDailyMinutesTime}`;
                 }
                 showStatus(msg, null);
                 return "ok";
