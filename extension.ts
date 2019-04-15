@@ -26,7 +26,8 @@ import {
     getOffsetSecends,
     handleCodeTimeStatusToggle,
     getVersion,
-    softwareSessionFileExists
+    softwareSessionFileExists,
+    showOfflinePrompt
 } from "./lib/Util";
 import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -118,7 +119,7 @@ export async function activate(ctx: ExtensionContext) {
             // check if the server is online before creating the anon user
             if (!serverIsOnline) {
                 if (retry_counter === 0) {
-                    showOfflinePrompt();
+                    showOfflinePrompt(true);
                 }
                 // call activate again later
                 setTimeout(() => {
@@ -130,7 +131,7 @@ export async function activate(ctx: ExtensionContext) {
                 const result = await createAnonymousUser(serverIsOnline);
                 if (!result) {
                     if (retry_counter === 0) {
-                        showOfflinePrompt();
+                        showOfflinePrompt(true);
                     }
                     // call activate again later
                     setTimeout(() => {
@@ -153,6 +154,8 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     console.log(`Code Time: Loaded v${getVersion()}`);
+
+    let serverIsOnline = await serverIsAvailable();
 
     //
     // Add the keystroke controller to the ext ctx, which
@@ -213,8 +216,8 @@ export async function intializePlugin(
 
     // every minute and a half, get the user's jwt if they've logged
     // in if they're still not a registered user.
-    token_check_interval = setInterval(() => {
-        getUserStatus();
+    token_check_interval = setInterval(async () => {
+        getUserStatus(serverIsOnline);
     }, userStatusInterval);
 
     ctx.subscriptions.push(
@@ -254,7 +257,7 @@ export async function intializePlugin(
     );
 
     initializeLiveshare();
-    initializeUserInfo(createdAnonUser);
+    initializeUserInfo(createdAnonUser, serverIsOnline);
 }
 
 function configUpdated(ctx) {
@@ -280,10 +283,12 @@ function handleViewSoftwareTopSongsEvent() {
     launchWebUrl("https://api.software.com/music/top40");
 }
 
-function processHourlyJobs() {
-    sendHeartbeat("HOURLY");
-
-    processGitData();
+async function processHourlyJobs() {
+    let serverIsOnline = await serverIsAvailable();
+    sendHeartbeat("HOURLY", serverIsOnline);
+    if (!serverIsOnline) {
+        processGitData();
+    }
 }
 
 function processGitData() {
@@ -297,15 +302,22 @@ function processGitData() {
 }
 
 async function handleCodeTimeLogin() {
+    if (!(await serverIsAvailable)) {
+        showOfflinePrompt(false);
+        return;
+    }
     let loginUrl = await buildLoginUrl();
     launchWebUrl(loginUrl);
     // retry 10 times, each retry is 10 seconds long
     refetchUserStatusLazily(10);
 }
 
-async function initializeUserInfo(createdAnonUser: boolean) {
+async function initializeUserInfo(
+    createdAnonUser: boolean,
+    serverIsOnline: boolean
+) {
     // {loggedIn: true|false}
-    await getUserStatus();
+    await getUserStatus(serverIsOnline);
     if (createdAnonUser) {
         showLoginPrompt();
         if (kpmController) {
@@ -313,16 +325,16 @@ async function initializeUserInfo(createdAnonUser: boolean) {
         }
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
-        sendHeartbeat("INSTALLED");
+        sendHeartbeat("INSTALLED", serverIsOnline);
     } else {
         // send a heartbeat
-        sendHeartbeat("INITIALIZED");
+        sendHeartbeat("INITIALIZED", serverIsOnline);
     }
 
     // initiate kpm fetch
     setTimeout(() => {
         fetchDailyKpmSessionInfo();
-    }, 2000);
+    }, 1000);
 }
 
 async function initializeLiveshare() {
@@ -358,8 +370,9 @@ async function initializeLiveshare() {
 }
 
 export async function handleKpmClickedEvent() {
+    let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus();
+    let userStatus = await getUserStatus(serverIsOnline);
     let webUrl = await buildWebDashboardUrl();
 
     if (!userStatus.loggedIn) {
@@ -371,12 +384,4 @@ export async function handleKpmClickedEvent() {
 
 export async function handlePaletteMenuEvent() {
     showMenuOptions();
-}
-
-export async function showOfflinePrompt() {
-    // shows a prompt that we're not able to communicate with the app server
-    let infoMsg =
-        "Our service is temporarily unavailable. We will try to reconnect again in 10 minutes. Your status bar will not update at this time.";
-    // set the last update time so we don't try to ask too frequently
-    window.showInformationMessage(infoMsg, ...["OK"]);
 }

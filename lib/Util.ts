@@ -1,5 +1,5 @@
 import { getStatusBarItem } from "../extension";
-import { workspace, extensions } from "vscode";
+import { workspace, extensions, window } from "vscode";
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -376,6 +376,19 @@ export function getSoftwareSessionAsJson() {
         }
     }
     return data ? data : {};
+}
+
+export async function showOfflinePrompt(addReconnectMsg = false) {
+    // shows a prompt that we're not able to communicate with the app server
+    let infoMsg = "Our service is temporarily unavailable. ";
+    if (showOfflinePrompt) {
+        infoMsg +=
+            "We will try to reconnect again in 10 minutes. Your status bar will not update at this time.";
+    } else {
+        infoMsg += "Please try again later.";
+    }
+    // set the last update time so we don't try to ask too frequently
+    window.showInformationMessage(infoMsg, ...["OK"]);
 }
 
 export function nowInSecs() {

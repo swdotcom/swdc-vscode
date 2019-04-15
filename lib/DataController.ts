@@ -27,15 +27,23 @@ const fs = require("fs");
 
 let loggedInCacheState = false;
 let initializedPrefs = false;
+let serverAvailable = true;
+let serverAvailableLastCheck = 0;
 
 export async function serverIsAvailable() {
-    return await softwareGet("/ping", null)
-        .then(result => {
-            return isResponseOk(result);
-        })
-        .catch(e => {
-            return false;
-        });
+    let nowSec = nowInSecs();
+    let diff = nowSec - serverAvailableLastCheck;
+    if (serverAvailableLastCheck === 0 || diff > 10) {
+        serverAvailable = await softwareGet("/ping", null)
+            .then(result => {
+                return isResponseOk(result);
+            })
+            .catch(e => {
+                return false;
+            });
+        serverAvailableLastCheck = nowInSecs();
+    }
+    return serverAvailable;
 }
 
 /**
@@ -184,10 +192,9 @@ async function isLoggedOn(serverIsOnline, jwt) {
  * check if the user is registered or not
  * return {loggedIn: true|false}
  */
-export async function getUserStatus() {
+export async function getUserStatus(serverIsOnline) {
     let jwt = getItem("jwt");
 
-    let serverIsOnline = await serverIsAvailable();
     let loggedIn = false;
     if (serverIsOnline) {
         // refetch the jwt then check if they're logged on
@@ -197,7 +204,7 @@ export async function getUserStatus() {
     }
 
     if (serverIsOnline && loggedIn && !initializedPrefs) {
-        initializePreferences();
+        initializePreferences(serverIsOnline);
         initializedPrefs = true;
     }
 
@@ -220,7 +227,7 @@ export async function getUserStatus() {
     );
 
     if (serverIsOnline && loggedInCacheState !== loggedIn) {
-        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`);
+        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);
@@ -244,9 +251,8 @@ export async function getUser(serverIsOnline, jwt) {
     return null;
 }
 
-export async function initializePreferences() {
+export async function initializePreferences(serverIsOnline) {
     let jwt = getItem("jwt");
-    let serverIsOnline = await serverIsAvailable();
     if (jwt && serverIsOnline) {
         let user = await getUser(serverIsOnline, jwt);
         if (user && user.preferences) {
@@ -389,7 +395,8 @@ export async function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
 }
 
 async function userStatusFetchHandler(tryCountUntilFoundUser) {
-    let userStatus = await getUserStatus();
+    let serverIsOnline = await serverIsAvailable();
+    let userStatus = await getUserStatus(serverIsOnline);
     if (!userStatus.loggedIn) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
@@ -399,8 +406,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     }
 }
 
-export async function sendHeartbeat(reason) {
-    let serverIsOnline = await serverIsAvailable();
+export async function sendHeartbeat(reason, serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let heartbeat = {

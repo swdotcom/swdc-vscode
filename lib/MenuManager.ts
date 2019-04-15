@@ -7,7 +7,11 @@ import {
     toggleStatusBar
 } from "./Util";
 import { softwareGet } from "./HttpClient";
-import { getUserStatus, refetchUserStatusLazily } from "./DataController";
+import {
+    getUserStatus,
+    refetchUserStatusLazily,
+    serverIsAvailable
+} from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
 
 const fs = require("fs");
@@ -62,9 +66,14 @@ export function showQuickPick(pickOptions) {
 
 export async function buildLoginUrl() {
     let jwt = getItem("jwt");
-    let encodedJwt = encodeURIComponent(jwt);
-    let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
-    return loginUrl;
+    if (jwt) {
+        let encodedJwt = encodeURIComponent(jwt);
+        let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
+        return loginUrl;
+    } else {
+        // no need to build an onboarding url if we dn't have the token
+        return launch_url;
+    }
 }
 
 export async function buildWebDashboardUrl() {
@@ -73,9 +82,10 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
+    let serverIsOnline = await serverIsAvailable();
     let filePath = getDashboardFile();
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus();
+    let userStatus = await getUserStatus(serverIsOnline);
     let webUrl = await buildWebDashboardUrl();
     let loginUrl = await buildLoginUrl();
 
@@ -104,12 +114,18 @@ export async function showMenuOptions() {
             cb: null
         });
     }
+    let loginMsgDetail =
+        "To see your coding data in Code Time, please log in to your account";
+    if (!serverIsOnline) {
+        loginMsgDetail =
+            "Our service is temporarily unavailable. Please try again later.";
+        loginUrl = null;
+    }
     if (!userStatus.loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             description: "",
-            detail:
-                "To see your coding data in Code Time, please log in to your account",
+            detail: loginMsgDetail,
             url: loginUrl,
             uri: null,
             cb: null
@@ -127,7 +143,8 @@ export async function showMenuOptions() {
     kpmMenuOptions.items.push({
         label: "Show/hide status bar metrics",
         description: "",
-        detail: "Toggle the Code Time status bar metrics (ctrl+t ctrl+t)",
+        detail:
+            "Toggle the Code Time status bar metrics (shift+ctrl+k shift+ctrl+o)",
         url: null,
         uri: null,
         cb: toggleStatusBar

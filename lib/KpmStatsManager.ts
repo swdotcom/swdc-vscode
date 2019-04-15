@@ -20,9 +20,6 @@ import { isResponseOk, softwareGet } from "./HttpClient";
  * check if the user needs to see the login prompt or not
  */
 export async function showLoginPrompt() {
-    // Show the dialog if the user is not authenticated but online,
-    // and it's past the threshold time and the confirm window is null
-    //
     let infoMsg =
         "To see your coding data in Code Time, please log in to your account.";
     // set the last update time so we don't try to ask too frequently
@@ -33,8 +30,9 @@ export async function showLoginPrompt() {
                 let loginUrl = await buildLoginUrl();
                 launchWebUrl(loginUrl);
                 refetchUserStatusLazily(10);
-                setTimeout(() => {
-                    getUserStatus();
+                setTimeout(async () => {
+                    let serverIsOnline = await serverIsAvailable();
+                    getUserStatus(serverIsOnline);
                 }, 15000);
             }
         });
