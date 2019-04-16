@@ -143,8 +143,7 @@ export async function showMenuOptions() {
     kpmMenuOptions.items.push({
         label: "Show/hide status bar metrics",
         description: "",
-        detail:
-            "Toggle the Code Time status bar metrics (shift+ctrl+k shift+ctrl+o)",
+        detail: "Toggle the Code Time status bar metrics",
         url: null,
         uri: null,
         cb: toggleStatusBar
