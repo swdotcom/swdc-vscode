@@ -29,7 +29,7 @@ import {
     softwareSessionFileExists,
     showOfflinePrompt
 } from "./lib/Util";
-import { getRepoUsers, getHistoricalCommits } from "./lib/KpmRepoManager";
+import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions,
@@ -295,10 +295,6 @@ function processGitData() {
     setTimeout(() => {
         getHistoricalCommits();
     }, 1000 * 5);
-
-    setTimeout(() => {
-        getRepoUsers();
-    }, 1000 * 60);
 }
 
 async function handleCodeTimeLogin() {

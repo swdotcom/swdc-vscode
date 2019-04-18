@@ -34,6 +34,7 @@ export async function serverIsAvailable() {
     let nowSec = nowInSecs();
     let diff = nowSec - serverAvailableLastCheck;
     if (serverAvailableLastCheck === 0 || diff > 10) {
+        serverAvailableLastCheck = nowInSecs();
         serverAvailable = await softwareGet("/ping", null)
             .then(result => {
                 return isResponseOk(result);
@@ -41,7 +42,6 @@ export async function serverIsAvailable() {
             .catch(e => {
                 return false;
             });
-        serverAvailableLastCheck = nowInSecs();
     }
     return serverAvailable;
 }
