@@ -19,13 +19,17 @@ import {
     getOs,
     getVersion,
     getHostname,
-    getEditorSessionToken
+    getEditorSessionToken,
+    showOfflinePrompt,
+    buildLoginUrl,
+    launchWebUrl,
+    logIt
 } from "./Util";
-import { updateShowMusicMetrics } from "./MenuManager";
+import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
 const fs = require("fs");
 
-let loggedInCacheState = false;
+let loggedInCacheState = null;
 let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
@@ -55,7 +59,7 @@ export function sendOfflineData() {
         if (fs.existsSync(dataStoreFile)) {
             const content = fs.readFileSync(dataStoreFile).toString();
             if (content) {
-                console.log(`Code Time: sending batch payloads: ${content}`);
+                logIt(`sending batch payloads: ${content}`);
                 const payloads = content
                     .split(/\r?\n/)
                     .map(item => {
@@ -94,7 +98,7 @@ export function sendOfflineData() {
  * send any music tracks
  */
 export function sendMusicData(trackData) {
-    console.log(`Code Time: sending ${JSON.stringify(trackData)}`);
+    logIt(`sending ${JSON.stringify(trackData)}`);
     // add the "local_start", "start", and "end"
     // POST the kpm to the PluginManager
     return softwarePost("/data/music", trackData, getItem("jwt"))
@@ -226,7 +230,11 @@ export async function getUserStatus(serverIsOnline) {
         userStatus.loggedIn
     );
 
-    if (serverIsOnline && loggedInCacheState !== loggedIn) {
+    if (
+        serverIsOnline &&
+        loggedInCacheState !== null &&
+        loggedInCacheState !== loggedIn
+    ) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
@@ -329,7 +337,7 @@ async function sendPreferencesUpdate(userId, userPrefs) {
     api = `/users/${userId}/preferences`;
     let resp = await softwarePut(api, userPrefs, getItem("jwt"));
     if (isResponseOk(resp)) {
-        console.log("Code Time: update user code time preferences");
+        logIt("update user code time preferences");
     }
 }
 
@@ -423,8 +431,32 @@ export async function sendHeartbeat(reason, serverIsOnline) {
         let api = `/data/heartbeat`;
         softwarePost(api, heartbeat, jwt).then(async resp => {
             if (!isResponseOk(resp)) {
-                console.log("Code Time: unable to send heartbeat ping");
+                logIt("unable to send heartbeat ping");
             }
         });
     }
+}
+
+export async function handleCodeTimeLogin() {
+    if (!(await serverIsAvailable())) {
+        showOfflinePrompt(false);
+        return;
+    }
+    let loginUrl = await buildLoginUrl();
+    launchWebUrl(loginUrl);
+    // retry 10 times, each retry is 10 seconds long
+    refetchUserStatusLazily(10);
+}
+
+export async function handleKpmClickedEvent() {
+    let serverIsOnline = await serverIsAvailable();
+    // {loggedIn: true|false}
+    let userStatus = await getUserStatus(serverIsOnline);
+    let webUrl = await buildWebDashboardUrl();
+
+    if (!userStatus.loggedIn) {
+        webUrl = await buildLoginUrl();
+        refetchUserStatusLazily(10);
+    }
+    launchWebUrl(webUrl);
 }

@@ -2,54 +2,40 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {
-    window,
-    workspace,
-    ExtensionContext,
-    StatusBarAlignment,
-    commands
-} from "vscode";
-import { KpmController } from "./lib/KpmController";
+import { window, ExtensionContext, StatusBarAlignment } from "vscode";
 import {
     sendOfflineData,
     getUserStatus,
-    updatePreferences,
-    refetchUserStatusLazily,
     sendHeartbeat,
     createAnonymousUser,
     serverIsAvailable
 } from "./lib/DataController";
 import {
     showStatus,
-    launchWebUrl,
     nowInSecs,
     getOffsetSecends,
-    handleCodeTimeStatusToggle,
     getVersion,
     softwareSessionFileExists,
-    showOfflinePrompt
+    showOfflinePrompt,
+    logIt,
+    isCodeTime,
+    isMusicTime
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
-import {
-    displayCodeTimeMetricsDashboard,
-    showMenuOptions,
-    buildWebDashboardUrl,
-    buildLoginUrl
-} from "./lib/MenuManager";
-import { gatherMusicInfo } from "./lib/MusicManager";
 import {
     fetchDailyKpmSessionInfo,
     showLoginPrompt
 } from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
+import { MusicPlayerManagerSingleton } from "./lib/MusicPlayerManager";
+import { createCommands } from "./lib/command-helper";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
 
 let token_check_interval = null;
-let repo_user_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let kpm_session_info_interval = null;
@@ -81,20 +67,19 @@ export function deactivate(ctx: ExtensionContext) {
         _ls = null;
     }
 
-    clearInterval(repo_user_interval);
     clearInterval(token_check_interval);
     clearInterval(historical_commits_interval);
     clearInterval(gather_music_interval);
     clearInterval(kpm_session_info_interval);
 
-    // console.log("Code Time: deactivating the plugin");
+    // console.log("deactivating the plugin");
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
     //     if (isResponseOk(resp)) {
     //         if (resp.data) {
-    //             console.log(`Code Time: Uninstalled plugin`);
+    //             console.log(`Uninstalled plugin`);
     //         } else {
     //             console.log(
-    //                 "Code Time: Failed to update Code Time about the uninstall event"
+    //                 "Failed to update Code Time about the uninstall event"
     //             );
     //         }
     //     }
@@ -153,44 +138,39 @@ export async function intializePlugin(
     ctx: ExtensionContext,
     createdAnonUser: boolean
 ) {
-    console.log(`Code Time: Loaded v${getVersion()}`);
+    logIt(`Loaded v${getVersion()}`);
 
     let serverIsOnline = await serverIsAvailable();
 
-    //
-    // Add the keystroke controller to the ext ctx, which
-    // will then listen for text document changes.
-    //
-    kpmController = new KpmController();
-    ctx.subscriptions.push(kpmController);
-
-    ctx.subscriptions.push(
-        workspace.onDidChangeConfiguration(e => configUpdated(ctx))
-    );
+    // initialize the music player
+    MusicPlayerManagerSingleton.initialize();
 
     let one_min = 1000 * 60;
     let userStatusInterval = 1000 * 90;
 
-    setTimeout(() => {
-        statusBarItem = window.createStatusBarItem(
-            StatusBarAlignment.Right,
-            10
-        );
-        statusBarItem.tooltip = "Click to see more from Code Time";
-        statusBarItem.command = "extension.softwarePaletteMenu";
-        statusBarItem.show();
+    if (isCodeTime()) {
+        // only code time will show the status bar text info
+        setTimeout(() => {
+            statusBarItem = window.createStatusBarItem(
+                StatusBarAlignment.Right,
+                10
+            );
+            statusBarItem.tooltip = "Click to see more from Code Time";
+            statusBarItem.command = "extension.softwarePaletteMenu";
+            statusBarItem.show();
 
-        showStatus("Code Time", null);
-    }, 100);
+            showStatus("Code Time", null);
+        }, 100);
 
-    // 50 second interval to fetch daily kpm info
-    kpm_session_info_interval = setInterval(() => {
-        fetchDailyKpmSessionInfo();
-    }, one_min);
+        // 50 second interval to fetch daily kpm info
+        kpm_session_info_interval = setInterval(() => {
+            fetchDailyKpmSessionInfo();
+        }, one_min);
+    }
 
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
-        gatherMusicInfo();
+        MusicPlayerManagerSingleton.stateCheckHandler();
     }, 1000 * 15);
 
     // send any offline data
@@ -220,49 +200,11 @@ export async function intializePlugin(
         getUserStatus(serverIsOnline);
     }, userStatusInterval);
 
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.softwareKpmDashboard", () => {
-            handleKpmClickedEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("codeTime.superDashboard", () => {
-            handleCodeTimeDashboardEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.softwarePaletteMenu", () => {
-            handlePaletteMenuEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeMetrics", () => {
-            handleCodeTimeDashboardEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.viewSoftwareTop40", () => {
-            handleViewSoftwareTopSongsEvent();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeLogin", () => {
-            handleCodeTimeLogin();
-        })
-    );
-    ctx.subscriptions.push(
-        commands.registerCommand("extension.codeTimeStatusToggle", () => {
-            handleCodeTimeStatusToggle();
-        })
-    );
+    // add the player commands
+    ctx.subscriptions.push(createCommands());
 
     initializeLiveshare();
     initializeUserInfo(createdAnonUser, serverIsOnline);
-}
-
-function configUpdated(ctx) {
-    // the software settings were updated, take action here
-    updatePreferences();
 }
 
 function handlePauseMetricsEvent() {
@@ -273,14 +215,6 @@ function handlePauseMetricsEvent() {
 function handleEnableMetricsEvent() {
     TELEMETRY_ON = true;
     showStatus("Code Time", null);
-}
-
-function handleCodeTimeDashboardEvent() {
-    displayCodeTimeMetricsDashboard();
-}
-
-function handleViewSoftwareTopSongsEvent() {
-    launchWebUrl("https://api.software.com/music/top40");
 }
 
 async function processHourlyJobs() {
@@ -295,17 +229,6 @@ function processGitData() {
     setTimeout(() => {
         getHistoricalCommits();
     }, 1000 * 5);
-}
-
-async function handleCodeTimeLogin() {
-    if (!(await serverIsAvailable)) {
-        showOfflinePrompt(false);
-        return;
-    }
-    let loginUrl = await buildLoginUrl();
-    launchWebUrl(loginUrl);
-    // retry 10 times, each retry is 10 seconds long
-    refetchUserStatusLazily(10);
 }
 
 async function initializeUserInfo(
@@ -327,19 +250,19 @@ async function initializeUserInfo(
         sendHeartbeat("INITIALIZED", serverIsOnline);
     }
 
-    // initiate kpm fetch
-    setTimeout(() => {
-        fetchDailyKpmSessionInfo();
-    }, 1000);
+    if (isCodeTime()) {
+        // initiate kpm fetch
+        setTimeout(() => {
+            fetchDailyKpmSessionInfo();
+        }, 1000);
+    }
 }
 
 async function initializeLiveshare() {
     const liveshare = await vsls.getApi();
     if (liveshare) {
         // {access: number, id: string, peerNumber: number, role: number, user: json}
-        console.log(
-            `Code Time: liveshare version - ${liveshare["apiVersion"]}`
-        );
+        logIt(`liveshare version - ${liveshare["apiVersion"]}`);
         liveshare.onDidChangeSession(async event => {
             let nowSec = nowInSecs();
             let offsetSec = getOffsetSecends();
@@ -363,21 +286,4 @@ async function initializeLiveshare() {
             }
         });
     }
-}
-
-export async function handleKpmClickedEvent() {
-    let serverIsOnline = await serverIsAvailable();
-    // {loggedIn: true|false}
-    let userStatus = await getUserStatus(serverIsOnline);
-    let webUrl = await buildWebDashboardUrl();
-
-    if (!userStatus.loggedIn) {
-        webUrl = await buildLoginUrl();
-        refetchUserStatusLazily(10);
-    }
-    launchWebUrl(webUrl);
-}
-
-export async function handlePaletteMenuEvent() {
-    showMenuOptions();
 }

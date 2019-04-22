@@ -4,7 +4,8 @@ import {
     getItem,
     isWindows,
     getRootPaths,
-    normalizeGithubEmail
+    normalizeGithubEmail,
+    logIt
 } from "./Util";
 
 //
@@ -100,7 +101,7 @@ export async function getRepoUsers() {
                     resp => {
                         if (isResponseOk(resp)) {
                             // everything is fine, delete the offline data file
-                            console.log("Code Time: repo membership updated");
+                            logIt("repo membership updated");
                         }
                     }
                 );
@@ -328,10 +329,10 @@ export async function getHistoricalCommits() {
             softwarePost("/commits", commitData, getItem("jwt")).then(resp => {
                 if (isResponseOk(resp)) {
                     if (resp.data) {
-                        console.log(`Code Time: ${resp.data.message}`);
+                        logIt(`${resp.data.message}`);
                     } else {
                         // everything is fine, delete the offline data file
-                        console.log("Code Time: repo commits updated");
+                        logIt("repo commits updated");
                     }
                 }
             });

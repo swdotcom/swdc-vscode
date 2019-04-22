@@ -1,5 +1,6 @@
 import { getStatusBarItem } from "../extension";
 import { workspace, extensions, window } from "vscode";
+import { CODE_TIME_EXT_ID, MUSIC_TIME_EXT_ID, launch_url } from "./Constants";
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -20,6 +21,7 @@ let editorSessiontoken = null;
 let lastMsg = null;
 let lastTooltip = null;
 let showStatusBarText = true;
+let extensionName = null;
 
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
@@ -29,9 +31,13 @@ export function getEditorSessionToken() {
 }
 
 export function getVersion() {
-    const extension = extensions.getExtension("softwaredotcom.swdc-vscode")
-        .packageJSON;
-    return extension.version;
+    let extension = null;
+    if (isCodeTime()) {
+        extension = extensions.getExtension(CODE_TIME_EXT_ID);
+    } else if (isMusicTime()) {
+        extension = extensions.getExtension(MUSIC_TIME_EXT_ID);
+    }
+    return extension.packageJSON.version;
 }
 
 export function isCodeTimeMetricsFocused() {
@@ -56,6 +62,24 @@ export function isCodeTimeMetricsFile(fileName) {
         return true;
     }
     return false;
+}
+
+export function isMusicTime() {
+    return getExtensionName() === "music-time" ? true : false;
+}
+
+export function isCodeTime() {
+    return getExtensionName() === "swdc-vscode" ? true : false;
+}
+
+export function codeTimeExtInstalled() {
+    const codeTimeExt = extensions.getExtension(CODE_TIME_EXT_ID);
+    return codeTimeExt ? true : false;
+}
+
+export function musicTimeExtInstalled() {
+    const musicTimeExt = extensions.getExtension(MUSIC_TIME_EXT_ID);
+    return musicTimeExt ? true : false;
 }
 
 export function getSessionFileCreateTime() {
@@ -149,10 +173,7 @@ export function setItem(key, value) {
     const sessionFile = getSoftwareSessionFile();
     fs.writeFileSync(sessionFile, content, err => {
         if (err)
-            console.log(
-                "Code Time: Error writing to the Software session file: ",
-                err.message
-            );
+            logIt(`Error writing to the Software session file: ${err.message}`);
     });
 }
 
@@ -215,6 +236,9 @@ function updateStatusBar(msg, tooltip) {
     } else {
         lastTooltip = tooltip;
         lastMsg = msg;
+    }
+    if (!getStatusBarItem()) {
+        return;
     }
     getStatusBarItem().tooltip = `${tooltip}${userInfo}`;
     if (!showStatusBarText) {
@@ -358,6 +382,40 @@ export function getSoftwareDataStoreFile() {
     return file;
 }
 
+export function getExtensionName() {
+    if (extensionName) {
+        return extensionName;
+    }
+    // const path = __dirname + "/models";
+    let extInfoFile = __dirname;
+    if (isWindows()) {
+        extInfoFile += "\\extensioninfo.json";
+    } else {
+        extInfoFile += "/extensioninfo.json";
+    }
+    if (fs.existsSync(extInfoFile)) {
+        const content = fs.readFileSync(extInfoFile).toString();
+        if (content) {
+            try {
+                const data = JSON.parse(content);
+                if (data) {
+                    extensionName = data.name;
+                }
+            } catch (e) {
+                logIt(`unable to read ext info name: ${e.message}`);
+            }
+        }
+    }
+    if (!extensionName) {
+        extensionName = "swdc-vscode";
+    }
+    return extensionName;
+}
+
+export function logIt(message) {
+    console.log(`${getExtensionName()}: ${message}`);
+}
+
 export function getSoftwareSessionAsJson() {
     let data = null;
 
@@ -365,11 +423,11 @@ export function getSoftwareSessionAsJson() {
     if (fs.existsSync(sessionFile)) {
         const content = fs.readFileSync(sessionFile).toString();
         if (content) {
-            data = JSON.parse(content);
-            let keysLen = data ? Object.keys(data).length : 0;
-            let dataLen = data && keysLen === 0 ? data.length : 0;
-            if (data && keysLen === 0 && dataLen > 0) {
-                // re-create the session file, it's corrupt without any keys but has a length
+            try {
+                data = JSON.parse(content);
+            } catch (e) {
+                logIt(`unable to read session info: ${e.message}`);
+                // error trying to read the session file, delete it
                 deleteFile(sessionFile);
                 data = {};
             }
@@ -406,9 +464,10 @@ export function storePayload(payload) {
         JSON.stringify(payload) + os.EOL,
         err => {
             if (err)
-                console.log(
-                    "Code Time: Error appending to the Software data store file: ",
-                    err.message
+                logIt(
+                    `Error appending to the Software data store file: ${
+                        err.message
+                    }`
                 );
         }
     );
@@ -505,10 +564,7 @@ export function launchWebUrl(url) {
 
     let process = cp.execFile(open, args, (error, stdout, stderr) => {
         if (error != null) {
-            console.log(
-                "Code Time: Error launching Software web url: ",
-                error.toString()
-            );
+            logIt(`Error launching Software web url: ${error.toString()}`);
         }
     });
 }
@@ -535,4 +591,16 @@ export function humanizeMinutes(min) {
         str = min.toFixed(0) + " min";
     }
     return str;
+}
+
+export async function buildLoginUrl() {
+    let jwt = getItem("jwt");
+    if (jwt) {
+        let encodedJwt = encodeURIComponent(jwt);
+        let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
+        return loginUrl;
+    } else {
+        // no need to build an onboarding url if we dn't have the token
+        return launch_url;
+    }
 }

@@ -4,7 +4,9 @@ import {
     getItem,
     getDashboardFile,
     isLinux,
-    toggleStatusBar
+    toggleStatusBar,
+    buildLoginUrl,
+    logIt
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
@@ -64,21 +66,8 @@ export function showQuickPick(pickOptions) {
     });
 }
 
-export async function buildLoginUrl() {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let encodedJwt = encodeURIComponent(jwt);
-        let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
-        return loginUrl;
-    } else {
-        // no need to build an onboarding url if we dn't have the token
-        return launch_url;
-    }
-}
-
 export async function buildWebDashboardUrl() {
-    let webUrl = launch_url;
-    return webUrl;
+    return launch_url;
 }
 
 export async function showMenuOptions() {
@@ -173,10 +162,7 @@ export async function fetchCodeTimeMetricsDashboard() {
 
     fs.writeFileSync(filePath, content, err => {
         if (err) {
-            console.log(
-                "Code Time: Error writing to the Software session file: ",
-                err.message
-            );
+            logIt(`Error writing to the Software session file: ${err.message}`);
         }
     });
 }

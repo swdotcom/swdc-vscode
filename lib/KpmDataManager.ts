@@ -1,4 +1,4 @@
-import { storePayload, getItem, getOs, getVersion } from "./Util";
+import { storePayload, getItem, getOs, getVersion, logIt } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 import { isTelemetryOn } from "../extension";
@@ -87,7 +87,7 @@ export class KpmDataManager {
 
         if (!isTelemetryOn()) {
             storePayload(payload);
-            console.log(
+            logIt(
                 "Software metrics are currently paused. Enable metrics to view your KPM info."
             );
             return;
@@ -95,7 +95,7 @@ export class KpmDataManager {
 
         sendOfflineData();
 
-        console.log(`Code Time: sending ${JSON.stringify(payload)}`);
+        logIt(`sending ${JSON.stringify(payload)}`);
 
         // POST the kpm to the PluginManager
         softwarePost("/data", payload, getItem("jwt")).then(async resp => {

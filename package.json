@@ -1,9 +1,11 @@
 {
-    "name": "swdc-vscode",
+    "name": "music-time",
+    "code-time": "swdc-vscode",
+    "music-time": "music-time",
     "displayName": "Code Time",
     "version": "0.15.0",
     "publisher": "softwaredotcom",
-    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
+    "description": "Music Time is an open source plugin that curates and launches playlists that help you code right in Visual Studio Code.",
     "author": {
         "name": "Software.com"
     },
@@ -35,6 +37,10 @@
     },
     "main": "./out/extension",
     "scripts": {
+        "prebuildcodetime": "node deployer name=code-time && yarn",
+        "prebuildmusictime": "node deployer name=music-time && yarn",
+        "musictime-package": "node deployer name=music-time && tsc -p ./",
+        "codetime-package": "node deployer name=code-time && tsc -p ./",
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install"
@@ -86,6 +92,26 @@
                 "command": "extension.codeTimeStatusToggle",
                 "title": "Show/hide status bar metrics",
                 "category": "Code Time"
+            },
+            {
+                "command": "musictime.next",
+                "title": "Play Next Song"
+            },
+            {
+                "command": "musictime.previous",
+                "title": "Play Previous Song"
+            },
+            {
+                "command": "musictime.play",
+                "title": "Play"
+            },
+            {
+                "command": "musictime.pause",
+                "title": "Pause"
+            },
+            {
+                "command": "musictime.menu",
+                "title": "Click to see more from Music Time"
             }
         ],
         "menus": {

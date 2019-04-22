@@ -9,7 +9,8 @@ import {
     isCodeTimeMetricsFile,
     isEmptyObj,
     getProjectFolder,
-    getDashboardFile
+    getDashboardFile,
+    logIt
 } from "./Util";
 
 const NO_PROJ_NAME = "Unnamed";
@@ -86,7 +87,7 @@ export class KpmController {
         }
 
         _keystrokeMap[rootPath].source[filename].close += 1;
-        console.log("Code Time: File closed: " + filename);
+        logIt(`File closed: ${filename}`);
     }
 
     private async _onOpenHandler(event) {
@@ -119,7 +120,7 @@ export class KpmController {
         }
 
         _keystrokeMap[rootPath].source[filename].open += 1;
-        console.log("Code Time: File opened: " + filename);
+        logIt(`File opened: ${filename}`);
     }
 
     /**
@@ -233,16 +234,16 @@ export class KpmController {
             // it's a copy and paste event
             //
             _keystrokeMap[rootPath].source[filename].paste += 1;
-            console.log("Code Time: Copy+Paste Incremented");
+            logIt("Copy+Paste Incremented");
         } else if (newCount < 0) {
             _keystrokeMap[rootPath].source[filename].delete += 1;
             // update the overall count
-            console.log("Code Time: Delete Incremented");
+            logIt("Delete Incremented");
         } else if (hasNonNewLineData) {
             // update the data for this fileInfo keys count
             _keystrokeMap[rootPath].source[filename].add += 1;
             // update the overall count
-            console.log("Code Time: KPM incremented");
+            logIt("KPM incremented");
         }
         // increment keystrokes by 1
         _keystrokeMap[rootPath].keystrokes += 1;
@@ -268,17 +269,17 @@ export class KpmController {
             _keystrokeMap[rootPath].source[filename].linesRemoved += Math.abs(
                 diff
             );
-            console.log("Code Time: Increment lines removed");
+            logIt("Increment lines removed");
         } else if (diff > 0) {
             _keystrokeMap[rootPath].source[filename].linesAdded += diff;
-            console.log("Code Time: Increment lines added");
+            logIt("Increment lines added");
         }
         if (
             _keystrokeMap[rootPath].source[filename].linesAdded === 0 &&
             isNewLine
         ) {
             _keystrokeMap[rootPath].source[filename].linesAdded = 1;
-            console.log("Code Time: Increment lines added");
+            logIt("Increment lines added");
         }
     }
 

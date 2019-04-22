@@ -6,9 +6,11 @@ import {
     humanizeMinutes,
     getDashboardFile,
     isFileOpen,
-    launchWebUrl
+    launchWebUrl,
+    buildLoginUrl,
+    logIt
 } from "./Util";
-import { fetchCodeTimeMetricsDashboard, buildLoginUrl } from "./MenuManager";
+import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import {
     getUserStatus,
     refetchUserStatusLazily,
@@ -83,10 +85,7 @@ async function getSessionStatus() {
             return "notok";
         })
         .catch(err => {
-            console.log(
-                "Code Time: error fetching session kpm info: ",
-                err.message
-            );
+            logIt(`error fetching session kpm info: ${err.message}`);
             return "error";
         });
     return result;

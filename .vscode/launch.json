@@ -13,6 +13,28 @@
             "preLaunchTask": "yarn"
         },
         {
+            "name": "Launch Music Time Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "preLaunchTask": "prebuildmusictime"
+        },
+        {
+            "name": "Launch Code Time Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "preLaunchTask": "prebuildcodetime"
+        },
+        {
             "name": "Launch Tests",
             "type": "extensionHost",
             "request": "launch",

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { api_endpoint } from "./Constants";
-import { showErrorStatus, getItem } from "./Util";
+import { showErrorStatus, getItem, logIt } from "./Util";
 
 // build the axios api base url
 const beApi = axios.create({
@@ -24,11 +24,7 @@ export async function softwareGet(api, jwt) {
             return resp;
         })
         .catch(err => {
-            console.log(
-                `Code Time: error fetching data for ${api}, message: ${
-                    err.message
-                }`
-            );
+            logIt(`error fetching data for ${api}, message: ${err.message}`);
             return err;
         });
 }
@@ -45,11 +41,7 @@ export async function softwarePut(api, payload, jwt) {
             return resp;
         })
         .catch(err => {
-            console.log(
-                `Code Time: error posting data for ${api}, message: ${
-                    err.message
-                }`
-            );
+            logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
 }
@@ -66,11 +58,7 @@ export async function softwarePost(api, payload, jwt) {
             return resp;
         })
         .catch(err => {
-            console.log(
-                `Code Time: error posting data for ${api}, message: ${
-                    err.message
-                }`
-            );
+            logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
 }
@@ -86,10 +74,8 @@ export async function softwareDelete(api, jwt) {
             return resp;
         })
         .catch(err => {
-            console.log(
-                `Code Time: error with delete request for ${api}, message: ${
-                    err.message
-                }`
+            logIt(
+                `error with delete request for ${api}, message: ${err.message}`
             );
             return err;
         });
