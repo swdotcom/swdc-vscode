@@ -19,7 +19,7 @@ import {
     showOfflinePrompt,
     logIt,
     isCodeTime,
-    isMusicTime
+    codeTimeExtInstalled
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -182,23 +182,25 @@ export async function intializePlugin(
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
 
-    // check on new commits once an hour
-    historical_commits_interval = setInterval(() => {
-        processHourlyJobs();
-    }, hourly_interval);
+    if (isCodeTime() || !codeTimeExtInstalled()) {
+        // check on new commits once an hour
+        historical_commits_interval = setInterval(() => {
+            processHourlyJobs();
+        }, hourly_interval);
 
-    // fire off the hourly jobs like
-    // commit gathering in a couple of minutes
-    // for initialization
-    setTimeout(() => {
-        processGitData();
-    }, one_min * 2);
+        // fire off the hourly jobs like
+        // commit gathering in a couple of minutes
+        // for initialization
+        setTimeout(() => {
+            processGitData();
+        }, one_min * 2);
 
-    // every minute and a half, get the user's jwt if they've logged
-    // in if they're still not a registered user.
-    token_check_interval = setInterval(async () => {
-        getUserStatus(serverIsOnline);
-    }, userStatusInterval);
+        // every minute and a half, get the user's jwt if they've logged
+        // in if they're still not a registered user.
+        token_check_interval = setInterval(async () => {
+            getUserStatus(serverIsOnline);
+        }, userStatusInterval);
+    }
 
     // add the player commands
     ctx.subscriptions.push(createCommands());

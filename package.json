@@ -1,11 +1,11 @@
 {
-    "name": "music-time",
+    "name": "swdc-vscode",
     "code-time": "swdc-vscode",
     "music-time": "music-time",
     "displayName": "Code Time",
     "version": "0.15.0",
     "publisher": "softwaredotcom",
-    "description": "Music Time is an open source plugin that curates and launches playlists that help you code right in Visual Studio Code.",
+    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
         "name": "Software.com"
     },
@@ -37,8 +37,8 @@
     },
     "main": "./out/extension",
     "scripts": {
-        "prebuildcodetime": "node deployer name=code-time && yarn",
-        "prebuildmusictime": "node deployer name=music-time && yarn",
+        "prebuildcodetime": "node deployer name=code-time && tsc -watch -p ./",
+        "prebuildmusictime": "node deployer name=music-time && tsc -watch -p ./",
         "musictime-package": "node deployer name=music-time && tsc -p ./",
         "codetime-package": "node deployer name=code-time && tsc -p ./",
         "vscode:prepublish": "tsc -p ./",
