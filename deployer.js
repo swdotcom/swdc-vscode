@@ -2,10 +2,17 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 
+const KEY_MAP = {
+    "code-time": "swdc-vscode",
+    "music-time": "music-time"
+};
+
 const CODE_TIME_DESC =
     "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.";
 const MUSIC_TIME_DESC =
-    "Music Time is an open source plugin that curates and launches playlists that help you code right in Visual Studio Code.";
+    "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
+const CODE_TIME_VERSION = "0.15.0";
+const MUSIC_TIME_VERSION = "0.1.1";
 
 // copy the scripts data to dist/scripts
 async function deploy() {
@@ -34,8 +41,8 @@ async function deploy() {
             process.exit(1);
         }
     }
-    let pluginName = getItem(getPackageFile(), key);
-    debug(`Building plugin: ${pluginName}`);
+    let pluginName = KEY_MAP[key];
+
     if (!pluginName) {
         console.error(
             `The plugin extension name is not found based on the key: ${key}`
@@ -43,11 +50,15 @@ async function deploy() {
         console.error("Usage: node deployer name={swdc-vscode|music-time}");
         process.exit(1);
     }
+
+    debug(`Building plugin: ${pluginName}`);
     setItem(getPackageFile(), "name", pluginName);
     if (pluginName === "swdc-vscode") {
         setItem(getPackageFile(), "description", CODE_TIME_DESC);
+        setItem(getPackageFile(), "version", CODE_TIME_VERSION);
     } else if (pluginName === "music-time") {
         setItem(getPackageFile(), "description", MUSIC_TIME_DESC);
+        setItem(getPackageFile(), "version", MUSIC_TIME_VERSION);
     }
     setItem(getExtensionFile(), "name", pluginName);
 

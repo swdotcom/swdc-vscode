@@ -10,7 +10,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js"],
-            "preLaunchTask": "yarn"
+            "preLaunchTask": "prebuildcodetime"
         },
         {
             "name": "Launch Music Time Extension",

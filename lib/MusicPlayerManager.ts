@@ -1,11 +1,4 @@
-import * as music from "cody-music";
-import {
-    workspace,
-    window,
-    StatusBarAlignment,
-    extensions,
-    StatusBarItem
-} from "vscode";
+import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime } from "./Util";
 import { MusicStateManager, TrackState } from "./MusicStateManager";
 

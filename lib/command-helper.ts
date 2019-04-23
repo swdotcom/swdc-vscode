@@ -1,5 +1,6 @@
-import { commands, Disposable, workspace } from "vscode";
+import { commands, Disposable, workspace, window } from "vscode";
 import { MusicController } from "./MusicController";
+// import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
 import {
     handleCodeTimeLogin,
     handleKpmClickedEvent,
@@ -83,6 +84,10 @@ export function createCommands(): {
         );
         cmds.push(configChangesHandler);
     } else if (isMusicTime()) {
+        // const playlistTreeView = window.createTreeView("music-time-playlists", {
+        //     treeDataProvider: new MusicPlaylistProvider()
+        // });
+
         const controller = new MusicController();
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.next();

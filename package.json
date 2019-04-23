@@ -1,7 +1,5 @@
 {
     "name": "swdc-vscode",
-    "code-time": "swdc-vscode",
-    "music-time": "music-time",
     "displayName": "Code Time",
     "version": "0.15.0",
     "publisher": "softwaredotcom",
