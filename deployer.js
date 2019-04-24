@@ -13,6 +13,8 @@ const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "0.15.0";
 const MUSIC_TIME_VERSION = "0.1.1";
+const CODE_TIME_DISPLAY = "Code Time";
+const MUSIC_TIME_DISPLAY = "Music Time";
 
 // copy the scripts data to dist/scripts
 async function deploy() {
@@ -56,9 +58,11 @@ async function deploy() {
     if (pluginName === "swdc-vscode") {
         setItem(getPackageFile(), "description", CODE_TIME_DESC);
         setItem(getPackageFile(), "version", CODE_TIME_VERSION);
+        setItem(getPackageFile(), "displayName", CODE_TIME_DISPLAY);
     } else if (pluginName === "music-time") {
         setItem(getPackageFile(), "description", MUSIC_TIME_DESC);
         setItem(getPackageFile(), "version", MUSIC_TIME_VERSION);
+        setItem(getPackageFile(), "displayName", MUSIC_TIME_DISPLAY);
     }
     setItem(getExtensionFile(), "name", pluginName);
 
