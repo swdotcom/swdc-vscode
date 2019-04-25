@@ -1,9 +1,9 @@
 {
-    "name": "music-time",
+    "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "0.1.1",
+    "version": "0.15.0",
     "publisher": "softwaredotcom",
-    "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
+    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
         "name": "Software.com"
     },
