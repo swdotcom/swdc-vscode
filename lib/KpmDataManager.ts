@@ -1,6 +1,7 @@
 import { storePayload, getItem, getOs, getVersion, logIt } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
+import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 import { isTelemetryOn } from "../extension";
 import { sendOfflineData } from "./DataController";
 
@@ -102,6 +103,9 @@ export class KpmDataManager {
             if (!isResponseOk(resp)) {
                 storePayload(payload);
             }
+            setTimeout(() => {
+                fetchDailyKpmSessionInfo();
+            }, 5000);
         });
     }
 }

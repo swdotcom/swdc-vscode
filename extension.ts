@@ -162,10 +162,13 @@ export async function intializePlugin(
             showStatus("Code Time", null);
         }, 100);
 
-        // 50 second interval to fetch daily kpm info
+        // 5 minute kpm session info fetch in case the user
+        // is offline then backonline, we'll then be able to fetch
+        // the data again
+        let kpmFetchInterval = one_min * 5;
         kpm_session_info_interval = setInterval(() => {
             fetchDailyKpmSessionInfo();
-        }, one_min);
+        }, kpmFetchInterval);
     }
 
     // 15 second interval to check music info
@@ -184,16 +187,19 @@ export async function intializePlugin(
 
     if (isCodeTime() || !codeTimeExtInstalled()) {
         // check on new commits once an hour
-        historical_commits_interval = setInterval(() => {
-            processHourlyJobs();
+        historical_commits_interval = setInterval(async () => {
+            let isonline = await serverIsAvailable();
+            sendHeartbeat("HOURLY", isonline);
+            getHistoricalCommits(isonline);
         }, hourly_interval);
 
         // fire off the hourly jobs like
         // commit gathering in a couple of minutes
         // for initialization
+        let two_min = one_min * 2;
         setTimeout(() => {
-            processGitData();
-        }, one_min * 2);
+            getHistoricalCommits(serverIsOnline);
+        }, two_min);
 
         // every minute and a half, get the user's jwt if they've logged
         // in if they're still not a registered user.
@@ -217,20 +223,6 @@ function handlePauseMetricsEvent() {
 function handleEnableMetricsEvent() {
     TELEMETRY_ON = true;
     showStatus("Code Time", null);
-}
-
-async function processHourlyJobs() {
-    let serverIsOnline = await serverIsAvailable();
-    sendHeartbeat("HOURLY", serverIsOnline);
-    if (!serverIsOnline) {
-        processGitData();
-    }
-}
-
-function processGitData() {
-    setTimeout(() => {
-        getHistoricalCommits();
-    }, 1000 * 5);
 }
 
 async function initializeUserInfo(

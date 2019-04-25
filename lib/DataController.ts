@@ -53,40 +53,40 @@ export async function serverIsAvailable() {
 /**
  * send the offline data
  */
-export function sendOfflineData() {
+export async function sendOfflineData() {
     const dataStoreFile = getSoftwareDataStoreFile();
     try {
         if (fs.existsSync(dataStoreFile)) {
-            const content = fs.readFileSync(dataStoreFile).toString();
-            if (content) {
-                logIt(`sending batch payloads: ${content}`);
-                const payloads = content
-                    .split(/\r?\n/)
-                    .map(item => {
-                        let obj = null;
-                        if (item) {
-                            try {
-                                obj = JSON.parse(item);
-                            } catch (e) {
-                                //
+            let isonline = await serverIsAvailable();
+            if (isonline) {
+                const content = fs.readFileSync(dataStoreFile).toString();
+                if (content) {
+                    logIt(`sending batch payloads: ${content}`);
+                    const payloads = content
+                        .split(/\r?\n/)
+                        .map(item => {
+                            let obj = null;
+                            if (item) {
+                                try {
+                                    obj = JSON.parse(item);
+                                } catch (e) {
+                                    //
+                                }
                             }
-                        }
-                        if (obj) {
-                            return obj;
-                        }
-                    })
-                    .filter(item => item);
-                softwarePost("/data/batch", payloads, getItem("jwt")).then(
-                    async resp => {
-                        if (isResponseOk(resp) || isUserDeactivated(resp)) {
-                            const serverAvailablePromise = await serverIsAvailable();
-                            if (serverAvailablePromise) {
+                            if (obj) {
+                                return obj;
+                            }
+                        })
+                        .filter(item => item);
+                    softwarePost("/data/batch", payloads, getItem("jwt")).then(
+                        async resp => {
+                            if (isResponseOk(resp)) {
                                 // everything is fine, delete the offline data file
                                 deleteFile(getSoftwareDataStoreFile());
                             }
                         }
-                    }
-                );
+                    );
+                }
             }
         }
     } catch (e) {

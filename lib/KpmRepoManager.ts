@@ -5,7 +5,8 @@ import {
     isWindows,
     getRootPaths,
     normalizeGithubEmail,
-    logIt
+    logIt,
+    nowInSecs
 } from "./Util";
 
 //
@@ -156,7 +157,10 @@ async function getLastCommit(projectDir) {
 /**
  * get the historical git commits
  */
-export async function getHistoricalCommits() {
+export async function getHistoricalCommits(isonline) {
+    if (!isonline) {
+        return;
+    }
     let projectDirs = getRootPaths();
 
     if (!projectDirs || projectDirs.length === 0) {
@@ -171,20 +175,25 @@ export async function getHistoricalCommits() {
             let identifier = resourceInfo.identifier;
             let tag = resourceInfo.tag;
             let branch = resourceInfo.branch;
-            let key = buildRepoKey(identifier, branch, tag);
 
             let latestCommit = await getLastCommit(projectDir);
-            let sinceOption = latestCommit
-                ? ` --since=${parseInt(latestCommit.timestamp, 10)}`
-                : "";
+
+            let sinceOption = "";
+            if (latestCommit) {
+                sinceOption = ` --since=${parseInt(
+                    latestCommit.timestamp,
+                    10
+                )}`;
+            } else {
+                sinceOption = " --max-count=100";
+            }
+
+            const gitCmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${
+                resourceInfo.email
+            }${sinceOption}`;
 
             // git log --stat --pretty="COMMIT:%H, %ct, %cI, %s, %ae"
-            let commitHistory = await wrapExecPromise(
-                `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${
-                    resourceInfo.email
-                }${sinceOption}`,
-                projectDir
-            );
+            let commitHistory = await wrapExecPromise(gitCmd, projectDir);
 
             if (!commitHistory) {
                 // something went wrong, but don't try to parse a null or undefined str
