@@ -4,11 +4,10 @@ import {
     getItem,
     showStatus,
     humanizeMinutes,
-    getDashboardFile,
-    isFileOpen,
     launchWebUrl,
     buildLoginUrl,
-    logIt
+    logIt,
+    isCodeTimeMetricsFocused
 } from "./Util";
 import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import {
@@ -53,11 +52,8 @@ export async function fetchDailyKpmSessionInfo() {
     // make sure we send the beginning of the day
     let result = await getSessionStatus();
 
-    if (result === "ok") {
-        let filePath = getDashboardFile();
-        if (isFileOpen(filePath)) {
-            fetchCodeTimeMetricsDashboard();
-        }
+    if (result === "ok" && isCodeTimeMetricsFocused()) {
+        fetchCodeTimeMetricsDashboard();
     }
 }
 

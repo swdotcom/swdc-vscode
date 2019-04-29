@@ -14,8 +14,10 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
-let codeTimeMetricsIsFocused = false;
-let codeTimeMetricsIsClosed = true;
+// start off as focused as the editor may have
+// had that file in the tabs. any close or tab
+// switch will set this to false if the file isn't CodeTime
+let codeTimeMetricsIsFocused = true;
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
 let lastMsg = null;
@@ -41,19 +43,21 @@ export function getVersion() {
 }
 
 export function isCodeTimeMetricsFocused() {
+    if (!codeTimeMetricsIsFocused) {
+        // check if it's the only one in the editor. the other files
+        // may have been closed
+        if (
+            getNumberOfTextDocumentsOpen() === 1 &&
+            isFileOpen(getDashboardFile())
+        ) {
+            codeTimeMetricsIsFocused = true;
+        }
+    }
     return codeTimeMetricsIsFocused;
-}
-
-export function isCodeTimeMetricsClosed() {
-    return codeTimeMetricsIsClosed;
 }
 
 export function updateCodeTimeMetricsFileFocus(isFocused) {
     codeTimeMetricsIsFocused = isFocused;
-}
-
-export function updateCodeTimeMetricsFileClosed(isClosed) {
-    codeTimeMetricsIsClosed = isClosed;
 }
 
 export function isCodeTimeMetricsFile(fileName) {
@@ -105,8 +109,12 @@ export function getRootPaths() {
     return paths;
 }
 
+export function getNumberOfTextDocumentsOpen() {
+    return workspace.textDocuments ? workspace.textDocuments.length : 0;
+}
+
 export function isFileOpen(fileName) {
-    if (workspace.textDocuments && workspace.textDocuments.length > 0) {
+    if (getNumberOfTextDocumentsOpen() > 0) {
         // check if the .software/CodeTime has already been opened
         for (let i = 0; i < workspace.textDocuments.length; i++) {
             let docObj = workspace.textDocuments[i];
@@ -603,4 +611,12 @@ export async function buildLoginUrl() {
         // no need to build an onboarding url if we dn't have the token
         return launch_url;
     }
+}
+
+export function showInformationMessage(message: string) {
+    return window.showInformationMessage(`${message}`);
+}
+
+export function showWarningMessage(message: string) {
+    return window.showWarningMessage(`${message}`);
 }

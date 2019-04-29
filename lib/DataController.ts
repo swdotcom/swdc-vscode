@@ -97,7 +97,7 @@ export async function sendOfflineData() {
 /**
  * send any music tracks
  */
-export function sendMusicData(trackData) {
+export async function sendMusicData(trackData) {
     logIt(`sending ${JSON.stringify(trackData)}`);
     // add the "local_start", "start", and "end"
     // POST the kpm to the PluginManager

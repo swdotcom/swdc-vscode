@@ -5,7 +5,6 @@ import { DEFAULT_DURATION } from "./Constants";
 import {
     getRootPathForFile,
     updateCodeTimeMetricsFileFocus,
-    updateCodeTimeMetricsFileClosed,
     isCodeTimeMetricsFile,
     isEmptyObj,
     getProjectFolder,
@@ -65,7 +64,6 @@ export class KpmController {
 
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(false);
-            updateCodeTimeMetricsFileClosed(true);
         }
 
         if (!this.isTrueEventFile(event)) {
@@ -97,7 +95,6 @@ export class KpmController {
         const filename = event.fileName;
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(true);
-            updateCodeTimeMetricsFileClosed(false);
         } else {
             updateCodeTimeMetricsFileFocus(false);
         }
