@@ -6,7 +6,8 @@ import {
     isLinux,
     toggleStatusBar,
     buildLoginUrl,
-    logIt
+    logIt,
+    nowInSecs
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
@@ -21,6 +22,7 @@ const fs = require("fs");
 const NO_DATA = "CODE TIME\n\nNo data available\n";
 
 let showMusicMetrics = false;
+let lastDashboardFetchTime = 0;
 
 /**
  * fetch the show music metrics flag
@@ -144,27 +146,39 @@ export async function showMenuOptions() {
 export async function fetchCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
 
-    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
-    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-    let showWeeklyRanking = workspace
-        .getConfiguration()
-        .get("showWeeklyRanking");
+    let nowSec = nowInSecs();
+    let diff = nowSec - lastDashboardFetchTime;
+    if (lastDashboardFetchTime === 0 || diff > 60) {
+        lastDashboardFetchTime = nowInSecs();
 
-    const dashboardSummary = await softwareGet(
-        `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
-        getItem("jwt")
-    );
-    // get the content
-    let content =
-        dashboardSummary && dashboardSummary.data
-            ? dashboardSummary.data
-            : NO_DATA;
+        logIt("retrieving dashboard metrics");
 
-    fs.writeFileSync(filePath, content, err => {
-        if (err) {
-            logIt(`Error writing to the Software session file: ${err.message}`);
-        }
-    });
+        let showMusicMetrics = workspace
+            .getConfiguration()
+            .get("showMusicMetrics");
+        let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
+        let showWeeklyRanking = workspace
+            .getConfiguration()
+            .get("showWeeklyRanking");
+
+        const dashboardSummary = await softwareGet(
+            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
+            getItem("jwt")
+        );
+        // get the content
+        let content =
+            dashboardSummary && dashboardSummary.data
+                ? dashboardSummary.data
+                : NO_DATA;
+
+        fs.writeFileSync(filePath, content, err => {
+            if (err) {
+                logIt(
+                    `Error writing to the Software session file: ${err.message}`
+                );
+            }
+        });
+    }
 }
 
 export async function displayCodeTimeMetricsDashboard() {

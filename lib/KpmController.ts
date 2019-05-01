@@ -57,7 +57,7 @@ export class KpmController {
     }
 
     private async _onCloseHandler(event) {
-        if (!event || !event.fileNme) {
+        if (!event || !event.fileName) {
             return;
         }
         const filename = event.fileName;
@@ -319,7 +319,10 @@ export class KpmController {
         }
 
         let keystrokeCount = _keystrokeMap[rootPath];
-        if (keystrokeCount) {
+        if (
+            _keystrokeMap[rootPath] &&
+            _keystrokeMap[rootPath].source[filename]
+        ) {
             return;
         }
 
@@ -329,14 +332,16 @@ export class KpmController {
         //
         // Create the keystroke count and add it to the map
         //
-        keystrokeCount = new KpmDataManager({
-            // project.directory is used as an object key, must be string
-            directory: rootPath,
-            name,
-            identifier: "",
-            resource: {}
-        });
-        keystrokeCount["keystrokes"] = 0;
+        if (!keystrokeCount) {
+            keystrokeCount = new KpmDataManager({
+                // project.directory is used as an object key, must be string
+                directory: rootPath,
+                name,
+                identifier: "",
+                resource: {}
+            });
+            keystrokeCount["keystrokes"] = 0;
+        }
 
         let fileInfo = null;
         if (filename) {

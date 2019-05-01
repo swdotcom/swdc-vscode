@@ -447,7 +447,7 @@ export function getSoftwareSessionAsJson() {
 export async function showOfflinePrompt(addReconnectMsg = false) {
     // shows a prompt that we're not able to communicate with the app server
     let infoMsg = "Our service is temporarily unavailable. ";
-    if (showOfflinePrompt) {
+    if (addReconnectMsg) {
         infoMsg +=
             "We will try to reconnect again in 10 minutes. Your status bar will not update at this time.";
     } else {
@@ -606,6 +606,18 @@ export async function buildLoginUrl() {
     if (jwt) {
         let encodedJwt = encodeURIComponent(jwt);
         let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
+        return loginUrl;
+    } else {
+        // no need to build an onboarding url if we dn't have the token
+        return launch_url;
+    }
+}
+
+export async function buildSpotifyConnectUrl() {
+    let jwt = getItem("jwt");
+    if (jwt) {
+        let encodedJwt = encodeURIComponent(jwt);
+        let loginUrl = `${launch_url}/connect/spotify?token=${encodedJwt}`;
         return loginUrl;
     } else {
         // no need to build an onboarding url if we dn't have the token

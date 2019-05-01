@@ -4,7 +4,6 @@ import {
     softwareGet,
     softwarePut,
     isResponseOk,
-    isUserDeactivated,
     softwarePost
 } from "./HttpClient";
 import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
@@ -23,7 +22,8 @@ import {
     showOfflinePrompt,
     buildLoginUrl,
     launchWebUrl,
-    logIt
+    logIt,
+    buildSpotifyConnectUrl
 } from "./Util";
 import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
@@ -160,6 +160,18 @@ export async function createAnonymousUser(serverIsOnline) {
         }
     }
     return null;
+}
+
+async function isConnectedToSpotify(serverIsOnline) {
+    let jwt = getItem("jwt");
+    if (serverIsOnline) {
+        let api = "/users/spotify/state";
+        let resp = await softwareGet(api, jwt);
+        if (isResponseOk(resp) && resp.data) {
+            // get the spotify oauth info
+        }
+    }
+    return false;
 }
 
 async function isLoggedOn(serverIsOnline, jwt) {
@@ -396,6 +408,26 @@ export async function updatePreferences() {
     }
 }
 
+export async function refetchSpotifyConnectStatusLazily(
+    tryCountUntilFoundUser = 3
+) {
+    setTimeout(() => {
+        userStatusFetchHandler(spotifyConnectStatusHandler);
+    }, 10000);
+}
+
+async function spotifyConnectStatusHandler(tryCountUntilFound) {
+    let serverIsOnline = await serverIsAvailable();
+    let isConnected = await isConnectedToSpotify(serverIsOnline);
+    if (!isConnected) {
+        // try again if the count is not zero
+        if (tryCountUntilFound > 0) {
+            tryCountUntilFound -= 1;
+            refetchSpotifyConnectStatusLazily(tryCountUntilFound);
+        }
+    }
+}
+
 export async function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
     setTimeout(() => {
         userStatusFetchHandler(tryCountUntilFoundUser);
@@ -440,12 +472,22 @@ export async function sendHeartbeat(reason, serverIsOnline) {
 export async function handleCodeTimeLogin() {
     if (!(await serverIsAvailable())) {
         showOfflinePrompt(false);
-        return;
+    } else {
+        let loginUrl = await buildLoginUrl();
+        launchWebUrl(loginUrl);
+        // retry 10 times, each retry is 10 seconds long
+        refetchUserStatusLazily(10);
     }
-    let loginUrl = await buildLoginUrl();
-    launchWebUrl(loginUrl);
-    // retry 10 times, each retry is 10 seconds long
-    refetchUserStatusLazily(10);
+}
+
+export async function handleSpotifyConnect() {
+    if (!(await serverIsAvailable())) {
+        showOfflinePrompt(false);
+    } else {
+        let spotifyUrl = await buildSpotifyConnectUrl();
+        launchWebUrl(spotifyUrl);
+        refetchSpotifyConnectStatusLazily(10);
+    }
 }
 
 export async function handleKpmClickedEvent() {
