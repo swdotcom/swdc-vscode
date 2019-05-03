@@ -107,6 +107,9 @@ export class MusicController {
                     setItem("spotify_access_token", accessToken);
                 }
                 // call get playlists again
+                setTimeout(() => {
+                    this.getPlaylists(1);
+                }, 1000);
             }
         } else {
             console.log("playlist data: ", response);
