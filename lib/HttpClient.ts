@@ -8,6 +8,28 @@ const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
 
+const spotifyApi = axios.create({
+    baseURL: "https://api.spotify.com"
+});
+
+export async function spotifyApiGet(api, accessToken) {
+    spotifyApi.defaults.headers.common[
+        "Authorization"
+    ] = `Bearer ${accessToken}`;
+    return await spotifyApi
+        .get(api)
+        .then(resp => {
+            return resp;
+        })
+        .catch(err => {
+            // when a token expires, we'll get the following error data
+            // err.response.status === 401
+            // err.response.statusText = "Unauthorized"
+            logIt(`error fetching data for ${api}, message: ${err.message}`);
+            return err;
+        });
+}
+
 /**
  * Response returns a paylod with the following...
  * data: <payload>, status: 200, statusText: "OK", config: Object
@@ -79,6 +101,25 @@ export async function softwareDelete(api, jwt) {
             );
             return err;
         });
+}
+
+/**
+ * Check if the spotify response has an expired token
+ * {"error": {"status": 401, "message": "The access token expired"}}
+ */
+export function hasTokenExpired(resp) {
+    // when a token expires, we'll get the following error data
+    // err.response.status === 401
+    // err.response.statusText = "Unauthorized"
+    if (
+        resp &&
+        resp.response &&
+        resp.response.status &&
+        resp.response.status === 401
+    ) {
+        return true;
+    }
+    return false;
 }
 
 /**

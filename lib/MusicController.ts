@@ -1,7 +1,18 @@
 import * as music from "cody-music";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
 import { showQuickPick } from "./MenuManager";
-import { getUserStatus, serverIsAvailable } from "./DataController";
+import {
+    handleSpotifyConnect,
+    serverIsAvailable,
+    getUser
+} from "./DataController";
+import { getItem } from "./Util";
+import {
+    softwareGet,
+    spotifyApiGet,
+    hasTokenExpired,
+    isResponseOk
+} from "./HttpClient";
 
 export class MusicController {
     getPlayer(): string {
@@ -56,6 +67,46 @@ export class MusicController {
             cb: null
         });
 
+        kpmMenuOptions.items.push({
+            label: "Connect Spotify",
+            description: "",
+            detail:
+                "To see your Spotify playlists in Music Time, please connect your account",
+            url: null,
+            uri: null,
+            cb: handleSpotifyConnect
+        });
+
+        kpmMenuOptions.items.push({
+            label: "Search Playlist",
+            description: "",
+            detail: "",
+            url: null,
+            uri: null,
+            cb: this.getPlaylists
+        });
+
         showQuickPick(kpmMenuOptions);
+    }
+
+    async getPlaylists(tryCount = 0) {
+        let accessToken = getItem("spotify_access_token");
+        let response = await spotifyApiGet("/v1/me/playlists", accessToken);
+        if (hasTokenExpired(response) && tryCount === 0) {
+            let serverIsOnline = await serverIsAvailable();
+            const jwt = getItem("jwt");
+            // refresh the token then try again
+            const refreshResponse = await softwareGet(
+                "/auth/spotify/refreshToken",
+                jwt
+            );
+            if (isResponseOk(refreshResponse)) {
+                // get the user then get the playlists again
+                let user = await getUser(serverIsOnline, jwt);
+                await this.getPlaylists(1);
+            }
+        } else {
+            console.log("playlist data: ", response);
+        }
     }
 }

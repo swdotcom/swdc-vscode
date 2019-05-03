@@ -617,7 +617,8 @@ export async function buildSpotifyConnectUrl() {
     let jwt = getItem("jwt");
     if (jwt) {
         let encodedJwt = encodeURIComponent(jwt);
-        let loginUrl = `${launch_url}/connect/spotify?token=${encodedJwt}`;
+        let loginUrl = `${launch_url}/login`;
+        // let loginUrl = `${launch_url}/spotify?token=${encodedJwt}`;
         return loginUrl;
     } else {
         // no need to build an onboarding url if we dn't have the token

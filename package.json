@@ -110,6 +110,10 @@
             {
                 "command": "musictime.menu",
                 "title": "Click to see more from Music Time"
+            },
+            {
+                "command": "musictime.connectSpotify",
+                "title": "Connect your spotify account"
             }
         ],
         "menus": {

@@ -8,7 +8,8 @@ import {
     getUserStatus,
     sendHeartbeat,
     createAnonymousUser,
-    serverIsAvailable
+    serverIsAvailable,
+    getSpotifyAccessToken
 } from "./lib/DataController";
 import {
     showStatus,
@@ -19,7 +20,10 @@ import {
     showOfflinePrompt,
     logIt,
     isCodeTime,
-    codeTimeExtInstalled
+    codeTimeExtInstalled,
+    isMusicTime,
+    getItem,
+    setItem
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -30,6 +34,7 @@ import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { MusicPlayerManagerSingleton } from "./lib/MusicPlayerManager";
 import { createCommands } from "./lib/command-helper";
+import { access } from "fs";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -146,7 +151,7 @@ export async function intializePlugin(
     MusicPlayerManagerSingleton.initialize();
 
     let one_min = 1000 * 60;
-    let userStatusInterval = 1000 * 90;
+    let userStatusInterval = 1000 * 120;
 
     if (isCodeTime()) {
         // only code time will show the status bar text info
@@ -249,6 +254,14 @@ async function initializeUserInfo(
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);
+    } else if (isMusicTime()) {
+        const spotifyAccessToken = getItem("spotify_access_token");
+        if (!spotifyAccessToken) {
+            let accessToken = await getSpotifyAccessToken(serverIsOnline);
+            if (accessToken) {
+                setItem("spotify_access_token", accessToken);
+            }
+        }
     }
 }
 
