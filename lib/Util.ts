@@ -370,6 +370,11 @@ export function softwareSessionFileExists() {
     return fs.existsSync(file);
 }
 
+export function jwtExists() {
+    let jwt = getItem("jwt");
+    return !jwt ? false : true;
+}
+
 export function getSoftwareSessionFile(autoCreate = true) {
     let file = getSoftwareDir();
     if (isWindows()) {

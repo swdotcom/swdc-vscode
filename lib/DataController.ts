@@ -27,13 +27,15 @@ import {
 } from "./Util";
 import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
-import { access } from "fs";
 const fs = require("fs");
 
 let loggedInCacheState = null;
 let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
+
+// batch offline payloads in 50. backend has a 100k body limit
+const batch_limit = 50;
 
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();
@@ -49,6 +51,12 @@ export async function serverIsAvailable() {
             });
     }
     return serverAvailable;
+}
+
+async function sendBatchPayload(batch) {
+    await softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
+        logIt(`Unable to send plugin data batch, error: ${e.message}`);
+    });
 }
 
 /**
@@ -79,14 +87,21 @@ export async function sendOfflineData() {
                             }
                         })
                         .filter(item => item);
-                    softwarePost("/data/batch", payloads, getItem("jwt")).then(
-                        async resp => {
-                            if (isResponseOk(resp)) {
-                                // everything is fine, delete the offline data file
-                                deleteFile(getSoftwareDataStoreFile());
-                            }
+
+                    // send 50 at a time
+                    let batch = [];
+                    for (let i = 0; i < payloads.length; i++) {
+                        if (batch.length >= batch_limit) {
+                            await sendBatchPayload(batch);
+                            batch = [];
                         }
-                    );
+                        batch.push(payloads[i]);
+                    }
+                    if (batch.length > 0) {
+                        await sendBatchPayload(batch);
+                    }
+                    // we're online so just delete the datastore file
+                    deleteFile(getSoftwareDataStoreFile());
                 }
             }
         }

@@ -23,7 +23,8 @@ import {
     codeTimeExtInstalled,
     isMusicTime,
     getItem,
-    setItem
+    setItem,
+    jwtExists
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import {
@@ -104,7 +105,7 @@ export async function activate(ctx: ExtensionContext) {
     } else {
         // check session.json existence
         const serverIsOnline = await serverIsAvailable();
-        if (!softwareSessionFileExists()) {
+        if (!softwareSessionFileExists() || !jwtExists()) {
             // session file doesn't exist
             // check if the server is online before creating the anon user
             if (!serverIsOnline) {
