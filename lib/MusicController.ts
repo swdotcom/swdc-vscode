@@ -4,9 +4,9 @@ import { showQuickPick } from "./MenuManager";
 import {
     handleSpotifyConnect,
     serverIsAvailable,
-    getUser
+    getSpotifyAccessToken
 } from "./DataController";
-import { getItem } from "./Util";
+import { getItem, setItem } from "./Util";
 import {
     softwareGet,
     spotifyApiGet,
@@ -102,8 +102,11 @@ export class MusicController {
             );
             if (isResponseOk(refreshResponse)) {
                 // get the user then get the playlists again
-                let user = await getUser(serverIsOnline, jwt);
-                await this.getPlaylists(1);
+                let accessToken = await getSpotifyAccessToken(serverIsOnline);
+                if (accessToken) {
+                    setItem("spotify_access_token", accessToken);
+                }
+                this.getPlaylists(1);
             }
         } else {
             console.log("playlist data: ", response);
