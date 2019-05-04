@@ -89,10 +89,10 @@ export class MusicController {
         showQuickPick(kpmMenuOptions);
     }
 
-    async getPlaylists(tryCount = 0) {
+    async getPlaylists() {
         let accessToken = getItem("spotify_access_token");
         let response = await spotifyApiGet("/v1/me/playlists", accessToken);
-        if (hasTokenExpired(response) && tryCount === 0) {
+        if (hasTokenExpired(response)) {
             let serverIsOnline = await serverIsAvailable();
             const jwt = getItem("jwt");
             // refresh the token then try again
@@ -107,9 +107,7 @@ export class MusicController {
                     setItem("spotify_access_token", accessToken);
                 }
                 // call get playlists again
-                setTimeout(() => {
-                    this.getPlaylists(1);
-                }, 1000);
+                response = await spotifyApiGet("/v1/me/playlists", accessToken);
             }
         } else {
             console.log("playlist data: ", response);
