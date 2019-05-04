@@ -54,17 +54,51 @@ async function deploy() {
     }
 
     debug(`Building plugin: ${pluginName}`);
-    setItem(getPackageFile(), "name", pluginName);
+    let packageJson = getPackageJson();
+    packageJson["name"] = pluginName;
     if (pluginName === "swdc-vscode") {
-        setItem(getPackageFile(), "description", CODE_TIME_DESC);
-        setItem(getPackageFile(), "version", CODE_TIME_VERSION);
-        setItem(getPackageFile(), "displayName", CODE_TIME_DISPLAY);
+        // remove contributes.viewsContainers and contributes.views
+        if (
+            packageJson.contributes &&
+            packageJson.contributes.viewsContainers
+        ) {
+            delete packageJson.contributes.viewsContainers;
+        }
+        if (packageJson.contributes && packageJson.contributes.views) {
+            delete packageJson.contributes.views;
+        }
+        packageJson["description"] = CODE_TIME_DESC;
+        packageJson["version"] = CODE_TIME_VERSION;
+        packageJson["displayName"] = CODE_TIME_DISPLAY;
     } else if (pluginName === "music-time") {
-        setItem(getPackageFile(), "description", MUSIC_TIME_DESC);
-        setItem(getPackageFile(), "version", MUSIC_TIME_VERSION);
-        setItem(getPackageFile(), "displayName", MUSIC_TIME_DISPLAY);
+        // add the viewsContainers and views
+        packageJson.contributes["viewsContainers"] = {
+            activitybar: [
+                {
+                    id: "music-time",
+                    title: "Music Time",
+                    icon: "resources/dark/logo.svg"
+                }
+            ]
+        };
+        packageJson.contributes["views"] = {
+            "music-time": [
+                {
+                    id: "music-time-playlists",
+                    name: "Playlists"
+                },
+                {
+                    id: "music-time-tracks",
+                    name: "Tracks"
+                }
+            ]
+        };
+        packageJson["description"] = MUSIC_TIME_DESC;
+        packageJson["version"] = MUSIC_TIME_VERSION;
+        packageJson["displayName"] = MUSIC_TIME_DISPLAY;
     }
-    setItem(getExtensionFile(), "name", pluginName);
+
+    updatePackageContent(packageJson);
 
     await runCommand(
         "mkdir out/lib",
@@ -82,6 +116,36 @@ function getExtensionFile() {
 
 function getPackageFile() {
     return __dirname + "/package.json";
+}
+
+function getPackageJson() {
+    let content = fs.readFileSync(getPackageFile()).toString();
+    if (content) {
+        try {
+            const data = JSON.parse(content);
+            return data;
+        } catch (e) {
+            //
+        }
+    }
+    return null;
+}
+
+function updatePackageContent(packageJson) {
+    try {
+        // JSON.stringify(data, replacer, number of spaces)
+        const content = JSON.stringify(packageJson, null, 4);
+        fs.writeFileSync(getPackageFile(), content, err => {
+            if (err)
+                console.log(
+                    "Deployer: Error updating the package content: ",
+                    err.message
+                );
+            process.exit(1);
+        });
+    } catch (e) {
+        //
+    }
 }
 
 function getItem(filename, key) {
