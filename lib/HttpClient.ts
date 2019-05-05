@@ -8,11 +8,17 @@ const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
 
+// const spotifyApi = axios.create({
+//     baseURL: "https://api.spotify.com"
+// });
 const spotifyApi = axios.create({
-    baseURL: "https://api.spotify.com"
+    //
 });
 
 export async function spotifyApiGet(api, accessToken) {
+    if (api.indexOf("https://api.spotify.com") === -1) {
+        api = "https://api.spotify.com" + api;
+    }
     spotifyApi.defaults.headers.common[
         "Authorization"
     ] = `Bearer ${accessToken}`;
@@ -124,10 +130,13 @@ export function hasTokenExpired(resp) {
 
 /**
  * check if the reponse is ok or not
+ * axios always sends the following
+ * status:200
+ * statusText:"OK"
  */
 export function isResponseOk(resp) {
     let status = getResponseStatus(resp);
-    if (!resp || (status && status < 400)) {
+    if (resp && status < 400) {
         return true;
     }
     return false;
@@ -157,6 +166,9 @@ export async function isUserDeactivated(resp) {
 
 /**
  * get the response http status code
+ * axios always sends the following
+ * status:200
+ * statusText:"OK"
  */
 function getResponseStatus(resp) {
     let status = null;

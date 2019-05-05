@@ -141,15 +141,15 @@
     },
     "devDependencies": {
         "@types/axios": "^0.14.0",
-        "@types/mocha": "^5.2.6",
-        "@types/node": "^9.4.0",
-        "mocha": "^6.0.0",
-        "typescript": "^2.8.3",
-        "vscode": "^1.1.28"
+        "@types/mocha": "5.2.6",
+        "@types/node": "12.0.0",
+        "mocha": "6.1.4",
+        "typescript": "3.4.5",
+        "vscode": "1.1.33"
     },
     "dependencies": {
-        "axios": "^0.17.1",
+        "axios": "0.18.0",
         "cody-music": "^1.0.0",
-        "vsls": "^0.3.967"
+        "vsls": "0.3.1291"
     }
 }

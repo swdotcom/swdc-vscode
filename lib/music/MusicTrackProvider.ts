@@ -9,7 +9,7 @@ import {
     Event
 } from "vscode";
 import * as path from "path";
-import { Track, Playlist } from "./MusicTreeManager";
+import { Track, Playlist } from "./MusicStoreManager";
 
 const createTrackTreeItem = (
     t: Track,

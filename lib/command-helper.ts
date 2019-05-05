@@ -1,6 +1,10 @@
 import { commands, Disposable, workspace, window } from "vscode";
 
-import { MusicController } from "./music/MusicController";
+import {
+    MusicControlManager,
+    getPlaylists,
+    getCurrentTrack
+} from "./music/MusicControlManager";
 import {
     handleCodeTimeLogin,
     handleSpotifyConnect,
@@ -89,7 +93,7 @@ export function createCommands(): {
         //     treeDataProvider: new MusicPlaylistProvider()
         // });
 
-        const controller = new MusicController();
+        const controller = new MusicControlManager();
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.next();
         });
@@ -129,7 +133,7 @@ export function createCommands(): {
         const getPlaylistsCommand = commands.registerCommand(
             "musictime.getPlaylists",
             () => {
-                controller.getPlaylists();
+                getPlaylists();
             }
         );
         cmds.push(getPlaylistsCommand);
@@ -137,7 +141,7 @@ export function createCommands(): {
         const getCurrentTrackCommand = commands.registerCommand(
             "musictime.getCurrentTrack",
             () => {
-                controller.getCurrentTrack();
+                getCurrentTrack();
             }
         );
         cmds.push(getCurrentTrackCommand);
