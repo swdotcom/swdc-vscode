@@ -1,5 +1,5 @@
 import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime } from "./Util";
+import { isMusicTime } from "../Util";
 import { MusicStateManager, TrackState } from "./MusicStateManager";
 
 export interface Button {

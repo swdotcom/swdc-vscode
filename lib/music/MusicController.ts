@@ -1,18 +1,18 @@
 import * as music from "cody-music";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
-import { showQuickPick } from "./MenuManager";
+import { showQuickPick } from "../MenuManager";
 import {
     handleSpotifyConnect,
     serverIsAvailable,
     getSpotifyAccessToken
-} from "./DataController";
-import { getItem, setItem } from "./Util";
+} from "../DataController";
+import { getItem, setItem } from "../Util";
 import {
     softwareGet,
     spotifyApiGet,
     hasTokenExpired,
     isResponseOk
-} from "./HttpClient";
+} from "../HttpClient";
 
 export class MusicController {
     getPlayer(): string {
@@ -80,37 +80,65 @@ export class MusicController {
         kpmMenuOptions.items.push({
             label: "Search Playlist",
             description: "",
-            detail: "",
+            detail: "Find a playlist",
             url: null,
             uri: null,
             cb: this.getPlaylists
+        });
+
+        kpmMenuOptions.items.push({
+            label: "Current spotify track",
+            description: "",
+            detail: "Get the current spotify track",
+            url: null,
+            uri: null,
+            cb: this.getCurrentTrack
         });
 
         showQuickPick(kpmMenuOptions);
     }
 
     async getPlaylists() {
+        let api = "/v1/me/playlists";
         let accessToken = getItem("spotify_access_token");
-        let response = await spotifyApiGet("/v1/me/playlists", accessToken);
+        let response = await spotifyApiGet(api, accessToken);
         if (hasTokenExpired(response)) {
-            let serverIsOnline = await serverIsAvailable();
-            const jwt = getItem("jwt");
-            // refresh the token then try again
-            const refreshResponse = await softwareGet(
-                "/auth/spotify/refreshToken",
-                jwt
-            );
-            if (isResponseOk(refreshResponse)) {
-                // get the user then get the playlists again
-                let accessToken = await getSpotifyAccessToken(serverIsOnline);
-                if (accessToken) {
-                    setItem("spotify_access_token", accessToken);
-                }
-                // call get playlists again
-                response = await spotifyApiGet("/v1/me/playlists", accessToken);
-            }
-        } else {
-            console.log("playlist data: ", response);
+            await refreshToken();
+            accessToken = getItem("spotify_access_token");
+            // call get playlists again
+            response = await spotifyApiGet(api, accessToken);
+        }
+        console.log("respnose: ", response);
+    }
+
+    async getCurrentTrack() {
+        let api = "/v1/me/player/currently-playing";
+        let accessToken = getItem("spotify_access_token");
+        // /v1/me/player/currently-playing
+        let response = await spotifyApiGet(api, accessToken);
+        if (hasTokenExpired(response)) {
+            await refreshToken();
+            accessToken = getItem("spotify_access_token");
+            // call get playlists again
+            response = await spotifyApiGet(api, accessToken);
+        }
+        console.log("respnose: ", response);
+    }
+}
+
+export async function refreshToken() {
+    let serverIsOnline = await serverIsAvailable();
+    const jwt = getItem("jwt");
+    // refresh the token then try again
+    const refreshResponse = await softwareGet(
+        "/auth/spotify/refreshToken",
+        jwt
+    );
+    if (isResponseOk(refreshResponse)) {
+        // get the user then get the playlists again
+        let accessToken = await getSpotifyAccessToken(serverIsOnline);
+        if (accessToken) {
+            setItem("spotify_access_token", accessToken);
         }
     }
 }

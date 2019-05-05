@@ -1,5 +1,6 @@
 import { commands, Disposable, workspace, window } from "vscode";
-import { MusicController } from "./MusicController";
+
+import { MusicController } from "./music/MusicController";
 import {
     handleCodeTimeLogin,
     handleSpotifyConnect,
@@ -131,7 +132,15 @@ export function createCommands(): {
                 controller.getPlaylists();
             }
         );
-        cmds.push(spotifyConnectCommand);
+        cmds.push(getPlaylistsCommand);
+
+        const getCurrentTrackCommand = commands.registerCommand(
+            "musictime.getCurrentTrack",
+            () => {
+                controller.getCurrentTrack();
+            }
+        );
+        cmds.push(getCurrentTrackCommand);
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

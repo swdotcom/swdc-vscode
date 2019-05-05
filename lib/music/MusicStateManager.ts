@@ -1,7 +1,7 @@
 import * as music from "cody-music";
-import { wrapExecPromise, isWindows, isMac, getItem } from "./Util";
-import { sendMusicData } from "./DataController";
-import { softwareGet, isResponseOk } from "./HttpClient";
+import { wrapExecPromise, isWindows, isMac, getItem } from "../Util";
+import { sendMusicData } from "../DataController";
+import { softwareGet, isResponseOk } from "../HttpClient";
 
 export interface TrackState {
     /**

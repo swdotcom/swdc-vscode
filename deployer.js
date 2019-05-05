@@ -77,7 +77,7 @@ async function deploy() {
                 {
                     id: "music-time",
                     title: "Music Time",
-                    icon: "resources/dark/logo.svg"
+                    icon: "images/icon.png"
                 }
             ]
         };

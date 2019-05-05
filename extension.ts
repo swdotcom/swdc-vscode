@@ -33,7 +33,7 @@ import {
 } from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
-import { MusicPlayerManagerSingleton } from "./lib/MusicPlayerManager";
+import { MusicPlayerManagerSingleton } from "./lib/music/MusicPlayerManager";
 import { createCommands } from "./lib/command-helper";
 import { access } from "fs";
 
