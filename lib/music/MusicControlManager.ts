@@ -1,11 +1,7 @@
 import * as music from "cody-music";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
 import { showQuickPick } from "../MenuManager";
-import {
-    handleSpotifyConnect,
-    serverIsAvailable,
-    getSpotifyAccessToken
-} from "../DataController";
+import { serverIsAvailable, getSpotifyAccessToken } from "../DataController";
 import { getItem, setItem } from "../Util";
 import {
     softwareGet,
@@ -14,6 +10,7 @@ import {
     isResponseOk
 } from "../HttpClient";
 import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
+import { api_endpoint } from "../Constants";
 
 const store: MusicStoreManager = MusicStoreManager.getInstance();
 
@@ -75,9 +72,9 @@ export class MusicControlManager {
             description: "",
             detail:
                 "To see your Spotify playlists in Music Time, please connect your account",
-            url: null,
+            url: `${api_endpoint}/auth/spotify`,
             uri: null,
-            cb: handleSpotifyConnect
+            cb: null
         });
 
         kpmMenuOptions.items.push({
@@ -144,7 +141,8 @@ async function populatePlaylists(
                 const playlistItem = data.items[i];
                 let playlist = new Playlist();
                 playlist.player = "spotify";
-                playlist.id = playlistItem.uri;
+                playlist.id = playlistItem.id;
+                playlist.uri = playlistItem.uri;
                 playlist.collaborative = playlistItem.collaborative;
                 playlist.name = playlistItem.name;
                 playlist.public = playlistItem.public;
@@ -169,7 +167,8 @@ async function populatePlaylists(
                                 track.explicit = trackItem.explicit;
                                 track.disc_number = trackItem.disc_number;
                                 track.popularity = trackItem.popularity;
-                                track.id = trackItem.uri;
+                                track.id = trackItem.id;
+                                track.uri = trackItem.uri;
                                 // set the artist
                                 if (trackItem.artists) {
                                     const len = trackItem.artists.length;

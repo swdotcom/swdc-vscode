@@ -4,6 +4,7 @@ export interface MusicTreeItem {
     name: string;
     id: string;
     type: string;
+    uri: string;
 }
 
 // {"artist": "Coldplay","album": "Parachutes","genre": "",
@@ -19,6 +20,7 @@ export class Track implements MusicTreeItem {
     track_number: number;
     popularity: number;
     id: string;
+    uri: string;
     name: string;
     state: string;
     explicit: boolean;

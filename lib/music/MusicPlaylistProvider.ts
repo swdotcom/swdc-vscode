@@ -14,6 +14,7 @@ import { MusicStoreManager } from "./MusicStoreManager";
 import { buildPlaylists } from "./MusicControlManager";
 import { spotiyApiPut } from "../HttpClient";
 import { getItem } from "../Util";
+import * as music from "cody-music";
 
 const createPlaylistTreeItem = (
     p: MusicTreeItem,
@@ -33,12 +34,24 @@ export const connectPlaylistTreeView = (
                 e.selection.length === 1 &&
                 e.selection[0].type === "track"
             ) {
-                const accessToken = getItem("spotify_access_token");
-                const payload = { context_uri: e.selection[0].id };
                 // play the selection
-                // If the user making the request is non-premium, a 403 FORBIDDEN response code will be returned.
+                // If the user making the request is non-premium, a
+                // 403 FORBIDDEN response code will be returned.
+                const accessToken = getItem("spotify_access_token");
+                const payload = { uri: e.selection[0].uri };
+
                 spotiyApiPut("/v1/me/player/play", payload, accessToken);
+
+                // music
+                //     .playTrack("spotify", e.selection[0].id)
+                //     .then(result => {
+                //         console.log("play result: ", result);
+                //     })
+                //     .catch(e => {
+                //         console.error("error playing song: ", e);
+                //     });
             }
+            // https://api.spotify.com/v1/me/player/pause
             /**
              * selection:Array[1]
                 0:Object
@@ -76,6 +89,14 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
+    }
+
+    play(): void {
+        console.log("play");
+    }
+
+    pause(): void {
+        console.log("pause");
     }
 
     getTreeItem(p: MusicTreeItem): PlaylistTreeItem {
@@ -119,20 +140,11 @@ class PlaylistTreeItem extends TreeItem {
             __filename,
             "..",
             "..",
-            "..",
             "resources",
             "light",
             "paw.svg"
         ),
-        dark: path.join(
-            __filename,
-            "..",
-            "..",
-            "..",
-            "resources",
-            "dark",
-            "paw.svg"
-        )
+        dark: path.join(__filename, "..", "..", "resources", "dark", "paw.svg")
     };
 
     contextValue = "musicTreeItem";
