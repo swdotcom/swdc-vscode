@@ -36,6 +36,24 @@ export async function spotifyApiGet(api, accessToken) {
         });
 }
 
+export async function spotiyApiPut(api, payload, accessToken) {
+    if (api.indexOf("https://api.spotify.com") === -1) {
+        api = "https://api.spotify.com" + api;
+    }
+    spotifyApi.defaults.headers.common[
+        "Authorization"
+    ] = `Bearer ${accessToken}`;
+    return await spotifyApi
+        .put(api, payload)
+        .then(resp => {
+            return resp;
+        })
+        .catch(err => {
+            logIt(`error posting data for ${api}, message: ${err.message}`);
+            return err;
+        });
+}
+
 /**
  * Response returns a paylod with the following...
  * data: <payload>, status: 200, statusText: "OK", config: Object
@@ -133,10 +151,18 @@ export function hasTokenExpired(resp) {
  * axios always sends the following
  * status:200
  * statusText:"OK"
+ * 
+    code:"ENOTFOUND"
+    config:Object {adapter: , transformRequest: Object, transformResponse: Object, …}
+    errno:"ENOTFOUND"
+    host:"api.spotify.com"
+    hostname:"api.spotify.com"
+    message:"getaddrinfo ENOTFOUND api.spotify.com api.spotify.com:443"
+    port:443
  */
 export function isResponseOk(resp) {
     let status = getResponseStatus(resp);
-    if (resp && status < 400) {
+    if (status && resp && status < 300) {
         return true;
     }
     return false;

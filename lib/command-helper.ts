@@ -1,10 +1,5 @@
-import { commands, Disposable, workspace, window } from "vscode";
-
-import {
-    MusicControlManager,
-    getPlaylists,
-    getCurrentTrack
-} from "./music/MusicControlManager";
+import { commands, Disposable, workspace, window, TreeView } from "vscode";
+import { MusicControlManager } from "./music/MusicControlManager";
 import {
     handleCodeTimeLogin,
     handleSpotifyConnect,
@@ -23,6 +18,11 @@ import {
     codeTimeExtInstalled
 } from "./Util";
 import { KpmController } from "./KpmController";
+import {
+    MusicPlaylistProvider,
+    connectPlaylistTreeView
+} from "./music/MusicPlaylistProvider";
+import { MusicStoreManager, MusicTreeItem } from "./music/MusicStoreManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -89,11 +89,9 @@ export function createCommands(): {
         );
         cmds.push(configChangesHandler);
     } else if (isMusicTime()) {
-        // const playlistTreeView = window.createTreeView("music-time-playlists", {
-        //     treeDataProvider: new MusicPlaylistProvider()
-        // });
-
+        const musicStore: MusicStoreManager = MusicStoreManager.getInstance();
         const controller = new MusicControlManager();
+
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.next();
         });
@@ -130,21 +128,15 @@ export function createCommands(): {
         );
         cmds.push(spotifyConnectCommand);
 
-        const getPlaylistsCommand = commands.registerCommand(
-            "musictime.getPlaylists",
-            () => {
-                getPlaylists();
+        const treePlaylistProvider = new MusicPlaylistProvider(musicStore);
+        const playlistTreeView: TreeView<MusicTreeItem> = window.createTreeView(
+            "music-time-playlists",
+            {
+                treeDataProvider: treePlaylistProvider,
+                showCollapseAll: false
             }
         );
-        cmds.push(getPlaylistsCommand);
-
-        const getCurrentTrackCommand = commands.registerCommand(
-            "musictime.getCurrentTrack",
-            () => {
-                getCurrentTrack();
-            }
-        );
-        cmds.push(getCurrentTrackCommand);
+        cmds.push(connectPlaylistTreeView(playlistTreeView, musicStore));
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

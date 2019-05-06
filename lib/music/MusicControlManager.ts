@@ -86,23 +86,14 @@ export class MusicControlManager {
             detail: "Find a playlist",
             url: null,
             uri: null,
-            cb: getPlaylists
-        });
-
-        kpmMenuOptions.items.push({
-            label: "Current spotify track",
-            description: "",
-            detail: "Get the current spotify track",
-            url: null,
-            uri: null,
-            cb: getCurrentTrack
+            cb: buildPlaylists
         });
 
         showQuickPick(kpmMenuOptions);
     }
 }
 
-export async function getPlaylists() {
+export async function buildPlaylists() {
     let playlists = store.getPlaylists();
     if (playlists.length > 0) {
         return playlists;
@@ -134,6 +125,8 @@ export async function getPlaylists() {
             break;
         }
     }
+
+    store.setPlaylists(playlists);
 
     return playlists;
 }
@@ -176,6 +169,7 @@ async function populatePlaylists(
                                 track.explicit = trackItem.explicit;
                                 track.disc_number = trackItem.disc_number;
                                 track.popularity = trackItem.popularity;
+                                track.id = trackItem.uri;
                                 // set the artist
                                 if (trackItem.artists) {
                                     const len = trackItem.artists.length;

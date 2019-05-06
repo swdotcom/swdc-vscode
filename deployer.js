@@ -11,7 +11,7 @@ const CODE_TIME_DESC =
     "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.";
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
-const CODE_TIME_VERSION = "0.15.4";
+const CODE_TIME_VERSION = "0.15.5";
 const MUSIC_TIME_VERSION = "0.1.2";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
@@ -54,7 +54,12 @@ async function deploy() {
     }
 
     debug(`Building plugin: ${pluginName}`);
-    let packageJson = getPackageJson();
+
+    let extInfoJson = getJsonFromFile(getExtensionFile());
+    extInfoJson["name"] = pluginName;
+    updateJsonContent(extInfoJson, getExtensionFile());
+
+    let packageJson = getJsonFromFile(getPackageFile());
     packageJson["name"] = pluginName;
     if (pluginName === "swdc-vscode") {
         // remove contributes.viewsContainers and contributes.views
@@ -77,7 +82,7 @@ async function deploy() {
                 {
                     id: "music-time",
                     title: "Music Time",
-                    icon: "images/icon.png"
+                    icon: "resources/dark/paw.svg"
                 }
             ]
         };
@@ -86,10 +91,6 @@ async function deploy() {
                 {
                     id: "music-time-playlists",
                     name: "Playlists"
-                },
-                {
-                    id: "music-time-tracks",
-                    name: "Tracks"
                 }
             ]
         };
@@ -98,7 +99,7 @@ async function deploy() {
         packageJson["displayName"] = MUSIC_TIME_DISPLAY;
     }
 
-    updatePackageContent(packageJson);
+    updateJsonContent(packageJson, getPackageFile());
 
     await runCommand(
         "mkdir out/lib",
@@ -118,8 +119,8 @@ function getPackageFile() {
     return __dirname + "/package.json";
 }
 
-function getPackageJson() {
-    let content = fs.readFileSync(getPackageFile()).toString();
+function getJsonFromFile(filename) {
+    let content = fs.readFileSync(filename).toString();
     if (content) {
         try {
             const data = JSON.parse(content);
@@ -131,11 +132,11 @@ function getPackageJson() {
     return null;
 }
 
-function updatePackageContent(packageJson) {
+function updateJsonContent(packageJson, filename) {
     try {
         // JSON.stringify(data, replacer, number of spaces)
         const content = JSON.stringify(packageJson, null, 4);
-        fs.writeFileSync(getPackageFile(), content, err => {
+        fs.writeFileSync(filename, content, err => {
             if (err)
                 console.log(
                     "Deployer: Error updating the package content: ",
@@ -145,44 +146,6 @@ function updatePackageContent(packageJson) {
         });
     } catch (e) {
         //
-    }
-}
-
-function getItem(filename, key) {
-    let item = null;
-    let content = fs.readFileSync(filename).toString();
-    if (content) {
-        try {
-            const data = JSON.parse(content);
-            item = data[key] || null;
-        } catch (e) {
-            //
-        }
-    }
-    return item;
-}
-
-function setItem(filename, key, value) {
-    let content = fs.readFileSync(filename).toString();
-    if (content) {
-        try {
-            const data = JSON.parse(content);
-            if (data[key]) {
-                data[key] = value;
-                // JSON.stringify(data, replacer, number of spaces)
-                content = JSON.stringify(data, null, 4);
-                fs.writeFileSync(filename, content, err => {
-                    if (err)
-                        console.log(
-                            "Deployer: Error updating the item value: ",
-                            err.message
-                        );
-                    process.exit(1);
-                });
-            }
-        } catch (e) {
-            //
-        }
     }
 }
 
