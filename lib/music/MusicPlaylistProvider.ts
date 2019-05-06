@@ -36,6 +36,7 @@ export const connectPlaylistTreeView = (
                 const accessToken = getItem("spotify_access_token");
                 const payload = { context_uri: e.selection[0].id };
                 // play the selection
+                // If the user making the request is non-premium, a 403 FORBIDDEN response code will be returned.
                 spotiyApiPut("/v1/me/player/play", payload, accessToken);
             }
             /**
