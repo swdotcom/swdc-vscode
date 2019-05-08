@@ -21,7 +21,5 @@ export const api_endpoint = "https://api.software.com";
 // "http://localhost:3000", "https://qa.software.com", "https://staging.software.com", "https://app.software.com"
 export const launch_url = "https://app.software.com";
 
-// export const dashboard_uri = Uri.parse("swdc://Software/SoftwareDashboard");
-
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const MUSIC_TIME_EXT_ID = "softwaredotcom.music-time";

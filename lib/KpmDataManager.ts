@@ -37,9 +37,8 @@ export class KpmDataManager {
      * check if the payload should be sent or not
      */
     hasData() {
-        if ((this.keystrokes, 10 > 0)) {
-            return true;
-        }
+        // delete files that don't have any kpm data
+        let foundKpmData = false;
         for (const fileName of Object.keys(this.source)) {
             const fileInfoData = this.source[fileName];
             // check if any of the metric values has data
@@ -49,12 +48,16 @@ export class KpmDataManager {
                     fileInfoData.paste > 0 ||
                     fileInfoData.open > 0 ||
                     fileInfoData.close > 0 ||
-                    fileInfoData.delete > 0)
+                    fileInfoData.delete > 0 ||
+                    fileInfoData.linesAdded > 0 ||
+                    fileInfoData.linesRemoved > 0)
             ) {
-                return true;
+                foundKpmData = true;
+            } else {
+                delete this.source[fileName];
             }
         }
-        return false;
+        return foundKpmData;
     }
 
     /**

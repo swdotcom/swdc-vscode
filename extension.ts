@@ -35,7 +35,6 @@ import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { MusicPlayerManagerSingleton } from "./lib/music/MusicPlayerManager";
 import { createCommands } from "./lib/command-helper";
-import { access } from "fs";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -97,7 +96,9 @@ export async function activate(ctx: ExtensionContext) {
     // check if window state is focused or not and the
     // secondary_window_activate_counter is equal to zero
     if (!windowState.focused && secondary_window_activate_counter === 0) {
-        // it's not focused, call activate in 1 minute
+        // This window is not focused, call activate in 1 minute in case
+        // there's another vscode editor that is focused. Allow that one
+        // to activate right away.
         setTimeout(() => {
             secondary_window_activate_counter++;
             activate(ctx);
