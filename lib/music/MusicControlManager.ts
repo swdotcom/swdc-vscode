@@ -64,8 +64,10 @@ export class MusicControlManager {
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
             const type = trackState.type;
-            // /:id/preferences
-            const api = `/music/liked/track/${trackId}/type/${type}`;
+            // use the name and artist as well since we have it
+            let trackName = encodeURIComponent(trackState.track.name);
+            let trackArtist = encodeURIComponent(trackState.track.artist);
+            const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
             const resp = await softwarePut(api, {}, getItem("jwt"));
             if (isResponseOk(resp)) {
                 logIt("update user code time preferences");

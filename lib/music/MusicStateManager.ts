@@ -20,6 +20,7 @@ export class MusicStateManagerSingleton {
 
     private static existingTrack: any = {};
     private static lastTimeSent: number = null;
+    private static gatheringMusic: boolean = false;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -78,6 +79,10 @@ export class MusicStateManagerSingleton {
     }
 
     public static async gatherMusicInfo() {
+        if (this.gatheringMusic) {
+            return;
+        }
+        this.gatheringMusic = true;
         const playingState: TrackState = await MusicStateManagerSingleton.getState();
 
         if (playingState) {
@@ -171,6 +176,8 @@ export class MusicStateManagerSingleton {
                 }
             }
         }
+
+        this.gatheringMusic = false;
     }
 
     private static async isWindowsSpotifyRunning() {
