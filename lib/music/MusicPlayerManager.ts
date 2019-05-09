@@ -1,6 +1,6 @@
 import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime } from "../Util";
-import { MusicStateManager, TrackState } from "./MusicStateManager";
+import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
 
 export interface Button {
     /**
@@ -24,14 +24,13 @@ export interface Button {
 
 export class MusicPlayerManagerSingleton {
     private static _buttons: Button[] = [];
-    private static _musicStateMgr: MusicStateManager = null;
     private static _currentTrackState: TrackState = null;
 
-    public static async initialize() {
-        if (!this._musicStateMgr) {
-            this._musicStateMgr = new MusicStateManager();
-        }
+    private constructor() {
+        // private to prevent non-singleton usage
+    }
 
+    public static async initialize() {
         if (!isMusicTime()) {
             return;
         }
@@ -50,6 +49,7 @@ export class MusicPlayerManagerSingleton {
             10
         );
         this.createButton("$(chevron-right)", "Next", "musictime.next", 10);
+        this.createButton("$(heart)", "Like", "musictime.like", 10);
         this.createButton(
             "$(grabber)",
             "Click to see more from Music Time",
@@ -63,7 +63,7 @@ export class MusicPlayerManagerSingleton {
 
     public static async updateButtons() {
         // get the current track state
-        this._currentTrackState = await this._musicStateMgr.getState();
+        this._currentTrackState = await MusicStateManagerSingleton.getState();
         if (
             !this._currentTrackState ||
             !this._currentTrackState.track ||
@@ -80,16 +80,10 @@ export class MusicPlayerManagerSingleton {
     }
 
     public static stateCheckHandler() {
-        if (this._musicStateMgr) {
-            this._musicStateMgr.gatherMusicInfo();
-        }
+        MusicStateManagerSingleton.gatherMusicInfo();
         if (isMusicTime()) {
             this.updateButtons();
         }
-    }
-
-    public static getStateMgr(): MusicStateManager {
-        return this._musicStateMgr;
     }
 
     public static getTrackState(): TrackState {

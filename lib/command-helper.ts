@@ -115,6 +115,11 @@ export function createCommands(): {
         });
         cmds.push(pauseCmd);
 
+        const likeCmd = commands.registerCommand("musictime.like", () => {
+            controller.like();
+        });
+        cmds.push(likeCmd);
+
         const menuCmd = commands.registerCommand("musictime.menu", () => {
             controller.showMenu();
         });

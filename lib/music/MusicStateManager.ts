@@ -14,18 +14,18 @@ export interface TrackState {
     track: any;
 }
 
-export class MusicStateManager {
-    private WINDOWS_SPOTIFY_TRACK_FIND: string =
+export class MusicStateManagerSingleton {
+    private static WINDOWS_SPOTIFY_TRACK_FIND: string =
         'tasklist /fi "imagename eq Spotify.exe" /fo list /v | find " - "';
 
-    private existingTrack: any = {};
-    private lastTimeSent: number = null;
+    private static existingTrack: any = {};
+    private static lastTimeSent: number = null;
 
-    constructor() {
-        //
+    private constructor() {
+        // private to prevent non-singleton usage
     }
 
-    async getState(): Promise<TrackState> {
+    public static async getState(): Promise<TrackState> {
         let trackState: TrackState = null;
         let playingTrack: any = null;
         let pausedTrack: any = null;
@@ -64,9 +64,9 @@ export class MusicStateManager {
             }
         } else if (isWindows()) {
             // supports only spotify for now
-            const winSpotifyRunning = await this.isWindowsSpotifyRunning();
+            const winSpotifyRunning = await MusicStateManagerSingleton.isWindowsSpotifyRunning();
             if (winSpotifyRunning) {
-                playingTrack = await this.getWindowsSpotifyTrackInfo();
+                playingTrack = await MusicStateManagerSingleton.getWindowsSpotifyTrackInfo();
                 if (playingTrack) {
                     trackState = { type: "spotify", track: playingTrack };
                     return trackState;
@@ -77,8 +77,8 @@ export class MusicStateManager {
         return null;
     }
 
-    async gatherMusicInfo() {
-        const playingState: TrackState = await this.getState();
+    public static async gatherMusicInfo() {
+        const playingState: TrackState = await MusicStateManagerSingleton.getState();
 
         if (playingState) {
             const playingTrack = playingState.track;
@@ -173,21 +173,22 @@ export class MusicStateManager {
         }
     }
 
-    async isWindowsSpotifyRunning() {
+    private static async isWindowsSpotifyRunning() {
         /**
              * tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
                 Window Title: Dexys Midnight Runners - Come On Eileen
             */
         return new Promise((resolve, reject) => {
-            wrapExecPromise(this.WINDOWS_SPOTIFY_TRACK_FIND, null).then(
-                result => {
-                    if (result && result.toLowerCase().includes("title")) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
+            wrapExecPromise(
+                MusicStateManagerSingleton.WINDOWS_SPOTIFY_TRACK_FIND,
+                null
+            ).then(result => {
+                if (result && result.toLowerCase().includes("title")) {
+                    resolve(true);
+                } else {
+                    resolve(false);
                 }
-            );
+            });
         });
     }
 
@@ -209,11 +210,11 @@ export class MusicStateManager {
             spotify_url: 'spotify:track:3AhXZa8sUQht0UEdBJgpGc' }
         }
     */
-    async getWindowsSpotifyTrackInfo() {
+    private static async getWindowsSpotifyTrackInfo() {
         let windowTitleStr = "Window Title:";
         // get the artist - song name from the command result, then get the rest of the info from spotify
         let songInfo = await wrapExecPromise(
-            this.WINDOWS_SPOTIFY_TRACK_FIND,
+            MusicStateManagerSingleton.WINDOWS_SPOTIFY_TRACK_FIND,
             null
         );
         if (!songInfo || !songInfo.includes(windowTitleStr)) {

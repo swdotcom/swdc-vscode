@@ -2,15 +2,17 @@ import * as music from "cody-music";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
 import { showQuickPick } from "../MenuManager";
 import { serverIsAvailable, getSpotifyAccessToken } from "../DataController";
-import { getItem, setItem } from "../Util";
+import { getItem, setItem, logIt } from "../Util";
 import {
     softwareGet,
+    softwarePut,
     spotifyApiGet,
     hasTokenExpired,
     isResponseOk
 } from "../HttpClient";
 import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
 import { api_endpoint } from "../Constants";
+import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
 
 const store: MusicStoreManager = MusicStoreManager.getInstance();
 
@@ -49,6 +51,25 @@ export class MusicControlManager {
         if (player) {
             await music.pause(player);
             MusicPlayerManagerSingleton.updateButtons();
+        }
+    }
+
+    async like() {
+        const trackState: TrackState = await MusicStateManagerSingleton.getState();
+        if (trackState && trackState.track) {
+            // set it to liked
+            let trackId = trackState.track.id;
+            if (trackId.indexOf(":") !== -1) {
+                // strip it down to just the last id part
+                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
+            }
+            const type = trackState.type;
+            // /:id/preferences
+            const api = `/music/liked/track/${trackId}/type/${type}`;
+            const resp = await softwarePut(api, {}, getItem("jwt"));
+            if (isResponseOk(resp)) {
+                logIt("update user code time preferences");
+            }
         }
     }
 

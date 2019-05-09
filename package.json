@@ -108,6 +108,10 @@
                 "title": "Pause"
             },
             {
+                "command": "musictime.like",
+                "title": "Like Song"
+            },
+            {
                 "command": "musictime.menu",
                 "title": "Click to see more from Music Time"
             },
