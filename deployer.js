@@ -87,23 +87,23 @@ async function deploy() {
         packageJson.contributes["commands"] = codeTimeCommands;
     } else if (pluginName === "music-time") {
         // add the viewsContainers and views
-        packageJson.contributes["viewsContainers"] = {
-            activitybar: [
-                {
-                    id: "music-time",
-                    title: "Music Time",
-                    icon: "resources/dark/paw.svg"
-                }
-            ]
-        };
-        packageJson.contributes["views"] = {
-            "music-time": [
-                {
-                    id: "music-time-playlists",
-                    name: "Playlists"
-                }
-            ]
-        };
+        // packageJson.contributes["viewsContainers"] = {
+        //     activitybar: [
+        //         {
+        //             id: "music-time",
+        //             title: "Music Time",
+        //             icon: "resources/dark/paw.svg"
+        //         }
+        //     ]
+        // };
+        // packageJson.contributes["views"] = {
+        //     "music-time": [
+        //         {
+        //             id: "music-time-playlists",
+        //             name: "Playlists"
+        //         }
+        //     ]
+        // };
         packageJson["description"] = MUSIC_TIME_DESC;
         packageJson["version"] = MUSIC_TIME_VERSION;
         packageJson["displayName"] = MUSIC_TIME_DISPLAY;
