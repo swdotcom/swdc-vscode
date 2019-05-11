@@ -1,6 +1,7 @@
 import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime } from "../Util";
+import { isMusicTime, isWindows } from "../Util";
 import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
+import * as music from "cody-music";
 
 export interface Button {
     /**
@@ -49,11 +50,18 @@ export class MusicPlayerManagerSingleton {
             10
         );
         this.createButton("$(chevron-right)", "Next", "musictime.next", 10);
-        this.createButton("$(heart)", "Like", "musictime.like", 10);
+        this.createButton("♡", "Like", "musictime.like", 10);
+        this.createButton("♥", "Unlike", "musictime.unlike", 10);
         this.createButton(
             "$(grabber)",
             "Click to see more from Music Time",
             "musictime.menu",
+            10
+        );
+        this.createButton(
+            "🎧",
+            "Click to launch your music player",
+            "musictime.launchplayer",
             10
         );
 
@@ -113,38 +121,91 @@ export class MusicPlayerManagerSingleton {
         this._buttons.push(button);
     }
 
-    private static showPlayControls(trackState: TrackState) {
-        const songInfo =
-            trackState && trackState.track
-                ? `${trackState.track.name} (${trackState.track.artist})`
-                : null;
-        this._buttons = this._buttons.map(button => {
-            if (button.statusBarItem.command === "musictime.pause") {
-                button.statusBarItem.hide();
-            } else {
-                if (
-                    songInfo &&
-                    button.statusBarItem.command === "musictime.play"
-                ) {
-                    button.statusBarItem.tooltip = `${
-                        button.tooltip
-                    } - ${songInfo}`;
+    private static async showPlayControls(trackState: TrackState) {
+        // check if the player is actually on since we're in the show play controls function
+        let spotifyRunning = false;
+        let itunesRunning = false;
+        if (isWindows()) {
+            // supports only spotify for now
+            spotifyRunning = await MusicStateManagerSingleton.isWindowsSpotifyRunning();
+        } else {
+            spotifyRunning = await music.isRunning("Spotify");
+            itunesRunning = await music.isRunning("iTunes");
+        }
+        if (!spotifyRunning && !itunesRunning) {
+            // hide all except for the launch player button
+            this._buttons = this._buttons.map(button => {
+                const btnCmd = button.statusBarItem.command;
+                if (btnCmd === "musictime.launchplayer") {
+                    button.statusBarItem.show();
+                } else {
+                    button.statusBarItem.hide();
                 }
-                button.statusBarItem.show();
-            }
-            return button;
-        });
+                return button;
+            });
+        } else {
+            const trackInfo = trackState ? trackState.track || null : null;
+            const songInfo = trackInfo
+                ? `${trackInfo.name} (${trackInfo.artist})`
+                : null;
+            const loved = trackInfo ? trackInfo.loved || false : false;
+            this._buttons = this._buttons.map(button => {
+                const btnCmd = button.statusBarItem.command;
+                if (btnCmd === "musictime.pause") {
+                    button.statusBarItem.hide();
+                } else if (btnCmd === "musictime.like") {
+                    if (loved) {
+                        button.statusBarItem.hide();
+                    } else {
+                        button.statusBarItem.show();
+                    }
+                } else if (btnCmd === "musictime.unlike") {
+                    if (loved) {
+                        button.statusBarItem.show();
+                    } else {
+                        button.statusBarItem.hide();
+                    }
+                } else if (btnCmd === "musictime.launchplayer") {
+                    button.statusBarItem.hide();
+                } else {
+                    if (songInfo && btnCmd === "musictime.play") {
+                        // show the song info over the play button
+                        button.statusBarItem.tooltip = `${
+                            button.tooltip
+                        } - ${songInfo}`;
+                    }
+                    button.statusBarItem.show();
+                }
+
+                return button;
+            });
+        }
     }
 
     private static showPauseControls(trackState: TrackState) {
-        const songInfo = `${trackState.track.name} (${
-            trackState.track.artist
-        })`;
+        const trackInfo = trackState.track;
+        const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
+        const loved = trackInfo ? trackInfo.loved || false : false;
         this._buttons = this._buttons.map(button => {
-            if (button.statusBarItem.command === "musictime.play") {
+            const btnCmd = button.statusBarItem.command;
+            if (btnCmd === "musictime.play") {
+                button.statusBarItem.hide();
+            } else if (btnCmd === "musictime.like") {
+                if (loved) {
+                    button.statusBarItem.hide();
+                } else {
+                    button.statusBarItem.show();
+                }
+            } else if (btnCmd === "musictime.unlike") {
+                if (loved) {
+                    button.statusBarItem.show();
+                } else {
+                    button.statusBarItem.hide();
+                }
+            } else if (btnCmd === "musictime.launchplayer") {
                 button.statusBarItem.hide();
             } else {
-                if (button.statusBarItem.command === "musictime.pause") {
+                if (btnCmd === "musictime.pause") {
                     button.statusBarItem.tooltip = `${
                         button.tooltip
                     } - ${songInfo}`;

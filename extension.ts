@@ -150,7 +150,9 @@ export async function intializePlugin(
     let serverIsOnline = await serverIsAvailable();
 
     // initialize the music player
-    MusicPlayerManagerSingleton.initialize();
+    setTimeout(() => {
+        MusicPlayerManagerSingleton.initialize();
+    }, 1000);
 
     let one_min = 1000 * 60;
     let userStatusInterval = 1000 * 120;
@@ -181,13 +183,13 @@ export async function intializePlugin(
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
         MusicPlayerManagerSingleton.stateCheckHandler();
-    }, 1000 * 15);
+    }, 1000 * 5);
 
     // send any offline data
     setTimeout(() => {
         // send any offline data
         sendOfflineData();
-    }, 10000);
+    }, 1000 * 10);
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;

@@ -1,5 +1,12 @@
 import * as music from "cody-music";
-import { wrapExecPromise, isWindows, isMac, getItem } from "../Util";
+import {
+    wrapExecPromise,
+    isWindows,
+    isMac,
+    getItem,
+    isEmptyObj,
+    isMusicTime
+} from "../Util";
 import { sendMusicData } from "../DataController";
 import { softwareGet, isResponseOk } from "../HttpClient";
 
@@ -21,9 +28,51 @@ export class MusicStateManagerSingleton {
     private static existingTrack: any = {};
     private static lastTimeSent: number = null;
     private static gatheringMusic: boolean = false;
+    private static serverTrack: any = null;
 
     private constructor() {
         // private to prevent non-singleton usage
+    }
+
+    public static clearServerTrack() {
+        this.serverTrack = null;
+    }
+
+    public static async getServerTrack(trackState) {
+        if (trackState && trackState.track) {
+            let trackId = trackState.track.id;
+            if (trackId.indexOf(":") !== -1) {
+                // strip it down to just the last id part
+                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
+            }
+            const type = trackState.type;
+            // use the name and artist as well since we have it
+            let trackName = trackState.track.name;
+            let trackArtist = trackState.track.artist;
+
+            // check if it's cached before hitting the server
+            if (this.serverTrack) {
+                if (this.serverTrack.trackId === trackState.track.id) {
+                    return this.serverTrack;
+                } else if (
+                    this.serverTrack.name === trackName &&
+                    this.serverTrack.artist === trackArtist
+                ) {
+                    return this.serverTrack;
+                }
+                // it doesn't match, might as well nullify it
+                this.serverTrack = null;
+            }
+
+            if (!this.serverTrack) {
+                const api = `/music/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
+                const resp = await softwareGet(api, getItem("jwt"));
+                if (isResponseOk(resp)) {
+                    this.serverTrack = { ...resp.data };
+                }
+            }
+        }
+        return this.serverTrack;
     }
 
     public static async getState(): Promise<TrackState> {
@@ -38,7 +87,6 @@ export class MusicStateManagerSingleton {
                 playingTrack = await music.getState("Spotify");
                 if (playingTrack && playingTrack.state === "playing") {
                     trackState = { type: "spotify", track: playingTrack };
-                    return trackState;
                 } else if (playingTrack) {
                     // save this one if itunes isn't running
                     pausedTrack = playingTrack;
@@ -52,7 +100,6 @@ export class MusicStateManagerSingleton {
                 playingTrack = await music.getState("iTunes");
                 if (playingTrack && playingTrack.state === "playing") {
                     trackState = { type: "itunes", track: playingTrack };
-                    return trackState;
                 } else if (!pausedTrack && playingTrack) {
                     pausedTrack = playingTrack;
                     pausedType = "itunes";
@@ -61,7 +108,6 @@ export class MusicStateManagerSingleton {
 
             if (pausedTrack) {
                 trackState = { type: pausedType, track: pausedTrack };
-                return trackState;
             }
         } else if (isWindows()) {
             // supports only spotify for now
@@ -70,12 +116,45 @@ export class MusicStateManagerSingleton {
                 playingTrack = await MusicStateManagerSingleton.getWindowsSpotifyTrackInfo();
                 if (playingTrack) {
                     trackState = { type: "spotify", track: playingTrack };
-                    return trackState;
                 }
             }
         }
 
-        return null;
+        // make sure it's not an advertisement
+        if (trackState && !isEmptyObj(trackState.track)) {
+            // "artist":"","album":"","id":"spotify:ad:000000012c603a6600000020316a17a1"
+            if (
+                trackState.type === "spotify" &&
+                trackState.track.id.includes("spotify:ad:")
+            ) {
+                // it's a spotify ad
+                trackState = null;
+            } else if (!trackState.track.artist && !trackState.track.album) {
+                // not enough info to send
+                trackState = null;
+            }
+        }
+
+        // get the matching server track if this is the music time plugin
+        if (
+            isMusicTime() &&
+            trackState &&
+            trackState.type === "spotify" &&
+            !isEmptyObj(trackState.track)
+        ) {
+            // if it's spotify, get it from the server as well
+            const serverTrack = await this.getServerTrack(trackState);
+            if (serverTrack) {
+                const liked = serverTrack.liked || 0;
+                if (liked === 1) {
+                    trackState.track["loved"] = true;
+                } else {
+                    trackState.track["loved"] = false;
+                }
+            }
+        }
+
+        return trackState;
     }
 
     public static async gatherMusicInfo() {
@@ -102,9 +181,13 @@ export class MusicStateManagerSingleton {
             let localNowInSec = nowInSec - offset_sec;
             let state = "stopped";
             let playingTrackId = playingTrack["id"] || null;
-            if (playingTrackId) {
-                state = playingTrack["state"] || "playing";
+            if (
+                playingTrack["state"] !== undefined &&
+                playingTrack["state"] !== null
+            ) {
+                state = playingTrack["state"];
             }
+
             let isPaused =
                 state.toLowerCase().indexOf("playing") !== -1 ? false : true;
 
@@ -180,7 +263,7 @@ export class MusicStateManagerSingleton {
         this.gatheringMusic = false;
     }
 
-    private static async isWindowsSpotifyRunning() {
+    public static async isWindowsSpotifyRunning(): Promise<boolean> {
         /**
              * tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
                 Window Title: Dexys Midnight Runners - Come On Eileen

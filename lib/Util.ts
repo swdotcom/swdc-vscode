@@ -24,6 +24,7 @@ let lastMsg = null;
 let lastTooltip = null;
 let showStatusBarText = true;
 let extensionName = null;
+let whoami = null;
 
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
@@ -69,11 +70,17 @@ export function isCodeTimeMetricsFile(fileName) {
 }
 
 export function isMusicTime() {
-    return getExtensionName() === "music-time" ? true : false;
+    if (whoami === null) {
+        whoami = getExtensionName();
+    }
+    return whoami === "music-time" ? true : false;
 }
 
 export function isCodeTime() {
-    return getExtensionName() === "swdc-vscode" ? true : false;
+    if (whoami === null) {
+        whoami = getExtensionName();
+    }
+    return whoami === "swdc-vscode" ? true : false;
 }
 
 export function codeTimeExtInstalled() {

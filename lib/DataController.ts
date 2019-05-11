@@ -34,8 +34,8 @@ let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 
-// batch offline payloads in 50. backend has a 100k body limit
-const batch_limit = 50;
+// batch offline payloads in 25. backend has a 100k body limit
+const batch_limit = 25;
 
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();

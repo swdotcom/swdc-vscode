@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "0.15.8",
+    "version": "0.15.9",
     "publisher": "softwaredotcom",
     "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
@@ -90,34 +90,6 @@
                 "command": "extension.codeTimeStatusToggle",
                 "title": "Show/hide status bar metrics",
                 "category": "Code Time"
-            },
-            {
-                "command": "musictime.next",
-                "title": "Play Next Song"
-            },
-            {
-                "command": "musictime.previous",
-                "title": "Play Previous Song"
-            },
-            {
-                "command": "musictime.play",
-                "title": "Play"
-            },
-            {
-                "command": "musictime.pause",
-                "title": "Pause"
-            },
-            {
-                "command": "musictime.like",
-                "title": "Like Song"
-            },
-            {
-                "command": "musictime.menu",
-                "title": "Click to see more from Music Time"
-            },
-            {
-                "command": "musictime.connectSpotify",
-                "title": "Connect your spotify account"
             }
         ],
         "menus": {
@@ -149,11 +121,11 @@
         "@types/node": "12.0.0",
         "mocha": "6.1.4",
         "typescript": "3.4.5",
-        "vscode": "^1.1.33"
+        "vscode": "^1.1.34"
     },
     "dependencies": {
         "axios": "0.18.0",
-        "cody-music": "^1.0.0",
+        "cody-music": "1.0.3",
         "vsls": "0.3.1291"
     }
 }

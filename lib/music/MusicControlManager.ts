@@ -2,7 +2,7 @@ import * as music from "cody-music";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
 import { showQuickPick } from "../MenuManager";
 import { serverIsAvailable, getSpotifyAccessToken } from "../DataController";
-import { getItem, setItem, logIt } from "../Util";
+import { getItem, setItem, isEmptyObj } from "../Util";
 import {
     softwareGet,
     softwarePut,
@@ -54,9 +54,35 @@ export class MusicControlManager {
         }
     }
 
-    async like() {
+    launchPlayerMenu() {
+        let menuOptions = {
+            items: []
+        };
+
+        menuOptions.items.push({
+            label: "Launch Spotify",
+            description: "",
+            detail: "Launch your Spotify player",
+            url: null,
+            uri: null,
+            cb: launchSpotifyPlayer
+        });
+
+        menuOptions.items.push({
+            label: "Launch iTunes",
+            description: "",
+            detail: "Launch your iTunes player",
+            url: null,
+            uri: null,
+            cb: launchItunesPlayer
+        });
+
+        showQuickPick(menuOptions);
+    }
+
+    async setLiked(liked: boolean) {
         const trackState: TrackState = await MusicStateManagerSingleton.getState();
-        if (trackState && trackState.track) {
+        if (trackState && trackState.track && !isEmptyObj(trackState.track)) {
             // set it to liked
             let trackId = trackState.track.id;
             if (trackId.indexOf(":") !== -1) {
@@ -68,19 +94,35 @@ export class MusicControlManager {
             let trackName = encodeURIComponent(trackState.track.name);
             let trackArtist = encodeURIComponent(trackState.track.artist);
             const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
-            const resp = await softwarePut(api, {}, getItem("jwt"));
+            const payload = { liked };
+            const resp = await softwarePut(api, payload, getItem("jwt"));
             if (isResponseOk(resp)) {
-                logIt("update user code time preferences");
+                if (type === "itunes") {
+                    music
+                        .setItunesLoved(liked)
+                        .then(result => {
+                            console.log("updated itunes loved state");
+                        })
+                        .catch(err => {
+                            console.log(
+                                "unable to update itunes loved state, error: ",
+                                err.message
+                            );
+                        });
+                }
+                // update the buttons
+                MusicStateManagerSingleton.clearServerTrack();
+                MusicPlayerManagerSingleton.stateCheckHandler();
             }
         }
     }
 
     async showMenu() {
-        let kpmMenuOptions = {
+        let menuOptions = {
             items: []
         };
 
-        kpmMenuOptions.items.push({
+        menuOptions.items.push({
             label: "Software Top 40",
             description: "",
             detail:
@@ -90,7 +132,7 @@ export class MusicControlManager {
             cb: null
         });
 
-        kpmMenuOptions.items.push({
+        menuOptions.items.push({
             label: "Connect Spotify",
             description: "",
             detail:
@@ -100,7 +142,7 @@ export class MusicControlManager {
             cb: null
         });
 
-        kpmMenuOptions.items.push({
+        menuOptions.items.push({
             label: "Search Playlist",
             description: "",
             detail: "Find a playlist",
@@ -109,8 +151,20 @@ export class MusicControlManager {
             cb: buildPlaylists
         });
 
-        showQuickPick(kpmMenuOptions);
+        showQuickPick(menuOptions);
     }
+}
+
+export async function launchSpotifyPlayer() {
+    music.startSpotifyIfNotRunning().then(result => {
+        MusicPlayerManagerSingleton.stateCheckHandler();
+    });
+}
+
+export async function launchItunesPlayer() {
+    music.startItunesIfNotRunning().then(result => {
+        MusicPlayerManagerSingleton.stateCheckHandler();
+    });
 }
 
 export async function buildPlaylists() {

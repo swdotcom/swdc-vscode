@@ -5,8 +5,7 @@ import {
     Command,
     EventEmitter,
     Event,
-    Disposable,
-    TreeView
+    Disposable
 } from "vscode";
 import * as path from "path";
 import { MusicTreeItem } from "./MusicStoreManager";
@@ -16,63 +15,54 @@ import { spotiyApiPut } from "../HttpClient";
 import { getItem } from "../Util";
 import * as music from "cody-music";
 
-const createPlaylistTreeItem = (
-    p: MusicTreeItem,
-    cstate: TreeItemCollapsibleState
-) => {
-    return new PlaylistTreeItem(p, cstate);
-};
+// const createPlaylistTreeItem = (
+//     p: MusicTreeItem,
+//     cstate: TreeItemCollapsibleState
+// ) => {
+//     return new PlaylistTreeItem(p, cstate);
+// };
 
-export const connectPlaylistTreeView = (
-    view: TreeView<MusicTreeItem>,
-    musicStore: MusicStoreManager
-) => {
-    return Disposable.from(
-        view.onDidChangeSelection(e => {
-            if (
-                e.selection &&
-                e.selection.length === 1 &&
-                e.selection[0].type === "track"
-            ) {
-                // play the selection
-                // If the user making the request is non-premium, a
-                // 403 FORBIDDEN response code will be returned.
-                const accessToken = getItem("spotify_access_token");
-                const payload = { uri: e.selection[0].uri };
+// export const connectPlaylistTreeView = (
+//     view: TreeView<MusicTreeItem>,
+//     musicStore: MusicStoreManager
+// ) => {
+//     return Disposable.from(
+//         view.onDidChangeSelection(e => {
+//             if (
+//                 e.selection &&
+//                 e.selection.length === 1 &&
+//                 e.selection[0].type === "track"
+//             ) {
+//                 // play the selection
+//                 // If the user making the request is non-premium, a
+//                 // 403 FORBIDDEN response code will be returned.
+//                 const accessToken = getItem("spotify_access_token");
+//                 const payload = { uri: e.selection[0].uri };
 
-                spotiyApiPut("/v1/me/player/play", payload, accessToken);
-
-                // music
-                //     .playTrack("spotify", e.selection[0].id)
-                //     .then(result => {
-                //         console.log("play result: ", result);
-                //     })
-                //     .catch(e => {
-                //         console.error("error playing song: ", e);
-                //     });
-            }
-            // https://api.spotify.com/v1/me/player/pause
-            /**
-             * selection:Array[1]
-                0:Object
-                type:"track"
-                duration_ms:219146
-                name:"you were good to me"
-                explicit:false
-                disc_number:1
-                popularity:53
-                artist:"Jeremy Zucker, Chelsea Cutler"
-                album:"brent"
-                id:"spotify:track:4CxFN5zON70B3VOPBYbd6P"
-             */
-        }),
-        view.onDidChangeVisibility(e => {
-            if (e.visible) {
-                //
-            }
-        })
-    );
-};
+//                 spotiyApiPut("/v1/me/player/play", payload, accessToken);
+//             }
+//             // https://api.spotify.com/v1/me/player/pause
+//             /**
+//              * selection:Array[1]
+//                 0:Object
+//                 type:"track"
+//                 duration_ms:219146
+//                 name:"you were good to me"
+//                 explicit:false
+//                 disc_number:1
+//                 popularity:53
+//                 artist:"Jeremy Zucker, Chelsea Cutler"
+//                 album:"brent"
+//                 id:"spotify:track:4CxFN5zON70B3VOPBYbd6P"
+//              */
+//         }),
+//         view.onDidChangeVisibility(e => {
+//             if (e.visible) {
+//                 //
+//             }
+//         })
+//     );
+// };
 
 export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
     private _onDidChangeTreeData: EventEmitter<
@@ -100,14 +90,15 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
     }
 
     getTreeItem(p: MusicTreeItem): PlaylistTreeItem {
-        if (p && p["tracks"] && p["tracks"].length > 0) {
-            return createPlaylistTreeItem(
-                p,
-                TreeItemCollapsibleState.Collapsed
-            );
-        } else {
-            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
-        }
+        return null;
+        // if (p && p["tracks"] && p["tracks"].length > 0) {
+        //     return createPlaylistTreeItem(
+        //         p,
+        //         TreeItemCollapsibleState.Collapsed
+        //     );
+        // } else {
+        //     return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
+        // }
     }
 
     async getChildren(element?: MusicTreeItem): Promise<MusicTreeItem[]> {
