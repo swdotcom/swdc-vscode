@@ -86,6 +86,7 @@ async function deploy() {
         }
         packageJson.contributes["commands"] = codeTimeCommands;
     } else if (pluginName === "music-time") {
+        //
         // add the viewsContainers and views
         // packageJson.contributes["viewsContainers"] = {
         //     activitybar: [

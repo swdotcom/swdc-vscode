@@ -53,15 +53,15 @@ export class MusicPlayerManagerSingleton {
         this.createButton("♡", "Like", "musictime.like", 10);
         this.createButton("♥", "Unlike", "musictime.unlike", 10);
         this.createButton(
-            "$(grabber)",
-            "Click to see more from Music Time",
-            "musictime.menu",
-            10
-        );
-        this.createButton(
             "🎧",
             "Click to launch your music player",
             "musictime.launchplayer",
+            10
+        );
+        this.createButton(
+            "$(grabber)",
+            "Click to see more from Music Time",
+            "musictime.menu",
             10
         );
 
@@ -136,7 +136,10 @@ export class MusicPlayerManagerSingleton {
             // hide all except for the launch player button
             this._buttons = this._buttons.map(button => {
                 const btnCmd = button.statusBarItem.command;
-                if (btnCmd === "musictime.launchplayer") {
+                if (
+                    btnCmd === "musictime.launchplayer" ||
+                    btnCmd === "musictime.menu"
+                ) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();

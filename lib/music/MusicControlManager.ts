@@ -188,7 +188,7 @@ export class MusicControlManager {
                 description: "",
                 detail:
                     "To see your Spotify playlists in Music Time, please connect your account",
-                url: `${api_endpoint}/auth/spotify`,
+                url: `${api_endpoint}/auth/spotify?integrate=spotify`,
                 uri: null,
                 cb: null
             });
