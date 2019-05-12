@@ -1,8 +1,21 @@
 import * as music from "cody-music";
+import { workspace, window, ViewColumn } from "vscode";
 import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
 import { showQuickPick } from "../MenuManager";
-import { serverIsAvailable, getSpotifyAccessToken } from "../DataController";
-import { getItem, setItem, isEmptyObj } from "../Util";
+import {
+    getUserStatus,
+    serverIsAvailable,
+    getSpotifyAccessToken
+} from "../DataController";
+import {
+    getItem,
+    setItem,
+    isEmptyObj,
+    getMusicTimeFile,
+    isLinux,
+    logIt,
+    buildLoginUrl
+} from "../Util";
 import {
     softwareGet,
     softwarePut,
@@ -11,10 +24,12 @@ import {
     isResponseOk
 } from "../HttpClient";
 import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
-import { api_endpoint } from "../Constants";
+import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
+const fs = require("fs");
 
 const store: MusicStoreManager = MusicStoreManager.getInstance();
+const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 export class MusicControlManager {
     getPlayer(): string {
@@ -118,12 +133,25 @@ export class MusicControlManager {
     }
 
     async showMenu() {
+        let serverIsOnline = await serverIsAvailable();
+        // {loggedIn: true|false}
+        let userStatus = await getUserStatus(serverIsOnline);
+        let loginUrl = await buildLoginUrl();
+
+        let loginMsgDetail =
+            "To see your music data in Music Time, please log in to your account";
+        if (!serverIsOnline) {
+            loginMsgDetail =
+                "Our service is temporarily unavailable. Please try again later.";
+            loginUrl = null;
+        }
+
         let menuOptions = {
             items: []
         };
 
         menuOptions.items.push({
-            label: "Software Top 40",
+            label: "Software top 40",
             description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
@@ -133,26 +161,80 @@ export class MusicControlManager {
         });
 
         menuOptions.items.push({
-            label: "Connect Spotify",
+            label: "Music time dashboard",
             description: "",
-            detail:
-                "To see your Spotify playlists in Music Time, please connect your account",
-            url: `${api_endpoint}/auth/spotify`,
-            uri: null,
-            cb: null
-        });
-
-        menuOptions.items.push({
-            label: "Search Playlist",
-            description: "",
-            detail: "Find a playlist",
+            detail: "View your latest music metrics right here in your editor",
             url: null,
             uri: null,
-            cb: buildPlaylists
+            cb: displayMusicTimeMetricsDashboard
         });
+
+        if (!userStatus.loggedIn) {
+            menuOptions.items.push({
+                label: LOGIN_LABEL,
+                description: "",
+                detail: loginMsgDetail,
+                url: loginUrl,
+                uri: null,
+                cb: null
+            });
+        }
+
+        // check if the user has the spotify_access_token
+        const accessToken = getItem("spotify_access_token");
+        if (!accessToken) {
+            menuOptions.items.push({
+                label: "Connect Spotify",
+                description: "",
+                detail:
+                    "To see your Spotify playlists in Music Time, please connect your account",
+                url: `${api_endpoint}/auth/spotify`,
+                uri: null,
+                cb: null
+            });
+        }
+
+        // menuOptions.items.push({
+        //     label: "Search Playlist",
+        //     description: "",
+        //     detail: "Find a playlist",
+        //     url: null,
+        //     uri: null,
+        //     cb: buildPlaylists
+        // });
 
         showQuickPick(menuOptions);
     }
+}
+
+export async function displayMusicTimeMetricsDashboard() {
+    let musicTimeFile = getMusicTimeFile();
+    await fetchMusicTimeMetricsDashboard();
+
+    workspace.openTextDocument(musicTimeFile).then(doc => {
+        // only focus if it's not already open
+        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+            // done
+        });
+    });
+}
+
+export async function fetchMusicTimeMetricsDashboard() {
+    let musicTimeFile = getMusicTimeFile();
+
+    const musicSummary = await softwareGet(
+        `/dashboard?plugin=music-time&linux=${isLinux()}`,
+        getItem("jwt")
+    );
+    // get the content
+    let content =
+        musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
+
+    fs.writeFileSync(musicTimeFile, content, err => {
+        if (err) {
+            logIt(`Error writing to the Software session file: ${err.message}`);
+        }
+    });
 }
 
 export async function launchSpotifyPlayer() {

@@ -354,6 +354,16 @@ export function getDashboardFile() {
     return file;
 }
 
+export function getMusicTimeFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\MusicTime.txt";
+    } else {
+        file += "/MusicTime.txt";
+    }
+    return file;
+}
+
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

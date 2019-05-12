@@ -74,7 +74,6 @@ export async function buildWebDashboardUrl() {
 
 export async function showMenuOptions() {
     let serverIsOnline = await serverIsAvailable();
-    let filePath = getDashboardFile();
     // {loggedIn: true|false}
     let userStatus = await getUserStatus(serverIsOnline);
     let webUrl = await buildWebDashboardUrl();
@@ -90,8 +89,8 @@ export async function showMenuOptions() {
         description: "",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
-        uri: filePath,
-        cb: null
+        uri: null,
+        cb: displayCodeTimeMetricsDashboard
     });
 
     if (userStatus.loggedIn && showMusicMetrics) {
