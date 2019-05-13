@@ -6,7 +6,8 @@ import {
     getItem,
     isEmptyObj,
     isMusicTime,
-    setItem
+    setItem,
+    nowInSecs
 } from "../Util";
 import {
     sendMusicData,
@@ -18,7 +19,8 @@ import {
     isResponseOk,
     spotifyApiGet,
     hasTokenExpired,
-    spotiyApiPut
+    spotifyApiPut,
+    spotifyApiPost
 } from "../HttpClient";
 import { Track, PlayerContext } from "./MusicStoreManager";
 
@@ -42,6 +44,9 @@ export class MusicStateManagerSingleton {
     private static gatheringMusic: boolean = false;
     private static serverTrack: any = null;
     private static currentTrack: Track = null;
+    private static refreshingToken: boolean = false;
+    private static lastWebCheck: number = 0;
+    private static webPlayerRunning: boolean = false;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -369,6 +374,7 @@ export class MusicStateManagerSingleton {
         }
         return false;
     }
+
     static async getSpotifyWebCurrentTrack(): Promise<Track> {
         let accessToken = getItem("spotify_access_token");
         if (accessToken) {
@@ -394,17 +400,28 @@ export class MusicStateManagerSingleton {
     static async spotifyWebPlay() {
         const accessToken = getItem("spotify_access_token");
         // const payload = { uri: e.selection[0].uri };
-        spotiyApiPut("/v1/me/player/play", {}, accessToken);
+        spotifyApiPut("/v1/me/player/play", {}, accessToken);
     }
 
     static async spotifyWebPause() {
         const accessToken = getItem("spotify_access_token");
         // const payload = { uri: e.selection[0].uri };
-        spotiyApiPut("/v1/me/player/pause", {}, accessToken);
+        spotifyApiPut("/v1/me/player/pause", {}, accessToken);
+    }
+
+    static async spotifyWebPrevious() {
+        const accessToken = getItem("spotify_access_token");
+        spotifyApiPost("/v1/me/player/previous", {}, accessToken);
+    }
+
+    static async spotifyWebNext() {
+        const accessToken = getItem("spotify_access_token");
+        spotifyApiPost("/v1/me/player/next", {}, accessToken);
     }
 
     static async checkSpotifyApiResponse(response: any, api: string) {
         if (hasTokenExpired(response)) {
+            let currAccessToken = getItem("spotify_access_token");
             await this.refreshToken();
             const accessToken = getItem("spotify_access_token");
             // call get playlists again
@@ -414,6 +431,10 @@ export class MusicStateManagerSingleton {
     }
 
     static async refreshToken() {
+        if (this.refreshingToken) {
+            return;
+        }
+        this.refreshingToken = true;
         let serverIsOnline = await serverIsAvailable();
         const jwt = getItem("jwt");
         // refresh the token then try again
@@ -428,6 +449,7 @@ export class MusicStateManagerSingleton {
                 setItem("spotify_access_token", accessToken);
             }
         }
+        this.refreshingToken = false;
     }
 
     /**
@@ -498,10 +520,16 @@ export class MusicStateManagerSingleton {
     }
 
     public static async isPlayerRunning() {
-        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
-        const webPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+        const nowSec = nowInSecs();
 
-        const hasRunningPlayer = webPlayerRunning || desktopPlayerRunning;
+        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
+
+        if (nowSec - this.lastWebCheck > 15) {
+            this.webPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+            this.lastWebCheck = nowSec;
+        }
+
+        const hasRunningPlayer = this.webPlayerRunning || desktopPlayerRunning;
         return hasRunningPlayer;
     }
 }

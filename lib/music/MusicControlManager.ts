@@ -9,7 +9,6 @@ import {
 } from "../DataController";
 import {
     getItem,
-    isEmptyObj,
     getMusicTimeFile,
     isLinux,
     logIt,
@@ -47,17 +46,27 @@ export class MusicControlManager {
     async next() {
         const player = await this.getPlayer();
         if (player) {
-            await music.next(player);
+            if (player === "spotify-web") {
+                await MusicStateManagerSingleton.spotifyWebNext();
+            } else {
+                await music.next(player);
+            }
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
+
     async previous() {
         const player = await this.getPlayer();
         if (player) {
-            await music.previous(player);
+            if (player === "spotify-web") {
+                await MusicStateManagerSingleton.spotifyWebPrevious();
+            } else {
+                await music.previous(player);
+            }
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
+
     async play() {
         const player = await this.getPlayer();
         if (player) {
@@ -69,6 +78,7 @@ export class MusicControlManager {
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
+
     async pause() {
         const player = await this.getPlayer();
         if (player) {

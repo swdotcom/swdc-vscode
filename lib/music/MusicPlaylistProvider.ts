@@ -11,7 +11,7 @@ import * as path from "path";
 import { MusicTreeItem } from "./MusicStoreManager";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { buildPlaylists } from "./MusicControlManager";
-import { spotiyApiPut } from "../HttpClient";
+import { spotifyApiPut } from "../HttpClient";
 import { getItem } from "../Util";
 import * as music from "cody-music";
 
@@ -39,7 +39,7 @@ import * as music from "cody-music";
 //                 const accessToken = getItem("spotify_access_token");
 //                 const payload = { uri: e.selection[0].uri };
 
-//                 spotiyApiPut("/v1/me/player/play", payload, accessToken);
+//                 spotifyApiPut("/v1/me/player/play", payload, accessToken);
 //             }
 //             // https://api.spotify.com/v1/me/player/pause
 //             /**
