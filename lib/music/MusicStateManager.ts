@@ -5,10 +5,22 @@ import {
     isMac,
     getItem,
     isEmptyObj,
-    isMusicTime
+    isMusicTime,
+    setItem
 } from "../Util";
-import { sendMusicData } from "../DataController";
-import { softwareGet, isResponseOk } from "../HttpClient";
+import {
+    sendMusicData,
+    serverIsAvailable,
+    getSpotifyAccessToken
+} from "../DataController";
+import {
+    softwareGet,
+    isResponseOk,
+    spotifyApiGet,
+    hasTokenExpired,
+    spotiyApiPut
+} from "../HttpClient";
+import { Track, PlayerContext } from "./MusicStoreManager";
 
 export interface TrackState {
     /**
@@ -29,6 +41,7 @@ export class MusicStateManagerSingleton {
     private static lastTimeSent: number = null;
     private static gatheringMusic: boolean = false;
     private static serverTrack: any = null;
+    private static currentTrack: Track = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -38,21 +51,25 @@ export class MusicStateManagerSingleton {
         this.serverTrack = null;
     }
 
-    public static async getServerTrack(trackState) {
-        if (trackState && trackState.track) {
-            let trackId = trackState.track.id;
+    public static getCurrentTrack(): Track {
+        return this.currentTrack;
+    }
+
+    public static async getServerTrack(track: Track) {
+        if (track) {
+            let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
                 // strip it down to just the last id part
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
-            const type = trackState.type;
+            const type = track.type;
             // use the name and artist as well since we have it
-            let trackName = trackState.track.name;
-            let trackArtist = trackState.track.artist;
+            let trackName = track.name;
+            let trackArtist = track.artist;
 
             // check if it's cached before hitting the server
             if (this.serverTrack) {
-                if (this.serverTrack.trackId === trackState.track.id) {
+                if (this.serverTrack.trackId === track.id) {
                     return this.serverTrack;
                 } else if (
                     this.serverTrack.name === trackName &&
@@ -135,6 +152,13 @@ export class MusicStateManagerSingleton {
             }
         }
 
+        // include common attributes
+        if (trackState && !isEmptyObj(trackState.track)) {
+            // create the attributes
+            trackState.track["duration_ms"] = trackState.track.duration;
+            trackState.track["type"] = trackState.type;
+        }
+
         // get the matching server track if this is the music time plugin
         if (
             isMusicTime() &&
@@ -143,7 +167,7 @@ export class MusicStateManagerSingleton {
             !isEmptyObj(trackState.track)
         ) {
             // if it's spotify, get it from the server as well
-            const serverTrack = await this.getServerTrack(trackState);
+            const serverTrack = await this.getServerTrack(trackState.track);
             if (serverTrack) {
                 const liked = serverTrack.liked || 0;
                 if (liked === 1) {
@@ -153,6 +177,9 @@ export class MusicStateManagerSingleton {
                 }
             }
         }
+
+        this.currentTrack =
+            trackState && trackState.track ? trackState.track : null;
 
         return trackState;
     }
@@ -263,11 +290,43 @@ export class MusicStateManagerSingleton {
         this.gatheringMusic = false;
     }
 
+    public static extractAristFromSpotifyTrack(track: Track): void {
+        if (!track) {
+            return;
+        }
+
+        if (track["artists"]) {
+            const len = track["artists"].length;
+            let artistNames = [];
+            for (let y = 0; y < len; y++) {
+                const artist = track["artists"][y];
+                artistNames.push(artist.name);
+            }
+            track["artist"] = artistNames.join(", ");
+        }
+    }
+
+    public static async updateLovedStateFromServer(track: Track) {
+        if (!track) {
+            return;
+        }
+
+        const serverTrack = await this.getServerTrack(track);
+        if (serverTrack) {
+            const liked = serverTrack.liked || 0;
+            if (liked === 1) {
+                track["loved"] = true;
+            } else {
+                track["loved"] = false;
+            }
+        }
+    }
+
     public static async isWindowsSpotifyRunning(): Promise<boolean> {
         /**
-             * tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
-                Window Title: Dexys Midnight Runners - Come On Eileen
-            */
+         * /tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
+         * Window Title: Dexys Midnight Runners - Come On Eileen
+         */
         return new Promise((resolve, reject) => {
             wrapExecPromise(
                 MusicStateManagerSingleton.WINDOWS_SPOTIFY_TRACK_FIND,
@@ -280,6 +339,95 @@ export class MusicStateManagerSingleton {
                 }
             });
         });
+    }
+
+    static async getSpotifyWebPlayerState(): Promise<PlayerContext> {
+        let accessToken = getItem("spotify_access_token");
+        if (accessToken) {
+            let api = "/v1/me/player";
+            let response = await spotifyApiGet(api, accessToken);
+            // check if the token needs to be refreshed
+            response = await this.checkSpotifyApiResponse(response, api);
+            if (response && response.data && response.data.item) {
+                // override "type" with "spotify"
+                response.data.item["type"] = "spotify";
+                this.extractAristFromSpotifyTrack(response.data.item);
+                await this.updateLovedStateFromServer(response.data.item);
+                this.currentTrack = response.data.item;
+                return response.data;
+            } else {
+                this.currentTrack = null;
+            }
+        }
+        return null;
+    }
+
+    static async isSpotifyWebRunning(): Promise<boolean> {
+        const track: Track = await this.getSpotifyWebCurrentTrack();
+        if (track) {
+            return true;
+        }
+        return false;
+    }
+    static async getSpotifyWebCurrentTrack(): Promise<Track> {
+        let accessToken = getItem("spotify_access_token");
+        if (accessToken) {
+            let api = "/v1/me/player/currently-playing";
+            let response = await spotifyApiGet(api, accessToken);
+            // check if the token needs to be refreshed
+            response = await this.checkSpotifyApiResponse(response, api);
+            if (response && response.data && response.data.item) {
+                let track: Track = response.data.item;
+                // override "type" with "spotify"
+                track["type"] = "spotify";
+                this.extractAristFromSpotifyTrack(track);
+                await this.updateLovedStateFromServer(track);
+                this.currentTrack = track;
+                return track;
+            } else {
+                this.currentTrack = null;
+            }
+        }
+        return null;
+    }
+
+    static async spotifyWebPlay() {
+        const accessToken = getItem("spotify_access_token");
+        // const payload = { uri: e.selection[0].uri };
+        spotiyApiPut("/v1/me/player/play", {}, accessToken);
+    }
+
+    static async spotifyWebPause() {
+        const accessToken = getItem("spotify_access_token");
+        // const payload = { uri: e.selection[0].uri };
+        spotiyApiPut("/v1/me/player/pause", {}, accessToken);
+    }
+
+    static async checkSpotifyApiResponse(response: any, api: string) {
+        if (hasTokenExpired(response)) {
+            await this.refreshToken();
+            const accessToken = getItem("spotify_access_token");
+            // call get playlists again
+            response = await spotifyApiGet(api, accessToken);
+        }
+        return response;
+    }
+
+    static async refreshToken() {
+        let serverIsOnline = await serverIsAvailable();
+        const jwt = getItem("jwt");
+        // refresh the token then try again
+        const refreshResponse = await softwareGet(
+            "/auth/spotify/refreshToken",
+            jwt
+        );
+        if (isResponseOk(refreshResponse)) {
+            // get the user then get the playlists again
+            let accessToken = await getSpotifyAccessToken(serverIsOnline);
+            if (accessToken) {
+                setItem("spotify_access_token", accessToken);
+            }
+        }
     }
 
     /**
@@ -331,6 +479,29 @@ export class MusicStateManagerSingleton {
             trackInfo["end"] = 0;
             trackInfo["genre"] = "";
         }
+
         return trackInfo;
+    }
+
+    public static async isDesktopPlayerRunning() {
+        let spotifyRunning = false;
+        let itunesRunning = false;
+        if (isWindows()) {
+            // supports only spotify for now
+            spotifyRunning = await MusicStateManagerSingleton.isWindowsSpotifyRunning();
+        } else {
+            spotifyRunning = await music.isRunning("Spotify");
+            itunesRunning = await music.isRunning("iTunes");
+        }
+
+        return spotifyRunning || itunesRunning;
+    }
+
+    public static async isPlayerRunning() {
+        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
+        const webPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+
+        const hasRunningPlayer = webPlayerRunning || desktopPlayerRunning;
+        return hasRunningPlayer;
     }
 }

@@ -32,6 +32,28 @@ export class Track implements MusicTreeItem {
     }
 }
 
+export class PlayerDevice {
+    id: string;
+    is_active: string;
+    is_restricted: boolean;
+    name: string;
+    type: string;
+    volume_percent: number;
+}
+
+export class PlayerContext {
+    timestamp: number;
+    device: PlayerDevice;
+    progress_ms: string;
+    is_playing: boolean;
+    currently_playing_type: string;
+    actions: any;
+    item: any;
+    shuffle_state: boolean;
+    repeat_state: string;
+    context: any;
+}
+
 // uri, name, public, collaborative, tracks
 export class Playlist implements MusicTreeItem {
     artist: string;

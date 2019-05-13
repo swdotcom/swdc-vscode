@@ -8,12 +8,7 @@ const beApi = axios.create({
     baseURL: `${api_endpoint}`
 });
 
-// const spotifyApi = axios.create({
-//     baseURL: "https://api.spotify.com"
-// });
-const spotifyApi = axios.create({
-    //
-});
+const spotifyApi = axios.create({});
 
 export async function spotifyApiGet(api, accessToken) {
     if (api.indexOf("https://api.spotify.com") === -1) {

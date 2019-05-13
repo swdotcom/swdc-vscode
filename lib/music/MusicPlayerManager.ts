@@ -1,6 +1,7 @@
 import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime, isWindows } from "../Util";
+import { isMusicTime } from "../Util";
 import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
+import { Track, PlayerContext } from "./MusicStoreManager";
 import * as music from "cody-music";
 
 export interface Button {
@@ -25,7 +26,6 @@ export interface Button {
 
 export class MusicPlayerManagerSingleton {
     private static _buttons: Button[] = [];
-    private static _currentTrackState: TrackState = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -70,17 +70,45 @@ export class MusicPlayerManagerSingleton {
     }
 
     public static async updateButtons() {
-        // get the current track state
-        this._currentTrackState = await MusicStateManagerSingleton.getState();
-        if (
-            !this._currentTrackState ||
-            !this._currentTrackState.track ||
-            this._currentTrackState.track.state !== "playing"
-        ) {
-            this.showPlayControls(this._currentTrackState);
-        } else {
-            this.showPauseControls(this._currentTrackState);
+        const playerRunning = await MusicStateManagerSingleton.isPlayerRunning();
+        if (!playerRunning) {
+            this.showLaunchPlayerControls();
+            return;
         }
+
+        // we have a running player (desktop or web). what is the state?
+        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
+        if (desktopPlayerRunning) {
+            // get the desktop player track state
+            const trackState: TrackState = await MusicStateManagerSingleton.getState();
+            if (trackState && trackState.track) {
+                if (trackState.track.state !== "playing") {
+                    // show the play
+                    this.showPlayControls(trackState.track);
+                } else {
+                    // show the pause
+                    this.showPauseControls(trackState.track);
+                }
+                return;
+            }
+        }
+
+        // desktop returned a null track but we've determined there is a player running somewhere.
+        // default by checking the spotify web player state
+        const spotifyWebState: PlayerContext = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
+        if (spotifyWebState) {
+            if (spotifyWebState.is_playing) {
+                // show the pause
+                this.showPauseControls(spotifyWebState.item);
+            } else {
+                // show the play
+                this.showPlayControls(spotifyWebState.item);
+            }
+            return;
+        }
+
+        // no other choice, show the launch player
+        this.showLaunchPlayerControls();
     }
 
     private static getConfig() {
@@ -92,10 +120,6 @@ export class MusicPlayerManagerSingleton {
         if (isMusicTime()) {
             this.updateButtons();
         }
-    }
-
-    public static getTrackState(): TrackState {
-        return this._currentTrackState;
     }
 
     private static createButton(
@@ -121,74 +145,62 @@ export class MusicPlayerManagerSingleton {
         this._buttons.push(button);
     }
 
-    private static async showPlayControls(trackState: TrackState) {
-        // check if the player is actually on since we're in the show play controls function
-        let spotifyRunning = false;
-        let itunesRunning = false;
-        if (isWindows()) {
-            // supports only spotify for now
-            spotifyRunning = await MusicStateManagerSingleton.isWindowsSpotifyRunning();
-        } else {
-            spotifyRunning = await music.isRunning("Spotify");
-            itunesRunning = await music.isRunning("iTunes");
-        }
-        if (!spotifyRunning && !itunesRunning) {
-            // hide all except for the launch player button
-            this._buttons = this._buttons.map(button => {
-                const btnCmd = button.statusBarItem.command;
-                if (
-                    btnCmd === "musictime.launchplayer" ||
-                    btnCmd === "musictime.menu"
-                ) {
-                    button.statusBarItem.show();
-                } else {
-                    button.statusBarItem.hide();
-                }
-                return button;
-            });
-        } else {
-            const trackInfo = trackState ? trackState.track || null : null;
-            const songInfo = trackInfo
-                ? `${trackInfo.name} (${trackInfo.artist})`
-                : null;
-            const loved = trackInfo ? trackInfo.loved || false : false;
-            this._buttons = this._buttons.map(button => {
-                const btnCmd = button.statusBarItem.command;
-                if (btnCmd === "musictime.pause") {
-                    button.statusBarItem.hide();
-                } else if (btnCmd === "musictime.like") {
-                    if (loved) {
-                        button.statusBarItem.hide();
-                    } else {
-                        button.statusBarItem.show();
-                    }
-                } else if (btnCmd === "musictime.unlike") {
-                    if (loved) {
-                        button.statusBarItem.show();
-                    } else {
-                        button.statusBarItem.hide();
-                    }
-                } else if (btnCmd === "musictime.launchplayer") {
-                    button.statusBarItem.hide();
-                } else {
-                    if (songInfo && btnCmd === "musictime.play") {
-                        // show the song info over the play button
-                        button.statusBarItem.tooltip = `${
-                            button.tooltip
-                        } - ${songInfo}`;
-                    }
-                    button.statusBarItem.show();
-                }
-
-                return button;
-            });
-        }
+    private static async showLaunchPlayerControls() {
+        // hide all except for the launch player button
+        this._buttons = this._buttons.map(button => {
+            const btnCmd = button.statusBarItem.command;
+            if (
+                btnCmd === "musictime.launchplayer" ||
+                btnCmd === "musictime.menu"
+            ) {
+                button.statusBarItem.show();
+            } else {
+                button.statusBarItem.hide();
+            }
+            return button;
+        });
     }
 
-    private static showPauseControls(trackState: TrackState) {
-        const trackInfo = trackState.track;
+    private static async showPlayControls(trackInfo: Track) {
+        const songInfo = trackInfo
+            ? `${trackInfo.name} (${trackInfo.artist})`
+            : null;
+        const loved = trackInfo ? trackInfo["loved"] || false : false;
+        this._buttons = this._buttons.map(button => {
+            const btnCmd = button.statusBarItem.command;
+            if (btnCmd === "musictime.pause") {
+                button.statusBarItem.hide();
+            } else if (btnCmd === "musictime.like") {
+                if (loved) {
+                    button.statusBarItem.hide();
+                } else {
+                    button.statusBarItem.show();
+                }
+            } else if (btnCmd === "musictime.unlike") {
+                if (loved) {
+                    button.statusBarItem.show();
+                } else {
+                    button.statusBarItem.hide();
+                }
+            } else if (btnCmd === "musictime.launchplayer") {
+                button.statusBarItem.hide();
+            } else {
+                if (songInfo && btnCmd === "musictime.play") {
+                    // show the song info over the play button
+                    button.statusBarItem.tooltip = `${
+                        button.tooltip
+                    } - ${songInfo}`;
+                }
+                button.statusBarItem.show();
+            }
+
+            return button;
+        });
+    }
+
+    private static showPauseControls(trackInfo: Track) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
-        const loved = trackInfo ? trackInfo.loved || false : false;
+        const loved = trackInfo ? trackInfo["loved"] || false : false;
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.play") {

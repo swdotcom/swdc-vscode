@@ -5,22 +5,21 @@ import { showQuickPick } from "../MenuManager";
 import {
     getUserStatus,
     serverIsAvailable,
-    getSpotifyAccessToken
+    refetchSpotifyConnectStatusLazily
 } from "../DataController";
 import {
     getItem,
-    setItem,
     isEmptyObj,
     getMusicTimeFile,
     isLinux,
     logIt,
-    buildLoginUrl
+    buildLoginUrl,
+    launchWebUrl
 } from "../Util";
 import {
     softwareGet,
     softwarePut,
     spotifyApiGet,
-    hasTokenExpired,
     isResponseOk
 } from "../HttpClient";
 import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
@@ -32,39 +31,52 @@ const store: MusicStoreManager = MusicStoreManager.getInstance();
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 export class MusicControlManager {
-    getPlayer(): string {
-        const trackState = MusicPlayerManagerSingleton.getTrackState();
+    async getPlayer(): Promise<string> {
+        const trackState: TrackState = await MusicStateManagerSingleton.getState();
         if (trackState) {
             return trackState.type;
+        } else {
+            const webTrack: Track = await MusicStateManagerSingleton.getSpotifyWebCurrentTrack();
+            if (webTrack) {
+                return "spotify-web";
+            }
         }
         return null;
     }
 
     async next() {
-        const player = this.getPlayer();
+        const player = await this.getPlayer();
         if (player) {
             await music.next(player);
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
     async previous() {
-        const player = this.getPlayer();
+        const player = await this.getPlayer();
         if (player) {
             await music.previous(player);
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
     async play() {
-        const player = this.getPlayer();
+        const player = await this.getPlayer();
         if (player) {
-            await music.play(player);
+            if (player === "spotify-web") {
+                await MusicStateManagerSingleton.spotifyWebPlay();
+            } else {
+                await music.play(player);
+            }
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
     async pause() {
-        const player = this.getPlayer();
+        const player = await this.getPlayer();
         if (player) {
-            await music.pause(player);
+            if (player === "spotify-web") {
+                await MusicStateManagerSingleton.spotifyWebPause();
+            } else {
+                await music.pause(player);
+            }
             MusicPlayerManagerSingleton.updateButtons();
         }
     }
@@ -79,7 +91,6 @@ export class MusicControlManager {
             description: "",
             detail: "Launch your Spotify player",
             url: null,
-            uri: null,
             cb: launchSpotifyPlayer
         });
 
@@ -88,7 +99,6 @@ export class MusicControlManager {
             description: "",
             detail: "Launch your iTunes player",
             url: null,
-            uri: null,
             cb: launchItunesPlayer
         });
 
@@ -96,18 +106,18 @@ export class MusicControlManager {
     }
 
     async setLiked(liked: boolean) {
-        const trackState: TrackState = await MusicStateManagerSingleton.getState();
-        if (trackState && trackState.track && !isEmptyObj(trackState.track)) {
+        const track: Track = await MusicStateManagerSingleton.getCurrentTrack();
+        if (track) {
             // set it to liked
-            let trackId = trackState.track.id;
+            let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
                 // strip it down to just the last id part
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
-            const type = trackState.type;
+            const type = track.type;
             // use the name and artist as well since we have it
-            let trackName = encodeURIComponent(trackState.track.name);
-            let trackArtist = encodeURIComponent(trackState.track.artist);
+            let trackName = encodeURIComponent(track.name);
+            let trackArtist = encodeURIComponent(track.artist);
             const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
             const payload = { liked };
             const resp = await softwarePut(api, payload, getItem("jwt"));
@@ -156,7 +166,6 @@ export class MusicControlManager {
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
-            uri: null,
             cb: null
         });
 
@@ -165,7 +174,6 @@ export class MusicControlManager {
             description: "",
             detail: "View your latest music metrics right here in your editor",
             url: null,
-            uri: null,
             cb: displayMusicTimeMetricsDashboard
         });
 
@@ -175,7 +183,6 @@ export class MusicControlManager {
                 description: "",
                 detail: loginMsgDetail,
                 url: loginUrl,
-                uri: null,
                 cb: null
             });
         }
@@ -188,9 +195,8 @@ export class MusicControlManager {
                 description: "",
                 detail:
                     "To see your Spotify playlists in Music Time, please connect your account",
-                url: `${api_endpoint}/auth/spotify?integrate=spotify`,
-                uri: null,
-                cb: null
+                url: null,
+                cb: connectSpotify
             });
         }
 
@@ -199,7 +205,6 @@ export class MusicControlManager {
         //     description: "",
         //     detail: "Find a playlist",
         //     url: null,
-        //     uri: null,
         //     cb: buildPlaylists
         // });
 
@@ -217,6 +222,12 @@ export async function displayMusicTimeMetricsDashboard() {
             // done
         });
     });
+}
+
+export async function connectSpotify() {
+    const endpoint = `${api_endpoint}/auth/spotify?integrate=spotify`;
+    launchWebUrl(endpoint);
+    refetchSpotifyConnectStatusLazily(15);
 }
 
 export async function fetchMusicTimeMetricsDashboard() {
@@ -259,7 +270,10 @@ export async function buildPlaylists() {
     let accessToken = getItem("spotify_access_token");
     let playlistResponse = await spotifyApiGet(api, accessToken);
     // check if the token needs to be refreshed
-    playlistResponse = await checkSpotifyApiResponse(playlistResponse, api);
+    playlistResponse = await MusicStateManagerSingleton.checkSpotifyApiResponse(
+        playlistResponse,
+        api
+    );
 
     if (!isResponseOk(playlistResponse)) {
         return;
@@ -350,45 +364,6 @@ async function populatePlaylists(
                 playlist.tracks = tracks;
                 playlists.push(playlist);
             }
-        }
-    }
-}
-
-export async function getCurrentTrack() {
-    let api = "/v1/me/player/currently-playing";
-    let accessToken = getItem("spotify_access_token");
-    // /v1/me/player/currently-playing
-    let response = await spotifyApiGet(api, accessToken);
-    // check if the token needs to be refreshed
-    response = await checkSpotifyApiResponse(response, api);
-    if (isResponseOk(response)) {
-        //
-    }
-}
-
-export async function checkSpotifyApiResponse(response: any, api: string) {
-    if (hasTokenExpired(response)) {
-        await refreshToken();
-        const accessToken = getItem("spotify_access_token");
-        // call get playlists again
-        response = await spotifyApiGet(api, accessToken);
-    }
-    return response;
-}
-
-export async function refreshToken() {
-    let serverIsOnline = await serverIsAvailable();
-    const jwt = getItem("jwt");
-    // refresh the token then try again
-    const refreshResponse = await softwareGet(
-        "/auth/spotify/refreshToken",
-        jwt
-    );
-    if (isResponseOk(refreshResponse)) {
-        // get the user then get the playlists again
-        let accessToken = await getSpotifyAccessToken(serverIsOnline);
-        if (accessToken) {
-            setItem("spotify_access_token", accessToken);
         }
     }
 }

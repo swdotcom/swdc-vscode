@@ -182,19 +182,23 @@ export async function getSpotifyAccessToken(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let user = await getUser(serverIsOnline, jwt);
-        if (user && user.oauths) {
-            const oauthKeys = Object.keys(user.oauths);
-            const oauthArray = oauthKeys
-                .map(n => ({
-                    email: n,
-                    ...user.oauths[n]
-                }))
-                .filter(n => n.type === "spotify");
-            // there should only be one
-            if (oauthArray && oauthArray.length > 0) {
-                // use the 1st one
-                return oauthArray[0].oauth.spotify_access_token;
-            }
+        if (
+            user &&
+            user.oauths &&
+            user.oauths.Spotify &&
+            user.oauths.Spotify.spotify_access_token
+        ) {
+            /**
+             * Spotify:
+                email:"..."
+                login:"..."
+                name:"..."
+                permissions:Array(0) []
+                spotify_access_token:"BQDcTyejy1MGT..."
+                spotify_id:"citipzzers..."
+                spotify_refresh_token:"AQAEQ-kFK5c3I..."
+             */
+            return user.oauths.Spotify.spotify_access_token;
         }
     }
     return null;

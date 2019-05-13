@@ -55,11 +55,6 @@ export function showQuickPick(pickOptions) {
             let cb = item["cb"];
             if (url) {
                 launchWebUrl(url);
-                if (url.includes("?")) {
-                    refetchUserStatusLazily();
-                }
-            } else if (uri) {
-                displayCodeTimeMetricsDashboard();
             }
             if (cb) {
                 cb();
@@ -76,8 +71,6 @@ export async function showMenuOptions() {
     let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}
     let userStatus = await getUserStatus(serverIsOnline);
-    let webUrl = await buildWebDashboardUrl();
-    let loginUrl = await buildLoginUrl();
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -89,7 +82,6 @@ export async function showMenuOptions() {
         description: "",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
-        uri: null,
         cb: displayCodeTimeMetricsDashboard
     });
 
@@ -100,7 +92,6 @@ export async function showMenuOptions() {
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
-            uri: null,
             cb: null
         });
     }
@@ -109,25 +100,22 @@ export async function showMenuOptions() {
     if (!serverIsOnline) {
         loginMsgDetail =
             "Our service is temporarily unavailable. Please try again later.";
-        loginUrl = null;
     }
     if (!userStatus.loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             description: "",
             detail: loginMsgDetail,
-            url: loginUrl,
-            uri: null,
-            cb: null
+            url: null,
+            cb: launchLogin
         });
     } else {
         kpmMenuOptions.items.push({
             label: "Web dashboard",
             description: "",
             detail: "See rich data visualizations in the web app",
-            url: webUrl + "/login",
-            uri: null,
-            cb: null
+            url: null,
+            cb: launchWebDashboardView
         });
     }
     kpmMenuOptions.items.push({
@@ -135,11 +123,21 @@ export async function showMenuOptions() {
         description: "",
         detail: "Toggle the Code Time status bar metrics",
         url: null,
-        uri: null,
         cb: toggleStatusBar
     });
 
     showQuickPick(kpmMenuOptions);
+}
+
+export async function launchWebDashboardView() {
+    let webUrl = await buildWebDashboardUrl();
+    launchWebUrl(`${webUrl}/login`);
+}
+
+export async function launchLogin() {
+    let loginUrl = await buildLoginUrl();
+    launchWebUrl(loginUrl);
+    refetchUserStatusLazily();
 }
 
 export async function fetchCodeTimeMetricsDashboard() {
