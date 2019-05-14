@@ -11,39 +11,25 @@ const CODE_TIME_DESC =
     "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.";
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
-const CODE_TIME_VERSION = "0.16.1";
-const MUSIC_TIME_VERSION = "0.1.5";
+const CODE_TIME_VERSION = "0.16.3";
+const MUSIC_TIME_VERSION = "0.1.6";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
 // copy the scripts data to dist/scripts
 async function deploy() {
     const args = process.argv;
-    let key = null;
-    if (args && args.length > 2) {
-        const remainingArgs = args.slice(2);
-        // we only care about name for now
-        for (let i = 0; i < remainingArgs.length; i++) {
-            let argParts = remainingArgs[i].split("=");
-            if (!argParts || argParts.length !== 2) {
-                // break out and show usage
-                console.error(
-                    "Usage: node deployer name={swdc-vscode|music-time}"
-                );
-                process.exit(1);
-            } else {
-                if (argParts[0].indexOf("name") !== -1) {
-                    key = argParts[1];
-                    break;
-                }
-            }
-        }
-        if (!key) {
-            console.error("Usage: node deployer name=extension-name");
-            process.exit(1);
-        }
+    let packageIt = false;
+    if (!args || args.length <= 2) {
+        console.error("Usage: node deployer <code-time|music-time> [package]");
+        process.exit(1);
     }
-    let pluginName = KEY_MAP[key];
+    const pluginKey = process.argv[2];
+    if (process.argv[3]) {
+        packageIt = process.argv[3] === "package";
+    }
+
+    let pluginName = KEY_MAP[pluginKey];
 
     if (!pluginName) {
         console.error(
@@ -150,12 +136,17 @@ async function deploy() {
 
     await runCommand(
         "mkdir out/lib",
-        "Creating the dist/lib directory if it doesn't exist"
+        "Creating the dist/lib directory if it doesn't exist",
+        true
     );
     await runCommand(
         "cp lib/extensioninfo.json out/lib/.",
         "Copy the extensioninfo.json to the out/lib directory"
     );
+
+    if (packageIt) {
+        await runCommand("vsce package", "package the plugin");
+    }
 }
 
 function getExtensionFile() {
@@ -196,43 +187,25 @@ function updateJsonContent(packageJson, filename) {
     }
 }
 
-async function runCommand(
-    cmd,
-    execMsg,
-    goToDirAfterExec = null,
-    allowError = true
-) {
-    var execResult = await wrapExecPromise(cmd);
-    if (goToDirAfterExec && goToDirAfterExec.length > 0) {
-        cd(goToDirAfterExec);
-    }
+async function runCommand(cmd, execMsg, ignoreError = false) {
+    debug("Executing task to " + execMsg + ".");
+    let execResult = await wrapExecPromise(cmd);
 
-    allowError =
-        allowError !== undefined && allowError !== null ? allowError : false;
-
-    if (execResult && execResult.code !== 0 && !allowError) {
+    if (execResult && execResult.status === "failed" && !ignoreError) {
         /* error happened */
-        debug(
-            "Failed to " +
-                execMsg +
-                ", code: " +
-                execResult.code +
-                ", reason: " +
-                execResult.stderr
-        );
+        debug("Failed to " + execMsg + ", reason: " + execResult.message);
         process.exit(1);
-    } else {
-        debug("Completed task to " + execMsg + ".");
     }
 }
 
 async function wrapExecPromise(cmd, dir) {
     let result = null;
     try {
+        let dir = __dirname;
         let opts = dir !== undefined && dir !== null ? { cwd: dir } : {};
         result = await execPromise(cmd, opts);
     } catch (e) {
-        result = null;
+        result = { status: "failed", message: e.message };
     }
     return result;
 }
@@ -240,12 +213,15 @@ async function wrapExecPromise(cmd, dir) {
 function execPromise(command, opts) {
     return new Promise(function(resolve, reject) {
         exec(command, opts, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
+            if (stderr) {
+                resolve({ status: "failed", message: stderr.trim() });
                 return;
+            } else if (error) {
+                resolve({ status: "failed", message: error.message });
+                return;
+            } else {
+                resolve({ status: "success", message: stdout.trim() });
             }
-
-            resolve(stdout.trim());
         });
     });
 }
