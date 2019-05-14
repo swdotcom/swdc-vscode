@@ -524,9 +524,12 @@ export class MusicStateManagerSingleton {
 
         const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
 
-        if (nowSec - this.lastWebCheck > 15) {
+        let accessToken = getItem("spotify_access_token");
+        if (nowSec - this.lastWebCheck > 15 && accessToken) {
             this.webPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
             this.lastWebCheck = nowSec;
+        } else if (!accessToken) {
+            this.webPlayerRunning = false;
         }
 
         const hasRunningPlayer = this.webPlayerRunning || desktopPlayerRunning;

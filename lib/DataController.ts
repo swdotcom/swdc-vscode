@@ -473,6 +473,11 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
+    } else {
+        // check if they have a connected spotify auth
+        setTimeout(() => {
+            getSpotifyAccessToken(serverIsOnline);
+        }, 5000);
     }
 }
 
