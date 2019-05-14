@@ -24,11 +24,15 @@ async function deploy() {
         console.error("Usage: node deployer <code-time|music-time> [package]");
         process.exit(1);
     }
-    const pluginKey = process.argv[2];
+    let pluginKey = process.argv[2];
     if (process.argv[3]) {
         packageIt = process.argv[3] === "package";
     }
-
+    if (!KEY_MAP[pluginKey]) {
+        console.error("No matching plugin found");
+        console.error("Usage: node deployer <code-time|music-time> [package]");
+        process.exit(1);
+    }
     let pluginName = KEY_MAP[pluginKey];
 
     if (!pluginName) {
@@ -39,7 +43,7 @@ async function deploy() {
         process.exit(1);
     }
 
-    debug(`Building plugin: ${pluginName}`);
+    debug(`------------- Building plugin: ${pluginName}`);
 
     let extInfoJson = getJsonFromFile(getExtensionFile());
     extInfoJson["name"] = pluginName;
