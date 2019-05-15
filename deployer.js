@@ -138,19 +138,26 @@ async function deploy() {
 
     updateJsonContent(packageJson, getPackageFile());
 
+    const copyCmd = !isWindows() ? "cp" : "copy";
+    const pathSep = !isWindows() ? "/" : "\\";
     await runCommand(
-        "mkdir out/lib",
+        `mkdir out${pathSep}lib`,
         "Creating the dist/lib directory if it doesn't exist",
         true
     );
+
     await runCommand(
-        "cp lib/extensioninfo.json out/lib/.",
+        `${copyCmd} lib${pathSep}extensioninfo.json out${pathSep}lib${pathSep}.`,
         "Copy the extensioninfo.json to the out/lib directory"
     );
 
     if (packageIt) {
         await runCommand("vsce package", "package the plugin");
     }
+}
+
+function isWindows() {
+    return process.platform.indexOf("win32") !== -1;
 }
 
 function getExtensionFile() {

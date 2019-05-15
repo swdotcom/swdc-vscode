@@ -70,6 +70,19 @@ export class MusicPlayerManagerSingleton {
     public static async updateButtons() {
         const playerRunning = await MusicStateManagerSingleton.isPlayerRunning();
         const spotifyWebState: PlayerContext = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
+        /**
+         * it can have
+         * spotifyWebState.device:
+         * {
+         * id:"92301de52072a44031e6823cfdd25bc05ed1e84e"
+            is_active:true
+            is_private_session:false
+            is_restricted:false
+            name:"Web Player (Chrome)"
+            type:"Computer"
+            volume_percent:8
+         * }
+         */
         if (!playerRunning) {
             this.showLaunchPlayerControls();
             return;

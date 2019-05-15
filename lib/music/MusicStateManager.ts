@@ -400,6 +400,7 @@ export class MusicStateManagerSingleton {
     static async spotifyWebPlay() {
         const accessToken = getItem("spotify_access_token");
         // const payload = { uri: e.selection[0].uri };
+        // i.e. { device_id: "92301de52072a44031e6823cfdd25bc05ed1e84e" }
         spotifyApiPut("/v1/me/player/play", {}, accessToken);
     }
 
