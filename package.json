@@ -1,9 +1,9 @@
 {
-    "name": "music-time",
-    "displayName": "Music Time",
-    "version": "0.1.6",
+    "name": "swdc-vscode",
+    "displayName": "Code Time",
+    "version": "0.16.3",
     "publisher": "softwaredotcom",
-    "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
+    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
         "name": "Software.com"
     },
@@ -90,42 +90,6 @@
                 "command": "extension.codeTimeStatusToggle",
                 "title": "Show/hide status bar metrics",
                 "category": "Code Time"
-            },
-            {
-                "command": "musictime.next",
-                "title": "Play Next Song"
-            },
-            {
-                "command": "musictime.previous",
-                "title": "Play Previous Song"
-            },
-            {
-                "command": "musictime.play",
-                "title": "Play"
-            },
-            {
-                "command": "musictime.pause",
-                "title": "Pause"
-            },
-            {
-                "command": "musictime.like",
-                "title": "Like Song"
-            },
-            {
-                "command": "musictime.unlike",
-                "title": "Unlike Song"
-            },
-            {
-                "command": "musictime.menu",
-                "title": "Click to see more from Music Time"
-            },
-            {
-                "command": "musictime.connectSpotify",
-                "title": "Connect your spotify account"
-            },
-            {
-                "command": "musictime.launchplayer",
-                "title": "Launch your music player"
             }
         ],
         "menus": {
