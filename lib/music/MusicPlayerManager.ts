@@ -2,7 +2,6 @@ import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime } from "../Util";
 import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
 import { Track, PlayerContext } from "./MusicStoreManager";
-import * as music from "cody-music";
 
 export interface Button {
     /**
@@ -35,7 +34,6 @@ export class MusicPlayerManagerSingleton {
         if (!isMusicTime()) {
             return;
         }
-
         this.createButton(
             "$(chevron-left)",
             "Previous",
@@ -71,8 +69,22 @@ export class MusicPlayerManagerSingleton {
 
     public static async updateButtons() {
         const playerRunning = await MusicStateManagerSingleton.isPlayerRunning();
+        const spotifyWebState: PlayerContext = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
         if (!playerRunning) {
             this.showLaunchPlayerControls();
+            return;
+        }
+
+        // desktop returned a null track but we've determined there is a player running somewhere.
+        // default by checking the spotify web player state
+        if (spotifyWebState) {
+            if (spotifyWebState.is_playing) {
+                // show the pause
+                this.showPauseControls(spotifyWebState.item);
+            } else {
+                // show the play
+                this.showPlayControls(spotifyWebState.item);
+            }
             return;
         }
 
@@ -91,20 +103,6 @@ export class MusicPlayerManagerSingleton {
                 }
                 return;
             }
-        }
-
-        // desktop returned a null track but we've determined there is a player running somewhere.
-        // default by checking the spotify web player state
-        const spotifyWebState: PlayerContext = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
-        if (spotifyWebState) {
-            if (spotifyWebState.is_playing) {
-                // show the pause
-                this.showPauseControls(spotifyWebState.item);
-            } else {
-                // show the play
-                this.showPlayControls(spotifyWebState.item);
-            }
-            return;
         }
 
         // no other choice, show the launch player

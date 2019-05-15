@@ -13,7 +13,8 @@ import {
     isLinux,
     logIt,
     buildLoginUrl,
-    launchWebUrl
+    launchWebUrl,
+    isMac
 } from "../Util";
 import {
     softwareGet,
@@ -96,20 +97,30 @@ export class MusicControlManager {
             items: []
         };
 
-        menuOptions.items.push({
-            label: "Launch Spotify",
-            description: "",
-            detail: "Launch your Spotify player",
-            url: null,
-            cb: launchSpotifyPlayer
-        });
+        if (isMac()) {
+            menuOptions.items.push({
+                label: "Launch Spotify",
+                description: "",
+                detail: "Launch your Spotify player",
+                url: null,
+                cb: launchSpotifyPlayer
+            });
+
+            menuOptions.items.push({
+                label: "Launch iTunes",
+                description: "",
+                detail: "Launch your iTunes player",
+                url: null,
+                cb: launchItunesPlayer
+            });
+        }
 
         menuOptions.items.push({
-            label: "Launch iTunes",
+            label: "Launch Spotify Web",
             description: "",
-            detail: "Launch your iTunes player",
+            detail: "Launch your Spotify web player",
             url: null,
-            cb: launchItunesPlayer
+            cb: launchSpotifyWebPlayer
         });
 
         showQuickPick(menuOptions);
@@ -258,13 +269,17 @@ export async function fetchMusicTimeMetricsDashboard() {
     });
 }
 
-export async function launchSpotifyPlayer() {
+export function launchSpotifyWebPlayer() {
+    launchWebUrl("https://open.spotify.com/collection/playlists");
+}
+
+export function launchSpotifyPlayer() {
     music.startSpotifyIfNotRunning().then(result => {
         MusicPlayerManagerSingleton.stateCheckHandler();
     });
 }
 
-export async function launchItunesPlayer() {
+export function launchItunesPlayer() {
     music.startItunesIfNotRunning().then(result => {
         MusicPlayerManagerSingleton.stateCheckHandler();
     });

@@ -22,7 +22,7 @@ import {
     spotifyApiPut,
     spotifyApiPost
 } from "../HttpClient";
-import { Track, PlayerContext } from "./MusicStoreManager";
+import { Track, PlayerContext, PlayerDevice } from "./MusicStoreManager";
 
 export interface TrackState {
     /**
@@ -419,9 +419,35 @@ export class MusicStateManagerSingleton {
         spotifyApiPost("/v1/me/player/next", {}, accessToken);
     }
 
+    /**
+     * returns...
+     * {
+        "devices" : [ {
+            "id" : "5fbb3ba6aa454b5534c4ba43a8c7e8e45a63ad0e",
+            "is_active" : false,
+            "is_private_session": true,
+            "is_restricted" : false,
+            "name" : "My fridge",
+            "type" : "Computer",
+            "volume_percent" : 100
+        } ]
+        }
+     */
+    static async spotifyWebUsersDevice() {
+        let devices: PlayerDevice[] = [];
+        const accessToken = getItem("spotify_access_token");
+        let api = "/v1/me/player/devices";
+        let response = await spotifyApiGet(api, accessToken);
+        // check if the token needs to be refreshed
+        response = await this.checkSpotifyApiResponse(response, api);
+        if (response && response.data && response.data.devices) {
+            devices = response.data.devices;
+        }
+        return devices;
+    }
+
     static async checkSpotifyApiResponse(response: any, api: string) {
         if (hasTokenExpired(response)) {
-            let currAccessToken = getItem("spotify_access_token");
             await this.refreshToken();
             const accessToken = getItem("spotify_access_token");
             // call get playlists again
