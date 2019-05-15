@@ -90,6 +90,11 @@
                 "command": "extension.codeTimeStatusToggle",
                 "title": "Show/hide status bar metrics",
                 "category": "Code Time"
+            },
+            {
+                "command": "extension.codeTimeCustomDashboard",
+                "title": "Generate a custom dashboard",
+                "category": "Code Time"
             }
         ],
         "menus": {
@@ -111,6 +116,9 @@
                 },
                 {
                     "command": "extension.codeTimeStatusToggle"
+                },
+                {
+                    "command": "extension.codeTimeCustomDashboard"
                 }
             ]
         }

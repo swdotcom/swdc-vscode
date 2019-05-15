@@ -3,11 +3,14 @@ import {
     launchWebUrl,
     getItem,
     getDashboardFile,
+    getCustomDashboardFile,
     isLinux,
     toggleStatusBar,
     buildLoginUrl,
     logIt,
-    nowInSecs
+    nowInSecs,
+    getUserDateInput,
+    getOffsetSecends
 } from "./Util";
 import { softwareGet } from "./HttpClient";
 import {
@@ -85,6 +88,16 @@ export async function showMenuOptions() {
         cb: displayCodeTimeMetricsDashboard
     });
 
+    kpmMenuOptions.items.push({
+        label: "Generate a custom dashboard",
+        description: "",
+        detail: "Generate a report with a custom start and end",
+        url: null,
+        cb: () => {
+            displayCodeTimeMetricsDashboard(true);
+        }
+    });
+
     if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
             label: "Software Top 40",
@@ -140,47 +153,79 @@ export async function launchLogin() {
     refetchUserStatusLazily();
 }
 
-export async function fetchCodeTimeMetricsDashboard() {
+export async function fetchCodeTimeMetricsDashboard(start = null, end = null) {
     let filePath = getDashboardFile();
+    let content;
 
-    let nowSec = nowInSecs();
-    let diff = nowSec - lastDashboardFetchTime;
-    if (lastDashboardFetchTime === 0 || diff > 60) {
-        lastDashboardFetchTime = nowInSecs();
-
-        logIt("retrieving dashboard metrics");
-
-        let showMusicMetrics = workspace
-            .getConfiguration()
-            .get("showMusicMetrics");
-        let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-        let showWeeklyRanking = workspace
-            .getConfiguration()
-            .get("showWeeklyRanking");
-
-        const dashboardSummary = await softwareGet(
-            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
+    if (start && end) {
+        filePath = getCustomDashboardFile();
+        logIt("retrieving custom dashboard metrics");
+        const customDashboardSummary = await softwareGet(
+            `/dashboard?start=${start}&end=${end}`,
             getItem("jwt")
         );
-        // get the content
-        let content =
-            dashboardSummary && dashboardSummary.data
-                ? dashboardSummary.data
-                : NO_DATA;
 
-        fs.writeFileSync(filePath, content, err => {
-            if (err) {
-                logIt(
-                    `Error writing to the Software session file: ${err.message}`
-                );
-            }
-        });
+        content =
+            customDashboardSummary && customDashboardSummary.data
+                ? customDashboardSummary.data
+                : NO_DATA;
+    } else {
+        let nowSec = nowInSecs();
+        let diff = nowSec - lastDashboardFetchTime;
+        if (lastDashboardFetchTime === 0 || diff > 60) {
+            lastDashboardFetchTime = nowInSecs();
+
+            logIt("retrieving dashboard metrics");
+
+            let showMusicMetrics = workspace
+                .getConfiguration()
+                .get("showMusicMetrics");
+            let showGitMetrics = workspace
+                .getConfiguration()
+                .get("showGitMetrics");
+            let showWeeklyRanking = workspace
+                .getConfiguration()
+                .get("showWeeklyRanking");
+
+            const dashboardSummary = await softwareGet(
+                `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
+                getItem("jwt")
+            );
+
+            content =
+                dashboardSummary && dashboardSummary.data
+                    ? dashboardSummary.data
+                    : NO_DATA;
+        }
     }
+
+    fs.writeFileSync(filePath, content, err => {
+        if (err) {
+            logIt(`Error writing to the Software session file: ${err.message}`);
+        }
+    });
 }
 
-export async function displayCodeTimeMetricsDashboard() {
+export async function displayCodeTimeMetricsDashboard(isCustom = false) {
     let filePath = getDashboardFile();
-    await fetchCodeTimeMetricsDashboard();
+
+    if (!isCustom) {
+        await fetchCodeTimeMetricsDashboard();
+    } else {
+        filePath = getCustomDashboardFile();
+
+        const dateRange = await getUserDateInput();
+
+        if (dateRange) {
+            const dates = dateRange.split(",");
+            const startDate = dates[0].trim();
+            const endDate = dates[1].trim();
+            const offsetSeconds = getOffsetSecends();
+            const start = new Date(startDate).getTime() / 1000 - offsetSeconds;
+            const end = new Date(endDate).getTime() / 1000 - offsetSeconds;
+            await fetchCodeTimeMetricsDashboard(start, end);
+        }
+    }
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open

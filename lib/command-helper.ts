@@ -8,6 +8,7 @@ import {
 } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
+    //displayCustomCodeTimeMetricsDashboard,
     showMenuOptions
 } from "./MenuManager";
 import {
@@ -59,6 +60,14 @@ export function createCommands(): {
             }
         );
         cmds.push(codeTimeMetricsCmd);
+
+        const customCodeTimeMetricsCmd = commands.registerCommand(
+            "extension.codeTimeCustomDashboard",
+            () => {
+                displayCodeTimeMetricsDashboard(true);
+            }
+        );
+        cmds.push(customCodeTimeMetricsCmd);
 
         const paletteMenuCmd = commands.registerCommand(
             "extension.softwarePaletteMenu",

@@ -354,6 +354,16 @@ export function getDashboardFile() {
     return file;
 }
 
+export function getCustomDashboardFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\CustomDashboard.txt";
+    } else {
+        file += "/CustomDashboard.txt";
+    }
+    return file;
+}
+
 export function getMusicTimeFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
@@ -654,4 +664,48 @@ export function showInformationMessage(message: string) {
 
 export function showWarningMessage(message: string) {
     return window.showWarningMessage(`${message}`);
+}
+
+export function getUserDateInput() {
+    // create default range
+    const date = new Date();
+    const end = date.toLocaleDateString("en-US");
+    const last = new Date(date.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const start = last.toLocaleDateString("en-US");
+
+    const options = {
+        prompt: 'Enter a start and end date in the format, "MM/DD/YYYY"',
+        value: `${start}, ${end}`,
+        validateInput: validateDateInput
+    };
+
+    return window.showInputBox(options);
+}
+
+export function validateDateInput(text: string) {
+    let validationMsg = "";
+
+    // first check if there are two dates separated by a comma
+    if (text.indexOf(",") > -1) {
+        const dates = text.split(",");
+        const startDate = dates[0].trim();
+        const endDate = dates[1].trim();
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+
+        // check for valid dates, then check that end > start
+        // getTime returns null or negative for invalid dates
+        if (!start || start < 0) {
+            validationMsg = 'Please enter a valid start date: "MM/DD/YYYY"';
+        } else if (!end || end < 0) {
+            validationMsg = 'Please enter a valid end date: "MM/DD/YYYY"';
+        } else if (start > end) {
+            validationMsg = "Start date must be before end date";
+        } else {
+            // valid date range
+        }
+    } else {
+        validationMsg = "The start and end date must be separated by a comma.";
+    }
+    return validationMsg;
 }
