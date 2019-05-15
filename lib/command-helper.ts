@@ -8,7 +8,6 @@ import {
 } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
-    //displayCustomCodeTimeMetricsDashboard,
     showMenuOptions
 } from "./MenuManager";
 import {

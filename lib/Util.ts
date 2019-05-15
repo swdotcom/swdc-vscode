@@ -684,12 +684,11 @@ export function getUserDateInput() {
 
 export function validateDateInput(text: string) {
     let validationMsg = "";
+    const dateParts = getDateParts(text);
 
-    // first check if there are two dates separated by a comma
-    if (text.indexOf(",") > -1) {
-        const dates = text.split(",");
-        const startDate = dates[0].trim();
-        const endDate = dates[1].trim();
+    if (dateParts) {
+        const startDate = dateParts[0].trim();
+        const endDate = dateParts[1].trim();
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
 
@@ -701,11 +700,21 @@ export function validateDateInput(text: string) {
             validationMsg = 'Please enter a valid end date: "MM/DD/YYYY"';
         } else if (start > end) {
             validationMsg = "Start date must be before end date";
-        } else {
-            // valid date range
         }
     } else {
-        validationMsg = "The start and end date must be separated by a comma.";
+        validationMsg =
+            "The start and end date must be separated by a comma or hyphen.";
     }
     return validationMsg;
+}
+
+export function getDateParts(text: string) {
+    let dateParts = null;
+    // check if there are two dates separated by a comma or hyphen
+    if (text.includes(",")) {
+        dateParts = text.split(",");
+    } else if (text.includes("-")) {
+        dateParts = text.split("-");
+    }
+    return dateParts;
 }

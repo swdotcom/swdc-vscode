@@ -10,6 +10,7 @@ import {
     logIt,
     nowInSecs,
     getUserDateInput,
+    getDateParts,
     getOffsetSecends
 } from "./Util";
 import { softwareGet } from "./HttpClient";
@@ -153,51 +154,38 @@ export async function launchLogin() {
     refetchUserStatusLazily();
 }
 
-export async function fetchCodeTimeMetricsDashboard(start = null, end = null) {
+export async function fetchCodeTimeMetricsDashboard(start = "", end = "") {
     let filePath = getDashboardFile();
     let content;
 
     if (start && end) {
         filePath = getCustomDashboardFile();
         logIt("retrieving custom dashboard metrics");
-        const customDashboardSummary = await softwareGet(
-            `/dashboard?start=${start}&end=${end}`,
-            getItem("jwt")
-        );
-
-        content =
-            customDashboardSummary && customDashboardSummary.data
-                ? customDashboardSummary.data
-                : NO_DATA;
     } else {
-        let nowSec = nowInSecs();
-        let diff = nowSec - lastDashboardFetchTime;
-        if (lastDashboardFetchTime === 0 || diff > 60) {
-            lastDashboardFetchTime = nowInSecs();
-
-            logIt("retrieving dashboard metrics");
-
-            let showMusicMetrics = workspace
-                .getConfiguration()
-                .get("showMusicMetrics");
-            let showGitMetrics = workspace
-                .getConfiguration()
-                .get("showGitMetrics");
-            let showWeeklyRanking = workspace
-                .getConfiguration()
-                .get("showWeeklyRanking");
-
-            const dashboardSummary = await softwareGet(
-                `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
-                getItem("jwt")
-            );
-
-            content =
-                dashboardSummary && dashboardSummary.data
-                    ? dashboardSummary.data
-                    : NO_DATA;
-        }
+        logIt("retrieving dashboard metrics");
     }
+
+    let nowSec = nowInSecs();
+    let diff = nowSec - lastDashboardFetchTime;
+    if (lastDashboardFetchTime === 0 || diff > 60) {
+        lastDashboardFetchTime = nowInSecs();
+    }
+
+    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
+    let showWeeklyRanking = workspace
+        .getConfiguration()
+        .get("showWeeklyRanking");
+
+    const dashboardSummary = await softwareGet(
+        `/dashboard?start=${start}&end=${end}&showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
+        getItem("jwt")
+    );
+
+    content =
+        dashboardSummary && dashboardSummary.data
+            ? dashboardSummary.data
+            : NO_DATA;
 
     fs.writeFileSync(filePath, content, err => {
         if (err) {
@@ -213,17 +201,18 @@ export async function displayCodeTimeMetricsDashboard(isCustom = false) {
         await fetchCodeTimeMetricsDashboard();
     } else {
         filePath = getCustomDashboardFile();
-
         const dateRange = await getUserDateInput();
-
-        if (dateRange) {
-            const dates = dateRange.split(",");
-            const startDate = dates[0].trim();
-            const endDate = dates[1].trim();
+        const dateParts = getDateParts(dateRange);
+        if (dateParts) {
+            const startDate = dateParts[0].trim();
+            const endDate = dateParts[1].trim();
             const offsetSeconds = getOffsetSecends();
             const start = new Date(startDate).getTime() / 1000 - offsetSeconds;
             const end = new Date(endDate).getTime() / 1000 - offsetSeconds;
-            await fetchCodeTimeMetricsDashboard(start, end);
+            await fetchCodeTimeMetricsDashboard(
+                start.toString(),
+                end.toString()
+            );
         }
     }
 
