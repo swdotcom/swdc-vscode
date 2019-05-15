@@ -125,14 +125,6 @@ export function createCommands(): {
         });
         cmds.push(unlikeCmd);
 
-        const launchPlayerCmd = commands.registerCommand(
-            "musictime.launchplayer",
-            () => {
-                controller.launchPlayerMenu();
-            }
-        );
-        cmds.push(launchPlayerCmd);
-
         const menuCmd = commands.registerCommand("musictime.menu", () => {
             controller.showMenu();
         });

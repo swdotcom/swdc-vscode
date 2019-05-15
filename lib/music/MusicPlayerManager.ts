@@ -52,12 +52,6 @@ export class MusicPlayerManagerSingleton {
         this.createButton("♥", "Unlike", "musictime.unlike", 10);
         this.createButton(
             "🎧",
-            "Click to launch your music player",
-            "musictime.launchplayer",
-            10
-        );
-        this.createButton(
-            "$(grabber)",
             "Click to see more from Music Time",
             "musictime.menu",
             10
@@ -68,8 +62,10 @@ export class MusicPlayerManagerSingleton {
     }
 
     public static async updateButtons() {
-        const playerRunning = await MusicStateManagerSingleton.isPlayerRunning();
-        const spotifyWebState: PlayerContext = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
+        const spotifyWebRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+        const itunesDesktopRunning = await MusicStateManagerSingleton.isItunesDesktopRunning();
+        const spotifyDesktopRunning = await MusicStateManagerSingleton.isSpotifyDesktopRunning();
+        const spotifyDevices = await MusicStateManagerSingleton.spotifyWebUsersDevices();
         /**
          * it can have
          * spotifyWebState.device:
@@ -83,14 +79,19 @@ export class MusicPlayerManagerSingleton {
             volume_percent:8
          * }
          */
-        if (!playerRunning) {
+        if (
+            !spotifyWebRunning &&
+            !itunesDesktopRunning &&
+            !spotifyDesktopRunning
+        ) {
             this.showLaunchPlayerControls();
             return;
         }
 
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
-        if (spotifyWebState) {
+        if (spotifyWebRunning) {
+            const spotifyWebState = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
             if (spotifyWebState.is_playing) {
                 // show the pause
                 this.showPauseControls(spotifyWebState.item);
@@ -102,8 +103,7 @@ export class MusicPlayerManagerSingleton {
         }
 
         // we have a running player (desktop or web). what is the state?
-        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
-        if (desktopPlayerRunning) {
+        if (itunesDesktopRunning || spotifyDesktopRunning) {
             // get the desktop player track state
             const trackState: TrackState = await MusicStateManagerSingleton.getState();
             if (trackState && trackState.track) {
@@ -160,10 +160,7 @@ export class MusicPlayerManagerSingleton {
         // hide all except for the launch player button
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
-            if (
-                btnCmd === "musictime.launchplayer" ||
-                btnCmd === "musictime.menu"
-            ) {
+            if (btnCmd === "musictime.menu") {
                 button.statusBarItem.show();
             } else {
                 button.statusBarItem.hide();
@@ -193,8 +190,6 @@ export class MusicPlayerManagerSingleton {
                 } else {
                     button.statusBarItem.hide();
                 }
-            } else if (btnCmd === "musictime.launchplayer") {
-                button.statusBarItem.hide();
             } else {
                 if (songInfo && btnCmd === "musictime.play") {
                     // show the song info over the play button
@@ -228,8 +223,6 @@ export class MusicPlayerManagerSingleton {
                 } else {
                     button.statusBarItem.hide();
                 }
-            } else if (btnCmd === "musictime.launchplayer") {
-                button.statusBarItem.hide();
             } else {
                 if (btnCmd === "musictime.pause") {
                     button.statusBarItem.tooltip = `${

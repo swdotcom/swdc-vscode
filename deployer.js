@@ -130,10 +130,6 @@ async function deploy() {
             command: "musictime.connectSpotify",
             title: "Connect your spotify account"
         });
-        packageJson.contributes["commands"].push({
-            command: "musictime.launchplayer",
-            title: "Launch your music player"
-        });
     }
 
     updateJsonContent(packageJson, getPackageFile());

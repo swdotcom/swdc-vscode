@@ -92,40 +92,6 @@ export class MusicControlManager {
         }
     }
 
-    launchPlayerMenu() {
-        let menuOptions = {
-            items: []
-        };
-
-        if (isMac()) {
-            menuOptions.items.push({
-                label: "Launch Spotify",
-                description: "",
-                detail: "Launch your Spotify player",
-                url: null,
-                cb: launchSpotifyPlayer
-            });
-
-            menuOptions.items.push({
-                label: "Launch iTunes",
-                description: "",
-                detail: "Launch your iTunes player",
-                url: null,
-                cb: launchItunesPlayer
-            });
-        }
-
-        menuOptions.items.push({
-            label: "Launch Spotify Web",
-            description: "",
-            detail: "Launch your Spotify web player",
-            url: null,
-            cb: launchSpotifyWebPlayer
-        });
-
-        showQuickPick(menuOptions);
-    }
-
     async setLiked(liked: boolean) {
         const track: Track = await MusicStateManagerSingleton.getCurrentTrack();
         if (track) {
@@ -228,6 +194,42 @@ export class MusicControlManager {
         //     url: null,
         //     cb: buildPlaylists
         // });
+
+        const itunesDesktopPlayerRunning = await MusicStateManagerSingleton.isItunesDesktopRunning();
+        const spotifyDesktopPlayerRunning = await MusicStateManagerSingleton.isSpotifyDesktopRunning();
+        const spotifyWebPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+
+        if (
+            !itunesDesktopPlayerRunning &&
+            !spotifyDesktopPlayerRunning &&
+            !spotifyWebPlayerRunning
+        ) {
+            if (isMac()) {
+                menuOptions.items.push({
+                    label: "Launch Spotify Desktop",
+                    description: "",
+                    detail: "Launch your Spotify desktop player",
+                    url: null,
+                    cb: launchSpotifyPlayer
+                });
+
+                menuOptions.items.push({
+                    label: "Launch iTunes Desktop",
+                    description: "",
+                    detail: "Launch your iTunes desktop player",
+                    url: null,
+                    cb: launchItunesPlayer
+                });
+            }
+
+            menuOptions.items.push({
+                label: "Launch Spotify Web",
+                description: "",
+                detail: "Launch your Spotify web player",
+                url: null,
+                cb: launchSpotifyWebPlayer
+            });
+        }
 
         showQuickPick(menuOptions);
     }

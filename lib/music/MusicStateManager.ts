@@ -46,7 +46,7 @@ export class MusicStateManagerSingleton {
     private static currentTrack: Track = null;
     private static refreshingToken: boolean = false;
     private static lastWebCheck: number = 0;
-    private static webPlayerRunning: boolean = false;
+    private static spotifyDevices: PlayerDevice[] = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -368,9 +368,13 @@ export class MusicStateManagerSingleton {
     }
 
     static async isSpotifyWebRunning(): Promise<boolean> {
-        const track: Track = await this.getSpotifyWebCurrentTrack();
-        if (track) {
-            return true;
+        let accessToken = getItem("spotify_access_token");
+        if (this.pastWebCheckThreshold() && accessToken) {
+            this.lastWebCheck = nowInSecs();
+            this.spotifyDevices = await MusicStateManagerSingleton.spotifyWebUsersDevices();
+            if (this.spotifyDevices.length > 0) {
+                return true;
+            }
         }
         return false;
     }
@@ -434,7 +438,7 @@ export class MusicStateManagerSingleton {
         } ]
         }
      */
-    static async spotifyWebUsersDevice() {
+    static async spotifyWebUsersDevices() {
         let devices: PlayerDevice[] = [];
         const accessToken = getItem("spotify_access_token");
         let api = "/v1/me/player/devices";
@@ -532,34 +536,30 @@ export class MusicStateManagerSingleton {
         return trackInfo;
     }
 
-    public static async isDesktopPlayerRunning() {
-        let spotifyRunning = false;
-        let itunesRunning = false;
-        if (isWindows()) {
-            // supports only spotify for now
-            spotifyRunning = await MusicStateManagerSingleton.isWindowsSpotifyRunning();
+    public static async isSpotifyDesktopRunning() {
+        if (isMac()) {
+            return await music.isRunning("Spotify");
+        } else if (isWindows()) {
+            return await MusicStateManagerSingleton.isWindowsSpotifyRunning();
         } else {
-            spotifyRunning = await music.isRunning("Spotify");
-            itunesRunning = await music.isRunning("iTunes");
+            // currently do not support linux desktop for spotify
+            return false;
         }
-
-        return spotifyRunning || itunesRunning;
     }
 
-    public static async isPlayerRunning() {
-        const nowSec = nowInSecs();
-
-        const desktopPlayerRunning = await MusicStateManagerSingleton.isDesktopPlayerRunning();
-
-        let accessToken = getItem("spotify_access_token");
-        if (nowSec - this.lastWebCheck > 15 && accessToken) {
-            this.webPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
-            this.lastWebCheck = nowSec;
-        } else if (!accessToken) {
-            this.webPlayerRunning = false;
+    public static async isItunesDesktopRunning() {
+        if (isMac()) {
+            return await music.isRunning("iTunes");
         }
+        // currently do not supoport windows or linux desktop for itunes
+        return false;
+    }
 
-        const hasRunningPlayer = this.webPlayerRunning || desktopPlayerRunning;
-        return hasRunningPlayer;
+    private static pastWebCheckThreshold() {
+        const nowSec = nowInSecs();
+        if (nowSec - this.lastWebCheck > 10) {
+            return true;
+        }
+        return false;
     }
 }
