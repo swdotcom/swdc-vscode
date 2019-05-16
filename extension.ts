@@ -33,7 +33,7 @@ import {
 } from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
-import { MusicPlayerManagerSingleton } from "./lib/music/MusicPlayerManager";
+import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 
 let TELEMETRY_ON = true;
@@ -151,7 +151,7 @@ export async function intializePlugin(
 
     // initialize the music player
     setTimeout(() => {
-        MusicPlayerManagerSingleton.initialize();
+        MusicCommandManager.initialize();
     }, 1000);
 
     let one_min = 1000 * 60;
@@ -182,7 +182,7 @@ export async function intializePlugin(
 
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
-        MusicPlayerManagerSingleton.stateCheckHandler();
+        MusicCommandManager.stateCheckHandler();
     }, 1000 * 5);
 
     // send any offline data

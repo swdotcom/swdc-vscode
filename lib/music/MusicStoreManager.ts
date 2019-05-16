@@ -16,6 +16,7 @@ export class Track implements MusicTreeItem {
     genre: string;
     disc_number: number;
     duration_ms: number;
+    duration: number; // also in millis to handle legacy spotify npm calls
     played_count: number;
     track_number: number;
     popularity: number;

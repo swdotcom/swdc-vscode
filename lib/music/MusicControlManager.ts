@@ -1,6 +1,6 @@
 import * as music from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
-import { MusicPlayerManagerSingleton } from "./MusicPlayerManager";
+import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
     getUserStatus,
@@ -24,77 +24,90 @@ import {
 } from "../HttpClient";
 import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
-import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
+import { MusicStateManager } from "./MusicStateManager";
+import {
+    MusicPlayerManager,
+    TrackState,
+    TrackType
+} from "./MusicPlayerManager";
+import { checkSpotifyApiResponse } from "./MusicUtil";
 const fs = require("fs");
 
 const store: MusicStoreManager = MusicStoreManager.getInstance();
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 export class MusicControlManager {
-    async getPlayer(): Promise<string> {
-        const trackState: TrackState = await MusicStateManagerSingleton.getState();
+    private mpMgr: MusicPlayerManager = MusicPlayerManager.getInstance();
+    private msMgr: MusicStateManager = MusicStateManager.getInstance();
+
+    async getPlayer(): Promise<TrackType> {
+        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
         if (trackState) {
             return trackState.type;
-        } else {
-            const webTrack: Track = await MusicStateManagerSingleton.getSpotifyWebCurrentTrack();
-            if (webTrack) {
-                return "spotify-web";
-            }
         }
         return null;
     }
 
     async next() {
-        const player = await this.getPlayer();
-        if (player) {
-            if (player === "spotify-web") {
-                await MusicStateManagerSingleton.spotifyWebNext();
-            } else {
-                await music.next(player);
+        const trackType: TrackType = await this.getPlayer();
+        if (trackType) {
+            if (trackType === TrackType.WebSpotify) {
+                await this.msMgr.spotifyWebNext();
+            } else if (trackType === TrackType.MacItunesDesktop) {
+                await music.next("itunes");
+            } else if (trackType === TrackType.MacSpotifyDesktop) {
+                await music.next("spotify");
             }
-            MusicPlayerManagerSingleton.updateButtons();
+            MusicCommandManager.updateButtons();
         }
     }
 
     async previous() {
-        const player = await this.getPlayer();
-        if (player) {
-            if (player === "spotify-web") {
-                await MusicStateManagerSingleton.spotifyWebPrevious();
-            } else {
-                await music.previous(player);
+        const trackType = await this.getPlayer();
+        if (trackType) {
+            if (trackType === TrackType.WebSpotify) {
+                await this.msMgr.spotifyWebPrevious();
+            } else if (trackType === TrackType.MacItunesDesktop) {
+                await music.previous("itunes");
+            } else if (trackType === TrackType.MacSpotifyDesktop) {
+                await music.previous("spotify");
             }
-            MusicPlayerManagerSingleton.updateButtons();
+            MusicCommandManager.updateButtons();
         }
     }
 
     async play() {
-        const player = await this.getPlayer();
-        if (player) {
-            if (player === "spotify-web") {
-                await MusicStateManagerSingleton.spotifyWebPlay();
-            } else {
-                await music.play(player);
+        const trackType = await this.getPlayer();
+        if (trackType) {
+            if (trackType === TrackType.WebSpotify) {
+                await this.msMgr.spotifyWebPlay();
+            } else if (trackType === TrackType.MacItunesDesktop) {
+                await music.play("itunes");
+            } else if (trackType === TrackType.MacSpotifyDesktop) {
+                await music.play("spotify");
             }
-            MusicPlayerManagerSingleton.updateButtons();
+            MusicCommandManager.updateButtons();
         }
     }
 
     async pause() {
-        const player = await this.getPlayer();
-        if (player) {
-            if (player === "spotify-web") {
-                await MusicStateManagerSingleton.spotifyWebPause();
-            } else {
-                await music.pause(player);
+        const trackType = await this.getPlayer();
+        if (trackType) {
+            if (trackType === TrackType.WebSpotify) {
+                await this.msMgr.spotifyWebPause();
+            } else if (trackType === TrackType.MacItunesDesktop) {
+                await music.pause("itunes");
+            } else if (trackType === TrackType.MacSpotifyDesktop) {
+                await music.pause("spotify");
             }
-            MusicPlayerManagerSingleton.updateButtons();
+            MusicCommandManager.updateButtons();
         }
     }
 
     async setLiked(liked: boolean) {
-        const track: Track = await MusicStateManagerSingleton.getCurrentTrack();
-        if (track) {
+        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
+        if (trackState && trackState.track) {
+            let track: Track = trackState.track;
             // set it to liked
             let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
@@ -123,8 +136,8 @@ export class MusicControlManager {
                         });
                 }
                 // update the buttons
-                MusicStateManagerSingleton.clearServerTrack();
-                MusicPlayerManagerSingleton.stateCheckHandler();
+                this.msMgr.clearServerTrack();
+                MusicCommandManager.stateCheckHandler();
             }
         }
     }
@@ -195,15 +208,9 @@ export class MusicControlManager {
         //     cb: buildPlaylists
         // });
 
-        const itunesDesktopPlayerRunning = await MusicStateManagerSingleton.isItunesDesktopRunning();
-        const spotifyDesktopPlayerRunning = await MusicStateManagerSingleton.isSpotifyDesktopRunning();
-        const spotifyWebPlayerRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
+        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
 
-        if (
-            !itunesDesktopPlayerRunning &&
-            !spotifyDesktopPlayerRunning &&
-            !spotifyWebPlayerRunning
-        ) {
+        if (!trackState) {
             if (isMac()) {
                 menuOptions.items.push({
                     label: "Launch Spotify Desktop",
@@ -277,13 +284,13 @@ export function launchSpotifyWebPlayer() {
 
 export function launchSpotifyPlayer() {
     music.startSpotifyIfNotRunning().then(result => {
-        MusicPlayerManagerSingleton.stateCheckHandler();
+        MusicCommandManager.stateCheckHandler();
     });
 }
 
 export function launchItunesPlayer() {
     music.startItunesIfNotRunning().then(result => {
-        MusicPlayerManagerSingleton.stateCheckHandler();
+        MusicCommandManager.stateCheckHandler();
     });
 }
 
@@ -297,10 +304,7 @@ export async function buildPlaylists() {
     let accessToken = getItem("spotify_access_token");
     let playlistResponse = await spotifyApiGet(api, accessToken);
     // check if the token needs to be refreshed
-    playlistResponse = await MusicStateManagerSingleton.checkSpotifyApiResponse(
-        playlistResponse,
-        api
-    );
+    playlistResponse = await checkSpotifyApiResponse(playlistResponse, api);
 
     if (!isResponseOk(playlistResponse)) {
         return;

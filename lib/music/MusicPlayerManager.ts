@@ -1,237 +1,336 @@
-import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime } from "../Util";
-import { MusicStateManagerSingleton, TrackState } from "./MusicStateManager";
-import { Track, PlayerContext } from "./MusicStoreManager";
+import { Disposable } from "vscode";
+import * as music from "cody-music";
+import {
+    wrapExecPromise,
+    isWindows,
+    isMac,
+    getItem,
+    isEmptyObj
+} from "../Util";
+import { softwareGet, isResponseOk, spotifyApiGet } from "../HttpClient";
+import { Track, PlayerContext, PlayerDevice } from "./MusicStoreManager";
+import { MusicStateManager } from "./MusicStateManager";
+import {
+    checkSpotifyApiResponse,
+    extractAristFromSpotifyTrack
+} from "./MusicUtil";
 
-export interface Button {
-    /**
-     * Id of button
-     */
-    id: string;
-    tooltip: string;
-    /**
-     * Generator of text for button(Octicons)
-     */
-    dynamicText?: (cond: boolean) => string;
-    /**
-     * Generator of color for button
-     */
-    dynamicColor?: (cond: boolean) => string;
-    /**
-     * vscode status bar item
-     */
-    statusBarItem: StatusBarItem;
+export enum TrackType {
+    MacItunesDesktop = 1,
+    MacSpotifyDesktop = 2,
+    WindowsSpotifyDesktop = 3,
+    WebSpotify = 4
 }
 
-export class MusicPlayerManagerSingleton {
-    private static _buttons: Button[] = [];
+export interface TrackState {
+    /**
+     * type of the player
+     */
+    type: TrackType;
+    /**
+     * The track data
+     */
+    track: Track;
+}
+
+export class MusicPlayerManager {
+    private static instance: MusicPlayerManager;
+
+    private _disposable: Disposable;
+    // private _interval: any = null;
+    private _spotifyDevices: PlayerDevice[] = null;
+
+    static getInstance() {
+        if (!MusicPlayerManager.instance) {
+            MusicPlayerManager.instance = new MusicPlayerManager();
+        }
+        return MusicPlayerManager.instance;
+    }
 
     private constructor() {
         // private to prevent non-singleton usage
+        // if (!this._interval) {
+        //     this._interval = setInterval(() => {
+        //         this.updatePrimaryRunningPlayer();
+        //     }, 1000 * 5);
+        // }
+        // this._disposable = new Disposable(() => this.dispose());
     }
 
-    public static async initialize() {
-        if (!isMusicTime()) {
-            return;
+    public dispose() {
+        // if (this._interval) {
+        //     clearInterval(this._interval);
+        // }
+        this._disposable.dispose();
+    }
+
+    public async getCurrentlyRunningTrackState(): Promise<TrackState> {
+        let spotifyDesktopRunning = await this.isSpotifyDesktopRunning();
+        let itunesDesktopRunning = await this.isItunesDesktopRunning();
+        if (spotifyDesktopRunning || itunesDesktopRunning) {
+            return await this.getDesktopTrackState();
+        } else if (await this.isSpotifyWebRunning()) {
+            return await this.getSpotifyWebCurrentTrack();
         }
-        this.createButton(
-            "$(chevron-left)",
-            "Previous",
-            "musictime.previous",
-            10
-        );
-        this.createButton("$(triangle-right)", "Play", "musictime.play", 10);
-        this.createButton(
-            "$(primitive-square)",
-            "Pause",
-            "musictime.pause",
-            10
-        );
-        this.createButton("$(chevron-right)", "Next", "musictime.next", 10);
-        this.createButton("♡", "Like", "musictime.like", 10);
-        this.createButton("♥", "Unlike", "musictime.unlike", 10);
-        this.createButton(
-            "🎧",
-            "Click to see more from Music Time",
-            "musictime.menu",
-            10
-        );
-
-        // get the current track state
-        this.updateButtons();
+        return null;
     }
 
-    public static async updateButtons() {
-        const spotifyWebRunning = await MusicStateManagerSingleton.isSpotifyWebRunning();
-        const itunesDesktopRunning = await MusicStateManagerSingleton.isItunesDesktopRunning();
-        const spotifyDesktopRunning = await MusicStateManagerSingleton.isSpotifyDesktopRunning();
-        const spotifyDevices = await MusicStateManagerSingleton.spotifyWebUsersDevices();
+    private async isWindowsSpotifyRunning(): Promise<boolean> {
         /**
-         * it can have
-         * spotifyWebState.device:
-         * {
-         * id:"92301de52072a44031e6823cfdd25bc05ed1e84e"
-            is_active:true
-            is_private_session:false
-            is_restricted:false
-            name:"Web Player (Chrome)"
-            type:"Computer"
-            volume_percent:8
-         * }
+         * /tasklist /fi "imagename eq Spotify.exe" /fo list /v |find " - "
+         * Window Title: Dexys Midnight Runners - Come On Eileen
          */
-        if (
-            !spotifyWebRunning &&
-            !itunesDesktopRunning &&
-            !spotifyDesktopRunning
-        ) {
-            this.showLaunchPlayerControls();
-            return;
-        }
-
-        // desktop returned a null track but we've determined there is a player running somewhere.
-        // default by checking the spotify web player state
-        if (spotifyWebRunning) {
-            const spotifyWebState = await MusicStateManagerSingleton.getSpotifyWebPlayerState();
-            if (spotifyWebState.is_playing) {
-                // show the pause
-                this.showPauseControls(spotifyWebState.item);
-            } else {
-                // show the play
-                this.showPlayControls(spotifyWebState.item);
-            }
-            return;
-        }
-
-        // we have a running player (desktop or web). what is the state?
-        if (itunesDesktopRunning || spotifyDesktopRunning) {
-            // get the desktop player track state
-            const trackState: TrackState = await MusicStateManagerSingleton.getState();
-            if (trackState && trackState.track) {
-                if (trackState.track.state !== "playing") {
-                    // show the play
-                    this.showPlayControls(trackState.track);
+        return new Promise((resolve, reject) => {
+            wrapExecPromise(
+                MusicStateManager.WINDOWS_SPOTIFY_TRACK_FIND,
+                null
+            ).then(result => {
+                if (result && result.toLowerCase().includes("title")) {
+                    resolve(true);
                 } else {
-                    // show the pause
-                    this.showPauseControls(trackState.track);
+                    resolve(false);
                 }
-                return;
+            });
+        });
+    }
+
+    private async isSpotifyDesktopRunning() {
+        let isRunning = false;
+        if (isMac()) {
+            isRunning = await music.isRunning("Spotify");
+        } else if (isWindows()) {
+            isRunning = await this.isWindowsSpotifyRunning();
+        }
+        // currently do not support linux desktop for spotify
+        return isRunning;
+    }
+
+    private async isItunesDesktopRunning() {
+        let isRunning = false;
+        if (isMac()) {
+            isRunning = await music.isRunning("iTunes");
+        }
+        // currently do not supoport windows or linux desktop for itunes
+        return isRunning;
+    }
+
+    private async isSpotifyWebRunning(): Promise<boolean> {
+        let accessToken = getItem("spotify_access_token");
+        if (accessToken) {
+            this._spotifyDevices = await this.spotifyWebUsersDevices();
+            if (this._spotifyDevices.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * returns...
+     * {
+        "devices" : [ {
+            "id" : "5fbb3ba6aa454b5534c4ba43a8c7e8e45a63ad0e",
+            "is_active" : false,
+            "is_private_session": true,
+            "is_restricted" : false,
+            "name" : "My fridge",
+            "type" : "Computer",
+            "volume_percent" : 100
+        } ]
+        }
+     */
+    private async spotifyWebUsersDevices() {
+        let devices: PlayerDevice[] = [];
+        const accessToken = getItem("spotify_access_token");
+
+        let api = "/v1/me/player/devices";
+        let response = await spotifyApiGet(api, accessToken);
+        // check if the token needs to be refreshed
+        response = await checkSpotifyApiResponse(response, api);
+        if (response && response.data && response.data.devices) {
+            devices = response.data.devices;
+        }
+        return devices;
+    }
+
+    private async getDesktopTrackState(): Promise<TrackState> {
+        let trackState: TrackState = null;
+        let playingTrack: Track = null;
+        let pausedTrack: Track = null;
+        let pausedType: TrackType = null;
+        if (isMac()) {
+            const spotifyRunning = await music.isRunning("Spotify");
+            // spotify first
+            if (spotifyRunning) {
+                playingTrack = await music.getState("Spotify");
+                if (playingTrack) {
+                    playingTrack.type = "spotify";
+                }
+                if (playingTrack && playingTrack.state === "playing") {
+                    trackState = {
+                        type: TrackType.MacSpotifyDesktop,
+                        track: playingTrack
+                    };
+                } else if (playingTrack) {
+                    // save this one if itunes isn't running
+                    pausedTrack = playingTrack;
+                    pausedType = TrackType.MacSpotifyDesktop;
+                }
+            }
+
+            // next itunes
+            const itunesRunning = await music.isRunning("iTunes");
+            if (itunesRunning) {
+                playingTrack = await music.getState("iTunes");
+                if (playingTrack) {
+                    playingTrack.type = "itunes";
+                }
+                if (playingTrack && playingTrack.state === "playing") {
+                    trackState = {
+                        type: TrackType.MacItunesDesktop,
+                        track: playingTrack
+                    };
+                } else if (!pausedTrack && playingTrack) {
+                    pausedTrack = playingTrack;
+                    pausedType = TrackType.MacItunesDesktop;
+                }
+            }
+
+            if (pausedTrack) {
+                trackState = { type: pausedType, track: pausedTrack };
+            }
+        } else if (isWindows()) {
+            // supports only spotify for now
+            const winSpotifyRunning = await this.isWindowsSpotifyRunning();
+            if (winSpotifyRunning) {
+                playingTrack = await this.getWindowsSpotifyTrackInfo();
+                if (playingTrack) {
+                    playingTrack.type = "spotify";
+                    trackState = {
+                        type: TrackType.MacSpotifyDesktop,
+                        track: playingTrack
+                    };
+                }
             }
         }
 
-        // no other choice, show the launch player
-        this.showLaunchPlayerControls();
-    }
-
-    private static getConfig() {
-        return workspace.getConfiguration("player");
-    }
-
-    public static stateCheckHandler() {
-        MusicStateManagerSingleton.gatherMusicInfo();
-        if (isMusicTime()) {
-            this.updateButtons();
+        // make sure it's not an advertisement
+        if (trackState && !isEmptyObj(trackState.track)) {
+            // "artist":"","album":"","id":"spotify:ad:000000012c603a6600000020316a17a1"
+            if (
+                trackState.type === TrackType.MacSpotifyDesktop &&
+                trackState.track.id.includes("spotify:ad:")
+            ) {
+                // it's a spotify ad
+                trackState = null;
+            } else if (!trackState.track.artist && !trackState.track.album) {
+                // not enough info to send
+                trackState = null;
+            }
         }
+
+        // include common attributes
+        if (trackState && !isEmptyObj(trackState.track)) {
+            // create the attributes
+            trackState.track["duration_ms"] = trackState.track.duration;
+        }
+
+        return trackState;
     }
 
-    private static createButton(
-        text: string,
-        tooltip: string,
-        command: string,
-        priority: number
-    ) {
-        let statusBarItem = window.createStatusBarItem(
-            StatusBarAlignment.Left,
-            priority
+    /**
+     * returns i.e.
+     * track = {
+            artist: 'Bob Dylan',
+            album: 'Highway 61 Revisited',
+            disc_number: 1,
+            duration: 370,
+            played count: 0,
+            track_number: 1,
+            starred: false,
+            popularity: 71,
+            id: 'spotify:track:3AhXZa8sUQht0UEdBJgpGc',
+            name: 'Like A Rolling Stone',
+            album_artist: 'Bob Dylan',
+            artwork_url: 'http://images.spotify.com/image/e3d720410b4a0770c1fc84bc8eb0f0b76758a358',
+            spotify_url: 'spotify:track:3AhXZa8sUQht0UEdBJgpGc' }
+        }
+    */
+    private async getWindowsSpotifyTrackInfo() {
+        let windowTitleStr = "Window Title:";
+        // get the artist - song name from the command result, then get the rest of the info from spotify
+        let songInfo = await wrapExecPromise(
+            MusicStateManager.WINDOWS_SPOTIFY_TRACK_FIND,
+            null
         );
-        statusBarItem.text = text;
-        statusBarItem.command = command;
-        statusBarItem.tooltip = tooltip;
+        if (!songInfo || !songInfo.includes(windowTitleStr)) {
+            // it must have paused, or an ad, or it was closed
+            return null;
+        }
+        // fetch it from spotify
+        // result will be something like: "Window Title: Dexys Midnight Runners - Come On Eileen"
+        songInfo = songInfo.substring(windowTitleStr.length);
+        let artistSong = songInfo.split("-");
+        let artist = artistSong[0].trim();
+        let song = artistSong[1].trim();
+        let resp = await softwareGet(
+            `/music/track?artist=${artist}&name=${song}`,
+            getItem("jwt")
+        );
+        let trackInfo = null;
+        if (isResponseOk(resp) && resp.data && resp.data.id) {
+            trackInfo = resp.data;
+            // set the other attributes like start and type
+            trackInfo["type"] = "spotify";
+            trackInfo["state"] = "playing";
+            trackInfo["start"] = 0;
+            trackInfo["end"] = 0;
+            trackInfo["genre"] = "";
+        }
 
-        let button: Button = {
-            id: command,
-            statusBarItem,
-            tooltip: tooltip
-        };
-
-        this._buttons.push(button);
+        return trackInfo;
     }
 
-    private static async showLaunchPlayerControls() {
-        // hide all except for the launch player button
-        this._buttons = this._buttons.map(button => {
-            const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.menu") {
-                button.statusBarItem.show();
-            } else {
-                button.statusBarItem.hide();
+    async getSpotifyWebCurrentTrack(): Promise<TrackState> {
+        let accessToken = getItem("spotify_access_token");
+        if (accessToken) {
+            let api = "/v1/me/player/currently-playing";
+            let response = await spotifyApiGet(api, accessToken);
+            // check if the token needs to be refreshed
+            response = await checkSpotifyApiResponse(response, api);
+            if (response && response.data && response.data.item) {
+                let track: Track = response.data.item;
+                // override "type" with "spotify"
+                track.type = "spotify";
+                if (track.duration_ms) {
+                    track.duration = track.duration_ms;
+                }
+                extractAristFromSpotifyTrack(track);
+
+                let trackState: TrackState = {
+                    type: TrackType.WebSpotify,
+                    track
+                };
+                return trackState;
             }
-            return button;
-        });
+        }
+        return null;
     }
 
-    private static async showPlayControls(trackInfo: Track) {
-        const songInfo = trackInfo
-            ? `${trackInfo.name} (${trackInfo.artist})`
-            : null;
-        const loved = trackInfo ? trackInfo["loved"] || false : false;
-        this._buttons = this._buttons.map(button => {
-            const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.pause") {
-                button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.like") {
-                if (loved) {
-                    button.statusBarItem.hide();
-                } else {
-                    button.statusBarItem.show();
-                }
-            } else if (btnCmd === "musictime.unlike") {
-                if (loved) {
-                    button.statusBarItem.show();
-                } else {
-                    button.statusBarItem.hide();
-                }
-            } else {
-                if (songInfo && btnCmd === "musictime.play") {
-                    // show the song info over the play button
-                    button.statusBarItem.tooltip = `${
-                        button.tooltip
-                    } - ${songInfo}`;
-                }
-                button.statusBarItem.show();
+    public async getSpotifyWebPlayerState(): Promise<PlayerContext> {
+        let accessToken = getItem("spotify_access_token");
+        if (accessToken) {
+            let api = "/v1/me/player";
+            let response = await spotifyApiGet(api, accessToken);
+            // check if the token needs to be refreshed
+            response = await checkSpotifyApiResponse(response, api);
+            if (response && response.data && response.data.item) {
+                // override "type" with "spotify"
+                response.data.item["type"] = "spotify";
+                extractAristFromSpotifyTrack(response.data.item);
+                return response.data;
             }
-
-            return button;
-        });
-    }
-
-    private static showPauseControls(trackInfo: Track) {
-        const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
-        const loved = trackInfo ? trackInfo["loved"] || false : false;
-        this._buttons = this._buttons.map(button => {
-            const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.play") {
-                button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.like") {
-                if (loved) {
-                    button.statusBarItem.hide();
-                } else {
-                    button.statusBarItem.show();
-                }
-            } else if (btnCmd === "musictime.unlike") {
-                if (loved) {
-                    button.statusBarItem.show();
-                } else {
-                    button.statusBarItem.hide();
-                }
-            } else {
-                if (btnCmd === "musictime.pause") {
-                    button.statusBarItem.tooltip = `${
-                        button.tooltip
-                    } - ${songInfo}`;
-                }
-                button.statusBarItem.show();
-            }
-            return button;
-        });
+        }
+        return null;
     }
 }
