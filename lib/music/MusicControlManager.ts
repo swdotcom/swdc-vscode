@@ -34,6 +34,7 @@ export class MusicControlManager {
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
     async getPlayer(): Promise<PlayerType> {
+        let accessToken = CodyMusic.getAccessToken();
         const track = await CodyMusic.getRunningTrack();
         if (track) {
             return track.playerType;

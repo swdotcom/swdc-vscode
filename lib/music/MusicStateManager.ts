@@ -1,12 +1,11 @@
 import { getItem, isEmptyObj, isMusicTime } from "../Util";
-import { sendMusicData } from "../DataController";
-import * as CodyMusic from "cody-music";
 import {
-    softwareGet,
-    isResponseOk,
-    spotifyApiPut,
-    spotifyApiPost
-} from "../HttpClient";
+    sendMusicData,
+    getSpotifyOauth,
+    serverIsAvailable
+} from "../DataController";
+import * as CodyMusic from "cody-music";
+import { softwareGet, isResponseOk } from "../HttpClient";
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -104,9 +103,16 @@ export class MusicStateManager {
             return;
         }
         this.gatheringMusic = true;
-        const playingTrack: CodyMusic.Track = await CodyMusic.getRunningTrack();
+        let access_token = CodyMusic.getAccessToken();
+        if (!access_token) {
+            let serverIsOnline = await serverIsAvailable();
+            await getSpotifyOauth(serverIsOnline);
+        }
+        const playingTrack: CodyMusic.Track = await CodyMusic.getTrack(
+            CodyMusic.PlayerName.ItunesDesktop
+        );
 
-        if (playingTrack) {
+        if (playingTrack && playingTrack.id) {
             playingTrack["start"] = 0;
             playingTrack["end"] = 0;
 

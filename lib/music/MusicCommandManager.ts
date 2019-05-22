@@ -73,6 +73,7 @@ export class MusicCommandManager {
             this.showLaunchPlayerControls();
             return;
         }
+        let accessToken = CodyMusic.getAccessToken();
 
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
