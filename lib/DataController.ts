@@ -6,6 +6,7 @@ import {
     isResponseOk,
     softwarePost
 } from "./HttpClient";
+import * as CodyMusic from "cody-music";
 import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 import {
     getItem,
@@ -187,7 +188,7 @@ export async function createAnonymousUser(serverIsOnline) {
     return null;
 }
 
-export async function getSpotifyAccessToken(serverIsOnline) {
+export async function getSpotifyOauth(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let user = await getUser(serverIsOnline, jwt);
@@ -207,7 +208,22 @@ export async function getSpotifyAccessToken(serverIsOnline) {
                 spotify_id:"citipzzers..."
                 spotify_refresh_token:"AQAEQ-kFK5c3I..."
              */
-            return user.oauths.Spotify.spotify_access_token;
+            setItem(
+                "spotify_access_token",
+                user.oauths.Spotify.spotify_access_token
+            );
+            setItem(
+                "spotify_refresh_token",
+                user.oauths.Spotify.spotify_refresh_token
+            );
+            // update the CodyMusic credentials
+            CodyMusic.setCredentials({
+                refreshToken: user.oauths.Spotify.spotify_refresh_token,
+                clientSecret: "2b40b4975b2743189c87f4712c0cd59e",
+                clientId: "eb67e22ba1c6474aad8ec8067480d9dc",
+                accessToken: user.oauths.Spotify.spotify_access_token
+            });
+            return user.oauths.Spotify;
         }
     }
     return null;
@@ -455,15 +471,13 @@ export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 3) {
 
 async function spotifyConnectStatusHandler(tryCountUntilFound) {
     let serverIsOnline = await serverIsAvailable();
-    let accessToken = await getSpotifyAccessToken(serverIsOnline);
-    if (!accessToken) {
+    let oauth = await getSpotifyOauth(serverIsOnline);
+    if (!oauth) {
         // try again if the count is not zero
         if (tryCountUntilFound > 0) {
             tryCountUntilFound -= 1;
             refetchSpotifyConnectStatusLazily(tryCountUntilFound);
         }
-    } else {
-        setItem("spotify_access_token", accessToken);
     }
 }
 
@@ -485,7 +499,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     } else {
         // check if they have a connected spotify auth
         setTimeout(() => {
-            getSpotifyAccessToken(serverIsOnline);
+            getSpotifyOauth(serverIsOnline);
         }, 5000);
     }
 }

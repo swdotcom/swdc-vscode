@@ -9,7 +9,7 @@ import {
     sendHeartbeat,
     createAnonymousUser,
     serverIsAvailable,
-    getSpotifyAccessToken
+    getSpotifyOauth
 } from "./lib/DataController";
 import {
     showStatus,
@@ -261,10 +261,7 @@ async function initializeUserInfo(
     } else if (isMusicTime()) {
         const spotifyAccessToken = getItem("spotify_access_token");
         if (!spotifyAccessToken) {
-            let accessToken = await getSpotifyAccessToken(serverIsOnline);
-            if (accessToken) {
-                setItem("spotify_access_token", accessToken);
-            }
+            await getSpotifyOauth(serverIsOnline);
         }
     }
 }

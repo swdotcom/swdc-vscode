@@ -5,8 +5,8 @@ import {
     softwareGet,
     isResponseOk
 } from "../HttpClient";
-import { serverIsAvailable, getSpotifyAccessToken } from "../DataController";
-import { Track } from "./MusicStoreManager";
+import { serverIsAvailable, getSpotifyOauth } from "../DataController";
+import { Track } from "cody-music";
 
 export async function checkSpotifyApiResponse(response: any, api: string) {
     if (hasTokenExpired(response)) {
@@ -33,10 +33,7 @@ export async function refreshToken() {
     );
     if (isResponseOk(refreshResponse)) {
         // get the user then get the playlists again
-        let accessToken = await getSpotifyAccessToken(serverIsOnline);
-        if (accessToken) {
-            setItem("spotify_access_token", accessToken);
-        }
+        await getSpotifyOauth(serverIsOnline);
     }
     this.refreshingToken = false;
 }

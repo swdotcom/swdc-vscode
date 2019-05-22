@@ -10,7 +10,7 @@ import {
 import * as path from "path";
 import { MusicTreeItem } from "./MusicStoreManager";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { buildPlaylists } from "./MusicControlManager";
+// import { buildPlaylists } from "./MusicControlManager";
 import { spotifyApiPut } from "../HttpClient";
 import { getItem } from "../Util";
 import * as music from "cody-music";
@@ -102,14 +102,15 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
     }
 
     async getChildren(element?: MusicTreeItem): Promise<MusicTreeItem[]> {
-        if (element && element.type === "playlist") {
-            // return the tracks
-            return element["tracks"];
-        } else {
-            // return the playlists
-            const playlists: MusicTreeItem[] = await buildPlaylists();
-            return Promise.resolve(playlists);
-        }
+        // if (element && element.type === "playlist") {
+        //     // return the tracks
+        //     return element["tracks"];
+        // } else {
+        //     // return the playlists
+        //     const playlists: MusicTreeItem[] = await buildPlaylists();
+        //     return Promise.resolve(playlists);
+        // }
+        return [];
     }
 }
 

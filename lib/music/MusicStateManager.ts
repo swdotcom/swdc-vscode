@@ -1,17 +1,12 @@
 import { getItem, isEmptyObj, isMusicTime } from "../Util";
 import { sendMusicData } from "../DataController";
+import * as CodyMusic from "cody-music";
 import {
     softwareGet,
     isResponseOk,
     spotifyApiPut,
     spotifyApiPost
 } from "../HttpClient";
-import { Track } from "./MusicStoreManager";
-import {
-    MusicPlayerManager,
-    TrackState,
-    TrackType
-} from "./MusicPlayerManager";
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -23,9 +18,7 @@ export class MusicStateManager {
     private lastTimeSent: number = null;
     private gatheringMusic: boolean = false;
     private serverTrack: any = null;
-    private currentTrack: Track = null;
-
-    private mpMgr: MusicPlayerManager = MusicPlayerManager.getInstance();
+    private currentTrack: CodyMusic.Track = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -42,11 +35,11 @@ export class MusicStateManager {
         this.serverTrack = null;
     }
 
-    public getCurrentTrack(): Track {
+    public getCurrentTrack(): CodyMusic.Track {
         return this.currentTrack;
     }
 
-    public async getServerTrack(track: Track) {
+    public async getServerTrack(track: CodyMusic.Track) {
         if (track) {
             let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
@@ -83,26 +76,25 @@ export class MusicStateManager {
         return this.serverTrack;
     }
 
-    public async updateLovedStateFromServer(trackState: TrackState) {
+    public async updateLovedStateFromServer(track: CodyMusic.Track) {
         if (!isMusicTime()) {
             return;
         }
         if (
-            !trackState ||
-            !trackState.track ||
-            isEmptyObj(trackState.track) ||
-            trackState.type === TrackType.MacItunesDesktop
+            !track ||
+            isEmptyObj(track) ||
+            track.playerType === CodyMusic.PlayerType.MacItunesDesktop
         ) {
             return;
         }
 
-        const serverTrack = await this.getServerTrack(trackState.track);
+        const serverTrack = await this.getServerTrack(track);
         if (serverTrack) {
             const liked = serverTrack.liked || 0;
             if (liked === 1) {
-                trackState.track["loved"] = true;
+                track["loved"] = true;
             } else {
-                trackState.track["loved"] = false;
+                track["loved"] = false;
             }
         }
     }
@@ -112,11 +104,9 @@ export class MusicStateManager {
             return;
         }
         this.gatheringMusic = true;
-        const playingState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
+        const playingTrack: CodyMusic.Track = await CodyMusic.getRunningTrack();
 
-        if (playingState) {
-            const playingTrack: Track = playingState.track;
-
+        if (playingTrack) {
             playingTrack["start"] = 0;
             playingTrack["end"] = 0;
 
@@ -162,7 +152,7 @@ export class MusicStateManager {
                 });
             } else if (playingTrackId && !existingTrackId) {
                 // first check if it needs to be synced in regard to the loved state
-                await this.updateLovedStateFromServer(playingState);
+                await this.updateLovedStateFromServer(playingTrack);
 
                 // this means we don't have an existing track, the playing track will be our new existing track
                 // it doesn't matter if it's paused or not since we don't have an existing track
@@ -209,7 +199,7 @@ export class MusicStateManager {
                         // close it out
                         sendMusicData(this.existingTrack).then(async result => {
                             // first check if it needs to be synced in regard to the loved state
-                            await this.updateLovedStateFromServer(playingState);
+                            await this.updateLovedStateFromServer(playingTrack);
 
                             // clear out the trackInfo
                             this.existingTrack = {};
@@ -226,28 +216,5 @@ export class MusicStateManager {
         }
 
         this.gatheringMusic = false;
-    }
-
-    public async spotifyWebPlay() {
-        const accessToken = getItem("spotify_access_token");
-        // const payload = { uri: e.selection[0].uri };
-        // i.e. { device_id: "92301de52072a44031e6823cfdd25bc05ed1e84e" }
-        spotifyApiPut("/v1/me/player/play", {}, accessToken);
-    }
-
-    public async spotifyWebPause() {
-        const accessToken = getItem("spotify_access_token");
-        // const payload = { uri: e.selection[0].uri };
-        spotifyApiPut("/v1/me/player/pause", {}, accessToken);
-    }
-
-    public async spotifyWebPrevious() {
-        const accessToken = getItem("spotify_access_token");
-        spotifyApiPost("/v1/me/player/previous", {}, accessToken);
-    }
-
-    public async spotifyWebNext() {
-        const accessToken = getItem("spotify_access_token");
-        spotifyApiPost("/v1/me/player/next", {}, accessToken);
     }
 }

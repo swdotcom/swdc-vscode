@@ -1,12 +1,7 @@
-import { workspace, window, StatusBarAlignment, StatusBarItem } from "vscode";
+import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime } from "../Util";
+import * as CodyMusic from "cody-music";
 import { MusicStateManager } from "./MusicStateManager";
-import {
-    MusicPlayerManager,
-    TrackState,
-    TrackType
-} from "./MusicPlayerManager";
-import { Track } from "./MusicStoreManager";
 
 export interface Button {
     /**
@@ -31,7 +26,6 @@ export interface Button {
 export class MusicCommandManager {
     private static _buttons: Button[] = [];
 
-    private static mpMgr: MusicPlayerManager;
     private static msMgr: MusicStateManager;
 
     private constructor() {
@@ -39,9 +33,6 @@ export class MusicCommandManager {
     }
 
     public static async initialize() {
-        if (!this.mpMgr) {
-            this.mpMgr = MusicPlayerManager.getInstance();
-        }
         if (!this.msMgr) {
             this.msMgr = MusicStateManager.getInstance();
         }
@@ -76,35 +67,22 @@ export class MusicCommandManager {
     }
 
     public static async updateButtons() {
-        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
-        /**
-         * it can have
-         * spotifyWebState.device:
-         * {
-         * id:"92301de52072a44031e6823cfdd25bc05ed1e84e"
-            is_active:true
-            is_private_session:false
-            is_restricted:false
-            name:"Web Player (Chrome)"
-            type:"Computer"
-            volume_percent:8
-         * }
-         */
-        if (!trackState) {
+        const track = await CodyMusic.getRunningTrack();
+
+        if (!track) {
             this.showLaunchPlayerControls();
             return;
         }
 
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
-        if (trackState.type === TrackType.WebSpotify) {
-            const spotifyWebState = await this.mpMgr.getSpotifyWebPlayerState();
-            if (spotifyWebState.is_playing) {
+        if (track.playerType === CodyMusic.PlayerType.WebSpotify) {
+            if (track.status === CodyMusic.TrackStatus.Playing) {
                 // show the pause
-                this.showPauseControls(spotifyWebState.item);
+                this.showPauseControls(track);
             } else {
                 // show the play
-                this.showPlayControls(spotifyWebState.item);
+                this.showPlayControls(track);
             }
             return;
         }
@@ -112,23 +90,19 @@ export class MusicCommandManager {
         // we have a running player (desktop or web). what is the state?
 
         // get the desktop player track state
-        if (trackState && trackState.track) {
-            if (trackState.track.state !== "playing") {
-                // show the play
-                this.showPlayControls(trackState.track);
-            } else {
+        if (track) {
+            if (track.status === CodyMusic.TrackStatus.Playing) {
                 // show the pause
-                this.showPauseControls(trackState.track);
+                this.showPauseControls(track);
+            } else {
+                // show the play
+                this.showPlayControls(track);
             }
             return;
         }
 
         // no other choice, show the launch player
         this.showLaunchPlayerControls();
-    }
-
-    private static getConfig() {
-        return workspace.getConfiguration("player");
     }
 
     public static async stateCheckHandler() {
@@ -174,7 +148,7 @@ export class MusicCommandManager {
         });
     }
 
-    private static async showPlayControls(trackInfo: Track) {
+    private static async showPlayControls(trackInfo) {
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
@@ -209,7 +183,7 @@ export class MusicCommandManager {
         });
     }
 
-    private static showPauseControls(trackInfo: Track) {
+    private static showPauseControls(trackInfo) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         const loved = trackInfo ? trackInfo["loved"] || false : false;
         this._buttons = this._buttons.map(button => {

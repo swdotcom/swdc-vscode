@@ -1,4 +1,4 @@
-import * as music from "cody-music";
+import * as CodyMusic from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
@@ -22,92 +22,84 @@ import {
     spotifyApiGet,
     isResponseOk
 } from "../HttpClient";
-import { MusicStoreManager, Playlist, Track } from "./MusicStoreManager";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import {
-    MusicPlayerManager,
-    TrackState,
-    TrackType
-} from "./MusicPlayerManager";
 import { checkSpotifyApiResponse } from "./MusicUtil";
+import { PlayerType } from "cody-music/dist/lib/models";
 const fs = require("fs");
 
-const store: MusicStoreManager = MusicStoreManager.getInstance();
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 export class MusicControlManager {
-    private mpMgr: MusicPlayerManager = MusicPlayerManager.getInstance();
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
-    async getPlayer(): Promise<TrackType> {
-        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
-        if (trackState) {
-            return trackState.type;
+    async getPlayer(): Promise<PlayerType> {
+        const track = await CodyMusic.getRunningTrack();
+        if (track) {
+            return track.playerType;
         }
         return null;
     }
 
     async next() {
-        const trackType: TrackType = await this.getPlayer();
-        if (trackType) {
-            if (trackType === TrackType.WebSpotify) {
-                await this.msMgr.spotifyWebNext();
-            } else if (trackType === TrackType.MacItunesDesktop) {
-                await music.next("itunes");
-            } else if (trackType === TrackType.MacSpotifyDesktop) {
-                await music.next("spotify");
+        const playerType = await this.getPlayer();
+        if (playerType) {
+            if (playerType === PlayerType.WebSpotify) {
+                await CodyMusic.next(CodyMusic.PlayerName.SpotifyWeb);
+            } else if (playerType === PlayerType.MacItunesDesktop) {
+                await CodyMusic.next(CodyMusic.PlayerName.ItunesDesktop);
+            } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                await CodyMusic.next(CodyMusic.PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
     }
 
     async previous() {
-        const trackType = await this.getPlayer();
-        if (trackType) {
-            if (trackType === TrackType.WebSpotify) {
-                await this.msMgr.spotifyWebPrevious();
-            } else if (trackType === TrackType.MacItunesDesktop) {
-                await music.previous("itunes");
-            } else if (trackType === TrackType.MacSpotifyDesktop) {
-                await music.previous("spotify");
+        const playerType = await this.getPlayer();
+        if (playerType) {
+            if (playerType === PlayerType.WebSpotify) {
+                await CodyMusic.previous(CodyMusic.PlayerName.SpotifyWeb);
+            } else if (playerType === PlayerType.MacItunesDesktop) {
+                await CodyMusic.previous(CodyMusic.PlayerName.ItunesDesktop);
+            } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                await CodyMusic.previous(CodyMusic.PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
     }
 
     async play() {
-        const trackType = await this.getPlayer();
-        if (trackType) {
-            if (trackType === TrackType.WebSpotify) {
-                await this.msMgr.spotifyWebPlay();
-            } else if (trackType === TrackType.MacItunesDesktop) {
-                await music.play("itunes");
-            } else if (trackType === TrackType.MacSpotifyDesktop) {
-                await music.play("spotify");
+        const playerType = await this.getPlayer();
+        if (playerType) {
+            if (playerType === PlayerType.WebSpotify) {
+                await CodyMusic.play(CodyMusic.PlayerName.SpotifyWeb);
+            } else if (playerType === PlayerType.MacItunesDesktop) {
+                await CodyMusic.play(CodyMusic.PlayerName.ItunesDesktop);
+            } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                await CodyMusic.play(CodyMusic.PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
     }
 
     async pause() {
-        const trackType = await this.getPlayer();
-        if (trackType) {
-            if (trackType === TrackType.WebSpotify) {
-                await this.msMgr.spotifyWebPause();
-            } else if (trackType === TrackType.MacItunesDesktop) {
-                await music.pause("itunes");
-            } else if (trackType === TrackType.MacSpotifyDesktop) {
-                await music.pause("spotify");
+        const playerType = await this.getPlayer();
+        if (playerType) {
+            if (playerType === PlayerType.WebSpotify) {
+                await CodyMusic.pause(CodyMusic.PlayerName.SpotifyWeb);
+            } else if (playerType === PlayerType.MacItunesDesktop) {
+                await CodyMusic.pause(CodyMusic.PlayerName.ItunesDesktop);
+            } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                await CodyMusic.pause(CodyMusic.PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
     }
 
     async setLiked(liked: boolean) {
-        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
-        if (trackState && trackState.track) {
-            let track: Track = trackState.track;
+        const track: CodyMusic.Track = await CodyMusic.getRunningTrack();
+        if (track) {
             // set it to liked
             let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
@@ -123,8 +115,7 @@ export class MusicControlManager {
             const resp = await softwarePut(api, payload, getItem("jwt"));
             if (isResponseOk(resp)) {
                 if (type === "itunes") {
-                    music
-                        .setItunesLoved(liked)
+                    CodyMusic.setItunesLoved(liked)
                         .then(result => {
                             console.log("updated itunes loved state");
                         })
@@ -208,9 +199,9 @@ export class MusicControlManager {
         //     cb: buildPlaylists
         // });
 
-        const trackState: TrackState = await this.mpMgr.getCurrentlyRunningTrackState();
+        const track: CodyMusic.Track = await CodyMusic.getRunningTrack();
 
-        if (!trackState) {
+        if (!track) {
             if (isMac()) {
                 menuOptions.items.push({
                     label: "Launch Spotify Desktop",
@@ -283,118 +274,122 @@ export function launchSpotifyWebPlayer() {
 }
 
 export function launchSpotifyPlayer() {
-    music.startSpotifyIfNotRunning().then(result => {
-        MusicCommandManager.stateCheckHandler();
-    });
+    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyDesktop, {}).then(
+        result => {
+            MusicCommandManager.stateCheckHandler();
+        }
+    );
 }
 
 export function launchItunesPlayer() {
-    music.startItunesIfNotRunning().then(result => {
-        MusicCommandManager.stateCheckHandler();
-    });
-}
-
-export async function buildPlaylists() {
-    let playlists = store.getPlaylists();
-    if (playlists.length > 0) {
-        return playlists;
-    }
-
-    let api = `/v1/me/playlists?offset=0&limit=20`;
-    let accessToken = getItem("spotify_access_token");
-    let playlistResponse = await spotifyApiGet(api, accessToken);
-    // check if the token needs to be refreshed
-    playlistResponse = await checkSpotifyApiResponse(playlistResponse, api);
-
-    if (!isResponseOk(playlistResponse)) {
-        return;
-    }
-
-    //href:"https://api.spotify.com/v1/playlists/0mwG8hCL4scWi8Nkt7jyoV/tracks"
-    //uri, name, public, collaborative, tracks: {total: 3}
-    await populatePlaylists(playlistResponse, playlists, accessToken);
-
-    // are there any more pages?
-    while (playlistResponse.data.next !== null) {
-        playlistResponse = await spotifyApiGet(
-            playlistResponse.data.next,
-            accessToken
-        );
-        if (isResponseOk(playlistResponse)) {
-            await populatePlaylists(playlistResponse, playlists, accessToken);
-        } else {
-            break;
+    CodyMusic.launchPlayer(CodyMusic.PlayerName.ItunesDesktop, {}).then(
+        result => {
+            MusicCommandManager.stateCheckHandler();
         }
-    }
-
-    store.setPlaylists(playlists);
-
-    return playlists;
+    );
 }
 
-async function populatePlaylists(
-    playlistResponse: any,
-    playlists: Playlist[],
-    accessToken: string
-) {
-    if (isResponseOk(playlistResponse)) {
-        const data = playlistResponse.data;
-        if (data && data.items) {
-            for (let i = 0; i < data.items.length; i++) {
-                // populate the playlists
-                const playlistItem = data.items[i];
-                let playlist = new Playlist();
-                playlist.player = "spotify";
-                playlist.id = playlistItem.id;
-                playlist.uri = playlistItem.uri;
-                playlist.collaborative = playlistItem.collaborative;
-                playlist.name = playlistItem.name;
-                playlist.public = playlistItem.public;
+// export async function buildPlaylists() {
+//     let playlists = store.getPlaylists();
+//     if (playlists.length > 0) {
+//         return playlists;
+//     }
 
-                let tracks = [];
-                // get the tracks
-                if (playlistItem.tracks) {
-                    const trackReponse = await spotifyApiGet(
-                        playlistItem.tracks.href,
-                        accessToken
-                    );
-                    const trackData = trackReponse.data;
-                    if (trackData && trackData.items) {
-                        for (let x = 0; x < trackData.items.length; x++) {
-                            // populate the tracks
-                            const trackItemData = trackData.items[x];
-                            if (trackItemData.track) {
-                                const trackItem = trackItemData.track;
-                                let track = new Track();
-                                track.duration_ms = trackItem.duration_ms;
-                                track.name = trackItem.name;
-                                track.explicit = trackItem.explicit;
-                                track.disc_number = trackItem.disc_number;
-                                track.popularity = trackItem.popularity;
-                                track.id = trackItem.id;
-                                track.uri = trackItem.uri;
-                                // set the artist
-                                if (trackItem.artists) {
-                                    const len = trackItem.artists.length;
-                                    let artistNames = [];
-                                    for (let y = 0; y < len; y++) {
-                                        const artist = trackItem.artists[y];
-                                        artistNames.push(artist.name);
-                                    }
-                                    track.artist = artistNames.join(", ");
-                                }
+//     let api = `/v1/me/playlists?offset=0&limit=20`;
+//     let accessToken = getItem("spotify_access_token");
+//     let playlistResponse = await spotifyApiGet(api, accessToken);
+//     // check if the token needs to be refreshed
+//     playlistResponse = await checkSpotifyApiResponse(playlistResponse, api);
 
-                                if (trackItem.album) {
-                                    track.album = trackItem.album.name;
-                                }
-                                tracks.push(track);
-                            }
-                        }
-                    }
-                }
-                playlist.tracks = tracks;
-                playlists.push(playlist);
-            }
-        }
-    }
-}
+//     if (!isResponseOk(playlistResponse)) {
+//         return;
+//     }
+
+//     //href:"https://api.spotify.com/v1/playlists/0mwG8hCL4scWi8Nkt7jyoV/tracks"
+//     //uri, name, public, collaborative, tracks: {total: 3}
+//     await populatePlaylists(playlistResponse, playlists, accessToken);
+
+//     // are there any more pages?
+//     while (playlistResponse.data.next !== null) {
+//         playlistResponse = await spotifyApiGet(
+//             playlistResponse.data.next,
+//             accessToken
+//         );
+//         if (isResponseOk(playlistResponse)) {
+//             await populatePlaylists(playlistResponse, playlists, accessToken);
+//         } else {
+//             break;
+//         }
+//     }
+
+//     store.setPlaylists(playlists);
+
+//     return playlists;
+// }
+
+// async function populatePlaylists(
+//     playlistResponse: any,
+//     playlists: Playlist[],
+//     accessToken: string
+// ) {
+//     if (isResponseOk(playlistResponse)) {
+//         const data = playlistResponse.data;
+//         if (data && data.items) {
+//             for (let i = 0; i < data.items.length; i++) {
+//                 // populate the playlists
+//                 const playlistItem = data.items[i];
+//                 let playlist = new Playlist();
+//                 playlist.player = "spotify";
+//                 playlist.id = playlistItem.id;
+//                 playlist.uri = playlistItem.uri;
+//                 playlist.collaborative = playlistItem.collaborative;
+//                 playlist.name = playlistItem.name;
+//                 playlist.public = playlistItem.public;
+
+//                 let tracks = [];
+//                 // get the tracks
+//                 if (playlistItem.tracks) {
+//                     const trackReponse = await spotifyApiGet(
+//                         playlistItem.tracks.href,
+//                         accessToken
+//                     );
+//                     const trackData = trackReponse.data;
+//                     if (trackData && trackData.items) {
+//                         for (let x = 0; x < trackData.items.length; x++) {
+//                             // populate the tracks
+//                             const trackItemData = trackData.items[x];
+//                             if (trackItemData.track) {
+//                                 const trackItem = trackItemData.track;
+//                                 let track = new Track();
+//                                 track.duration_ms = trackItem.duration_ms;
+//                                 track.name = trackItem.name;
+//                                 track.explicit = trackItem.explicit;
+//                                 track.disc_number = trackItem.disc_number;
+//                                 track.popularity = trackItem.popularity;
+//                                 track.id = trackItem.id;
+//                                 track.uri = trackItem.uri;
+//                                 // set the artist
+//                                 if (trackItem.artists) {
+//                                     const len = trackItem.artists.length;
+//                                     let artistNames = [];
+//                                     for (let y = 0; y < len; y++) {
+//                                         const artist = trackItem.artists[y];
+//                                         artistNames.push(artist.name);
+//                                     }
+//                                     track.artist = artistNames.join(", ");
+//                                 }
+
+//                                 if (trackItem.album) {
+//                                     track.album = trackItem.album.name;
+//                                 }
+//                                 tracks.push(track);
+//                             }
+//                         }
+//                     }
+//                 }
+//                 playlist.tracks = tracks;
+//                 playlists.push(playlist);
+//             }
+//         }
+//     }
+// }

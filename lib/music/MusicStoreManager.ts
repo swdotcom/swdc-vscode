@@ -1,3 +1,5 @@
+import { Track } from "cody-music";
+
 export interface MusicTreeItem {
     artist: string;
     album: string;
@@ -5,54 +7,6 @@ export interface MusicTreeItem {
     id: string;
     type: string;
     uri: string;
-}
-
-// {"artist": "Coldplay","album": "Parachutes","genre": "",
-// "disc_number": 1,"duration_ms": 273426,"played_count": 0,"track_number": 6,
-// "id": "spotify:track:0R8P9KfGJCDULmlEoBagcO","name": "Trouble","state":"playing"}
-export class Track implements MusicTreeItem {
-    artist: string;
-    album: string;
-    genre: string;
-    disc_number: number;
-    duration_ms: number;
-    duration: number; // also in millis to handle legacy spotify npm calls
-    played_count: number;
-    track_number: number;
-    popularity: number;
-    id: string;
-    uri: string;
-    name: string;
-    state: string;
-    explicit: boolean;
-    // href:"https://api.spotify.com/v1/playlists/0mwG8hCL4scWi8Nkt7jyoV/tracks"
-    href: string;
-    type: string = "track";
-    constructor() {
-        //
-    }
-}
-
-export class PlayerDevice {
-    id: string;
-    is_active: string;
-    is_restricted: boolean;
-    name: string;
-    type: string;
-    volume_percent: number;
-}
-
-export class PlayerContext {
-    timestamp: number;
-    device: PlayerDevice;
-    progress_ms: string;
-    is_playing: boolean;
-    currently_playing_type: string;
-    actions: any;
-    item: any;
-    shuffle_state: boolean;
-    repeat_state: string;
-    context: any;
 }
 
 // uri, name, public, collaborative, tracks
