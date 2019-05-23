@@ -89,7 +89,6 @@ export function createCommands(): {
         );
         cmds.push(configChangesHandler);
     } else if (isMusicTime()) {
-        const musicStore: MusicStoreManager = MusicStoreManager.getInstance();
         const controller = new MusicControlManager();
 
         const nextCmd = commands.registerCommand("musictime.next", () => {
@@ -129,6 +128,13 @@ export function createCommands(): {
             controller.showMenu();
         });
         cmds.push(menuCmd);
+
+        const launchTrackPlayerCmd = commands.registerCommand(
+            "musictime.currentSong",
+            () => {
+                controller.launchTrackPlayer();
+            }
+        );
 
         const spotifyConnectCommand = commands.registerCommand(
             "musictime.connectSpotify",

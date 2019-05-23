@@ -16,15 +16,9 @@ import {
     launchWebUrl,
     isMac
 } from "../Util";
-import {
-    softwareGet,
-    softwarePut,
-    spotifyApiGet,
-    isResponseOk
-} from "../HttpClient";
+import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import { checkSpotifyApiResponse } from "./MusicUtil";
 import { PlayerType } from "cody-music/dist/lib/models";
 const fs = require("fs");
 
@@ -34,7 +28,6 @@ export class MusicControlManager {
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
     async getPlayer(): Promise<PlayerType> {
-        let accessToken = CodyMusic.getAccessToken();
         const track = await CodyMusic.getRunningTrack();
         if (track) {
             return track.playerType;
@@ -107,7 +100,10 @@ export class MusicControlManager {
                 // strip it down to just the last id part
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
-            const type = track.type;
+            let type = "spotify";
+            if (track.playerType === CodyMusic.PlayerType.MacItunesDesktop) {
+                type = "itunes";
+            }
             // use the name and artist as well since we have it
             let trackName = encodeURIComponent(track.name);
             let trackArtist = encodeURIComponent(track.artist);
@@ -116,7 +112,9 @@ export class MusicControlManager {
             const resp = await softwarePut(api, payload, getItem("jwt"));
             if (isResponseOk(resp)) {
                 if (type === "itunes") {
-                    CodyMusic.setItunesLoved(liked)
+                    // await so that the stateCheckHandler fetches
+                    // the latest version of the itunes track
+                    await CodyMusic.setItunesLoved(liked)
                         .then(result => {
                             console.log("updated itunes loved state");
                         })
@@ -129,9 +127,24 @@ export class MusicControlManager {
                 }
                 // update the buttons
                 this.msMgr.clearServerTrack();
-                MusicCommandManager.stateCheckHandler();
+                // update the buttons since the liked state changed
+                MusicCommandManager.updateButtons();
             }
         }
+    }
+
+    launchTrackPlayer() {
+        CodyMusic.getRunningTrack().then((track: CodyMusic.Track) => {
+            if (track && track.id) {
+                if (track.playerType === PlayerType.WebSpotify) {
+                    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb);
+                } else if (track.playerType === PlayerType.MacItunesDesktop) {
+                    CodyMusic.launchPlayer(CodyMusic.PlayerName.ItunesDesktop);
+                } else {
+                    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyDesktop);
+                }
+            }
+        });
     }
 
     async showMenu() {

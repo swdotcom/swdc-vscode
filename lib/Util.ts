@@ -543,6 +543,14 @@ export function normalizeGithubEmail(email) {
     return email;
 }
 
+export function getSongDisplayName(name) {
+    name = name.trim();
+    if (name.length > 11) {
+        return `${name.substring(0, 10)}...`;
+    }
+    return name;
+}
+
 export async function getGitEmail() {
     let projectDirs = getRootPaths();
 

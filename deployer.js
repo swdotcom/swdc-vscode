@@ -127,6 +127,10 @@ async function deploy() {
             title: "Click to see more from Music Time"
         });
         packageJson.contributes["commands"].push({
+            command: "musictime.currentSong",
+            title: "Click to launch track player"
+        });
+        packageJson.contributes["commands"].push({
             command: "musictime.connectSpotify",
             title: "Connect your spotify account"
         });

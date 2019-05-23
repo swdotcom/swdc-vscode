@@ -45,7 +45,10 @@ export class MusicStateManager {
                 // strip it down to just the last id part
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
-            const type = track.type;
+            let type = "spotify";
+            if (track.playerType === CodyMusic.PlayerType.MacItunesDesktop) {
+                type = "itunes";
+            }
             // use the name and artist as well since we have it
             let trackName = track.name;
             let trackArtist = track.artist;
@@ -98,9 +101,10 @@ export class MusicStateManager {
         }
     }
 
-    public async gatherMusicInfo() {
+    public async gatherMusicInfo(): Promise<boolean> {
+        let hasChanges = false;
         if (this.gatheringMusic) {
-            return;
+            return hasChanges;
         }
         this.gatheringMusic = true;
         let access_token = CodyMusic.getAccessToken();
@@ -150,6 +154,8 @@ export class MusicStateManager {
                 // we don't have a track playing and we have an existing one, close it out
                 this.existingTrack["end"] = nowInSec;
 
+                hasChanges = true;
+
                 // send the existing to close it out
                 sendMusicData(this.existingTrack).then(result => {
                     // clear out the trackInfo
@@ -167,6 +173,8 @@ export class MusicStateManager {
                 this.existingTrack["start"] = nowInSec;
                 this.existingTrack["local_start"] = localNowInSec;
 
+                hasChanges = true;
+
                 // send the existing (which is the initial one for this session)
                 sendMusicData(this.existingTrack);
                 this.lastTimeSent = nowInSec;
@@ -175,6 +183,9 @@ export class MusicStateManager {
                 if (playingTrackId !== existingTrackId) {
                     // send the existing song now to close it out
                     this.existingTrack["end"] = nowInSec - 1;
+
+                    hasChanges = true;
+
                     sendMusicData(this.existingTrack).then(result => {
                         // clear out the trackInfo
                         this.existingTrack = {};
@@ -202,6 +213,9 @@ export class MusicStateManager {
                     ) {
                         // it's on repeat, send it and start the next one
                         this.existingTrack["end"] = nowInSec - 1;
+
+                        hasChanges = true;
+
                         // close it out
                         sendMusicData(this.existingTrack).then(async result => {
                             // first check if it needs to be synced in regard to the loved state
@@ -222,5 +236,7 @@ export class MusicStateManager {
         }
 
         this.gatheringMusic = false;
+
+        return hasChanges;
     }
 }

@@ -125,7 +125,7 @@
     },
     "dependencies": {
         "axios": "0.18.0",
-        "cody-music": "1.4.0",
+        "cody-music": "2.0.0",
         "vsls": "0.3.1291"
     }
 }

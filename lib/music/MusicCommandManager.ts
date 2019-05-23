@@ -1,5 +1,5 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime } from "../Util";
+import { isMusicTime, getSongDisplayName } from "../Util";
 import * as CodyMusic from "cody-music";
 import { MusicStateManager } from "./MusicStateManager";
 
@@ -23,8 +23,11 @@ export interface Button {
     statusBarItem: StatusBarItem;
 }
 
+const songNameDisplayTimeoutMillis: number = 12000;
+
 export class MusicCommandManager {
     private static _buttons: Button[] = [];
+    private static _hideSongTimeout = null;
 
     private static msMgr: MusicStateManager;
 
@@ -43,23 +46,30 @@ export class MusicCommandManager {
             "$(chevron-left)",
             "Previous",
             "musictime.previous",
-            10
+            30
         );
-        this.createButton("$(triangle-right)", "Play", "musictime.play", 10);
+        this.createButton("$(triangle-right)", "Play", "musictime.play", 29);
         this.createButton(
             "$(primitive-square)",
             "Pause",
             "musictime.pause",
-            10
+            29
         );
-        this.createButton("$(chevron-right)", "Next", "musictime.next", 10);
-        this.createButton("♡", "Like", "musictime.like", 10);
-        this.createButton("♥", "Unlike", "musictime.unlike", 10);
+        this.createButton("$(chevron-right)", "Next", "musictime.next", 28);
+        this.createButton("♡", "Like", "musictime.like", 27);
+        this.createButton("♥", "Unlike", "musictime.unlike", 27);
         this.createButton(
             "🎧",
             "Click to see more from Music Time",
             "musictime.menu",
-            10
+            26
+        );
+        // button area for the current song name
+        this.createButton(
+            "",
+            "Click to launch track player",
+            "musictime.currentSong",
+            25
         );
 
         // get the current track state
@@ -67,18 +77,19 @@ export class MusicCommandManager {
     }
 
     public static async updateButtons() {
+        if (this._hideSongTimeout) {
+            clearTimeout(this._hideSongTimeout);
+        }
         const track = await CodyMusic.getRunningTrack();
-
-        if (!track) {
+        if (!track || !track.id) {
             this.showLaunchPlayerControls();
             return;
         }
-        let accessToken = CodyMusic.getAccessToken();
 
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
         if (track.playerType === CodyMusic.PlayerType.WebSpotify) {
-            if (track.status === CodyMusic.TrackStatus.Playing) {
+            if (track.state === CodyMusic.TrackStatus.Playing) {
                 // show the pause
                 this.showPauseControls(track);
             } else {
@@ -92,7 +103,7 @@ export class MusicCommandManager {
 
         // get the desktop player track state
         if (track) {
-            if (track.status === CodyMusic.TrackStatus.Playing) {
+            if (track.state === CodyMusic.TrackStatus.Playing) {
                 // show the pause
                 this.showPauseControls(track);
             } else {
@@ -101,14 +112,11 @@ export class MusicCommandManager {
             }
             return;
         }
-
-        // no other choice, show the launch player
-        this.showLaunchPlayerControls();
     }
 
     public static async stateCheckHandler() {
-        await this.msMgr.gatherMusicInfo();
-        if (isMusicTime()) {
+        const hasChanges = await this.msMgr.gatherMusicInfo();
+        if (hasChanges && isMusicTime()) {
             this.updateButtons();
         }
     }
@@ -154,7 +162,7 @@ export class MusicCommandManager {
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
         const loved = trackInfo ? trackInfo["loved"] || false : false;
-        this._buttons = this._buttons.map(button => {
+        this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.pause") {
                 button.statusBarItem.hide();
@@ -170,6 +178,16 @@ export class MusicCommandManager {
                 } else {
                     button.statusBarItem.hide();
                 }
+            } else if (btnCmd === "musictime.currentSong") {
+                button.statusBarItem.tooltip = `(${trackInfo.name}) ${
+                    button.tooltip
+                }`;
+                button.statusBarItem.text = getSongDisplayName(trackInfo.name);
+                button.statusBarItem.show();
+                this._hideSongTimeout = setTimeout(() => {
+                    // hide this name in 10 seconds
+                    this.hideSongDisplay();
+                }, songNameDisplayTimeoutMillis);
             } else {
                 if (songInfo && btnCmd === "musictime.play") {
                     // show the song info over the play button
@@ -179,15 +197,13 @@ export class MusicCommandManager {
                 }
                 button.statusBarItem.show();
             }
-
-            return button;
         });
     }
 
     private static showPauseControls(trackInfo) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         const loved = trackInfo ? trackInfo["loved"] || false : false;
-        this._buttons = this._buttons.map(button => {
+        this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.play") {
                 button.statusBarItem.hide();
@@ -203,6 +219,16 @@ export class MusicCommandManager {
                 } else {
                     button.statusBarItem.hide();
                 }
+            } else if (btnCmd === "musictime.currentSong") {
+                button.statusBarItem.tooltip = `(${trackInfo.name}) ${
+                    button.tooltip
+                }`;
+                button.statusBarItem.text = getSongDisplayName(trackInfo.name);
+                button.statusBarItem.show();
+                this._hideSongTimeout = setTimeout(() => {
+                    // hide this name in 10 seconds
+                    this.hideSongDisplay();
+                }, songNameDisplayTimeoutMillis);
             } else {
                 if (btnCmd === "musictime.pause") {
                     button.statusBarItem.tooltip = `${
@@ -211,7 +237,16 @@ export class MusicCommandManager {
                 }
                 button.statusBarItem.show();
             }
-            return button;
         });
+    }
+
+    private static hideSongDisplay() {
+        this._buttons.map(button => {
+            const btnCmd = button.statusBarItem.command;
+            if (btnCmd === "musictime.currentSong") {
+                button.statusBarItem.hide();
+            }
+        });
+        this._hideSongTimeout = null;
     }
 }
