@@ -102,7 +102,7 @@ export async function activate(ctx: ExtensionContext) {
         setTimeout(() => {
             secondary_window_activate_counter++;
             activate(ctx);
-        }, 1000 * 30);
+        }, 1000 * 5);
     } else {
         // check session.json existence
         const serverIsOnline = await serverIsAvailable();

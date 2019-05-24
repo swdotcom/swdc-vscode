@@ -13,8 +13,7 @@ import {
     isLinux,
     logIt,
     buildLoginUrl,
-    launchWebUrl,
-    isMac
+    launchWebUrl
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
