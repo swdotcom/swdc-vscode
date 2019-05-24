@@ -215,29 +215,11 @@ export class MusicControlManager {
 
         const track: CodyMusic.Track = await CodyMusic.getRunningTrack();
 
-        if (!track) {
-            if (isMac()) {
-                menuOptions.items.push({
-                    label: "Launch Spotify Desktop",
-                    description: "",
-                    detail: "Launch your Spotify desktop player",
-                    url: null,
-                    cb: launchSpotifyPlayer
-                });
-
-                menuOptions.items.push({
-                    label: "Launch iTunes Desktop",
-                    description: "",
-                    detail: "Launch your iTunes desktop player",
-                    url: null,
-                    cb: launchItunesPlayer
-                });
-            }
-
+        if (!track || !track.id) {
             menuOptions.items.push({
-                label: "Launch Spotify Web",
+                label: "Play Spotify",
                 description: "",
-                detail: "Launch your Spotify web player",
+                detail: "Launch the Spotify web player",
                 url: null,
                 cb: launchSpotifyWebPlayer
             });
@@ -284,23 +266,9 @@ export async function fetchMusicTimeMetricsDashboard() {
 }
 
 export function launchSpotifyWebPlayer() {
-    launchWebUrl("https://open.spotify.com/collection/playlists");
-}
-
-export function launchSpotifyPlayer() {
-    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyDesktop, {}).then(
-        result => {
-            MusicCommandManager.stateCheckHandler();
-        }
-    );
-}
-
-export function launchItunesPlayer() {
-    CodyMusic.launchPlayer(CodyMusic.PlayerName.ItunesDesktop, {}).then(
-        result => {
-            MusicCommandManager.stateCheckHandler();
-        }
-    );
+    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb, {}).then(result => {
+        MusicCommandManager.stateCheckHandler();
+    });
 }
 
 // export async function buildPlaylists() {

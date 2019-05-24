@@ -112,10 +112,11 @@ export class MusicStateManager {
             let serverIsOnline = await serverIsAvailable();
             await getSpotifyOauth(serverIsOnline);
         }
-        const playingTrack: CodyMusic.Track = await CodyMusic.getTrack(
-            CodyMusic.PlayerName.ItunesDesktop
-        );
+        // const playingTrack: CodyMusic.Track = await CodyMusic.getTrack(
+        //     CodyMusic.PlayerName.ItunesDesktop
+        // );
 
+        const playingTrack = await CodyMusic.getRunningTrack();
         if (playingTrack && playingTrack.id) {
             playingTrack["start"] = 0;
             playingTrack["end"] = 0;
