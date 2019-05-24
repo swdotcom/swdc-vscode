@@ -26,6 +26,12 @@ const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 export class MusicControlManager {
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
+    constructor() {
+        setTimeout(() => {
+            getSpotifyPlaylistNames();
+        }, 5000);
+    }
+
     async getPlayer(): Promise<PlayerType> {
         const track = await CodyMusic.getRunningTrack();
         if (track) {
@@ -268,6 +274,16 @@ export function launchSpotifyWebPlayer() {
     CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb, {}).then(result => {
         MusicCommandManager.stateCheckHandler();
     });
+}
+
+export async function getSpotifyPlaylistNames() {
+    let playlistNames: string[] = await CodyMusic.getPlaylistNames(
+        CodyMusic.PlayerName.SpotifyWeb
+    );
+}
+
+export async function getSpotifyPlaylists() {
+    //
 }
 
 // export async function buildPlaylists() {

@@ -81,7 +81,6 @@ export class MusicCommandManager {
             clearTimeout(this._hideSongTimeout);
         }
         const track = await CodyMusic.getRunningTrack();
-        console.log("track: ", track);
         if (!track || !track.id) {
             this.showLaunchPlayerControls();
             return;
@@ -122,7 +121,6 @@ export class MusicCommandManager {
 
     public static async stateCheckHandler() {
         const hasChanges = await this.msMgr.gatherMusicInfo();
-        console.log("has changes: ", hasChanges);
         if (hasChanges && isMusicTime()) {
             this.updateButtons();
         }
