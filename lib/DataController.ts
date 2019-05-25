@@ -6,7 +6,7 @@ import {
     isResponseOk,
     softwarePost
 } from "./HttpClient";
-import * as CodyMusic from "cody-music";
+import { MusicStoreManager } from "./music/MusicStoreManager";
 import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 import {
     getItem,
@@ -216,13 +216,7 @@ export async function getSpotifyOauth(serverIsOnline) {
                 "spotify_refresh_token",
                 user.oauths.Spotify.spotify_refresh_token
             );
-            // update the CodyMusic credentials
-            CodyMusic.setCredentials({
-                refreshToken: user.oauths.Spotify.spotify_refresh_token,
-                clientSecret: "2b40b4975b2743189c87f4712c0cd59e",
-                clientId: "eb67e22ba1c6474aad8ec8067480d9dc",
-                accessToken: user.oauths.Spotify.spotify_access_token
-            });
+
             return user.oauths.Spotify;
         }
     }
@@ -478,6 +472,8 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
             tryCountUntilFound -= 1;
             refetchSpotifyConnectStatusLazily(tryCountUntilFound);
         }
+    } else {
+        MusicStoreManager.getInstance().initializeSpotify();
     }
 }
 

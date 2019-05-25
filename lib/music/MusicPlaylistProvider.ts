@@ -8,22 +8,19 @@ import {
     Disposable
 } from "vscode";
 import * as path from "path";
-import { MusicTreeItem } from "./MusicStoreManager";
 import { MusicStoreManager } from "./MusicStoreManager";
+import { PlaylistItem } from "cody-music/dist/lib/models";
 // import { buildPlaylists } from "./MusicControlManager";
-import { spotifyApiPut } from "../HttpClient";
-import { getItem } from "../Util";
-import * as music from "cody-music";
 
 // const createPlaylistTreeItem = (
-//     p: MusicTreeItem,
+//     p: PlaylistItem,
 //     cstate: TreeItemCollapsibleState
 // ) => {
 //     return new PlaylistTreeItem(p, cstate);
 // };
 
 // export const connectPlaylistTreeView = (
-//     view: TreeView<MusicTreeItem>,
+//     view: TreeView<PlaylistItem>,
 //     musicStore: MusicStoreManager
 // ) => {
 //     return Disposable.from(
@@ -64,16 +61,16 @@ import * as music from "cody-music";
 //     );
 // };
 
-export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
+export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     private _onDidChangeTreeData: EventEmitter<
-        MusicTreeItem | undefined
-    > = new EventEmitter<MusicTreeItem | undefined>();
-    readonly onDidChangeTreeData: Event<MusicTreeItem | undefined> = this
+        PlaylistItem | undefined
+    > = new EventEmitter<PlaylistItem | undefined>();
+    readonly onDidChangeTreeData: Event<PlaylistItem | undefined> = this
         ._onDidChangeTreeData.event;
 
     constructor(private readonly musicStore: MusicStoreManager) {}
 
-    getParent(_p: MusicTreeItem) {
+    getParent(_p: PlaylistItem) {
         return void 0; // all playlists are in root
     }
 
@@ -89,7 +86,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
         console.log("pause");
     }
 
-    getTreeItem(p: MusicTreeItem): PlaylistTreeItem {
+    getTreeItem(p: PlaylistItem): PlaylistTreeItem {
         return null;
         // if (p && p["tracks"] && p["tracks"].length > 0) {
         //     return createPlaylistTreeItem(
@@ -101,13 +98,13 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
         // }
     }
 
-    async getChildren(element?: MusicTreeItem): Promise<MusicTreeItem[]> {
+    async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         // if (element && element.type === "playlist") {
         //     // return the tracks
         //     return element["tracks"];
         // } else {
         //     // return the playlists
-        //     const playlists: MusicTreeItem[] = await buildPlaylists();
+        //     const playlists: PlaylistItem[] = await buildPlaylists();
         //     return Promise.resolve(playlists);
         // }
         return [];
@@ -116,7 +113,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<MusicTreeItem> {
 
 class PlaylistTreeItem extends TreeItem {
     constructor(
-        private readonly musicTreeItem: MusicTreeItem,
+        private readonly musicTreeItem: PlaylistItem,
         public readonly collapsibleState: TreeItemCollapsibleState,
         public readonly command?: Command
     ) {

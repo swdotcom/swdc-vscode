@@ -2,6 +2,7 @@ import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
 import * as CodyMusic from "cody-music";
 import { MusicStateManager } from "./MusicStateManager";
+import { MusicStoreManager } from "./MusicStoreManager";
 
 export interface Button {
     /**
@@ -33,6 +34,7 @@ export class MusicCommandManager {
 
     private constructor() {
         // private to prevent non-singleton usage
+        MusicStoreManager.getInstance().initializeSpotify();
     }
 
     public static async initialize() {

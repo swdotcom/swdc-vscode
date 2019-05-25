@@ -7,6 +7,7 @@ import {
     serverIsAvailable,
     refetchSpotifyConnectStatusLazily
 } from "../DataController";
+import { MusicStoreManager } from "./MusicStoreManager";
 import {
     getItem,
     getMusicTimeFile,
@@ -27,9 +28,7 @@ export class MusicControlManager {
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
     constructor() {
-        setTimeout(() => {
-            getSpotifyPlaylistNames();
-        }, 5000);
+        MusicStoreManager.getInstance().initializeSpotify();
     }
 
     async getPlayer(): Promise<PlayerType> {
@@ -280,6 +279,7 @@ export async function getSpotifyPlaylistNames() {
     let playlistNames: string[] = await CodyMusic.getPlaylistNames(
         CodyMusic.PlayerName.SpotifyWeb
     );
+    console.log("playlist names: ", playlistNames);
 }
 
 export async function getSpotifyPlaylists() {

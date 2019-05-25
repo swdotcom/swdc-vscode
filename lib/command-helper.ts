@@ -22,7 +22,6 @@ import { KpmController } from "./KpmController";
 //     MusicPlaylistProvider,
 //     connectPlaylistTreeView
 // } from "./music/MusicPlaylistProvider";
-import { MusicStoreManager, MusicTreeItem } from "./music/MusicStoreManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -145,7 +144,7 @@ export function createCommands(): {
         cmds.push(spotifyConnectCommand);
 
         // const treePlaylistProvider = new MusicPlaylistProvider(musicStore);
-        // const playlistTreeView: TreeView<MusicTreeItem> = window.createTreeView(
+        // const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
         //     "music-time-playlists",
         //     {
         //         treeDataProvider: treePlaylistProvider,

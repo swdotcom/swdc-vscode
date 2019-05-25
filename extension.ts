@@ -8,9 +8,9 @@ import {
     getUserStatus,
     sendHeartbeat,
     createAnonymousUser,
-    serverIsAvailable,
-    getSpotifyOauth
+    serverIsAvailable
 } from "./lib/DataController";
+import { MusicStoreManager } from "./lib/music/MusicStoreManager";
 import {
     showStatus,
     nowInSecs,
@@ -259,10 +259,7 @@ async function initializeUserInfo(
             fetchDailyKpmSessionInfo();
         }, 1000);
     } else if (isMusicTime()) {
-        const spotifyAccessToken = getItem("spotify_access_token");
-        if (!spotifyAccessToken) {
-            await getSpotifyOauth(serverIsOnline);
-        }
+        MusicStoreManager.getInstance().initializeSpotify();
     }
 }
 
