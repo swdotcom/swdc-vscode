@@ -8,10 +8,10 @@ import { getItem } from "../Util";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
-    private playlists: PlaylistItem[] = [];
-    private codyPlaylists: PlaylistItem[] = [];
-    private codyFavorites: any[] = [];
-    private tracks: CodyMusic.Track[] = [];
+    private _playlists: PlaylistItem[] = [];
+    private _codyPlaylists: PlaylistItem[] = [];
+    private _codyFavorites: any[] = [];
+    private _tracks: CodyMusic.Track[] = [];
 
     private constructor() {
         //
@@ -39,15 +39,15 @@ export class MusicStoreManager {
                 });
 
                 // fetch playlists
-                this.updatePlaylists();
+                this.syncSpotifyWebPlaylists();
             }
         }
     }
 
-    async getCodyPlaylists() {
+    async syncCodyPlaylists() {
         const response = await softwareGet("/music/playlist", getItem("jwt"));
         if (isResponseOk(response)) {
-            this.codyPlaylists = response.data(item => {
+            this._codyPlaylists = response.data(item => {
                 item["id"] = item.playlist_id;
                 delete item.playlist_id;
                 return item;
@@ -55,36 +55,44 @@ export class MusicStoreManager {
         }
     }
 
-    async getPlaylistFavorites() {
+    async syncPlaylistFavorites() {
         const response = await softwareGet(
             "/music/playlist/favorites",
             getItem("jwt")
         );
 
         if (isResponseOk(response) && response.data.length > 0) {
-            this.codyFavorites = response.data(item => {
+            this._codyFavorites = response.data(item => {
                 return item;
             });
         } else {
             // clear the favorites
-            this.codyFavorites = [];
+            this._codyFavorites = [];
         }
     }
 
-    getPlaylists(): PlaylistItem[] {
-        return this.playlists;
+    async syncSpotifyWebPlaylists() {
+        this._playlists = await MusicPlaylistManager.getInstance().getSpotifyWebPlaylists();
     }
 
-    async updatePlaylists() {
-        this.playlists = await MusicPlaylistManager.getInstance().getSpotifyWebPlaylists();
+    get codyPlaylists(): PlaylistItem[] {
+        return this._codyPlaylists;
     }
 
-    getTracks(): CodyMusic.Track[] {
-        if (!this.tracks || this.tracks.length === 0) {
+    get playlists(): PlaylistItem[] {
+        return this._playlists;
+    }
+
+    get codyFavorites(): any[] {
+        return this._codyFavorites;
+    }
+
+    get tracks(): CodyMusic.Track[] {
+        if (!this._tracks || this._tracks.length === 0) {
             // check if there are any playists to get tracks from
-            if (this.playlists && this.playlists.length > 0) {
-                for (let i = 0; i < this.playlists.length; i++) {
-                    let playlist: PlaylistItem = this.playlists[i];
+            if (this._playlists && this._playlists.length > 0) {
+                for (let i = 0; i < this._playlists.length; i++) {
+                    let playlist: PlaylistItem = this._playlists[i];
                     if (playlist.tracks) {
                         for (let x = 0; x < playlist.tracks.length; x++) {
                             let track: CodyMusic.Track = playlist.tracks[x];

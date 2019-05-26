@@ -22,8 +22,6 @@ import {
     isCodeTime,
     codeTimeExtInstalled,
     isMusicTime,
-    getItem,
-    setItem,
     jwtExists
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
@@ -260,6 +258,13 @@ async function initializeUserInfo(
         }, 1000);
     } else if (isMusicTime()) {
         MusicStoreManager.getInstance().initializeSpotify();
+
+        // fetch the favorites every 15 minutes
+        setTimeout(() => {
+            MusicStoreManager.getInstance().syncPlaylistFavorites();
+        }, 1000 * 60 * 15);
+        // and once right now
+        MusicStoreManager.getInstance().syncPlaylistFavorites();
     }
 }
 

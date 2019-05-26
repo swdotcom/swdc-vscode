@@ -19,7 +19,7 @@ import {
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import { PlayerType } from "cody-music/dist/lib/models";
+import { PlayerType, PlaylistItem } from "cody-music/dist/lib/models";
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
@@ -208,15 +208,28 @@ export class MusicControlManager {
                 cb: connectSpotify
             });
         } else {
-            // show the generate playlist menu item
-            menuOptions.items.push({
-                label: "Create Playlist",
-                description: "",
-                detail:
-                    "Generate a playlist of your top 10 productivity songs in your Spotify playlists",
-                url: null,
-                cb: createProductivityPlaylist
-            });
+            // check if we already have a playlist
+            let codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
+                .codyPlaylists;
+
+            let codyTracks: any[] = MusicStoreManager.getInstance()
+                .codyFavorites;
+
+            if (
+                (!codyPlaylists || codyPlaylists.length === 0) &&
+                codyTracks &&
+                codyTracks.length > 0
+            ) {
+                // show the generate playlist menu item
+                menuOptions.items.push({
+                    label: "Create Playlist",
+                    description: "",
+                    detail:
+                        "Generate a playlist of your top 10 productivity songs in your Spotify playlists",
+                    url: null,
+                    cb: createProductivityPlaylist
+                });
+            }
         }
 
         // menuOptions.items.push({
@@ -256,7 +269,12 @@ export async function displayMusicTimeMetricsDashboard() {
 }
 
 export async function createProductivityPlaylist() {
-    //
+    // get the spotify track ids and create the playlist
+    let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
+    if (codyTracks && codyTracks.length > 0) {
+        let result = await CodyMusic.createPlaylist("Cody Dev Beats", true);
+        console.log("playlist creation result: ", result);
+    }
 }
 
 export async function connectSpotify() {
@@ -272,9 +290,7 @@ export async function fetchMusicTimeMetricsDashboard() {
         `/dashboard?plugin=music-time&linux=${isLinux()}`,
         getItem("jwt")
     );
-    if (isResponseOk(musicSummary)) {
-        MusicStoreManager.getInstance().getPlaylistFavorites();
-    }
+
     // get the content
     let content =
         musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
