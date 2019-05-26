@@ -87,7 +87,7 @@ export async function showMenuOptions() {
 
     if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
-            label: "Software Top 40",
+            label: "Software top 40",
             description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",

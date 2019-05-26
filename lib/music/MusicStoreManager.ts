@@ -2,10 +2,15 @@ import * as CodyMusic from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 import { MusicPlaylistManager } from "./MusicPlaylistManager";
 import { PlaylistItem } from "cody-music/dist/lib/models";
+import { softwareGet, isResponseOk } from "../HttpClient";
+import { getItem } from "../Util";
 
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
+
     private playlists: PlaylistItem[] = [];
+    private codyPlaylists: PlaylistItem[] = [];
+    private codyFavorites: any[] = [];
     private tracks: CodyMusic.Track[] = [];
 
     private constructor() {
@@ -36,6 +41,33 @@ export class MusicStoreManager {
                 // fetch playlists
                 this.updatePlaylists();
             }
+        }
+    }
+
+    async getCodyPlaylists() {
+        const response = await softwareGet("/music/playlist", getItem("jwt"));
+        if (isResponseOk(response)) {
+            this.codyPlaylists = response.data(item => {
+                item["id"] = item.playlist_id;
+                delete item.playlist_id;
+                return item;
+            });
+        }
+    }
+
+    async getPlaylistFavorites() {
+        const response = await softwareGet(
+            "/music/playlist/favorites",
+            getItem("jwt")
+        );
+
+        if (isResponseOk(response) && response.data.length > 0) {
+            this.codyFavorites = response.data(item => {
+                return item;
+            });
+        } else {
+            // clear the favorites
+            this.codyFavorites = [];
         }
     }
 

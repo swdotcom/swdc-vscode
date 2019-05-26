@@ -207,6 +207,16 @@ export class MusicControlManager {
                 url: null,
                 cb: connectSpotify
             });
+        } else {
+            // show the generate playlist menu item
+            menuOptions.items.push({
+                label: "Create Playlist",
+                description: "",
+                detail:
+                    "Generate a playlist of your top 10 productivity songs in your Spotify playlists",
+                url: null,
+                cb: createProductivityPlaylist
+            });
         }
 
         // menuOptions.items.push({
@@ -245,6 +255,10 @@ export async function displayMusicTimeMetricsDashboard() {
     });
 }
 
+export async function createProductivityPlaylist() {
+    //
+}
+
 export async function connectSpotify() {
     const endpoint = `${api_endpoint}/auth/spotify?integrate=spotify`;
     launchWebUrl(endpoint);
@@ -258,6 +272,9 @@ export async function fetchMusicTimeMetricsDashboard() {
         `/dashboard?plugin=music-time&linux=${isLinux()}`,
         getItem("jwt")
     );
+    if (isResponseOk(musicSummary)) {
+        MusicStoreManager.getInstance().getPlaylistFavorites();
+    }
     // get the content
     let content =
         musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
