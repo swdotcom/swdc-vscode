@@ -124,6 +124,11 @@ export class MusicStoreManager {
         }
 
         // get the spotify web playlists, then the cody playlists
+        this.syncPairedPlaylists();
+    }
+
+    async syncPairedPlaylists() {
+        // get the spotify web playlists, then the cody playlists
         this.syncSpotifyWebPlaylists().then(() => {
             this.syncCodyPlaylists();
         });

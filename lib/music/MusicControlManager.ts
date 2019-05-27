@@ -304,7 +304,7 @@ export async function createPlaylist() {
             });
 
             // create the playlist_id in software
-            await CodyMusic.addTracksToPlaylist(
+            const addTracksResult = await CodyMusic.addTracksToPlaylist(
                 playlistResult.data.id,
                 tracksToAdd
             );

@@ -141,7 +141,7 @@ async function deploy() {
     const copyCmd = !isWindows() ? "cp" : "copy";
     const pathSep = !isWindows() ? "/" : "\\";
     await runCommand(
-        `mkdir out${pathSep}lib`,
+        `mkdir -p out${pathSep}lib`,
         "Creating the dist/lib directory if it doesn't exist",
         true
     );

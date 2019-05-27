@@ -259,12 +259,17 @@ async function initializeUserInfo(
     } else if (isMusicTime()) {
         MusicStoreManager.getInstance().initializeSpotify();
 
-        // fetch the favorites every 15 minutes
-        setTimeout(() => {
+        // fetch the favorites every 10 minutes
+        setInterval(() => {
             MusicStoreManager.getInstance().syncPlaylistFavorites();
-        }, 1000 * 60);
+        }, 1000 * 60 * 10);
         // and once right now
         MusicStoreManager.getInstance().syncPlaylistFavorites();
+
+        // sync the spotify playlist and what's on software every 15 seconds
+        setInterval(() => {
+            MusicStoreManager.getInstance().syncPairedPlaylists();
+        }, 1000 * 15);
     }
 }
 
