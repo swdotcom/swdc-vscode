@@ -27,7 +27,8 @@ import { MusicStateManager } from "./MusicStateManager";
 import {
     PlayerType,
     PlaylistItem,
-    CodyResponse
+    CodyResponse,
+    CodyResponseType
 } from "cody-music/dist/lib/models";
 const fs = require("fs");
 
@@ -304,10 +305,17 @@ export async function createPlaylist() {
             });
 
             // create the playlist_id in software
-            const addTracksResult = await CodyMusic.addTracksToPlaylist(
+            const addTracksResult: CodyResponse = await CodyMusic.addTracksToPlaylist(
                 playlistResult.data.id,
                 tracksToAdd
             );
+
+            if (addTracksResult.state === CodyResponseType.Success) {
+                window.showInformationMessage(
+                    "Successfully created playlist and added tracks.",
+                    ...["OK"]
+                );
+            }
 
             await MusicStoreManager.getInstance().syncSpotifyWebPlaylists();
 
