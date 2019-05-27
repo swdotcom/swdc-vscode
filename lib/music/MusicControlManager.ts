@@ -16,10 +16,19 @@ import {
     buildLoginUrl,
     launchWebUrl
 } from "../Util";
-import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
+import {
+    softwareGet,
+    softwarePut,
+    isResponseOk,
+    softwarePost
+} from "../HttpClient";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import { PlayerType, PlaylistItem } from "cody-music/dist/lib/models";
+import {
+    PlayerType,
+    PlaylistItem,
+    CodyResponse
+} from "cody-music/dist/lib/models";
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
@@ -209,25 +218,34 @@ export class MusicControlManager {
             });
         } else {
             // check if we already have a playlist
-            let codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
+            const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
                 .codyPlaylists;
+            const hasCodyPlaylists =
+                codyPlaylists && codyPlaylists.length > 0 ? true : false;
 
-            let codyTracks: any[] = MusicStoreManager.getInstance()
+            const codyTracks: any[] = MusicStoreManager.getInstance()
                 .codyFavorites;
+            const hasCodyFavorites =
+                codyTracks && codyTracks.length > 0 ? true : false;
 
-            if (
-                (!codyPlaylists || codyPlaylists.length === 0) &&
-                codyTracks &&
-                codyTracks.length > 0
-            ) {
+            if (!hasCodyPlaylists && hasCodyFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Create Playlist",
+                    label: "Create your weekly playlist",
                     description: "",
                     detail:
-                        "Generate a playlist of your top 10 productivity songs in your Spotify playlists",
+                        "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40",
                     url: null,
                     cb: createProductivityPlaylist
+                });
+            } else if (hasCodyPlaylists) {
+                menuOptions.items.push({
+                    label: "Play your spotify weekly playlist",
+                    description: "",
+                    detail:
+                        "Launch the Spotify web player to view your playlist",
+                    url: null,
+                    cb: launchSpotifyWebPlayer
                 });
             }
         }
@@ -272,8 +290,28 @@ export async function createProductivityPlaylist() {
     // get the spotify track ids and create the playlist
     let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
     if (codyTracks && codyTracks.length > 0) {
-        let result = await CodyMusic.createPlaylist("Cody Dev Beats", true);
-        console.log("playlist creation result: ", result);
+        let playlistResult: CodyResponse = await CodyMusic.createPlaylist(
+            "Cody Dev Beats",
+            true
+        );
+        if (playlistResult && playlistResult.data && playlistResult.data.id) {
+            // create the playlist_id in software
+            // playlist_id || !body.type || !body.name
+            const payload = {
+                playlist_id: playlistResult.data.id,
+                type: CodyMusic.PlayerName.SpotifyWeb,
+                name: "Cody Dev Beats"
+            };
+            let createResult = await softwarePost(
+                "/music/playlist",
+                payload,
+                getItem("jwt")
+            );
+            if (isResponseOk(createResult)) {
+                // fetch the cody playlists
+                MusicStoreManager.getInstance().syncCodyPlaylists();
+            }
+        }
     }
 }
 
@@ -303,9 +341,18 @@ export async function fetchMusicTimeMetricsDashboard() {
 }
 
 export function launchSpotifyWebPlayer() {
-    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb, {}).then(result => {
-        MusicCommandManager.stateCheckHandler();
-    });
+    const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
+        .codyPlaylists;
+    let options = {};
+    if (codyPlaylists && codyPlaylists.length > 0) {
+        options["playlist_id"] = codyPlaylists[0].id;
+    }
+
+    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb, options).then(
+        result => {
+            MusicCommandManager.stateCheckHandler();
+        }
+    );
 }
 
 export async function getSpotifyPlaylistNames() {
