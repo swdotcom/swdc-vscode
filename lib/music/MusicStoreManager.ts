@@ -46,7 +46,7 @@ export class MusicStoreManager {
         }
     }
 
-    async syncCodyPlaylists() {
+    async fetchCodyPlaylists() {
         const response = await softwareGet("/music/playlist", getItem("jwt"));
         if (isResponseOk(response)) {
             this._codyPlaylists = response.data.map(item => {
@@ -56,6 +56,10 @@ export class MusicStoreManager {
                 return item;
             });
         }
+    }
+
+    async syncCodyPlaylists() {
+        await this.fetchCodyPlaylists();
 
         this.reconcilePlaylists();
     }
@@ -102,7 +106,7 @@ export class MusicStoreManager {
         }
 
         if (hasUpdates) {
-            this.syncCodyPlaylists();
+            this.fetchCodyPlaylists();
         }
     }
 

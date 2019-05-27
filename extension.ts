@@ -262,7 +262,7 @@ async function initializeUserInfo(
         // fetch the favorites every 15 minutes
         setTimeout(() => {
             MusicStoreManager.getInstance().syncPlaylistFavorites();
-        }, 1000 * 60 * 15);
+        }, 1000 * 60);
         // and once right now
         MusicStoreManager.getInstance().syncPlaylistFavorites();
     }

@@ -236,7 +236,7 @@ export class MusicControlManager {
                     detail:
                         "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40",
                     url: null,
-                    cb: createProductivityPlaylist
+                    cb: createPlaylist
                 });
             } else if (hasCodyPlaylists) {
                 menuOptions.items.push({
@@ -286,7 +286,7 @@ export async function displayMusicTimeMetricsDashboard() {
     });
 }
 
-export async function createProductivityPlaylist() {
+export async function createPlaylist() {
     // get the spotify track ids and create the playlist
     let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
     if (codyTracks && codyTracks.length > 0) {
@@ -295,8 +295,22 @@ export async function createProductivityPlaylist() {
             true
         );
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
+            // add the tracks
+            // list of [{uri, artist, name}...]
+            const codyTracks: any[] = MusicStoreManager.getInstance()
+                .codyFavorites;
+            let tracksToAdd: string[] = codyTracks.map(item => {
+                return item.uri;
+            });
+
             // create the playlist_id in software
-            // playlist_id || !body.type || !body.name
+            await CodyMusic.addTracksToPlaylist(
+                playlistResult.data.id,
+                tracksToAdd
+            );
+
+            await MusicStoreManager.getInstance().syncSpotifyWebPlaylists();
+
             const payload = {
                 playlist_id: playlistResult.data.id,
                 type: CodyMusic.PlayerName.SpotifyWeb,
