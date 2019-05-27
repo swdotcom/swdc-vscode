@@ -1,4 +1,5 @@
 [![](https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) [![](https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) [![](https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode)
+[![](https://aka.ms/vsls-badge)](https://aka.ms/vsls)
 
 # Code Time for Visual Studio Code
 
