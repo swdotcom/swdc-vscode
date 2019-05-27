@@ -295,6 +295,17 @@ export async function createPlaylist() {
             "Cody Dev Beats",
             true
         );
+
+        if (playlistResult.state === CodyResponseType.Failed) {
+            window.showErrorMessage(
+                `There was an unexpected error adding tracks to the playlist. ${
+                    playlistResult.message
+                }`,
+                ...["OK"]
+            );
+            return;
+        }
+
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
             // add the tracks
             // list of [{uri, artist, name}...]
@@ -315,6 +326,13 @@ export async function createPlaylist() {
                     "Successfully created playlist and added tracks.",
                     ...["OK"]
                 );
+            } else {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        addTracksResult.message
+                    }`,
+                    ...["OK"]
+                );
             }
 
             await MusicStoreManager.getInstance().syncSpotifyWebPlaylists();
@@ -331,7 +349,7 @@ export async function createPlaylist() {
             );
             if (isResponseOk(createResult)) {
                 // fetch the cody playlists
-                MusicStoreManager.getInstance().syncCodyPlaylists();
+                MusicStoreManager.getInstance().syncPairedPlaylists();
             }
         }
     }
