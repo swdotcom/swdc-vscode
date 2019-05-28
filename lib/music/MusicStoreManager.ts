@@ -146,6 +146,12 @@ export class MusicStoreManager {
 
     async syncSpotifyWebPlaylists() {
         this._spotifyPlaylists = await MusicPlaylistManager.getInstance().getSpotifyWebPlaylists();
+        if (this._spotifyPlaylists) {
+            // update the type to "playlist";
+            this._spotifyPlaylists.map(item => {
+                item["type"] = "playlist";
+            });
+        }
     }
 
     get codyPlaylists(): PlaylistItem[] {
@@ -165,7 +171,7 @@ export class MusicStoreManager {
     }
 
     async getTracksForPlaylistId(playlist_id: string) {
-        let trackInfos = [];
+        let playlistItems = [];
         let tracks = this._playlistTracks[playlist_id];
         if (tracks) {
             return tracks;
@@ -183,11 +189,21 @@ export class MusicStoreManager {
          */
         // result.data.items[0].track
         if (playlistTracks.state === CodyResponseType.Success) {
-            trackInfos = playlistTracks.data.items.map(item => {
-                return item.track;
+            playlistItems = playlistTracks.data.items.map(item => {
+                let track: any = item.track;
+                // turn it into a PlaylistItem
+                let playlistItem: PlaylistItem = new PlaylistItem();
+                playlistItem.id = track.id;
+                playlistItem["type"] = "track";
+                playlistItem["name"] = track.name;
+                playlistItem["artists"] = track.artists.join(", ");
+
+                // remove the tracks attribute as this is a track element
+                delete playlistItem.tracks;
+                return playlistItem;
             });
-            this._playlistTracks[playlist_id] = trackInfos;
+            this._playlistTracks[playlist_id] = playlistItems;
         }
-        return trackInfos;
+        return playlistItems;
     }
 }

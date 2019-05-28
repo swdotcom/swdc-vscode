@@ -88,21 +88,34 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
-        if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
-            if (!msMgr.hasTracksForPlaylistId(p.id)) {
-                msMgr.getTracksForPlaylistId(p.id);
+        if (p["type"] === "playlist") {
+            // it's a track parent (playlist)
+            if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
+                if (!msMgr.hasTracksForPlaylistId(p.id)) {
+                    msMgr.getTracksForPlaylistId(p.id);
+                }
+                return createPlaylistTreeItem(
+                    p,
+                    TreeItemCollapsibleState.Collapsed
+                );
             }
-            return createPlaylistTreeItem(
-                p,
-                TreeItemCollapsibleState.Collapsed
-            );
+            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
+        } else {
+            // it's a track
+            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
         }
-        return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
     }
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
-        let playlists = msMgr.spotifyPlaylists;
-        return playlists;
+        if (element) {
+            // return track of the playlist parent
+            let tracks = msMgr.getTracksForPlaylistId(element.id);
+            return tracks;
+        } else {
+            // get the top level playlist parents
+            let playlists = msMgr.spotifyPlaylists;
+            return playlists;
+        }
     }
 }
 
