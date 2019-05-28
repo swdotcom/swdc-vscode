@@ -2,7 +2,13 @@ import {
     Track,
     getAccessToken,
     setCredentials,
-    getPlaylistTracks
+    getPlaylistTracks,
+    PaginationItem,
+    PlaylistItem,
+    PlayerName,
+    CodyResponse,
+    CodyResponseType,
+    Album
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 import { MusicPlaylistManager } from "./MusicPlaylistManager";
@@ -13,13 +19,6 @@ import {
     softwarePut
 } from "../HttpClient";
 import { getItem } from "../Util";
-import {
-    PlaylistItem,
-    PlayerName,
-    CodyResponse,
-    CodyResponseType
-} from "cody-music/dist/lib/models";
-
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -149,7 +148,7 @@ export class MusicStoreManager {
         if (this._spotifyPlaylists) {
             // update the type to "playlist";
             this._spotifyPlaylists.map(item => {
-                item["type"] = "playlist";
+                item.type = "playlist";
             });
         }
     }
@@ -189,19 +188,19 @@ export class MusicStoreManager {
          */
         // result.data.items[0].track
         if (playlistTracks.state === CodyResponseType.Success) {
-            playlistItems = playlistTracks.data.items.map(item => {
-                let track: any = item.track;
-                // turn it into a PlaylistItem
-                let playlistItem: PlaylistItem = new PlaylistItem();
-                playlistItem.id = track.id;
-                playlistItem["type"] = "track";
-                playlistItem["name"] = track.name;
-                playlistItem["artists"] = track.artists.join(", ");
+            let paginationItem: PaginationItem = playlistTracks.data;
+            if (paginationItem && paginationItem.items) {
+                playlistItems = paginationItem.items.map((track: Track) => {
+                    let playlistItem: PlaylistItem = new PlaylistItem();
+                    playlistItem.type = "track";
+                    playlistItem.name = track.name;
+                    playlistItem["artists"] = track.artists.join(", ");
+                    // since this is a track, delete the tracks attribute
+                    delete playlistItem.tracks;
+                    return playlistItem;
+                });
+            }
 
-                // remove the tracks attribute as this is a track element
-                delete playlistItem.tracks;
-                return playlistItem;
-            });
             this._playlistTracks[playlist_id] = playlistItems;
         }
         return playlistItems;

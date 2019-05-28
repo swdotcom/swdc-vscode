@@ -11,7 +11,10 @@ import {
     launchPlayer,
     createPlaylist,
     addTracksToPlaylist,
-    getPlaylistNames
+    getPlaylistNames,
+    PlaylistItem,
+    CodyResponse,
+    CodyResponseType
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -38,11 +41,6 @@ import {
 } from "../HttpClient";
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import {
-    PlaylistItem,
-    CodyResponse,
-    CodyResponseType
-} from "cody-music/dist/lib/models";
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";

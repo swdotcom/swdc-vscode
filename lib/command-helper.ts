@@ -22,7 +22,7 @@ import {
     MusicPlaylistProvider,
     connectPlaylistTreeView
 } from "./music/MusicPlaylistProvider";
-import { PlaylistItem } from "cody-music/dist/lib/models";
+import { PlaylistItem } from "cody-music";
 
 export function createCommands(): {
     dispose: () => void;

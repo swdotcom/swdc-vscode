@@ -1,6 +1,5 @@
-import { PlayerName, getPlaylists } from "cody-music";
+import { PlayerName, getPlaylists, PlaylistItem } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { PlaylistItem } from "cody-music/dist/lib/models";
 
 export class MusicPlaylistManager {
     private static instance: MusicPlaylistManager;

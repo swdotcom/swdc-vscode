@@ -10,7 +10,7 @@ import {
 } from "vscode";
 import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { PlaylistItem } from "cody-music/dist/lib/models";
+import { PlaylistItem } from "cody-music";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -88,7 +88,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
-        if (p["type"] === "playlist") {
+        if (p.type === "playlist") {
             // it's a track parent (playlist)
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
                 if (!msMgr.hasTracksForPlaylistId(p.id)) {
