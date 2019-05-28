@@ -1,4 +1,9 @@
-import { Track, getAccessToken, setCredentials } from "cody-music";
+import {
+    Track,
+    getAccessToken,
+    setCredentials,
+    getPlaylistTracks
+} from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 import { MusicPlaylistManager } from "./MusicPlaylistManager";
 import {
@@ -8,7 +13,12 @@ import {
     softwarePut
 } from "../HttpClient";
 import { getItem } from "../Util";
-import { PlaylistItem } from "cody-music/dist/lib/models";
+import {
+    PlaylistItem,
+    PlayerName,
+    CodyResponse,
+    CodyResponseType
+} from "cody-music/dist/lib/models";
 
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
@@ -16,7 +26,7 @@ export class MusicStoreManager {
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _codyPlaylists: PlaylistItem[] = [];
     private _codyFavorites: any[] = [];
-    private _tracks: Track[] = [];
+    private _playlistTracks: any = {};
 
     private constructor() {
         //
@@ -150,21 +160,34 @@ export class MusicStoreManager {
         return this._codyFavorites;
     }
 
-    get tracks(): Track[] {
-        if (!this._tracks || this._tracks.length === 0) {
-            // check if there are any playists to get tracks from
-            if (this._spotifyPlaylists && this._spotifyPlaylists.length > 0) {
-                for (let i = 0; i < this._spotifyPlaylists.length; i++) {
-                    let playlist: PlaylistItem = this._spotifyPlaylists[i];
-                    if (playlist.tracks) {
-                        for (let x = 0; x < playlist.tracks.length; x++) {
-                            let track: Track = playlist.tracks[x];
-                            this.tracks.push(track);
-                        }
-                    }
-                }
-            }
+    hasTracksForPlaylistId(playlist_id: string): boolean {
+        return this._playlistTracks[playlist_id] ? true : false;
+    }
+
+    async getTracksForPlaylistId(playlist_id: string) {
+        let trackInfos = [];
+        let tracks = this._playlistTracks[playlist_id];
+        if (tracks) {
+            return tracks;
         }
-        return this.tracks;
+
+        let playlistTracks: CodyResponse = await getPlaylistTracks(
+            PlayerName.SpotifyWeb,
+            playlist_id
+        );
+        /**
+         * album: { id: '4KaiavWFhR7j9tY1f7V6UL', name: 'Nightmare' },
+            id: '340UVheS8z3ncW9TTUhAbc',
+            name: 'Nightmare',
+            artists: [ 'Halsey' ]
+         */
+        // result.data.items[0].track
+        if (playlistTracks.state === CodyResponseType.Success) {
+            trackInfos = playlistTracks.data.items.map(item => {
+                return item.track;
+            });
+            this._playlistTracks[playlist_id] = trackInfos;
+        }
+        return trackInfos;
     }
 }

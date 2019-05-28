@@ -40,8 +40,7 @@
         "musictime-package": "node deployer music-time && tsc -p ./",
         "codetime-package": "node deployer ode-time && tsc -p ./",
         "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
+        "compile": "tsc -watch -p ./"
     },
     "contributes": {
         "configuration": {
@@ -123,7 +122,7 @@
         "@types/vscode": "^1.32.0"
     },
     "dependencies": {
-        "cody-music": "2.1.6",
+        "cody-music": "2.1.7",
         "vsls": "0.3.1291"
     }
 }

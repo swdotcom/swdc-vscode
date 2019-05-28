@@ -11,7 +11,6 @@ import {
 import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { PlaylistItem } from "cody-music/dist/lib/models";
-// import { buildPlaylists } from "./MusicControlManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -89,28 +88,21 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
-        if (p && p["tracks"] && p["tracks"].length > 0) {
+        if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
+            if (!msMgr.hasTracksForPlaylistId(p.id)) {
+                msMgr.getTracksForPlaylistId(p.id);
+            }
             return createPlaylistTreeItem(
                 p,
                 TreeItemCollapsibleState.Collapsed
             );
-        } else {
-            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
         }
+        return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
     }
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         let playlists = msMgr.spotifyPlaylists;
         return playlists;
-        // if (element && element.type === "playlist") {
-        //     // return the tracks
-        //     return element["tracks"];
-        // } else {
-        //     // return the playlists
-        //     const playlists: PlaylistItem[] = await buildPlaylists();
-        //     return Promise.resolve(playlists);
-        // }
-        // return [];
     }
 }
 
