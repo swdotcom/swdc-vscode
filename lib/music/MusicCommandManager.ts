@@ -34,7 +34,6 @@ export class MusicCommandManager {
 
     private constructor() {
         // private to prevent non-singleton usage
-        MusicStoreManager.getInstance().initializeSpotify();
     }
 
     public static async initialize() {

@@ -49,7 +49,7 @@ export class MusicControlManager {
     private msMgr: MusicStateManager = MusicStateManager.getInstance();
 
     constructor() {
-        MusicStoreManager.getInstance().initializeSpotify();
+        //
     }
 
     async getPlayer(): Promise<PlayerType> {
@@ -346,8 +346,6 @@ export async function createPlaylistCb() {
                 );
             }
 
-            await MusicStoreManager.getInstance().syncSpotifyWebPlaylists();
-
             const payload = {
                 playlist_id: playlistResult.data.id,
                 type: PlayerName.SpotifyWeb,
@@ -360,7 +358,7 @@ export async function createPlaylistCb() {
             );
             if (isResponseOk(createResult)) {
                 // fetch the cody playlists
-                MusicStoreManager.getInstance().syncPairedPlaylists();
+                MusicStoreManager.getInstance().syncPairedSpotifyPlaylists();
             }
         }
     }

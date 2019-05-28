@@ -24,8 +24,10 @@ import {
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    buildSpotifyConnectUrl
+    buildSpotifyConnectUrl,
+    isMusicTime
 } from "./Util";
+import { getAccessToken } from "cody-music";
 import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
 const fs = require("fs");
@@ -300,6 +302,13 @@ export async function getUserStatus(serverIsOnline) {
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);
+
+        if (!getAccessToken() && isMusicTime()) {
+            // check if they have a connected spotify auth
+            setTimeout(() => {
+                refetchSpotifyConnectStatusLazily();
+            }, 1000);
+        }
     }
 
     loggedInCacheState = loggedIn;
@@ -473,6 +482,7 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
             refetchSpotifyConnectStatusLazily(tryCountUntilFound);
         }
     } else {
+        // oauth is not null, initialize spotify
         MusicStoreManager.getInstance().initializeSpotify();
     }
 }
@@ -492,11 +502,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
-    } else {
-        // check if they have a connected spotify auth
-        setTimeout(() => {
-            getSpotifyOauth(serverIsOnline);
-        }, 5000);
     }
 }
 

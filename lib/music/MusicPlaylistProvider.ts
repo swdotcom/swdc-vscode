@@ -19,7 +19,7 @@ const createPlaylistTreeItem = (
     return new PlaylistTreeItem(p, cstate);
 };
 
-const msMgr = MusicStoreManager.getInstance();
+const musicstoreMgr = MusicStoreManager.getInstance();
 
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
@@ -31,7 +31,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             ) {
                 // play the track
                 let uri = e.selection[0].id;
-                play(PlayerName.SpotifyWeb, { track_ids: [uri] });
+                // play(PlayerName.SpotifyWeb, { track_ids: [uri] });
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -73,8 +73,8 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         if (p.type === "playlist") {
             // it's a track parent (playlist)
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
-                if (!msMgr.hasTracksForPlaylistId(p.id)) {
-                    msMgr.getTracksForPlaylistId(p.id);
+                if (!musicstoreMgr.hasTracksForPlaylistId(p.id)) {
+                    musicstoreMgr.getTracksForPlaylistId(p.id);
                 }
                 return createPlaylistTreeItem(
                     p,
@@ -91,11 +91,11 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         if (element) {
             // return track of the playlist parent
-            let tracks = msMgr.getTracksForPlaylistId(element.id);
+            let tracks = musicstoreMgr.getTracksForPlaylistId(element.id);
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists = msMgr.spotifyPlaylists;
+            let playlists = musicstoreMgr.runningPlaylists;
             return playlists;
         }
     }

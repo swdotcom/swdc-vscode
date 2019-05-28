@@ -257,7 +257,10 @@ async function initializeUserInfo(
             fetchDailyKpmSessionInfo();
         }, 1000);
     } else if (isMusicTime()) {
-        MusicStoreManager.getInstance().initializeSpotify();
+        // this needs to happen first to enable spotify playlist and control logic
+        await MusicStoreManager.getInstance().initializeSpotify();
+
+        await MusicStoreManager.getInstance().syncRunningPlaylists();
 
         // fetch the favorites every 10 minutes
         setInterval(() => {
@@ -266,10 +269,10 @@ async function initializeUserInfo(
         // and once right now
         MusicStoreManager.getInstance().syncPlaylistFavorites();
 
-        // sync the spotify playlist and what's on software every 15 seconds
+        // sync the spotify playlist and what's on software every 1 minute
         setInterval(() => {
-            MusicStoreManager.getInstance().syncPairedPlaylists();
-        }, 1000 * 15);
+            MusicStoreManager.getInstance().syncPairedSpotifyPlaylists();
+        }, 1000 * 60);
     }
 }
 
