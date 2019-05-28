@@ -10,7 +10,7 @@ import {
 } from "vscode";
 import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { PlaylistItem } from "cody-music";
+import { PlaylistItem, play, PlayerName } from "cody-music";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -24,33 +24,15 @@ const msMgr = MusicStoreManager.getInstance();
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
         view.onDidChangeSelection(e => {
-            console.log("did change");
-            // if (
-            //     e.selection &&
-            //     e.selection.length === 1 &&
-            //     e.selection[0].type === "track"
-            // ) {
-            //     // play the selection
-            //     // If the user making the request is non-premium, a
-            //     // 403 FORBIDDEN response code will be returned.
-            //     const accessToken = getItem("spotify_access_token");
-            //     const payload = { uri: e.selection[0].uri };
-            //     spotifyApiPut("/v1/me/player/play", payload, accessToken);
-            // }
-            // https://api.spotify.com/v1/me/player/pause
-            /**
-             * selection:Array[1]
-                0:Object
-                type:"track"
-                duration_ms:219146
-                name:"you were good to me"
-                explicit:false
-                disc_number:1
-                popularity:53
-                artist:"Jeremy Zucker, Chelsea Cutler"
-                album:"brent"
-                id:"spotify:track:4CxFN5zON70B3VOPBYbd6P"
-             */
+            if (
+                e.selection &&
+                e.selection.length === 1 &&
+                e.selection[0].type === "track"
+            ) {
+                // play the track
+                let uri = e.selection[0].id;
+                play(PlayerName.SpotifyWeb, { track_ids: [uri] });
+            }
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {

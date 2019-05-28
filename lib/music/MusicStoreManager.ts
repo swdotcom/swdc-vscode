@@ -180,12 +180,7 @@ export class MusicStoreManager {
             PlayerName.SpotifyWeb,
             playlist_id
         );
-        /**
-         * album: { id: '4KaiavWFhR7j9tY1f7V6UL', name: 'Nightmare' },
-            id: '340UVheS8z3ncW9TTUhAbc',
-            name: 'Nightmare',
-            artists: [ 'Halsey' ]
-         */
+
         // result.data.items[0].track
         if (playlistTracks.state === CodyResponseType.Success) {
             let paginationItem: PaginationItem = playlistTracks.data;
@@ -194,6 +189,7 @@ export class MusicStoreManager {
                     let playlistItem: PlaylistItem = new PlaylistItem();
                     playlistItem.type = "track";
                     playlistItem.name = track.name;
+                    playlistItem.id = track.id;
                     playlistItem["artists"] = track.artists.join(", ");
                     // since this is a track, delete the tracks attribute
                     delete playlistItem.tracks;
