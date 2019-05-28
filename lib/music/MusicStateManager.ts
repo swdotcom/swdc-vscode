@@ -1,8 +1,8 @@
 import { getItem, isEmptyObj, isMusicTime } from "../Util";
-import { sendMusicData, getSpotifyOauth } from "../DataController";
-import * as CodyMusic from "cody-music";
+import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { softwareGet, isResponseOk } from "../HttpClient";
+import { Track, PlayerType, getAccessToken, getRunningTrack } from "cody-music";
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -14,7 +14,7 @@ export class MusicStateManager {
     private lastTimeSent: number = null;
     private gatheringMusic: boolean = false;
     private serverTrack: any = null;
-    private currentTrack: CodyMusic.Track = null;
+    private currentTrack: Track = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -31,11 +31,11 @@ export class MusicStateManager {
         this.serverTrack = null;
     }
 
-    public getCurrentTrack(): CodyMusic.Track {
+    public getCurrentTrack(): Track {
         return this.currentTrack;
     }
 
-    public async getServerTrack(track: CodyMusic.Track) {
+    public async getServerTrack(track: Track) {
         if (track) {
             let trackId = track.id;
             if (trackId.indexOf(":") !== -1) {
@@ -43,7 +43,7 @@ export class MusicStateManager {
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
             let type = "spotify";
-            if (track.playerType === CodyMusic.PlayerType.MacItunesDesktop) {
+            if (track.playerType === PlayerType.MacItunesDesktop) {
                 type = "itunes";
             }
             // use the name and artist as well since we have it
@@ -75,14 +75,14 @@ export class MusicStateManager {
         return this.serverTrack;
     }
 
-    public async updateLovedStateFromServer(track: CodyMusic.Track) {
+    public async updateLovedStateFromServer(track: Track) {
         if (!isMusicTime()) {
             return;
         }
         if (
             !track ||
             isEmptyObj(track) ||
-            track.playerType === CodyMusic.PlayerType.MacItunesDesktop
+            track.playerType === PlayerType.MacItunesDesktop
         ) {
             return;
         }
@@ -110,17 +110,17 @@ export class MusicStateManager {
         // has connected a spotify_access_token
         if (spotifyAccessToken) {
             // connected
-            let access_token = CodyMusic.getAccessToken();
+            let access_token = getAccessToken();
             if (!access_token) {
                 // cody-music doesn't have the access token, initialize
                 await MusicStoreManager.getInstance().initializeSpotify();
             }
         }
 
-        let playingTrack = await CodyMusic.getRunningTrack();
+        let playingTrack = await getRunningTrack();
 
         if (!playingTrack) {
-            playingTrack = new CodyMusic.Track();
+            playingTrack = new Track();
         }
 
         playingTrack["start"] = 0;

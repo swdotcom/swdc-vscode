@@ -1,4 +1,4 @@
-import * as CodyMusic from "cody-music";
+import { PlayerName, getPlaylists } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { PlaylistItem } from "cody-music/dist/lib/models";
 
@@ -18,6 +18,6 @@ export class MusicPlaylistManager {
     }
 
     public getSpotifyWebPlaylists(): Promise<PlaylistItem[]> {
-        return CodyMusic.getPlaylists(CodyMusic.PlayerName.SpotifyWeb);
+        return getPlaylists(PlayerName.SpotifyWeb);
     }
 }

@@ -1,4 +1,18 @@
-import * as CodyMusic from "cody-music";
+import {
+    PlayerType,
+    getRunningTrack,
+    play,
+    pause,
+    previous,
+    next,
+    PlayerName,
+    Track,
+    setItunesLoved,
+    launchPlayer,
+    createPlaylist,
+    addTracksToPlaylist,
+    getPlaylistNames
+} from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
@@ -25,7 +39,6 @@ import {
 import { api_endpoint, LOGIN_LABEL } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import {
-    PlayerType,
     PlaylistItem,
     CodyResponse,
     CodyResponseType
@@ -42,7 +55,7 @@ export class MusicControlManager {
     }
 
     async getPlayer(): Promise<PlayerType> {
-        const track = await CodyMusic.getRunningTrack();
+        const track = await getRunningTrack();
         if (track) {
             return track.playerType;
         }
@@ -53,11 +66,11 @@ export class MusicControlManager {
         const playerType = await this.getPlayer();
         if (playerType) {
             if (playerType === PlayerType.WebSpotify) {
-                await CodyMusic.next(CodyMusic.PlayerName.SpotifyWeb);
+                await next(PlayerName.SpotifyWeb);
             } else if (playerType === PlayerType.MacItunesDesktop) {
-                await CodyMusic.next(CodyMusic.PlayerName.ItunesDesktop);
+                await next(PlayerName.ItunesDesktop);
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await CodyMusic.next(CodyMusic.PlayerName.SpotifyDesktop);
+                await next(PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
@@ -67,11 +80,11 @@ export class MusicControlManager {
         const playerType = await this.getPlayer();
         if (playerType) {
             if (playerType === PlayerType.WebSpotify) {
-                await CodyMusic.previous(CodyMusic.PlayerName.SpotifyWeb);
+                await previous(PlayerName.SpotifyWeb);
             } else if (playerType === PlayerType.MacItunesDesktop) {
-                await CodyMusic.previous(CodyMusic.PlayerName.ItunesDesktop);
+                await previous(PlayerName.ItunesDesktop);
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await CodyMusic.previous(CodyMusic.PlayerName.SpotifyDesktop);
+                await previous(PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
@@ -81,11 +94,11 @@ export class MusicControlManager {
         const playerType = await this.getPlayer();
         if (playerType) {
             if (playerType === PlayerType.WebSpotify) {
-                await CodyMusic.play(CodyMusic.PlayerName.SpotifyWeb);
+                await play(PlayerName.SpotifyWeb);
             } else if (playerType === PlayerType.MacItunesDesktop) {
-                await CodyMusic.play(CodyMusic.PlayerName.ItunesDesktop);
+                await play(PlayerName.ItunesDesktop);
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await CodyMusic.play(CodyMusic.PlayerName.SpotifyDesktop);
+                await play(PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
@@ -95,18 +108,18 @@ export class MusicControlManager {
         const playerType = await this.getPlayer();
         if (playerType) {
             if (playerType === PlayerType.WebSpotify) {
-                await CodyMusic.pause(CodyMusic.PlayerName.SpotifyWeb);
+                await pause(PlayerName.SpotifyWeb);
             } else if (playerType === PlayerType.MacItunesDesktop) {
-                await CodyMusic.pause(CodyMusic.PlayerName.ItunesDesktop);
+                await pause(PlayerName.ItunesDesktop);
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await CodyMusic.pause(CodyMusic.PlayerName.SpotifyDesktop);
+                await pause(PlayerName.SpotifyDesktop);
             }
             MusicCommandManager.updateButtons();
         }
     }
 
     async setLiked(liked: boolean) {
-        const track: CodyMusic.Track = await CodyMusic.getRunningTrack();
+        const track: Track = await getRunningTrack();
         if (track) {
             // set it to liked
             let trackId = track.id;
@@ -115,7 +128,7 @@ export class MusicControlManager {
                 trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
             }
             let type = "spotify";
-            if (track.playerType === CodyMusic.PlayerType.MacItunesDesktop) {
+            if (track.playerType === PlayerType.MacItunesDesktop) {
                 type = "itunes";
             }
             // use the name and artist as well since we have it
@@ -128,7 +141,7 @@ export class MusicControlManager {
                 if (type === "itunes") {
                     // await so that the stateCheckHandler fetches
                     // the latest version of the itunes track
-                    await CodyMusic.setItunesLoved(liked)
+                    await setItunesLoved(liked)
                         .then(result => {
                             console.log("updated itunes loved state");
                         })
@@ -148,14 +161,14 @@ export class MusicControlManager {
     }
 
     launchTrackPlayer() {
-        CodyMusic.getRunningTrack().then((track: CodyMusic.Track) => {
+        getRunningTrack().then((track: Track) => {
             if (track && track.id) {
                 if (track.playerType === PlayerType.WebSpotify) {
-                    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb);
+                    launchPlayer(PlayerName.SpotifyWeb);
                 } else if (track.playerType === PlayerType.MacItunesDesktop) {
-                    CodyMusic.launchPlayer(CodyMusic.PlayerName.ItunesDesktop);
+                    launchPlayer(PlayerName.ItunesDesktop);
                 } else {
-                    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyDesktop);
+                    launchPlayer(PlayerName.SpotifyDesktop);
                 }
             }
         });
@@ -237,7 +250,7 @@ export class MusicControlManager {
                     detail:
                         "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40",
                     url: null,
-                    cb: createPlaylist
+                    cb: createPlaylistCb
                 });
             } else if (hasCodyPlaylists) {
                 menuOptions.items.push({
@@ -259,7 +272,7 @@ export class MusicControlManager {
         //     cb: buildPlaylists
         // });
 
-        const track: CodyMusic.Track = await CodyMusic.getRunningTrack();
+        const track: Track = await getRunningTrack();
 
         if (!track || !track.id) {
             menuOptions.items.push({
@@ -287,11 +300,11 @@ export async function displayMusicTimeMetricsDashboard() {
     });
 }
 
-export async function createPlaylist() {
+export async function createPlaylistCb() {
     // get the spotify track ids and create the playlist
     let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
     if (codyTracks && codyTracks.length > 0) {
-        let playlistResult: CodyResponse = await CodyMusic.createPlaylist(
+        let playlistResult: CodyResponse = await createPlaylist(
             "Cody Dev Beats",
             true
         );
@@ -316,7 +329,7 @@ export async function createPlaylist() {
             });
 
             // create the playlist_id in software
-            const addTracksResult: CodyResponse = await CodyMusic.addTracksToPlaylist(
+            const addTracksResult: CodyResponse = await addTracksToPlaylist(
                 playlistResult.data.id,
                 tracksToAdd
             );
@@ -339,7 +352,7 @@ export async function createPlaylist() {
 
             const payload = {
                 playlist_id: playlistResult.data.id,
-                type: CodyMusic.PlayerName.SpotifyWeb,
+                type: PlayerName.SpotifyWeb,
                 name: "Cody Dev Beats"
             };
             let createResult = await softwarePost(
@@ -388,17 +401,13 @@ export function launchSpotifyWebPlayer() {
         options["playlist_id"] = codyPlaylists[0].id;
     }
 
-    CodyMusic.launchPlayer(CodyMusic.PlayerName.SpotifyWeb, options).then(
-        result => {
-            MusicCommandManager.stateCheckHandler();
-        }
-    );
+    launchPlayer(PlayerName.SpotifyWeb, options).then(result => {
+        MusicCommandManager.stateCheckHandler();
+    });
 }
 
 export async function getSpotifyPlaylistNames() {
-    let playlistNames: string[] = await CodyMusic.getPlaylistNames(
-        CodyMusic.PlayerName.SpotifyWeb
-    );
+    let playlistNames: string[] = await getPlaylistNames(PlayerName.SpotifyWeb);
     console.log("playlist names: ", playlistNames);
 }
 

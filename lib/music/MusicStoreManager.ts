@@ -1,7 +1,6 @@
-import * as CodyMusic from "cody-music";
+import { Track, getAccessToken, setCredentials } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 import { MusicPlaylistManager } from "./MusicPlaylistManager";
-import { PlaylistItem } from "cody-music/dist/lib/models";
 import {
     softwareGet,
     isResponseOk,
@@ -9,6 +8,7 @@ import {
     softwarePut
 } from "../HttpClient";
 import { getItem } from "../Util";
+import { PlaylistItem } from "cody-music/dist/lib/models";
 
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
@@ -16,7 +16,7 @@ export class MusicStoreManager {
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _codyPlaylists: PlaylistItem[] = [];
     private _codyFavorites: any[] = [];
-    private _tracks: CodyMusic.Track[] = [];
+    private _tracks: Track[] = [];
 
     private constructor() {
         //
@@ -31,12 +31,12 @@ export class MusicStoreManager {
     }
 
     async initializeSpotify() {
-        if (!CodyMusic.getAccessToken()) {
+        if (!getAccessToken()) {
             let serverIsOnline = await serverIsAvailable();
             const spotifyOauth = await getSpotifyOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
-                CodyMusic.setCredentials({
+                setCredentials({
                     refreshToken: spotifyOauth.spotify_refresh_token,
                     clientSecret: "2b40b4975b2743189c87f4712c0cd59e",
                     clientId: "eb67e22ba1c6474aad8ec8067480d9dc",
@@ -150,7 +150,7 @@ export class MusicStoreManager {
         return this._codyFavorites;
     }
 
-    get tracks(): CodyMusic.Track[] {
+    get tracks(): Track[] {
         if (!this._tracks || this._tracks.length === 0) {
             // check if there are any playists to get tracks from
             if (this._spotifyPlaylists && this._spotifyPlaylists.length > 0) {
@@ -158,7 +158,7 @@ export class MusicStoreManager {
                     let playlist: PlaylistItem = this._spotifyPlaylists[i];
                     if (playlist.tracks) {
                         for (let x = 0; x < playlist.tracks.length; x++) {
-                            let track: CodyMusic.Track = playlist.tracks[x];
+                            let track: Track = playlist.tracks[x];
                             this.tracks.push(track);
                         }
                     }

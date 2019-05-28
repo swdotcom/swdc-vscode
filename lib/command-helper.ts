@@ -1,4 +1,4 @@
-import { commands, Disposable, workspace, window } from "vscode";
+import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { MusicControlManager } from "./music/MusicControlManager";
 import {
     handleCodeTimeLogin,
@@ -18,10 +18,11 @@ import {
     codeTimeExtInstalled
 } from "./Util";
 import { KpmController } from "./KpmController";
-// import {
-//     MusicPlaylistProvider,
-//     connectPlaylistTreeView
-// } from "./music/MusicPlaylistProvider";
+import {
+    MusicPlaylistProvider,
+    connectPlaylistTreeView
+} from "./music/MusicPlaylistProvider";
+import { PlaylistItem } from "cody-music/dist/lib/models";
 
 export function createCommands(): {
     dispose: () => void;
@@ -143,15 +144,15 @@ export function createCommands(): {
         );
         cmds.push(spotifyConnectCommand);
 
-        // const treePlaylistProvider = new MusicPlaylistProvider(musicStore);
-        // const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
-        //     "music-time-playlists",
-        //     {
-        //         treeDataProvider: treePlaylistProvider,
-        //         showCollapseAll: false
-        //     }
-        // );
-        // cmds.push(connectPlaylistTreeView(playlistTreeView, musicStore));
+        const treePlaylistProvider = new MusicPlaylistProvider();
+        const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
+            "music-time-playlists",
+            {
+                treeDataProvider: treePlaylistProvider,
+                showCollapseAll: false
+            }
+        );
+        cmds.push(connectPlaylistTreeView(playlistTreeView));
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

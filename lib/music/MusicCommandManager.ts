@@ -1,8 +1,8 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
-import * as CodyMusic from "cody-music";
 import { MusicStateManager } from "./MusicStateManager";
 import { MusicStoreManager } from "./MusicStoreManager";
+import { getRunningTrack, PlayerType, TrackStatus } from "cody-music";
 
 export interface Button {
     /**
@@ -82,21 +82,21 @@ export class MusicCommandManager {
         if (this._hideSongTimeout) {
             clearTimeout(this._hideSongTimeout);
         }
-        const track = await CodyMusic.getRunningTrack();
+        const track = await getRunningTrack();
         if (!track || !track.id) {
             this.showLaunchPlayerControls();
             return;
         }
 
-        if (track.playerType !== CodyMusic.PlayerType.MacItunesDesktop) {
+        if (track.playerType !== PlayerType.MacItunesDesktop) {
             // get the liked state
             await this.msMgr.updateLovedStateFromServer(track);
         }
 
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
-        if (track.playerType === CodyMusic.PlayerType.WebSpotify) {
-            if (track.state === CodyMusic.TrackStatus.Playing) {
+        if (track.playerType === PlayerType.WebSpotify) {
+            if (track.state === TrackStatus.Playing) {
                 // show the pause
                 this.showPauseControls(track);
             } else {
@@ -110,7 +110,7 @@ export class MusicCommandManager {
 
         // get the desktop player track state
         if (track) {
-            if (track.state === CodyMusic.TrackStatus.Playing) {
+            if (track.state === TrackStatus.Playing) {
                 // show the pause
                 this.showPauseControls(track);
             } else {

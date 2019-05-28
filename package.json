@@ -119,13 +119,11 @@
         "@types/axios": "^0.14.0",
         "@types/mocha": "5.2.6",
         "@types/node": "12.0.0",
-        "mocha": "6.1.4",
-        "typescript": "3.4.5",
-        "vscode": "^1.1.34"
+        "typescript": "^3.4.5",
+        "@types/vscode": "^1.32.0"
     },
     "dependencies": {
-        "axios": "0.18.0",
-        "cody-music": "2.1.5",
+        "cody-music": "2.1.6",
         "vsls": "0.3.1291"
     }
 }
