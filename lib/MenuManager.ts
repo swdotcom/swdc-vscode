@@ -9,7 +9,7 @@ import {
     logIt,
     nowInSecs
 } from "./Util";
-import { softwareGet } from "./HttpClient";
+import { softwareGet, isResponseOk } from "./HttpClient";
 import {
     getUserStatus,
     refetchUserStatusLazily,
@@ -20,6 +20,8 @@ import { launch_url, LOGIN_LABEL } from "./Constants";
 const fs = require("fs");
 
 const NO_DATA = "CODE TIME\n\nNo data available\n";
+const SERVICE_NOT_AVAIL =
+    "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
 let showMusicMetrics = false;
 let lastDashboardFetchTime = 0;
@@ -162,11 +164,18 @@ export async function fetchCodeTimeMetricsDashboard() {
             `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
             getItem("jwt")
         );
-        // get the content
-        let content =
-            dashboardSummary && dashboardSummary.data
-                ? dashboardSummary.data
-                : NO_DATA;
+
+        // ECONNREFUSED
+        let content = "";
+        if (isResponseOk(dashboardSummary)) {
+            // get the content
+            content =
+                dashboardSummary && dashboardSummary.data
+                    ? dashboardSummary.data
+                    : NO_DATA;
+        } else {
+            content = SERVICE_NOT_AVAIL;
+        }
 
         fs.writeFileSync(filePath, content, err => {
             if (err) {
