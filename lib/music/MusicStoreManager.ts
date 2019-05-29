@@ -196,6 +196,15 @@ export class MusicStoreManager {
                 );
             }
         }
+
+        if (this._runningPlaylists.length > 0) {
+            // check if we need to update the ID to the name
+            this._runningPlaylists.map((playlist: PlaylistItem) => {
+                if (!playlist.id) {
+                    playlist.id = playlist.name;
+                }
+            });
+        }
     }
 
     async syncSpotifyWebPlaylists() {
