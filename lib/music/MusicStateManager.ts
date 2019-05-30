@@ -153,6 +153,11 @@ export class MusicStateManager {
             playingTrackDuration = playingTrack.duration_ms;
         }
 
+        // don't send this track if it's stopped and the exsting track doesn't exist
+        if (state === "stopped" && !existingTrackId) {
+            playingTrackId = null;
+        }
+
         if (!playingTrackId && existingTrackId) {
             // we don't have a track playing and we have an existing one, close it out
             this.existingTrack["end"] = nowInSec;
