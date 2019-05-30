@@ -10,7 +10,13 @@ import {
 } from "vscode";
 import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { PlaylistItem, play, PlayerName } from "cody-music";
+import {
+    PlaylistItem,
+    playTrackInContext,
+    play,
+    PlayerName,
+    Track
+} from "cody-music";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -30,8 +36,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 e.selection[0].type === "track"
             ) {
                 // play the track
-                let uri = e.selection[0].id;
-                // play(PlayerName.SpotifyWeb, { track_ids: [uri] });
+                const selectedPlaylist: PlaylistItem =
+                    musicstoreMgr.selectedPlaylist;
+                const track = e.selection[0];
+                let params = [track.name, selectedPlaylist.name];
+
+                playTrackInContext(PlayerName.ItunesDesktop, params);
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -90,6 +100,15 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         if (element) {
+            /**
+             * collaborative:false
+                id:"MostRecents"
+                name:"MostRecents"
+                public:true
+                tracks:PlaylistTrackInfo {href: "", total: 34}
+                type:"playlist"
+             */
+            musicstoreMgr.selectedPlaylist = element;
             // return track of the playlist parent
             let tracks = musicstoreMgr.getTracksForPlaylistId(element.id);
             return tracks;

@@ -30,6 +30,7 @@ export class MusicStoreManager {
     private _codyFavorites: any[] = [];
     private _playlistTracks: any = {};
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
+    private _selectedPlaylist: PlaylistItem = null;
 
     private constructor() {
         //
@@ -61,6 +62,14 @@ export class MusicStoreManager {
 
     get runningPlaylists(): PlaylistItem[] {
         return this._runningPlaylists;
+    }
+
+    get selectedPlaylist(): PlaylistItem {
+        return this._selectedPlaylist;
+    }
+
+    set selectedPlaylist(item: PlaylistItem) {
+        this._selectedPlaylist = item;
     }
 
     //
