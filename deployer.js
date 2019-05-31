@@ -142,13 +142,24 @@ async function deploy() {
     const pathSep = !isWindows() ? "/" : "\\";
     await runCommand(
         `mkdir -p out${pathSep}lib`,
-        "Creating the dist/lib directory if it doesn't exist",
+        "Creating the out/lib directory if it doesn't exist",
+        true
+    );
+
+    await runCommand(
+        `mkdir -p out${pathSep}resources`,
+        "Creating the out/resources directory if it doesn't exist",
         true
     );
 
     await runCommand(
         `${copyCmd} lib${pathSep}extensioninfo.json out${pathSep}lib${pathSep}.`,
         "Copy the extensioninfo.json to the out/lib directory"
+    );
+
+    await runCommand(
+        `${copyCmd} -R resources${pathSep}* out${pathSep}resources${pathSep}.`,
+        "Copy the resources to the out dir"
     );
 
     if (packageIt) {

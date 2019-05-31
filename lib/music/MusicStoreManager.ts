@@ -1,6 +1,6 @@
 import {
     Track,
-    getAccessToken,
+    requiresSpotifyAccessInfo,
     setCredentials,
     getPlaylistTracks,
     PaginationItem,
@@ -10,7 +10,8 @@ import {
     CodyResponseType,
     getPlaylists,
     getRunningTrack,
-    PlayerType
+    PlayerType,
+    PlaylistTrackInfo
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -75,6 +76,11 @@ export class MusicStoreManager {
     //
     // store functions
     //
+
+    async clearPlaylists() {
+        this._selectedPlaylist = null;
+        this._runningPlaylists = [];
+    }
 
     async initializeSpotify() {
         if (!this.hasSpotifyAccessToken()) {
@@ -185,6 +191,8 @@ export class MusicStoreManager {
         }
         this._currentPlayerType = runningTrack.playerType;
 
+        let playlistTitle = "Spotify";
+
         if (this._runningPlaylists.length === 0) {
             if (
                 this.hasSpotifyAccessToken() &&
@@ -196,6 +204,7 @@ export class MusicStoreManager {
             } else if (
                 this._currentPlayerType === PlayerType.MacItunesDesktop
             ) {
+                playlistTitle = "iTunes";
                 this._runningPlaylists = await getPlaylists(
                     PlayerName.ItunesDesktop
                 );
@@ -206,6 +215,17 @@ export class MusicStoreManager {
             }
         }
 
+        /**
+         * playlist example...
+            collaborative:false
+            id:"MostRecents"
+            name:"MostRecents"
+            playerType:"MacItunesDesktop"
+            public:true
+            tracks:PlaylistTrackInfo {href: "", total: 34}
+            type:"playlist"
+         */
+
         if (this._runningPlaylists.length > 0) {
             // check if we need to update the ID to the name
             this._runningPlaylists.map((playlist: PlaylistItem) => {
@@ -214,6 +234,14 @@ export class MusicStoreManager {
                 }
             });
         }
+
+        // add the title object to the beginning of the array
+        let playlistItemTitle: PlaylistItem = new PlaylistItem();
+        playlistItemTitle.name = playlistTitle;
+        playlistItemTitle.tracks = new PlaylistTrackInfo();
+        playlistItemTitle.type = "title";
+        playlistItemTitle.playerType = this._currentPlayerType;
+        this._runningPlaylists.unshift(playlistItemTitle);
     }
 
     async syncSpotifyWebPlaylists() {
@@ -231,7 +259,7 @@ export class MusicStoreManager {
     }
 
     hasSpotifyAccessToken() {
-        return getAccessToken() ? true : false;
+        return requiresSpotifyAccessInfo() ? false : true;
     }
 
     hasTracksForPlaylistId(playlist_id: string): boolean {
@@ -283,6 +311,7 @@ export class MusicStoreManager {
                     playlistItem.name = track.name;
                     playlistItem.id = track.id;
                     playlistItem["artists"] = track.artists.join(", ");
+                    playlistItem["playerType"] = track.playerType;
                     // since this is a track, delete the tracks attribute
                     delete playlistItem.tracks;
                     return playlistItem;

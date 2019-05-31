@@ -121,6 +121,10 @@ export class MusicStateManager {
 
         if (!playingTrack) {
             playingTrack = new Track();
+            // clear the music store playlists
+            MusicStoreManager.getInstance().clearPlaylists();
+        } else {
+            // check if the music store has playlists or not
         }
 
         playingTrack["start"] = 0;
