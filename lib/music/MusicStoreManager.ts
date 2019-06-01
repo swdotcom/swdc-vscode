@@ -32,6 +32,7 @@ export class MusicStoreManager {
     private _playlistTracks: any = {};
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
     private _selectedPlaylist: PlaylistItem = null;
+    private _hasPlaylists: boolean = false;
 
     private constructor() {
         //
@@ -57,12 +58,20 @@ export class MusicStoreManager {
         return this._spotifyPlaylists;
     }
 
+    set spotifyPlaylists(lists: PlaylistItem[]) {
+        this._spotifyPlaylists = lists;
+    }
+
     get codyFavorites(): any[] {
         return this._codyFavorites;
     }
 
     get runningPlaylists(): PlaylistItem[] {
         return this._runningPlaylists;
+    }
+
+    set runningPlaylists(list: PlaylistItem[]) {
+        this._runningPlaylists = list;
     }
 
     get selectedPlaylist(): PlaylistItem {
@@ -73,13 +82,22 @@ export class MusicStoreManager {
         this._selectedPlaylist = item;
     }
 
+    get hasPlaylists(): boolean {
+        return this._hasPlaylists;
+    }
+
+    set hasPlaylists(flag: boolean) {
+        this._hasPlaylists = flag;
+    }
+
     //
     // store functions
     //
 
     async clearPlaylists() {
-        this._selectedPlaylist = null;
-        this._runningPlaylists = [];
+        this.selectedPlaylist = null;
+        this.runningPlaylists = [];
+        this.hasPlaylists = false;
     }
 
     async initializeSpotify() {
@@ -184,36 +202,47 @@ export class MusicStoreManager {
         });
     }
 
-    async syncRunningPlaylists() {
-        let runningTrack: Track = await getRunningTrack();
-        if (runningTrack.playerType !== this._currentPlayerType) {
-            this._runningPlaylists = [];
-        }
+    async syncRunningPlaylists(runningTrack: Track) {
+        let playlists: PlaylistItem[] = [];
+
+        runningTrack = runningTrack || new Track();
+
+        let playlistItemTitle: PlaylistItem = new PlaylistItem();
+        playlistItemTitle.tracks = new PlaylistTrackInfo();
+        playlistItemTitle.type = "title";
+        playlistItemTitle.id = "title";
+        playlistItemTitle.playerType = runningTrack.playerType;
+
         this._currentPlayerType = runningTrack.playerType;
 
-        let playlistTitle = "Spotify";
-
-        if (this._runningPlaylists.length === 0) {
-            if (
-                this.hasSpotifyAccessToken() &&
-                (this._currentPlayerType === PlayerType.NotAssigned ||
-                    this._currentPlayerType === PlayerType.WebSpotify)
-            ) {
-                // fetch spotify and sync what we have
-                await this.syncPairedSpotifyPlaylists();
-            } else if (
-                this._currentPlayerType === PlayerType.MacItunesDesktop
-            ) {
-                playlistTitle = "iTunes";
-                this._runningPlaylists = await getPlaylists(
-                    PlayerName.ItunesDesktop
-                );
-            } else {
-                this._runningPlaylists = await getPlaylists(
-                    PlayerName.SpotifyDesktop
-                );
-            }
+        if (
+            runningTrack.playerType === PlayerType.NotAssigned ||
+            !runningTrack.id
+        ) {
+            // no player or track
+            playlistItemTitle.name = "No active music player found";
+            this.runningPlaylists = [playlistItemTitle];
+            return;
         }
+
+        this._currentPlayerType = runningTrack.playerType;
+
+        if (
+            this.hasSpotifyAccessToken() &&
+            this._currentPlayerType === PlayerType.WebSpotify
+        ) {
+            playlistItemTitle.name = "Spotify";
+            // fetch spotify and sync what we have
+            playlists = await this.syncSpotifyWebPlaylists();
+        } else if (this._currentPlayerType === PlayerType.MacItunesDesktop) {
+            playlistItemTitle.name = "iTunes";
+            playlists = await getPlaylists(PlayerName.ItunesDesktop);
+        } else {
+            playlistItemTitle.name = "Spotify";
+            playlists = await getPlaylists(PlayerName.SpotifyDesktop);
+        }
+
+        playlists.unshift(playlistItemTitle);
 
         /**
          * playlist example...
@@ -226,36 +255,34 @@ export class MusicStoreManager {
             type:"playlist"
          */
 
-        if (this._runningPlaylists.length > 0) {
+        if (playlists.length > 0) {
+            this.hasPlaylists = true;
             // check if we need to update the ID to the name
-            this._runningPlaylists.map((playlist: PlaylistItem) => {
+            playlists.map((playlist: PlaylistItem) => {
                 if (!playlist.id) {
                     playlist.id = playlist.name;
                 }
             });
         }
 
-        // add the title object to the beginning of the array
-        let playlistItemTitle: PlaylistItem = new PlaylistItem();
-        playlistItemTitle.name = playlistTitle;
-        playlistItemTitle.tracks = new PlaylistTrackInfo();
-        playlistItemTitle.type = "title";
-        playlistItemTitle.playerType = this._currentPlayerType;
-        this._runningPlaylists.unshift(playlistItemTitle);
+        this.runningPlaylists = playlists;
     }
 
     async syncSpotifyWebPlaylists() {
+        let playlists = [];
         if (this.hasSpotifyAccessToken()) {
-            this._spotifyPlaylists = await getPlaylists(PlayerName.SpotifyWeb);
-            if (this._spotifyPlaylists) {
+            playlists = await getPlaylists(PlayerName.SpotifyWeb);
+            if (playlists) {
                 // update the type to "playlist";
-                this._spotifyPlaylists.map(item => {
+                playlists.map(item => {
                     item.type = "playlist";
                 });
             }
-        } else {
-            this._spotifyPlaylists = [];
         }
+
+        this.spotifyPlaylists = playlists;
+
+        return this.spotifyPlaylists;
     }
 
     hasSpotifyAccessToken() {

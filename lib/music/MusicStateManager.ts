@@ -22,8 +22,13 @@ export class MusicStateManager {
     private lastTimeSent: number = null;
     private serverTrack: any = null;
 
+    private musicstoreMgr: MusicStoreManager;
+
     private constructor() {
         // private to prevent non-singleton usage
+        if (!this.musicstoreMgr) {
+            this.musicstoreMgr = MusicStoreManager.getInstance();
+        }
     }
 
     static getInstance() {
@@ -109,15 +114,22 @@ export class MusicStateManager {
             // do we still have a player or has the player changed?
             // either case, refresh the player provider list
             let playerFound = track.id ? true : false;
-            let showingPlaylists =
-                MusicStoreManager.getInstance().runningPlaylists.length > 0
-                    ? true
-                    : false;
-            if (!playerFound && showingPlaylists) {
+            let hasPlaylists = this.musicstoreMgr.hasPlaylists;
+
+            // clear the playlists and possibly sync the running playlists
+            // if the following 2 conditions are met
+            if (
+                (!playerFound && hasPlaylists) ||
+                (playerFound && !hasPlaylists)
+            ) {
+                await this.musicstoreMgr.clearPlaylists();
                 // no player found and the playlists were showing
-                commands.executeCommand("musictime.refreshPlaylist");
-            } else if (playerFound && !showingPlaylists) {
+                // OR
                 // player found and now showing playlists
+
+                await this.musicstoreMgr.clearPlaylists();
+                await this.musicstoreMgr.syncRunningPlaylists(track);
+
                 commands.executeCommand("musictime.refreshPlaylist");
             }
         }
@@ -132,7 +144,7 @@ export class MusicStateManager {
             let access_token = getAccessToken();
             if (!access_token) {
                 // cody-music doesn't have the access token, initialize
-                await MusicStoreManager.getInstance().initializeSpotify();
+                await this.musicstoreMgr.initializeSpotify();
             }
         }
 

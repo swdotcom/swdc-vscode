@@ -24,8 +24,6 @@ const createPlaylistTreeItem = (
     return new PlaylistTreeItem(p, cstate);
 };
 
-const musicstoreMgr = MusicStoreManager.getInstance();
-
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
         view.onDidChangeSelection(e => {
@@ -35,8 +33,8 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 e.selection[0].type === "track"
             ) {
                 // play the track
-                const selectedPlaylist: PlaylistItem =
-                    musicstoreMgr.selectedPlaylist;
+                const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
+                    .selectedPlaylist;
                 const track = e.selection[0];
                 let params = [track.name, selectedPlaylist.name];
 
@@ -71,7 +69,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     refresh(): void {
-        musicstoreMgr.clearPlaylists();
+        //MusicStoreManager.getInstance().clearPlaylists();
         this._onDidChangeTreeData.fire();
     }
 
@@ -87,8 +85,14 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         if (p.type === "playlist") {
             // it's a track parent (playlist)
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
-                if (!musicstoreMgr.hasTracksForPlaylistId(p.id)) {
-                    musicstoreMgr.getTracksForPlaylistId(p.id);
+                if (
+                    !MusicStoreManager.getInstance().hasTracksForPlaylistId(
+                        p.id
+                    )
+                ) {
+                    MusicStoreManager.getInstance().getTracksForPlaylistId(
+                        p.id
+                    );
                 }
                 return createPlaylistTreeItem(
                     p,
@@ -113,13 +117,15 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 type:"playlist"
                 playerType:"MacItunesDesktop"
              */
-            musicstoreMgr.selectedPlaylist = element;
+            MusicStoreManager.getInstance().selectedPlaylist = element;
             // return track of the playlist parent
-            let tracks = musicstoreMgr.getTracksForPlaylistId(element.id);
+            let tracks = MusicStoreManager.getInstance().getTracksForPlaylistId(
+                element.id
+            );
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists = musicstoreMgr.runningPlaylists;
+            let playlists = MusicStoreManager.getInstance().runningPlaylists;
             return playlists;
         }
     }
@@ -138,16 +144,16 @@ class PlaylistTreeItem extends TreeItem {
     );
 
     constructor(
-        private readonly musicTreeItem: PlaylistItem,
+        private readonly treeItem: PlaylistItem,
         public readonly collapsibleState: TreeItemCollapsibleState,
         public readonly command?: Command
     ) {
-        super(musicTreeItem.name, collapsibleState);
-        if (musicTreeItem.type === "playlist") {
+        super(treeItem.name, collapsibleState);
+        if (treeItem.type === "playlist") {
             // for now, don't show the playlist icon
             delete this.iconPath;
         } else {
-            if (musicTreeItem.playerType === PlayerType.MacItunesDesktop) {
+            if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "icons8-itunes.svg"
@@ -155,22 +161,27 @@ class PlaylistTreeItem extends TreeItem {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "icons8-itunes.svg"
+                );
+            } else if (
+                treeItem.playerType === PlayerType.MacSpotifyDesktop ||
+                treeItem.playerType === PlayerType.WebSpotify
+            ) {
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "icons8-spotify.svg"
+                );
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "icons8-spotify.svg"
                 );
             } else {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "icons8-spotify.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "icons8-spotify.svg"
-                );
+                delete this.iconPath;
             }
         }
     }
 
     get tooltip(): string {
-        return `${this.musicTreeItem.id}`;
+        return `${this.treeItem.id}`;
     }
 
     iconPath = {
@@ -178,5 +189,5 @@ class PlaylistTreeItem extends TreeItem {
         dark: ""
     };
 
-    contextValue = "musicTreeItem";
+    contextValue = "treeItem";
 }

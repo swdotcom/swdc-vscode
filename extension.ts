@@ -34,6 +34,7 @@ import * as vsls from "vsls/vscode";
 import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
+import { Track, getRunningTrack } from "cody-music";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -258,21 +259,25 @@ async function initializeUserInfo(
             fetchDailyKpmSessionInfo();
         }, 1000);
     } else if (isMusicTime()) {
-        // this needs to happen first to enable spotify playlist and control logic
-        await MusicStoreManager.getInstance().initializeSpotify();
+        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
 
-        await MusicStoreManager.getInstance().syncRunningPlaylists();
+        // this needs to happen first to enable spotify playlist and control logic
+        await musicstoreMgr.initializeSpotify();
+
+        let runningTrack: Track = await getRunningTrack();
+
+        await musicstoreMgr.syncRunningPlaylists(runningTrack);
 
         // fetch the favorites every 10 minutes
         setInterval(() => {
-            MusicStoreManager.getInstance().syncPlaylistFavorites();
+            musicstoreMgr.syncPlaylistFavorites();
         }, 1000 * 60 * 10);
         // and once right now
-        MusicStoreManager.getInstance().syncPlaylistFavorites();
+        musicstoreMgr.syncPlaylistFavorites();
 
         // sync the spotify playlist and what's on software every 1 minute
         setInterval(() => {
-            MusicStoreManager.getInstance().syncPairedSpotifyPlaylists();
+            musicstoreMgr.syncPairedSpotifyPlaylists();
         }, 1000 * 60);
     }
 }
