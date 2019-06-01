@@ -1,7 +1,13 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
 import { MusicStateManager } from "./MusicStateManager";
-import { getRunningTrack, PlayerType, TrackStatus, Track } from "cody-music";
+import {
+    getRunningTrack,
+    PlayerType,
+    TrackStatus,
+    Track,
+    requiresSpotifyAccessInfo
+} from "cody-music";
 
 export interface Button {
     /**
@@ -70,6 +76,12 @@ export class MusicCommandManager {
             "Click to launch track player",
             "musictime.currentSong",
             25
+        );
+        this.createButton(
+            "$(stop)",
+            "Connect Spotify to add your top productivity tracks",
+            "musictime.connectSpotify",
+            24
         );
 
         this.syncControls();
@@ -154,6 +166,11 @@ export class MusicCommandManager {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.menu") {
                 button.statusBarItem.show();
+            } else if (
+                btnCmd === "musictime.connectSpotify" &&
+                requiresSpotifyAccessInfo()
+            ) {
+                button.statusBarItem.show();
             } else {
                 button.statusBarItem.hide();
             }
@@ -192,6 +209,8 @@ export class MusicCommandManager {
                     // hide this name in 10 seconds
                     this.hideSongDisplay();
                 }, songNameDisplayTimeoutMillis);
+            } else if (btnCmd === "musictime.connectSpotify") {
+                button.statusBarItem.hide();
             } else {
                 if (songInfo && btnCmd === "musictime.play") {
                     // show the song info over the play button
@@ -233,6 +252,8 @@ export class MusicCommandManager {
                     // hide this name in 10 seconds
                     this.hideSongDisplay();
                 }, songNameDisplayTimeoutMillis);
+            } else if (btnCmd === "musictime.connectSpotify") {
+                button.statusBarItem.hide();
             } else {
                 if (btnCmd === "musictime.pause") {
                     button.statusBarItem.tooltip = `${

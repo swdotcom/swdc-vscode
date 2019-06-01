@@ -16,6 +16,7 @@ import {
     PlayerName,
     PlayerType
 } from "cody-music";
+import { connectSpotify } from "./MusicControlManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -27,22 +28,28 @@ const createPlaylistTreeItem = (
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
         view.onDidChangeSelection(e => {
-            if (
-                e.selection &&
-                e.selection.length === 1 &&
-                e.selection[0].type === "track"
-            ) {
+            if (!e.selection || e.selection.length === 0) {
+                return;
+            }
+            let playlistItem: PlaylistItem = e.selection[0];
+
+            if (playlistItem.type === "track") {
                 // play the track
                 const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
                     .selectedPlaylist;
-                const track = e.selection[0];
-                let params = [track.name, selectedPlaylist.name];
+                MusicStoreManager.getInstance();
+                let params = [playlistItem.name, selectedPlaylist.name];
 
                 playTrackInContext(PlayerName.ItunesDesktop, params).then(
                     result => {
                         // update the controls buttons
                     }
                 );
+            } else if (
+                playlistItem.id === "connect" &&
+                playlistItem.playerType === PlayerType.WebSpotify
+            ) {
+                connectSpotify();
             }
         }),
         view.onDidChangeVisibility(e => {

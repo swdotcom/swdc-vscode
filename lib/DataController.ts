@@ -540,16 +540,6 @@ export async function handleCodeTimeLogin() {
     }
 }
 
-export async function handleSpotifyConnect() {
-    if (!(await serverIsAvailable())) {
-        showOfflinePrompt(false);
-    } else {
-        let spotifyUrl = await buildSpotifyConnectUrl();
-        launchWebUrl(spotifyUrl);
-        refetchSpotifyConnectStatusLazily(10);
-    }
-}
-
 export async function handleKpmClickedEvent() {
     let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}

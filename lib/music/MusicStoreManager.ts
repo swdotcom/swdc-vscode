@@ -221,7 +221,9 @@ export class MusicStoreManager {
         ) {
             // no player or track
             playlistItemTitle.name = "No active music player found";
-            this.runningPlaylists = [playlistItemTitle];
+            playlists.push(playlistItemTitle);
+            this.addConnectToListIfNoAccessToken(playlists);
+            this.runningPlaylists = playlists;
             return;
         }
 
@@ -242,6 +244,7 @@ export class MusicStoreManager {
             playlists = await getPlaylists(PlayerName.SpotifyDesktop);
         }
 
+        // add the title to the beginning of the array
         playlists.unshift(playlistItemTitle);
 
         /**
@@ -265,7 +268,22 @@ export class MusicStoreManager {
             });
         }
 
+        this.addConnectToListIfNoAccessToken(playlists);
+
         this.runningPlaylists = playlists;
+    }
+
+    addConnectToListIfNoAccessToken(playlists: PlaylistItem[]) {
+        if (!this.hasSpotifyAccessToken()) {
+            // add the connect spotify link
+            let connectSpotifyItem: PlaylistItem = new PlaylistItem();
+            connectSpotifyItem.tracks = new PlaylistTrackInfo();
+            connectSpotifyItem.type = "connect";
+            connectSpotifyItem.id = "connect";
+            connectSpotifyItem.playerType = PlayerType.WebSpotify;
+            connectSpotifyItem.name = "Connect your spotify account";
+            playlists.push(connectSpotifyItem);
+        }
     }
 
     async syncSpotifyWebPlaylists() {

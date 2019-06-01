@@ -11,7 +11,7 @@ const CODE_TIME_DESC =
     "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.";
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
-const CODE_TIME_VERSION = "0.16.4";
+const CODE_TIME_VERSION = "0.16.5";
 const MUSIC_TIME_VERSION = "0.1.6";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
@@ -47,7 +47,6 @@ async function deploy() {
 
     let extInfoJson = getJsonFromFile(getExtensionFile());
     extInfoJson["name"] = pluginName;
-    updateJsonContent(extInfoJson, getExtensionFile());
 
     let packageJson = getJsonFromFile(getPackageFile());
     packageJson["name"] = pluginName;
@@ -65,6 +64,7 @@ async function deploy() {
         packageJson["description"] = CODE_TIME_DESC;
         packageJson["version"] = CODE_TIME_VERSION;
         packageJson["displayName"] = CODE_TIME_DISPLAY;
+        extInfoJson["displayName"] = CODE_TIME_DISPLAY;
 
         let codeTimeCommands = [];
         let existingCommands = packageJson.contributes["commands"];
@@ -98,6 +98,7 @@ async function deploy() {
         packageJson["description"] = MUSIC_TIME_DESC;
         packageJson["version"] = MUSIC_TIME_VERSION;
         packageJson["displayName"] = MUSIC_TIME_DISPLAY;
+        extInfoJson["displayName"] = MUSIC_TIME_DISPLAY;
         packageJson.contributes["commands"].push({
             command: "musictime.next",
             title: "Play Next Song"
@@ -144,6 +145,7 @@ async function deploy() {
         });
     }
 
+    updateJsonContent(extInfoJson, getExtensionFile());
     updateJsonContent(packageJson, getPackageFile());
 
     const copyCmd = !isWindows() ? "cp" : "copy";

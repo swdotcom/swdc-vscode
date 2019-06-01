@@ -8,7 +8,8 @@ import {
     buildLoginUrl,
     logIt,
     isFileOpen,
-    getDashboardFile
+    getDashboardFile,
+    getExtensionDisplayName
 } from "./Util";
 import { fetchCodeTimeMetricsDashboard } from "./MenuManager";
 import {
@@ -22,8 +23,8 @@ import { isResponseOk, softwareGet } from "./HttpClient";
  * check if the user needs to see the login prompt or not
  */
 export async function showLoginPrompt() {
-    let infoMsg =
-        "To see your coding data in Code Time, please log in to your account.";
+    let extDisplayName = getExtensionDisplayName();
+    let infoMsg = `To see your coding data in ${extDisplayName}, please log in to your account.`;
     // set the last update time so we don't try to ask too frequently
     window
         .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])

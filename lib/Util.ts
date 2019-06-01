@@ -24,6 +24,7 @@ let lastMsg = null;
 let lastTooltip = null;
 let showStatusBarText = true;
 let extensionName = null;
+let extensionDisplayName = null; // Code Time or Music Time
 let whoami = null;
 
 export function getEditorSessionToken() {
@@ -412,11 +413,39 @@ export function getSoftwareDataStoreFile() {
     return file;
 }
 
+export function getExtensionDisplayName() {
+    if (extensionDisplayName) {
+        return extensionDisplayName;
+    }
+    let extInfoFile = __dirname;
+    if (isWindows()) {
+        extInfoFile += "\\extensioninfo.json";
+    } else {
+        extInfoFile += "/extensioninfo.json";
+    }
+    if (fs.existsSync(extInfoFile)) {
+        const content = fs.readFileSync(extInfoFile).toString();
+        if (content) {
+            try {
+                const data = JSON.parse(content);
+                if (data) {
+                    extensionDisplayName = data.displayName;
+                }
+            } catch (e) {
+                logIt(`unable to read ext info name: ${e.message}`);
+            }
+        }
+    }
+    if (!extensionDisplayName) {
+        extensionDisplayName = "Code Time";
+    }
+    return extensionDisplayName;
+}
+
 export function getExtensionName() {
     if (extensionName) {
         return extensionName;
     }
-    // const path = __dirname + "/models";
     let extInfoFile = __dirname;
     if (isWindows()) {
         extInfoFile += "\\extensioninfo.json";

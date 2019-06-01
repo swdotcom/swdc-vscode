@@ -1,8 +1,10 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import { MusicControlManager } from "./music/MusicControlManager";
+import {
+    MusicControlManager,
+    connectSpotify
+} from "./music/MusicControlManager";
 import {
     handleCodeTimeLogin,
-    handleSpotifyConnect,
     handleKpmClickedEvent,
     updatePreferences
 } from "./DataController";
@@ -139,7 +141,7 @@ export function createCommands(): {
         const spotifyConnectCommand = commands.registerCommand(
             "musictime.connectSpotify",
             () => {
-                handleSpotifyConnect();
+                connectSpotify();
             }
         );
         cmds.push(spotifyConnectCommand);
