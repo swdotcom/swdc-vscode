@@ -134,6 +134,14 @@ async function deploy() {
             command: "musictime.connectSpotify",
             title: "Connect your spotify account"
         });
+        packageJson.contributes["commands"].push({
+            command: "musictime.connectSpotify",
+            title: "Refresh",
+            icon: {
+                light: "resources/light/refresh.svg",
+                dark: "resources/dark/refresh.svg"
+            }
+        });
     }
 
     updateJsonContent(packageJson, getPackageFile());

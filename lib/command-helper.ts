@@ -154,6 +154,12 @@ export function createCommands(): {
         );
         cmds.push(connectPlaylistTreeView(playlistTreeView));
 
+        const refreshPlaylistCommand = commands.registerCommand(
+            "musictime.refreshPlaylist",
+            () => treePlaylistProvider.refresh()
+        );
+        cmds.push(refreshPlaylistCommand);
+
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
             const kpmController = new KpmController();

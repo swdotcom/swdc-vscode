@@ -1,8 +1,7 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
 import { MusicStateManager } from "./MusicStateManager";
-import { MusicStoreManager } from "./MusicStoreManager";
-import { getRunningTrack, PlayerType, TrackStatus } from "cody-music";
+import { getRunningTrack, PlayerType, TrackStatus, Track } from "cody-music";
 
 export interface Button {
     /**
@@ -37,11 +36,11 @@ export class MusicCommandManager {
     }
 
     public static async initialize() {
-        if (!this.msMgr) {
-            this.msMgr = MusicStateManager.getInstance();
-        }
         if (!isMusicTime()) {
             return;
+        }
+        if (!this.msMgr) {
+            this.msMgr = MusicStateManager.getInstance();
         }
         this.createButton(
             "$(chevron-left)",
@@ -73,15 +72,21 @@ export class MusicCommandManager {
             25
         );
 
-        // get the current track state
-        this.updateButtons();
+        this.syncControls();
     }
 
-    public static async updateButtons() {
+    public static async syncControls() {
+        const track = await getRunningTrack();
+
+        // get the current track state
+        this.updateButtons(track);
+    }
+
+    public static async updateButtons(track: Track) {
         if (this._hideSongTimeout) {
             clearTimeout(this._hideSongTimeout);
         }
-        const track = await getRunningTrack();
+
         if (!track || !track.id) {
             this.showLaunchPlayerControls();
             return;
@@ -117,13 +122,6 @@ export class MusicCommandManager {
                 this.showPlayControls(track);
             }
             return;
-        }
-    }
-
-    public static async stateCheckHandler() {
-        const hasChanges = await this.msMgr.gatherMusicInfo();
-        if (hasChanges && isMusicTime()) {
-            this.updateButtons();
         }
     }
 

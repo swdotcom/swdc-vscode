@@ -70,7 +70,7 @@ export class MusicControlManager {
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
                 await next(PlayerName.SpotifyDesktop);
             }
-            MusicCommandManager.updateButtons();
+            MusicCommandManager.syncControls();
         }
     }
 
@@ -84,7 +84,7 @@ export class MusicControlManager {
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
                 await previous(PlayerName.SpotifyDesktop);
             }
-            MusicCommandManager.updateButtons();
+            MusicCommandManager.syncControls();
         }
     }
 
@@ -98,7 +98,7 @@ export class MusicControlManager {
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
                 await play(PlayerName.SpotifyDesktop);
             }
-            MusicCommandManager.updateButtons();
+            MusicCommandManager.syncControls();
         }
     }
 
@@ -112,7 +112,7 @@ export class MusicControlManager {
             } else if (playerType === PlayerType.MacSpotifyDesktop) {
                 await pause(PlayerName.SpotifyDesktop);
             }
-            MusicCommandManager.updateButtons();
+            MusicCommandManager.syncControls();
         }
     }
 
@@ -153,7 +153,7 @@ export class MusicControlManager {
                 // update the buttons
                 this.msMgr.clearServerTrack();
                 // update the buttons since the liked state changed
-                MusicCommandManager.updateButtons();
+                MusicCommandManager.syncControls();
             }
         }
     }
@@ -398,120 +398,14 @@ export function launchSpotifyWebPlayer() {
     }
 
     launchPlayer(PlayerName.SpotifyWeb, options).then(result => {
-        MusicCommandManager.stateCheckHandler();
+        MusicStateManager.getInstance().musicStateCheck();
     });
 }
 
 export async function getSpotifyPlaylistNames() {
     let playlistNames: string[] = await getPlaylistNames(PlayerName.SpotifyWeb);
-    console.log("playlist names: ", playlistNames);
 }
 
 export async function getSpotifyPlaylists() {
     //
 }
-
-// export async function buildPlaylists() {
-//     let playlists = store.getPlaylists();
-//     if (playlists.length > 0) {
-//         return playlists;
-//     }
-
-//     let api = `/v1/me/playlists?offset=0&limit=20`;
-//     let accessToken = getItem("spotify_access_token");
-//     let playlistResponse = await spotifyApiGet(api, accessToken);
-//     // check if the token needs to be refreshed
-//     playlistResponse = await checkSpotifyApiResponse(playlistResponse, api);
-
-//     if (!isResponseOk(playlistResponse)) {
-//         return;
-//     }
-
-//     //href:"https://api.spotify.com/v1/playlists/0mwG8hCL4scWi8Nkt7jyoV/tracks"
-//     //uri, name, public, collaborative, tracks: {total: 3}
-//     await populatePlaylists(playlistResponse, playlists, accessToken);
-
-//     // are there any more pages?
-//     while (playlistResponse.data.next !== null) {
-//         playlistResponse = await spotifyApiGet(
-//             playlistResponse.data.next,
-//             accessToken
-//         );
-//         if (isResponseOk(playlistResponse)) {
-//             await populatePlaylists(playlistResponse, playlists, accessToken);
-//         } else {
-//             break;
-//         }
-//     }
-
-//     store.setPlaylists(playlists);
-
-//     return playlists;
-// }
-
-// async function populatePlaylists(
-//     playlistResponse: any,
-//     playlists: Playlist[],
-//     accessToken: string
-// ) {
-//     if (isResponseOk(playlistResponse)) {
-//         const data = playlistResponse.data;
-//         if (data && data.items) {
-//             for (let i = 0; i < data.items.length; i++) {
-//                 // populate the playlists
-//                 const playlistItem = data.items[i];
-//                 let playlist = new Playlist();
-//                 playlist.player = "spotify";
-//                 playlist.id = playlistItem.id;
-//                 playlist.uri = playlistItem.uri;
-//                 playlist.collaborative = playlistItem.collaborative;
-//                 playlist.name = playlistItem.name;
-//                 playlist.public = playlistItem.public;
-
-//                 let tracks = [];
-//                 // get the tracks
-//                 if (playlistItem.tracks) {
-//                     const trackReponse = await spotifyApiGet(
-//                         playlistItem.tracks.href,
-//                         accessToken
-//                     );
-//                     const trackData = trackReponse.data;
-//                     if (trackData && trackData.items) {
-//                         for (let x = 0; x < trackData.items.length; x++) {
-//                             // populate the tracks
-//                             const trackItemData = trackData.items[x];
-//                             if (trackItemData.track) {
-//                                 const trackItem = trackItemData.track;
-//                                 let track = new Track();
-//                                 track.duration_ms = trackItem.duration_ms;
-//                                 track.name = trackItem.name;
-//                                 track.explicit = trackItem.explicit;
-//                                 track.disc_number = trackItem.disc_number;
-//                                 track.popularity = trackItem.popularity;
-//                                 track.id = trackItem.id;
-//                                 track.uri = trackItem.uri;
-//                                 // set the artist
-//                                 if (trackItem.artists) {
-//                                     const len = trackItem.artists.length;
-//                                     let artistNames = [];
-//                                     for (let y = 0; y < len; y++) {
-//                                         const artist = trackItem.artists[y];
-//                                         artistNames.push(artist.name);
-//                                     }
-//                                     track.artist = artistNames.join(", ");
-//                                 }
-
-//                                 if (trackItem.album) {
-//                                     track.album = trackItem.album.name;
-//                                 }
-//                                 tracks.push(track);
-//                             }
-//                         }
-//                     }
-//                 }
-//                 playlist.tracks = tracks;
-//                 playlists.push(playlist);
-//             }
-//         }
-//     }
-// }

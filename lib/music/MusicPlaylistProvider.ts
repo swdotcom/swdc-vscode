@@ -13,9 +13,7 @@ import { MusicStoreManager } from "./MusicStoreManager";
 import {
     PlaylistItem,
     playTrackInContext,
-    play,
     PlayerName,
-    Track,
     PlayerType
 } from "cody-music";
 
@@ -42,7 +40,11 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 const track = e.selection[0];
                 let params = [track.name, selectedPlaylist.name];
 
-                playTrackInContext(PlayerName.ItunesDesktop, params);
+                playTrackInContext(PlayerName.ItunesDesktop, params).then(
+                    result => {
+                        // update the controls buttons
+                    }
+                );
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -69,6 +71,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     refresh(): void {
+        musicstoreMgr.clearPlaylists();
         this._onDidChangeTreeData.fire();
     }
 

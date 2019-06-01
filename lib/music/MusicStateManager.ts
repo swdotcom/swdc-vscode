@@ -1,8 +1,16 @@
 import { getItem, isEmptyObj, isMusicTime } from "../Util";
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
+import { MusicCommandManager } from "./MusicCommandManager";
 import { softwareGet, isResponseOk } from "../HttpClient";
-import { Track, PlayerType, getAccessToken, getRunningTrack } from "cody-music";
+import {
+    Track,
+    PlayerType,
+    getAccessToken,
+    getRunningTrack,
+    TrackStatus
+} from "cody-music";
+import { commands } from "vscode";
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -12,9 +20,7 @@ export class MusicStateManager {
 
     private existingTrack: any = {};
     private lastTimeSent: number = null;
-    private gatheringMusic: boolean = false;
     private serverTrack: any = null;
-    private currentTrack: Track = null;
 
     private constructor() {
         // private to prevent non-singleton usage
@@ -29,10 +35,6 @@ export class MusicStateManager {
 
     public clearServerTrack() {
         this.serverTrack = null;
-    }
-
-    public getCurrentTrack(): Track {
-        return this.currentTrack;
     }
 
     public async getServerTrack(track: Track) {
@@ -98,13 +100,30 @@ export class MusicStateManager {
         }
     }
 
-    public async gatherMusicInfo(): Promise<boolean> {
-        let hasChanges = false;
-        if (this.gatheringMusic) {
-            return hasChanges;
-        }
-        this.gatheringMusic = true;
+    public async musicStateCheck() {
+        const track: Track = (await this.gatherMusicInfo()) || new Track();
+        if (isMusicTime()) {
+            // update the buttons to show player control changes
+            MusicCommandManager.updateButtons(track);
 
+            // do we still have a player or has the player changed?
+            // either case, refresh the player provider list
+            let playerFound = track.id ? true : false;
+            let showingPlaylists =
+                MusicStoreManager.getInstance().runningPlaylists.length > 0
+                    ? true
+                    : false;
+            if (!playerFound && showingPlaylists) {
+                // no player found and the playlists were showing
+                commands.executeCommand("musictime.refreshPlaylist");
+            } else if (playerFound && !showingPlaylists) {
+                // player found and now showing playlists
+                commands.executeCommand("musictime.refreshPlaylist");
+            }
+        }
+    }
+
+    public async gatherMusicInfo(): Promise<any> {
         let spotifyAccessToken = getItem("spotify_access_token");
         // only check if we need to initialize cody-music if the user
         // has connected a spotify_access_token
@@ -121,10 +140,6 @@ export class MusicStateManager {
 
         if (!playingTrack) {
             playingTrack = new Track();
-            // clear the music store playlists
-            MusicStoreManager.getInstance().clearPlaylists();
-        } else {
-            // check if the music store has playlists or not
         }
 
         playingTrack["start"] = 0;
@@ -146,8 +161,7 @@ export class MusicStateManager {
             state = playingTrack["state"];
         }
 
-        let isPaused =
-            state.toLowerCase().indexOf("playing") !== -1 ? false : true;
+        let isPlaying = state.toLowerCase() === "playing" ? true : false;
 
         let existingTrackId = this.existingTrack["id"] || null;
         let playingTrackDuration: number = null;
@@ -158,15 +172,14 @@ export class MusicStateManager {
         }
 
         // don't send this track if it's stopped and the exsting track doesn't exist
-        if (state === "stopped" && !existingTrackId) {
+        if (state === "stopped" || state === TrackStatus.NotAssigned) {
+            // set playingTrackId to null;
             playingTrackId = null;
         }
 
         if (!playingTrackId && existingTrackId) {
             // we don't have a track playing and we have an existing one, close it out
             this.existingTrack["end"] = nowInSec;
-
-            hasChanges = true;
 
             // send the existing to close it out
             sendMusicData(this.existingTrack).then(result => {
@@ -185,8 +198,6 @@ export class MusicStateManager {
             this.existingTrack["start"] = nowInSec;
             this.existingTrack["local_start"] = localNowInSec;
 
-            hasChanges = true;
-
             // send the existing (which is the initial one for this session)
             sendMusicData(this.existingTrack);
             this.lastTimeSent = nowInSec;
@@ -195,8 +206,6 @@ export class MusicStateManager {
             if (playingTrackId !== existingTrackId) {
                 // send the existing song now to close it out
                 this.existingTrack["end"] = nowInSec - 1;
-
-                hasChanges = true;
 
                 sendMusicData(this.existingTrack).then(result => {
                     // clear out the trackInfo
@@ -218,15 +227,13 @@ export class MusicStateManager {
                     ? nowInSec - this.lastTimeSent
                     : 0;
                 if (
-                    !isPaused &&
+                    isPlaying &&
                     playingTrackDuration &&
                     this.lastTimeSent &&
                     diffInSec > playingTrackDuration
                 ) {
                     // it's on repeat, send it and start the next one
                     this.existingTrack["end"] = nowInSec - 1;
-
-                    hasChanges = true;
 
                     // close it out
                     sendMusicData(this.existingTrack).then(async result => {
@@ -242,12 +249,14 @@ export class MusicStateManager {
                         sendMusicData(this.existingTrack);
                         this.lastTimeSent = nowInSec;
                     });
+                } else if (this.existingTrack.state !== playingTrack.state) {
+                    // track IDs are the same but it's not on repeat,
+                    // just update the state so they're in sync
+                    this.existingTrack.state = playingTrack.state;
                 }
             }
         }
 
-        this.gatheringMusic = false;
-
-        return hasChanges;
+        return playingTrack;
     }
 }

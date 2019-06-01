@@ -31,6 +31,7 @@ import {
 } from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
+import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 
@@ -180,8 +181,8 @@ export async function intializePlugin(
 
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
-        MusicCommandManager.stateCheckHandler();
-    }, 1000 * 5);
+        MusicStateManager.getInstance().musicStateCheck();
+    }, 1000 * 15);
 
     // send any offline data
     setTimeout(() => {
