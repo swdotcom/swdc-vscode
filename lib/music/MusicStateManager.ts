@@ -122,7 +122,6 @@ export class MusicStateManager {
                 (!playerFound && hasPlaylists) ||
                 (playerFound && !hasPlaylists)
             ) {
-                await this.musicstoreMgr.clearPlaylists();
                 // no player found and the playlists were showing
                 // OR
                 // player found and now showing playlists

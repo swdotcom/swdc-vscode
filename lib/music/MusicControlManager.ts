@@ -16,7 +16,7 @@ import {
     CodyResponse,
     CodyResponseType
 } from "cody-music";
-import { workspace, window, ViewColumn } from "vscode";
+import { workspace, window, ViewColumn, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -357,8 +357,12 @@ export async function createPlaylistCb() {
                 getItem("jwt")
             );
             if (isResponseOk(createResult)) {
-                // fetch the cody playlists
-                MusicStoreManager.getInstance().syncPairedSpotifyPlaylists();
+                // refresh the playlists
+                await this.musicstoreMgr.clearPlaylists();
+                let track: Track = await this.musicstoreMgr.getRunningTrack();
+                await this.musicstoreMgr.syncRunningPlaylists(track);
+
+                commands.executeCommand("musictime.refreshPlaylist");
             }
         }
     }

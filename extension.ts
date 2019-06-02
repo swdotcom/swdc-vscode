@@ -265,7 +265,6 @@ async function initializeUserInfo(
         await musicstoreMgr.initializeSpotify();
 
         let runningTrack: Track = await getRunningTrack();
-
         await musicstoreMgr.syncRunningPlaylists(runningTrack);
 
         // fetch the favorites every 10 minutes
@@ -274,11 +273,6 @@ async function initializeUserInfo(
         }, 1000 * 60 * 10);
         // and once right now
         musicstoreMgr.syncPlaylistFavorites();
-
-        // sync the spotify playlist and what's on software every 1 minute
-        setInterval(() => {
-            musicstoreMgr.syncPairedSpotifyPlaylists();
-        }, 1000 * 60);
     }
 }
 

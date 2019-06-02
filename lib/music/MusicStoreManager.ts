@@ -57,6 +57,10 @@ export class MusicStoreManager {
         return this._codyPlaylists;
     }
 
+    set codyPlaylists(lists: PlaylistItem[]) {
+        this._codyPlaylists = lists;
+    }
+
     get spotifyPlaylists(): PlaylistItem[] {
         return this._spotifyPlaylists;
     }
@@ -130,18 +134,18 @@ export class MusicStoreManager {
     async fetchCodyPlaylists() {
         const response = await softwareGet("/music/playlist", getItem("jwt"));
         if (isResponseOk(response)) {
-            this._codyPlaylists = response.data.map(item => {
+            let playlists = response.data.map(item => {
                 // transform the playlist_id to id
                 item["id"] = item.playlist_id;
                 delete item.playlist_id;
                 return item;
             });
+            this.codyPlaylists = playlists;
         }
     }
 
     async syncCodyPlaylists() {
         await this.fetchCodyPlaylists();
-
         this.reconcilePlaylists();
     }
 
@@ -192,6 +196,9 @@ export class MusicStoreManager {
         }
     }
 
+    /**
+     * These are the top productivity songs for this user
+     */
     async syncPlaylistFavorites() {
         const response = await softwareGet(
             "/music/playlist/favorites",
@@ -204,13 +211,6 @@ export class MusicStoreManager {
             // clear the favorites
             this._codyFavorites = [];
         }
-    }
-
-    async syncPairedSpotifyPlaylists() {
-        // get the spotify web playlists, then the cody playlists
-        this.syncSpotifyWebPlaylists().then(() => {
-            this.syncCodyPlaylists();
-        });
     }
 
     async syncRunningPlaylists(runningTrack: Track) {
@@ -238,25 +238,26 @@ export class MusicStoreManager {
             return;
         }
 
-        this._currentPlayerType = runningTrack.playerType;
+        // also get the player devices
+        this.spotifyPlayerDevices = await getSpotifyDevices();
 
-        if (
-            this.hasSpotifyAccessToken() &&
-            this._currentPlayerType === PlayerType.WebSpotify
-        ) {
+        if (this.spotifyPlayerDevices.length > 0) {
             playlistItemTitle.name = "Spotify";
             // fetch spotify and sync what we have
             playlists = await this.syncSpotifyWebPlaylists();
-        } else if (this._currentPlayerType === PlayerType.MacItunesDesktop) {
+
+            this._currentPlayerType = PlayerType.WebSpotify;
+        } else if (runningTrack.playerType === PlayerType.MacItunesDesktop) {
             playlistItemTitle.name = "iTunes";
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
+
+            // add the title to the beginning of the array
+            playlists.unshift(playlistItemTitle);
         } else {
             playlistItemTitle.name = "Spotify";
             playlists = await getPlaylists(PlayerName.SpotifyDesktop);
+            this._currentPlayerType = PlayerType.MacSpotifyDesktop;
         }
-
-        // add the title to the beginning of the array
-        playlists.unshift(playlistItemTitle);
 
         /**
          * playlist example...
@@ -337,14 +338,8 @@ export class MusicStoreManager {
         }
 
         let playlistTracks: CodyResponse;
-        if (
-            this.hasSpotifyAccessToken() &&
-            (this._currentPlayerType === PlayerType.NotAssigned ||
-                this._currentPlayerType === PlayerType.WebSpotify)
-        ) {
-            // also get the player devices
-            this.spotifyPlayerDevices = await getSpotifyDevices();
 
+        if (this.spotifyPlayerDevices.length > 0) {
             // get the playlist tracks
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
