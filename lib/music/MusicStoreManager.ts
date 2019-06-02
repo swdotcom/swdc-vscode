@@ -11,7 +11,9 @@ import {
     getPlaylists,
     getRunningTrack,
     PlayerType,
-    PlaylistTrackInfo
+    PlaylistTrackInfo,
+    PlayerDevice,
+    getSpotifyDevices
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -33,6 +35,7 @@ export class MusicStoreManager {
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
     private _selectedPlaylist: PlaylistItem = null;
     private _hasPlaylists: boolean = false;
+    private _spotifyPlayerDevices: PlayerDevice[] = [];
 
     private constructor() {
         //
@@ -88,6 +91,14 @@ export class MusicStoreManager {
 
     set hasPlaylists(flag: boolean) {
         this._hasPlaylists = flag;
+    }
+
+    get spotifyPlayerDevices(): PlayerDevice[] {
+        return this._spotifyPlayerDevices;
+    }
+
+    set spotifyPlayerDevices(devices: PlayerDevice[]) {
+        this._spotifyPlayerDevices = devices;
     }
 
     //
@@ -281,7 +292,7 @@ export class MusicStoreManager {
             connectSpotifyItem.type = "connect";
             connectSpotifyItem.id = "connect";
             connectSpotifyItem.playerType = PlayerType.WebSpotify;
-            connectSpotifyItem.name = "Connect your spotify account";
+            connectSpotifyItem.name = "Connect Spotify to see your playlists";
             playlists.push(connectSpotifyItem);
         }
     }
@@ -331,6 +342,10 @@ export class MusicStoreManager {
             (this._currentPlayerType === PlayerType.NotAssigned ||
                 this._currentPlayerType === PlayerType.WebSpotify)
         ) {
+            // also get the player devices
+            this.spotifyPlayerDevices = await getSpotifyDevices();
+
+            // get the playlist tracks
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
                 playlist_id

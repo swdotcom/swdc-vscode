@@ -14,7 +14,8 @@ import {
     PlaylistItem,
     playTrackInContext,
     PlayerName,
-    PlayerType
+    PlayerType,
+    play
 } from "cody-music";
 import { connectSpotify } from "./MusicControlManager";
 
@@ -33,18 +34,40 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             }
             let playlistItem: PlaylistItem = e.selection[0];
 
-            if (playlistItem.type === "track") {
-                // play the track
-                const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
-                    .selectedPlaylist;
-                MusicStoreManager.getInstance();
-                let params = [playlistItem.name, selectedPlaylist.name];
+            const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
+                .selectedPlaylist;
 
-                playTrackInContext(PlayerName.ItunesDesktop, params).then(
-                    result => {
-                        // update the controls buttons
+            if (playlistItem.type === "track") {
+                if (playlistItem.playerType === PlayerType.WebSpotify) {
+                    // get the 1st device
+
+                    let track_id = playlistItem.id;
+                    if (track_id.indexOf("spotify:track:") === -1) {
+                        track_id = `spotify:track:${track_id}`;
                     }
-                );
+                    let options = {
+                        track_ids: [track_id]
+                    };
+                    let devices = MusicStoreManager.getInstance()
+                        .spotifyPlayerDevices;
+                    if (devices.length > 0) {
+                        options["device_id"] = devices[0].id;
+                    }
+                    play(PlayerName.SpotifyWeb, options).then(result => {
+                        console.log("play result: ", result);
+                    });
+                } else {
+                    // play the track
+
+                    MusicStoreManager.getInstance();
+                    let params = [playlistItem.name, selectedPlaylist.name];
+
+                    playTrackInContext(PlayerName.ItunesDesktop, params).then(
+                        result => {
+                            // console.log("result: ", result);
+                        }
+                    );
+                }
             } else if (
                 playlistItem.id === "connect" &&
                 playlistItem.playerType === PlayerType.WebSpotify
