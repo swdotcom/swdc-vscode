@@ -183,7 +183,7 @@ export async function intializePlugin(
     // 15 second interval to check music info
     gather_music_interval = setInterval(() => {
         MusicStateManager.getInstance().musicStateCheck();
-    }, 1000 * 15);
+    }, 1000 * 5);
 
     // send any offline data
     setTimeout(() => {

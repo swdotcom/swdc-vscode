@@ -126,6 +126,15 @@ export async function sendMusicData(trackData) {
     if (trackData.images) {
         delete trackData.images;
     }
+    if (trackData.artists) {
+        delete trackData.artists;
+    }
+    if (trackData.external_urls) {
+        delete trackData.external_urls;
+    }
+    if (trackData.href) {
+        delete trackData.href;
+    }
     logIt(`sending ${JSON.stringify(trackData)}`);
     // add the "local_start", "start", and "end"
     // POST the kpm to the PluginManager

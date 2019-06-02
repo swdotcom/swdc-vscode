@@ -17,7 +17,7 @@ import {
     PlayerType,
     play
 } from "cody-music";
-import { connectSpotify } from "./MusicControlManager";
+import { connectSpotify, createDevBeatsPlaylist } from "./MusicControlManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -68,11 +68,10 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         }
                     );
                 }
-            } else if (
-                playlistItem.id === "connect" &&
-                playlistItem.playerType === PlayerType.WebSpotify
-            ) {
+            } else if (playlistItem.id === "connectspotify") {
                 connectSpotify();
+            } else if (playlistItem.id === "addtop40") {
+                createDevBeatsPlaylist();
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -180,8 +179,19 @@ class PlaylistTreeItem extends TreeItem {
     ) {
         super(treeItem.name, collapsibleState);
         if (treeItem.type === "playlist") {
-            // for now, don't show the playlist icon
-            delete this.iconPath;
+            if (treeItem["tag"] && treeItem["tag"] === "cody") {
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "pl-paw.svg"
+                );
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "pl-paw.svg"
+                );
+            } else {
+                // for now, don't show the playlist icon
+                delete this.iconPath;
+            }
         } else {
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(

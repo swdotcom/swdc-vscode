@@ -248,7 +248,7 @@ export class MusicControlManager {
                     detail:
                         "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40",
                     url: null,
-                    cb: createPlaylistCb
+                    cb: createDevBeatsPlaylist
                 });
             } else if (hasCodyPlaylists) {
                 menuOptions.items.push({
@@ -298,7 +298,7 @@ export async function displayMusicTimeMetricsDashboard() {
     });
 }
 
-export async function createPlaylistCb() {
+export async function createDevBeatsPlaylist() {
     // get the spotify track ids and create the playlist
     let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
     if (codyTracks && codyTracks.length > 0) {

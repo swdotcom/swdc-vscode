@@ -132,16 +132,17 @@ export class MusicStoreManager {
     }
 
     async fetchCodyPlaylists() {
+        let playlists = [];
         const response = await softwareGet("/music/playlist", getItem("jwt"));
         if (isResponseOk(response)) {
-            let playlists = response.data.map(item => {
+            playlists = response.data.map(item => {
                 // transform the playlist_id to id
                 item["id"] = item.playlist_id;
                 delete item.playlist_id;
                 return item;
             });
-            this.codyPlaylists = playlists;
         }
+        this.codyPlaylists = playlists;
     }
 
     async syncCodyPlaylists() {
@@ -241,23 +242,25 @@ export class MusicStoreManager {
         // also get the player devices
         this.spotifyPlayerDevices = await getSpotifyDevices();
 
+        // get the cody playlists
+        await this.fetchCodyPlaylists();
+
         if (this.spotifyPlayerDevices.length > 0) {
             playlistItemTitle.name = "Spotify";
             // fetch spotify and sync what we have
             playlists = await this.syncSpotifyWebPlaylists();
-
             this._currentPlayerType = PlayerType.WebSpotify;
         } else if (runningTrack.playerType === PlayerType.MacItunesDesktop) {
             playlistItemTitle.name = "iTunes";
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
-
-            // add the title to the beginning of the array
-            playlists.unshift(playlistItemTitle);
         } else {
-            playlistItemTitle.name = "Spotify";
-            playlists = await getPlaylists(PlayerName.SpotifyDesktop);
+            playlistItemTitle.name =
+                "No playlists available without Spotify access";
             this._currentPlayerType = PlayerType.MacSpotifyDesktop;
         }
+
+        // add the title to the beginning of the array
+        playlists.unshift(playlistItemTitle);
 
         /**
          * playlist example...
@@ -277,10 +280,20 @@ export class MusicStoreManager {
                 if (!playlist.id) {
                     playlist.id = playlist.name;
                 }
+                if (this._currentPlayerType === PlayerType.WebSpotify) {
+                    let foundItem = this.codyPlaylists.find(element => {
+                        return element.id === playlist.id;
+                    });
+                    if (foundItem) {
+                        playlist["tag"] = "cody";
+                    }
+                }
             });
         }
 
         this.addConnectToListIfNoAccessToken(playlists);
+
+        this.addTop40PlaylistLinkIfDoesntExist(playlists);
 
         this.runningPlaylists = playlists;
     }
@@ -290,11 +303,35 @@ export class MusicStoreManager {
             // add the connect spotify link
             let connectSpotifyItem: PlaylistItem = new PlaylistItem();
             connectSpotifyItem.tracks = new PlaylistTrackInfo();
-            connectSpotifyItem.type = "connect";
-            connectSpotifyItem.id = "connect";
+            connectSpotifyItem.type = "connectspotify";
+            connectSpotifyItem.id = "connectspotify";
             connectSpotifyItem.playerType = PlayerType.WebSpotify;
             connectSpotifyItem.name = "Connect Spotify to see your playlists";
             playlists.push(connectSpotifyItem);
+        }
+    }
+
+    addTop40PlaylistLinkIfDoesntExist(playlists: PlaylistItem[]) {
+        if (this._currentPlayerType === PlayerType.WebSpotify) {
+            let foundItem = null;
+            for (let i = 0; i < playlists.length; i++) {
+                let playlist = playlists[i];
+                foundItem = this.codyPlaylists.find(element => {
+                    return element.id === playlist.id;
+                });
+                if (foundItem) {
+                    // add the connect spotify link
+                    let connectSpotifyItem: PlaylistItem = new PlaylistItem();
+                    connectSpotifyItem.tracks = new PlaylistTrackInfo();
+                    connectSpotifyItem.type = "addtop40";
+                    connectSpotifyItem.id = "addtop40";
+                    connectSpotifyItem.playerType = PlayerType.WebSpotify;
+                    connectSpotifyItem.name =
+                        "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40";
+                    playlists.push(connectSpotifyItem);
+                    break;
+                }
+            }
         }
     }
 
