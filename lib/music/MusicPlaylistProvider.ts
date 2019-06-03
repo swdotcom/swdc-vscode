@@ -54,7 +54,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         options["device_id"] = devices[0].id;
                     }
                     play(PlayerName.SpotifyWeb, options).then(result => {
-                        console.log("play result: ", result);
+                        //
                     });
                 } else {
                     // play the track
@@ -179,7 +179,7 @@ class PlaylistTreeItem extends TreeItem {
     ) {
         super(treeItem.name, collapsibleState);
         if (treeItem.type === "playlist") {
-            if (treeItem["tag"] && treeItem["tag"] === "cody") {
+            if (treeItem.tag && treeItem.tag === "cody") {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "pl-paw.svg"
@@ -192,6 +192,15 @@ class PlaylistTreeItem extends TreeItem {
                 // for now, don't show the playlist icon
                 delete this.iconPath;
             }
+        } else if (treeItem.type === "title") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "icons8-playlist-16.png"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "icons8-playlist-16.png"
+            );
         } else {
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
@@ -221,7 +230,7 @@ class PlaylistTreeItem extends TreeItem {
     }
 
     get tooltip(): string {
-        return `${this.treeItem.id}`;
+        return `${this.treeItem.tooltip}`;
     }
 
     iconPath = {

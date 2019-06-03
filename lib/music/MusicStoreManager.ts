@@ -24,6 +24,8 @@ import {
     softwarePut
 } from "../HttpClient";
 import { getItem } from "../Util";
+import { PRODUCTIVITY_PLAYLIST_NAME } from "../Constants";
+import { commands } from "vscode";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -145,11 +147,6 @@ export class MusicStoreManager {
         this.codyPlaylists = playlists;
     }
 
-    async syncCodyPlaylists() {
-        await this.fetchCodyPlaylists();
-        this.reconcilePlaylists();
-    }
-
     async reconcilePlaylists() {
         let hasSpotifyPlaylists = this._spotifyPlaylists.length > 0;
         let hasUpdates = false;
@@ -193,7 +190,11 @@ export class MusicStoreManager {
         }
 
         if (hasUpdates) {
-            this.fetchCodyPlaylists();
+            await this.clearPlaylists();
+            let track: Track = await getRunningTrack();
+            await this.syncRunningPlaylists(track);
+
+            commands.executeCommand("musictime.refreshPlaylist");
         }
     }
 
@@ -223,7 +224,7 @@ export class MusicStoreManager {
         playlistItemTitle.tracks = new PlaylistTrackInfo();
         playlistItemTitle.type = "title";
         playlistItemTitle.id = "title";
-        playlistItemTitle.playerType = runningTrack.playerType;
+        playlistItemTitle.playerType = PlayerType.NotAssigned;
 
         this._currentPlayerType = runningTrack.playerType;
 
@@ -233,6 +234,7 @@ export class MusicStoreManager {
         ) {
             // no player or track
             playlistItemTitle.name = "No active music player found";
+            playlistItemTitle.playerType = PlayerType.NotAssigned;
             playlists.push(playlistItemTitle);
             this.addConnectToListIfNoAccessToken(playlists);
             this.runningPlaylists = playlists;
@@ -254,9 +256,10 @@ export class MusicStoreManager {
             playlistItemTitle.name = "iTunes";
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
         } else {
-            playlistItemTitle.name =
-                "No playlists available without Spotify access";
-            this._currentPlayerType = PlayerType.MacSpotifyDesktop;
+            playlistItemTitle.name = "Playlists not accessible";
+            playlistItemTitle.tooltip =
+                "Connect Spotify to view your playlists";
+            playlistItemTitle.playerType = PlayerType.NotAssigned;
         }
 
         // add the title to the beginning of the array
@@ -285,7 +288,7 @@ export class MusicStoreManager {
                         return element.id === playlist.id;
                     });
                     if (foundItem) {
-                        playlist["tag"] = "cody";
+                        playlist.tag = "cody";
                     }
                 }
             });
@@ -319,18 +322,22 @@ export class MusicStoreManager {
                 foundItem = this.codyPlaylists.find(element => {
                     return element.id === playlist.id;
                 });
+
                 if (foundItem) {
-                    // add the connect spotify link
-                    let connectSpotifyItem: PlaylistItem = new PlaylistItem();
-                    connectSpotifyItem.tracks = new PlaylistTrackInfo();
-                    connectSpotifyItem.type = "addtop40";
-                    connectSpotifyItem.id = "addtop40";
-                    connectSpotifyItem.playerType = PlayerType.WebSpotify;
-                    connectSpotifyItem.name =
-                        "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40";
-                    playlists.push(connectSpotifyItem);
                     break;
                 }
+            }
+
+            if (!foundItem) {
+                // add the connect spotify link
+                let connectSpotifyItem: PlaylistItem = new PlaylistItem();
+                connectSpotifyItem.tracks = new PlaylistTrackInfo();
+                connectSpotifyItem.type = "addtop40";
+                connectSpotifyItem.id = "addtop40";
+                connectSpotifyItem.playerType = PlayerType.WebSpotify;
+                connectSpotifyItem.name = `Create a Spotify playlist`;
+                connectSpotifyItem.tooltip = `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`;
+                playlists.push(connectSpotifyItem);
             }
         }
     }

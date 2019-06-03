@@ -135,15 +135,17 @@ export class MusicStateManager {
     }
 
     public async gatherMusicInfo(): Promise<any> {
-        let spotifyAccessToken = getItem("spotify_access_token");
-        // only check if we need to initialize cody-music if the user
-        // has connected a spotify_access_token
-        if (spotifyAccessToken) {
-            // connected
-            let access_token = getAccessToken();
-            if (!access_token) {
-                // cody-music doesn't have the access token, initialize
-                await this.musicstoreMgr.initializeSpotify();
+        if (isMusicTime()) {
+            let spotifyAccessToken = getItem("spotify_access_token");
+            // only check if we need to initialize cody-music if the user
+            // has connected a spotify_access_token
+            if (spotifyAccessToken) {
+                // connected
+                let access_token = getAccessToken();
+                if (!access_token) {
+                    // cody-music doesn't have the access token, initialize
+                    await this.musicstoreMgr.initializeSpotify();
+                }
             }
         }
 

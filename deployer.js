@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "0.16.6";
-const MUSIC_TIME_VERSION = "0.1.6";
+const MUSIC_TIME_VERSION = "0.1.7";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
@@ -133,10 +133,11 @@ async function deploy() {
         });
         packageJson.contributes["commands"].push({
             command: "musictime.connectSpotify",
-            title: "Connect your spotify account"
+            title: "Connect your Spotify account",
+            tooltip: "Connect your Spotify account to view your playlists"
         });
         packageJson.contributes["commands"].push({
-            command: "musictime.connectSpotify",
+            command: "musictime.refreshPlaylist",
             title: "Refresh",
             icon: {
                 light: "resources/light/refresh.svg",

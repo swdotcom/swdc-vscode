@@ -273,6 +273,11 @@ async function initializeUserInfo(
         }, 1000 * 60 * 10);
         // and once right now
         musicstoreMgr.syncPlaylistFavorites();
+
+        // every 2 minutes reconcile
+        setInterval(() => {
+            musicstoreMgr.reconcilePlaylists();
+        }, 1000 * 60 * 2);
     }
 }
 

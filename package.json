@@ -122,7 +122,7 @@
         "@types/vscode": "^1.32.0"
     },
     "dependencies": {
-        "cody-music": "2.3.5",
+        "cody-music": "2.3.6",
         "vsls": "0.3.1291"
     }
 }

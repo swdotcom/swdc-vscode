@@ -39,7 +39,11 @@ import {
     isResponseOk,
     softwarePost
 } from "../HttpClient";
-import { api_endpoint, LOGIN_LABEL } from "../Constants";
+import {
+    api_endpoint,
+    LOGIN_LABEL,
+    PRODUCTIVITY_PLAYLIST_NAME
+} from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 const fs = require("fs");
 
@@ -245,8 +249,7 @@ export class MusicControlManager {
                 menuOptions.items.push({
                     label: "Create your weekly playlist",
                     description: "",
-                    detail:
-                        "Create a Spotify playlist (Cody Dev Beats) based on your weekly top 40",
+                    detail: `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`,
                     url: null,
                     cb: createDevBeatsPlaylist
                 });
@@ -299,11 +302,12 @@ export async function displayMusicTimeMetricsDashboard() {
 }
 
 export async function createDevBeatsPlaylist() {
+    let musicstoreMgr = MusicStoreManager.getInstance();
     // get the spotify track ids and create the playlist
-    let codyTracks: any[] = MusicStoreManager.getInstance().codyFavorites;
+    let codyTracks: any[] = musicstoreMgr.codyFavorites;
     if (codyTracks && codyTracks.length > 0) {
         let playlistResult: CodyResponse = await createPlaylist(
-            "Cody Dev Beats",
+            PRODUCTIVITY_PLAYLIST_NAME,
             true
         );
 
@@ -320,8 +324,7 @@ export async function createDevBeatsPlaylist() {
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
             // add the tracks
             // list of [{uri, artist, name}...]
-            const codyTracks: any[] = MusicStoreManager.getInstance()
-                .codyFavorites;
+            const codyTracks: any[] = musicstoreMgr.codyFavorites;
             let tracksToAdd: string[] = codyTracks.map(item => {
                 return item.uri;
             });
@@ -346,10 +349,11 @@ export async function createDevBeatsPlaylist() {
                 );
             }
 
+            // playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
             const payload = {
                 playlist_id: playlistResult.data.id,
-                type: PlayerName.SpotifyWeb,
-                name: "Cody Dev Beats"
+                playlistTypeId: 1,
+                name: PRODUCTIVITY_PLAYLIST_NAME
             };
             let createResult = await softwarePost(
                 "/music/playlist",
@@ -358,9 +362,9 @@ export async function createDevBeatsPlaylist() {
             );
             if (isResponseOk(createResult)) {
                 // refresh the playlists
-                await this.musicstoreMgr.clearPlaylists();
-                let track: Track = await this.musicstoreMgr.getRunningTrack();
-                await this.musicstoreMgr.syncRunningPlaylists(track);
+                await musicstoreMgr.clearPlaylists();
+                let track: Track = await getRunningTrack();
+                await musicstoreMgr.syncRunningPlaylists(track);
 
                 commands.executeCommand("musictime.refreshPlaylist");
             }
