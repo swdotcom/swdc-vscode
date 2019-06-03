@@ -1,7 +1,7 @@
 import {
     Track,
     requiresSpotifyAccessInfo,
-    setCredentials,
+    setConfig,
     getPlaylistTracks,
     PaginationItem,
     PlaylistItem,
@@ -13,7 +13,8 @@ import {
     PlayerType,
     PlaylistTrackInfo,
     PlayerDevice,
-    getSpotifyDevices
+    getSpotifyDevices,
+    CodyConfig
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -123,12 +124,15 @@ export class MusicStoreManager {
             const spotifyOauth = await getSpotifyOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
-                setCredentials({
-                    refreshToken: spotifyOauth.spotify_refresh_token,
-                    clientSecret: "2b40b4975b2743189c87f4712c0cd59e",
-                    clientId: "eb67e22ba1c6474aad8ec8067480d9dc",
-                    accessToken: spotifyOauth.spotify_access_token
-                });
+                let codyConfig: CodyConfig = new CodyConfig();
+                codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
+                codyConfig.spotifyAccessToken =
+                    spotifyOauth.spotify_access_token;
+                codyConfig.spotifyRefreshToken =
+                    spotifyOauth.spotify_refresh_token;
+                codyConfig.spotifyClientSecret =
+                    "2b40b4975b2743189c87f4712c0cd59e";
+                setConfig(codyConfig);
             }
         }
     }

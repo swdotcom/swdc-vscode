@@ -34,7 +34,7 @@ import * as vsls from "vsls/vscode";
 import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
-import { Track, getRunningTrack } from "cody-music";
+import { Track, getRunningTrack, setConfig, CodyConfig } from "cody-music";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -258,7 +258,16 @@ async function initializeUserInfo(
         setTimeout(() => {
             fetchDailyKpmSessionInfo();
         }, 1000);
+
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = false;
+        codyConfig.enableSpotifyDesktop = false;
+        setConfig(codyConfig);
     } else if (isMusicTime()) {
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = true;
+        setConfig(codyConfig);
+
         const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
 
         // this needs to happen first to enable spotify playlist and control logic
