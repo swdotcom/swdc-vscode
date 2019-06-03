@@ -220,12 +220,6 @@ export class MusicStoreManager {
 
         runningTrack = runningTrack || new Track();
 
-        let playlistItemTitle: PlaylistItem = new PlaylistItem();
-        playlistItemTitle.tracks = new PlaylistTrackInfo();
-        playlistItemTitle.type = "title";
-        playlistItemTitle.id = "title";
-        playlistItemTitle.playerType = PlayerType.NotAssigned;
-
         this._currentPlayerType = runningTrack.playerType;
 
         if (
@@ -233,8 +227,12 @@ export class MusicStoreManager {
             !runningTrack.id
         ) {
             // no player or track
-            playlistItemTitle.name = "No active music player found";
+            let playlistItemTitle: PlaylistItem = new PlaylistItem();
+            playlistItemTitle.tracks = new PlaylistTrackInfo();
+            playlistItemTitle.type = "title";
+            playlistItemTitle.id = "title";
             playlistItemTitle.playerType = PlayerType.NotAssigned;
+            playlistItemTitle.name = "No active music player found";
             playlists.push(playlistItemTitle);
             this.addConnectToListIfNoAccessToken(playlists);
             this.runningPlaylists = playlists;
@@ -248,22 +246,12 @@ export class MusicStoreManager {
         await this.fetchCodyPlaylists();
 
         if (this.spotifyPlayerDevices.length > 0) {
-            playlistItemTitle.name = "Spotify";
             // fetch spotify and sync what we have
             playlists = await this.syncSpotifyWebPlaylists();
             this._currentPlayerType = PlayerType.WebSpotify;
         } else if (runningTrack.playerType === PlayerType.MacItunesDesktop) {
-            playlistItemTitle.name = "iTunes";
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
-        } else {
-            playlistItemTitle.name = "Playlists not accessible";
-            playlistItemTitle.tooltip =
-                "Connect Spotify to view your playlists";
-            playlistItemTitle.playerType = PlayerType.NotAssigned;
         }
-
-        // add the title to the beginning of the array
-        playlists.unshift(playlistItemTitle);
 
         /**
          * playlist example...
