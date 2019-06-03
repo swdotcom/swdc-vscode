@@ -11,7 +11,7 @@ const CODE_TIME_DESC =
     "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.";
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
-const CODE_TIME_VERSION = "0.16.6";
+const CODE_TIME_VERSION = "0.16.7";
 const MUSIC_TIME_VERSION = "0.1.7";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
