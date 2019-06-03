@@ -14,7 +14,8 @@ import {
     getPlaylistNames,
     PlaylistItem,
     CodyResponse,
-    CodyResponseType
+    CodyResponseType,
+    PlayerDevice
 } from "cody-music";
 import { workspace, window, ViewColumn, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -165,12 +166,28 @@ export class MusicControlManager {
     launchTrackPlayer() {
         getRunningTrack().then((track: Track) => {
             if (track && track.id) {
-                if (track.playerType === PlayerType.WebSpotify) {
-                    launchPlayer(PlayerName.SpotifyWeb);
-                } else if (track.playerType === PlayerType.MacItunesDesktop) {
-                    launchPlayer(PlayerName.ItunesDesktop);
+                let options = {
+                    trackId: track.id
+                };
+                let playerType: PlayerType = track.playerType;
+                let devices: PlayerDevice[] = MusicStoreManager.getInstance()
+                    .spotifyPlayerDevices;
+
+                if (
+                    playerType === PlayerType.WebSpotify &&
+                    devices &&
+                    devices.length === 1 &&
+                    !devices[0].name.includes("Web Player")
+                ) {
+                    // launch the spotify desktop
+                    playerType = PlayerType.MacSpotifyDesktop;
+                }
+                if (playerType === PlayerType.WebSpotify) {
+                    launchPlayer(PlayerName.SpotifyWeb, options);
+                } else if (playerType === PlayerType.MacItunesDesktop) {
+                    launchPlayer(PlayerName.ItunesDesktop, options);
                 } else {
-                    launchPlayer(PlayerName.SpotifyDesktop);
+                    launchPlayer(PlayerName.SpotifyDesktop, options);
                 }
             }
         });

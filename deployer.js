@@ -99,44 +99,45 @@ async function deploy() {
         packageJson["version"] = MUSIC_TIME_VERSION;
         packageJson["displayName"] = MUSIC_TIME_DISPLAY;
         extInfoJson["displayName"] = MUSIC_TIME_DISPLAY;
-        packageJson.contributes["commands"].push({
+        let commands = [];
+        commands.push({
             command: "musictime.next",
             title: "Play Next Song"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.previous",
             title: "Play Previous Song"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.play",
             title: "Play"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.pause",
             title: "Pause"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.like",
             title: "Like Song"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.unlike",
             title: "Unlike Song"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.menu",
             title: "Click to see more from Music Time"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.currentSong",
-            title: "Click to launch track player"
+            title: "Click to view track"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.connectSpotify",
             title: "Connect your Spotify account",
             tooltip: "Connect your Spotify account to view your playlists"
         });
-        packageJson.contributes["commands"].push({
+        commands.push({
             command: "musictime.refreshPlaylist",
             title: "Refresh",
             icon: {
@@ -144,6 +145,8 @@ async function deploy() {
                 dark: "resources/dark/refresh.svg"
             }
         });
+
+        packageJson.contributes["commands"] = commands;
     }
 
     updateJsonContent(extInfoJson, getExtensionFile());

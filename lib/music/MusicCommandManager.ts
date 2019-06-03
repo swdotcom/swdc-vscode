@@ -73,7 +73,7 @@ export class MusicCommandManager {
         // button area for the current song name
         this.createButton(
             "",
-            "Click to launch track player",
+            "Click to view track",
             "musictime.currentSong",
             25
         );
