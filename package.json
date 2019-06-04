@@ -1,7 +1,7 @@
 {
     "name": "music-time",
     "displayName": "Music Time",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "publisher": "softwaredotcom",
     "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
     "author": {
@@ -109,27 +109,25 @@
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
                 }
+            },
+            {
+                "command": "musictime.refreshSettings",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             }
         ],
         "menus": {
-            "commandPalette": [
+            "view/title": [
                 {
-                    "command": "extension.codeTimeMetrics"
+                    "when": "view == music-time-playlists",
+                    "group": "navigation"
                 },
                 {
-                    "command": "extension.softwareKpmDashboard",
-                    "when": "codetime:loggedIn"
-                },
-                {
-                    "command": "extension.viewSoftwareTop40",
-                    "when": "config.showMusicMetrics"
-                },
-                {
-                    "command": "extension.codeTimeLogin",
-                    "when": "!codetime:loggedIn"
-                },
-                {
-                    "command": "extension.codeTimeStatusToggle"
+                    "when": "view == music-time-settings",
+                    "group": "navigation"
                 }
             ]
         },
@@ -138,7 +136,7 @@
                 {
                     "id": "music-time",
                     "title": "Music Time",
-                    "icon": "resources/dark/paw.svg"
+                    "icon": "resources/dark/headphone-symbol.svg"
                 }
             ]
         },
@@ -147,6 +145,10 @@
                 {
                     "id": "music-time-playlists",
                     "name": "Playlists"
+                },
+                {
+                    "id": "music-time-settings",
+                    "name": "Settings"
                 }
             ]
         }

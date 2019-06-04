@@ -80,7 +80,7 @@ export async function showMenuOptions() {
     };
 
     kpmMenuOptions.items.push({
-        label: "Code time dashboard",
+        label: "Code Time Dashboard",
         description: "",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
@@ -89,7 +89,7 @@ export async function showMenuOptions() {
 
     if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
-            label: "Software top 40",
+            label: "Software Top 40",
             description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
@@ -113,7 +113,7 @@ export async function showMenuOptions() {
         });
     } else {
         kpmMenuOptions.items.push({
-            label: "Web dashboard",
+            label: "Web Dashboard",
             description: "",
             detail: "See rich data visualizations in the web app",
             url: null,
@@ -121,7 +121,7 @@ export async function showMenuOptions() {
         });
     }
     kpmMenuOptions.items.push({
-        label: "Show/hide status bar metrics",
+        label: "Show/Hide Status Bar Metrics",
         description: "",
         detail: "Toggle the Code Time status bar metrics",
         url: null,

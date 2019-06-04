@@ -212,7 +212,7 @@ export class MusicControlManager {
         };
 
         menuOptions.items.push({
-            label: "Software top 40",
+            label: "Software Top 40",
             description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
@@ -221,7 +221,7 @@ export class MusicControlManager {
         });
 
         menuOptions.items.push({
-            label: "Music time dashboard",
+            label: "Music Time Dashboard",
             description: "",
             detail: "View your latest music metrics right here in your editor",
             url: null,
@@ -264,7 +264,7 @@ export class MusicControlManager {
             if (!hasCodyPlaylists && hasCodyFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Create your weekly playlist",
+                    label: "Create Your Top 40 Playlist",
                     description: "",
                     detail: `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`,
                     url: null,
@@ -272,7 +272,7 @@ export class MusicControlManager {
                 });
             } else if (hasCodyPlaylists) {
                 menuOptions.items.push({
-                    label: "Play your spotify weekly playlist",
+                    label: "Play Spotify Playlists",
                     description: "",
                     detail:
                         "Launch the Spotify web player to view your playlist",

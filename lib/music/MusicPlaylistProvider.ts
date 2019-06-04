@@ -98,16 +98,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     refresh(): void {
-        //MusicStoreManager.getInstance().clearPlaylists();
         this._onDidChangeTreeData.fire();
-    }
-
-    play(): void {
-        console.log("play");
-    }
-
-    pause(): void {
-        console.log("pause");
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
@@ -168,8 +159,7 @@ class PlaylistTreeItem extends TreeItem {
         "..",
         "..",
         "..",
-        "resources",
-        "light"
+        "resources"
     );
 
     constructor(
@@ -182,10 +172,12 @@ class PlaylistTreeItem extends TreeItem {
             if (treeItem.tag && treeItem.tag === "cody") {
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "light",
                     "pl-paw.svg"
                 );
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "dark",
                     "pl-paw.svg"
                 );
             } else {
@@ -195,20 +187,24 @@ class PlaylistTreeItem extends TreeItem {
         } else if (treeItem.type === "title") {
             this.iconPath.light = path.join(
                 this.resourcePath,
+                "light",
                 "icons8-playlist-16.png"
             );
             this.iconPath.light = path.join(
                 this.resourcePath,
+                "dark",
                 "icons8-playlist-16.png"
             );
         } else {
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "light",
                     "icons8-itunes.svg"
                 );
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "dark",
                     "icons8-itunes.svg"
                 );
             } else if (
@@ -217,10 +213,12 @@ class PlaylistTreeItem extends TreeItem {
             ) {
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "light",
                     "icons8-spotify.svg"
                 );
                 this.iconPath.light = path.join(
                     this.resourcePath,
+                    "dark",
                     "icons8-spotify.svg"
                 );
             } else {

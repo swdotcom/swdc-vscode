@@ -33,6 +33,7 @@ export class MusicStoreManager {
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _runningPlaylists: PlaylistItem[] = [];
     private _codyPlaylists: PlaylistItem[] = [];
+    private _settings: PlaylistItem[] = [];
     private _codyFavorites: any[] = [];
     private _playlistTracks: any = {};
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
@@ -62,6 +63,14 @@ export class MusicStoreManager {
 
     set codyPlaylists(lists: PlaylistItem[]) {
         this._codyPlaylists = lists;
+    }
+
+    get settings(): PlaylistItem[] {
+        return this._settings;
+    }
+
+    set settings(lists: PlaylistItem[]) {
+        this._settings = lists;
     }
 
     get spotifyPlaylists(): PlaylistItem[] {
@@ -243,8 +252,14 @@ export class MusicStoreManager {
             playlistItemTitle.playerType = PlayerType.NotAssigned;
             playlistItemTitle.name = "No active music player found";
             playlists.push(playlistItemTitle);
-            this.addConnectToListIfNoAccessToken(playlists);
+
+            this.updateSettingsItems(playlists);
+
             this.runningPlaylists = playlists;
+
+            commands.executeCommand("musictime.refreshPlaylist");
+            commands.executeCommand("musictime.refreshSettings");
+
             return;
         }
 
@@ -291,29 +306,37 @@ export class MusicStoreManager {
             });
         }
 
-        this.addConnectToListIfNoAccessToken(playlists);
-
-        this.addTop40PlaylistLinkIfDoesntExist(playlists);
+        this.updateSettingsItems(playlists);
 
         this.runningPlaylists = playlists;
 
         commands.executeCommand("musictime.refreshPlaylist");
+        commands.executeCommand("musictime.refreshSettings");
     }
 
-    addConnectToListIfNoAccessToken(playlists: PlaylistItem[]) {
+    updateSettingsItems(playlists: PlaylistItem[]) {
+        let settingsList: PlaylistItem[] = [];
+
         if (!this.hasSpotifyAccessToken()) {
             // add the connect spotify link
-            let connectSpotifyItem: PlaylistItem = new PlaylistItem();
-            connectSpotifyItem.tracks = new PlaylistTrackInfo();
-            connectSpotifyItem.type = "connectspotify";
-            connectSpotifyItem.id = "connectspotify";
-            connectSpotifyItem.playerType = PlayerType.WebSpotify;
-            connectSpotifyItem.name = "Connect Spotify to see your playlists";
-            playlists.push(connectSpotifyItem);
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "connectspotify";
+            listItem.id = "connectspotify";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = "Connect Spotify To View Your Playlists";
+            settingsList.push(listItem);
+        } else {
+            // show that you've connected
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "spotifyconnected";
+            listItem.id = "spotifyconnected";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = "Spotify Connected";
+            settingsList.push(listItem);
         }
-    }
 
-    addTop40PlaylistLinkIfDoesntExist(playlists: PlaylistItem[]) {
         if (this._currentPlayerType === PlayerType.WebSpotify) {
             let foundItem = null;
             for (let i = 0; i < playlists.length; i++) {
@@ -329,16 +352,18 @@ export class MusicStoreManager {
 
             if (!foundItem) {
                 // add the connect spotify link
-                let connectSpotifyItem: PlaylistItem = new PlaylistItem();
-                connectSpotifyItem.tracks = new PlaylistTrackInfo();
-                connectSpotifyItem.type = "addtop40";
-                connectSpotifyItem.id = "addtop40";
-                connectSpotifyItem.playerType = PlayerType.WebSpotify;
-                connectSpotifyItem.name = `Create a Spotify playlist`;
-                connectSpotifyItem.tooltip = `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`;
-                playlists.push(connectSpotifyItem);
+                let listItem: PlaylistItem = new PlaylistItem();
+                listItem.tracks = new PlaylistTrackInfo();
+                listItem.type = "addtop40";
+                listItem.id = "addtop40";
+                listItem.playerType = PlayerType.WebSpotify;
+                listItem.name = `Create Your Spotify Top 40 Playlist`;
+                listItem.tooltip = `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`;
+                settingsList.push(listItem);
             }
         }
+
+        this.settings = settingsList;
     }
 
     async syncSpotifyWebPlaylists() {

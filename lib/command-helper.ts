@@ -25,6 +25,10 @@ import {
     connectPlaylistTreeView
 } from "./music/MusicPlaylistProvider";
 import { PlaylistItem } from "cody-music";
+import {
+    MusicSettingsProvider,
+    connectSettingsTreeView
+} from "./music/MusicSettingsProvider";
 
 export function createCommands(): {
     dispose: () => void;
@@ -146,6 +150,7 @@ export function createCommands(): {
         );
         cmds.push(spotifyConnectCommand);
 
+        // playlist tree view
         const treePlaylistProvider = new MusicPlaylistProvider();
         const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
             "music-time-playlists",
@@ -156,11 +161,28 @@ export function createCommands(): {
         );
         cmds.push(connectPlaylistTreeView(playlistTreeView));
 
+        // settings tree view
+        const treeSettingsProvider = new MusicSettingsProvider();
+        const settingsTreeView: TreeView<PlaylistItem> = window.createTreeView(
+            "music-time-settings",
+            {
+                treeDataProvider: treeSettingsProvider,
+                showCollapseAll: false
+            }
+        );
+        cmds.push(connectSettingsTreeView(settingsTreeView));
+
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
             () => treePlaylistProvider.refresh()
         );
         cmds.push(refreshPlaylistCommand);
+
+        const refreshSettingsCommand = commands.registerCommand(
+            "musictime.refreshSettings",
+            () => treeSettingsProvider.refresh()
+        );
+        cmds.push(refreshSettingsCommand);
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
