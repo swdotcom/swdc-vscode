@@ -17,7 +17,7 @@ import {
     CodyResponseType,
     PlayerDevice
 } from "cody-music";
-import { workspace, window, ViewColumn, commands } from "vscode";
+import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -379,11 +379,7 @@ export async function createDevBeatsPlaylist() {
             );
             if (isResponseOk(createResult)) {
                 // refresh the playlists
-                await musicstoreMgr.clearPlaylists();
-                let track: Track = await getRunningTrack();
-                await musicstoreMgr.syncRunningPlaylists(track);
-
-                commands.executeCommand("musictime.refreshPlaylist");
+                musicstoreMgr.refreshPlaylists();
             }
         }
     }

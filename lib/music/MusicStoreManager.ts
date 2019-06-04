@@ -112,6 +112,13 @@ export class MusicStoreManager {
     // store functions
     //
 
+    async refreshPlaylists() {
+        // refresh the playlists
+        await this.clearPlaylists();
+        let track: Track = await getRunningTrack();
+        await this.syncRunningPlaylists(track);
+    }
+
     async clearPlaylists() {
         this.selectedPlaylist = null;
         this.runningPlaylists = [];
@@ -197,8 +204,6 @@ export class MusicStoreManager {
             await this.clearPlaylists();
             let track: Track = await getRunningTrack();
             await this.syncRunningPlaylists(track);
-
-            commands.executeCommand("musictime.refreshPlaylist");
         }
     }
 
@@ -291,6 +296,8 @@ export class MusicStoreManager {
         this.addTop40PlaylistLinkIfDoesntExist(playlists);
 
         this.runningPlaylists = playlists;
+
+        commands.executeCommand("musictime.refreshPlaylist");
     }
 
     addConnectToListIfNoAccessToken(playlists: PlaylistItem[]) {

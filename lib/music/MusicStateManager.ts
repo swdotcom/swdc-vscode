@@ -10,7 +10,6 @@ import {
     getRunningTrack,
     TrackStatus
 } from "cody-music";
-import { commands } from "vscode";
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -126,10 +125,7 @@ export class MusicStateManager {
                 // OR
                 // player found and now showing playlists
 
-                await this.musicstoreMgr.clearPlaylists();
-                await this.musicstoreMgr.syncRunningPlaylists(track);
-
-                commands.executeCommand("musictime.refreshPlaylist");
+                this.musicstoreMgr.refreshPlaylists();
             }
         }
     }
