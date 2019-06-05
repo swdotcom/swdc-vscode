@@ -8,7 +8,8 @@ import {
     PlayerType,
     getAccessToken,
     getRunningTrack,
-    TrackStatus
+    TrackStatus,
+    requiresSpotifyAccessInfo
 } from "cody-music";
 
 export class MusicStateManager {
@@ -138,8 +139,7 @@ export class MusicStateManager {
             // has connected a spotify_access_token
             if (spotifyAccessToken) {
                 // connected
-                let access_token = getAccessToken();
-                if (!access_token) {
+                if (requiresSpotifyAccessInfo()) {
                     // cody-music doesn't have the access token, initialize
                     await this.musicstoreMgr.initializeSpotify();
                 }
