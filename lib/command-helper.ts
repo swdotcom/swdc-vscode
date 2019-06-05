@@ -29,6 +29,7 @@ import {
     MusicSettingsProvider,
     connectSettingsTreeView
 } from "./music/MusicSettingsProvider";
+import { MusicCommandManager } from "./music/MusicCommandManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -159,6 +160,8 @@ export function createCommands(): {
                 showCollapseAll: false
             }
         );
+        MusicCommandManager.setTreeProvider(treePlaylistProvider);
+        treePlaylistProvider.bindView(playlistTreeView);
         cmds.push(connectPlaylistTreeView(playlistTreeView));
 
         // settings tree view

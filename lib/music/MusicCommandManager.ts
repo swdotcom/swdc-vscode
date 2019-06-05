@@ -1,4 +1,9 @@
-import { window, StatusBarAlignment, StatusBarItem } from "vscode";
+import {
+    window,
+    StatusBarAlignment,
+    StatusBarItem,
+    TreeDataProvider
+} from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
 import { MusicStateManager } from "./MusicStateManager";
 import {
@@ -6,8 +11,11 @@ import {
     PlayerType,
     TrackStatus,
     Track,
-    requiresSpotifyAccessInfo
+    requiresSpotifyAccessInfo,
+    PlaylistItem
 } from "cody-music";
+import { MusicStoreManager } from "./MusicStoreManager";
+import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
 
 export interface Button {
     /**
@@ -34,11 +42,16 @@ const songNameDisplayTimeoutMillis: number = 12000;
 export class MusicCommandManager {
     private static _buttons: Button[] = [];
     private static _hideSongTimeout = null;
+    private static _treeProvider: MusicPlaylistProvider;
 
     private static msMgr: MusicStateManager;
 
     private constructor() {
         // private to prevent non-singleton usage
+    }
+
+    public static setTreeProvider(provider: MusicPlaylistProvider) {
+        this._treeProvider = provider;
     }
 
     public static async initialize() {
@@ -88,13 +101,27 @@ export class MusicCommandManager {
     }
 
     public static async syncControls() {
+        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
         const track = await getRunningTrack();
 
+        musicstoreMgr.runningTrack = track;
+        // update the playlist
+        const selectedPlaylist: PlaylistItem = musicstoreMgr.selectedPlaylist;
+        if (selectedPlaylist) {
+            musicstoreMgr.clearPlaylistTracksForId(selectedPlaylist.id);
+            musicstoreMgr.getTracksForPlaylistId(selectedPlaylist.id);
+
+            if (this._treeProvider) {
+                this._treeProvider.refreshParent(selectedPlaylist);
+            }
+        }
+
         // get the current track state
-        this.updateButtons(track);
+        this.updateButtons();
     }
 
-    public static async updateButtons(track: Track) {
+    public static async updateButtons() {
+        const track: Track = MusicStoreManager.getInstance().runningTrack;
         if (this._hideSongTimeout) {
             clearTimeout(this._hideSongTimeout);
         }

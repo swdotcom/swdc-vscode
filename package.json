@@ -1,9 +1,9 @@
 {
-    "name": "swdc-vscode",
-    "displayName": "Code Time",
-    "version": "0.16.10",
+    "name": "music-time",
+    "displayName": "Music Time",
+    "version": "0.1.12",
     "publisher": "softwaredotcom",
-    "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
+    "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
     "author": {
         "name": "Software.com"
     },
@@ -64,28 +64,105 @@
                 }
             }
         },
-        "commands": [],
+        "commands": [
+            {
+                "command": "musictime.next",
+                "title": "Play Next Song"
+            },
+            {
+                "command": "musictime.previous",
+                "title": "Play Previous Song"
+            },
+            {
+                "command": "musictime.play",
+                "title": "Play",
+                "icon": {
+                    "light": "resources/light/play-button.svg",
+                    "dark": "resources/dark/play-button.svg"
+                }
+            },
+            {
+                "command": "musictime.pause",
+                "title": "Pause",
+                "icon": {
+                    "light": "resources/light/pause-button.svg",
+                    "dark": "resources/dark/pause-button.svg"
+                }
+            },
+            {
+                "command": "musictime.like",
+                "title": "Like Song"
+            },
+            {
+                "command": "musictime.unlike",
+                "title": "Unlike Song"
+            },
+            {
+                "command": "musictime.menu",
+                "title": "Click to see more from Music Time"
+            },
+            {
+                "command": "musictime.currentSong",
+                "title": "Click to view track"
+            },
+            {
+                "command": "musictime.connectSpotify",
+                "title": "Connect your Spotify account",
+                "tooltip": "Connect your Spotify account to view your playlists"
+            },
+            {
+                "command": "musictime.refreshPlaylist",
+                "title": "Refresh"
+            },
+            {
+                "command": "musictime.refreshSettings",
+                "title": "Refresh"
+            }
+        ],
         "menus": {
-            "view/title": [
+            "view/item/context": [
                 {
-                    "when": "view == music-time-playlists",
-                    "group": "navigation"
+                    "command": "musictime.play",
+                    "when": "view == music-time-playlists && viewItem == paused",
+                    "group": "inline"
                 },
                 {
-                    "when": "view == music-time-settings",
-                    "group": "navigation"
+                    "command": "musictime.pause",
+                    "when": "view == music-time-playlists && viewItem == playing",
+                    "group": "inline"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "music-time",
+                    "title": "Music Time",
+                    "icon": "resources/dark/headphone-symbol.svg"
+                }
+            ]
+        },
+        "views": {
+            "music-time": [
+                {
+                    "id": "music-time-playlists",
+                    "name": "Playlists"
+                },
+                {
+                    "id": "music-time-settings",
+                    "name": "Settings"
                 }
             ]
         }
     },
     "devDependencies": {
         "@types/mocha": "5.2.6",
-        "@types/node": "12.0.0",
-        "typescript": "^3.4.5",
+        "@types/node": "12.0.4",
+        "typescript": "^3.5.1",
         "@types/vscode": "^1.32.0"
     },
     "dependencies": {
-        "cody-music": "2.4.0",
+        "cody-music": "2.4.2",
         "vsls": "0.3.1291",
         "axios": "^0.19.0"
     }

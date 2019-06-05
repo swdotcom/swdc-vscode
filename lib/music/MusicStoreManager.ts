@@ -14,7 +14,9 @@ import {
     PlaylistTrackInfo,
     PlayerDevice,
     getSpotifyDevices,
-    CodyConfig
+    CodyConfig,
+    TrackStatus,
+    play
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -32,12 +34,14 @@ export class MusicStoreManager {
 
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _runningPlaylists: PlaylistItem[] = [];
+    private _runningTrack: Track = new Track();
     private _codyPlaylists: PlaylistItem[] = [];
     private _settings: PlaylistItem[] = [];
     private _codyFavorites: any[] = [];
     private _playlistTracks: any = {};
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
     private _selectedPlaylist: PlaylistItem = null;
+    private _selectedTrackItem: PlaylistItem = null;
     private _hasPlaylists: boolean = false;
     private _spotifyPlayerDevices: PlayerDevice[] = [];
 
@@ -63,6 +67,14 @@ export class MusicStoreManager {
 
     set codyPlaylists(lists: PlaylistItem[]) {
         this._codyPlaylists = lists;
+    }
+
+    get runningTrack(): Track {
+        return this._runningTrack;
+    }
+
+    set runningTrack(track: Track) {
+        this._runningTrack = track;
     }
 
     get settings(): PlaylistItem[] {
@@ -101,6 +113,14 @@ export class MusicStoreManager {
         this._selectedPlaylist = item;
     }
 
+    get selectedTrackItem(): PlaylistItem {
+        return this._selectedTrackItem;
+    }
+
+    set selectedTrackItem(item: PlaylistItem) {
+        this._selectedTrackItem = item;
+    }
+
     get hasPlaylists(): boolean {
         return this._hasPlaylists;
     }
@@ -124,8 +144,8 @@ export class MusicStoreManager {
     async refreshPlaylists() {
         // refresh the playlists
         await this.clearPlaylists();
-        let track: Track = await getRunningTrack();
-        await this.syncRunningPlaylists(track);
+        this.runningTrack = await getRunningTrack();
+        await this.syncRunningPlaylists();
     }
 
     async clearPlaylists() {
@@ -211,8 +231,8 @@ export class MusicStoreManager {
 
         if (hasUpdates) {
             await this.clearPlaylists();
-            let track: Track = await getRunningTrack();
-            await this.syncRunningPlaylists(track);
+            this.runningTrack = await getRunningTrack();
+            await this.syncRunningPlaylists();
         }
     }
 
@@ -233,16 +253,14 @@ export class MusicStoreManager {
         }
     }
 
-    async syncRunningPlaylists(runningTrack: Track) {
+    async syncRunningPlaylists() {
         let playlists: PlaylistItem[] = [];
 
-        runningTrack = runningTrack || new Track();
-
-        this._currentPlayerType = runningTrack.playerType;
+        this._currentPlayerType = this.runningTrack.playerType;
 
         if (
-            runningTrack.playerType === PlayerType.NotAssigned ||
-            !runningTrack.id
+            this.runningTrack.playerType === PlayerType.NotAssigned ||
+            !this.runningTrack.id
         ) {
             // no player or track
             let playlistItemTitle: PlaylistItem = new PlaylistItem();
@@ -256,7 +274,6 @@ export class MusicStoreManager {
             this.updateSettingsItems(playlists);
 
             this.runningPlaylists = playlists;
-
             commands.executeCommand("musictime.refreshPlaylist");
             commands.executeCommand("musictime.refreshSettings");
 
@@ -273,7 +290,9 @@ export class MusicStoreManager {
             // fetch spotify and sync what we have
             playlists = await this.syncSpotifyWebPlaylists();
             this._currentPlayerType = PlayerType.WebSpotify;
-        } else if (runningTrack.playerType === PlayerType.MacItunesDesktop) {
+        } else if (
+            this.runningTrack.playerType === PlayerType.MacItunesDesktop
+        ) {
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
         }
 
@@ -309,7 +328,6 @@ export class MusicStoreManager {
         this.updateSettingsItems(playlists);
 
         this.runningPlaylists = playlists;
-
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
     }
@@ -324,7 +342,8 @@ export class MusicStoreManager {
             listItem.type = "connectspotify";
             listItem.id = "connectspotify";
             listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = "Connect Spotify To View Your Playlists";
+            listItem.name = "Connect Spotify";
+            listItem.tooltip = "Connect Spotify To View Your Playlists";
             settingsList.push(listItem);
         } else {
             // show that you've connected
@@ -334,6 +353,7 @@ export class MusicStoreManager {
             listItem.id = "spotifyconnected";
             listItem.playerType = PlayerType.WebSpotify;
             listItem.name = "Spotify Connected";
+            listItem.tooltip = "You've connected Spotify";
             settingsList.push(listItem);
         }
 
@@ -391,13 +411,18 @@ export class MusicStoreManager {
         return this._playlistTracks[playlist_id] ? true : false;
     }
 
+    clearPlaylistTracksForId(playlist_id: string) {
+        if (this._playlistTracks[playlist_id]) {
+            this._playlistTracks[playlist_id] = null;
+        }
+    }
+
     async getTracksForPlaylistId(playlist_id: string) {
-        let runningTrack: Track = await getRunningTrack();
-        if (runningTrack.playerType !== this._currentPlayerType) {
+        if (this.runningTrack.playerType !== this._currentPlayerType) {
             // clear the map
             this._playlistTracks[playlist_id] = null;
         }
-        this._currentPlayerType = runningTrack.playerType;
+        this._currentPlayerType = this.runningTrack.playerType;
 
         let playlistItems = [];
         let tracks = this._playlistTracks[playlist_id];
@@ -434,9 +459,17 @@ export class MusicStoreManager {
                     playlistItem.name = track.name;
                     playlistItem.id = track.id;
                     playlistItem["artists"] = track.artists.join(", ");
-                    playlistItem["playerType"] = track.playerType;
-                    // since this is a track, delete the tracks attribute
+                    playlistItem.playerType = track.playerType;
                     delete playlistItem.tracks;
+
+                    if (track.id === this.runningTrack.id) {
+                        playlistItem["state"] = this.runningTrack.state;
+                        this.selectedTrackItem = playlistItem;
+                    } else {
+                        playlistItem["state"] = TrackStatus.NotAssigned;
+                    }
+                    // since this is a track, delete the tracks attribute
+
                     return playlistItem;
                 });
             }

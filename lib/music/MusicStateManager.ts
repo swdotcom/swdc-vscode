@@ -106,9 +106,10 @@ export class MusicStateManager {
 
     public async musicStateCheck() {
         const track: Track = (await this.gatherMusicInfo()) || new Track();
+        MusicStoreManager.getInstance().runningTrack = track;
         if (isMusicTime()) {
             // update the buttons to show player control changes
-            MusicCommandManager.updateButtons(track);
+            MusicCommandManager.updateButtons();
 
             // do we still have a player or has the player changed?
             // either case, refresh the player provider list

@@ -274,7 +274,8 @@ async function initializeUserInfo(
         await musicstoreMgr.initializeSpotify();
 
         let runningTrack: Track = await getRunningTrack();
-        await musicstoreMgr.syncRunningPlaylists(runningTrack);
+        musicstoreMgr.runningTrack = runningTrack;
+        await musicstoreMgr.syncRunningPlaylists();
 
         // fetch the favorites every 10 minutes
         setInterval(() => {

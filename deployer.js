@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "0.16.10";
-const MUSIC_TIME_VERSION = "0.1.11";
+const MUSIC_TIME_VERSION = "0.1.12";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
@@ -111,6 +111,20 @@ async function deploy() {
                 }
             ]
         };
+        packageJson.contributes["menus"] = {
+            "view/item/context": [
+                {
+                    command: "musictime.play",
+                    when: "view == music-time-playlists && viewItem == paused",
+                    group: "inline"
+                },
+                {
+                    command: "musictime.pause",
+                    when: "view == music-time-playlists && viewItem == playing",
+                    group: "inline"
+                }
+            ]
+        };
         packageJson["description"] = MUSIC_TIME_DESC;
         packageJson["version"] = MUSIC_TIME_VERSION;
         packageJson["displayName"] = MUSIC_TIME_DISPLAY;
@@ -126,11 +140,19 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.play",
-            title: "Play"
+            title: "Play",
+            icon: {
+                light: "resources/light/play-button.svg",
+                dark: "resources/dark/play-button.svg"
+            }
         });
         commands.push({
             command: "musictime.pause",
-            title: "Pause"
+            title: "Pause",
+            icon: {
+                light: "resources/light/pause-button.svg",
+                dark: "resources/dark/pause-button.svg"
+            }
         });
         commands.push({
             command: "musictime.like",
@@ -155,19 +177,11 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.refreshPlaylist",
-            title: "Refresh",
-            icon: {
-                light: "resources/light/refresh.svg",
-                dark: "resources/dark/refresh.svg"
-            }
+            title: "Refresh"
         });
         commands.push({
             command: "musictime.refreshSettings",
-            title: "Refresh",
-            icon: {
-                light: "resources/light/refresh.svg",
-                dark: "resources/dark/refresh.svg"
-            }
+            title: "Refresh"
         });
 
         packageJson.contributes["commands"] = commands;

@@ -15,7 +15,10 @@ import {
     playTrackInContext,
     PlayerName,
     PlayerType,
-    play
+    play,
+    TrackStatus,
+    Track,
+    pause
 } from "cody-music";
 import { connectSpotify, createDevBeatsPlaylist } from "./MusicControlManager";
 
@@ -53,20 +56,22 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     if (devices.length > 0) {
                         options["device_id"] = devices[0].id;
                     }
-                    play(PlayerName.SpotifyWeb, options).then(result => {
-                        //
-                    });
+                    if (playlistItem["state"] !== TrackStatus.Playing) {
+                        play(PlayerName.SpotifyWeb, options);
+                    } else {
+                        pause(PlayerName.SpotifyWeb);
+                    }
                 } else {
                     // play the track
 
                     MusicStoreManager.getInstance();
                     let params = [playlistItem.name, selectedPlaylist.name];
 
-                    playTrackInContext(PlayerName.ItunesDesktop, params).then(
-                        result => {
-                            // console.log("result: ", result);
-                        }
-                    );
+                    if (playlistItem["state"] !== TrackStatus.Playing) {
+                        playTrackInContext(PlayerName.ItunesDesktop, params);
+                    } else {
+                        pause(PlayerName.ItunesDesktop);
+                    }
                 }
             } else if (playlistItem.id === "connectspotify") {
                 connectSpotify();
@@ -75,9 +80,10 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             }
         }),
         view.onDidChangeVisibility(e => {
+            /**
             if (e.visible) {
-                //
             }
+            **/
         })
     );
 };
@@ -86,11 +92,18 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     private _onDidChangeTreeData: EventEmitter<
         PlaylistItem | undefined
     > = new EventEmitter<PlaylistItem | undefined>();
+
     readonly onDidChangeTreeData: Event<PlaylistItem | undefined> = this
         ._onDidChangeTreeData.event;
 
+    private view: TreeView<PlaylistItem>;
+
     constructor() {
         //
+    }
+
+    bindView(view: TreeView<PlaylistItem>): void {
+        this.view = view;
     }
 
     getParent(_p: PlaylistItem) {
@@ -101,19 +114,14 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         this._onDidChangeTreeData.fire();
     }
 
+    refreshParent(parent: PlaylistItem) {
+        this._onDidChangeTreeData.fire(parent);
+    }
+
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
         if (p.type === "playlist") {
             // it's a track parent (playlist)
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
-                if (
-                    !MusicStoreManager.getInstance().hasTracksForPlaylistId(
-                        p.id
-                    )
-                ) {
-                    MusicStoreManager.getInstance().getTracksForPlaylistId(
-                        p.id
-                    );
-                }
                 return createPlaylistTreeItem(
                     p,
                     TreeItemCollapsibleState.Collapsed
@@ -139,9 +147,28 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
              */
             MusicStoreManager.getInstance().selectedPlaylist = element;
             // return track of the playlist parent
-            let tracks = MusicStoreManager.getInstance().getTracksForPlaylistId(
+            let tracks = await MusicStoreManager.getInstance().getTracksForPlaylistId(
                 element.id
             );
+
+            // reveal the selected track
+            setTimeout(() => {
+                const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
+                const selectedPlaylistItem: PlaylistItem =
+                    musicstoreMgr.selectedTrackItem;
+
+                let foundItem = tracks.find(element => {
+                    return element.id === selectedPlaylistItem.id;
+                });
+
+                if (foundItem) {
+                    this.view.reveal(foundItem, {
+                        focus: true,
+                        select: false
+                    });
+                }
+            }, 500);
+
             return tracks;
         } else {
             // get the top level playlist parents
@@ -196,6 +223,9 @@ class PlaylistTreeItem extends TreeItem {
                 "icons8-playlist-16.png"
             );
         } else {
+            if (treeItem.type === "track") {
+                this.contextValue = treeItem["state"];
+            }
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
                     this.resourcePath,
@@ -236,5 +266,5 @@ class PlaylistTreeItem extends TreeItem {
         dark: ""
     };
 
-    contextValue = "treeItem";
+    contextValue = "playlistItem";
 }

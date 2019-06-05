@@ -127,5 +127,5 @@ class SettingsTreeItem extends TreeItem {
         dark: ""
     };
 
-    contextValue = "treeItem";
+    contextValue = "settingsItem";
 }
