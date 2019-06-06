@@ -155,7 +155,6 @@ export async function intializePlugin(
     }, 1000);
 
     let one_min = 1000 * 60;
-    let userStatusInterval = 1000 * 120;
 
     if (isCodeTime()) {
         // only code time will show the status bar text info
@@ -189,7 +188,7 @@ export async function intializePlugin(
     setTimeout(() => {
         // send any offline data
         sendOfflineData();
-    }, 1000 * 10);
+    }, one_min);
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
@@ -205,16 +204,16 @@ export async function intializePlugin(
         // fire off the hourly jobs like
         // commit gathering in a couple of minutes
         // for initialization
-        let two_min = one_min * 2;
+
         setTimeout(() => {
             getHistoricalCommits(serverIsOnline);
-        }, two_min);
+        }, one_min * 2);
 
-        // every minute and a half, get the user's jwt if they've logged
+        // every m3 minutes, get the user's jwt if they've logged
         // in if they're still not a registered user.
         token_check_interval = setInterval(async () => {
             getUserStatus(serverIsOnline);
-        }, userStatusInterval);
+        }, one_min * 3);
     }
 
     // add the player commands

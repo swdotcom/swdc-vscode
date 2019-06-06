@@ -24,10 +24,9 @@ import {
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    buildSpotifyConnectUrl,
     isMusicTime
 } from "./Util";
-import { getAccessToken, requiresSpotifyAccessInfo } from "cody-music";
+import { requiresSpotifyAccessInfo } from "cody-music";
 import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
 const fs = require("fs");
@@ -37,8 +36,8 @@ let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 
-// batch offline payloads in 25. backend has a 100k body limit
-const batch_limit = 25;
+// batch offline payloads in 40. backend has a 100k body limit
+const batch_limit = 40;
 
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();
@@ -91,7 +90,7 @@ export async function sendOfflineData() {
                         })
                         .filter(item => item);
 
-                    // send 50 at a time
+                    // send 40 at a time
                     let batch = [];
                     for (let i = 0; i < payloads.length; i++) {
                         if (batch.length >= batch_limit) {

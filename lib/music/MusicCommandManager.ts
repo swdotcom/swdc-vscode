@@ -54,6 +54,10 @@ export class MusicCommandManager {
         this._treeProvider = provider;
     }
 
+    /**
+     * Initialize the music command manager.
+     * Create the list of status bar buttons that will be displayed.
+     */
     public static async initialize() {
         if (!isMusicTime()) {
             return;
@@ -100,6 +104,9 @@ export class MusicCommandManager {
         this.syncControls();
     }
 
+    /**
+     * Sync the music button controls
+     */
     public static async syncControls() {
         const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
         const track = await getRunningTrack();
@@ -120,6 +127,9 @@ export class MusicCommandManager {
         this.updateButtons();
     }
 
+    /**
+     * Update the buttons based on the current track state
+     */
     public static async updateButtons() {
         const track: Track = MusicStoreManager.getInstance().runningTrack;
         if (this._hideSongTimeout) {
@@ -164,6 +174,13 @@ export class MusicCommandManager {
         }
     }
 
+    /**
+     * Create a status bar button
+     * @param text
+     * @param tooltip
+     * @param command
+     * @param priority
+     */
     private static createButton(
         text: string,
         tooltip: string,
@@ -205,6 +222,10 @@ export class MusicCommandManager {
         });
     }
 
+    /**
+     * Show the buttons to play a track
+     * @param trackInfo
+     */
     private static async showPlayControls(trackInfo) {
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
@@ -250,6 +271,10 @@ export class MusicCommandManager {
         });
     }
 
+    /**
+     * Show the buttons to pause a track
+     * @param trackInfo
+     */
     private static showPauseControls(trackInfo) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         const loved = trackInfo ? trackInfo["loved"] || false : false;
@@ -292,6 +317,9 @@ export class MusicCommandManager {
         });
     }
 
+    /**
+     * Hide the song name display
+     */
     private static hideSongDisplay() {
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
