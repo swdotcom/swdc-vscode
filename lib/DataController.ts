@@ -39,6 +39,10 @@ let serverAvailableLastCheck = 0;
 // batch offline payloads in 40. backend has a 100k body limit
 const batch_limit = 40;
 
+export function getLoggedInCacheState() {
+    return loggedInCacheState;
+}
+
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();
     let diff = nowSec - serverAvailableLastCheck;

@@ -13,7 +13,8 @@ import { softwareGet, isResponseOk } from "./HttpClient";
 import {
     getUserStatus,
     refetchUserStatusLazily,
-    serverIsAvailable
+    serverIsAvailable,
+    getLoggedInCacheState
 } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
 
@@ -70,9 +71,16 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
+    let loggedInCacheState = getLoggedInCacheState();
     let serverIsOnline = await serverIsAvailable();
-    // {loggedIn: true|false}
-    let userStatus = await getUserStatus(serverIsOnline);
+    let userStatus = {
+        loggedIn: loggedInCacheState
+    };
+    if (loggedInCacheState === null) {
+        // update it since it's null
+        // {loggedIn: true|false}
+        userStatus = await getUserStatus(serverIsOnline);
+    }
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
