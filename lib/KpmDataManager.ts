@@ -97,8 +97,19 @@ export class KpmDataManager {
             return;
         }
 
-        sendOfflineData();
+        // post the batch data if there's any
+        sendOfflineData()
+            .then(result => {
+                // send the current payload
+                this.sendPayload(payload);
+            })
+            .catch(e => {
+                // unable to send batch but send the current payload
+                this.sendPayload(payload);
+            });
+    }
 
+    sendPayload(payload) {
         logIt(`sending ${JSON.stringify(payload)}`);
 
         // POST the kpm to the PluginManager
@@ -108,7 +119,7 @@ export class KpmDataManager {
             }
             setTimeout(() => {
                 fetchDailyKpmSessionInfo();
-            }, 5000);
+            }, 10000);
         });
     }
 }

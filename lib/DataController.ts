@@ -24,23 +24,75 @@ import {
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    isMusicTime
+    isMusicTime,
+    storePayloads
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
+const AWS = require("aws-sdk");
 const fs = require("fs");
 
 let loggedInCacheState = null;
 let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
+let awsQueueCfg = null;
 
-// batch offline payloads in 40. backend has a 100k body limit
-const batch_limit = 40;
+// batch offline payloads in 50. backend has a 100k body limit
+const batch_limit = 50;
 
 export function getLoggedInCacheState() {
     return loggedInCacheState;
+}
+
+export async function initializeQueue() {
+    let resp = await softwareGet("/data/queueConfig", getItem("jwt"));
+    if (isResponseOk(resp)) {
+        awsQueueCfg = resp.data;
+    }
+}
+
+/**
+ * Sends the plugin data json list to the queue
+ * @param batchData is a list of the plugin data json objects
+ * @returns {status: <"success"|"failed">}
+ */
+export async function sendPluginDataToQueue(batchData): Promise<any> {
+    // initialize the queue if it hasn't already been initialized
+    if (!awsQueueCfg) {
+        await initializeQueue();
+    }
+
+    if (awsQueueCfg) {
+        let payload = {
+            data: batchData,
+            jwt: getItem("jwt")
+        };
+        const sqs = new AWS.SQS(awsQueueCfg);
+        const params = {
+            MessageBody: JSON.stringify(payload),
+            QueueUrl: awsQueueCfg.code_time_url
+        };
+
+        return new Promise((resolve, reject) => {
+            sqs.sendMessage(params, (err, data) => {
+                if (data && data.MessageId) {
+                    resolve({ status: "success" });
+                    return;
+                }
+
+                if (err) {
+                    logIt(`Unable to send batch data, error: ${err.message}`);
+                    awsQueueCfg = null;
+                }
+                // no message id, resolve with status failed
+                resolve({ status: "failed" });
+            });
+        });
+    }
+    // no config, return failed status
+    return { status: "failed" };
 }
 
 export async function serverIsAvailable() {
@@ -69,45 +121,46 @@ async function sendBatchPayload(batch) {
  * send the offline data
  */
 export async function sendOfflineData() {
+    let isonline = await serverIsAvailable();
+    if (!isonline) {
+        return;
+    }
     const dataStoreFile = getSoftwareDataStoreFile();
     try {
         if (fs.existsSync(dataStoreFile)) {
-            let isonline = await serverIsAvailable();
-            if (isonline) {
-                const content = fs.readFileSync(dataStoreFile).toString();
-                if (content) {
-                    logIt(`sending batch payloads: ${content}`);
-                    const payloads = content
-                        .split(/\r?\n/)
-                        .map(item => {
-                            let obj = null;
-                            if (item) {
-                                try {
-                                    obj = JSON.parse(item);
-                                } catch (e) {
-                                    //
-                                }
+            const content = fs.readFileSync(dataStoreFile).toString();
+            // we're online so just delete the datastore file
+            deleteFile(getSoftwareDataStoreFile());
+            if (content) {
+                logIt(`sending batch payloads: ${content}`);
+                const payloads = content
+                    .split(/\r?\n/)
+                    .map(item => {
+                        let obj = null;
+                        if (item) {
+                            try {
+                                obj = JSON.parse(item);
+                            } catch (e) {
+                                //
                             }
-                            if (obj) {
-                                return obj;
-                            }
-                        })
-                        .filter(item => item);
-
-                    // send 40 at a time
-                    let batch = [];
-                    for (let i = 0; i < payloads.length; i++) {
-                        if (batch.length >= batch_limit) {
-                            await sendBatchPayload(batch);
-                            batch = [];
                         }
-                        batch.push(payloads[i]);
-                    }
-                    if (batch.length > 0) {
+                        if (obj) {
+                            return obj;
+                        }
+                    })
+                    .filter(item => item);
+
+                // send 50 at a time
+                let batch = [];
+                for (let i = 0; i < payloads.length; i++) {
+                    if (batch.length >= batch_limit) {
                         await sendBatchPayload(batch);
+                        batch = [];
                     }
-                    // we're online so just delete the datastore file
-                    deleteFile(getSoftwareDataStoreFile());
+                    batch.push(payloads[i]);
+                }
+                if (batch.length > 0) {
+                    await sendBatchPayload(batch);
                 }
             }
         }

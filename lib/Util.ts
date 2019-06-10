@@ -517,6 +517,24 @@ export function getOffsetSecends() {
     return d.getTimezoneOffset() * 60;
 }
 
+export function storePayloads(payloads) {
+    if (!payloads || payloads.length === 0) {
+        return;
+    }
+    let content = "";
+    payloads.map(payload => {
+        content += JSON.stringify(payload) + os.EOL;
+    });
+    fs.appendFile(getSoftwareDataStoreFile(), content, err => {
+        if (err)
+            logIt(
+                `Error appending to the Software data store file: ${
+                    err.message
+                }`
+            );
+    });
+}
+
 export function storePayload(payload) {
     fs.appendFile(
         getSoftwareDataStoreFile(),
