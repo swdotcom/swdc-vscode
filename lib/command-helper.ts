@@ -24,7 +24,7 @@ import {
     MusicPlaylistProvider,
     connectPlaylistTreeView
 } from "./music/MusicPlaylistProvider";
-import { PlaylistItem } from "cody-music";
+import { PlaylistItem, PlayerName } from "cody-music";
 import {
     MusicSettingsProvider,
     connectSettingsTreeView
@@ -186,6 +186,11 @@ export function createCommands(): {
             () => treeSettingsProvider.refresh()
         );
         cmds.push(refreshSettingsCommand);
+
+        const launchSpotifyCommand = commands.registerCommand(
+            "musictime.launchSpotify",
+            () => controller.launchTrackPlayer(PlayerName.SpotifyWeb)
+        );
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

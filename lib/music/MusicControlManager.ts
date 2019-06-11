@@ -163,34 +163,38 @@ export class MusicControlManager {
         }
     }
 
-    launchTrackPlayer() {
-        getRunningTrack().then((track: Track) => {
-            if (track && track.id) {
-                let options = {
-                    trackId: track.id
-                };
-                let playerType: PlayerType = track.playerType;
-                let devices: PlayerDevice[] = MusicStoreManager.getInstance()
-                    .spotifyPlayerDevices;
+    launchTrackPlayer(playerType: PlayerName = null) {
+        if (!playerType) {
+            getRunningTrack().then((track: Track) => {
+                if (track && track.id) {
+                    let options = {
+                        trackId: track.id
+                    };
+                    let playerType: PlayerType = track.playerType;
+                    let devices: PlayerDevice[] = MusicStoreManager.getInstance()
+                        .spotifyPlayerDevices;
 
-                if (
-                    playerType === PlayerType.WebSpotify &&
-                    devices &&
-                    devices.length === 1 &&
-                    !devices[0].name.includes("Web Player")
-                ) {
-                    // launch the spotify desktop
-                    playerType = PlayerType.MacSpotifyDesktop;
+                    if (
+                        playerType === PlayerType.WebSpotify &&
+                        devices &&
+                        devices.length === 1 &&
+                        !devices[0].name.includes("Web Player")
+                    ) {
+                        // launch the spotify desktop
+                        playerType = PlayerType.MacSpotifyDesktop;
+                    }
+                    if (playerType === PlayerType.WebSpotify) {
+                        launchPlayer(PlayerName.SpotifyWeb, options);
+                    } else if (playerType === PlayerType.MacItunesDesktop) {
+                        launchPlayer(PlayerName.ItunesDesktop, options);
+                    } else {
+                        launchPlayer(PlayerName.SpotifyDesktop, options);
+                    }
                 }
-                if (playerType === PlayerType.WebSpotify) {
-                    launchPlayer(PlayerName.SpotifyWeb, options);
-                } else if (playerType === PlayerType.MacItunesDesktop) {
-                    launchPlayer(PlayerName.ItunesDesktop, options);
-                } else {
-                    launchPlayer(PlayerName.SpotifyDesktop, options);
-                }
-            }
-        });
+            });
+        } else {
+            launchPlayer(playerType, {});
+        }
     }
 
     async showMenu() {

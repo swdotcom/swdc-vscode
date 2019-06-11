@@ -263,13 +263,22 @@ export class MusicStoreManager {
             !this.runningTrack.id
         ) {
             // no player or track
-            let playlistItemTitle: PlaylistItem = new PlaylistItem();
-            playlistItemTitle.tracks = new PlaylistTrackInfo();
-            playlistItemTitle.type = "title";
-            playlistItemTitle.id = "title";
-            playlistItemTitle.playerType = PlayerType.NotAssigned;
-            playlistItemTitle.name = "No active music player found";
-            playlists.push(playlistItemTitle);
+            let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
+            noPlayerFoundItem.tracks = new PlaylistTrackInfo();
+            noPlayerFoundItem.type = "title";
+            noPlayerFoundItem.id = "title";
+            noPlayerFoundItem.playerType = PlayerType.NotAssigned;
+            noPlayerFoundItem.name = "No active music player found";
+            playlists.push(noPlayerFoundItem);
+
+            let launchSpotifyItem: PlaylistItem = new PlaylistItem();
+            launchSpotifyItem.tracks = new PlaylistTrackInfo();
+            launchSpotifyItem.type = PlayerType.WebSpotify;
+            launchSpotifyItem.id = "title";
+            launchSpotifyItem.command = "musictime.launchSpotify";
+            launchSpotifyItem.playerType = PlayerType.WebSpotify;
+            launchSpotifyItem.name = "Launch Spotify";
+            playlists.push(launchSpotifyItem);
 
             this.updateSettingsItems(playlists);
 

@@ -6,7 +6,8 @@ import {
     EventEmitter,
     Event,
     Disposable,
-    TreeView
+    TreeView,
+    commands
 } from "vscode";
 import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
@@ -40,6 +41,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
                 .selectedPlaylist;
 
+            if (playlistItem.command) {
+                // run the command
+                commands.executeCommand(playlistItem.command);
+                return;
+            }
+
             if (playlistItem.type === "track") {
                 if (playlistItem.playerType === PlayerType.WebSpotify) {
                     // get the 1st device
@@ -63,7 +70,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     }
                 } else {
                     // play the track
-
                     MusicStoreManager.getInstance();
                     let params = [playlistItem.name, selectedPlaylist.name];
 
