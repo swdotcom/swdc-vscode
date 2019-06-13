@@ -7,16 +7,21 @@ import {
     toggleStatusBar,
     buildLoginUrl,
     logIt,
-    nowInSecs
+    nowInSecs,
+    getDashboardRow,
+    humanizeMinutes,
+    getSummaryInfoFile
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
     getUserStatus,
     refetchUserStatusLazily,
     serverIsAvailable,
-    getLoggedInCacheState
+    getLoggedInCacheState,
+    getSessionSummaryStatus
 } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
+const moment = require("moment-timezone");
 
 const fs = require("fs");
 
@@ -26,6 +31,7 @@ const SERVICE_NOT_AVAIL =
 
 let showMusicMetrics = false;
 let lastDashboardFetchTime = 0;
+let day_in_sec = 60 * 60 * 24;
 
 /**
  * fetch the show music metrics flag
@@ -150,12 +156,12 @@ export async function launchLogin() {
     refetchUserStatusLazily();
 }
 
-export async function fetchCodeTimeMetricsDashboard() {
-    let filePath = getDashboardFile();
+export async function fetchCodeTimeMetricsDashboard(summary) {
+    let summaryInfoFile = getSummaryInfoFile();
 
     let nowSec = nowInSecs();
     let diff = nowSec - lastDashboardFetchTime;
-    if (lastDashboardFetchTime === 0 || diff > 60) {
+    if (lastDashboardFetchTime === 0 || diff >= day_in_sec) {
         lastDashboardFetchTime = nowInSecs();
 
         logIt("retrieving dashboard metrics");
@@ -168,36 +174,80 @@ export async function fetchCodeTimeMetricsDashboard() {
             .getConfiguration()
             .get("showWeeklyRanking");
 
-        const dashboardSummary = await softwareGet(
-            `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}`,
-            getItem("jwt")
-        );
+        let api = `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}&showToday=false`;
+        const dashboardSummary = await softwareGet(api, getItem("jwt"));
 
-        // ECONNREFUSED
-        let content = "";
+        let summaryContent = "";
+
         if (isResponseOk(dashboardSummary)) {
             // get the content
-            content =
-                dashboardSummary && dashboardSummary.data
-                    ? dashboardSummary.data
-                    : NO_DATA;
+            summaryContent += dashboardSummary.data;
         } else {
-            content = SERVICE_NOT_AVAIL;
+            summaryContent = SERVICE_NOT_AVAIL;
         }
 
-        fs.writeFileSync(filePath, content, err => {
+        fs.writeFileSync(summaryInfoFile, summaryContent, err => {
             if (err) {
                 logIt(
-                    `Error writing to the Software session file: ${err.message}`
+                    `Error writing to the code time summary content file: ${
+                        err.message
+                    }`
                 );
             }
         });
     }
+
+    // concat summary info with the dashboard file
+    let dashboardFile = getDashboardFile();
+    let dashboardContent = "";
+    const formattedDate = moment().format("ddd, MMM Do h:mma");
+    dashboardContent = `CODE TIME          (Last updated on ${formattedDate})`;
+    dashboardContent += "\n\n";
+
+    if (summary) {
+        let averageTime = humanizeMinutes(summary.averageDailyMinutes);
+        let hoursCodedToday = humanizeMinutes(summary.currentDayMinutes);
+        let liveshareTime = null;
+        if (summary.liveshareMinutes) {
+            liveshareTime = humanizeMinutes(summary.liveshareMinutes);
+        }
+        dashboardContent += getDashboardRow(
+            "Hours coded today",
+            hoursCodedToday
+        );
+        dashboardContent += getDashboardRow("90-day avg", averageTime);
+        if (liveshareTime) {
+            dashboardContent += getDashboardRow("Live Share", liveshareTime);
+        }
+        dashboardContent += "\n";
+    }
+
+    if (fs.existsSync(summaryInfoFile)) {
+        const summaryContent = fs.readFileSync(summaryInfoFile).toString();
+
+        // create the dashboard file
+        dashboardContent += summaryContent;
+    }
+
+    fs.writeFileSync(dashboardFile, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the code time dashboard content file: ${
+                    err.message
+                }`
+            );
+        }
+    });
 }
 
 export async function displayCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
-    await fetchCodeTimeMetricsDashboard();
+
+    let result = await getSessionSummaryStatus();
+
+    if (result.status === "OK") {
+        fetchCodeTimeMetricsDashboard(result.data);
+    }
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open

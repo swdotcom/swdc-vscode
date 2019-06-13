@@ -77,6 +77,7 @@ export async function softwareGet(api, jwt) {
     if (jwt) {
         beApi.defaults.headers.common["Authorization"] = jwt;
     }
+    console.log("get api: ", api);
     return await beApi
         .get(api)
         .then(resp => {

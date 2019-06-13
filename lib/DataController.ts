@@ -1,4 +1,4 @@
-import { workspace, commands, ConfigurationTarget, env } from "vscode";
+import { workspace, ConfigurationTarget, env } from "vscode";
 
 import {
     softwareGet,
@@ -7,7 +7,6 @@ import {
     softwarePost
 } from "./HttpClient";
 import { MusicStoreManager } from "./music/MusicStoreManager";
-import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
 import {
     getItem,
     setItem,
@@ -25,19 +24,39 @@ import {
     launchWebUrl,
     logIt,
     isMusicTime,
-    storePayloads
+    humanizeMinutes,
+    showStatus
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
-import { updateShowMusicMetrics, buildWebDashboardUrl } from "./MenuManager";
+import {
+    updateShowMusicMetrics,
+    buildWebDashboardUrl,
+    fetchCodeTimeMetricsDashboard
+} from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
-const AWS = require("aws-sdk");
 const fs = require("fs");
 
 let loggedInCacheState = null;
 let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
-let awsQueueCfg = null;
+
+/**
+ * {
+    "currentDayMinutes": 2,
+    "averageDailyMinutes": 1.516144578313253,
+    "averageDailyKeystrokes": 280.07014725568945,
+    "currentDayKeystrokes": 49,
+    "liveshareMinutes": null
+    }
+    */
+let sessionSummaryData = {
+    currentDayMinutes: 0,
+    averageDailyMinutes: 0,
+    averageDailyKeystrokes: 0,
+    currentDayKeystrokes: 0,
+    liveshareMinutes: null
+};
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
@@ -46,59 +65,29 @@ export function getLoggedInCacheState() {
     return loggedInCacheState;
 }
 
-export async function initializeQueue() {
-    let resp = await softwareGet("/data/queueConfig", getItem("jwt"));
-    if (isResponseOk(resp)) {
-        awsQueueCfg = resp.data;
-    }
+export function clearSessionSummaryData() {
+    sessionSummaryData = {
+        currentDayMinutes: 0,
+        averageDailyMinutes: 0,
+        averageDailyKeystrokes: 0,
+        currentDayKeystrokes: 0,
+        liveshareMinutes: null
+    };
 }
 
-/**
- * Sends the plugin data json list to the queue
- * @param batchData is a list of the plugin data json objects
- * @returns {status: <"success"|"failed">}
- */
-export async function sendPluginDataToQueue(batchData): Promise<any> {
-    // initialize the queue if it hasn't already been initialized
-    if (!awsQueueCfg) {
-        await initializeQueue();
-    }
+export function setSessionSummaryLiveshareMinutes(minutes) {
+    sessionSummaryData.liveshareMinutes = minutes;
+}
 
-    if (awsQueueCfg) {
-        let payload = {
-            data: batchData,
-            jwt: getItem("jwt")
-        };
-        const sqs = new AWS.SQS(awsQueueCfg);
-        const params = {
-            MessageBody: JSON.stringify(payload),
-            QueueUrl: awsQueueCfg.code_time_url
-        };
-
-        return new Promise((resolve, reject) => {
-            sqs.sendMessage(params, (err, data) => {
-                if (data && data.MessageId) {
-                    resolve({ status: "success" });
-                    return;
-                }
-
-                if (err) {
-                    logIt(`Unable to send batch data, error: ${err.message}`);
-                    awsQueueCfg = null;
-                }
-                // no message id, resolve with status failed
-                resolve({ status: "failed" });
-            });
-        });
-    }
-    // no config, return failed status
-    return { status: "failed" };
+export function incrementSessionSummaryData(minutes, keystrokes) {
+    sessionSummaryData.currentDayMinutes += minutes;
+    sessionSummaryData.currentDayKeystrokes += keystrokes;
 }
 
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();
     let diff = nowSec - serverAvailableLastCheck;
-    if (serverAvailableLastCheck === 0 || diff > 10) {
+    if (serverAvailableLastCheck === 0 || diff > 30) {
         serverAvailableLastCheck = nowInSecs();
         serverAvailable = await softwareGet("/ping", null)
             .then(result => {
@@ -167,6 +156,12 @@ export async function sendOfflineData() {
     } catch (e) {
         //
     }
+
+    // clear the stats cache
+    clearSessionSummaryData();
+
+    // update the statusbar
+    fetchSessionSummaryInfo();
 }
 
 /**
@@ -325,6 +320,11 @@ async function isLoggedOn(serverIsOnline, jwt) {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus(serverIsOnline) {
+    if (loggedInCacheState !== null && loggedInCacheState === true) {
+        // commands.executeCommand("setContext", "codetime:loggedIn", true);
+        return { loggedIn: true };
+    }
+
     let jwt = getItem("jwt");
 
     let loggedIn = false;
@@ -352,11 +352,11 @@ export async function getUserStatus(serverIsOnline) {
         }
     }
 
-    commands.executeCommand(
-        "setContext",
-        "codetime:loggedIn",
-        userStatus.loggedIn
-    );
+    // commands.executeCommand(
+    //     "setContext",
+    //     "codetime:loggedIn",
+    //     userStatus.loggedIn
+    // );
 
     if (
         serverIsOnline &&
@@ -365,7 +365,7 @@ export async function getUserStatus(serverIsOnline) {
     ) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
         setTimeout(() => {
-            fetchDailyKpmSessionInfo();
+            fetchSessionSummaryInfo();
         }, 1000);
 
         if (requiresSpotifyAccessInfo() && isMusicTime()) {
@@ -617,4 +617,59 @@ export async function handleKpmClickedEvent() {
         refetchUserStatusLazily(10);
     }
     launchWebUrl(webUrl);
+}
+
+export async function fetchSessionSummaryInfo() {
+    // make sure we send the beginning of the day
+    let result = await getSessionSummaryStatus();
+
+    if (result.status === "OK") {
+        fetchCodeTimeMetricsDashboard(result.data);
+    }
+}
+
+export async function getSessionSummaryStatus() {
+    if (sessionSummaryData.currentDayMinutes === 0) {
+        let serverIsOnline = await serverIsAvailable();
+        if (!serverIsOnline) {
+            showStatus(
+                "Code Time",
+                "The code time app is currently not available, we'll try retrieving your dashboard metrics again later."
+            );
+            return { data: sessionSummaryData, status: "CONN_ERR" };
+        }
+        let result = await softwareGet(`/sessions/summary`, getItem("jwt"))
+            .then(resp => {
+                if (isResponseOk(resp)) {
+                    // update the cache summary
+                    sessionSummaryData = resp.data;
+                    // update the status bar
+                    updateStatusBarWithSummaryData();
+                    return { data: sessionSummaryData, status: "OK" };
+                }
+                return { status: "NO_DATA", data: sessionSummaryData };
+            })
+            .catch(err => {
+                logIt(`error fetching session kpm info: ${err.message}`);
+                return { status: "ERROR", data: sessionSummaryData };
+            });
+        return result;
+    } else {
+        updateStatusBarWithSummaryData();
+        return { data: sessionSummaryData, status: "OK" };
+    }
+}
+
+export function updateStatusBarWithSummaryData() {
+    let currentDayMinutes = sessionSummaryData.currentDayMinutes;
+    let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
+    let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
+    let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
+
+    let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
+    let msg = `${inFlowIcon}${currentDayMinutesTime}`;
+    if (averageDailyMinutes > 0) {
+        msg += ` | ${averageDailyMinutesTime}`;
+    }
+    showStatus(msg, null);
 }

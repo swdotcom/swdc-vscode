@@ -1,6 +1,17 @@
 import { getStatusBarItem } from "../extension";
 import { workspace, extensions, window } from "vscode";
-import { CODE_TIME_EXT_ID, MUSIC_TIME_EXT_ID, launch_url } from "./Constants";
+import {
+    CODE_TIME_EXT_ID,
+    MUSIC_TIME_EXT_ID,
+    launch_url,
+    NOT_NOW_LABEL,
+    LOGIN_LABEL
+} from "./Constants";
+import {
+    incrementSessionSummaryData,
+    refetchUserStatusLazily,
+    fetchSessionSummaryInfo
+} from "./DataController";
 
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -9,8 +20,9 @@ const cp = require("child_process");
 const crypto = require("crypto");
 
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-export const DASHBOARD_LABEL_WIDTH = 23;
+export const DASHBOARD_LABEL_WIDTH = 25;
 export const DASHBOARD_VALUE_WIDTH = 25;
+export const MARKER_WIDTH = 4;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
@@ -355,6 +367,16 @@ export function getDashboardFile() {
     return file;
 }
 
+export function getSummaryInfoFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\SummaryInfo.txt";
+    } else {
+        file += "/SummaryInfo.txt";
+    }
+    return file;
+}
+
 export function getMusicTimeFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
@@ -517,25 +539,17 @@ export function getOffsetSecends() {
     return d.getTimezoneOffset() * 60;
 }
 
-export function storePayloads(payloads) {
-    if (!payloads || payloads.length === 0) {
-        return;
-    }
-    let content = "";
-    payloads.map(payload => {
-        content += JSON.stringify(payload) + os.EOL;
-    });
-    fs.appendFile(getSoftwareDataStoreFile(), content, err => {
-        if (err)
-            logIt(
-                `Error appending to the Software data store file: ${
-                    err.message
-                }`
-            );
-    });
-}
-
 export function storePayload(payload) {
+    // calculate it and call
+    // add to the minutes
+    let keystrokes = parseInt(payload.keystrokes, 10) || 0;
+    incrementSessionSummaryData(1 /*minutes*/, keystrokes);
+    setTimeout(() => {
+        // update the statusbar
+        fetchSessionSummaryInfo();
+    }, 1000);
+
+    // store the payload into the data.json file
     fs.appendFile(
         getSoftwareDataStoreFile(),
         JSON.stringify(payload) + os.EOL,
@@ -678,6 +692,24 @@ export function humanizeMinutes(min) {
     return str;
 }
 
+/**
+ * check if the user needs to see the login prompt or not
+ */
+export async function showLoginPrompt() {
+    let extDisplayName = getExtensionDisplayName();
+    let infoMsg = `To see your coding data in ${extDisplayName}, please log in to your account.`;
+    // set the last update time so we don't try to ask too frequently
+    window
+        .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])
+        .then(async selection => {
+            if (selection === LOGIN_LABEL) {
+                let loginUrl = await buildLoginUrl();
+                launchWebUrl(loginUrl);
+                refetchUserStatusLazily(11);
+            }
+        });
+}
+
 export async function buildLoginUrl() {
     let jwt = getItem("jwt");
     if (jwt) {
@@ -709,4 +741,35 @@ export function showInformationMessage(message: string) {
 
 export function showWarningMessage(message: string) {
     return window.showWarningMessage(`${message}`);
+}
+
+export function getDashboardRow(label, value) {
+    let content = `${getDashboardLabel(label)} : ${getDashboardValue(value)}\n`;
+    return content;
+}
+
+function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
+    return getDashboardDataDisplay(width, label);
+}
+
+function getDashboardValue(value) {
+    let valueContent = getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
+    let paddedContent = "";
+    for (let i = 0; i < 11; i++) {
+        paddedContent += " ";
+    }
+    paddedContent += valueContent;
+    return paddedContent;
+}
+
+function getDashboardDataDisplay(widthLen, data) {
+    let len =
+        data.constructor === String
+            ? widthLen - data.length
+            : widthLen - String(data).length;
+    let content = "";
+    for (let i = 0; i < len; i++) {
+        content += " ";
+    }
+    return `${content}${data}`;
 }

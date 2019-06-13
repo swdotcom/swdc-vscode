@@ -18,7 +18,6 @@ import {
     PlayerType,
     play,
     TrackStatus,
-    Track,
     pause
 } from "cody-music";
 import { connectSpotify, createDevBeatsPlaylist } from "./MusicControlManager";

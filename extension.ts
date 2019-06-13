@@ -8,7 +8,8 @@ import {
     getUserStatus,
     sendHeartbeat,
     createAnonymousUser,
-    serverIsAvailable
+    serverIsAvailable,
+    setSessionSummaryLiveshareMinutes
 } from "./lib/DataController";
 import { MusicStoreManager } from "./lib/music/MusicStoreManager";
 import {
@@ -20,15 +21,11 @@ import {
     showOfflinePrompt,
     logIt,
     isCodeTime,
-    codeTimeExtInstalled,
     isMusicTime,
-    jwtExists
+    jwtExists,
+    showLoginPrompt
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
-import {
-    fetchDailyKpmSessionInfo,
-    showLoginPrompt
-} from "./lib/KpmStatsManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { MusicStateManager } from "./lib/music/MusicStateManager";
@@ -43,7 +40,7 @@ let _ls = null;
 let token_check_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
-let kpm_session_info_interval = null;
+let offline_data_interval = null;
 let kpmController = null;
 
 const check_online_interval_ms = 1000 * 60 * 10;
@@ -74,8 +71,8 @@ export function deactivate(ctx: ExtensionContext) {
 
     clearInterval(token_check_interval);
     clearInterval(historical_commits_interval);
+    clearInterval(offline_data_interval);
     clearInterval(gather_music_interval);
-    clearInterval(kpm_session_info_interval);
 
     // console.log("deactivating the plugin");
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
@@ -149,11 +146,6 @@ export async function intializePlugin(
 
     let serverIsOnline = await serverIsAvailable();
 
-    // initialize the music player
-    setTimeout(() => {
-        MusicCommandManager.initialize();
-    }, 1000);
-
     let one_min = 1000 * 60;
 
     if (isCodeTime()) {
@@ -169,31 +161,19 @@ export async function intializePlugin(
 
             showStatus("Code Time", null);
         }, 100);
-
-        // 5 minute kpm session info fetch in case the user
-        // is offline then backonline, we'll then be able to fetch
-        // the data again
-        let kpmFetchInterval = one_min * 5;
-        kpm_session_info_interval = setInterval(() => {
-            fetchDailyKpmSessionInfo();
-        }, kpmFetchInterval);
     }
 
-    // 15 second interval to check music info
-    gather_music_interval = setInterval(() => {
-        MusicStateManager.getInstance().musicStateCheck();
-    }, 1000 * 5);
-
-    // send any offline data
-    setTimeout(() => {
-        // send any offline data
-        sendOfflineData();
-    }, one_min);
+    if (isMusicTime()) {
+        // initialize the music player
+        setTimeout(() => {
+            MusicCommandManager.initialize();
+        }, 1000);
+    }
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
 
-    if (isCodeTime() || !codeTimeExtInstalled()) {
+    if (isCodeTime()) {
         // check on new commits once an hour
         historical_commits_interval = setInterval(async () => {
             let isonline = await serverIsAvailable();
@@ -201,19 +181,31 @@ export async function intializePlugin(
             getHistoricalCommits(isonline);
         }, hourly_interval);
 
-        // fire off the hourly jobs like
-        // commit gathering in a couple of minutes
-        // for initialization
+        // every half hour, send offline data
+        let offlineInterval = hourly_interval / 2;
+        offline_data_interval = setInterval(() => {
+            sendOfflineData();
+        }, offlineInterval);
 
+        // in 2 minutes fetch the historical commits if any
         setTimeout(() => {
             getHistoricalCommits(serverIsOnline);
         }, one_min * 2);
 
-        // every m3 minutes, get the user's jwt if they've logged
-        // in if they're still not a registered user.
+        // 1 minute interval tasks
+        // check if the use has become a registered user
+        // if they're already logged on, it will not send a request
         token_check_interval = setInterval(async () => {
             getUserStatus(serverIsOnline);
-        }, one_min * 3);
+            updateLiveshareTime();
+        }, one_min * 1);
+    }
+
+    if (isMusicTime()) {
+        // 15 second interval to check music info
+        gather_music_interval = setInterval(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000 * 5);
     }
 
     // add the player commands
@@ -253,9 +245,9 @@ async function initializeUserInfo(
     }
 
     if (isCodeTime()) {
-        // initiate kpm fetch
+        // initiate kpm fetch by sending any offline data
         setTimeout(() => {
-            fetchDailyKpmSessionInfo();
+            sendOfflineData();
         }, 1000);
 
         let codyConfig: CodyConfig = new CodyConfig();
@@ -290,6 +282,14 @@ async function initializeUserInfo(
     }
 }
 
+function updateLiveshareTime() {
+    if (_ls) {
+        let nowSec = nowInSecs();
+        let diffSeconds = nowSec - parseInt(_ls["start"], 10);
+        setSessionSummaryLiveshareMinutes(diffSeconds * 60);
+    }
+}
+
 async function initializeLiveshare() {
     const liveshare = await vsls.getApi();
     if (liveshare) {
@@ -310,6 +310,7 @@ async function initializeLiveshare() {
 
                 await manageLiveshareSession(_ls);
             } else if (_ls && (!event || !event["id"])) {
+                updateLiveshareTime();
                 // close the session on our end
                 _ls["end"] = nowSec;
                 _ls["local_end"] = localNow;

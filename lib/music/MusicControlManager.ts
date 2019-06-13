@@ -23,7 +23,8 @@ import { showQuickPick } from "../MenuManager";
 import {
     getUserStatus,
     serverIsAvailable,
-    refetchSpotifyConnectStatusLazily
+    refetchSpotifyConnectStatusLazily,
+    getLoggedInCacheState
 } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import {
@@ -198,9 +199,16 @@ export class MusicControlManager {
     }
 
     async showMenu() {
+        let loggedInCacheState = getLoggedInCacheState();
         let serverIsOnline = await serverIsAvailable();
-        // {loggedIn: true|false}
-        let userStatus = await getUserStatus(serverIsOnline);
+        let userStatus = {
+            loggedIn: loggedInCacheState
+        };
+        if (loggedInCacheState === null) {
+            // update it since it's null
+            // {loggedIn: true|false}
+            userStatus = await getUserStatus(serverIsOnline);
+        }
         let loginUrl = await buildLoginUrl();
 
         let loginMsgDetail =

@@ -1,9 +1,6 @@
 import { storePayload, getItem, getOs, getVersion, logIt } from "./Util";
 import { softwarePost, isResponseOk } from "./HttpClient";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
-import { fetchDailyKpmSessionInfo } from "./KpmStatsManager";
-import { isTelemetryOn } from "../extension";
-import { sendOfflineData } from "./DataController";
 
 // ? marks that the parameter is optional
 type Project = {
@@ -89,24 +86,8 @@ export class KpmDataManager {
             payload.project = null;
         }
 
-        if (!isTelemetryOn()) {
-            storePayload(payload);
-            logIt(
-                "Software metrics are currently paused. Enable metrics to view your KPM info."
-            );
-            return;
-        }
-
-        // post the batch data if there's any
-        sendOfflineData()
-            .then(result => {
-                // send the current payload
-                this.sendPayload(payload);
-            })
-            .catch(e => {
-                // unable to send batch but send the current payload
-                this.sendPayload(payload);
-            });
+        storePayload(payload);
+        logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
     }
 
     sendPayload(payload) {
@@ -117,9 +98,6 @@ export class KpmDataManager {
             if (!isResponseOk(resp)) {
                 storePayload(payload);
             }
-            setTimeout(() => {
-                fetchDailyKpmSessionInfo();
-            }, 10000);
         });
     }
 }
