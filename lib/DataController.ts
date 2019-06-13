@@ -365,6 +365,11 @@ export async function getUserStatus(serverIsOnline) {
     ) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
         setTimeout(() => {
+            // update the status bar
+            // clear the stats cache
+            clearSessionSummaryData();
+
+            // update the statusbar
             fetchSessionSummaryInfo();
         }, 1000);
 
