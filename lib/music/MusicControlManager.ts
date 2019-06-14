@@ -15,7 +15,10 @@ import {
     PlaylistItem,
     CodyResponse,
     CodyResponseType,
-    PlayerDevice
+    PlayerDevice,
+    playSpotifyDevice,
+    playTrackInContext,
+    playTrack
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -194,7 +197,14 @@ export class MusicControlManager {
                 }
             });
         } else {
-            launchPlayer(playerType, {});
+            launchPlayer(PlayerName.SpotifyWeb);
+            // launchPlayer(PlayerName.SpotifyWeb, {
+            //     track_id: "3HVWdVOQ0ZA45FuZGSfvns"
+            // }).then(result => {
+            //     setTimeout(() => {
+            //         pause(PlayerName.SpotifyWeb);
+            //     }, 7000);
+            // });
         }
     }
 
@@ -398,7 +408,9 @@ export async function createDevBeatsPlaylist() {
 }
 
 export async function connectSpotify() {
-    const endpoint = `${api_endpoint}/auth/spotify?integrate=spotify`;
+    const endpoint = `${api_endpoint}/auth/spotify?integrate=spotify&token=${getItem(
+        "jwt"
+    )}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily(15);
 }

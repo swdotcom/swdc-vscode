@@ -71,7 +71,7 @@ export class MusicCommandManager {
             "musictime.previous",
             30
         );
-        this.createButton("$(triangle-right)", "Play", "musictime.play", 29);
+        this.createButton("$(play)", "Play", "musictime.play", 29);
         this.createButton(
             "$(primitive-square)",
             "Pause",
@@ -208,12 +208,14 @@ export class MusicCommandManager {
         // hide all except for the launch player button
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.menu") {
+
+            let isMusicTimeMenu = btnCmd === "musictime.menu";
+            let isPlayButton = btnCmd === "musictime.play";
+            let isConnectSpotify = btnCmd === "musictime.connectSpotify";
+
+            if (isMusicTimeMenu || isPlayButton) {
                 button.statusBarItem.show();
-            } else if (
-                btnCmd === "musictime.connectSpotify" &&
-                requiresSpotifyAccessInfo()
-            ) {
+            } else if (isConnectSpotify && requiresSpotifyAccessInfo()) {
                 button.statusBarItem.show();
             } else {
                 button.statusBarItem.hide();
