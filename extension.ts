@@ -41,6 +41,7 @@ let token_check_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let offline_data_interval = null;
+let session_check_interval = null;
 let kpmController = null;
 
 const check_online_interval_ms = 1000 * 60 * 10;
@@ -73,6 +74,7 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(historical_commits_interval);
     clearInterval(offline_data_interval);
     clearInterval(gather_music_interval);
+    clearInterval(session_check_interval);
 
     // console.log("deactivating the plugin");
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
@@ -172,6 +174,11 @@ export async function intializePlugin(
 
     // every hour, look for repo members
     let hourly_interval = 1000 * 60 * 60;
+
+    // 35 min interval to check if the session file exists or not
+    session_check_interval = setInterval(() => {
+        periodicSessionCheck();
+    }, 1000 * 60 * 35);
 
     if (isCodeTime()) {
         // check on new commits once an hour
@@ -318,5 +325,20 @@ async function initializeLiveshare() {
                 _ls = null;
             }
         });
+    }
+}
+
+async function periodicSessionCheck() {
+    const serverIsOnline = await serverIsAvailable();
+    if (serverIsOnline && (!softwareSessionFileExists() || !jwtExists())) {
+        // session file doesn't exist
+        // create the anon user
+        let createdJwt = await createAnonymousUser(serverIsOnline);
+        if (createdJwt) {
+            await getUserStatus(serverIsOnline);
+            setTimeout(() => {
+                sendOfflineData();
+            }, 1000);
+        }
     }
 }
