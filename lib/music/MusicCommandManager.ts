@@ -210,10 +210,9 @@ export class MusicCommandManager {
             const btnCmd = button.statusBarItem.command;
 
             let isMusicTimeMenu = btnCmd === "musictime.menu";
-            let isPlayButton = btnCmd === "musictime.play";
             let isConnectSpotify = btnCmd === "musictime.connectSpotify";
 
-            if (isMusicTimeMenu || isPlayButton) {
+            if (isMusicTimeMenu) {
                 button.statusBarItem.show();
             } else if (isConnectSpotify && requiresSpotifyAccessInfo()) {
                 button.statusBarItem.show();

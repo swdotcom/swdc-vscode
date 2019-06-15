@@ -50,9 +50,9 @@ export function showQuickPick(pickOptions) {
         return;
     }
     let options: QuickPickOptions = {
-        onDidSelectItem: item => {
-            window.setStatusBarMessage(item["label"]);
-        },
+        // onDidSelectItem: item => {
+        //     window.setStatusBarMessage(item["label"]);
+        // },
         matchOnDescription: false,
         matchOnDetail: false,
         placeHolder: pickOptions.placeholder || ""
@@ -60,7 +60,6 @@ export function showQuickPick(pickOptions) {
     window.showQuickPick(pickOptions.items, options).then(async item => {
         if (item) {
             let url = item["url"];
-            let uri = item["uri"];
             let cb = item["cb"];
             if (url) {
                 launchWebUrl(url);

@@ -11,14 +11,11 @@ import {
     launchPlayer,
     createPlaylist,
     addTracksToPlaylist,
-    getPlaylistNames,
     PlaylistItem,
     CodyResponse,
     CodyResponseType,
     PlayerDevice,
-    playSpotifyDevice,
-    playTrackInContext,
-    playTrack
+    getTrack
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -168,6 +165,17 @@ export class MusicControlManager {
     }
 
     launchTrackPlayer(playerType: PlayerName = null) {
+        // const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
+        //     .codyPlaylists;
+        // let options = {};
+        // if (codyPlaylists && codyPlaylists.length > 0) {
+        //     options["playlist_id"] = codyPlaylists[0].id;
+        // }
+
+        // launchPlayer(PlayerName.SpotifyWeb, options).then(result => {
+        //     MusicStateManager.getInstance().musicStateCheck();
+        // });
+
         if (!playerType) {
             getRunningTrack().then((track: Track) => {
                 if (track && track.id) {
@@ -197,15 +205,18 @@ export class MusicControlManager {
                 }
             });
         } else {
-            launchPlayer(PlayerName.SpotifyWeb);
-            // launchPlayer(PlayerName.SpotifyWeb, {
-            //     track_id: "3HVWdVOQ0ZA45FuZGSfvns"
-            // }).then(result => {
-            //     setTimeout(() => {
-            //         pause(PlayerName.SpotifyWeb);
-            //     }, 7000);
-            // });
+            this.launchSpotifyPlayer();
         }
+    }
+
+    launchSpotifyPlayer() {
+        window.showInformationMessage(
+            `After you select and play your first song in Spotify, standard controls (play, pause, next, etc.) will appear in your status bar.`,
+            ...["OK"]
+        );
+        setTimeout(() => {
+            launchPlayer(PlayerName.SpotifyWeb);
+        }, 1000);
     }
 
     async showMenu() {
@@ -292,35 +303,14 @@ export class MusicControlManager {
                     url: null,
                     cb: createDevBeatsPlaylist
                 });
-            } else if (hasCodyPlaylists) {
-                menuOptions.items.push({
-                    label: "Play Spotify Playlists",
-                    description: "",
-                    detail:
-                        "Launch the Spotify web player to view your playlist",
-                    url: null,
-                    cb: launchSpotifyWebPlayer
-                });
             }
-        }
 
-        // menuOptions.items.push({
-        //     label: "Search Playlist",
-        //     description: "",
-        //     detail: "Find a playlist",
-        //     url: null,
-        //     cb: buildPlaylists
-        // });
-
-        const track: Track = await getRunningTrack();
-
-        if (!track || !track.id) {
             menuOptions.items.push({
-                label: "Play Spotify",
+                label: "Launch Spotify",
                 description: "",
-                detail: "Launch the Spotify web player",
+                detail: "Launch the Spotify web player to view your playlist",
                 url: null,
-                cb: launchSpotifyWebPlayer
+                cb: this.launchSpotifyPlayer
             });
         }
 
@@ -432,25 +422,4 @@ export async function fetchMusicTimeMetricsDashboard() {
             logIt(`Error writing to the Software session file: ${err.message}`);
         }
     });
-}
-
-export function launchSpotifyWebPlayer() {
-    const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
-        .codyPlaylists;
-    let options = {};
-    if (codyPlaylists && codyPlaylists.length > 0) {
-        options["playlist_id"] = codyPlaylists[0].id;
-    }
-
-    launchPlayer(PlayerName.SpotifyWeb, options).then(result => {
-        MusicStateManager.getInstance().musicStateCheck();
-    });
-}
-
-export async function getSpotifyPlaylistNames() {
-    let playlistNames: string[] = await getPlaylistNames(PlayerName.SpotifyWeb);
-}
-
-export async function getSpotifyPlaylists() {
-    //
 }

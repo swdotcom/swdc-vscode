@@ -32,6 +32,7 @@ import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 import { Track, getRunningTrack, setConfig, CodyConfig } from "cody-music";
+const moment = require("moment-timezone");
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -148,7 +149,7 @@ export async function intializePlugin(
 
     let serverIsOnline = await serverIsAvailable();
 
-    let one_min = 1000 * 60;
+    let one_min_ms = 1000 * 60;
 
     if (isCodeTime()) {
         // only code time will show the status bar text info
@@ -173,7 +174,7 @@ export async function intializePlugin(
     }
 
     // every hour, look for repo members
-    let hourly_interval = 1000 * 60 * 60;
+    let hourly_interval_ms = 1000 * 60 * 60;
 
     // 35 min interval to check if the session file exists or not
     session_check_interval = setInterval(() => {
@@ -186,18 +187,20 @@ export async function intializePlugin(
             let isonline = await serverIsAvailable();
             sendHeartbeat("HOURLY", isonline);
             getHistoricalCommits(isonline);
-        }, hourly_interval);
+        }, hourly_interval_ms);
 
         // every half hour, send offline data
-        let offlineInterval = hourly_interval / 2;
-        offline_data_interval = setInterval(() => {
+        const delay = getMillisecondsDelayToStartBatchSend();
+        setTimeout(() => {
+            // fetch once
             sendOfflineData();
-        }, offlineInterval);
+            initializeBatchInterval();
+        }, delay * 1000);
 
         // in 2 minutes fetch the historical commits if any
         setTimeout(() => {
             getHistoricalCommits(serverIsOnline);
-        }, one_min * 2);
+        }, one_min_ms * 2);
 
         // 1 minute interval tasks
         // check if the use has become a registered user
@@ -205,7 +208,7 @@ export async function intializePlugin(
         token_check_interval = setInterval(async () => {
             getUserStatus(serverIsOnline);
             updateLiveshareTime();
-        }, one_min * 1);
+        }, one_min_ms * 1);
     }
 
     if (isMusicTime()) {
@@ -220,6 +223,34 @@ export async function intializePlugin(
 
     initializeLiveshare();
     initializeUserInfo(createdAnonUser, serverIsOnline);
+}
+
+function getMillisecondsDelayToStartBatchSend() {
+    // every half hour, send offline data
+    const endOfHour = moment()
+        .endOf("hour")
+        .unix();
+    const secondsUntilEndOfHour = endOfHour - moment().unix();
+    let delayToStart_in_sec = 0;
+    // add 2 minutes to ensure
+    const two_minute_in_sec = 60 * 2;
+    const hour_in_sec = 60 * 60;
+    const thirty_min_in_sec = hour_in_sec / 2;
+    if (secondsUntilEndOfHour > thirty_min_in_sec) {
+        delayToStart_in_sec =
+            secondsUntilEndOfHour - thirty_min_in_sec + two_minute_in_sec;
+    } else {
+        delayToStart_in_sec = secondsUntilEndOfHour + two_minute_in_sec;
+    }
+    return delayToStart_in_sec * 1000;
+}
+
+function initializeBatchInterval() {
+    // every half hour, send offline data
+    let thirty_min_interval = 1000 * 60 * 30;
+    offline_data_interval = setInterval(() => {
+        sendOfflineData();
+    }, thirty_min_interval);
 }
 
 function handlePauseMetricsEvent() {
