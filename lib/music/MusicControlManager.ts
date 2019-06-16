@@ -165,17 +165,6 @@ export class MusicControlManager {
     }
 
     launchTrackPlayer(playerType: PlayerName = null) {
-        // const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
-        //     .codyPlaylists;
-        // let options = {};
-        // if (codyPlaylists && codyPlaylists.length > 0) {
-        //     options["playlist_id"] = codyPlaylists[0].id;
-        // }
-
-        // launchPlayer(PlayerName.SpotifyWeb, options).then(result => {
-        //     MusicStateManager.getInstance().musicStateCheck();
-        // });
-
         if (!playerType) {
             getRunningTrack().then((track: Track) => {
                 if (track && track.id) {
@@ -284,20 +273,20 @@ export class MusicControlManager {
             });
         } else {
             // check if we already have a playlist
-            const codyPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
-                .codyPlaylists;
-            const hasCodyPlaylists =
-                codyPlaylists && codyPlaylists.length > 0 ? true : false;
+            const savedPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
+                .savedPlaylists;
+            const hasSavedPlaylists =
+                savedPlaylists && savedPlaylists.length > 0 ? true : false;
 
             const codyTracks: any[] = MusicStoreManager.getInstance()
-                .codyFavorites;
-            const hasCodyFavorites =
+                .userFavorites;
+            const hasUserFavorites =
                 codyTracks && codyTracks.length > 0 ? true : false;
 
-            if (!hasCodyPlaylists && hasCodyFavorites) {
+            if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Create Your Top 40 Playlist",
+                    label: "Create Spotify Coding Playlist",
                     description: "",
                     detail: `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`,
                     url: null,
@@ -333,7 +322,7 @@ export async function displayMusicTimeMetricsDashboard() {
 export async function createDevBeatsPlaylist() {
     let musicstoreMgr = MusicStoreManager.getInstance();
     // get the spotify track ids and create the playlist
-    let codyTracks: any[] = musicstoreMgr.codyFavorites;
+    let codyTracks: any[] = musicstoreMgr.userFavorites;
     if (codyTracks && codyTracks.length > 0) {
         let playlistResult: CodyResponse = await createPlaylist(
             PRODUCTIVITY_PLAYLIST_NAME,
@@ -353,7 +342,7 @@ export async function createDevBeatsPlaylist() {
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
             // add the tracks
             // list of [{uri, artist, name}...]
-            const codyTracks: any[] = musicstoreMgr.codyFavorites;
+            const codyTracks: any[] = musicstoreMgr.userFavorites;
             let tracksToAdd: string[] = codyTracks.map(item => {
                 return item.uri;
             });
@@ -402,7 +391,7 @@ export async function connectSpotify() {
         "jwt"
     )}`;
     launchWebUrl(endpoint);
-    refetchSpotifyConnectStatusLazily(15);
+    refetchSpotifyConnectStatusLazily(20);
 }
 
 export async function fetchMusicTimeMetricsDashboard() {

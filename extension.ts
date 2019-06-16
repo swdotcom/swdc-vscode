@@ -192,8 +192,6 @@ export async function intializePlugin(
         // every half hour, send offline data
         const delay = getMillisecondsDelayToStartBatchSend();
         setTimeout(() => {
-            // fetch once
-            sendOfflineData();
             initializeBatchInterval();
         }, delay * 1000);
 
@@ -307,11 +305,10 @@ async function initializeUserInfo(
         await musicstoreMgr.syncRunningPlaylists();
 
         // fetch the favorites every 10 minutes
-        setInterval(() => {
-            musicstoreMgr.syncPlaylistFavorites();
-        }, 1000 * 60 * 10);
-        // and once right now
-        musicstoreMgr.syncPlaylistFavorites();
+        setTimeout(() => {
+            musicstoreMgr.syncUserTopSongs();
+            musicstoreMgr.syncGlobalTopSongs();
+        }, 1000);
 
         // every 2 minutes reconcile
         setInterval(() => {

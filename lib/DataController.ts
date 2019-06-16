@@ -25,7 +25,9 @@ import {
     logIt,
     isMusicTime,
     humanizeMinutes,
-    showStatus
+    showStatus,
+    saveSessionSummaryToDisk,
+    getSessionSummaryFileAsJson
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import {
@@ -73,6 +75,8 @@ export function clearSessionSummaryData() {
         currentDayKeystrokes: 0,
         liveshareMinutes: null
     };
+
+    saveSessionSummaryToDisk(getSessionSummaryData());
 }
 
 export function setSessionSummaryLiveshareMinutes(minutes) {
@@ -82,6 +86,10 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 export function incrementSessionSummaryData(minutes, keystrokes) {
     sessionSummaryData.currentDayMinutes += minutes;
     sessionSummaryData.currentDayKeystrokes += keystrokes;
+}
+
+export function getSessionSummaryData() {
+    return sessionSummaryData;
 }
 
 export async function serverIsAvailable() {
@@ -648,6 +656,8 @@ export async function getSessionSummaryStatus() {
                 if (isResponseOk(resp)) {
                     // update the cache summary
                     sessionSummaryData = resp.data;
+                    // update the file
+                    saveSessionSummaryToDisk(sessionSummaryData);
                     // update the status bar
                     updateStatusBarWithSummaryData();
                     return { data: sessionSummaryData, status: "OK" };
@@ -666,6 +676,9 @@ export async function getSessionSummaryStatus() {
 }
 
 export function updateStatusBarWithSummaryData() {
+    // update the session summary data with what is found in the sessionSummary.json
+    sessionSummaryData = getSessionSummaryFileAsJson();
+
     let currentDayMinutes = sessionSummaryData.currentDayMinutes;
     let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
     let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;

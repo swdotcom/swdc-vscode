@@ -35,9 +35,10 @@ export class MusicStoreManager {
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _runningPlaylists: PlaylistItem[] = [];
     private _runningTrack: Track = new Track();
-    private _codyPlaylists: PlaylistItem[] = [];
+    private _savedPlaylists: PlaylistItem[] = [];
     private _settings: PlaylistItem[] = [];
-    private _codyFavorites: any[] = [];
+    private _userFavorites: any[] = [];
+    private _globalFavorites: any[] = [];
     private _playlistTracks: any = {};
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
     private _selectedPlaylist: PlaylistItem = null;
@@ -61,12 +62,12 @@ export class MusicStoreManager {
     // getters
     //
 
-    get codyPlaylists(): PlaylistItem[] {
-        return this._codyPlaylists;
+    get savedPlaylists(): PlaylistItem[] {
+        return this._savedPlaylists;
     }
 
-    set codyPlaylists(lists: PlaylistItem[]) {
-        this._codyPlaylists = lists;
+    set savedPlaylists(lists: PlaylistItem[]) {
+        this._savedPlaylists = lists;
     }
 
     get runningTrack(): Track {
@@ -93,8 +94,12 @@ export class MusicStoreManager {
         this._spotifyPlaylists = lists;
     }
 
-    get codyFavorites(): any[] {
-        return this._codyFavorites;
+    get userFavorites(): any[] {
+        return this._userFavorites;
+    }
+
+    get globalFavorites(): any[] {
+        return this._globalFavorites;
     }
 
     get runningPlaylists(): PlaylistItem[] {
@@ -173,26 +178,27 @@ export class MusicStoreManager {
         }
     }
 
-    async fetchCodyPlaylists() {
+    async fetchSavedPlaylists() {
         let playlists = [];
         const response = await softwareGet("/music/playlist", getItem("jwt"));
         if (isResponseOk(response)) {
             playlists = response.data.map(item => {
                 // transform the playlist_id to id
                 item["id"] = item.playlist_id;
+                item["playlistTypeId"] = item.playlistTypeId;
                 delete item.playlist_id;
                 return item;
             });
         }
-        this.codyPlaylists = playlists;
+        this.savedPlaylists = playlists;
     }
 
     async reconcilePlaylists() {
         let hasSpotifyPlaylists = this._spotifyPlaylists.length > 0;
         let hasUpdates = false;
-        if (this._codyPlaylists.length > 0) {
-            for (let i = 0; i < this._codyPlaylists.length; i++) {
-                let codyPlaylist = this._codyPlaylists[i];
+        if (this._savedPlaylists.length > 0) {
+            for (let i = 0; i < this._savedPlaylists.length; i++) {
+                let codyPlaylist = this._savedPlaylists[i];
 
                 if (hasSpotifyPlaylists) {
                     let foundItem = this._spotifyPlaylists.find(element => {
@@ -239,17 +245,31 @@ export class MusicStoreManager {
     /**
      * These are the top productivity songs for this user
      */
-    async syncPlaylistFavorites() {
+    async syncUserTopSongs() {
         const response = await softwareGet(
             "/music/playlist/favorites",
             getItem("jwt")
         );
 
         if (isResponseOk(response) && response.data.length > 0) {
-            this._codyFavorites = response.data;
+            this._userFavorites = response.data;
         } else {
             // clear the favorites
-            this._codyFavorites = [];
+            this._userFavorites = [];
+        }
+    }
+
+    async syncGlobalTopSongs() {
+        const response = await softwareGet(
+            "/music/playlist/favorites?global=true",
+            getItem("jwt")
+        );
+
+        if (isResponseOk(response) && response.data.length > 0) {
+            this._globalFavorites = response.data;
+        } else {
+            // clear the favorites
+            this._globalFavorites = [];
         }
     }
 
@@ -295,7 +315,7 @@ export class MusicStoreManager {
         this.spotifyPlayerDevices = await getSpotifyDevices();
 
         // get the cody playlists
-        await this.fetchCodyPlaylists();
+        await this.fetchSavedPlaylists();
 
         if (this.spotifyPlayerDevices.length > 0) {
             // fetch spotify and sync what we have
@@ -305,35 +325,6 @@ export class MusicStoreManager {
             this.runningTrack.playerType === PlayerType.MacItunesDesktop
         ) {
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
-        }
-
-        /**
-         * playlist example...
-            collaborative:false
-            id:"MostRecents"
-            name:"MostRecents"
-            playerType:"MacItunesDesktop"
-            public:true
-            tracks:PlaylistTrackInfo {href: "", total: 34}
-            type:"playlist"
-         */
-
-        if (playlists.length > 0) {
-            this.hasPlaylists = true;
-            // check if we need to update the ID to the name
-            playlists.map((playlist: PlaylistItem) => {
-                if (!playlist.id) {
-                    playlist.id = playlist.name;
-                }
-                if (this._currentPlayerType === PlayerType.WebSpotify) {
-                    let foundItem = this.codyPlaylists.find(element => {
-                        return element.id === playlist.id;
-                    });
-                    if (foundItem) {
-                        playlist.tag = "cody";
-                    }
-                }
-            });
         }
 
         this.updateSettingsItems(playlists);
@@ -369,26 +360,16 @@ export class MusicStoreManager {
         }
 
         if (this._currentPlayerType === PlayerType.WebSpotify) {
-            let foundItem = null;
-            for (let i = 0; i < playlists.length; i++) {
-                let playlist = playlists[i];
-                foundItem = this.codyPlaylists.find(element => {
-                    return element.id === playlist.id;
-                });
+            const foundCodingFavorites = this.hasMusicTimePlaylistForType(1);
 
-                if (foundItem) {
-                    break;
-                }
-            }
-
-            if (!foundItem) {
+            if (!foundCodingFavorites) {
                 // add the connect spotify link
                 let listItem: PlaylistItem = new PlaylistItem();
                 listItem.tracks = new PlaylistTrackInfo();
                 listItem.type = "addtop40";
                 listItem.id = "addtop40";
                 listItem.playerType = PlayerType.WebSpotify;
-                listItem.name = `Create Your Spotify Top 40 Playlist`;
+                listItem.name = `Create Spotify Coding Playlist`;
                 listItem.tooltip = `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`;
                 settingsList.push(listItem);
             }
@@ -426,6 +407,35 @@ export class MusicStoreManager {
         if (this._playlistTracks[playlist_id]) {
             this._playlistTracks[playlist_id] = null;
         }
+    }
+
+    /**
+     * Checks if the user's spotify playlists contains either
+     * the global top 40 or the user's coding favorites playlist.
+     * The playlistTypeId is used to match the set ID from music time
+     * app. 1 = user's coding favorites, 2 = global top 40
+     */
+    hasMusicTimePlaylistForType(playlistTypeId: number) {
+        if (this.spotifyPlaylists.length > 0) {
+            for (let i = 0; i < this.spotifyPlaylists.length; i++) {
+                const playlist: PlaylistItem = this.spotifyPlaylists[i];
+                const foundItem: PlaylistItem = this.savedPlaylists.find(
+                    element => {
+                        return (
+                            element.id === playlist.id &&
+                            element["playlistTypeId"] === playlistTypeId
+                        );
+                    }
+                );
+
+                if (foundItem) {
+                    playlist.tag = "cody";
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     async getTracksForPlaylistId(playlist_id: string) {

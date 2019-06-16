@@ -24,4 +24,4 @@ export const launch_url = "https://app.software.com";
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const MUSIC_TIME_EXT_ID = "softwaredotcom.music-time";
 
-export const PRODUCTIVITY_PLAYLIST_NAME = "Your Software Top 40";
+export const PRODUCTIVITY_PLAYLIST_NAME = "Your Playlist Favorites";

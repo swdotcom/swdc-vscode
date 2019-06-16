@@ -90,14 +90,14 @@ export class KpmDataManager {
         logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
     }
 
-    sendPayload(payload) {
-        logIt(`sending ${JSON.stringify(payload)}`);
+    // sendPayload(payload) {
+    //     logIt(`sending ${JSON.stringify(payload)}`);
 
-        // POST the kpm to the PluginManager
-        softwarePost("/data", payload, getItem("jwt")).then(async resp => {
-            if (!isResponseOk(resp)) {
-                storePayload(payload);
-            }
-        });
-    }
+    //     // POST the kpm to the PluginManager
+    //     softwarePost("/data", payload, getItem("jwt")).then(async resp => {
+    //         if (!isResponseOk(resp)) {
+    //             storePayload(payload);
+    //         }
+    //     });
+    // }
 }

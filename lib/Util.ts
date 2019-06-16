@@ -10,7 +10,8 @@ import {
 import {
     incrementSessionSummaryData,
     refetchUserStatusLazily,
-    fetchSessionSummaryInfo
+    fetchSessionSummaryInfo,
+    getSessionSummaryData
 } from "./DataController";
 
 const { exec } = require("child_process");
@@ -497,6 +498,52 @@ export function logIt(message) {
     console.log(`${getExtensionName()}: ${message}`);
 }
 
+export function getSessionSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\sessionSummary.json";
+    } else {
+        file += "/sessionSummary.json";
+    }
+    return file;
+}
+
+export function saveSessionSummaryToDisk(sessionSummaryData) {
+    try {
+        // JSON.stringify(data, replacer, number of spaces)
+        const content = JSON.stringify(sessionSummaryData, null, 4);
+        fs.writeFileSync(getSessionSummaryFile(), content, err => {
+            if (err)
+                logIt(
+                    `Deployer: Error writing session summary data: ${
+                        err.message
+                    }`
+                );
+        });
+    } catch (e) {
+        //
+    }
+}
+
+export function getSessionSummaryFileAsJson() {
+    let data = null;
+    let file = getSessionSummaryFile();
+    if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file).toString();
+        if (content) {
+            try {
+                data = JSON.parse(content);
+            } catch (e) {
+                logIt(`unable to read session info: ${e.message}`);
+                // error trying to read the session file, delete it
+                deleteFile(file);
+                data = {};
+            }
+        }
+    }
+    return data ? data : {};
+}
+
 export function getSoftwareSessionAsJson() {
     let data = null;
 
@@ -544,7 +591,10 @@ export function storePayload(payload) {
     // add to the minutes
     let keystrokes = parseInt(payload.keystrokes, 10) || 0;
     incrementSessionSummaryData(1 /*minutes*/, keystrokes);
+
     setTimeout(() => {
+        // push the stats to the file so other editor windows can have it
+        saveSessionSummaryToDisk(getSessionSummaryData());
         // update the statusbar
         fetchSessionSummaryInfo();
     }, 1000);

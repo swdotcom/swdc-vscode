@@ -6,7 +6,6 @@ import { softwareGet, isResponseOk } from "../HttpClient";
 import {
     Track,
     PlayerType,
-    getAccessToken,
     getRunningTrack,
     TrackStatus,
     requiresSpotifyAccessInfo
