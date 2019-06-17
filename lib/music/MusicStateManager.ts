@@ -106,27 +106,26 @@ export class MusicStateManager {
 
     public async musicStateCheck() {
         const track: Track = (await this.gatherMusicInfo()) || new Track();
-        MusicStoreManager.getInstance().runningTrack = track;
+        this.musicstoreMgr.runningTrack = track;
         if (isMusicTime()) {
             // update the buttons to show player control changes
             MusicCommandManager.updateButtons();
 
             // do we still have a player or has the player changed?
             // either case, refresh the player provider list
-            let playerFound = track.id ? true : false;
-            let hasPlaylists = this.musicstoreMgr.hasPlaylists;
+            const playerFound = track.id ? true : false;
+            const hasPlaylists = this.musicstoreMgr.hasActivePlaylistItems();
+            const foundGlobalFavorites = this.musicstoreMgr.hasMusicTimePlaylistForType(
+                2
+            );
+            const hasSpotifyAccess = this.musicstoreMgr.hasSpotifyAccessToken();
 
-            // clear the playlists and possibly sync the running playlists
-            // if the following 2 conditions are met
             if (
-                (!playerFound && hasPlaylists) ||
-                (playerFound && !hasPlaylists)
+                (hasSpotifyAccess && !hasPlaylists) ||
+                (playerFound && !hasPlaylists) ||
+                (!foundGlobalFavorites && hasSpotifyAccess)
             ) {
-                // no player found and the playlists were showing
-                // OR
-                // player found and now showing playlists
-
-                this.musicstoreMgr.refreshPlaylists();
+                await this.musicstoreMgr.refreshPlaylists();
             }
         }
     }

@@ -44,7 +44,6 @@ export class MusicStoreManager {
     private _currentPlayerType: PlayerType = PlayerType.NotAssigned;
     private _selectedPlaylist: PlaylistItem = null;
     private _selectedTrackItem: PlaylistItem = null;
-    private _hasPlaylists: boolean = false;
     private _spotifyPlayerDevices: PlayerDevice[] = [];
 
     private constructor() {
@@ -127,14 +126,6 @@ export class MusicStoreManager {
         this._selectedTrackItem = item;
     }
 
-    get hasPlaylists(): boolean {
-        return this._hasPlaylists;
-    }
-
-    set hasPlaylists(flag: boolean) {
-        this._hasPlaylists = flag;
-    }
-
     get spotifyPlayerDevices(): PlayerDevice[] {
         return this._spotifyPlayerDevices;
     }
@@ -157,7 +148,6 @@ export class MusicStoreManager {
     async clearPlaylists() {
         this.selectedPlaylist = null;
         this.runningPlaylists = [];
-        this.hasPlaylists = false;
     }
 
     async initializeSpotify() {
@@ -274,14 +264,39 @@ export class MusicStoreManager {
         }
     }
 
+    hasActivePlaylistItems() {
+        if (this.runningPlaylists && this.runningPlaylists.length > 0) {
+            for (let i = 0; i < this.runningPlaylists.length; i++) {
+                const plItem = this.runningPlaylists[i];
+                if (
+                    plItem.id !== "title" &&
+                    plItem.id !== "connectspotify" &&
+                    plItem.id !== "codingfavorites" &&
+                    plItem.id !== "spotifyconnected"
+                ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     async syncRunningPlaylists() {
         let playlists: PlaylistItem[] = [];
+
+        // get the cody playlists
+        await this.fetchSavedPlaylists();
+
+        if (this.hasSpotifyAccessToken()) {
+            await this.syncSpotifyWebPlaylists();
+        }
 
         this._currentPlayerType = this.runningTrack.playerType;
 
         if (
-            this.runningTrack.playerType === PlayerType.NotAssigned ||
-            !this.runningTrack.id
+            this.spotifyPlaylists.length === 0 &&
+            (this.runningTrack.playerType === PlayerType.NotAssigned ||
+                !this.runningTrack.id)
         ) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
@@ -302,27 +317,14 @@ export class MusicStoreManager {
                 launchSpotifyItem.name = "Launch Spotify";
                 playlists.push(launchSpotifyItem);
             }
-
-            this.updateSettingsItems();
-
-            this.runningPlaylists = playlists;
-            commands.executeCommand("musictime.refreshPlaylist");
-            commands.executeCommand("musictime.refreshSettings");
-
-            return;
-        }
-
-        // also get the player devices
-        this.spotifyPlayerDevices = await getSpotifyDevices();
-
-        // get the cody playlists
-        await this.fetchSavedPlaylists();
-
-        if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
-            playlists = await getPlaylists(PlayerName.ItunesDesktop);
         } else {
-            playlists = await this.syncSpotifyWebPlaylists();
-            this._currentPlayerType = PlayerType.WebSpotify;
+            // get the current running playlist
+            if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
+                playlists = await getPlaylists(PlayerName.ItunesDesktop);
+            } else {
+                playlists = this.spotifyPlaylists;
+                this._currentPlayerType = PlayerType.WebSpotify;
+            }
         }
 
         this.updateSettingsItems();
@@ -357,10 +359,7 @@ export class MusicStoreManager {
             settingsList.push(listItem);
         }
 
-        if (
-            this.hasSpotifyAccessToken() &&
-            this._currentPlayerType === PlayerType.WebSpotify
-        ) {
+        if (this.hasSpotifyAccessToken()) {
             const foundCodingFavorites = this.hasMusicTimePlaylistForType(1);
 
             if (!foundCodingFavorites) {
