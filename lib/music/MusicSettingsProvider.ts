@@ -11,7 +11,10 @@ import {
 import * as path from "path";
 import { PlaylistItem, PlayerType } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { connectSpotify, createDevBeatsPlaylist } from "./MusicControlManager";
+import {
+    connectSpotify,
+    createCodingFavoritesPlaylist
+} from "./MusicControlManager";
 
 const createSettingsTreeItem = (
     p: PlaylistItem,
@@ -30,8 +33,8 @@ export const connectSettingsTreeView = (view: TreeView<PlaylistItem>) => {
 
             if (playlistItem.id === "connectspotify") {
                 connectSpotify();
-            } else if (playlistItem.id === "addtop40") {
-                createDevBeatsPlaylist();
+            } else if (playlistItem.id === "codingfavorites") {
+                createCodingFavoritesPlaylist();
             }
         }),
         view.onDidChangeVisibility(e => {

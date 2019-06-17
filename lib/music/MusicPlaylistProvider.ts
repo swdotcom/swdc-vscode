@@ -20,7 +20,10 @@ import {
     TrackStatus,
     pause
 } from "cody-music";
-import { connectSpotify, createDevBeatsPlaylist } from "./MusicControlManager";
+import {
+    connectSpotify,
+    createCodingFavoritesPlaylist
+} from "./MusicControlManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -80,8 +83,8 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 }
             } else if (playlistItem.id === "connectspotify") {
                 connectSpotify();
-            } else if (playlistItem.id === "addtop40") {
-                createDevBeatsPlaylist();
+            } else if (playlistItem.id === "codingfavorites") {
+                createCodingFavoritesPlaylist();
             }
         }),
         view.onDidChangeVisibility(e => {

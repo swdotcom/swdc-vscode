@@ -27,8 +27,9 @@ import {
     softwarePut
 } from "../HttpClient";
 import { getItem } from "../Util";
-import { PRODUCTIVITY_PLAYLIST_NAME } from "../Constants";
+import { CODING_FAVORITES_NAME } from "../Constants";
 import { commands } from "vscode";
+import { createGlobalTopSongsPlaylist } from "./MusicControlManager";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -302,7 +303,7 @@ export class MusicStoreManager {
                 playlists.push(launchSpotifyItem);
             }
 
-            this.updateSettingsItems(playlists);
+            this.updateSettingsItems();
 
             this.runningPlaylists = playlists;
             commands.executeCommand("musictime.refreshPlaylist");
@@ -327,14 +328,14 @@ export class MusicStoreManager {
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
         }
 
-        this.updateSettingsItems(playlists);
+        this.updateSettingsItems();
 
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
     }
 
-    updateSettingsItems(playlists: PlaylistItem[]) {
+    updateSettingsItems() {
         let settingsList: PlaylistItem[] = [];
 
         if (!this.hasSpotifyAccessToken()) {
@@ -359,19 +360,28 @@ export class MusicStoreManager {
             settingsList.push(listItem);
         }
 
-        if (this._currentPlayerType === PlayerType.WebSpotify) {
+        if (
+            this.hasSpotifyAccessToken() &&
+            this._currentPlayerType === PlayerType.WebSpotify
+        ) {
             const foundCodingFavorites = this.hasMusicTimePlaylistForType(1);
 
             if (!foundCodingFavorites) {
                 // add the connect spotify link
                 let listItem: PlaylistItem = new PlaylistItem();
                 listItem.tracks = new PlaylistTrackInfo();
-                listItem.type = "addtop40";
-                listItem.id = "addtop40";
+                listItem.type = "codingfavorites";
+                listItem.id = "codingfavorites";
                 listItem.playerType = PlayerType.WebSpotify;
-                listItem.name = `Create Spotify Coding Playlist`;
-                listItem.tooltip = `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`;
+                listItem.name = `Create Coding Favorites Playlist`;
+                listItem.tooltip = `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top 40`;
                 settingsList.push(listItem);
+            }
+
+            const foundGlobalFavorites = this.hasMusicTimePlaylistForType(2);
+            if (!foundGlobalFavorites) {
+                // create the global top 40
+                createGlobalTopSongsPlaylist();
             }
         }
 

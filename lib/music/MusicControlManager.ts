@@ -44,7 +44,8 @@ import {
 import {
     api_endpoint,
     LOGIN_LABEL,
-    PRODUCTIVITY_PLAYLIST_NAME
+    CODING_FAVORITES_NAME,
+    SOFTWARE_TOP_SONGS_NAME
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 const fs = require("fs");
@@ -278,19 +279,19 @@ export class MusicControlManager {
             const hasSavedPlaylists =
                 savedPlaylists && savedPlaylists.length > 0 ? true : false;
 
-            const codyTracks: any[] = MusicStoreManager.getInstance()
+            const codingFavs: any[] = MusicStoreManager.getInstance()
                 .userFavorites;
             const hasUserFavorites =
-                codyTracks && codyTracks.length > 0 ? true : false;
+                codingFavs && codingFavs.length > 0 ? true : false;
 
             if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Create Spotify Coding Playlist",
+                    label: "Create Coding Favorites Playlist",
                     description: "",
-                    detail: `Create a Spotify playlist (${PRODUCTIVITY_PLAYLIST_NAME}) based on your weekly top 40`,
+                    detail: `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top 40`,
                     url: null,
-                    cb: createDevBeatsPlaylist
+                    cb: createCodingFavoritesPlaylist
                 });
             }
 
@@ -319,13 +320,40 @@ export async function displayMusicTimeMetricsDashboard() {
     });
 }
 
-export async function createDevBeatsPlaylist() {
+export async function createGlobalTopSongsPlaylist() {
+    let musicstoreMgr = MusicStoreManager.getInstance();
+    let globalFavs: any[] = musicstoreMgr.globalFavorites;
+    if (globalFavs && globalFavs.length > 0) {
+        // 1st create the empty playlist
+        let playlistResult: CodyResponse = await createPlaylist(
+            CODING_FAVORITES_NAME,
+            true
+        );
+
+        // add the global songs to the playlist
+        if (playlistResult.state === CodyResponseType.Failed) {
+            window.showErrorMessage(
+                `There was an unexpected error adding tracks to the playlist. ${
+                    playlistResult.message
+                }`,
+                ...["OK"]
+            );
+            return;
+        }
+
+        if (playlistResult && playlistResult.data && playlistResult.data.id) {
+            await addTracks(playlistResult.data.id, 2, SOFTWARE_TOP_SONGS_NAME);
+        }
+    }
+}
+
+export async function createCodingFavoritesPlaylist() {
     let musicstoreMgr = MusicStoreManager.getInstance();
     // get the spotify track ids and create the playlist
-    let codyTracks: any[] = musicstoreMgr.userFavorites;
-    if (codyTracks && codyTracks.length > 0) {
+    let codingFavs: any[] = musicstoreMgr.userFavorites;
+    if (codingFavs && codingFavs.length > 0) {
         let playlistResult: CodyResponse = await createPlaylist(
-            PRODUCTIVITY_PLAYLIST_NAME,
+            CODING_FAVORITES_NAME,
             true
         );
 
@@ -340,48 +368,59 @@ export async function createDevBeatsPlaylist() {
         }
 
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
-            // add the tracks
-            // list of [{uri, artist, name}...]
-            const codyTracks: any[] = musicstoreMgr.userFavorites;
-            let tracksToAdd: string[] = codyTracks.map(item => {
-                return item.uri;
-            });
+            await addTracks(playlistResult.data.id, 1, CODING_FAVORITES_NAME);
+        }
+    }
+}
 
-            // create the playlist_id in software
-            const addTracksResult: CodyResponse = await addTracksToPlaylist(
-                playlistResult.data.id,
-                tracksToAdd
+async function addTracks(
+    playlist_id: string,
+    playlistTypeId: number,
+    name: string
+) {
+    let musicstoreMgr = MusicStoreManager.getInstance();
+    if (playlist_id) {
+        // add the tracks
+        // list of [{uri, artist, name}...]
+        const codingFavs: any[] = musicstoreMgr.userFavorites;
+        let tracksToAdd: string[] = codingFavs.map(item => {
+            return item.uri;
+        });
+
+        // create the playlist_id in software
+        const addTracksResult: CodyResponse = await addTracksToPlaylist(
+            playlist_id,
+            tracksToAdd
+        );
+
+        if (addTracksResult.state === CodyResponseType.Success) {
+            window.showInformationMessage(
+                "Successfully created playlist and added tracks.",
+                ...["OK"]
             );
-
-            if (addTracksResult.state === CodyResponseType.Success) {
-                window.showInformationMessage(
-                    "Successfully created playlist and added tracks.",
-                    ...["OK"]
-                );
-            } else {
-                window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${
-                        addTracksResult.message
-                    }`,
-                    ...["OK"]
-                );
-            }
-
-            // playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
-            const payload = {
-                playlist_id: playlistResult.data.id,
-                playlistTypeId: 1,
-                name: PRODUCTIVITY_PLAYLIST_NAME
-            };
-            let createResult = await softwarePost(
-                "/music/playlist",
-                payload,
-                getItem("jwt")
+        } else {
+            window.showErrorMessage(
+                `There was an unexpected error adding tracks to the playlist. ${
+                    addTracksResult.message
+                }`,
+                ...["OK"]
             );
-            if (isResponseOk(createResult)) {
-                // refresh the playlists
-                musicstoreMgr.refreshPlaylists();
-            }
+        }
+
+        // playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
+        const payload = {
+            playlist_id,
+            playlistTypeId,
+            name
+        };
+        let createResult = await softwarePost(
+            "/music/playlist",
+            payload,
+            getItem("jwt")
+        );
+        if (isResponseOk(createResult)) {
+            // refresh the playlists
+            musicstoreMgr.refreshPlaylists();
         }
     }
 }
