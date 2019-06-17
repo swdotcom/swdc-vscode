@@ -453,11 +453,17 @@ export class MusicStoreManager {
     }
 
     async getTracksForPlaylistId(playlist_id: string) {
+        const hasActivePlaylistItems = this.hasActivePlaylistItems();
+
         if (this.runningTrack.playerType !== this._currentPlayerType) {
             // clear the map
             this._playlistTracks[playlist_id] = null;
         }
-        this._currentPlayerType = this.runningTrack.playerType;
+        // don't update the current player type if we're already showing the
+        // spotify playlist even if the running track is not defined
+        if (!hasActivePlaylistItems) {
+            this._currentPlayerType = this.runningTrack.playerType;
+        }
 
         let playlistItems = [];
         let tracks = this._playlistTracks[playlist_id];
@@ -467,7 +473,7 @@ export class MusicStoreManager {
 
         let playlistTracks: CodyResponse;
 
-        if (this.spotifyPlayerDevices.length > 0) {
+        if (this._currentPlayerType === PlayerType.WebSpotify) {
             // get the playlist tracks
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
