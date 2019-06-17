@@ -318,14 +318,11 @@ export class MusicStoreManager {
         // get the cody playlists
         await this.fetchSavedPlaylists();
 
-        if (this.spotifyPlayerDevices.length > 0) {
-            // fetch spotify and sync what we have
+        if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
+            playlists = await getPlaylists(PlayerName.ItunesDesktop);
+        } else {
             playlists = await this.syncSpotifyWebPlaylists();
             this._currentPlayerType = PlayerType.WebSpotify;
-        } else if (
-            this.runningTrack.playerType === PlayerType.MacItunesDesktop
-        ) {
-            playlists = await getPlaylists(PlayerName.ItunesDesktop);
         }
 
         this.updateSettingsItems();
@@ -429,16 +426,24 @@ export class MusicStoreManager {
         if (this.spotifyPlaylists.length > 0) {
             for (let i = 0; i < this.spotifyPlaylists.length; i++) {
                 const playlist: PlaylistItem = this.spotifyPlaylists[i];
-                const foundItem: PlaylistItem = this.savedPlaylists.find(
-                    element => {
-                        return (
-                            element.id === playlist.id &&
-                            element["playlistTypeId"] === playlistTypeId
-                        );
-                    }
-                );
 
-                if (foundItem) {
+                let foundPlaylist = null;
+                for (let i = 0; i < this.savedPlaylists.length; i++) {
+                    let savedPlaylist = this.savedPlaylists[i];
+                    let savedPlaylistTypeId = parseInt(
+                        savedPlaylist["playlistTypeId"],
+                        10
+                    );
+                    if (
+                        savedPlaylist.id === playlist.id &&
+                        savedPlaylistTypeId === playlistTypeId
+                    ) {
+                        foundPlaylist = savedPlaylist;
+                        break;
+                    }
+                }
+
+                if (foundPlaylist) {
                     playlist.tag = "cody";
                     return true;
                 }

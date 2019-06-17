@@ -206,7 +206,7 @@ export class MusicControlManager {
         );
         setTimeout(() => {
             launchPlayer(PlayerName.SpotifyWeb);
-        }, 1000);
+        }, 3000);
     }
 
     async showMenu() {
@@ -326,7 +326,7 @@ export async function createGlobalTopSongsPlaylist() {
     if (globalFavs && globalFavs.length > 0) {
         // 1st create the empty playlist
         let playlistResult: CodyResponse = await createPlaylist(
-            CODING_FAVORITES_NAME,
+            SOFTWARE_TOP_SONGS_NAME,
             true
         );
 
@@ -342,8 +342,32 @@ export async function createGlobalTopSongsPlaylist() {
         }
 
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
-            await addTracks(playlistResult.data.id, 2, SOFTWARE_TOP_SONGS_NAME);
+            let result = await updateSavedPlaylists(
+                playlistResult.data.id,
+                2,
+                SOFTWARE_TOP_SONGS_NAME
+            );
+
+            if (isResponseOk(result)) {
+                console.log(`Synced playlist ID with music time`);
+            }
+
+            const globalFavs: any[] = musicstoreMgr.globalFavorites;
+            if (globalFavs && globalFavs.length > 0) {
+                let tracksToAdd: string[] = globalFavs.map(item => {
+                    return item.uri;
+                });
+                await addTracks(
+                    playlistResult.data.id,
+                    2,
+                    SOFTWARE_TOP_SONGS_NAME,
+                    tracksToAdd
+                );
+            }
         }
+
+        // refresh the playlists
+        musicstoreMgr.refreshPlaylists();
     }
 }
 
@@ -368,25 +392,61 @@ export async function createCodingFavoritesPlaylist() {
         }
 
         if (playlistResult && playlistResult.data && playlistResult.data.id) {
-            await addTracks(playlistResult.data.id, 1, CODING_FAVORITES_NAME);
+            let result = await updateSavedPlaylists(
+                playlistResult.data.id,
+                1,
+                CODING_FAVORITES_NAME
+            );
+
+            // add the tracks
+            // list of [{uri, artist, name}...]
+            const codingFavs: any[] = musicstoreMgr.userFavorites;
+            if (codingFavs && codingFavs.length > 0) {
+                let tracksToAdd: string[] = codingFavs.map(item => {
+                    return item.uri;
+                });
+                await addTracks(
+                    playlistResult.data.id,
+                    1,
+                    CODING_FAVORITES_NAME,
+                    tracksToAdd
+                );
+            }
         }
+
+        // refresh the playlists
+        musicstoreMgr.refreshPlaylists();
     }
+}
+
+async function updateSavedPlaylists(
+    playlist_id: string,
+    playlistTypeId: number,
+    name: string
+) {
+    // i.e. playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
+    // playlistTypeId 2 = SOFTWARE_TOP_SONGS_NAME
+    const payload = {
+        playlist_id,
+        playlistTypeId,
+        name
+    };
+    let createResult = await softwarePost(
+        "/music/playlist",
+        payload,
+        getItem("jwt")
+    );
+
+    return createResult;
 }
 
 async function addTracks(
     playlist_id: string,
     playlistTypeId: number,
-    name: string
+    name: string,
+    tracksToAdd: string[]
 ) {
-    let musicstoreMgr = MusicStoreManager.getInstance();
     if (playlist_id) {
-        // add the tracks
-        // list of [{uri, artist, name}...]
-        const codingFavs: any[] = musicstoreMgr.userFavorites;
-        let tracksToAdd: string[] = codingFavs.map(item => {
-            return item.uri;
-        });
-
         // create the playlist_id in software
         const addTracksResult: CodyResponse = await addTracksToPlaylist(
             playlist_id,
@@ -405,22 +465,6 @@ async function addTracks(
                 }`,
                 ...["OK"]
             );
-        }
-
-        // playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
-        const payload = {
-            playlist_id,
-            playlistTypeId,
-            name
-        };
-        let createResult = await softwarePost(
-            "/music/playlist",
-            payload,
-            getItem("jwt")
-        );
-        if (isResponseOk(createResult)) {
-            // refresh the playlists
-            musicstoreMgr.refreshPlaylists();
         }
     }
 }
