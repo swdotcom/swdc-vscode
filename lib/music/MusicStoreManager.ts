@@ -13,10 +13,8 @@ import {
     PlayerType,
     PlaylistTrackInfo,
     PlayerDevice,
-    getSpotifyDevices,
     CodyConfig,
-    TrackStatus,
-    play
+    TrackStatus
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 

@@ -187,11 +187,6 @@ export function createCommands(): {
         );
         cmds.push(refreshSettingsCommand);
 
-        const launchSpotifyCommand = commands.registerCommand(
-            "musictime.launchSpotify",
-            () => controller.launchTrackPlayer(PlayerName.SpotifyDesktop)
-        );
-
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
             const kpmController = new KpmController();

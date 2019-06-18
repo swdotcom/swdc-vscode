@@ -15,7 +15,8 @@ import {
     CodyResponse,
     CodyResponseType,
     PlayerDevice,
-    getTrack
+    getTrack,
+    getSpotifyDevices
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -230,6 +231,8 @@ export class MusicControlManager {
             loginUrl = null;
         }
 
+        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+
         let menuOptions = {
             items: []
         };
@@ -295,13 +298,16 @@ export class MusicControlManager {
                 });
             }
 
-            menuOptions.items.push({
-                label: "Launch Spotify",
-                description: "",
-                detail: "Launch the Spotify web player to view your playlist",
-                url: null,
-                cb: this.launchSpotifyPlayer
-            });
+            if (!spotifyDevices || spotifyDevices.length === 0) {
+                menuOptions.items.push({
+                    label: "Launch Spotify",
+                    description: "",
+                    detail:
+                        "Launch the Spotify web player to view your playlist",
+                    url: null,
+                    cb: this.launchSpotifyPlayer
+                });
+            }
         }
 
         showQuickPick(menuOptions);

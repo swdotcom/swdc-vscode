@@ -18,7 +18,10 @@ import {
     PlayerType,
     play,
     TrackStatus,
-    pause
+    pause,
+    getSpotifyDevices,
+    PlayerDevice,
+    launchPlayer
 } from "cody-music";
 import {
     connectSpotify,
@@ -34,7 +37,7 @@ const createPlaylistTreeItem = (
 
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
-        view.onDidChangeSelection(e => {
+        view.onDidChangeSelection(async e => {
             if (!e.selection || e.selection.length === 0) {
                 return;
             }
@@ -51,22 +54,36 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
 
             if (playlistItem.type === "track") {
                 if (playlistItem.playerType === PlayerType.WebSpotify) {
-                    // get the 1st device
+                    // check if there's any spotify devices
+                    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
 
                     let track_id = playlistItem.id;
-                    if (track_id.indexOf("spotify:track:") === -1) {
-                        track_id = `spotify:track:${track_id}`;
-                    }
-                    let options = {
-                        track_ids: [track_id]
-                    };
-                    let devices = MusicStoreManager.getInstance()
-                        .spotifyPlayerDevices;
-                    if (devices.length > 0) {
-                        options["device_id"] = devices[0].id;
-                    }
+
                     if (playlistItem["state"] !== TrackStatus.Playing) {
-                        play(PlayerName.SpotifyWeb, options);
+                        if (!spotifyDevices || spotifyDevices.length === 0) {
+                            // no spotify devices found, lets launch the web player with the track
+                            if (track_id.includes("spotify:track:")) {
+                                track_id = track_id.substring(
+                                    track_id.lastIndexOf(":") + 1
+                                );
+                            }
+                            let options = {
+                                track_id
+                            };
+                            launchPlayer(PlayerName.SpotifyWeb, options);
+                        } else {
+                            // a device is found, play using the device
+                            if (track_id.indexOf("spotify:track:") === -1) {
+                                track_id = `spotify:track:${track_id}`;
+                            }
+                            let options = {
+                                track_ids: [track_id]
+                            };
+                            if (spotifyDevices.length > 0) {
+                                options["device_id"] = spotifyDevices[0].id;
+                            }
+                            play(PlayerName.SpotifyWeb, options);
+                        }
                     } else {
                         pause(PlayerName.SpotifyWeb);
                     }
