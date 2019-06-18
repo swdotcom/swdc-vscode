@@ -298,22 +298,16 @@ async function initializeUserInfo(
         const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
 
         // this needs to happen first to enable spotify playlist and control logic
-        await musicstoreMgr.initializeSpotify();
+        await musicstoreMgr.initializeSpotify(serverIsOnline);
 
         let runningTrack: Track = await getRunningTrack();
         musicstoreMgr.runningTrack = runningTrack;
-        await musicstoreMgr.syncRunningPlaylists();
+        await musicstoreMgr.syncRunningPlaylists(serverIsOnline);
 
-        // fetch the favorites every 10 minutes
-        setTimeout(() => {
-            musicstoreMgr.syncUserTopSongs();
-            musicstoreMgr.syncGlobalTopSongs();
-        }, 1000);
-
-        // every 2 minutes reconcile
+        // reconcile the playlists
         setInterval(() => {
             musicstoreMgr.reconcilePlaylists();
-        }, 1000 * 60 * 2);
+        }, 1000 * 60 * 1);
     }
 }
 

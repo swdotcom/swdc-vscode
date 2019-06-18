@@ -137,10 +137,11 @@ export class MusicStoreManager {
     //
 
     async refreshPlaylists() {
+        let serverIsOnline = await serverIsAvailable();
         // refresh the playlists
         await this.clearPlaylists();
         this.runningTrack = await getRunningTrack();
-        await this.syncRunningPlaylists();
+        await this.syncRunningPlaylists(serverIsOnline);
     }
 
     async clearPlaylists() {
@@ -148,9 +149,8 @@ export class MusicStoreManager {
         this.runningPlaylists = [];
     }
 
-    async initializeSpotify() {
+    async initializeSpotify(serverIsOnline) {
         if (!this.hasSpotifyAccessToken()) {
-            let serverIsOnline = await serverIsAvailable();
             const spotifyOauth = await getSpotifyOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
@@ -167,17 +167,22 @@ export class MusicStoreManager {
         }
     }
 
-    async fetchSavedPlaylists() {
+    async fetchSavedPlaylists(serverIsOnline) {
         let playlists = [];
-        const response = await softwareGet("/music/playlist", getItem("jwt"));
-        if (isResponseOk(response)) {
-            playlists = response.data.map(item => {
-                // transform the playlist_id to id
-                item["id"] = item.playlist_id;
-                item["playlistTypeId"] = item.playlistTypeId;
-                delete item.playlist_id;
-                return item;
-            });
+        if (serverIsOnline) {
+            const response = await softwareGet(
+                "/music/playlist",
+                getItem("jwt")
+            );
+            if (isResponseOk(response)) {
+                playlists = response.data.map(item => {
+                    // transform the playlist_id to id
+                    item["id"] = item.playlist_id;
+                    item["playlistTypeId"] = item.playlistTypeId;
+                    delete item.playlist_id;
+                    return item;
+                });
+            }
         }
         this.savedPlaylists = playlists;
     }
@@ -225,9 +230,7 @@ export class MusicStoreManager {
         }
 
         if (hasUpdates) {
-            await this.clearPlaylists();
-            this.runningTrack = await getRunningTrack();
-            await this.syncRunningPlaylists();
+            this.refreshPlaylists();
         }
     }
 
@@ -279,22 +282,23 @@ export class MusicStoreManager {
         return false;
     }
 
-    async syncRunningPlaylists() {
+    async syncRunningPlaylists(serverIsOnline: boolean) {
         let playlists: PlaylistItem[] = [];
 
         // get the cody playlists
-        await this.fetchSavedPlaylists();
+        await this.fetchSavedPlaylists(serverIsOnline);
 
-        if (this.hasSpotifyAccessToken()) {
-            await this.syncSpotifyWebPlaylists();
-        }
+        await this.syncSpotifyWebPlaylists(serverIsOnline);
 
         this._currentPlayerType = this.runningTrack.playerType;
 
+        const noTrackId = !this.runningTrack.id;
+        const playerNotAssigned =
+            this.runningTrack.playerType === PlayerType.NotAssigned;
+
         if (
             this.spotifyPlaylists.length === 0 &&
-            (this.runningTrack.playerType === PlayerType.NotAssigned ||
-                !this.runningTrack.id)
+            (playerNotAssigned || noTrackId)
         ) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
@@ -367,8 +371,8 @@ export class MusicStoreManager {
                 listItem.type = "codingfavorites";
                 listItem.id = "codingfavorites";
                 listItem.playerType = PlayerType.WebSpotify;
-                listItem.name = `Create Coding Favorites Playlist`;
-                listItem.tooltip = `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top 40`;
+                listItem.name = `Create Your Weekly Top Songs`;
+                listItem.tooltip = `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top songs`;
                 settingsList.push(listItem);
             }
 
@@ -382,9 +386,9 @@ export class MusicStoreManager {
         this.settings = settingsList;
     }
 
-    async syncSpotifyWebPlaylists() {
+    async syncSpotifyWebPlaylists(serverIsOnline) {
         let playlists = [];
-        if (this.hasSpotifyAccessToken()) {
+        if (serverIsOnline && this.hasSpotifyAccessToken()) {
             playlists = await getPlaylists(PlayerName.SpotifyWeb);
             if (playlists) {
                 // update the type to "playlist";

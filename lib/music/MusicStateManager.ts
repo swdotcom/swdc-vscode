@@ -1,5 +1,5 @@
 import { getItem, isEmptyObj, isMusicTime } from "../Util";
-import { sendMusicData } from "../DataController";
+import { sendMusicData, serverIsAvailable } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { softwareGet, isResponseOk } from "../HttpClient";
@@ -135,12 +135,10 @@ export class MusicStateManager {
             let spotifyAccessToken = getItem("spotify_access_token");
             // only check if we need to initialize cody-music if the user
             // has connected a spotify_access_token
-            if (spotifyAccessToken) {
-                // connected
-                if (requiresSpotifyAccessInfo()) {
-                    // cody-music doesn't have the access token, initialize
-                    await this.musicstoreMgr.initializeSpotify();
-                }
+            if (spotifyAccessToken && requiresSpotifyAccessInfo()) {
+                let serverIsOnline = await serverIsAvailable();
+                // cody-music doesn't have the access token, initialize
+                await this.musicstoreMgr.initializeSpotify(serverIsOnline);
             }
         }
 

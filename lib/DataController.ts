@@ -29,7 +29,7 @@ import {
     saveSessionSummaryToDisk,
     getSessionSummaryFileAsJson
 } from "./Util";
-import { requiresSpotifyAccessInfo } from "cody-music";
+import { requiresSpotifyAccessInfo, Track, getRunningTrack } from "cody-music";
 import {
     updateShowMusicMetrics,
     buildWebDashboardUrl,
@@ -560,9 +560,13 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
             refetchSpotifyConnectStatusLazily(tryCountUntilFound);
         }
     } else {
+        const musicstoreMgr = MusicStoreManager.getInstance();
         // oauth is not null, initialize spotify
-        MusicStoreManager.getInstance().initializeSpotify();
-        MusicStoreManager.getInstance().refreshPlaylists();
+        await musicstoreMgr.initializeSpotify(serverIsOnline);
+
+        let runningTrack: Track = await getRunningTrack();
+        musicstoreMgr.runningTrack = runningTrack;
+        await musicstoreMgr.syncRunningPlaylists(serverIsOnline);
     }
 }
 

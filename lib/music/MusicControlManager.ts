@@ -461,7 +461,7 @@ async function addTracks(
 
         if (addTracksResult.state === CodyResponseType.Success) {
             window.showInformationMessage(
-                "Successfully created playlist and added tracks.",
+                `Successfully created ${name} and added tracks.`,
                 ...["OK"]
             );
         } else {
