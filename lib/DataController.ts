@@ -169,7 +169,7 @@ export async function sendOfflineData() {
     clearSessionSummaryData();
 
     // update the statusbar
-    fetchSessionSummaryInfo();
+    await fetchSessionSummaryInfo(true /*forceRefresh*/);
 }
 
 /**
@@ -636,17 +636,17 @@ export async function handleKpmClickedEvent() {
     launchWebUrl(webUrl);
 }
 
-export async function fetchSessionSummaryInfo() {
+export async function fetchSessionSummaryInfo(forceRefresh = false) {
     // make sure we send the beginning of the day
-    let result = await getSessionSummaryStatus();
+    let result = await getSessionSummaryStatus(forceRefresh);
 
     if (result.status === "OK") {
         fetchCodeTimeMetricsDashboard(result.data);
     }
 }
 
-export async function getSessionSummaryStatus() {
-    if (sessionSummaryData.currentDayMinutes === 0) {
+export async function getSessionSummaryStatus(forceRefresh = false) {
+    if (sessionSummaryData.currentDayMinutes === 0 || forceRefresh) {
         let serverIsOnline = await serverIsAvailable();
         if (!serverIsOnline) {
             showStatus(

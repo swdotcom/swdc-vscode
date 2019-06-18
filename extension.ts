@@ -193,7 +193,7 @@ export async function intializePlugin(
         const delay = getMillisecondsDelayToStartBatchSend();
         setTimeout(() => {
             initializeBatchInterval();
-        }, delay * 1000);
+        }, delay);
 
         // in 2 minutes fetch the historical commits if any
         setTimeout(() => {
