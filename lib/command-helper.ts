@@ -190,7 +190,7 @@ export function createCommands(): {
 
         const launchSpotifyCommand = commands.registerCommand(
             "musictime.launchSpotify",
-            () => controller.launchTrackPlayer(PlayerName.SpotifyDesktop)
+            () => controller.launchTrackPlayer(PlayerName.SpotifyWeb)
         );
         cmds.push(launchSpotifyCommand);
 

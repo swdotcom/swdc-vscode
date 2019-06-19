@@ -173,9 +173,14 @@ export class MusicControlManager {
                         devices.length === 1 &&
                         !devices[0].name.includes("Web Player")
                     ) {
-                        // launch the spotify desktop
+                        // launch the spotify desktop only if we have
+                        //
                         playerType = PlayerType.MacSpotifyDesktop;
                     }
+                    if (playerType === PlayerType.NotAssigned) {
+                        playerType = PlayerType.WebSpotify;
+                    }
+
                     if (playerType === PlayerType.WebSpotify) {
                         launchPlayer(PlayerName.SpotifyWeb, options);
                     } else if (playerType === PlayerType.MacItunesDesktop) {
