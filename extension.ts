@@ -30,7 +30,7 @@ import * as vsls from "vsls/vscode";
 import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
-import { Track, getRunningTrack, setConfig, CodyConfig } from "cody-music";
+import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 const moment = require("moment-timezone");
 
@@ -190,7 +190,7 @@ export async function intializePlugin(
 
         // every half hour, send offline data
         const half_hour_ms = hourly_interval_ms / 2;
-        setTimeout(() => {
+        offline_data_interval = setInterval(() => {
             sendOfflineData();
         }, half_hour_ms);
 
