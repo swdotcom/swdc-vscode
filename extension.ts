@@ -77,7 +77,6 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(gather_music_interval);
     clearInterval(session_check_interval);
 
-    // console.log("deactivating the plugin");
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
     //     if (isResponseOk(resp)) {
     //         if (resp.data) {

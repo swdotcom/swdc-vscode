@@ -138,12 +138,13 @@ export class MusicControlManager {
                     // the latest version of the itunes track
                     await setItunesLoved(liked)
                         .then(result => {
-                            console.log("updated itunes loved state");
+                            //
                         })
                         .catch(err => {
-                            console.log(
-                                "unable to update itunes loved state, error: ",
-                                err.message
+                            logIt(
+                                `Error updating itunes loved state: ${
+                                    err.message
+                                }`
                             );
                         });
                 }

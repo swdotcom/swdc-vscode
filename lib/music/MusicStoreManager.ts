@@ -575,11 +575,7 @@ export class MusicStoreManager {
                     SOFTWARE_TOP_SONGS_NAME
                 );
 
-                if (isResponseOk(result)) {
-                    console.log(`Synced playlist ID with music time`);
-                }
-
-                if (musicstoreMgr.hasGlobalFavorites) {
+                if (isResponseOk(result) && musicstoreMgr.hasGlobalFavorites) {
                     let tracksToAdd: string[] = musicstoreMgr.globalFavorites.map(
                         item => {
                             return item.uri;

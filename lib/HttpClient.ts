@@ -77,7 +77,7 @@ export async function softwareGet(api, jwt) {
     if (jwt) {
         beApi.defaults.headers.common["Authorization"] = jwt;
     }
-    console.log("get api: ", api);
+
     return await beApi
         .get(api)
         .then(resp => {
@@ -95,6 +95,7 @@ export async function softwareGet(api, jwt) {
 export async function softwarePut(api, payload, jwt) {
     // PUT the kpm to the PluginManager
     beApi.defaults.headers.common["Authorization"] = jwt;
+
     return beApi
         .put(api, payload)
         .then(resp => {
