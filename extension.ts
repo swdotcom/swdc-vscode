@@ -8,8 +8,7 @@ import {
     getUserStatus,
     sendHeartbeat,
     createAnonymousUser,
-    serverIsAvailable,
-    setSessionSummaryLiveshareMinutes
+    serverIsAvailable
 } from "./lib/DataController";
 import { MusicStoreManager } from "./lib/music/MusicStoreManager";
 import {
@@ -32,6 +31,7 @@ import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 import { Track, getRunningTrack, setConfig, CodyConfig } from "cody-music";
+import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 const moment = require("moment-timezone");
 
 let TELEMETRY_ON = true;
@@ -299,15 +299,14 @@ async function initializeUserInfo(
 
         // this needs to happen first to enable spotify playlist and control logic
         await musicstoreMgr.initializeSpotify(serverIsOnline);
+        await musicstoreMgr.refreshPlaylists();
 
-        let runningTrack: Track = await getRunningTrack();
-        musicstoreMgr.runningTrack = runningTrack;
-        await musicstoreMgr.syncRunningPlaylists(serverIsOnline);
-
-        // reconcile the playlists
+        // reconcile the playlists every 2 minutes
         setInterval(() => {
-            musicstoreMgr.reconcilePlaylists();
-        }, 1000 * 60 * 1);
+            musicstoreMgr.refreshPlaylists().then(() => {
+                musicstoreMgr.reconcilePlaylists();
+            });
+        }, 1000 * 60 * 2);
     }
 }
 

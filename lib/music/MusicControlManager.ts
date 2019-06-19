@@ -9,13 +9,8 @@ import {
     Track,
     setItunesLoved,
     launchPlayer,
-    createPlaylist,
-    addTracksToPlaylist,
     PlaylistItem,
-    CodyResponse,
-    CodyResponseType,
     PlayerDevice,
-    getTrack,
     getSpotifyDevices
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
@@ -36,17 +31,11 @@ import {
     buildLoginUrl,
     launchWebUrl
 } from "../Util";
-import {
-    softwareGet,
-    softwarePut,
-    isResponseOk,
-    softwarePost
-} from "../HttpClient";
+import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
     api_endpoint,
     LOGIN_LABEL,
-    CODING_FAVORITES_NAME,
-    SOFTWARE_TOP_SONGS_NAME
+    PERSONAL_TOP_SONGS_NAME
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 const fs = require("fs");
@@ -290,11 +279,12 @@ export class MusicControlManager {
             if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Create Coding Favorites Playlist",
+                    label: "Generate New Software Playlist",
                     description: "",
-                    detail: `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top 40`,
+                    detail: `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`,
                     url: null,
-                    cb: createCodingFavoritesPlaylist
+                    cb: MusicStoreManager.getInstance()
+                        .generateUsersWeeklyTopSongs
                 });
             }
 
@@ -324,155 +314,6 @@ export async function displayMusicTimeMetricsDashboard() {
             // done
         });
     });
-}
-
-export async function createGlobalTopSongsPlaylist() {
-    let musicstoreMgr = MusicStoreManager.getInstance();
-    let globalFavs: any[] = musicstoreMgr.globalFavorites;
-    if (globalFavs && globalFavs.length > 0) {
-        // 1st create the empty playlist
-        let playlistResult: CodyResponse = await createPlaylist(
-            SOFTWARE_TOP_SONGS_NAME,
-            true
-        );
-
-        // add the global songs to the playlist
-        if (playlistResult.state === CodyResponseType.Failed) {
-            window.showErrorMessage(
-                `There was an unexpected error adding tracks to the playlist. ${
-                    playlistResult.message
-                }`,
-                ...["OK"]
-            );
-            return;
-        }
-
-        if (playlistResult && playlistResult.data && playlistResult.data.id) {
-            let result = await updateSavedPlaylists(
-                playlistResult.data.id,
-                2,
-                SOFTWARE_TOP_SONGS_NAME
-            );
-
-            if (isResponseOk(result)) {
-                console.log(`Synced playlist ID with music time`);
-            }
-
-            const globalFavs: any[] = musicstoreMgr.globalFavorites;
-            if (globalFavs && globalFavs.length > 0) {
-                let tracksToAdd: string[] = globalFavs.map(item => {
-                    return item.uri;
-                });
-                await addTracks(
-                    playlistResult.data.id,
-                    2,
-                    SOFTWARE_TOP_SONGS_NAME,
-                    tracksToAdd
-                );
-            }
-        }
-
-        // refresh the playlists
-        musicstoreMgr.refreshPlaylists();
-    }
-}
-
-export async function createCodingFavoritesPlaylist() {
-    let musicstoreMgr = MusicStoreManager.getInstance();
-    // get the spotify track ids and create the playlist
-    let codingFavs: any[] = musicstoreMgr.userFavorites;
-    if (codingFavs && codingFavs.length > 0) {
-        let playlistResult: CodyResponse = await createPlaylist(
-            CODING_FAVORITES_NAME,
-            true
-        );
-
-        if (playlistResult.state === CodyResponseType.Failed) {
-            window.showErrorMessage(
-                `There was an unexpected error adding tracks to the playlist. ${
-                    playlistResult.message
-                }`,
-                ...["OK"]
-            );
-            return;
-        }
-
-        if (playlistResult && playlistResult.data && playlistResult.data.id) {
-            let result = await updateSavedPlaylists(
-                playlistResult.data.id,
-                1,
-                CODING_FAVORITES_NAME
-            );
-
-            // add the tracks
-            // list of [{uri, artist, name}...]
-            const codingFavs: any[] = musicstoreMgr.userFavorites;
-            if (codingFavs && codingFavs.length > 0) {
-                let tracksToAdd: string[] = codingFavs.map(item => {
-                    return item.uri;
-                });
-                await addTracks(
-                    playlistResult.data.id,
-                    1,
-                    CODING_FAVORITES_NAME,
-                    tracksToAdd
-                );
-            }
-        }
-
-        // refresh the playlists
-        musicstoreMgr.refreshPlaylists();
-    }
-}
-
-async function updateSavedPlaylists(
-    playlist_id: string,
-    playlistTypeId: number,
-    name: string
-) {
-    // i.e. playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
-    // playlistTypeId 2 = SOFTWARE_TOP_SONGS_NAME
-    const payload = {
-        playlist_id,
-        playlistTypeId,
-        name
-    };
-    let createResult = await softwarePost(
-        "/music/playlist",
-        payload,
-        getItem("jwt")
-    );
-
-    return createResult;
-}
-
-async function addTracks(
-    playlist_id: string,
-    playlistTypeId: number,
-    name: string,
-    tracksToAdd: string[]
-) {
-    if (playlist_id) {
-        // create the playlist_id in software
-        const addTracksResult: CodyResponse = await addTracksToPlaylist(
-            playlist_id,
-            tracksToAdd
-        );
-
-        if (addTracksResult.state === CodyResponseType.Success) {
-            window.showInformationMessage(
-                `Successfully created ${name} and added tracks.`,
-                ...["OK"]
-            );
-        } else {
-            window.showErrorMessage(
-                `There was an unexpected error adding tracks to the playlist. ${
-                    addTracksResult.message
-                }`,
-                ...["OK"]
-            );
-        }
-    }
 }
 
 export async function connectSpotify() {

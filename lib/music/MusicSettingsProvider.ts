@@ -6,15 +6,12 @@ import {
     Command,
     TreeItem,
     EventEmitter,
-    Event
+    Event,
+    commands
 } from "vscode";
 import * as path from "path";
-import { PlaylistItem, PlayerType } from "cody-music";
+import { PlaylistItem } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
-import {
-    connectSpotify,
-    createCodingFavoritesPlaylist
-} from "./MusicControlManager";
 
 const createSettingsTreeItem = (
     p: PlaylistItem,
@@ -31,10 +28,10 @@ export const connectSettingsTreeView = (view: TreeView<PlaylistItem>) => {
             }
             let playlistItem: PlaylistItem = e.selection[0];
 
-            if (playlistItem.id === "connectspotify") {
-                connectSpotify();
-            } else if (playlistItem.id === "codingfavorites") {
-                createCodingFavoritesPlaylist();
+            if (playlistItem.command) {
+                // run the command
+                commands.executeCommand(playlistItem.command);
+                return;
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -94,7 +91,7 @@ class SettingsTreeItem extends TreeItem {
         public readonly command?: Command
     ) {
         super(treeItem.name, collapsibleState);
-        if (treeItem.type === "connectspotify") {
+        if (treeItem.type === "spotify") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -105,16 +102,27 @@ class SettingsTreeItem extends TreeItem {
                 "dark",
                 "icons8-spotify.svg"
             );
-        } else if (treeItem.type === "spotifyconnected") {
+        } else if (treeItem.type === "connected") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "icons8-spotify.svg"
+                "wifi.svg"
             );
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "dark",
-                "icons8-spotify.svg"
+                "wifi.svg"
+            );
+        } else if (treeItem.type === "paw") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "pl-paw.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "pl-paw.svg"
             );
         } else {
             delete this.iconPath;

@@ -14,7 +14,9 @@ import {
     PlaylistTrackInfo,
     PlayerDevice,
     CodyConfig,
-    TrackStatus
+    TrackStatus,
+    addTracksToPlaylist,
+    createPlaylist
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -22,12 +24,12 @@ import {
     softwareGet,
     isResponseOk,
     softwareDelete,
-    softwarePut
+    softwarePut,
+    softwarePost
 } from "../HttpClient";
 import { getItem } from "../Util";
-import { CODING_FAVORITES_NAME } from "../Constants";
-import { commands } from "vscode";
-import { createGlobalTopSongsPlaylist } from "./MusicControlManager";
+import { PERSONAL_TOP_SONGS_NAME, SOFTWARE_TOP_SONGS_NAME } from "../Constants";
+import { commands, window } from "vscode";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -43,6 +45,8 @@ export class MusicStoreManager {
     private _selectedPlaylist: PlaylistItem = null;
     private _selectedTrackItem: PlaylistItem = null;
     private _spotifyPlayerDevices: PlayerDevice[] = [];
+    private _initializedSpotifyPlaylist: boolean = false;
+    private _refreshing: boolean = false;
 
     private constructor() {
         //
@@ -66,6 +70,22 @@ export class MusicStoreManager {
 
     set savedPlaylists(lists: PlaylistItem[]) {
         this._savedPlaylists = lists;
+    }
+
+    get refreshing(): boolean {
+        return this._refreshing;
+    }
+
+    set refreshing(value: boolean) {
+        this._refreshing = value;
+    }
+
+    get initializedSpotifyPlaylist(): boolean {
+        return this._initializedSpotifyPlaylist;
+    }
+
+    set initializedSpotifyPlaylist(value: boolean) {
+        this._initializedSpotifyPlaylist = value;
     }
 
     get runningTrack(): Track {
@@ -92,12 +112,20 @@ export class MusicStoreManager {
         this._spotifyPlaylists = lists;
     }
 
+    get hasSpotifyPlaylists(): boolean {
+        return this._spotifyPlaylists && this._spotifyPlaylists.length > 0;
+    }
+
     get userFavorites(): any[] {
         return this._userFavorites;
     }
 
     get globalFavorites(): any[] {
         return this._globalFavorites;
+    }
+
+    get hasGlobalFavorites(): boolean {
+        return this._globalFavorites && this._globalFavorites.length > 0;
     }
 
     get runningPlaylists(): PlaylistItem[] {
@@ -137,11 +165,16 @@ export class MusicStoreManager {
     //
 
     async refreshPlaylists() {
+        if (this.refreshing) {
+            return;
+        }
+        this.refreshing = true;
         let serverIsOnline = await serverIsAvailable();
         // refresh the playlists
         await this.clearPlaylists();
         this.runningTrack = await getRunningTrack();
         await this.syncRunningPlaylists(serverIsOnline);
+        this.refreshing = false;
     }
 
     async clearPlaylists() {
@@ -188,56 +221,41 @@ export class MusicStoreManager {
     }
 
     async reconcilePlaylists() {
-        let hasSpotifyPlaylists = this._spotifyPlaylists.length > 0;
-        let hasUpdates = false;
-        if (this._savedPlaylists.length > 0) {
-            for (let i = 0; i < this._savedPlaylists.length; i++) {
-                let codyPlaylist = this._savedPlaylists[i];
-
-                if (hasSpotifyPlaylists) {
-                    let foundItem = this._spotifyPlaylists.find(element => {
-                        return element.id === codyPlaylist.id;
-                    });
-                    if (!foundItem) {
-                        // the playlist was deleted, delete the one on software
-                        await softwareDelete(
-                            `/music/playlist/${codyPlaylist.id}`,
-                            getItem("jwt")
-                        );
-                        hasUpdates = true;
-                    } else if (foundItem.name !== codyPlaylist.name) {
-                        // update the name on software
-                        const payload = {
-                            name: foundItem.name
-                        };
-                        await softwarePut(
-                            `/music/playlist/${codyPlaylist.id}`,
-                            payload,
-                            getItem("jwt")
-                        );
-                        hasUpdates = true;
-                    }
-                } else {
-                    // either access token as removed or playlist(s) were
-                    // deleted. delete our copy of the playlist ID
+        if (!this.initializedSpotifyPlaylist) {
+            // its not ready yet
+            return;
+        }
+        // fetch what we have from the app
+        if (this.savedPlaylists) {
+            this.savedPlaylists.map(async savedPlaylist => {
+                let foundItem = this.spotifyPlaylists.find(element => {
+                    return element.id === savedPlaylist.id;
+                });
+                if (!foundItem) {
+                    // remove it from the server
                     await softwareDelete(
-                        `/music/playlist/${codyPlaylist.id}`,
+                        `/music/playlist/${savedPlaylist.id}`,
                         getItem("jwt")
                     );
-                    hasUpdates = true;
+                } else if (foundItem.name !== savedPlaylist.name) {
+                    // update the name on software
+                    const payload = {
+                        name: foundItem.name
+                    };
+                    await softwarePut(
+                        `/music/playlist/${savedPlaylist.id}`,
+                        payload,
+                        getItem("jwt")
+                    );
                 }
-            }
-        }
-
-        if (hasUpdates) {
-            this.refreshPlaylists();
+            });
         }
     }
 
     /**
      * These are the top productivity songs for this user
      */
-    async syncUserTopSongs() {
+    async syncUsersWeeklyTopSongs() {
         const response = await softwareGet(
             "/music/playlist/favorites",
             getItem("jwt")
@@ -269,12 +287,7 @@ export class MusicStoreManager {
         if (this.runningPlaylists && this.runningPlaylists.length > 0) {
             for (let i = 0; i < this.runningPlaylists.length; i++) {
                 const plItem = this.runningPlaylists[i];
-                if (
-                    plItem.id !== "title" &&
-                    plItem.id !== "connectspotify" &&
-                    plItem.id !== "codingfavorites" &&
-                    plItem.id !== "spotifyconnected"
-                ) {
+                if (plItem.type === "track" || plItem.type === "playlist") {
                     return true;
                 }
             }
@@ -312,7 +325,7 @@ export class MusicStoreManager {
             if (this.hasSpotifyAccessToken()) {
                 let launchSpotifyItem: PlaylistItem = new PlaylistItem();
                 launchSpotifyItem.tracks = new PlaylistTrackInfo();
-                launchSpotifyItem.type = PlayerType.WebSpotify;
+                launchSpotifyItem.type = "spotify";
                 launchSpotifyItem.id = "title";
                 launchSpotifyItem.command = "musictime.launchSpotify";
                 launchSpotifyItem.playerType = PlayerType.WebSpotify;
@@ -336,15 +349,16 @@ export class MusicStoreManager {
         commands.executeCommand("musictime.refreshSettings");
     }
 
-    updateSettingsItems() {
+    async updateSettingsItems() {
         let settingsList: PlaylistItem[] = [];
 
         if (!this.hasSpotifyAccessToken()) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "connectspotify";
+            listItem.type = "spotify";
             listItem.id = "connectspotify";
+            listItem.command = "musictime.connectSpotify";
             listItem.playerType = PlayerType.WebSpotify;
             listItem.name = "Connect Spotify";
             listItem.tooltip = "Connect Spotify To View Your Playlists";
@@ -353,7 +367,7 @@ export class MusicStoreManager {
             // show that you've connected
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "spotifyconnected";
+            listItem.type = "connected";
             listItem.id = "spotifyconnected";
             listItem.playerType = PlayerType.WebSpotify;
             listItem.name = "Spotify Connected";
@@ -362,24 +376,28 @@ export class MusicStoreManager {
         }
 
         if (this.hasSpotifyAccessToken()) {
-            const foundCodingFavorites = this.hasMusicTimePlaylistForType(1);
+            // add the connect spotify link
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "paw";
+            listItem.id = "codingfavorites";
+            listItem.command = "musictime.generateWeeklyPlaylist";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = `Generate New Software Playlist`;
+            listItem.tooltip = `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+            settingsList.push(listItem);
 
-            if (!foundCodingFavorites) {
-                // add the connect spotify link
-                let listItem: PlaylistItem = new PlaylistItem();
-                listItem.tracks = new PlaylistTrackInfo();
-                listItem.type = "codingfavorites";
-                listItem.id = "codingfavorites";
-                listItem.playerType = PlayerType.WebSpotify;
-                listItem.name = `Create Your Weekly Top Songs`;
-                listItem.tooltip = `Create a Spotify playlist (${CODING_FAVORITES_NAME}) based on your weekly top songs`;
-                settingsList.push(listItem);
-            }
+            // update the existing playlist that matches the personal playlist with a paw if found
+            this.hasMusicTimePlaylistForType(1);
 
+            // update the existing playlist that matches the global top 40 playlist with a paw if found
             const foundGlobalFavorites = this.hasMusicTimePlaylistForType(2);
             if (!foundGlobalFavorites) {
+                if (!this.hasGlobalFavorites) {
+                    await this.syncGlobalTopSongs();
+                }
                 // create the global top 40
-                createGlobalTopSongsPlaylist();
+                await this.createGlobalTopSongsPlaylist();
             }
         }
 
@@ -397,6 +415,8 @@ export class MusicStoreManager {
                 });
             }
         }
+
+        this.initializedSpotifyPlaylist = true;
 
         this.spotifyPlaylists = playlists;
 
@@ -424,6 +444,7 @@ export class MusicStoreManager {
      * app. 1 = user's coding favorites, 2 = global top 40
      */
     hasMusicTimePlaylistForType(playlistTypeId: number) {
+        let result = false;
         if (this.spotifyPlaylists.length > 0) {
             for (let i = 0; i < this.spotifyPlaylists.length; i++) {
                 const playlist: PlaylistItem = this.spotifyPlaylists[i];
@@ -445,13 +466,13 @@ export class MusicStoreManager {
                 }
 
                 if (foundPlaylist) {
-                    playlist.tag = "cody";
-                    return true;
+                    playlist.tag = "paw";
+                    result = true;
                 }
             }
         }
 
-        return false;
+        return result;
     }
 
     async getTracksForPlaylistId(playlist_id: string) {
@@ -520,5 +541,167 @@ export class MusicStoreManager {
             this._playlistTracks[playlist_id] = playlistItems;
         }
         return playlistItems;
+    }
+
+    async createGlobalTopSongsPlaylist() {
+        let musicstoreMgr = MusicStoreManager.getInstance();
+        let globalFavs: any[] = musicstoreMgr.globalFavorites;
+        if (globalFavs && globalFavs.length > 0) {
+            // 1st create the empty playlist
+            let playlistResult: CodyResponse = await createPlaylist(
+                SOFTWARE_TOP_SONGS_NAME,
+                true
+            );
+
+            // add the global songs to the playlist
+            if (playlistResult.state === CodyResponseType.Failed) {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        playlistResult.message
+                    }`,
+                    ...["OK"]
+                );
+                return;
+            }
+
+            if (
+                playlistResult &&
+                playlistResult.data &&
+                playlistResult.data.id
+            ) {
+                let result = await updateSavedPlaylists(
+                    playlistResult.data.id,
+                    2,
+                    SOFTWARE_TOP_SONGS_NAME
+                );
+
+                if (isResponseOk(result)) {
+                    console.log(`Synced playlist ID with music time`);
+                }
+
+                if (musicstoreMgr.hasGlobalFavorites) {
+                    let tracksToAdd: string[] = musicstoreMgr.globalFavorites.map(
+                        item => {
+                            return item.uri;
+                        }
+                    );
+                    await addTracks(
+                        playlistResult.data.id,
+                        2,
+                        SOFTWARE_TOP_SONGS_NAME,
+                        tracksToAdd
+                    );
+                }
+            }
+
+            // refresh the playlists
+            musicstoreMgr.refreshPlaylists();
+        }
+    }
+
+    async generateUsersWeeklyTopSongs() {
+        let musicstoreMgr = MusicStoreManager.getInstance();
+        // get the spotify track ids and create the playlist
+        let codingFavs: any[] = musicstoreMgr.userFavorites;
+        if (!codingFavs || codingFavs.length === 0) {
+            await this.syncUsersWeeklyTopSongs();
+            codingFavs = musicstoreMgr.userFavorites;
+        }
+        if (codingFavs && codingFavs.length > 0) {
+            let playlistResult: CodyResponse = await createPlaylist(
+                PERSONAL_TOP_SONGS_NAME,
+                true
+            );
+
+            if (playlistResult.state === CodyResponseType.Failed) {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        playlistResult.message
+                    }`,
+                    ...["OK"]
+                );
+                return;
+            }
+
+            if (
+                playlistResult &&
+                playlistResult.data &&
+                playlistResult.data.id
+            ) {
+                let result = await updateSavedPlaylists(
+                    playlistResult.data.id,
+                    1,
+                    PERSONAL_TOP_SONGS_NAME
+                );
+
+                // add the tracks
+                // list of [{uri, artist, name}...]
+                const codingFavs: any[] = musicstoreMgr.userFavorites;
+                if (codingFavs && codingFavs.length > 0) {
+                    let tracksToAdd: string[] = codingFavs.map(item => {
+                        return item.uri;
+                    });
+                    await addTracks(
+                        playlistResult.data.id,
+                        1,
+                        PERSONAL_TOP_SONGS_NAME,
+                        tracksToAdd
+                    );
+                }
+            }
+
+            // refresh the playlists
+            musicstoreMgr.refreshPlaylists();
+        }
+    }
+}
+
+async function updateSavedPlaylists(
+    playlist_id: string,
+    playlistTypeId: number,
+    name: string
+) {
+    // i.e. playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
+    // playlistTypeId 2 = SOFTWARE_TOP_SONGS_NAME
+    const payload = {
+        playlist_id,
+        playlistTypeId,
+        name
+    };
+    let createResult = await softwarePost(
+        "/music/playlist",
+        payload,
+        getItem("jwt")
+    );
+
+    return createResult;
+}
+
+async function addTracks(
+    playlist_id: string,
+    playlistTypeId: number,
+    name: string,
+    tracksToAdd: string[]
+) {
+    if (playlist_id) {
+        // create the playlist_id in software
+        const addTracksResult: CodyResponse = await addTracksToPlaylist(
+            playlist_id,
+            tracksToAdd
+        );
+
+        if (addTracksResult.state === CodyResponseType.Success) {
+            window.showInformationMessage(
+                `Successfully created ${name} and added tracks.`,
+                ...["OK"]
+            );
+        } else {
+            window.showErrorMessage(
+                `There was an unexpected error adding tracks to the playlist. ${
+                    addTracksResult.message
+                }`,
+                ...["OK"]
+            );
+        }
     }
 }

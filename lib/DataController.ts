@@ -24,10 +24,7 @@ import {
     launchWebUrl,
     logIt,
     isMusicTime,
-    humanizeMinutes,
-    showStatus,
-    saveSessionSummaryToDisk,
-    getSessionSummaryFileAsJson
+    showStatus
 } from "./Util";
 import { requiresSpotifyAccessInfo, Track, getRunningTrack } from "cody-music";
 import {
@@ -36,6 +33,12 @@ import {
     fetchCodeTimeMetricsDashboard
 } from "./MenuManager";
 import { PLUGIN_ID } from "./Constants";
+import {
+    getSessionSummaryData,
+    updateStatusBarWithSummaryData,
+    clearSessionSummaryData,
+    saveSessionSummaryToDisk
+} from "./OfflineManager";
 const fs = require("fs");
 
 let loggedInCacheState = null;
@@ -43,53 +46,11 @@ let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 
-/**
- * {
-    "currentDayMinutes": 2,
-    "averageDailyMinutes": 1.516144578313253,
-    "averageDailyKeystrokes": 280.07014725568945,
-    "currentDayKeystrokes": 49,
-    "liveshareMinutes": null
-    }
-    */
-let sessionSummaryData = {
-    currentDayMinutes: 0,
-    averageDailyMinutes: 0,
-    averageDailyKeystrokes: 0,
-    currentDayKeystrokes: 0,
-    liveshareMinutes: null
-};
-
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
 export function getLoggedInCacheState() {
     return loggedInCacheState;
-}
-
-export function clearSessionSummaryData() {
-    sessionSummaryData = {
-        currentDayMinutes: 0,
-        averageDailyMinutes: 0,
-        averageDailyKeystrokes: 0,
-        currentDayKeystrokes: 0,
-        liveshareMinutes: null
-    };
-
-    saveSessionSummaryToDisk(getSessionSummaryData());
-}
-
-export function setSessionSummaryLiveshareMinutes(minutes) {
-    sessionSummaryData.liveshareMinutes = minutes;
-}
-
-export function incrementSessionSummaryData(minutes, keystrokes) {
-    sessionSummaryData.currentDayMinutes += minutes;
-    sessionSummaryData.currentDayKeystrokes += keystrokes;
-}
-
-export function getSessionSummaryData() {
-    return sessionSummaryData;
 }
 
 export async function serverIsAvailable() {
@@ -646,6 +607,7 @@ export async function fetchSessionSummaryInfo(forceRefresh = false) {
 }
 
 export async function getSessionSummaryStatus(forceRefresh = false) {
+    let sessionSummaryData = getSessionSummaryData();
     if (sessionSummaryData.currentDayMinutes === 0 || forceRefresh) {
         let serverIsOnline = await serverIsAvailable();
         if (!serverIsOnline) {
@@ -677,21 +639,4 @@ export async function getSessionSummaryStatus(forceRefresh = false) {
         updateStatusBarWithSummaryData();
         return { data: sessionSummaryData, status: "OK" };
     }
-}
-
-export function updateStatusBarWithSummaryData() {
-    // update the session summary data with what is found in the sessionSummary.json
-    sessionSummaryData = getSessionSummaryFileAsJson();
-
-    let currentDayMinutes = sessionSummaryData.currentDayMinutes;
-    let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
-    let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
-    let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
-
-    let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    let msg = `${inFlowIcon}${currentDayMinutesTime}`;
-    if (averageDailyMinutes > 0) {
-        msg += ` | ${averageDailyMinutesTime}`;
-    }
-    showStatus(msg, null);
 }

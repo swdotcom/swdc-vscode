@@ -30,6 +30,7 @@ import {
     connectSettingsTreeView
 } from "./music/MusicSettingsProvider";
 import { MusicCommandManager } from "./music/MusicCommandManager";
+import { MusicStoreManager } from "./music/MusicStoreManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -186,6 +187,18 @@ export function createCommands(): {
             () => treeSettingsProvider.refresh()
         );
         cmds.push(refreshSettingsCommand);
+
+        const launchSpotifyCommand = commands.registerCommand(
+            "musictime.launchSpotify",
+            () => controller.launchTrackPlayer(PlayerName.SpotifyDesktop)
+        );
+        cmds.push(launchSpotifyCommand);
+
+        const generateWeeklyPlaylistCommand = commands.registerCommand(
+            "musictime.generateWeeklyPlaylist",
+            () => MusicStoreManager.getInstance().generateUsersWeeklyTopSongs()
+        );
+        cmds.push(generateWeeklyPlaylistCommand);
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

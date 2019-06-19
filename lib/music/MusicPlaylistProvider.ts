@@ -23,10 +23,7 @@ import {
     PlayerDevice,
     launchPlayer
 } from "cody-music";
-import {
-    connectSpotify,
-    createCodingFavoritesPlaylist
-} from "./MusicControlManager";
+import { connectSpotify } from "./MusicControlManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -62,20 +59,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     if (playlistItem["state"] !== TrackStatus.Playing) {
                         if (!spotifyDevices || spotifyDevices.length === 0) {
                             // no spotify devices found, lets launch the web player with the track
-                            if (track_id.includes("spotify:track:")) {
-                                track_id = track_id.substring(
-                                    track_id.lastIndexOf(":") + 1
-                                );
-                            }
                             let options = {
                                 track_id
                             };
                             launchPlayer(PlayerName.SpotifyWeb, options);
                         } else {
                             // a device is found, play using the device
-                            if (track_id.indexOf("spotify:track:") === -1) {
-                                track_id = `spotify:track:${track_id}`;
-                            }
                             let options = {
                                 track_ids: [track_id]
                             };
@@ -98,10 +87,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         pause(PlayerName.ItunesDesktop);
                     }
                 }
-            } else if (playlistItem.id === "connectspotify") {
-                connectSpotify();
-            } else if (playlistItem.id === "codingfavorites") {
-                createCodingFavoritesPlaylist();
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -221,7 +206,7 @@ class PlaylistTreeItem extends TreeItem {
     ) {
         super(treeItem.name, collapsibleState);
         if (treeItem.type === "playlist") {
-            if (treeItem.tag && treeItem.tag === "cody") {
+            if (treeItem.tag === "paw") {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "light",
@@ -247,10 +232,20 @@ class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "icons8-playlist-16.png"
             );
-        } else {
-            if (treeItem.type === "track") {
-                this.contextValue = treeItem["state"];
-            }
+        } else if (treeItem.type === "spotify") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "icons8-spotify.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "icons8-spotify.svg"
+            );
+        } else if (treeItem.type === "track") {
+            this.contextValue = treeItem["state"];
+
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
                     this.resourcePath,
@@ -262,10 +257,7 @@ class PlaylistTreeItem extends TreeItem {
                     "dark",
                     "icons8-itunes.svg"
                 );
-            } else if (
-                treeItem.playerType === PlayerType.MacSpotifyDesktop ||
-                treeItem.playerType === PlayerType.WebSpotify
-            ) {
+            } else {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "light",
@@ -276,8 +268,6 @@ class PlaylistTreeItem extends TreeItem {
                     "dark",
                     "icons8-spotify.svg"
                 );
-            } else {
-                delete this.iconPath;
             }
         }
     }

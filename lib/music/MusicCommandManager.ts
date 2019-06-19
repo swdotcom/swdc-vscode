@@ -1,9 +1,4 @@
-import {
-    window,
-    StatusBarAlignment,
-    StatusBarItem,
-    TreeDataProvider
-} from "vscode";
+import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName } from "../Util";
 import { MusicStateManager } from "./MusicStateManager";
 import {
