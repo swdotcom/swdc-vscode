@@ -189,10 +189,10 @@ export async function intializePlugin(
         }, hourly_interval_ms);
 
         // every half hour, send offline data
-        const delay = getMillisecondsDelayToStartBatchSend();
+        const half_hour_ms = hourly_interval_ms / 2;
         setTimeout(() => {
-            initializeBatchInterval();
-        }, delay);
+            sendOfflineData();
+        }, half_hour_ms);
 
         // in 2 minutes fetch the historical commits if any
         setTimeout(() => {
@@ -240,14 +240,6 @@ function getMillisecondsDelayToStartBatchSend() {
         delayToStart_in_sec = secondsUntilEndOfHour + two_minute_in_sec;
     }
     return delayToStart_in_sec * 1000;
-}
-
-function initializeBatchInterval() {
-    // every half hour, send offline data
-    let thirty_min_interval = 1000 * 60 * 30;
-    offline_data_interval = setInterval(() => {
-        sendOfflineData();
-    }, thirty_min_interval);
 }
 
 function handlePauseMetricsEvent() {
