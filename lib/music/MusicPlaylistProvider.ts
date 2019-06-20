@@ -24,6 +24,7 @@ import {
     launchPlayer
 } from "cody-music";
 import { connectSpotify } from "./MusicControlManager";
+import { MusicCommandManager } from "./MusicCommandManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -49,7 +50,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 return;
             }
 
+            const musicstoreMgr = MusicStoreManager.getInstance();
+
+            let syncControlsDelay = 1000;
             if (playlistItem.type === "track") {
+                musicstoreMgr.selectedTrackItem = playlistItem;
+
                 if (playlistItem.playerType === PlayerType.WebSpotify) {
                     // check if there's any spotify devices
                     const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
@@ -62,7 +68,8 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                             let options = {
                                 track_id
                             };
-                            launchPlayer(PlayerName.SpotifyWeb, options);
+                            await launchPlayer(PlayerName.SpotifyWeb, options);
+                            syncControlsDelay = 10000;
                         } else {
                             // a device is found, play using the device
                             let options = {
@@ -71,27 +78,35 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                             if (spotifyDevices.length > 0) {
                                 options["device_id"] = spotifyDevices[0].id;
                             }
-                            play(PlayerName.SpotifyWeb, options);
+                            await play(PlayerName.SpotifyWeb, options);
                         }
                     } else {
-                        pause(PlayerName.SpotifyWeb);
+                        await pause(PlayerName.SpotifyWeb);
                     }
                 } else {
+                    let playerName =
+                        playlistItem.playerType === PlayerType.MacItunesDesktop
+                            ? PlayerName.ItunesDesktop
+                            : PlayerName.SpotifyDesktop;
                     // play the track
-                    MusicStoreManager.getInstance();
                     let params = [playlistItem.name, selectedPlaylist.name];
 
                     if (playlistItem["state"] !== TrackStatus.Playing) {
-                        playTrackInContext(PlayerName.ItunesDesktop, params);
+                        await playTrackInContext(playerName, params);
                     } else {
-                        pause(PlayerName.ItunesDesktop);
+                        await pause(playerName);
                     }
                 }
+
+                // setTimeout(() => {
+                //     MusicCommandManager.syncControls();
+                // }, syncControlsDelay);
             }
         }),
         view.onDidChangeVisibility(e => {
             /**
             if (e.visible) {
+                //
             }
             **/
         })
@@ -163,20 +178,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
 
             // reveal the selected track
             setTimeout(() => {
-                const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
-                const selectedPlaylistItem: PlaylistItem =
-                    musicstoreMgr.selectedTrackItem;
-
-                let foundItem = tracks.find(element => {
-                    return element.id === selectedPlaylistItem.id;
-                });
-
-                if (foundItem) {
-                    this.view.reveal(foundItem, {
-                        focus: true,
-                        select: false
-                    });
-                }
+                this.revealSelectedTrackItem(element);
             }, 500);
 
             return tracks;
@@ -185,6 +187,27 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
             let playlists = MusicStoreManager.getInstance().runningPlaylists;
             return playlists;
         }
+    }
+
+    async revealSelectedTrackItem(element: PlaylistItem) {
+        const musicstoreMgr = MusicStoreManager.getInstance();
+        let tracks = await musicstoreMgr.getTracksForPlaylistId(element.id);
+        // reveal the selected track
+        setTimeout(() => {
+            const selectedPlaylistItem: PlaylistItem =
+                musicstoreMgr.selectedTrackItem;
+
+            let foundItem = tracks.find(element => {
+                return element.id === selectedPlaylistItem.id;
+            });
+
+            if (foundItem) {
+                this.view.reveal(foundItem, {
+                    focus: true,
+                    select: false
+                });
+            }
+        }, 500);
     }
 }
 

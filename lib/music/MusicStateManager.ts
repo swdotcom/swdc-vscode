@@ -20,6 +20,7 @@ export class MusicStateManager {
     private existingTrack: any = {};
     private lastTimeSent: number = null;
     private serverTrack: any = null;
+    private currentPlayerType: PlayerType = null;
 
     private musicstoreMgr: MusicStoreManager;
 
@@ -111,23 +112,40 @@ export class MusicStateManager {
             // update the buttons to show player control changes
             MusicCommandManager.updateButtons();
 
-            // do we still have a player or has the player changed?
-            // either case, refresh the player provider list
-            const playerFound = track.id ? true : false;
-            const hasPlaylists = this.musicstoreMgr.hasActivePlaylistItems();
             const foundGlobalFavorites = this.musicstoreMgr.hasMusicTimePlaylistForType(
                 2
             );
             const hasSpotifyAccess = this.musicstoreMgr.hasSpotifyAccessToken();
 
             if (
-                (hasSpotifyAccess && !hasPlaylists) ||
-                (playerFound && !hasPlaylists) ||
+                this.currentPlayerType !== track.playerType ||
                 (!foundGlobalFavorites && hasSpotifyAccess)
             ) {
+                // add the global favorites since the user has spotify access
                 await this.musicstoreMgr.refreshPlaylists();
             }
+
+            this.currentPlayerType = track.playerType;
         }
+    }
+
+    private trackStateChanged(playingTrack: Track): boolean {
+        let existingTrackId = this.existingTrack
+            ? this.existingTrack.id || null
+            : null;
+        let playingTrackId = playingTrack.id || null;
+        let existingTrackState = this.existingTrack
+            ? this.existingTrack.state || null
+            : null;
+        let playingTrackState = playingTrack.state || null;
+        if (
+            existingTrackId !== playingTrackId ||
+            existingTrackState !== playingTrackState
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     public async gatherMusicInfo(): Promise<any> {
@@ -176,6 +194,8 @@ export class MusicStateManager {
         } else if (playingTrack.duration_ms && playingTrack.duration_ms > 0) {
             playingTrackDuration = playingTrack.duration_ms;
         }
+
+        const trackChanged = this.trackStateChanged(playingTrack);
 
         // don't send this track if it's stopped and the exsting track doesn't exist
         if (state === "stopped" || state === TrackStatus.NotAssigned) {
@@ -261,6 +281,10 @@ export class MusicStateManager {
                     this.existingTrack.state = playingTrack.state;
                 }
             }
+        }
+
+        if (trackChanged) {
+            MusicCommandManager.syncControls();
         }
 
         return playingTrack;
