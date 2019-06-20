@@ -29,7 +29,8 @@ import {
     isLinux,
     logIt,
     buildLoginUrl,
-    launchWebUrl
+    launchWebUrl,
+    launchLogin
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
@@ -216,14 +217,14 @@ export class MusicControlManager {
             // {loggedIn: true|false}
             userStatus = await getUserStatus(serverIsOnline);
         }
-        let loginUrl = await buildLoginUrl();
 
+        let loginFunction = launchLogin;
         let loginMsgDetail =
             "To see your music data in Music Time, please log in to your account";
         if (!serverIsOnline) {
             loginMsgDetail =
                 "Our service is temporarily unavailable. Please try again later.";
-            loginUrl = null;
+            loginFunction = null;
         }
 
         const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
@@ -254,8 +255,8 @@ export class MusicControlManager {
                 label: LOGIN_LABEL,
                 description: "",
                 detail: loginMsgDetail,
-                url: loginUrl,
-                cb: null
+                url: null,
+                cb: loginFunction
             });
         }
 
@@ -327,7 +328,7 @@ export async function connectSpotify() {
         "jwt"
     )}`;
     launchWebUrl(endpoint);
-    refetchSpotifyConnectStatusLazily(20);
+    refetchSpotifyConnectStatusLazily();
 }
 
 export async function fetchMusicTimeMetricsDashboard() {

@@ -699,6 +699,12 @@ export function humanizeMinutes(min) {
     return str;
 }
 
+export async function launchLogin() {
+    let loginUrl = await buildLoginUrl();
+    launchWebUrl(loginUrl);
+    refetchUserStatusLazily();
+}
+
 /**
  * check if the user needs to see the login prompt or not
  */
@@ -712,7 +718,7 @@ export async function showLoginPrompt() {
             if (selection === LOGIN_LABEL) {
                 let loginUrl = await buildLoginUrl();
                 launchWebUrl(loginUrl);
-                refetchUserStatusLazily(11);
+                refetchUserStatusLazily();
             }
         });
 }

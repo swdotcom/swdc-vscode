@@ -187,16 +187,20 @@ export class MusicStoreManager {
             const spotifyOauth = await getSpotifyOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
-                let codyConfig: CodyConfig = new CodyConfig();
-                codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
-                codyConfig.spotifyAccessToken =
-                    spotifyOauth.spotify_access_token;
-                codyConfig.spotifyRefreshToken =
-                    spotifyOauth.spotify_refresh_token;
-                codyConfig.spotifyClientSecret =
-                    "2b40b4975b2743189c87f4712c0cd59e";
-                setConfig(codyConfig);
+                this.updateSpotifyAccessInfo(spotifyOauth);
             }
+        }
+    }
+
+    updateSpotifyAccessInfo(spotifyOauth) {
+        if (spotifyOauth) {
+            // update the CodyMusic credentials
+            let codyConfig: CodyConfig = new CodyConfig();
+            codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
+            codyConfig.spotifyAccessToken = spotifyOauth.spotify_access_token;
+            codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
+            codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
+            setConfig(codyConfig);
         }
     }
 

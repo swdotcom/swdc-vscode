@@ -10,7 +10,8 @@ import {
     nowInSecs,
     getDashboardRow,
     humanizeMinutes,
-    getSummaryInfoFile
+    getSummaryInfoFile,
+    launchLogin
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
@@ -63,8 +64,7 @@ export function showQuickPick(pickOptions) {
             let cb = item["cb"];
             if (url) {
                 launchWebUrl(url);
-            }
-            if (cb) {
+            } else if (cb) {
                 cb();
             }
         }
@@ -147,12 +147,6 @@ export async function showMenuOptions() {
 export async function launchWebDashboardView() {
     let webUrl = await buildWebDashboardUrl();
     launchWebUrl(`${webUrl}/login`);
-}
-
-export async function launchLogin() {
-    let loginUrl = await buildLoginUrl();
-    launchWebUrl(loginUrl);
-    refetchUserStatusLazily();
 }
 
 export async function fetchCodeTimeMetricsDashboard(summary) {

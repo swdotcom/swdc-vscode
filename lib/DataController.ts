@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, env } from "vscode";
+import { workspace, ConfigurationTarget, env, window } from "vscode";
 
 import {
     softwareGet,
@@ -505,7 +505,7 @@ export async function updatePreferences() {
     }
 }
 
-export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 3) {
+export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 20) {
     setTimeout(() => {
         spotifyConnectStatusHandler(tryCountUntilFound);
     }, 10000);
@@ -523,15 +523,13 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
     } else {
         const musicstoreMgr = MusicStoreManager.getInstance();
         // oauth is not null, initialize spotify
-        await musicstoreMgr.initializeSpotify(serverIsOnline);
+        await musicstoreMgr.updateSpotifyAccessInfo(oauth);
 
-        let runningTrack: Track = await getRunningTrack();
-        musicstoreMgr.runningTrack = runningTrack;
-        await musicstoreMgr.syncRunningPlaylists(serverIsOnline);
+        musicstoreMgr.refreshPlaylists();
     }
 }
 
-export function refetchUserStatusLazily(tryCountUntilFoundUser = 3) {
+export function refetchUserStatusLazily(tryCountUntilFoundUser = 20) {
     setTimeout(() => {
         userStatusFetchHandler(tryCountUntilFoundUser);
     }, 10000);
@@ -546,6 +544,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
+    } else {
+        window.showInformationMessage(`Successfully logged on to Music Time`);
     }
 }
 
@@ -579,8 +579,8 @@ export async function handleCodeTimeLogin() {
     } else {
         let loginUrl = await buildLoginUrl();
         launchWebUrl(loginUrl);
-        // retry 10 times, each retry is 10 seconds long
-        refetchUserStatusLazily(10);
+        // each retry is 10 seconds long
+        refetchUserStatusLazily();
     }
 }
 
@@ -592,7 +592,7 @@ export async function handleKpmClickedEvent() {
 
     if (!userStatus.loggedIn) {
         webUrl = await buildLoginUrl();
-        refetchUserStatusLazily(10);
+        refetchUserStatusLazily();
     }
     launchWebUrl(webUrl);
 }
