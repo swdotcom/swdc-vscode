@@ -1,15 +1,18 @@
-import { getItem, isEmptyObj, isMusicTime } from "../Util";
-import { sendMusicData, serverIsAvailable } from "../DataController";
+import {
+    getItem,
+    isEmptyObj,
+    isMusicTime,
+    getMusicSessionDataStoreFile,
+    deleteFile,
+    logIt,
+    nowInSecs
+} from "../Util";
+import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { softwareGet, isResponseOk } from "../HttpClient";
-import {
-    Track,
-    PlayerType,
-    getRunningTrack,
-    TrackStatus,
-    requiresSpotifyAccessInfo
-} from "cody-music";
+import { Track, PlayerType, getRunningTrack, TrackStatus } from "cody-music";
+const fs = require("fs");
 
 export class MusicStateManager {
     static readonly WINDOWS_SPOTIFY_TRACK_FIND: string =
@@ -129,37 +132,79 @@ export class MusicStateManager {
         }
     }
 
-    private trackStateChanged(playingTrack: Track): boolean {
-        let existingTrackId = this.existingTrack
+    private getChangeStatus(playingTrack: Track): any {
+        const existingTrackId = this.existingTrack
             ? this.existingTrack.id || null
             : null;
-        let playingTrackId = playingTrack.id || null;
-        let existingTrackState = this.existingTrack
+        const playingTrackId = playingTrack.id || null;
+        const existingTrackState = this.existingTrack
             ? this.existingTrack.state || null
             : null;
-        let playingTrackState = playingTrack.state || null;
-        if (
-            existingTrackId !== playingTrackId ||
-            existingTrackState !== playingTrackState
-        ) {
-            return true;
-        }
+        const playingTrackState = playingTrack.state || "stopped";
 
-        return false;
+        // return obj attributes
+        const isNewTrack = existingTrackId !== playingTrackId;
+        const endPrevTrack = existingTrackId !== null && isNewTrack;
+        const trackStateChanged = existingTrackState !== playingTrackState;
+        const playing = playingTrackState === "playing";
+
+        return {
+            isNewTrack,
+            endPrevTrack,
+            trackStateChanged,
+            playing
+        };
     }
 
     public async gatherMusicInfo(): Promise<any> {
-        if (isMusicTime()) {
-            let spotifyAccessToken = getItem("spotify_access_token");
-            // only check if we need to initialize cody-music if the user
-            // has connected a spotify_access_token
-            if (spotifyAccessToken && requiresSpotifyAccessInfo()) {
-                let serverIsOnline = await serverIsAvailable();
-                // cody-music doesn't have the access token, initialize
-                await this.musicstoreMgr.initializeSpotify(serverIsOnline);
+        let playingTrack = await getRunningTrack();
+
+        const changeStatus = this.getChangeStatus(playingTrack);
+
+        const now = nowInSecs();
+
+        const isNewAndPlaying = changeStatus.isNewTrack && changeStatus.playing;
+
+        if (changeStatus.endPrevTrack) {
+            // subtract a few seconds since our timer is every 5 seconds
+            this.existingTrack["end"] = now - 3;
+            this.existingTrack["coding"] = false;
+            // gather the coding metrics
+            this.existingTrack = {
+                ...this.existingTrack,
+                ...this.getMusicCodingData()
+            };
+
+            if (parseInt(this.existingTrack.keystrokes, 10) > 0) {
+                this.existingTrack["coding"] = true;
             }
+
+            // send off the ended song session
+            await sendMusicData(this.existingTrack);
+            this.existingTrack = {};
         }
 
+        if (isNewAndPlaying) {
+            let d = new Date();
+            // offset is the minutes from GMT. it's positive if it's before, and negative after
+            const offset = d.getTimezoneOffset();
+            const offset_sec = offset * 60;
+
+            playingTrack["start"] = now;
+            playingTrack["local_start"] = now - offset_sec;
+            playingTrack["end"] = 0;
+
+            // set existing track to playing track
+            this.existingTrack = {};
+            this.existingTrack = { ...playingTrack };
+        }
+
+        return this.existingTrack;
+    }
+
+    /**
+     * 
+    public async gatherMusicInfo_old(): Promise<any> {
         let playingTrack = await getRunningTrack();
 
         if (!playingTrack) {
@@ -195,7 +240,7 @@ export class MusicStateManager {
             playingTrackDuration = playingTrack.duration_ms;
         }
 
-        const trackChanged = this.trackStateChanged(playingTrack);
+        const trackChanged = this.getChangeStatus(playingTrack);
 
         // don't send this track if it's stopped and the exsting track doesn't exist
         if (state === "stopped" || state === TrackStatus.NotAssigned) {
@@ -283,10 +328,111 @@ export class MusicStateManager {
             }
         }
 
-        if (trackChanged) {
+        if (trackChanged.trackStateChanged || trackChanged.isNewTrack) {
             MusicCommandManager.syncControls();
         }
 
         return playingTrack;
+    }**/
+
+    private codingDataReducer(accumulator, current) {
+        const numberList: string[] = [
+            "add",
+            "paste",
+            "delete",
+            "netkeys",
+            "linesRemoved",
+            "linesAdded",
+            "open",
+            "close"
+        ];
+        if (current && accumulator) {
+            const currObjectKeys = Object.keys(current);
+
+            let sourceJson = current.source;
+            Object.keys(sourceJson).forEach(file => {
+                accumulator.source[file] = sourceJson[file];
+            });
+
+            const keystrokes = parseInt(current.keystrokes, 10) || 0;
+            accumulator.keystrokes += keystrokes;
+            if (!accumulator.syntax) {
+                accumulator.syntax = current.syntax || "";
+            }
+
+            currObjectKeys.forEach(currObjectKey => {
+                const sourceObj = current[currObjectKey];
+
+                Object.keys(sourceObj).forEach(sourceKey => {
+                    const fileObj = sourceObj[sourceKey];
+
+                    Object.keys(fileObj).forEach(fileKey => {
+                        const val = fileObj[fileKey];
+
+                        if (numberList.indexOf(fileKey) !== -1) {
+                            if (accumulator[fileKey] && val) {
+                                accumulator[fileKey] =
+                                    parseInt(val, 10) +
+                                    parseInt(accumulator[fileKey], 10);
+                            } else if (val) {
+                                accumulator[fileKey] = parseInt(val, 10);
+                            }
+                        }
+                    });
+                });
+            });
+        }
+        return accumulator;
+    }
+
+    private getMusicCodingData() {
+        const file = getMusicSessionDataStoreFile();
+        const initialValue = {
+            add: 0,
+            paste: 0,
+            delete: 0,
+            netkeys: 0,
+            linesAdded: 0,
+            linesRemoved: 0,
+            open: 0,
+            close: 0,
+            keystrokes: 0,
+            syntax: "",
+            source: {}
+        };
+        try {
+            if (fs.existsSync(file)) {
+                const content = fs.readFileSync(file).toString();
+                // we're online so just delete the datastore file
+                deleteFile(file);
+                if (content) {
+                    const payloads = content
+                        .split(/\r?\n/)
+                        .map(item => {
+                            let obj = null;
+                            if (item) {
+                                try {
+                                    obj = JSON.parse(item);
+                                } catch (e) {
+                                    //
+                                }
+                            }
+                            if (obj) {
+                                return obj;
+                            }
+                        })
+                        .filter(item => item);
+
+                    const musicCodingData = payloads.reduce(
+                        this.codingDataReducer,
+                        initialValue
+                    );
+                    return musicCodingData;
+                }
+            }
+        } catch (e) {
+            logIt(`Unable to aggregate music session data: ${e.message}`);
+        }
+        return initialValue;
     }
 }

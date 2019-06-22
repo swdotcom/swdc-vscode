@@ -155,10 +155,12 @@ export async function sendMusicData(trackData) {
     if (trackData.href) {
         delete trackData.href;
     }
+
     logIt(`sending ${JSON.stringify(trackData)}`);
     // add the "local_start", "start", and "end"
     // POST the kpm to the PluginManager
-    return softwarePost("/data/music", trackData, getItem("jwt"))
+    let api = `/music/session`;
+    return softwarePost(api, trackData, getItem("jwt"))
         .then(resp => {
             if (!isResponseOk(resp)) {
                 return { status: "fail" };

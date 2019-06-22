@@ -1,5 +1,4 @@
-import { storePayload, getItem, getOs, getVersion, logIt } from "./Util";
-import { softwarePost, isResponseOk } from "./HttpClient";
+import { storePayload, getOs, getVersion, logIt } from "./Util";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 
 // ? marks that the parameter is optional

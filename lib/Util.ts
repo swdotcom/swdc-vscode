@@ -439,6 +439,16 @@ export function getSoftwareDataStoreFile() {
     return file;
 }
 
+export function getMusicSessionDataStoreFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\MusicSession.json";
+    } else {
+        file += "/MusicSession.json";
+    }
+    return file;
+}
+
 export function getExtensionDisplayName() {
     if (extensionDisplayName) {
         return extensionDisplayName;
@@ -569,6 +579,22 @@ export function storePayload(payload) {
                 );
         }
     );
+
+    if (isMusicTime()) {
+        // also store the payload into the MusicSession.json file
+        fs.appendFile(
+            getMusicSessionDataStoreFile(),
+            JSON.stringify(payload) + os.EOL,
+            err => {
+                if (err)
+                    logIt(
+                        `Error appending to the music session data store file: ${
+                            err.message
+                        }`
+                    );
+            }
+        );
+    }
 }
 
 export function randomCode() {
