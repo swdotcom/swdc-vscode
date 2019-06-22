@@ -235,7 +235,6 @@ export class MusicControlManager {
 
         menuOptions.items.push({
             label: "Software Top 40",
-            description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
@@ -244,7 +243,6 @@ export class MusicControlManager {
 
         menuOptions.items.push({
             label: "Music Time Dashboard",
-            description: "",
             detail: "View your latest music metrics right here in your editor",
             url: null,
             cb: displayMusicTimeMetricsDashboard
@@ -253,7 +251,6 @@ export class MusicControlManager {
         if (!userStatus.loggedIn) {
             menuOptions.items.push({
                 label: LOGIN_LABEL,
-                description: "",
                 detail: loginMsgDetail,
                 url: null,
                 cb: loginFunction
@@ -265,7 +262,6 @@ export class MusicControlManager {
         if (!accessToken) {
             menuOptions.items.push({
                 label: "Connect Spotify",
-                description: "",
                 detail:
                     "To see your Spotify playlists in Music Time, please connect your account",
                 url: null,
@@ -287,7 +283,6 @@ export class MusicControlManager {
                 // show the generate playlist menu item
                 menuOptions.items.push({
                     label: "Generate New Software Playlist",
-                    description: "",
                     detail: `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`,
                     url: null,
                     cb: MusicStoreManager.getInstance()
@@ -298,7 +293,6 @@ export class MusicControlManager {
             if (!spotifyDevices || spotifyDevices.length === 0) {
                 menuOptions.items.push({
                     label: "Launch Spotify",
-                    description: "",
                     detail:
                         "Launch the Spotify web player to view your playlist",
                     url: null,

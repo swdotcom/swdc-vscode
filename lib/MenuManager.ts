@@ -5,7 +5,6 @@ import {
     getDashboardFile,
     isLinux,
     toggleStatusBar,
-    buildLoginUrl,
     logIt,
     nowInSecs,
     getDashboardRow,
@@ -16,7 +15,6 @@ import {
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
     getUserStatus,
-    refetchUserStatusLazily,
     serverIsAvailable,
     getLoggedInCacheState,
     getSessionSummaryStatus
@@ -26,7 +24,6 @@ const moment = require("moment-timezone");
 
 const fs = require("fs");
 
-const NO_DATA = "CODE TIME\n\nNo data available\n";
 const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
@@ -51,9 +48,6 @@ export function showQuickPick(pickOptions) {
         return;
     }
     let options: QuickPickOptions = {
-        // onDidSelectItem: item => {
-        //     window.setStatusBarMessage(item["label"]);
-        // },
         matchOnDescription: false,
         matchOnDetail: false,
         placeHolder: pickOptions.placeholder || ""
@@ -94,7 +88,6 @@ export async function showMenuOptions() {
 
     kpmMenuOptions.items.push({
         label: "Code Time Dashboard",
-        description: "",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
         cb: displayCodeTimeMetricsDashboard
@@ -103,7 +96,6 @@ export async function showMenuOptions() {
     if (userStatus.loggedIn && showMusicMetrics) {
         kpmMenuOptions.items.push({
             label: "Software Top 40",
-            description: "",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
             url: "https://api.software.com/music/top40",
@@ -119,7 +111,6 @@ export async function showMenuOptions() {
     if (!userStatus.loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
-            description: "",
             detail: loginMsgDetail,
             url: null,
             cb: launchLogin
@@ -127,18 +118,31 @@ export async function showMenuOptions() {
     } else {
         kpmMenuOptions.items.push({
             label: "Web Dashboard",
-            description: "",
             detail: "See rich data visualizations in the web app",
             url: null,
             cb: launchWebDashboardView
         });
     }
+
     kpmMenuOptions.items.push({
         label: "Show/Hide Status Bar Metrics",
-        description: "",
         detail: "Toggle the Code Time status bar metrics",
         url: null,
         cb: toggleStatusBar
+    });
+
+    kpmMenuOptions.items.push({
+        label: "Submit an issue on GitHub",
+        detail: "Encounter a bug? Submit an issue on our GitHub page",
+        url: "https://github.com/swdotcom/swdc-vscode/issues",
+        cb: null
+    });
+
+    kpmMenuOptions.items.push({
+        label: "Submit Feedback",
+        detail: "Send us an email at cody@software.com.",
+        url: "mailto:cody@software.com",
+        cb: null
     });
 
     showQuickPick(kpmMenuOptions);
