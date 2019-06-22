@@ -16,7 +16,8 @@ import {
     CodyConfig,
     TrackStatus,
     addTracksToPlaylist,
-    createPlaylist
+    createPlaylist,
+    getUserProfile
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -30,6 +31,7 @@ import {
 import { getItem } from "../Util";
 import { PERSONAL_TOP_SONGS_NAME, SOFTWARE_TOP_SONGS_NAME } from "../Constants";
 import { commands, window } from "vscode";
+import { SpotifyUser } from "cody-music/dist/lib/profile";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -47,6 +49,7 @@ export class MusicStoreManager {
     private _spotifyPlayerDevices: PlayerDevice[] = [];
     private _initializedSpotifyPlaylist: boolean = false;
     private _refreshing: boolean = false;
+    private _spotifyUser: SpotifyUser = null;
 
     private constructor() {
         //
@@ -63,6 +66,14 @@ export class MusicStoreManager {
     //
     // getters
     //
+
+    get spotifyUser(): SpotifyUser {
+        return this._spotifyUser;
+    }
+
+    set spotifyUser(user: SpotifyUser) {
+        this._spotifyUser = user;
+    }
 
     get savedPlaylists(): PlaylistItem[] {
         return this._savedPlaylists;
@@ -192,7 +203,7 @@ export class MusicStoreManager {
         }
     }
 
-    updateSpotifyAccessInfo(spotifyOauth) {
+    async updateSpotifyAccessInfo(spotifyOauth) {
         if (spotifyOauth) {
             // update the CodyMusic credentials
             let codyConfig: CodyConfig = new CodyConfig();
@@ -201,6 +212,11 @@ export class MusicStoreManager {
             codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
             codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
             setConfig(codyConfig);
+
+            // get the user
+            getUserProfile().then(user => {
+                this._spotifyUser = user;
+            });
         }
     }
 

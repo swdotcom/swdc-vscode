@@ -23,14 +23,31 @@ import {
     PlayerDevice,
     launchPlayer
 } from "cody-music";
-import { connectSpotify } from "./MusicControlManager";
-import { MusicCommandManager } from "./MusicCommandManager";
+import { SpotifyUser } from "cody-music/dist/lib/profile";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
     cstate: TreeItemCollapsibleState
 ) => {
     return new PlaylistTreeItem(p, cstate);
+};
+
+export const playTrackFromPlaylist = async (
+    spotifyUser: SpotifyUser,
+    playlistId: string,
+    trackId: string
+) => {
+    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+    const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
+    let options = {
+        context_uri: playlistUri,
+        track_ids: [trackId]
+    };
+    if (spotifyDevices.length > 0) {
+        options["device_id"] = spotifyDevices[0].id;
+    }
+
+    await play(PlayerName.SpotifyWeb, options);
 };
 
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
@@ -67,16 +84,24 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                             let options = {
                                 track_id
                             };
+
+                            // launch it
                             await launchPlayer(PlayerName.SpotifyWeb, options);
+                            // now select it from within the playlist
+                            setTimeout(() => {
+                                playTrackFromPlaylist(
+                                    musicstoreMgr.spotifyUser,
+                                    musicstoreMgr.selectedPlaylist.id,
+                                    track_id
+                                );
+                            }, 8000);
                         } else {
                             // a device is found, play using the device
-                            let options = {
-                                track_ids: [track_id]
-                            };
-                            if (spotifyDevices.length > 0) {
-                                options["device_id"] = spotifyDevices[0].id;
-                            }
-                            await play(PlayerName.SpotifyWeb, options);
+                            playTrackFromPlaylist(
+                                musicstoreMgr.spotifyUser,
+                                musicstoreMgr.selectedPlaylist.id,
+                                track_id
+                            );
                         }
                     } else {
                         await pause(PlayerName.SpotifyWeb);
