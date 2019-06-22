@@ -52,7 +52,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
 
             const musicstoreMgr = MusicStoreManager.getInstance();
 
-            let syncControlsDelay = 1000;
             if (playlistItem.type === "track") {
                 musicstoreMgr.selectedTrackItem = playlistItem;
 
@@ -69,7 +68,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                                 track_id
                             };
                             await launchPlayer(PlayerName.SpotifyWeb, options);
-                            syncControlsDelay = 10000;
                         } else {
                             // a device is found, play using the device
                             let options = {
@@ -97,10 +95,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         await pause(playerName);
                     }
                 }
-
-                // setTimeout(() => {
-                //     MusicCommandManager.syncControls();
-                // }, syncControlsDelay);
             }
         }),
         view.onDidChangeVisibility(e => {
