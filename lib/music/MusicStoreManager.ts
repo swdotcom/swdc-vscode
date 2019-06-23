@@ -619,15 +619,61 @@ export class MusicStoreManager {
 
     async createGlobalTopSongsPlaylist() {
         let musicstoreMgr = MusicStoreManager.getInstance();
+
+        // 1st create the empty playlist
+        const playlistResult: CodyResponse = await createPlaylist(
+            SOFTWARE_TOP_SONGS_NAME,
+            true
+        );
+
+        if (playlistResult.state === CodyResponseType.Failed) {
+            window.showErrorMessage(
+                `There was an unexpected error adding tracks to the playlist. ${
+                    playlistResult.message
+                }`,
+                ...["OK"]
+            );
+            return;
+        }
+
+        const playlistId = playlistResult.data.id;
+
+        if (playlistId) {
+            await updateSavedPlaylists(
+                playlistId,
+                2,
+                SOFTWARE_TOP_SONGS_NAME
+            ).catch(err => {
+                console.log("Error updating music time global playlist ID");
+            });
+        }
+
         let globalFavs: any[] = musicstoreMgr.globalFavorites;
         if (globalFavs && globalFavs.length > 0) {
-            // 1st create the empty playlist
-            let playlistResult: CodyResponse = await createPlaylist(
+            let tracksToAdd: string[] = globalFavs.map(item => {
+                return item.uri;
+            });
+            await addTracks(
+                playlistResult.data.id,
                 SOFTWARE_TOP_SONGS_NAME,
+                tracksToAdd
+            );
+        }
+
+        // refresh the playlists
+        musicstoreMgr.refreshPlaylists();
+    }
+
+    async generateUsersWeeklyTopSongs() {
+        const existingPersonalPlaylist = this.getExistingPesonalPlaylist();
+
+        let playlistId = null;
+        if (!existingPersonalPlaylist) {
+            let playlistResult: CodyResponse = await createPlaylist(
+                PERSONAL_TOP_SONGS_NAME,
                 true
             );
 
-            // add the global songs to the playlist
             if (playlistResult.state === CodyResponseType.Failed) {
                 window.showErrorMessage(
                     `There was an unexpected error adding tracks to the playlist. ${
@@ -638,38 +684,19 @@ export class MusicStoreManager {
                 return;
             }
 
-            if (
-                playlistResult &&
-                playlistResult.data &&
-                playlistResult.data.id
-            ) {
-                let result = await updateSavedPlaylists(
-                    playlistResult.data.id,
-                    2,
-                    SOFTWARE_TOP_SONGS_NAME
-                );
+            playlistId = playlistResult.data.id;
 
-                if (isResponseOk(result) && musicstoreMgr.hasGlobalFavorites) {
-                    let tracksToAdd: string[] = musicstoreMgr.globalFavorites.map(
-                        item => {
-                            return item.uri;
-                        }
-                    );
-                    await addTracks(
-                        playlistResult.data.id,
-                        2,
-                        SOFTWARE_TOP_SONGS_NAME,
-                        tracksToAdd
-                    );
-                }
-            }
-
-            // refresh the playlists
-            musicstoreMgr.refreshPlaylists();
+            await updateSavedPlaylists(
+                playlistId,
+                1,
+                PERSONAL_TOP_SONGS_NAME
+            ).catch(err => {
+                console.log("Error updating music time global playlist ID");
+            });
+        } else {
+            playlistId = existingPersonalPlaylist.playlist_id;
         }
-    }
 
-    async generateUsersWeeklyTopSongs() {
         let musicstoreMgr = MusicStoreManager.getInstance();
         // get the spotify track ids and create the playlist
         let codingFavs: any[] = musicstoreMgr.userFavorites;
@@ -678,39 +705,7 @@ export class MusicStoreManager {
             codingFavs = musicstoreMgr.userFavorites;
         }
         if (codingFavs && codingFavs.length > 0) {
-            const existingPersonalPlaylist = this.getExistingPesonalPlaylist();
-
-            let playlistId = null;
-            if (!existingPersonalPlaylist) {
-                let playlistResult: CodyResponse = await createPlaylist(
-                    PERSONAL_TOP_SONGS_NAME,
-                    true
-                );
-
-                if (playlistResult.state === CodyResponseType.Failed) {
-                    window.showErrorMessage(
-                        `There was an unexpected error adding tracks to the playlist. ${
-                            playlistResult.message
-                        }`,
-                        ...["OK"]
-                    );
-                    return;
-                }
-
-                playlistId = playlistResult.data.id;
-            } else {
-                playlistId = existingPersonalPlaylist.playlist_id;
-            }
-
             if (playlistId) {
-                if (!existingPersonalPlaylist) {
-                    let result = await updateSavedPlaylists(
-                        playlistId,
-                        1,
-                        PERSONAL_TOP_SONGS_NAME
-                    );
-                }
-
                 // add the tracks
                 // list of [{uri, artist, name}...]
                 const codingFavs: any[] = musicstoreMgr.userFavorites;
@@ -728,10 +723,9 @@ export class MusicStoreManager {
                     await replacePlaylistTracks(playlistId, tracksToAdd);
                 }
             }
-
-            // refresh the playlists
-            musicstoreMgr.refreshPlaylists();
         }
+        // refresh the playlists
+        musicstoreMgr.refreshPlaylists();
     }
 }
 
@@ -758,7 +752,6 @@ async function updateSavedPlaylists(
 
 async function addTracks(
     playlist_id: string,
-    playlistTypeId: number,
     name: string,
     tracksToAdd: string[]
 ) {
