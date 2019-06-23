@@ -30,7 +30,12 @@ import {
     softwarePost
 } from "../HttpClient";
 import { getItem, setItem } from "../Util";
-import { PERSONAL_TOP_SONGS_NAME, SOFTWARE_TOP_SONGS_NAME } from "../Constants";
+import {
+    PERSONAL_TOP_SONGS_NAME,
+    SOFTWARE_TOP_SONGS_NAME,
+    PERSONAL_TOP_SONGS_PLID,
+    SOFTWARE_TOP_SONGS_PLID
+} from "../Constants";
 import { commands, window } from "vscode";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 export class MusicStoreManager {
@@ -195,7 +200,7 @@ export class MusicStoreManager {
     }
 
     async initializeSpotify(serverIsOnline) {
-        if (!this.hasSpotifyAccessToken()) {
+        if (!this.requiresSpotifyAccess()) {
             const spotifyOauth = await getSpotifyOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
@@ -264,7 +269,7 @@ export class MusicStoreManager {
 
     getExistingPesonalPlaylist(): any {
         return this.savedPlaylists.find(element => {
-            return parseInt(element.id, 10) === 1;
+            return parseInt(element["playlistTypeId"], 10) === 1;
         });
     }
 
@@ -370,7 +375,7 @@ export class MusicStoreManager {
             noPlayerFoundItem.name = "No active music player found";
             playlists.push(noPlayerFoundItem);
 
-            if (this.hasSpotifyAccessToken()) {
+            if (this.requiresSpotifyAccess()) {
                 let launchSpotifyItem: PlaylistItem = new PlaylistItem();
                 launchSpotifyItem.tracks = new PlaylistTrackInfo();
                 launchSpotifyItem.type = "spotify";
@@ -400,7 +405,7 @@ export class MusicStoreManager {
     async updateSettingsItems() {
         let settingsList: PlaylistItem[] = [];
 
-        if (!this.hasSpotifyAccessToken()) {
+        if (!this.requiresSpotifyAccess()) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
@@ -441,7 +446,7 @@ export class MusicStoreManager {
             ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
             : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 
-        if (this.hasSpotifyAccessToken()) {
+        if (this.requiresSpotifyAccess()) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
@@ -454,10 +459,12 @@ export class MusicStoreManager {
             settingsList.push(listItem);
 
             // update the existing playlist that matches the personal playlist with a paw if found
-            this.hasMusicTimePlaylistForType(1);
+            this.hasMusicTimePlaylistForType(PERSONAL_TOP_SONGS_PLID);
 
             // update the existing playlist that matches the global top 40 playlist with a paw if found
-            const foundGlobalFavorites = this.hasMusicTimePlaylistForType(2);
+            const foundGlobalFavorites = this.hasMusicTimePlaylistForType(
+                SOFTWARE_TOP_SONGS_PLID
+            );
             if (!foundGlobalFavorites) {
                 if (!this.hasGlobalFavorites) {
                     await this.syncGlobalTopSongs();
@@ -472,7 +479,7 @@ export class MusicStoreManager {
 
     async syncSpotifyWebPlaylists(serverIsOnline) {
         let playlists = [];
-        if (serverIsOnline && this.hasSpotifyAccessToken()) {
+        if (serverIsOnline && this.requiresSpotifyAccess()) {
             playlists = await getPlaylists(PlayerName.SpotifyWeb);
             if (playlists) {
                 // update the type to "playlist";
@@ -489,8 +496,9 @@ export class MusicStoreManager {
         return this.spotifyPlaylists;
     }
 
-    hasSpotifyAccessToken() {
-        return requiresSpotifyAccessInfo() ? false : true;
+    requiresSpotifyAccess() {
+        let spotifyAccessToken = getItem("spotify_access_token");
+        return spotifyAccessToken ? true : false;
     }
 
     hasTracksForPlaylistId(playlist_id: string): boolean {

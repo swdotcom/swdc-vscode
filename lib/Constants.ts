@@ -25,4 +25,6 @@ export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const MUSIC_TIME_EXT_ID = "softwaredotcom.music-time";
 
 export const PERSONAL_TOP_SONGS_NAME = "Your Software Top 40";
+export const PERSONAL_TOP_SONGS_PLID = 1;
 export const SOFTWARE_TOP_SONGS_NAME = "Software Top 40";
+export const SOFTWARE_TOP_SONGS_PLID = 2;

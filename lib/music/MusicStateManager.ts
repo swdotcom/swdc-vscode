@@ -12,6 +12,7 @@ import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { softwareGet, isResponseOk } from "../HttpClient";
 import { Track, PlayerType, getRunningTrack, TrackStatus } from "cody-music";
+import { SOFTWARE_TOP_SONGS_PLID } from "../Constants";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -112,20 +113,24 @@ export class MusicStateManager {
         const track: Track = (await this.gatherMusicInfo()) || new Track();
         this.musicstoreMgr.runningTrack = track;
         if (isMusicTime()) {
-            // update the buttons to show player control changes
-            MusicCommandManager.updateButtons();
+            // valid track shows that we're able to communicate to spotify web or local
+            const isValidTrack = !isEmptyObj(track);
+            if (isValidTrack) {
+                // update the buttons to show player control changes
+                MusicCommandManager.updateButtons();
 
-            const foundGlobalFavorites = this.musicstoreMgr.hasMusicTimePlaylistForType(
-                2
-            );
-            const hasSpotifyAccess = this.musicstoreMgr.hasSpotifyAccessToken();
+                const foundGlobalFavorites = this.musicstoreMgr.hasMusicTimePlaylistForType(
+                    SOFTWARE_TOP_SONGS_PLID
+                );
+                const hasSpotifyAccess = this.musicstoreMgr.requiresSpotifyAccess();
 
-            if (
-                this.currentPlayerType !== track.playerType ||
-                (!foundGlobalFavorites && hasSpotifyAccess)
-            ) {
-                // add the global favorites since the user has spotify access
-                await this.musicstoreMgr.refreshPlaylists();
+                if (
+                    this.currentPlayerType !== track.playerType ||
+                    (!foundGlobalFavorites && hasSpotifyAccess)
+                ) {
+                    // add the global favorites since the user has spotify access
+                    await this.musicstoreMgr.refreshPlaylists();
+                }
             }
 
             this.currentPlayerType = track.playerType;
