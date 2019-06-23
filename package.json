@@ -111,6 +111,11 @@
                 "tooltip": "Connect your Spotify account to view your playlists"
             },
             {
+                "command": "musictime.disconnectSpotify",
+                "title": "Disconnect your Spotify account",
+                "tooltip": "Disconnect your Spotify account"
+            },
+            {
                 "command": "musictime.refreshPlaylist",
                 "title": "Refresh"
             },

@@ -21,7 +21,9 @@ import {
     pause,
     getSpotifyDevices,
     PlayerDevice,
-    launchPlayer
+    launchPlayer,
+    getRunningTrack,
+    Track
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 
@@ -35,7 +37,8 @@ const createPlaylistTreeItem = (
 export const playTrackFromPlaylist = async (
     spotifyUser: SpotifyUser,
     playlistId: string,
-    trackId: string
+    trackId: string,
+    checkTrackStateAndTryAgain: boolean = false
 ) => {
     const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
     const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
@@ -48,6 +51,21 @@ export const playTrackFromPlaylist = async (
     }
 
     await play(PlayerName.SpotifyWeb, options);
+
+    if (checkTrackStateAndTryAgain) {
+        getRunningTrack().then(track => {
+            if (!track || track.id) {
+                setTimeout(() => {
+                    playTrackFromPlaylist(
+                        spotifyUser,
+                        playlistId,
+                        trackId,
+                        checkTrackStateAndTryAgain
+                    );
+                }, 1000);
+            }
+        });
+    }
 };
 
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
@@ -81,12 +99,9 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     if (playlistItem["state"] !== TrackStatus.Playing) {
                         if (!spotifyDevices || spotifyDevices.length === 0) {
                             // no spotify devices found, lets launch the web player with the track
-                            let options = {
-                                track_id
-                            };
 
                             // launch it
-                            await launchPlayer(PlayerName.SpotifyWeb, options);
+                            await launchPlayer(PlayerName.SpotifyWeb);
                             // now select it from within the playlist
                             setTimeout(() => {
                                 playTrackFromPlaylist(
@@ -94,7 +109,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                                     musicstoreMgr.selectedPlaylist.id,
                                     track_id
                                 );
-                            }, 8000);
+                            }, 4000);
                         } else {
                             // a device is found, play using the device
                             playTrackFromPlaylist(

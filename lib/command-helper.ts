@@ -1,7 +1,8 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
     MusicControlManager,
-    connectSpotify
+    connectSpotify,
+    disconnectSpotify
 } from "./music/MusicControlManager";
 import {
     handleCodeTimeLogin,
@@ -151,6 +152,14 @@ export function createCommands(): {
             }
         );
         cmds.push(spotifyConnectCommand);
+
+        const disconnectSpotifyCommand = commands.registerCommand(
+            "musictime.disconnectSpotify",
+            () => {
+                disconnectSpotify();
+            }
+        );
+        cmds.push(disconnectSpotifyCommand);
 
         // playlist tree view
         const treePlaylistProvider = new MusicPlaylistProvider();

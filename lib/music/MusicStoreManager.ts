@@ -17,7 +17,8 @@ import {
     TrackStatus,
     addTracksToPlaylist,
     createPlaylist,
-    getUserProfile
+    getUserProfile,
+    replacePlaylistTracks
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -28,7 +29,7 @@ import {
     softwarePut,
     softwarePost
 } from "../HttpClient";
-import { getItem } from "../Util";
+import { getItem, setItem } from "../Util";
 import { PERSONAL_TOP_SONGS_NAME, SOFTWARE_TOP_SONGS_NAME } from "../Constants";
 import { commands, window } from "vscode";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
@@ -199,6 +200,9 @@ export class MusicStoreManager {
             if (spotifyOauth) {
                 // update the CodyMusic credentials
                 this.updateSpotifyAccessInfo(spotifyOauth);
+            } else {
+                setItem("spotify_access_token", null);
+                setItem("spotify_refresh_token", null);
             }
         }
     }
@@ -213,11 +217,29 @@ export class MusicStoreManager {
             codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
             setConfig(codyConfig);
 
+            setItem("spotify_access_token", spotifyOauth.spotify_access_token);
+            setItem(
+                "spotify_refresh_token",
+                spotifyOauth.spotify_refresh_token
+            );
+
             // get the user
             getUserProfile().then(user => {
                 this._spotifyUser = user;
             });
         }
+    }
+
+    async clearSpotifyAccessInfo() {
+        setItem("spotify_access_token", null);
+        setItem("spotify_refresh_token", null);
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
+        codyConfig.spotifyAccessToken = null;
+        codyConfig.spotifyRefreshToken = null;
+        codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
+        setConfig(codyConfig);
+        this._spotifyUser = null;
     }
 
     async fetchSavedPlaylists(serverIsOnline) {
@@ -238,6 +260,12 @@ export class MusicStoreManager {
             }
         }
         this.savedPlaylists = playlists;
+    }
+
+    getExistingPesonalPlaylist(): any {
+        return this.savedPlaylists.find(element => {
+            return parseInt(element.id, 10) === 1;
+        });
     }
 
     async reconcilePlaylists() {
@@ -385,15 +413,33 @@ export class MusicStoreManager {
             settingsList.push(listItem);
         } else {
             // show that you've connected
-            let listItem: PlaylistItem = new PlaylistItem();
-            listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "connected";
-            listItem.id = "spotifyconnected";
-            listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = "Spotify Connected";
-            listItem.tooltip = "You've connected Spotify";
-            settingsList.push(listItem);
+            let connectedItem: PlaylistItem = new PlaylistItem();
+            connectedItem.tracks = new PlaylistTrackInfo();
+            connectedItem.type = "connected";
+            connectedItem.id = "spotifyconnected";
+            connectedItem.playerType = PlayerType.WebSpotify;
+            connectedItem.name = "Spotify Connected";
+            connectedItem.tooltip = "You've connected Spotify";
+            settingsList.push(connectedItem);
+
+            let disconnectItem: PlaylistItem = new PlaylistItem();
+            disconnectItem.tracks = new PlaylistTrackInfo();
+            disconnectItem.type = "spotify";
+            disconnectItem.id = "disconnectspotify";
+            disconnectItem.playerType = PlayerType.WebSpotify;
+            disconnectItem.name = "Disconnect Spotify";
+            disconnectItem.tooltip = "Disconnect Spotify";
+            disconnectItem.command = "musictime.disconnectSpotify";
+            settingsList.push(disconnectItem);
         }
+
+        const personalPlaylistInfo = MusicStoreManager.getInstance().getExistingPesonalPlaylist();
+        const personalPlaylistLabel = !personalPlaylistInfo
+            ? "Generate Software Playlist"
+            : "Update Software Playlist";
+        const personalPlaylistTooltip = !personalPlaylistInfo
+            ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
+            : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 
         if (this.hasSpotifyAccessToken()) {
             // add the connect spotify link
@@ -403,8 +449,8 @@ export class MusicStoreManager {
             listItem.id = "codingfavorites";
             listItem.command = "musictime.generateWeeklyPlaylist";
             listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = `Generate New Software Playlist`;
-            listItem.tooltip = `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+            listItem.name = personalPlaylistLabel;
+            listItem.tooltip = personalPlaylistTooltip;
             settingsList.push(listItem);
 
             // update the existing playlist that matches the personal playlist with a paw if found
@@ -624,31 +670,38 @@ export class MusicStoreManager {
             codingFavs = musicstoreMgr.userFavorites;
         }
         if (codingFavs && codingFavs.length > 0) {
-            let playlistResult: CodyResponse = await createPlaylist(
-                PERSONAL_TOP_SONGS_NAME,
-                true
-            );
+            const existingPersonalPlaylist = this.getExistingPesonalPlaylist();
 
-            if (playlistResult.state === CodyResponseType.Failed) {
-                window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${
-                        playlistResult.message
-                    }`,
-                    ...["OK"]
+            let playlistId = null;
+            if (!existingPersonalPlaylist) {
+                let playlistResult: CodyResponse = await createPlaylist(
+                    PERSONAL_TOP_SONGS_NAME,
+                    true
                 );
-                return;
+
+                if (playlistResult.state === CodyResponseType.Failed) {
+                    window.showErrorMessage(
+                        `There was an unexpected error adding tracks to the playlist. ${
+                            playlistResult.message
+                        }`,
+                        ...["OK"]
+                    );
+                    return;
+                }
+
+                playlistId = playlistResult.data.id;
+            } else {
+                playlistId = existingPersonalPlaylist.playlist_id;
             }
 
-            if (
-                playlistResult &&
-                playlistResult.data &&
-                playlistResult.data.id
-            ) {
-                let result = await updateSavedPlaylists(
-                    playlistResult.data.id,
-                    1,
-                    PERSONAL_TOP_SONGS_NAME
-                );
+            if (playlistId) {
+                if (!existingPersonalPlaylist) {
+                    let result = await updateSavedPlaylists(
+                        playlistId,
+                        1,
+                        PERSONAL_TOP_SONGS_NAME
+                    );
+                }
 
                 // add the tracks
                 // list of [{uri, artist, name}...]
@@ -657,12 +710,14 @@ export class MusicStoreManager {
                     let tracksToAdd: string[] = codingFavs.map(item => {
                         return item.uri;
                     });
-                    await addTracks(
-                        playlistResult.data.id,
-                        1,
-                        PERSONAL_TOP_SONGS_NAME,
-                        tracksToAdd
-                    );
+
+                    // await addTracks(
+                    //     playlistId,
+                    //     1,
+                    //     PERSONAL_TOP_SONGS_NAME,
+                    //     tracksToAdd
+                    // );
+                    await replacePlaylistTracks(playlistId, tracksToAdd);
                 }
             }
 

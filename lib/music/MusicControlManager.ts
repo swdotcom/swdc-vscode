@@ -20,7 +20,8 @@ import {
     getUserStatus,
     serverIsAvailable,
     refetchSpotifyConnectStatusLazily,
-    getLoggedInCacheState
+    getLoggedInCacheState,
+    getSpotifyOauth
 } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import {
@@ -32,7 +33,12 @@ import {
     launchWebUrl,
     launchLogin
 } from "../Util";
-import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
+import {
+    softwareGet,
+    softwarePut,
+    isResponseOk,
+    spotifyApiPut
+} from "../HttpClient";
 import {
     api_endpoint,
     LOGIN_LABEL,
@@ -257,6 +263,8 @@ export class MusicControlManager {
             });
         }
 
+        const musicstoreMgr = MusicStoreManager.getInstance();
+
         // check if the user has the spotify_access_token
         const accessToken = getItem("spotify_access_token");
         if (!accessToken) {
@@ -269,21 +277,27 @@ export class MusicControlManager {
             });
         } else {
             // check if we already have a playlist
-            const savedPlaylists: PlaylistItem[] = MusicStoreManager.getInstance()
-                .savedPlaylists;
+            const savedPlaylists: PlaylistItem[] = musicstoreMgr.savedPlaylists;
             const hasSavedPlaylists =
                 savedPlaylists && savedPlaylists.length > 0 ? true : false;
 
-            const codingFavs: any[] = MusicStoreManager.getInstance()
-                .userFavorites;
+            const codingFavs: any[] = musicstoreMgr.userFavorites;
             const hasUserFavorites =
                 codingFavs && codingFavs.length > 0 ? true : false;
+
+            const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
+            let personalPlaylistLabel = !personalPlaylistInfo
+                ? "Generate Software Playlist"
+                : "Update Software Playlist";
+            const personalPlaylistTooltip = !personalPlaylistInfo
+                ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
+                : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 
             if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
-                    label: "Generate New Software Playlist",
-                    detail: `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`,
+                    label: personalPlaylistLabel,
+                    detail: personalPlaylistTooltip,
                     url: null,
                     cb: MusicStoreManager.getInstance()
                         .generateUsersWeeklyTopSongs
@@ -323,6 +337,29 @@ export async function connectSpotify() {
     )}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily();
+}
+
+export async function disconnectSpotify() {
+    let serverIsOnline = await serverIsAvailable();
+    if (serverIsOnline) {
+        let result = await softwarePut(
+            "/disconnect/spotify",
+            {},
+            getItem("jwt")
+        );
+
+        if (isResponseOk(result)) {
+            const musicstoreMgr = MusicStoreManager.getInstance();
+            // oauth is not null, initialize spotify
+            musicstoreMgr.clearSpotifyAccessInfo();
+
+            musicstoreMgr.refreshPlaylists();
+        }
+    } else {
+        window.showInformationMessage(
+            `Our service is temporarily unavailable.\n\nPlease try again later.\n`
+        );
+    }
 }
 
 export async function fetchMusicTimeMetricsDashboard() {

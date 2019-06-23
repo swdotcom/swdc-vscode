@@ -241,14 +241,6 @@ export async function getSpotifyOauth(serverIsOnline) {
                 spotify_id:"citipzzers..."
                 spotify_refresh_token:"AQAEQ-kFK5c3I..."
              */
-            setItem(
-                "spotify_access_token",
-                user.oauths.Spotify.spotify_access_token
-            );
-            setItem(
-                "spotify_refresh_token",
-                user.oauths.Spotify.spotify_refresh_token
-            );
 
             return user.oauths.Spotify;
         }
