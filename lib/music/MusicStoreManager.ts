@@ -714,13 +714,15 @@ export class MusicStoreManager {
                         return item.uri;
                     });
 
-                    // await addTracks(
-                    //     playlistId,
-                    //     1,
-                    //     PERSONAL_TOP_SONGS_NAME,
-                    //     tracksToAdd
-                    // );
-                    await replacePlaylistTracks(playlistId, tracksToAdd);
+                    if (!existingPersonalPlaylist) {
+                        await addTracks(
+                            playlistId,
+                            PERSONAL_TOP_SONGS_NAME,
+                            tracksToAdd
+                        );
+                    } else {
+                        await replacePlaylistTracks(playlistId, tracksToAdd);
+                    }
                 }
             }
         }

@@ -22,8 +22,7 @@ import {
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    getRunningTrack,
-    Track
+    getRunningTrack
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 
@@ -86,6 +85,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             }
 
             const musicstoreMgr = MusicStoreManager.getInstance();
+
+            //
+            // MusicStateManager.gatherMusicInfo() will be called
+            // after pause or play has been invoked. That will also
+            // update the button states
+            //
 
             if (playlistItem.type === "track") {
                 musicstoreMgr.selectedTrackItem = playlistItem;

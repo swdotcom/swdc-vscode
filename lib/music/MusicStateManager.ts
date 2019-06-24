@@ -204,6 +204,11 @@ export class MusicStateManager {
             this.existingTrack = { ...playingTrack };
         }
 
+        // this updates the buttons in the status bar and the playlist buttons
+        if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
+            MusicCommandManager.syncControls();
+        }
+
         return this.existingTrack;
     }
 
