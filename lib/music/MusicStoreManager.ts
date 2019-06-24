@@ -200,15 +200,13 @@ export class MusicStoreManager {
     }
 
     async initializeSpotify(serverIsOnline) {
-        if (!this.requiresSpotifyAccess()) {
-            const spotifyOauth = await getSpotifyOauth(serverIsOnline);
-            if (spotifyOauth) {
-                // update the CodyMusic credentials
-                this.updateSpotifyAccessInfo(spotifyOauth);
-            } else {
-                setItem("spotify_access_token", null);
-                setItem("spotify_refresh_token", null);
-            }
+        const spotifyOauth = await getSpotifyOauth(serverIsOnline);
+        if (spotifyOauth) {
+            // update the CodyMusic credentials
+            this.updateSpotifyAccessInfo(spotifyOauth);
+        } else {
+            setItem("spotify_access_token", null);
+            setItem("spotify_refresh_token", null);
         }
     }
 
@@ -232,6 +230,8 @@ export class MusicStoreManager {
             getUserProfile().then(user => {
                 this._spotifyUser = user;
             });
+        } else {
+            this.clearSpotifyAccessInfo();
         }
     }
 
@@ -721,7 +721,19 @@ export class MusicStoreManager {
                             tracksToAdd
                         );
                     } else {
-                        await replacePlaylistTracks(playlistId, tracksToAdd);
+                        await replacePlaylistTracks(playlistId, tracksToAdd)
+                            .then(result => {
+                                console.log(
+                                    "replace playlist tracks result: ",
+                                    result
+                                );
+                            })
+                            .catch(err => {
+                                console.log(
+                                    "replace playlist tracks error: ",
+                                    err.message
+                                );
+                            });
                     }
                 }
             }

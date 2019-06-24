@@ -20,8 +20,7 @@ import {
     getUserStatus,
     serverIsAvailable,
     refetchSpotifyConnectStatusLazily,
-    getLoggedInCacheState,
-    getSpotifyOauth
+    getLoggedInCacheState
 } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import {
@@ -29,16 +28,10 @@ import {
     getMusicTimeFile,
     isLinux,
     logIt,
-    buildLoginUrl,
     launchWebUrl,
     launchLogin
 } from "../Util";
-import {
-    softwareGet,
-    softwarePut,
-    isResponseOk,
-    spotifyApiPut
-} from "../HttpClient";
+import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
     api_endpoint,
     LOGIN_LABEL,
@@ -57,7 +50,7 @@ export class MusicControlManager {
     }
 
     async getPlayer(): Promise<PlayerType> {
-        const track = await getRunningTrack();
+        const track = MusicStoreManager.getInstance().runningTrack;
         if (track) {
             return track.playerType;
         }

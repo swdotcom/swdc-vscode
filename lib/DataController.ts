@@ -26,7 +26,7 @@ import {
     isMusicTime,
     showStatus
 } from "./Util";
-import { requiresSpotifyAccessInfo, Track, getRunningTrack } from "cody-music";
+import { requiresSpotifyAccessInfo } from "cody-music";
 import {
     updateShowMusicMetrics,
     buildWebDashboardUrl,
