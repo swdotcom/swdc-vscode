@@ -697,7 +697,8 @@ export class MusicStoreManager {
                 console.log("Error updating music time global playlist ID");
             });
         } else {
-            playlistId = existingPersonalPlaylist.playlist_id;
+            // get the spotify playlist id from the app's existing playlist info
+            playlistId = existingPersonalPlaylist.id;
         }
 
         let musicstoreMgr = MusicStoreManager.getInstance();
