@@ -395,14 +395,14 @@ export class MusicStoreManager {
             }
         }
 
-        this.updateSettingsItems();
+        this.updateSettingsItems(serverIsOnline);
 
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
     }
 
-    async updateSettingsItems() {
+    async updateSettingsItems(serverIsOnline: boolean) {
         let settingsList: PlaylistItem[] = [];
 
         if (!this.requiresSpotifyAccess()) {
@@ -465,7 +465,10 @@ export class MusicStoreManager {
             const foundGlobalFavorites = this.hasMusicTimePlaylistForType(
                 SOFTWARE_TOP_SONGS_PLID
             );
-            if (!foundGlobalFavorites) {
+
+            // only create global favorites if the app is online and we're
+            // unable to find the global playlist id for the user
+            if (!foundGlobalFavorites && serverIsOnline) {
                 if (!this.hasGlobalFavorites) {
                     await this.syncGlobalTopSongs();
                 }

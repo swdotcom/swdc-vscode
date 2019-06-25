@@ -25,6 +25,7 @@ import {
     getRunningTrack
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
+import { MusicStateManager } from "./MusicStateManager";
 
 const createPlaylistTreeItem = (
     p: PlaylistItem,
@@ -50,6 +51,11 @@ export const playTrackFromPlaylist = async (
     }
 
     await play(PlayerName.SpotifyWeb, options);
+
+    // invoke the music gather
+    setTimeout(() => {
+        MusicStateManager.getInstance().musicStateCheck();
+    }, 1000);
 
     if (checkTrackStateAndTryAgain) {
         getRunningTrack().then(track => {
