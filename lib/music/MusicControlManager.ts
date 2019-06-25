@@ -232,30 +232,6 @@ export class MusicControlManager {
             items: []
         };
 
-        menuOptions.items.push({
-            label: "Software Top 40",
-            detail:
-                "Top 40 most popular songs developers around the world listen to as they code",
-            url: "https://api.software.com/music/top40",
-            cb: null
-        });
-
-        menuOptions.items.push({
-            label: "Music Time Dashboard",
-            detail: "View your latest music metrics right here in your editor",
-            url: null,
-            cb: displayMusicTimeMetricsDashboard
-        });
-
-        if (!userStatus.loggedIn) {
-            menuOptions.items.push({
-                label: LOGIN_LABEL,
-                detail: loginMsgDetail,
-                url: null,
-                cb: loginFunction
-            });
-        }
-
         const musicstoreMgr = MusicStoreManager.getInstance();
 
         // check if the user has the spotify_access_token
@@ -307,6 +283,44 @@ export class MusicControlManager {
                 });
             }
         }
+
+        if (!userStatus.loggedIn) {
+            menuOptions.items.push({
+                label: LOGIN_LABEL,
+                detail: loginMsgDetail,
+                url: null,
+                cb: loginFunction
+            });
+        }
+
+        menuOptions.items.push({
+            label: "Music Time Dashboard",
+            detail: "View your latest music metrics right here in your editor",
+            url: null,
+            cb: displayMusicTimeMetricsDashboard
+        });
+
+        menuOptions.items.push({
+            label: "Software Top 40",
+            detail:
+                "Top 40 most popular songs developers around the world listen to as they code",
+            url: "https://api.software.com/music/top40",
+            cb: null
+        });
+
+        menuOptions.items.push({
+            label: "Submit an issue on GitHub",
+            detail: "Encounter a bug? Submit an issue on our GitHub page",
+            url: "https://github.com/swdotcom/swdc-vscode/issues",
+            cb: null
+        });
+
+        menuOptions.items.push({
+            label: "Submit Feedback",
+            detail: "Send us an email at cody@software.com.",
+            url: "mailto:cody@software.com",
+            cb: null
+        });
 
         showQuickPick(menuOptions);
     }

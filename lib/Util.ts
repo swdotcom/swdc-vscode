@@ -787,6 +787,17 @@ export function getDashboardRow(label, value) {
     return content;
 }
 
+export function getSectionHeader(label) {
+    let content = `${label}\n`;
+    // add 3 to account for the " : " between the columns
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 15;
+    for (let i = 0; i < dashLen; i++) {
+        content += "-";
+    }
+    content += "\n";
+    return content;
+}
+
 function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
     return getDashboardDataDisplay(width, label);
 }

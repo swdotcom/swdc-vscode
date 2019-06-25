@@ -10,7 +10,8 @@ import {
     getDashboardRow,
     humanizeMinutes,
     getSummaryInfoFile,
-    launchLogin
+    launchLogin,
+    getSectionHeader
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
@@ -93,15 +94,6 @@ export async function showMenuOptions() {
         cb: displayCodeTimeMetricsDashboard
     });
 
-    if (userStatus.loggedIn && showMusicMetrics) {
-        kpmMenuOptions.items.push({
-            label: "Software Top 40",
-            detail:
-                "Top 40 most popular songs developers around the world listen to as they code",
-            url: "https://api.software.com/music/top40",
-            cb: null
-        });
-    }
     let loginMsgDetail =
         "To see your coding data in Code Time, please log in to your account";
     if (!serverIsOnline) {
@@ -115,13 +107,6 @@ export async function showMenuOptions() {
             url: null,
             cb: launchLogin
         });
-    } else {
-        kpmMenuOptions.items.push({
-            label: "Web Dashboard",
-            detail: "See rich data visualizations in the web app",
-            url: null,
-            cb: launchWebDashboardView
-        });
     }
 
     kpmMenuOptions.items.push({
@@ -130,6 +115,16 @@ export async function showMenuOptions() {
         url: null,
         cb: toggleStatusBar
     });
+
+    if (userStatus.loggedIn && showMusicMetrics) {
+        kpmMenuOptions.items.push({
+            label: "Software Top 40",
+            detail:
+                "Top 40 most popular songs developers around the world listen to as they code",
+            url: "https://api.software.com/music/top40",
+            cb: null
+        });
+    }
 
     kpmMenuOptions.items.push({
         label: "Submit an issue on GitHub",
@@ -144,6 +139,15 @@ export async function showMenuOptions() {
         url: "mailto:cody@software.com",
         cb: null
     });
+
+    if (userStatus.loggedIn) {
+        kpmMenuOptions.items.push({
+            label: "Web Dashboard",
+            detail: "See rich data visualizations in the web app",
+            url: null,
+            cb: launchWebDashboardView
+        });
+    }
 
     showQuickPick(kpmMenuOptions);
 }
@@ -200,6 +204,9 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
     const formattedDate = moment().format("ddd, MMM Do h:mma");
     dashboardContent = `CODE TIME          (Last updated on ${formattedDate})`;
     dashboardContent += "\n\n";
+
+    const todayStr = moment().format("ddd, MMM Do");
+    dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
     if (summary) {
         let averageTime = humanizeMinutes(summary.averageDailyMinutes);

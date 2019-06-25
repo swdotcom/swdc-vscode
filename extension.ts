@@ -32,7 +32,6 @@ import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
-const moment = require("moment-timezone");
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -220,26 +219,6 @@ export async function intializePlugin(
 
     initializeLiveshare();
     initializeUserInfo(createdAnonUser, serverIsOnline);
-}
-
-function getMillisecondsDelayToStartBatchSend() {
-    // every half hour, send offline data
-    const endOfHour = moment()
-        .endOf("hour")
-        .unix();
-    const secondsUntilEndOfHour = endOfHour - moment().unix();
-    let delayToStart_in_sec = 0;
-    // add 2 minutes to ensure
-    const two_minute_in_sec = 60 * 2;
-    const hour_in_sec = 60 * 60;
-    const thirty_min_in_sec = hour_in_sec / 2;
-    if (secondsUntilEndOfHour > thirty_min_in_sec) {
-        delayToStart_in_sec =
-            secondsUntilEndOfHour - thirty_min_in_sec + two_minute_in_sec;
-    } else {
-        delayToStart_in_sec = secondsUntilEndOfHour + two_minute_in_sec;
-    }
-    return delayToStart_in_sec * 1000;
 }
 
 function handlePauseMetricsEvent() {
