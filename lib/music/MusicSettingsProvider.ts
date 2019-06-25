@@ -31,7 +31,10 @@ export const connectSettingsTreeView = (view: TreeView<PlaylistItem>) => {
             if (playlistItem.command) {
                 // run the command
                 commands.executeCommand(playlistItem.command);
-                return;
+                // clear the selection and refresh the playlist
+                setTimeout(() => {
+                    MusicStoreManager.getInstance().refreshPlaylists();
+                }, 1000);
             }
         }),
         view.onDidChangeVisibility(e => {
