@@ -152,11 +152,8 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         playlistItem.playerType === PlayerType.MacItunesDesktop
                             ? PlayerName.ItunesDesktop
                             : PlayerName.SpotifyDesktop;
-                    // play the track
-                    let params = [playlistItem.name, currentPlaylist.name];
-
                     if (playlistItem["state"] !== TrackStatus.Playing) {
-                        await playTrackInContext(playerName, params);
+                        await play(playerName);
                     } else {
                         await pause(playerName);
                     }
@@ -175,10 +172,23 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     if (tracks && tracks.length > 0) {
                         const firstTrack: PlaylistItem = tracks[0];
 
-                        await launchAndPlayTrack(
-                            firstTrack,
-                            musicstoreMgr.spotifyUser
-                        );
+                        if (
+                            playlistItem.playerType !==
+                            PlayerType.MacItunesDesktop
+                        ) {
+                            await launchAndPlayTrack(
+                                firstTrack,
+                                musicstoreMgr.spotifyUser
+                            );
+                        } else {
+                            const playlistName = playlistItem.name;
+                            const trackName = firstTrack.name;
+                            const params = [trackName, playlistName];
+                            await playTrackInContext(
+                                PlayerName.ItunesDesktop,
+                                params
+                            );
+                        }
                     }
                 }
             }
