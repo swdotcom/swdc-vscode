@@ -38,9 +38,9 @@ export const playTrackFromPlaylist = async (
     spotifyUser: SpotifyUser,
     playlistId: string,
     trackId: string,
-    checkTrackStateAndTryAgain: boolean = false
+    spotifyDevices: PlayerDevice[],
+    checkTrackStateAndTryAgainCount: number = 0
 ) => {
-    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
     const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
     let options = {
         context_uri: playlistUri,
@@ -57,19 +57,56 @@ export const playTrackFromPlaylist = async (
         MusicStateManager.getInstance().musicStateCheck();
     }, 1000);
 
-    if (checkTrackStateAndTryAgain) {
-        getRunningTrack().then(track => {
-            if (!track || track.id) {
+    if (checkTrackStateAndTryAgainCount > 0) {
+        getRunningTrack().then(async track => {
+            if (!track || !track.id) {
+                checkTrackStateAndTryAgainCount--;
+                spotifyDevices = await getSpotifyDevices();
                 setTimeout(() => {
                     playTrackFromPlaylist(
                         spotifyUser,
                         playlistId,
                         trackId,
-                        checkTrackStateAndTryAgain
+                        spotifyDevices,
+                        checkTrackStateAndTryAgainCount
                     );
                 }, 1000);
             }
         });
+    }
+};
+
+export const launchAndPlayTrack = async (
+    track: PlaylistItem,
+    spotifyUser: SpotifyUser
+) => {
+    const currentPlaylist: PlaylistItem = MusicStoreManager.getInstance()
+        .selectedPlaylist;
+    // check if there's any spotify devices
+    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+    if (!spotifyDevices || spotifyDevices.length === 0) {
+        // no spotify devices found, lets launch the web player with the track
+
+        // launch it
+        await launchPlayer(PlayerName.SpotifyWeb);
+        // now select it from within the playlist
+        setTimeout(() => {
+            playTrackFromPlaylist(
+                spotifyUser,
+                currentPlaylist.id,
+                track.id,
+                spotifyDevices,
+                10 /* checkTrackStateAndTryAgain */
+            );
+        }, 4000);
+    } else {
+        // a device is found, play using the device
+        playTrackFromPlaylist(
+            spotifyUser,
+            currentPlaylist.id,
+            track.id,
+            spotifyDevices
+        );
     }
 };
 
@@ -81,7 +118,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             }
             let playlistItem: PlaylistItem = e.selection[0];
 
-            const selectedPlaylist: PlaylistItem = MusicStoreManager.getInstance()
+            const currentPlaylist: PlaylistItem = MusicStoreManager.getInstance()
                 .selectedPlaylist;
 
             if (playlistItem.command) {
@@ -102,33 +139,11 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 musicstoreMgr.selectedTrackItem = playlistItem;
 
                 if (playlistItem.playerType === PlayerType.WebSpotify) {
-                    // check if there's any spotify devices
-                    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-
-                    let track_id = playlistItem.id;
-
                     if (playlistItem["state"] !== TrackStatus.Playing) {
-                        if (!spotifyDevices || spotifyDevices.length === 0) {
-                            // no spotify devices found, lets launch the web player with the track
-
-                            // launch it
-                            await launchPlayer(PlayerName.SpotifyWeb);
-                            // now select it from within the playlist
-                            setTimeout(() => {
-                                playTrackFromPlaylist(
-                                    musicstoreMgr.spotifyUser,
-                                    musicstoreMgr.selectedPlaylist.id,
-                                    track_id
-                                );
-                            }, 4000);
-                        } else {
-                            // a device is found, play using the device
-                            playTrackFromPlaylist(
-                                musicstoreMgr.spotifyUser,
-                                musicstoreMgr.selectedPlaylist.id,
-                                track_id
-                            );
-                        }
+                        await launchAndPlayTrack(
+                            playlistItem,
+                            musicstoreMgr.spotifyUser
+                        );
                     } else {
                         await pause(PlayerName.SpotifyWeb);
                     }
@@ -138,12 +153,32 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                             ? PlayerName.ItunesDesktop
                             : PlayerName.SpotifyDesktop;
                     // play the track
-                    let params = [playlistItem.name, selectedPlaylist.name];
+                    let params = [playlistItem.name, currentPlaylist.name];
 
                     if (playlistItem["state"] !== TrackStatus.Playing) {
                         await playTrackInContext(playerName, params);
                     } else {
                         await pause(playerName);
+                    }
+                }
+            } else {
+                // if playlist isn't already running or it's a diffent playlist, play the 1st track in the playlist
+                musicstoreMgr.selectedPlaylist = playlistItem;
+                if (
+                    !currentPlaylist ||
+                    playlistItem.id !== currentPlaylist.id
+                ) {
+                    // start the playlist by playing the 1st track in the playlist
+                    let tracks = await musicstoreMgr.getTracksForPlaylistId(
+                        playlistItem.id
+                    );
+                    if (tracks && tracks.length > 0) {
+                        const firstTrack: PlaylistItem = tracks[0];
+
+                        await launchAndPlayTrack(
+                            firstTrack,
+                            musicstoreMgr.spotifyUser
+                        );
                     }
                 }
             }
@@ -215,7 +250,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 type:"playlist"
                 playerType:"MacItunesDesktop"
              */
-            MusicStoreManager.getInstance().selectedPlaylist = element;
+
             // return track of the playlist parent
             let tracks = await MusicStoreManager.getInstance().getTracksForPlaylistId(
                 element.id

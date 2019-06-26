@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "1.1.10";
-const MUSIC_TIME_VERSION = "0.1.16";
+const MUSIC_TIME_VERSION = "0.1.17";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 

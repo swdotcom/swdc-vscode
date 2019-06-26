@@ -195,7 +195,7 @@ export class MusicStoreManager {
     }
 
     async clearPlaylists() {
-        this.selectedPlaylist = null;
+        // this.selectedPlaylist = null;
         this.runningPlaylists = [];
     }
 
