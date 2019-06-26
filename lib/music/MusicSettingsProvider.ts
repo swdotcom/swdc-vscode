@@ -105,6 +105,17 @@ class SettingsTreeItem extends TreeItem {
                 "dark",
                 "icons8-spotify.svg"
             );
+        } else if (treeItem.type === "itunes") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "icons8-itunes.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "icons8-itunes.svg"
+            );
         } else if (treeItem.type === "connected") {
             this.iconPath.light = path.join(
                 this.resourcePath,

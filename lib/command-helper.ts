@@ -203,6 +203,12 @@ export function createCommands(): {
         );
         cmds.push(launchSpotifyCommand);
 
+        const launchItunesCommand = commands.registerCommand(
+            "musictime.launchItunes",
+            () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
+        );
+        cmds.push(launchItunesCommand);
+
         const generateWeeklyPlaylistCommand = commands.registerCommand(
             "musictime.generateWeeklyPlaylist",
             () => MusicStoreManager.getInstance().generateUsersWeeklyTopSongs()

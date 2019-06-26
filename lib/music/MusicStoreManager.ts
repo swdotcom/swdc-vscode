@@ -358,13 +358,12 @@ export class MusicStoreManager {
 
         this._currentPlayerType = this.runningTrack.playerType;
 
-        const noTrackId = !this.runningTrack.id;
         const playerNotAssigned =
             this.runningTrack.playerType === PlayerType.NotAssigned;
 
         if (
             this.spotifyPlaylists.length === 0 &&
-            (playerNotAssigned || noTrackId)
+            (playerNotAssigned || !this.runningTrack.id)
         ) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
@@ -402,6 +401,10 @@ export class MusicStoreManager {
         commands.executeCommand("musictime.refreshSettings");
     }
 
+    /**
+     * TreeView settings items
+     * @param serverIsOnline
+     */
     async updateSettingsItems(serverIsOnline: boolean) {
         let settingsList: PlaylistItem[] = [];
 
@@ -475,6 +478,19 @@ export class MusicStoreManager {
                 // create the global top 40
                 await this.createGlobalTopSongsPlaylist();
             }
+        }
+
+        // If iTunes is currently playing show .
+        // If it's not then show the launch iTunes
+        if (this.runningTrack.playerType !== PlayerType.MacItunesDesktop) {
+            let item: PlaylistItem = new PlaylistItem();
+            item.tracks = new PlaylistTrackInfo();
+            item.type = "itunes";
+            item.id = "title";
+            item.command = "musictime.launchItunes";
+            item.playerType = PlayerType.MacItunesDesktop;
+            item.name = "Launch iTunes";
+            settingsList.push(item);
         }
 
         this.settings = settingsList;

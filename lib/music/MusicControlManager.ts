@@ -156,8 +156,8 @@ export class MusicControlManager {
         }
     }
 
-    launchTrackPlayer(playerType: PlayerName = null) {
-        if (!playerType) {
+    launchTrackPlayer(playerName: PlayerName = null) {
+        if (!playerName) {
             getRunningTrack().then((track: Track) => {
                 if (track && track.id) {
                     let options = {
@@ -190,6 +190,8 @@ export class MusicControlManager {
                     }
                 }
             });
+        } else if (playerName === PlayerName.ItunesDesktop) {
+            launchPlayer(PlayerName.ItunesDesktop);
         } else {
             this.launchSpotifyPlayer();
         }
