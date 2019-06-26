@@ -29,7 +29,7 @@ import {
     softwarePut,
     softwarePost
 } from "../HttpClient";
-import { getItem, setItem } from "../Util";
+import { getItem, setItem, logIt } from "../Util";
 import {
     PERSONAL_TOP_SONGS_NAME,
     SOFTWARE_TOP_SONGS_NAME,
@@ -663,7 +663,7 @@ export class MusicStoreManager {
                 2,
                 SOFTWARE_TOP_SONGS_NAME
             ).catch(err => {
-                console.log("Error updating music time global playlist ID");
+                logIt("Error updating music time global playlist ID");
             });
         }
 
@@ -710,7 +710,7 @@ export class MusicStoreManager {
                 1,
                 PERSONAL_TOP_SONGS_NAME
             ).catch(err => {
-                console.log("Error updating music time global playlist ID");
+                logIt("Error updating music time global playlist ID");
             });
         } else {
             // get the spotify playlist id from the app's existing playlist info
@@ -741,19 +741,14 @@ export class MusicStoreManager {
                             tracksToAdd
                         );
                     } else {
-                        await replacePlaylistTracks(playlistId, tracksToAdd)
-                            .then(result => {
-                                console.log(
-                                    "replace playlist tracks result: ",
-                                    result
-                                );
-                            })
-                            .catch(err => {
-                                console.log(
-                                    "replace playlist tracks error: ",
-                                    err.message
-                                );
-                            });
+                        await replacePlaylistTracks(
+                            playlistId,
+                            tracksToAdd
+                        ).catch(err => {
+                            logIt(
+                                `Error replacing tracks, error: ${err.message}`
+                            );
+                        });
                     }
                 }
             }

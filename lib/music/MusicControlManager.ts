@@ -114,45 +114,22 @@ export class MusicControlManager {
     }
 
     async setLiked(liked: boolean) {
-        const track: Track = await getRunningTrack();
+        let track: Track = MusicStoreManager.getInstance().runningTrack;
         if (track) {
-            // set it to liked
-            let trackId = track.id;
-            if (trackId.indexOf(":") !== -1) {
-                // strip it down to just the last id part
-                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
-            }
-            let type = "spotify";
             if (track.playerType === PlayerType.MacItunesDesktop) {
-                type = "itunes";
+                // await so that the stateCheckHandler fetches
+                // the latest version of the itunes track
+                await setItunesLoved(liked).catch(err => {
+                    logIt(`Error updating itunes loved state: ${err.message}`);
+                });
             }
-            // use the name and artist as well since we have it
-            let trackName = encodeURIComponent(track.name);
-            let trackArtist = encodeURIComponent(track.artist);
-            const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
-            const payload = { liked };
-            const resp = await softwarePut(api, payload, getItem("jwt"));
-            if (isResponseOk(resp)) {
-                if (type === "itunes") {
-                    // await so that the stateCheckHandler fetches
-                    // the latest version of the itunes track
-                    await setItunesLoved(liked)
-                        .then(result => {
-                            //
-                        })
-                        .catch(err => {
-                            logIt(
-                                `Error updating itunes loved state: ${
-                                    err.message
-                                }`
-                            );
-                        });
-                }
-                // update the buttons
-                this.msMgr.clearServerTrack();
-                // update the buttons since the liked state changed
-                MusicCommandManager.syncControls();
-            }
+
+            // update the music store running track liked state
+            track.loved = liked;
+            MusicStoreManager.getInstance().runningTrack = track;
+
+            // get the current track state
+            MusicCommandManager.updateButtons();
         }
     }
 

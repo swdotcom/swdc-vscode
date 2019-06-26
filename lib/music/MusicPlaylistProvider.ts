@@ -130,7 +130,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             const musicstoreMgr = MusicStoreManager.getInstance();
 
             //
-            // MusicStateManager.gatherMusicInfo() will be called
+            // MusicStateManager gatherMusicInfo will be called
             // after pause or play has been invoked. That will also
             // update the button states
             //

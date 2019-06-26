@@ -22,8 +22,8 @@ export class MusicStateManager {
     private static instance: MusicStateManager;
 
     private existingTrack: any = {};
-    private serverTrack: any = null;
     private currentPlayerType: PlayerType = null;
+    private processingSong: boolean = false;
 
     private musicstoreMgr: MusicStoreManager;
 
@@ -39,73 +39,6 @@ export class MusicStateManager {
             MusicStateManager.instance = new MusicStateManager();
         }
         return MusicStateManager.instance;
-    }
-
-    public clearServerTrack() {
-        this.serverTrack = null;
-    }
-
-    public async getServerTrack(track: Track) {
-        if (track) {
-            let trackId = track.id;
-            if (trackId.indexOf(":") !== -1) {
-                // strip it down to just the last id part
-                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
-            }
-            let type = "spotify";
-            if (track.playerType === PlayerType.MacItunesDesktop) {
-                type = "itunes";
-            }
-            // use the name and artist as well since we have it
-            let trackName = track.name;
-            let trackArtist = track.artist;
-
-            // check if it's cached before hitting the server
-            if (this.serverTrack) {
-                if (this.serverTrack.trackId === track.id) {
-                    return this.serverTrack;
-                } else if (
-                    this.serverTrack.name === trackName &&
-                    this.serverTrack.artist === trackArtist
-                ) {
-                    return this.serverTrack;
-                }
-                // it doesn't match, might as well nullify it
-                this.serverTrack = null;
-            }
-
-            if (!this.serverTrack) {
-                const api = `/music/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
-                const resp = await softwareGet(api, getItem("jwt"));
-                if (isResponseOk(resp)) {
-                    this.serverTrack = { ...resp.data };
-                }
-            }
-        }
-        return this.serverTrack;
-    }
-
-    public async updateLovedStateFromServer(track: Track) {
-        if (!isMusicTime()) {
-            return;
-        }
-        if (
-            !track ||
-            isEmptyObj(track) ||
-            track.playerType === PlayerType.MacItunesDesktop
-        ) {
-            return;
-        }
-
-        const serverTrack = await this.getServerTrack(track);
-        if (serverTrack) {
-            const liked = serverTrack.liked || 0;
-            if (liked === 1) {
-                track["loved"] = true;
-            } else {
-                track["loved"] = false;
-            }
-        }
     }
 
     public async musicStateCheck() {
@@ -168,6 +101,11 @@ export class MusicStateManager {
     }
 
     public async gatherMusicInfo(): Promise<any> {
+        if (this.processingSong) {
+            return this.existingTrack;
+        }
+
+        this.processingSong = true;
         let playingTrack = await getRunningTrack();
 
         const changeStatus = this.getChangeStatus(playingTrack);
@@ -215,6 +153,7 @@ export class MusicStateManager {
             MusicCommandManager.syncControls();
         }
 
+        this.processingSong = false;
         return this.existingTrack;
     }
 

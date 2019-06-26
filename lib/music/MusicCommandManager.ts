@@ -136,11 +136,6 @@ export class MusicCommandManager {
             return;
         }
 
-        if (track.playerType !== PlayerType.MacItunesDesktop) {
-            // get the liked state
-            await this.msMgr.updateLovedStateFromServer(track);
-        }
-
         // desktop returned a null track but we've determined there is a player running somewhere.
         // default by checking the spotify web player state
         if (track.playerType === PlayerType.WebSpotify) {
