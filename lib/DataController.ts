@@ -625,6 +625,7 @@ export async function getSessionSummaryStatus(forceRefresh = false) {
                 return { status: "NO_DATA", data: sessionSummaryData };
             })
             .catch(err => {
+                updateStatusBarWithSummaryData();
                 logIt(`error fetching session kpm info: ${err.message}`);
                 return { status: "ERROR", data: sessionSummaryData };
             });
