@@ -169,7 +169,7 @@
     "dependencies": {
         "aws-sdk": "^2.470.0",
         "axios": "^0.19.0",
-        "cody-music": "2.5.0",
+        "cody-music": "2.5.2",
         "moment-timezone": "^0.5.25",
         "vsls": "0.3.1291"
     }

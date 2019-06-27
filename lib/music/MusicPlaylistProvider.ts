@@ -13,7 +13,6 @@ import * as path from "path";
 import { MusicStoreManager } from "./MusicStoreManager";
 import {
     PlaylistItem,
-    playTrackInContext,
     PlayerName,
     PlayerType,
     play,
@@ -22,7 +21,8 @@ import {
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    getRunningTrack
+    getRunningTrack,
+    playTrackInLibrary
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicStateManager } from "./MusicStateManager";
@@ -34,7 +34,18 @@ const createPlaylistTreeItem = (
     return new PlaylistTreeItem(p, cstate);
 };
 
-export const playTrackFromPlaylist = async (
+export const playItunesTrackFromPlaylist = async (
+    playlistItem: PlaylistItem
+) => {
+    const musicstoreMgr = MusicStoreManager.getInstance();
+    const playlistName = musicstoreMgr.selectedPlaylist.name;
+    const trackName = playlistItem.name;
+    const params = [trackName, playlistName];
+
+    await playTrackInLibrary(PlayerName.ItunesDesktop, params);
+};
+
+export const playSpotifyTrackFromPlaylist = async (
     spotifyUser: SpotifyUser,
     playlistId: string,
     trackId: string,
@@ -63,7 +74,7 @@ export const playTrackFromPlaylist = async (
                 checkTrackStateAndTryAgainCount--;
                 spotifyDevices = await getSpotifyDevices();
                 setTimeout(() => {
-                    playTrackFromPlaylist(
+                    playSpotifyTrackFromPlaylist(
                         spotifyUser,
                         playlistId,
                         trackId,
@@ -91,7 +102,7 @@ export const launchAndPlayTrack = async (
         await launchPlayer(PlayerName.SpotifyWeb);
         // now select it from within the playlist
         setTimeout(() => {
-            playTrackFromPlaylist(
+            playSpotifyTrackFromPlaylist(
                 spotifyUser,
                 currentPlaylist.id,
                 track.id,
@@ -101,7 +112,7 @@ export const launchAndPlayTrack = async (
         }, 4000);
     } else {
         // a device is found, play using the device
-        playTrackFromPlaylist(
+        playSpotifyTrackFromPlaylist(
             spotifyUser,
             currentPlaylist.id,
             track.id,
@@ -138,24 +149,25 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             if (playlistItem.type === "track") {
                 musicstoreMgr.selectedTrackItem = playlistItem;
 
-                if (playlistItem.playerType === PlayerType.WebSpotify) {
-                    if (playlistItem["state"] !== TrackStatus.Playing) {
+                const isPlaying =
+                    playlistItem["state"] !== TrackStatus.Playing
+                        ? true
+                        : false;
+
+                if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
+                    if (isPlaying) {
+                        await playItunesTrackFromPlaylist(playlistItem);
+                    } else {
+                        await pause(PlayerName.ItunesDesktop);
+                    }
+                } else {
+                    if (isPlaying) {
+                        await pause(PlayerName.SpotifyWeb);
+                    } else {
                         await launchAndPlayTrack(
                             playlistItem,
                             musicstoreMgr.spotifyUser
                         );
-                    } else {
-                        await pause(PlayerName.SpotifyWeb);
-                    }
-                } else {
-                    let playerName =
-                        playlistItem.playerType === PlayerType.MacItunesDesktop
-                            ? PlayerName.ItunesDesktop
-                            : PlayerName.SpotifyDesktop;
-                    if (playlistItem["state"] !== TrackStatus.Playing) {
-                        await play(playerName);
-                    } else {
-                        await pause(playerName);
                     }
                 }
             } else {
@@ -181,13 +193,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                                 musicstoreMgr.spotifyUser
                             );
                         } else {
-                            const playlistName = playlistItem.name;
-                            const trackName = firstTrack.name;
-                            const params = [trackName, playlistName];
-                            await playTrackInContext(
-                                PlayerName.ItunesDesktop,
-                                params
-                            );
+                            await playItunesTrackFromPlaylist(firstTrack);
                         }
                     }
                 }
