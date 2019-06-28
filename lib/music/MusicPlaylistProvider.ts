@@ -83,7 +83,7 @@ export const launchAndPlayTrack = async (
         }, 2000);
     } else {
         // a device is found, play using the device
-        musicCtrlMgr.playSpotifyTrackFromPlaylist(
+        await musicCtrlMgr.playSpotifyTrackFromPlaylist(
             spotifyUser,
             currentPlaylist.id,
             track.id,
@@ -125,6 +125,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         await playItunesTrackFromPlaylist(playlistItem);
                     } else {
                         await pause(PlayerName.ItunesDesktop);
+                        musicstoreMgr.refreshPlaylists();
                     }
                 } else {
                     if (notPlaying) {
@@ -134,6 +135,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                         );
                     } else {
                         await pause(PlayerName.SpotifyWeb);
+                        musicstoreMgr.refreshPlaylists();
                     }
                 }
             } else {

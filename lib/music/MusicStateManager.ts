@@ -43,7 +43,7 @@ export class MusicStateManager {
 
     public async musicStateCheck() {
         const currTrack = this.musicstoreMgr.runningTrack;
-        const track: Track = (await this.gatherMusicInfo()) || new Track();
+        const track: Track = await this.gatherMusicInfo();
         this.musicstoreMgr.runningTrack = track;
         if (isMusicTime()) {
             // valid track shows that we're able to communicate to spotify web or local
@@ -59,9 +59,14 @@ export class MusicStateManager {
                     SOFTWARE_TOP_SONGS_PLID
                 );
                 const hasSpotifyAccess = this.musicstoreMgr.requiresSpotifyAccess();
+                const trackPlayerStateChanged =
+                    this.currentPlayerType &&
+                    this.currentPlayerType !== track.playerType
+                        ? true
+                        : false;
 
                 if (
-                    this.currentPlayerType !== track.playerType ||
+                    trackPlayerStateChanged ||
                     (!foundGlobalFavorites && hasSpotifyAccess)
                 ) {
                     // add the global favorites since the user has spotify access
@@ -104,7 +109,7 @@ export class MusicStateManager {
 
     public async gatherMusicInfo(): Promise<any> {
         if (this.processingSong) {
-            return this.existingTrack;
+            return this.existingTrack || new Track();
         }
 
         this.processingSong = true;
@@ -115,6 +120,10 @@ export class MusicStateManager {
         const now = nowInSecs();
 
         const isNewAndPlaying = changeStatus.isNewTrack && changeStatus.playing;
+
+        if (changeStatus.trackStateChanged) {
+            console.log("new track state: ", playingTrack.state);
+        }
 
         if (changeStatus.endPrevTrack) {
             // subtract a few seconds since our timer is every 5 seconds
@@ -132,7 +141,6 @@ export class MusicStateManager {
 
             // send off the ended song session
             await sendMusicData(this.existingTrack);
-            this.existingTrack = {};
         }
 
         if (isNewAndPlaying) {
@@ -144,13 +152,11 @@ export class MusicStateManager {
             playingTrack["start"] = now;
             playingTrack["local_start"] = now - offset_sec;
             playingTrack["end"] = 0;
-
-            // set existing track to playing track
-            this.existingTrack = {};
-            this.existingTrack = { ...playingTrack };
-        } else if (changeStatus.paused) {
-            this.existingTrack.state = TrackStatus.Paused;
         }
+
+        // set existing track to playing track
+        this.existingTrack = {};
+        this.existingTrack = { ...playingTrack };
 
         // this updates the buttons in the status bar and the playlist buttons
         if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
@@ -158,7 +164,7 @@ export class MusicStateManager {
         }
 
         this.processingSong = false;
-        return this.existingTrack;
+        return this.existingTrack || new Track();
     }
 
     private codingDataReducer(accumulator, current) {

@@ -188,14 +188,12 @@ export class MusicStoreManager {
         this.refreshing = true;
         let serverIsOnline = await serverIsAvailable();
         // refresh the playlists
-        // await this.clearPlaylists();
         this.runningTrack = await getRunningTrack();
         await this.syncRunningPlaylists(serverIsOnline);
         this.refreshing = false;
     }
 
     async clearPlaylists() {
-        // this.selectedPlaylist = null;
         this.runningPlaylists = [];
     }
 

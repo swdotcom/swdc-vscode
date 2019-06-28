@@ -139,6 +139,7 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
+        const musicstoreMgr = MusicStoreManager.getInstance();
         const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
         let options = {
             context_uri: playlistUri,
@@ -169,9 +170,13 @@ export class MusicControlManager {
                             checkTrackStateAndTryAgainCount
                         );
                     }, 1000);
+                } else {
+                    musicstoreMgr.refreshPlaylists();
                 }
             });
         }
+
+        musicstoreMgr.refreshPlaylists();
     }
 
     launchTrackPlayer(playerName: PlayerName = null) {
