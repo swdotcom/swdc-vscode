@@ -356,9 +356,11 @@ export class MusicStoreManager {
 
         await this.syncSpotifyWebPlaylists(serverIsOnline);
 
-        this._currentPlayerType = this.runningTrack.playerType;
+        this._currentPlayerType =
+            this.runningTrack.playerType || PlayerType.NotAssigned;
 
         const playerNotAssigned =
+            !this.runningTrack.playerType ||
             this.runningTrack.playerType === PlayerType.NotAssigned;
         const noPlaylistsFound =
             this.spotifyPlaylists.length === 0 &&
@@ -393,6 +395,15 @@ export class MusicStoreManager {
             } else {
                 playlists = this.spotifyPlaylists;
                 this._currentPlayerType = PlayerType.WebSpotify;
+
+                // go through each playlist and find out it's state
+                for (let i = 0; i < playlists.length; i++) {
+                    const playlist = playlists[i];
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
+                }
             }
         }
 
@@ -571,10 +582,20 @@ export class MusicStoreManager {
     }
 
     async getTracksForPlaylistId(playlist_id: string) {
+        let trackInfo = await this.getPlaylistTrackInfo(playlist_id);
+        return trackInfo.tracks;
+    }
+
+    async getPlaylistState(playlist_id: string) {
+        let trackInfo = await this.getPlaylistTrackInfo(playlist_id);
+        return trackInfo.playlist_state;
+    }
+
+    async getPlaylistTrackInfo(playlist_id: string) {
         const hasActivePlaylistItems = this.hasActivePlaylistItems();
 
         if (this.runningTrack.playerType !== this._currentPlayerType) {
-            // clear the map
+            // the player type has changed, clear the map
             this._playlistTracks[playlist_id] = null;
         }
         // don't update the current player type if we're already showing the
@@ -584,14 +605,25 @@ export class MusicStoreManager {
         }
 
         let playlistItems = [];
-        let tracks = this._playlistTracks[playlist_id];
-        if (tracks) {
-            return tracks;
+        let trackInfo = this._playlistTracks[playlist_id];
+        if (trackInfo) {
+            return trackInfo;
         }
 
-        let playlistTracks: CodyResponse;
+        trackInfo = {
+            tracks: [],
+            playlist_state: TrackStatus.NotAssigned
+        };
 
-        if (this._currentPlayerType === PlayerType.WebSpotify) {
+        let playlistTracks: CodyResponse;
+        let noPlaylistType =
+            !this._currentPlayerType ||
+            this._currentPlayerType === PlayerType.NotAssigned;
+
+        if (
+            noPlaylistType ||
+            this._currentPlayerType === PlayerType.WebSpotify
+        ) {
             // get the playlist tracks
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
@@ -610,7 +642,9 @@ export class MusicStoreManager {
         }
 
         if (playlistTracks.state === CodyResponseType.Success) {
+            let playlist_state = TrackStatus.NotAssigned;
             let paginationItem: PaginationItem = playlistTracks.data;
+
             if (paginationItem && paginationItem.items) {
                 playlistItems = paginationItem.items.map((track: Track) => {
                     let playlistItem: PlaylistItem = new PlaylistItem();
@@ -627,15 +661,24 @@ export class MusicStoreManager {
                     } else {
                         playlistItem.state = TrackStatus.NotAssigned;
                     }
-                    // since this is a track, delete the tracks attribute
+
+                    if (
+                        playlistItem.state === TrackStatus.Playing ||
+                        playlistItem.state === TrackStatus.Paused
+                    ) {
+                        playlist_state = playlistItem.state;
+                    }
 
                     return playlistItem;
                 });
             }
 
-            this._playlistTracks[playlist_id] = playlistItems;
+            trackInfo.tracks = playlistItems;
+            trackInfo.playlist_state = playlist_state;
+
+            this._playlistTracks[playlist_id] = trackInfo;
         }
-        return playlistItems;
+        return trackInfo;
     }
 
     async createGlobalTopSongsPlaylist() {

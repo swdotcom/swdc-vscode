@@ -273,6 +273,12 @@ class PlaylistTreeItem extends TreeItem {
         public readonly command?: Command
     ) {
         super(treeItem.name, collapsibleState);
+
+        // set the track's context value to the playlist item state
+        // if it's a track that's playing or paused it will show the appropriate button.
+        // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
+        this.contextValue = treeItem.state;
+
         if (treeItem.type === "playlist") {
             if (treeItem.tag === "paw") {
                 this.iconPath.light = path.join(
@@ -312,9 +318,6 @@ class PlaylistTreeItem extends TreeItem {
                 "icons8-spotify.svg"
             );
         } else if (treeItem.type === "track") {
-            // set the track's context value to the track.state
-            this.contextValue = treeItem.state;
-
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(
                     this.resourcePath,

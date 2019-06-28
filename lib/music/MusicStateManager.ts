@@ -54,24 +54,6 @@ export class MusicStateManager {
             if (isValidTrack) {
                 // update the buttons to show player control changes
                 MusicCommandManager.updateButtons();
-
-                const foundGlobalFavorites = this.musicstoreMgr.hasMusicTimePlaylistForType(
-                    SOFTWARE_TOP_SONGS_PLID
-                );
-                const hasSpotifyAccess = this.musicstoreMgr.requiresSpotifyAccess();
-                const trackPlayerStateChanged =
-                    this.currentPlayerType &&
-                    this.currentPlayerType !== track.playerType
-                        ? true
-                        : false;
-
-                if (
-                    trackPlayerStateChanged ||
-                    (!foundGlobalFavorites && hasSpotifyAccess)
-                ) {
-                    // add the global favorites since the user has spotify access
-                    await this.musicstoreMgr.refreshPlaylists();
-                }
             } else if (isValidCurrTrack) {
                 // refresh
                 await this.musicstoreMgr.refreshPlaylists();
@@ -121,10 +103,6 @@ export class MusicStateManager {
 
         const isNewAndPlaying = changeStatus.isNewTrack && changeStatus.playing;
 
-        if (changeStatus.trackStateChanged) {
-            console.log("new track state: ", playingTrack.state);
-        }
-
         if (changeStatus.endPrevTrack) {
             // subtract a few seconds since our timer is every 5 seconds
             this.existingTrack["end"] = now - 3;
@@ -160,7 +138,8 @@ export class MusicStateManager {
 
         // this updates the buttons in the status bar and the playlist buttons
         if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
-            MusicCommandManager.syncControls(this.existingTrack);
+            // MusicCommandManager.syncControls(this.existingTrack);
+            await this.musicstoreMgr.refreshPlaylists();
         }
 
         this.processingSong = false;
