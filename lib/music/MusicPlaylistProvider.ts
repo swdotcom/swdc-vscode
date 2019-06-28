@@ -50,6 +50,8 @@ export const playItunesTrackFromPlaylist = async (
     const params = [trackName, playlistName];
 
     await playTrackInLibrary(PlayerName.ItunesDesktop, params);
+
+    musicstoreMgr.refreshPlaylists();
 };
 
 /**
@@ -106,6 +108,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 return;
             }
 
+            const musicCtrlMgr = new MusicControlManager();
             const musicstoreMgr = MusicStoreManager.getInstance();
 
             //
@@ -124,8 +127,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                     if (notPlaying) {
                         await playItunesTrackFromPlaylist(playlistItem);
                     } else {
-                        await pause(PlayerName.ItunesDesktop);
-                        musicstoreMgr.refreshPlaylists();
+                        musicCtrlMgr.pause(PlayerName.ItunesDesktop);
                     }
                 } else {
                     if (notPlaying) {
@@ -134,8 +136,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                             musicstoreMgr.spotifyUser
                         );
                     } else {
-                        await pause(PlayerName.SpotifyWeb);
-                        musicstoreMgr.refreshPlaylists();
+                        musicCtrlMgr.pause(PlayerName.SpotifyWeb);
                     }
                 }
             } else {

@@ -56,60 +56,77 @@ export class MusicControlManager {
         return null;
     }
 
-    async next() {
-        const playerType = await this.getPlayer();
-        if (playerType) {
-            if (playerType === PlayerType.WebSpotify) {
-                await next(PlayerName.SpotifyWeb);
-            } else if (playerType === PlayerType.MacItunesDesktop) {
-                await next(PlayerName.ItunesDesktop);
-            } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await next(PlayerName.SpotifyDesktop);
+    async next(playerName: PlayerName = null) {
+        if (!playerName) {
+            const playerType = await this.getPlayer();
+            if (playerType) {
+                if (playerType === PlayerType.WebSpotify) {
+                    await next(PlayerName.SpotifyWeb);
+                } else if (playerType === PlayerType.MacItunesDesktop) {
+                    await next(PlayerName.ItunesDesktop);
+                } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                    await next(PlayerName.SpotifyDesktop);
+                }
             }
-            MusicCommandManager.syncControls();
+        } else {
+            await next(playerName);
         }
+
+        MusicStoreManager.getInstance().refreshPlaylists();
     }
 
-    async previous() {
-        const playerType = await this.getPlayer();
-        if (playerType) {
-            if (playerType === PlayerType.WebSpotify) {
-                await previous(PlayerName.SpotifyWeb);
-            } else if (playerType === PlayerType.MacItunesDesktop) {
-                await previous(PlayerName.ItunesDesktop);
-            } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await previous(PlayerName.SpotifyDesktop);
+    async previous(playerName: PlayerName = null) {
+        if (!playerName) {
+            const playerType = await this.getPlayer();
+            if (playerType) {
+                if (playerType === PlayerType.WebSpotify) {
+                    await previous(PlayerName.SpotifyWeb);
+                } else if (playerType === PlayerType.MacItunesDesktop) {
+                    await previous(PlayerName.ItunesDesktop);
+                } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                    await previous(PlayerName.SpotifyDesktop);
+                }
             }
-            MusicCommandManager.syncControls();
+        } else {
+            await previous(playerName);
         }
+        MusicStoreManager.getInstance().refreshPlaylists();
     }
 
-    async play() {
-        const playerType = await this.getPlayer();
-        if (playerType) {
-            if (playerType === PlayerType.WebSpotify) {
-                await play(PlayerName.SpotifyWeb);
-            } else if (playerType === PlayerType.MacItunesDesktop) {
-                await play(PlayerName.ItunesDesktop);
-            } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await play(PlayerName.SpotifyDesktop);
+    async play(playerName: PlayerName = null) {
+        if (!playerName) {
+            const playerType = await this.getPlayer();
+            if (playerType) {
+                if (playerType === PlayerType.WebSpotify) {
+                    await play(PlayerName.SpotifyWeb);
+                } else if (playerType === PlayerType.MacItunesDesktop) {
+                    await play(PlayerName.ItunesDesktop);
+                } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                    await play(PlayerName.SpotifyDesktop);
+                }
             }
-            MusicCommandManager.syncControls();
+        } else {
+            await play(playerName);
         }
+        MusicStoreManager.getInstance().refreshPlaylists();
     }
 
-    async pause() {
-        const playerType = await this.getPlayer();
-        if (playerType) {
-            if (playerType === PlayerType.WebSpotify) {
-                await pause(PlayerName.SpotifyWeb);
-            } else if (playerType === PlayerType.MacItunesDesktop) {
-                await pause(PlayerName.ItunesDesktop);
-            } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                await pause(PlayerName.SpotifyDesktop);
+    async pause(playerName: PlayerName = null) {
+        if (!playerName) {
+            const playerType = await this.getPlayer();
+            if (playerType) {
+                if (playerType === PlayerType.WebSpotify) {
+                    await pause(PlayerName.SpotifyWeb);
+                } else if (playerType === PlayerType.MacItunesDesktop) {
+                    await pause(PlayerName.ItunesDesktop);
+                } else if (playerType === PlayerType.MacSpotifyDesktop) {
+                    await pause(PlayerName.SpotifyDesktop);
+                }
             }
-            MusicCommandManager.syncControls();
+        } else {
+            await pause(playerName);
         }
+        MusicStoreManager.getInstance().refreshPlaylists();
     }
 
     async setLiked(liked: boolean) {
@@ -156,6 +173,8 @@ export class MusicControlManager {
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000);
 
+        const musicCtrlMgr = new MusicControlManager();
+
         if (checkTrackStateAndTryAgainCount > 0) {
             getRunningTrack().then(async track => {
                 if (!track || !track.id) {
@@ -174,9 +193,9 @@ export class MusicControlManager {
                     musicstoreMgr.refreshPlaylists();
                 }
             });
+        } else {
+            musicstoreMgr.refreshPlaylists();
         }
-
-        musicstoreMgr.refreshPlaylists();
     }
 
     launchTrackPlayer(playerName: PlayerName = null) {

@@ -38,6 +38,7 @@ import {
 } from "../Constants";
 import { commands, window } from "vscode";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
+import { MusicCommandManager } from "./MusicCommandManager";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -190,6 +191,7 @@ export class MusicStoreManager {
         // refresh the playlists
         this.runningTrack = await getRunningTrack();
         await this.syncRunningPlaylists(serverIsOnline);
+        MusicCommandManager.syncControls(this.runningTrack);
         this.refreshing = false;
     }
 

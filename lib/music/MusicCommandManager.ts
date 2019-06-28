@@ -96,15 +96,15 @@ export class MusicCommandManager {
             24
         );
 
-        this.syncControls();
+        const track = await getRunningTrack();
+        this.syncControls(track);
     }
 
     /**
      * Sync the music button controls
      */
-    public static async syncControls() {
+    public static async syncControls(track: Track) {
         const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
-        const track = await getRunningTrack();
 
         musicstoreMgr.runningTrack = track;
         // update the playlist
