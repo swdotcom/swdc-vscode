@@ -15,18 +15,21 @@ import {
     PlaylistItem,
     PlayerName,
     PlayerType,
-    play,
     TrackStatus,
     pause,
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    getRunningTrack,
     playTrackInLibrary
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
-import { MusicStateManager } from "./MusicStateManager";
+import { MusicControlManager } from "./MusicControlManager";
 
+/**
+ * Create the playlist tree item (root or leaf)
+ * @param p
+ * @param cstate
+ */
 const createPlaylistTreeItem = (
     p: PlaylistItem,
     cstate: TreeItemCollapsibleState
@@ -34,6 +37,10 @@ const createPlaylistTreeItem = (
     return new PlaylistTreeItem(p, cstate);
 };
 
+/**
+ * Play an iTunes track from the currently selected playlist
+ * @param playlistItem
+ */
 export const playItunesTrackFromPlaylist = async (
     playlistItem: PlaylistItem
 ) => {
@@ -45,52 +52,16 @@ export const playItunesTrackFromPlaylist = async (
     await playTrackInLibrary(PlayerName.ItunesDesktop, params);
 };
 
-export const playSpotifyTrackFromPlaylist = async (
-    spotifyUser: SpotifyUser,
-    playlistId: string,
-    trackId: string,
-    spotifyDevices: PlayerDevice[],
-    checkTrackStateAndTryAgainCount: number = 0
-) => {
-    const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
-    let options = {
-        context_uri: playlistUri,
-        track_ids: [trackId]
-    };
-    if (spotifyDevices.length > 0) {
-        options["device_id"] = spotifyDevices[0].id;
-    }
-
-    await play(PlayerName.SpotifyWeb, options);
-
-    // invoke the music gather
-    setTimeout(() => {
-        MusicStateManager.getInstance().musicStateCheck();
-    }, 1000);
-
-    if (checkTrackStateAndTryAgainCount > 0) {
-        getRunningTrack().then(async track => {
-            if (!track || !track.id) {
-                checkTrackStateAndTryAgainCount--;
-                spotifyDevices = await getSpotifyDevices();
-                setTimeout(() => {
-                    playSpotifyTrackFromPlaylist(
-                        spotifyUser,
-                        playlistId,
-                        trackId,
-                        spotifyDevices,
-                        checkTrackStateAndTryAgainCount
-                    );
-                }, 1000);
-            }
-        });
-    }
-};
-
+/**
+ * Launch the Spotify player if it's not already launched, then play the track
+ * @param track
+ * @param spotifyUser
+ */
 export const launchAndPlayTrack = async (
     track: PlaylistItem,
     spotifyUser: SpotifyUser
 ) => {
+    const musicCtrlMgr = new MusicControlManager();
     const currentPlaylist: PlaylistItem = MusicStoreManager.getInstance()
         .selectedPlaylist;
     // check if there's any spotify devices
@@ -102,17 +73,17 @@ export const launchAndPlayTrack = async (
         await launchPlayer(PlayerName.SpotifyWeb);
         // now select it from within the playlist
         setTimeout(() => {
-            playSpotifyTrackFromPlaylist(
+            musicCtrlMgr.playSpotifyTrackFromPlaylist(
                 spotifyUser,
                 currentPlaylist.id,
                 track.id,
                 spotifyDevices,
                 10 /* checkTrackStateAndTryAgain */
             );
-        }, 4000);
+        }, 2000);
     } else {
         // a device is found, play using the device
-        playSpotifyTrackFromPlaylist(
+        musicCtrlMgr.playSpotifyTrackFromPlaylist(
             spotifyUser,
             currentPlaylist.id,
             track.id,
@@ -128,9 +99,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 return;
             }
             let playlistItem: PlaylistItem = e.selection[0];
-
-            const currentPlaylist: PlaylistItem = MusicStoreManager.getInstance()
-                .selectedPlaylist;
 
             if (playlistItem.command) {
                 // run the command
@@ -149,54 +117,27 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             if (playlistItem.type === "track") {
                 musicstoreMgr.selectedTrackItem = playlistItem;
 
-                const isPlaying =
-                    playlistItem["state"] !== TrackStatus.Playing
-                        ? true
-                        : false;
+                const notPlaying =
+                    playlistItem.state !== TrackStatus.Playing ? true : false;
 
                 if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
-                    if (isPlaying) {
+                    if (notPlaying) {
                         await playItunesTrackFromPlaylist(playlistItem);
                     } else {
                         await pause(PlayerName.ItunesDesktop);
                     }
                 } else {
-                    if (isPlaying) {
-                        await pause(PlayerName.SpotifyWeb);
-                    } else {
+                    if (notPlaying) {
                         await launchAndPlayTrack(
                             playlistItem,
                             musicstoreMgr.spotifyUser
                         );
+                    } else {
+                        await pause(PlayerName.SpotifyWeb);
                     }
                 }
             } else {
-                // if playlist isn't already running or it's a diffent playlist, play the 1st track in the playlist
                 musicstoreMgr.selectedPlaylist = playlistItem;
-                if (
-                    !currentPlaylist ||
-                    playlistItem.id !== currentPlaylist.id
-                ) {
-                    // start the playlist by playing the 1st track in the playlist
-                    let tracks = await musicstoreMgr.getTracksForPlaylistId(
-                        playlistItem.id
-                    );
-                    if (tracks && tracks.length > 0) {
-                        const firstTrack: PlaylistItem = tracks[0];
-
-                        if (
-                            playlistItem.playerType !==
-                            PlayerType.MacItunesDesktop
-                        ) {
-                            await launchAndPlayTrack(
-                                firstTrack,
-                                musicstoreMgr.spotifyUser
-                            );
-                        } else {
-                            await playItunesTrackFromPlaylist(firstTrack);
-                        }
-                    }
-                }
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -273,9 +214,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
             );
 
             // reveal the selected track
-            setTimeout(() => {
-                this.revealSelectedTrackItem(element);
-            }, 500);
+            this.revealSelectedTrackItem(element, tracks);
 
             return tracks;
         } else {
@@ -285,31 +224,38 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         }
     }
 
-    async revealSelectedTrackItem(element: PlaylistItem) {
+    async revealSelectedTrackItem(element: PlaylistItem, tracks) {
         const musicstoreMgr = MusicStoreManager.getInstance();
-        let tracks = await musicstoreMgr.getTracksForPlaylistId(element.id);
+
         // reveal the selected track
-        setTimeout(() => {
-            const selectedPlaylistItem: PlaylistItem =
-                musicstoreMgr.selectedTrackItem;
 
-            let foundItem = tracks.find(element => {
-                return element.id === selectedPlaylistItem.id;
+        const selectedPlaylistItem: PlaylistItem =
+            musicstoreMgr.selectedTrackItem;
+
+        let foundItem = null;
+        if (selectedPlaylistItem && selectedPlaylistItem.id) {
+            foundItem = tracks.find(element => {
+                return element && element.id
+                    ? element.id === selectedPlaylistItem.id
+                    : null;
             });
+        }
 
-            if (foundItem) {
-                this.view.reveal(foundItem, {
-                    focus: true,
-                    select: false
-                });
-            }
-        }, 500);
+        if (foundItem) {
+            this.view.reveal(foundItem, {
+                focus: true,
+                select: false
+            });
+        }
     }
 }
 
+/**
+ * The TreeItem contains the "contextValue", which is represented as the "viewItem"
+ * from within the package.json when determining if there should be decoracted context
+ * based on that value.
+ */
 class PlaylistTreeItem extends TreeItem {
-    private treeItemIcon: string = "";
-
     private resourcePath: string = path.join(
         __filename,
         "..",
@@ -363,7 +309,8 @@ class PlaylistTreeItem extends TreeItem {
                 "icons8-spotify.svg"
             );
         } else if (treeItem.type === "track") {
-            this.contextValue = treeItem["state"];
+            // set the track's context value to the track.state
+            this.contextValue = treeItem.state;
 
             if (treeItem.playerType === PlayerType.MacItunesDesktop) {
                 this.iconPath.light = path.join(

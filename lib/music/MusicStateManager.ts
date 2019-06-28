@@ -82,21 +82,23 @@ export class MusicStateManager {
             : null;
         const playingTrackId = playingTrack.id || null;
         const existingTrackState = this.existingTrack
-            ? this.existingTrack.state || null
-            : null;
+            ? this.existingTrack.state || TrackStatus.NotAssigned
+            : TrackStatus.NotAssigned;
         const playingTrackState = playingTrack.state || "stopped";
 
         // return obj attributes
         const isNewTrack = existingTrackId !== playingTrackId;
         const endPrevTrack = existingTrackId !== null && isNewTrack;
         const trackStateChanged = existingTrackState !== playingTrackState;
-        const playing = playingTrackState === "playing";
+        const playing = playingTrackState === TrackStatus.Playing;
+        const paused = playingTrackState === TrackStatus.Paused;
 
         return {
             isNewTrack,
             endPrevTrack,
             trackStateChanged,
-            playing
+            playing,
+            paused
         };
     }
 
@@ -146,6 +148,8 @@ export class MusicStateManager {
             // set existing track to playing track
             this.existingTrack = {};
             this.existingTrack = { ...playingTrack };
+        } else if (changeStatus.paused) {
+            this.existingTrack.state = TrackStatus.Paused;
         }
 
         // this updates the buttons in the status bar and the playlist buttons

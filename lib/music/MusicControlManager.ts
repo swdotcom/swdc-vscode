@@ -38,13 +38,12 @@ import {
     PERSONAL_TOP_SONGS_NAME
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
+import { SpotifyUser } from "cody-music/dist/lib/profile";
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 export class MusicControlManager {
-    private msMgr: MusicStateManager = MusicStateManager.getInstance();
-
     constructor() {
         //
     }
@@ -130,6 +129,48 @@ export class MusicControlManager {
 
             // get the current track state
             MusicCommandManager.updateButtons();
+        }
+    }
+
+    async playSpotifyTrackFromPlaylist(
+        spotifyUser: SpotifyUser,
+        playlistId: string,
+        trackId: string,
+        spotifyDevices: PlayerDevice[],
+        checkTrackStateAndTryAgainCount: number = 0
+    ) {
+        const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
+        let options = {
+            context_uri: playlistUri,
+            track_ids: [trackId]
+        };
+        if (spotifyDevices.length > 0) {
+            options["device_id"] = spotifyDevices[0].id;
+        }
+
+        await play(PlayerName.SpotifyWeb, options);
+
+        // invoke the music gather
+        setTimeout(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000);
+
+        if (checkTrackStateAndTryAgainCount > 0) {
+            getRunningTrack().then(async track => {
+                if (!track || !track.id) {
+                    checkTrackStateAndTryAgainCount--;
+                    spotifyDevices = await getSpotifyDevices();
+                    setTimeout(() => {
+                        this.playSpotifyTrackFromPlaylist(
+                            spotifyUser,
+                            playlistId,
+                            trackId,
+                            spotifyDevices,
+                            checkTrackStateAndTryAgainCount
+                        );
+                    }, 1000);
+                }
+            });
         }
     }
 

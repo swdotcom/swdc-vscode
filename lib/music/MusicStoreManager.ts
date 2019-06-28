@@ -188,7 +188,7 @@ export class MusicStoreManager {
         this.refreshing = true;
         let serverIsOnline = await serverIsAvailable();
         // refresh the playlists
-        await this.clearPlaylists();
+        // await this.clearPlaylists();
         this.runningTrack = await getRunningTrack();
         await this.syncRunningPlaylists(serverIsOnline);
         this.refreshing = false;
@@ -360,11 +360,13 @@ export class MusicStoreManager {
 
         const playerNotAssigned =
             this.runningTrack.playerType === PlayerType.NotAssigned;
-
-        if (
+        const noPlaylistsFound =
             this.spotifyPlaylists.length === 0 &&
             (playerNotAssigned || !this.runningTrack.id)
-        ) {
+                ? true
+                : false;
+
+        if (noPlaylistsFound) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
             noPlayerFoundItem.tracks = new PlaylistTrackInfo();
@@ -620,10 +622,10 @@ export class MusicStoreManager {
                     delete playlistItem.tracks;
 
                     if (track.id === this.runningTrack.id) {
-                        playlistItem["state"] = this.runningTrack.state;
+                        playlistItem.state = this.runningTrack.state;
                         this.selectedTrackItem = playlistItem;
                     } else {
-                        playlistItem["state"] = TrackStatus.NotAssigned;
+                        playlistItem.state = TrackStatus.NotAssigned;
                     }
                     // since this is a track, delete the tracks attribute
 
