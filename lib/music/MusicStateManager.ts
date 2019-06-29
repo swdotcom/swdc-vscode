@@ -115,6 +115,11 @@ export class MusicStateManager {
                 this.existingTrack["coding"] = true;
             }
 
+            // update the loved state
+            if (this.musicstoreMgr.serverTrack) {
+                this.existingTrack.loved = this.musicstoreMgr.serverTrack.loved;
+            }
+
             // send off the ended song session
             await sendMusicData(this.existingTrack);
 

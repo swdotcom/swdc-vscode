@@ -223,6 +223,10 @@ export class MusicCommandManager {
             : null;
         // get the server track
         let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let showLoved = true;
+        if (serverTrack && serverTrack.id !== trackInfo.id) {
+            showLoved = false;
+        }
         let loved = false;
         if (!serverTrack || serverTrack.id !== trackInfo.id) {
             loved = trackInfo ? trackInfo.loved || false : false;
@@ -235,13 +239,13 @@ export class MusicCommandManager {
             if (btnCmd === "musictime.pause") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
-                if (loved) {
+                if (loved || !showLoved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (btnCmd === "musictime.unlike") {
-                if (loved) {
+                if (loved && showLoved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
@@ -278,6 +282,10 @@ export class MusicCommandManager {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         // get the server track
         let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let showLoved = true;
+        if (serverTrack && serverTrack.id !== trackInfo.id) {
+            showLoved = false;
+        }
         let loved = false;
         if (!serverTrack || serverTrack.id !== trackInfo.id) {
             loved = trackInfo ? trackInfo.loved || false : false;
@@ -290,13 +298,13 @@ export class MusicCommandManager {
             if (btnCmd === "musictime.play") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
-                if (loved) {
+                if (loved || !showLoved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (btnCmd === "musictime.unlike") {
-                if (loved) {
+                if (loved && showLoved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();

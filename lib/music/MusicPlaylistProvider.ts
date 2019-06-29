@@ -16,7 +16,6 @@ import {
     PlayerName,
     PlayerType,
     TrackStatus,
-    pause,
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
@@ -184,6 +183,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
+        let treeItem: PlaylistTreeItem = null;
         if (p.type === "playlist") {
             // it's a track parent (playlist)
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
@@ -192,11 +192,24 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                     TreeItemCollapsibleState.Collapsed
                 );
             }
-            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
+            treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
         } else {
             // it's a track or a title
-            return createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
+            treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
+
+            // reveal the track state if it's playing or paused
+            if (
+                p.state === TrackStatus.Playing ||
+                p.state === TrackStatus.Paused
+            ) {
+                this.view.reveal(p, {
+                    focus: true,
+                    select: true
+                });
+            }
         }
+
+        return treeItem;
     }
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
@@ -216,39 +229,11 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 element.id
             );
 
-            // reveal the selected track
-            this.revealSelectedTrackItem(element, tracks);
-
             return tracks;
         } else {
             // get the top level playlist parents
             let playlists = MusicStoreManager.getInstance().runningPlaylists;
             return playlists;
-        }
-    }
-
-    async revealSelectedTrackItem(element: PlaylistItem, tracks) {
-        const musicstoreMgr = MusicStoreManager.getInstance();
-
-        // reveal the selected track
-
-        const selectedPlaylistItem: PlaylistItem =
-            musicstoreMgr.selectedTrackItem;
-
-        let foundItem = null;
-        if (selectedPlaylistItem && selectedPlaylistItem.id) {
-            foundItem = tracks.find(element => {
-                return element && element.id
-                    ? element.id === selectedPlaylistItem.id
-                    : null;
-            });
-        }
-
-        if (foundItem) {
-            this.view.reveal(foundItem, {
-                focus: true,
-                select: false
-            });
         }
     }
 }
