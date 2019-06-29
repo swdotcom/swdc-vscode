@@ -76,6 +76,7 @@ export class MusicStateManager {
         const trackStateChanged = existingTrackState !== playingTrackState;
         const playing = playingTrackState === TrackStatus.Playing;
         const paused = playingTrackState === TrackStatus.Paused;
+        const stopped = playingTrackState === "stopped";
         const isValidTrack = playingTrack.id ? true : false;
 
         return {
@@ -84,6 +85,7 @@ export class MusicStateManager {
             trackStateChanged,
             playing,
             paused,
+            stopped,
             isValidTrack
         };
     }

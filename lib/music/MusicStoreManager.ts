@@ -462,6 +462,7 @@ export class MusicStoreManager {
                 ? true
                 : false;
 
+        let playlistPlayerType = PlayerType.NotAssigned;
         if (noPlaylistsFound) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
@@ -475,11 +476,13 @@ export class MusicStoreManager {
             // get the current running playlist
             if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
                 playlists = await getPlaylists(PlayerName.ItunesDesktop);
+                // update so the playlist header shows the spotify related icons
                 commands.executeCommand(
                     "setContext",
                     "treeview-type",
                     "itunes"
                 );
+                playlistPlayerType = PlayerType.MacItunesDesktop;
             } else {
                 playlists = this.spotifyPlaylists;
                 this._currentPlayerType = PlayerType.WebSpotify;
@@ -492,15 +495,17 @@ export class MusicStoreManager {
                     );
                     playlist.state = playlistState;
                 }
+                // update so the playlist header shows the spotify related icons
                 commands.executeCommand(
                     "setContext",
                     "treeview-type",
                     "spotify"
                 );
+                playlistPlayerType = PlayerType.WebSpotify;
             }
         }
 
-        this.updateSettingsItems(serverIsOnline);
+        this.updateSettingsItems(serverIsOnline, playlistPlayerType);
 
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
@@ -511,7 +516,10 @@ export class MusicStoreManager {
      * TreeView settings items
      * @param serverIsOnline
      */
-    async updateSettingsItems(serverIsOnline: boolean) {
+    async updateSettingsItems(
+        serverIsOnline: boolean,
+        playlistPlayerType: PlayerType
+    ) {
         let settingsList: PlaylistItem[] = [];
         const musicstoreMgr = MusicStoreManager.getInstance();
 
@@ -537,15 +545,15 @@ export class MusicStoreManager {
             connectedItem.tooltip = "You've connected Spotify";
             settingsList.push(connectedItem);
 
-            let disconnectItem: PlaylistItem = new PlaylistItem();
-            disconnectItem.tracks = new PlaylistTrackInfo();
-            disconnectItem.type = "spotify";
-            disconnectItem.id = "disconnectspotify";
-            disconnectItem.playerType = PlayerType.WebSpotify;
-            disconnectItem.name = "Disconnect Spotify Access";
-            disconnectItem.tooltip = "Disconnect Spotify";
-            disconnectItem.command = "musictime.disconnectSpotify";
-            settingsList.push(disconnectItem);
+            // let disconnectItem: PlaylistItem = new PlaylistItem();
+            // disconnectItem.tracks = new PlaylistTrackInfo();
+            // disconnectItem.type = "spotify";
+            // disconnectItem.id = "disconnectspotify";
+            // disconnectItem.playerType = PlayerType.WebSpotify;
+            // disconnectItem.name = "Disconnect Spotify Access";
+            // disconnectItem.tooltip = "Disconnect Spotify";
+            // disconnectItem.command = "musictime.disconnectSpotify";
+            // settingsList.push(disconnectItem);
         }
 
         const personalPlaylistInfo = this.getExistingPesonalPlaylist();
@@ -600,7 +608,7 @@ export class MusicStoreManager {
 
         // If iTunes is currently playing show .
         // If it's not then show the launch iTunes
-        if (this.runningTrack.playerType !== PlayerType.MacItunesDesktop) {
+        if (playlistPlayerType !== PlayerType.MacItunesDesktop) {
             let item: PlaylistItem = new PlaylistItem();
             item.tracks = new PlaylistTrackInfo();
             item.type = "itunes";
@@ -611,10 +619,7 @@ export class MusicStoreManager {
             settingsList.push(item);
         }
 
-        if (
-            this.runningTrack.playerType === PlayerType.MacItunesDesktop &&
-            !hasSpotifyDevices
-        ) {
+        if (playlistPlayerType === PlayerType.MacItunesDesktop) {
             // show the launch spotify menu item
             let item: PlaylistItem = new PlaylistItem();
             item.tracks = new PlaylistTrackInfo();

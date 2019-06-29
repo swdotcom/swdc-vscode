@@ -11,7 +11,8 @@ import {
     launchPlayer,
     PlaylistItem,
     PlayerDevice,
-    getSpotifyDevices
+    getSpotifyDevices,
+    quitMacPlayer
 } from "cody-music";
 import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -256,7 +257,9 @@ export class MusicControlManager {
             launchPlayer(PlayerName.ItunesDesktop);
         } else {
             // end the itunes track
-            musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+            // musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+            // quit the app
+            let result = await quitMacPlayer(PlayerName.ItunesDesktop);
             const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
             if (!spotifyDevices || spotifyDevices.length === 0) {
                 this.launchSpotifyPlayer();
