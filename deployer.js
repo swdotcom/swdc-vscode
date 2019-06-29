@@ -103,18 +103,6 @@ async function deploy() {
             ]
         };
         packageJson.contributes["menus"] = {
-            "view/title": [
-                {
-                    when: "view == music-time-playlists",
-                    group: "navigation"
-                },
-                {
-                    when: "view == music-time-settings",
-                    group: "navigation"
-                }
-            ]
-        };
-        packageJson.contributes["menus"] = {
             "view/item/context": [
                 {
                     command: "musictime.play",
@@ -125,6 +113,20 @@ async function deploy() {
                     command: "musictime.pause",
                     when: "view == music-time-playlists && viewItem == playing",
                     group: "inline"
+                }
+            ],
+            "view/title": [
+                {
+                    command: "musictime.itunesPlaylist",
+                    group: "navigation@1",
+                    when:
+                        "view == music-time-playlists && treeview-type == itunes"
+                },
+                {
+                    command: "musictime.spotifyPlaylist",
+                    group: "navigation@1",
+                    when:
+                        "view == music-time-playlists && treeview-type == spotify"
                 }
             ]
         };

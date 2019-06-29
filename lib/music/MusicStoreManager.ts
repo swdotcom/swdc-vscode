@@ -475,6 +475,11 @@ export class MusicStoreManager {
             // get the current running playlist
             if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
                 playlists = await getPlaylists(PlayerName.ItunesDesktop);
+                commands.executeCommand(
+                    "setContext",
+                    "treeview-type",
+                    "itunes"
+                );
             } else {
                 playlists = this.spotifyPlaylists;
                 this._currentPlayerType = PlayerType.WebSpotify;
@@ -487,6 +492,11 @@ export class MusicStoreManager {
                     );
                     playlist.state = playlistState;
                 }
+                commands.executeCommand(
+                    "setContext",
+                    "treeview-type",
+                    "spotify"
+                );
             }
         }
 
