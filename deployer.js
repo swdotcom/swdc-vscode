@@ -158,6 +158,22 @@ async function deploy() {
             }
         });
         commands.push({
+            command: "musictime.itunesPlaylist",
+            title: "iTunes",
+            icon: {
+                light: "resources/light/icons8-itunes.svg",
+                dark: "resources/dark/icons8-itunes.svg"
+            }
+        });
+        commands.push({
+            command: "musictime.spotifyPlaylist",
+            title: "Spotify",
+            icon: {
+                light: "resources/light/icons8-spotify.svg",
+                dark: "resources/dark/icons8-spotify.svg"
+            }
+        });
+        commands.push({
             command: "musictime.like",
             title: "Like Song"
         });

@@ -208,7 +208,10 @@ export class MusicControlManager {
         }
     }
 
-    launchTrackPlayer(playerName: PlayerName = null) {
+    async launchTrackPlayer(playerName: PlayerName = null) {
+        const musicstoreMgr = MusicStoreManager.getInstance();
+        const musicCtrlMgr = new MusicControlManager();
+        const currentTrack = musicstoreMgr.runningTrack;
         if (!playerName) {
             getRunningTrack().then((track: Track) => {
                 if (track && track.id) {
@@ -243,9 +246,21 @@ export class MusicControlManager {
                 }
             });
         } else if (playerName === PlayerName.ItunesDesktop) {
+            if (
+                currentTrack &&
+                currentTrack.playerType !== PlayerType.MacItunesDesktop
+            ) {
+                // end the spotify web track
+                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+            }
             launchPlayer(PlayerName.ItunesDesktop);
         } else {
-            this.launchSpotifyPlayer();
+            // end the itunes track
+            musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+            const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+            if (!spotifyDevices || spotifyDevices.length === 0) {
+                this.launchSpotifyPlayer();
+            }
         }
     }
 

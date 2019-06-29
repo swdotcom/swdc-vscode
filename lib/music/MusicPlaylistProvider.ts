@@ -202,9 +202,10 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 p.state === TrackStatus.Playing ||
                 p.state === TrackStatus.Paused
             ) {
+                // don't "select" it thought. that will invoke the pause/play action
                 this.view.reveal(p, {
                     focus: true,
-                    select: true
+                    select: false
                 });
             }
         }

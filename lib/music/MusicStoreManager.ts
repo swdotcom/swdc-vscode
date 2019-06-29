@@ -1,6 +1,5 @@
 import {
     Track,
-    requiresSpotifyAccessInfo,
     setConfig,
     getPlaylistTracks,
     PaginationItem,
@@ -18,7 +17,8 @@ import {
     addTracksToPlaylist,
     createPlaylist,
     getUserProfile,
-    replacePlaylistTracks
+    replacePlaylistTracks,
+    getSpotifyDevices
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -29,7 +29,7 @@ import {
     softwarePut,
     softwarePost
 } from "../HttpClient";
-import { getItem, setItem, logIt, isEmptyObj } from "../Util";
+import { getItem, setItem, logIt } from "../Util";
 import {
     PERSONAL_TOP_SONGS_NAME,
     SOFTWARE_TOP_SONGS_NAME,
@@ -471,17 +471,6 @@ export class MusicStoreManager {
             noPlayerFoundItem.playerType = PlayerType.NotAssigned;
             noPlayerFoundItem.name = "No active music player found";
             playlists.push(noPlayerFoundItem);
-
-            if (this.requiresSpotifyAccess()) {
-                let launchSpotifyItem: PlaylistItem = new PlaylistItem();
-                launchSpotifyItem.tracks = new PlaylistTrackInfo();
-                launchSpotifyItem.type = "spotify";
-                launchSpotifyItem.id = "title";
-                launchSpotifyItem.command = "musictime.launchSpotify";
-                launchSpotifyItem.playerType = PlayerType.WebSpotify;
-                launchSpotifyItem.name = "Launch Spotify";
-                playlists.push(launchSpotifyItem);
-            }
         } else {
             // get the current running playlist
             if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
@@ -514,8 +503,9 @@ export class MusicStoreManager {
      */
     async updateSettingsItems(serverIsOnline: boolean) {
         let settingsList: PlaylistItem[] = [];
+        const musicstoreMgr = MusicStoreManager.getInstance();
 
-        if (!this.requiresSpotifyAccess()) {
+        if (this.requiresSpotifyAccess()) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
@@ -542,21 +532,28 @@ export class MusicStoreManager {
             disconnectItem.type = "spotify";
             disconnectItem.id = "disconnectspotify";
             disconnectItem.playerType = PlayerType.WebSpotify;
-            disconnectItem.name = "Disconnect Spotify";
+            disconnectItem.name = "Disconnect Spotify Access";
             disconnectItem.tooltip = "Disconnect Spotify";
             disconnectItem.command = "musictime.disconnectSpotify";
             settingsList.push(disconnectItem);
         }
 
-        const personalPlaylistInfo = MusicStoreManager.getInstance().getExistingPesonalPlaylist();
+        const personalPlaylistInfo = this.getExistingPesonalPlaylist();
         const personalPlaylistLabel = !personalPlaylistInfo
             ? "Generate Software Playlist"
             : "Update Software Playlist";
         const personalPlaylistTooltip = !personalPlaylistInfo
             ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
             : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+        let showingSpotifyPlaylist = true;
+        if (
+            this.runningTrack &&
+            this.runningTrack.playerType === PlayerType.MacItunesDesktop
+        ) {
+            showingSpotifyPlaylist = false;
+        }
 
-        if (this.requiresSpotifyAccess()) {
+        if (showingSpotifyPlaylist && !this.requiresSpotifyAccess()) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
@@ -587,6 +584,10 @@ export class MusicStoreManager {
             }
         }
 
+        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+        const hasSpotifyDevices =
+            !spotifyDevices || spotifyDevices.length === 0 ? false : true;
+
         // If iTunes is currently playing show .
         // If it's not then show the launch iTunes
         if (this.runningTrack.playerType !== PlayerType.MacItunesDesktop) {
@@ -600,12 +601,27 @@ export class MusicStoreManager {
             settingsList.push(item);
         }
 
+        if (
+            this.runningTrack.playerType === PlayerType.MacItunesDesktop &&
+            !hasSpotifyDevices
+        ) {
+            // show the launch spotify menu item
+            let item: PlaylistItem = new PlaylistItem();
+            item.tracks = new PlaylistTrackInfo();
+            item.type = "spotify";
+            item.id = "title";
+            item.command = "musictime.launchSpotify";
+            item.playerType = PlayerType.WebSpotify;
+            item.name = "Launch Spotify";
+            settingsList.push(item);
+        }
+
         this.settings = settingsList;
     }
 
     async syncSpotifyWebPlaylists(serverIsOnline) {
         let playlists = [];
-        if (serverIsOnline && this.requiresSpotifyAccess()) {
+        if (serverIsOnline && !this.requiresSpotifyAccess()) {
             playlists = await getPlaylists(PlayerName.SpotifyWeb);
             if (playlists) {
                 // update the type to "playlist";
@@ -624,7 +640,7 @@ export class MusicStoreManager {
 
     requiresSpotifyAccess() {
         let spotifyAccessToken = getItem("spotify_access_token");
-        return spotifyAccessToken ? true : false;
+        return spotifyAccessToken ? false : true;
     }
 
     hasTracksForPlaylistId(playlist_id: string): boolean {
@@ -681,11 +697,14 @@ export class MusicStoreManager {
     }
 
     async getPlaylistState(playlist_id: string) {
-        let trackInfo = await this.getPlaylistTrackInfo(playlist_id);
+        let trackInfo = await this.getPlaylistTrackInfo(playlist_id, true);
         return trackInfo.playlist_state;
     }
 
-    async getPlaylistTrackInfo(playlist_id: string) {
+    async getPlaylistTrackInfo(
+        playlist_id: string,
+        skipCache: boolean = false
+    ) {
         const hasActivePlaylistItems = this.hasActivePlaylistItems();
 
         if (this.runningTrack.playerType !== this._currentPlayerType) {
@@ -700,7 +719,7 @@ export class MusicStoreManager {
 
         let playlistItems = [];
         let trackInfo = this._playlistTracks[playlist_id];
-        if (trackInfo) {
+        if (trackInfo && !skipCache) {
             return trackInfo;
         }
 

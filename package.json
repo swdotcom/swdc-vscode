@@ -90,6 +90,22 @@
                 }
             },
             {
+                "command": "musictime.itunesPlaylist",
+                "title": "iTunes",
+                "icon": {
+                    "light": "resources/light/icons8-itunes.svg",
+                    "dark": "resources/dark/icons8-itunes.svg"
+                }
+            },
+            {
+                "command": "musictime.spotifyPlaylist",
+                "title": "Spotify",
+                "icon": {
+                    "light": "resources/light/icons8-spotify.svg",
+                    "dark": "resources/dark/icons8-spotify.svg"
+                }
+            },
+            {
                 "command": "musictime.like",
                 "title": "Like Song"
             },
