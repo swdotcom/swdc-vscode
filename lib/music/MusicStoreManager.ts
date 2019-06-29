@@ -29,7 +29,7 @@ import {
     softwarePut,
     softwarePost
 } from "../HttpClient";
-import { getItem, setItem, logIt } from "../Util";
+import { getItem, setItem, logIt, isEmptyObj } from "../Util";
 import {
     PERSONAL_TOP_SONGS_NAME,
     SOFTWARE_TOP_SONGS_NAME,
@@ -57,6 +57,7 @@ export class MusicStoreManager {
     private _initializedSpotifyPlaylist: boolean = false;
     private _refreshing: boolean = false;
     private _spotifyUser: SpotifyUser = null;
+    private _serverTrack: Track = null;
 
     private constructor() {
         //
@@ -178,6 +179,14 @@ export class MusicStoreManager {
         this._spotifyPlayerDevices = devices;
     }
 
+    get serverTrack(): Track {
+        return this._serverTrack;
+    }
+
+    set serverTrack(track: Track) {
+        this._serverTrack = track;
+    }
+
     //
     // store functions
     //
@@ -265,6 +274,91 @@ export class MusicStoreManager {
             }
         }
         this.savedPlaylists = playlists;
+    }
+
+    async getServerTrack(track: Track) {
+        if (track) {
+            let trackId = track.id;
+            if (trackId.indexOf(":") !== -1) {
+                // strip it down to just the last id part
+                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
+            }
+            let type = "spotify";
+            if (track.playerType === PlayerType.MacItunesDesktop) {
+                type = "itunes";
+            }
+            // use the name and artist as well since we have it
+            let trackName = track.name;
+            let trackArtist = track.artist;
+
+            // check if it's cached before hitting the server
+            if (this.serverTrack) {
+                if (this.serverTrack.id === track.id) {
+                    return this.serverTrack;
+                } else if (
+                    this.serverTrack.name === trackName &&
+                    this.serverTrack.artist === trackArtist
+                ) {
+                    return this.serverTrack;
+                }
+                // it doesn't match, might as well nullify it
+                this.serverTrack = null;
+            }
+
+            if (!this.serverTrack) {
+                const api = `/music/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
+                const resp = await softwareGet(api, getItem("jwt"));
+                if (isResponseOk(resp) && resp.data) {
+                    let trackData = resp.data;
+                    // set the server track to this one
+                    this.serverTrack = { ...track };
+                    // update the loved state
+                    if (
+                        trackData.liked !== null &&
+                        trackData.liked !== undefined
+                    ) {
+                        // set the boolean value
+                        if (isNaN(trackData.liked)) {
+                            // it's not 0 or 1, use the bool
+                            this.serverTrack.loved = trackData.liked;
+                        } else {
+                            // it's 0 or 1, convert it
+                            this.serverTrack.loved =
+                                trackData.liked === 0 ? false : true;
+                        }
+
+                        track.loved = this.serverTrack.loved;
+                    }
+                } else {
+                    this.serverTrack = { ...track };
+                }
+            }
+        }
+
+        MusicCommandManager.syncControls(track);
+
+        return this.serverTrack;
+    }
+
+    async setLiked(track: Track, liked: boolean) {
+        if (track) {
+            // set it to liked
+            let trackId = track.id;
+            if (trackId.indexOf(":") !== -1) {
+                // strip it down to just the last id part
+                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
+            }
+            let type = "spotify";
+            if (track.playerType === PlayerType.MacItunesDesktop) {
+                type = "itunes";
+            }
+            // use the name and artist as well since we have it
+            let trackName = encodeURIComponent(track.name);
+            let trackArtist = encodeURIComponent(track.artist);
+            const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
+            const payload = { liked };
+            await softwarePut(api, payload, getItem("jwt"));
+        }
     }
 
     getExistingPesonalPlaylist(): any {

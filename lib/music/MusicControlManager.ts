@@ -130,7 +130,8 @@ export class MusicControlManager {
     }
 
     async setLiked(liked: boolean) {
-        let track: Track = MusicStoreManager.getInstance().runningTrack;
+        const musicstoreMgr = MusicStoreManager.getInstance();
+        let track: Track = musicstoreMgr.runningTrack;
         if (track) {
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
@@ -140,12 +141,21 @@ export class MusicControlManager {
                 });
             }
 
+            // set the server track to liked to keep it cached
+            // until the song session is sent from the MusicStateManager
+            let serverTrack = musicstoreMgr.serverTrack;
+            if (!serverTrack) {
+                serverTrack = { ...track };
+            }
+            serverTrack.loved = liked;
+            musicstoreMgr.serverTrack = serverTrack;
+
             // update the music store running track liked state
             track.loved = liked;
-            MusicStoreManager.getInstance().runningTrack = track;
+            musicstoreMgr.runningTrack = track;
 
             // get the current track state
-            MusicCommandManager.updateButtons();
+            MusicCommandManager.syncControls(track);
         }
     }
 

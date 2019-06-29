@@ -217,11 +217,19 @@ export class MusicCommandManager {
      * Show the buttons to play a track
      * @param trackInfo
      */
-    private static async showPlayControls(trackInfo) {
+    private static async showPlayControls(trackInfo: Track) {
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
-        const loved = trackInfo ? trackInfo["loved"] || false : false;
+        // get the server track
+        let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let loved = false;
+        if (!serverTrack || serverTrack.id !== trackInfo.id) {
+            loved = trackInfo ? trackInfo.loved || false : false;
+        } else {
+            loved = serverTrack.loved;
+        }
+
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.pause") {
@@ -266,9 +274,17 @@ export class MusicCommandManager {
      * Show the buttons to pause a track
      * @param trackInfo
      */
-    private static showPauseControls(trackInfo) {
+    private static showPauseControls(trackInfo: Track) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
-        const loved = trackInfo ? trackInfo["loved"] || false : false;
+        // get the server track
+        let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let loved = false;
+        if (!serverTrack || serverTrack.id !== trackInfo.id) {
+            loved = trackInfo ? trackInfo.loved || false : false;
+        } else {
+            loved = serverTrack.loved;
+        }
+
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             if (btnCmd === "musictime.play") {

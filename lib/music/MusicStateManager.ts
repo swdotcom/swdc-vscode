@@ -1,5 +1,4 @@
 import {
-    getItem,
     isEmptyObj,
     isMusicTime,
     getMusicSessionDataStoreFile,
@@ -10,9 +9,7 @@ import {
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicCommandManager } from "./MusicCommandManager";
-import { softwareGet, isResponseOk } from "../HttpClient";
 import { Track, PlayerType, getRunningTrack, TrackStatus } from "cody-music";
-import { SOFTWARE_TOP_SONGS_PLID } from "../Constants";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -79,13 +76,15 @@ export class MusicStateManager {
         const trackStateChanged = existingTrackState !== playingTrackState;
         const playing = playingTrackState === TrackStatus.Playing;
         const paused = playingTrackState === TrackStatus.Paused;
+        const isValidTrack = playingTrack.id ? true : false;
 
         return {
             isNewTrack,
             endPrevTrack,
             trackStateChanged,
             playing,
-            paused
+            paused,
+            isValidTrack
         };
     }
 
@@ -101,8 +100,7 @@ export class MusicStateManager {
 
         const now = nowInSecs();
 
-        const isNewAndPlaying = changeStatus.isNewTrack && changeStatus.playing;
-
+        // has the existing track ended?
         if (changeStatus.endPrevTrack) {
             // subtract a few seconds since our timer is every 5 seconds
             this.existingTrack["end"] = now - 3;
@@ -119,9 +117,15 @@ export class MusicStateManager {
 
             // send off the ended song session
             await sendMusicData(this.existingTrack);
+
+            // set existing track to playing track
+            this.existingTrack = {};
         }
 
-        if (isNewAndPlaying) {
+        // do we have a new song
+        if (changeStatus.isNewTrack && changeStatus.isValidTrack) {
+            this.musicstoreMgr.getServerTrack(playingTrack);
+
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after
             const offset = d.getTimezoneOffset();
@@ -130,15 +134,17 @@ export class MusicStateManager {
             playingTrack["start"] = now;
             playingTrack["local_start"] = now - offset_sec;
             playingTrack["end"] = 0;
+
+            this.existingTrack = { ...playingTrack };
         }
 
-        // set existing track to playing track
-        this.existingTrack = {};
-        this.existingTrack = { ...playingTrack };
+        if (changeStatus.trackStateChanged) {
+            // update the state so the requester gets this value
+            this.existingTrack.state = playingTrack.state;
+        }
 
         // this updates the buttons in the status bar and the playlist buttons
         if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
-            // MusicCommandManager.syncControls(this.existingTrack);
             await this.musicstoreMgr.refreshPlaylists();
         }
 
