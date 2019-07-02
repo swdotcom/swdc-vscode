@@ -19,7 +19,8 @@ import {
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    playTrackInLibrary
+    playTrackInLibrary,
+    playItunesTrackNumberInPlaylist
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
@@ -77,7 +78,7 @@ export const launchAndPlayTrack = async (
             musicCtrlMgr.playSpotifyTrackFromPlaylist(
                 spotifyUser,
                 currentPlaylist.id,
-                track.id,
+                track,
                 spotifyDevices,
                 10 /* checkTrackStateAndTryAgain */
             );
@@ -87,7 +88,7 @@ export const launchAndPlayTrack = async (
         await musicCtrlMgr.playSpotifyTrackFromPlaylist(
             spotifyUser,
             currentPlaylist.id,
-            track.id,
+            track,
             spotifyDevices
         );
     }
@@ -124,7 +125,12 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
 
                 if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                     if (notPlaying) {
-                        await playItunesTrackFromPlaylist(playlistItem);
+                        // await playItunesTrackFromPlaylist(playlistItem);
+                        const pos: number = playlistItem["position"] || 1;
+                        await playItunesTrackNumberInPlaylist(
+                            musicstoreMgr.selectedPlaylist.name,
+                            pos
+                        );
                     } else {
                         musicCtrlMgr.pause(PlayerName.ItunesDesktop);
                     }

@@ -774,31 +774,36 @@ export class MusicStoreManager {
             let paginationItem: PaginationItem = playlistTracks.data;
 
             if (paginationItem && paginationItem.items) {
-                playlistItems = paginationItem.items.map((track: Track) => {
-                    let playlistItem: PlaylistItem = new PlaylistItem();
-                    playlistItem.type = "track";
-                    playlistItem.name = track.name;
-                    playlistItem.id = track.id;
-                    playlistItem["artists"] = track.artists.join(", ");
-                    playlistItem.playerType = track.playerType;
-                    delete playlistItem.tracks;
+                playlistItems = paginationItem.items.map(
+                    (track: Track, idx: number) => {
+                        let playlistItem: PlaylistItem = new PlaylistItem();
+                        playlistItem.type = "track";
+                        playlistItem.name = track.name;
+                        playlistItem.id = track.id;
+                        playlistItem.popularity = track.popularity;
+                        playlistItem.played_count = track.played_count;
+                        playlistItem.position = idx + 1;
+                        playlistItem["artists"] = track.artists.join(", ");
+                        playlistItem.playerType = track.playerType;
+                        delete playlistItem.tracks;
 
-                    if (track.id === this.runningTrack.id) {
-                        playlistItem.state = this.runningTrack.state;
-                        this.selectedTrackItem = playlistItem;
-                    } else {
-                        playlistItem.state = TrackStatus.NotAssigned;
+                        if (track.id === this.runningTrack.id) {
+                            playlistItem.state = this.runningTrack.state;
+                            this.selectedTrackItem = playlistItem;
+                        } else {
+                            playlistItem.state = TrackStatus.NotAssigned;
+                        }
+
+                        if (
+                            playlistItem.state === TrackStatus.Playing ||
+                            playlistItem.state === TrackStatus.Paused
+                        ) {
+                            playlist_state = playlistItem.state;
+                        }
+
+                        return playlistItem;
                     }
-
-                    if (
-                        playlistItem.state === TrackStatus.Playing ||
-                        playlistItem.state === TrackStatus.Paused
-                    ) {
-                        playlist_state = playlistItem.state;
-                    }
-
-                    return playlistItem;
-                });
+                );
             }
 
             trackInfo.tracks = playlistItems;

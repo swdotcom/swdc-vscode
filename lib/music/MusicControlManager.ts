@@ -163,15 +163,16 @@ export class MusicControlManager {
     async playSpotifyTrackFromPlaylist(
         spotifyUser: SpotifyUser,
         playlistId: string,
-        trackId: string,
+        playlistItem: PlaylistItem,
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
+        const playlistTrackNumber = playlistItem["position"] || null;
         const musicstoreMgr = MusicStoreManager.getInstance();
         const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
         let options = {
             context_uri: playlistUri,
-            track_ids: [trackId]
+            track_ids: [playlistItem.id]
         };
         if (spotifyDevices.length > 0) {
             options["device_id"] = spotifyDevices[0].id;
@@ -184,8 +185,6 @@ export class MusicControlManager {
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000);
 
-        const musicCtrlMgr = new MusicControlManager();
-
         if (checkTrackStateAndTryAgainCount > 0) {
             getRunningTrack().then(async track => {
                 if (!track || !track.id) {
@@ -195,7 +194,7 @@ export class MusicControlManager {
                         this.playSpotifyTrackFromPlaylist(
                             spotifyUser,
                             playlistId,
-                            trackId,
+                            playlistItem,
                             spotifyDevices,
                             checkTrackStateAndTryAgainCount
                         );
