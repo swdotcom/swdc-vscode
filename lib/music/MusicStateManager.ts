@@ -57,12 +57,14 @@ export class MusicStateManager {
         const playingTrackState = playingTrack.state || "stopped";
 
         // return obj attributes
+        const stopped = playingTrackState === "stopped";
+        const paused = playingTrackState === TrackStatus.Paused;
         const isNewTrack = existingTrackId !== playingTrackId;
-        const endPrevTrack = existingTrackId !== null && isNewTrack;
+        const endPrevTrack =
+            existingTrackId !== null && (isNewTrack || stopped || paused);
         const trackStateChanged = existingTrackState !== playingTrackState;
         const playing = playingTrackState === TrackStatus.Playing;
-        const paused = playingTrackState === TrackStatus.Paused;
-        const stopped = playingTrackState === "stopped";
+
         const isValidTrack = playingTrack.id ? true : false;
 
         return {
@@ -90,8 +92,8 @@ export class MusicStateManager {
 
         // has the existing track ended?
         if (changeStatus.endPrevTrack) {
-            // subtract a few seconds since our timer is every 5 seconds
-            this.existingTrack["end"] = now - 3;
+            // subtract a couple of seconds since our timer is every 5 seconds
+            this.existingTrack["end"] = now - 2;
             this.existingTrack["coding"] = false;
             // gather the coding metrics
             this.existingTrack = {
@@ -116,7 +118,11 @@ export class MusicStateManager {
         }
 
         // do we have a new song
-        if (changeStatus.isNewTrack && changeStatus.isValidTrack) {
+        if (
+            changeStatus.isNewTrack &&
+            changeStatus.playing &&
+            changeStatus.isValidTrack
+        ) {
             this.musicstoreMgr.getServerTrack(playingTrack);
 
             let d = new Date();
