@@ -39,23 +39,9 @@ export class MusicStateManager {
     }
 
     public async musicStateCheck() {
-        const currTrack = this.musicstoreMgr.runningTrack;
         const track: Track = await this.gatherMusicInfo();
         this.musicstoreMgr.runningTrack = track;
-        if (isMusicTime()) {
-            // valid track shows that we're able to communicate to spotify web or local
-            const isValidTrack = !isEmptyObj(track);
-
-            // was there a previous track?
-            const isValidCurrTrack = currTrack ? !isEmptyObj(currTrack) : false;
-            if (isValidTrack) {
-                // update the buttons to show player control changes
-                MusicCommandManager.updateButtons();
-            } else if (isValidCurrTrack) {
-                // refresh
-                await this.musicstoreMgr.refreshPlaylists();
-            }
-
+        if (track) {
             this.currentPlayerType = track.playerType;
         }
     }

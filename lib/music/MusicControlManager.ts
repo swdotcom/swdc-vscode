@@ -167,7 +167,6 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
-        const playlistTrackNumber = playlistItem["position"] || null;
         const musicstoreMgr = MusicStoreManager.getInstance();
         const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
         let options = {

@@ -783,7 +783,7 @@ export class MusicStoreManager {
                         playlistItem.popularity = track.popularity;
                         playlistItem.played_count = track.played_count;
                         playlistItem.position = idx + 1;
-                        playlistItem["artists"] = track.artists.join(", ");
+                        playlistItem.artists = track.artists.join(", ");
                         playlistItem.playerType = track.playerType;
                         delete playlistItem.tracks;
 

@@ -126,7 +126,7 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                     if (notPlaying) {
                         // await playItunesTrackFromPlaylist(playlistItem);
-                        const pos: number = playlistItem["position"] || 1;
+                        const pos: number = playlistItem.position || 1;
                         await playItunesTrackNumberInPlaylist(
                             musicstoreMgr.selectedPlaylist.name,
                             pos
