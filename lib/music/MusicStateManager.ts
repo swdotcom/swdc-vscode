@@ -162,6 +162,13 @@ export class MusicStateManager {
             "open",
             "close"
         ];
+        const keystrokeList: string[] = [
+            "add",
+            "paste",
+            "delete",
+            "linesRemoved",
+            "linesAdded"
+        ];
         if (current && accumulator) {
             const currObjectKeys = Object.keys(current);
 
@@ -181,20 +188,30 @@ export class MusicStateManager {
 
                 Object.keys(sourceObj).forEach(sourceKey => {
                     const fileObj = sourceObj[sourceKey];
-
+                    let keystrokesTotal = 0;
                     Object.keys(fileObj).forEach(fileKey => {
                         const val = fileObj[fileKey];
-
                         if (numberList.indexOf(fileKey) !== -1) {
+                            const intVal = parseInt(val, 10);
                             if (accumulator[fileKey] && val) {
+                                // aggregate
                                 accumulator[fileKey] =
-                                    parseInt(val, 10) +
-                                    parseInt(accumulator[fileKey], 10);
+                                    intVal + parseInt(accumulator[fileKey], 10);
                             } else if (val) {
-                                accumulator[fileKey] = parseInt(val, 10);
+                                // doesn't exist yet, just set it
+                                accumulator[fileKey] = intVal;
+                            }
+                            // aggregate keystrokes
+                            if (keystrokeList.indexOf(fileKey) !== -1) {
+                                keystrokesTotal += intVal;
                             }
                         }
                     });
+
+                    // set the keystrokes for this file object
+                    accumulator.source[sourceKey][
+                        "keystrokes"
+                    ] = keystrokesTotal;
                 });
             });
         }
