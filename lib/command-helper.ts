@@ -138,6 +138,14 @@ export function createCommands(): {
         });
         cmds.push(menuCmd);
 
+        const launchTrackPlayerCmd = commands.registerCommand(
+            "musictime.currentSong",
+            () => {
+                controller.launchTrackPlayer();
+            }
+        );
+        cmds.push(launchTrackPlayerCmd);
+
         const spotifyConnectCommand = commands.registerCommand(
             "musictime.connectSpotify",
             () => {
