@@ -1,4 +1,4 @@
-import { storePayload, getOs, getVersion, logIt } from "./Util";
+import { storePayload, getOs, getVersion, logIt, getNowTimes } from "./Util";
 import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
 
 // ? marks that the parameter is optional
@@ -61,18 +61,22 @@ export class KpmDataManager {
      */
     postData() {
         const payload = JSON.parse(JSON.stringify(this));
-        payload.keystrokes = String(payload.keystrokes);
 
-        // ensure the start and end are exactly DEFAULT_DURATION apart
-        let d = new Date();
-        d = new Date(d.getTime() - DEFAULT_DURATION_MILLIS);
-        // offset is the minutes from GMT.
-        // it's positive if it's before, and negative after
-        const offset = d.getTimezoneOffset();
-        const offset_sec = offset * 60;
-        payload.start = Math.round(d.getTime() / 1000);
-        // subtract the offset_sec (it'll be positive before utc and negative after utc)
-        payload.local_start = payload.start - offset_sec;
+        // set the end time for the session
+        let nowTimes = getNowTimes();
+        payload["end"] = nowTimes.now_in_sec;
+        payload["local_end"] = nowTimes.local_now_in_sec;
+        Object.keys(payload.source).forEach(key => {
+            // ensure there is an end time
+            const end = parseInt(payload.source[key]["end"], 10) || 0;
+            if (end === 0) {
+                // set the end time for this file event
+                let nowTimes = getNowTimes();
+                payload.source[key]["end"] = nowTimes.now_in_sec;
+                payload.source[key]["local_end"] = nowTimes.local_now_in_sec;
+            }
+        });
+
         payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
         const projectName =
@@ -88,15 +92,4 @@ export class KpmDataManager {
         storePayload(payload);
         logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
     }
-
-    // sendPayload(payload) {
-    //     logIt(`sending ${JSON.stringify(payload)}`);
-
-    //     // POST the kpm to the PluginManager
-    //     softwarePost("/data", payload, getItem("jwt")).then(async resp => {
-    //         if (!isResponseOk(resp)) {
-    //             storePayload(payload);
-    //         }
-    //     });
-    // }
 }

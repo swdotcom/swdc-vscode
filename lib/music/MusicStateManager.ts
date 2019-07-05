@@ -1,15 +1,13 @@
 import {
-    isEmptyObj,
-    isMusicTime,
     getMusicSessionDataStoreFile,
     deleteFile,
     logIt,
-    nowInSecs
+    nowInSecs,
+    getOffsetSecends
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { MusicCommandManager } from "./MusicCommandManager";
-import { Track, PlayerType, getRunningTrack, TrackStatus } from "cody-music";
+import { Track, getRunningTrack, TrackStatus } from "cody-music";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -19,7 +17,6 @@ export class MusicStateManager {
     private static instance: MusicStateManager;
 
     private existingTrack: any = {};
-    private currentPlayerType: PlayerType = null;
     private processingSong: boolean = false;
 
     private musicstoreMgr: MusicStoreManager;
@@ -41,9 +38,6 @@ export class MusicStateManager {
     public async musicStateCheck() {
         const track: Track = await this.gatherMusicInfo();
         this.musicstoreMgr.runningTrack = track;
-        if (track) {
-            this.currentPlayerType = track.playerType;
-        }
     }
 
     private getChangeStatus(playingTrack: Track): any {
@@ -183,15 +177,29 @@ export class MusicStateManager {
                 accumulator.syntax = current.syntax || "";
             }
 
+            // set the other top level attributes
+            accumulator["timezone"] = current.timezone;
+            accumulator["os"] = current.os;
+            accumulator["version"] = current.version;
+            accumulator["pluginId"] = current.pluginId;
+            // set the: start, local_start, end, local_end, offset
+            accumulator["start"] = current.start;
+            accumulator["local_start"] = current.local_start;
+            accumulator["end"] = current.end;
+            accumulator["local_end"] = current.local_end;
+            accumulator["offset"] = getOffsetSecends();
+
             currObjectKeys.forEach(currObjectKey => {
                 const sourceObj = current[currObjectKey];
 
                 Object.keys(sourceObj).forEach(sourceKey => {
                     const fileObj = sourceObj[sourceKey];
                     let keystrokesTotal = 0;
+                    let foundfile = false;
                     Object.keys(fileObj).forEach(fileKey => {
                         const val = fileObj[fileKey];
                         if (numberList.indexOf(fileKey) !== -1) {
+                            foundfile = true;
                             const intVal = parseInt(val, 10);
                             if (accumulator[fileKey] && val) {
                                 // aggregate
@@ -208,10 +216,12 @@ export class MusicStateManager {
                         }
                     });
 
-                    // set the keystrokes for this file object
-                    accumulator.source[sourceKey][
-                        "keystrokes"
-                    ] = keystrokesTotal;
+                    if (foundfile) {
+                        // set the keystrokes for this file object
+                        accumulator.source[sourceKey][
+                            "keystrokes"
+                        ] = keystrokesTotal;
+                    }
                 });
             });
         }
@@ -260,6 +270,7 @@ export class MusicStateManager {
                         this.codingDataReducer,
                         initialValue
                     );
+                    console.log("MUSIC CODING DATA: ", musicCodingData);
                     return musicCodingData;
                 }
             }

@@ -553,6 +553,21 @@ export function getOffsetSecends() {
     return d.getTimezoneOffset() * 60;
 }
 
+export function getNowTimes() {
+    let d = new Date();
+    d = new Date(d.getTime());
+    // offset is the minutes from GMT.
+    // it's positive if it's before, and negative after
+    const offset = d.getTimezoneOffset();
+    const offset_sec = offset * 60;
+    let now_in_sec = Math.round(d.getTime() / 1000);
+    // subtract the offset_sec (it'll be positive before utc and negative after utc)
+    return {
+        now_in_sec,
+        local_now_in_sec: now_in_sec - offset_sec
+    };
+}
+
 export function storePayload(payload) {
     // calculate it and call
     // add to the minutes

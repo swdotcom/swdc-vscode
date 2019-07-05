@@ -9,7 +9,8 @@ import {
     isEmptyObj,
     getProjectFolder,
     getDashboardFile,
-    logIt
+    logIt,
+    getNowTimes
 } from "./Util";
 
 const NO_PROJ_NAME = "Unnamed";
@@ -171,8 +172,6 @@ export class KpmController {
             return;
         }
 
-        // let fileInfo = _keystrokeMap[rootPath].source[filename];
-
         if (event.document && event.document.getText()) {
             _keystrokeMap[rootPath].source[
                 filename
@@ -329,6 +328,8 @@ export class KpmController {
         let workspaceFolder = getProjectFolder(filename);
         let name = workspaceFolder ? workspaceFolder.name : UNTITLED_WORKSPACE;
 
+        const nowTimes = getNowTimes();
+
         //
         // Create the keystroke count and add it to the map
         //
@@ -340,11 +341,37 @@ export class KpmController {
                 identifier: "",
                 resource: {}
             });
+
+            keystrokeCount["start"] = nowTimes.now_in_sec;
+            keystrokeCount["local_start"] = nowTimes.local_now_in_sec;
             keystrokeCount["keystrokes"] = 0;
         }
 
         let fileInfo = null;
         if (filename) {
+            if (keystrokeCount.source) {
+                Object.keys(keystrokeCount.source).forEach(key => {
+                    if (key !== filename) {
+                        // ending a file session that doesn't match the incoming file
+                        const end =
+                            parseInt(keystrokeCount.source[key]["end"], 10) ||
+                            0;
+                        if (end === 0) {
+                            // set the end time for this file event
+                            let nowTimes = getNowTimes();
+                            keystrokeCount.source[key]["end"] =
+                                nowTimes.now_in_sec;
+                            keystrokeCount.source[key]["local_end"] =
+                                nowTimes.local_now_in_sec;
+                        }
+                    } else {
+                        // they're working on this file again, zero out the end
+                        keystrokeCount.source[key]["end"] = 0;
+                        keystrokeCount.source[key]["local_end"] = 0;
+                    }
+                });
+            }
+
             //
             // Look for an existing file source. create it if it doesn't exist
             // or use it if it does and increment it's data value
@@ -368,6 +395,8 @@ export class KpmController {
                     linesRemoved: 0,
                     syntax: ""
                 };
+                fileInfo["start"] = nowTimes.now_in_sec;
+                fileInfo["local_start"] = nowTimes.local_now_in_sec;
                 keystrokeCount.source[filename] = fileInfo;
             }
         }
