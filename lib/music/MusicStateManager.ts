@@ -72,6 +72,18 @@ export class MusicStateManager {
         };
     }
 
+    private getChangeStatusStringResult(changeStatus) {
+        return `{isNewTrack: ${changeStatus.isNewTrack}, endPrevTrack: ${
+            changeStatus.endPrevTrack
+        },
+                trackStateChanged: ${
+                    changeStatus.trackStateChanged
+                }, playing: ${changeStatus.playing},
+                paused: ${changeStatus.paused}, stopped: ${
+            changeStatus.stopped
+        }, isValidTrack: ${changeStatus.isValidTrack}`;
+    }
+
     public async gatherMusicInfo(): Promise<any> {
         if (this.processingSong) {
             return this.existingTrack || new Track();

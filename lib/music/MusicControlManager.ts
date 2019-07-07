@@ -40,6 +40,8 @@ import {
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
+import { stringify } from "querystring";
+const ncp = require("copy-paste");
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
@@ -209,6 +211,11 @@ export class MusicControlManager {
 
     async launchTrackPlayer(playerName: PlayerName = null) {
         const musicstoreMgr = MusicStoreManager.getInstance();
+        if (playerName === PlayerName.ItunesDesktop) {
+            musicstoreMgr.currentPlayerType = PlayerType.MacItunesDesktop;
+        } else {
+            musicstoreMgr.currentPlayerType = PlayerType.WebSpotify;
+        }
         const musicCtrlMgr = new MusicControlManager();
         const currentTrack = musicstoreMgr.runningTrack;
         if (!playerName) {
@@ -263,6 +270,39 @@ export class MusicControlManager {
                 this.launchSpotifyPlayer();
             }
         }
+    }
+
+    copy(id: string, isPlaylist: boolean) {
+        let link = "";
+        let messageContext = "";
+        if (isPlaylist) {
+            link = `https://open.spotify.com/playlist/${id}`;
+            messageContext = "playlist";
+        } else {
+            link = `https://open.spotify.com/track/${id}`;
+            messageContext = "track";
+        }
+
+        ncp.copy(link);
+        window.showInformationMessage(
+            `Spotify ${messageContext} link copied to clipboard.`,
+            ...["OK"]
+        );
+    }
+
+    copyCurrentTrackLink() {
+        // example: https://open.spotify.com/track/7fa9MBXhVfQ8P8Df9OEbD8
+        // get the current track
+        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+            .selectedTrackItem;
+        this.copy(selectedItem.id, false);
+    }
+
+    copyCurrentPlaylistLink() {
+        // example: https://open.spotify.com/playlist/0mwG8hCL4scWi8Nkt7jyoV
+        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+            .selectedPlaylist;
+        this.copy(selectedItem.id, true);
     }
 
     launchSpotifyPlayer() {
@@ -354,11 +394,34 @@ export class MusicControlManager {
             }
         }
 
+        if (
+            musicstoreMgr.selectedPlaylist &&
+            musicstoreMgr.selectedPlaylist.id
+        ) {
+            menuOptions.items.push({
+                label: "Copy Current Playlist Link",
+                detail:
+                    "Copy the current playlist link to your clipboard to share.",
+                cb: this.copyCurrentPlaylistLink
+            });
+        }
+
+        if (
+            musicstoreMgr.selectedTrackItem &&
+            musicstoreMgr.selectedTrackItem.id
+        ) {
+            menuOptions.items.push({
+                label: "Copy Current Track Link",
+                detail:
+                    "Copy the current track link to your clipboard to share.",
+                cb: this.copyCurrentTrackLink
+            });
+        }
+
         if (!userStatus.loggedIn) {
             menuOptions.items.push({
                 label: LOGIN_LABEL,
                 detail: loginMsgDetail,
-                url: null,
                 cb: loginFunction
             });
         }
@@ -366,7 +429,6 @@ export class MusicControlManager {
         menuOptions.items.push({
             label: "Music Time Dashboard",
             detail: "View your latest music metrics right here in your editor",
-            url: null,
             cb: displayMusicTimeMetricsDashboard
         });
 
@@ -374,22 +436,19 @@ export class MusicControlManager {
             label: "Software Top 40",
             detail:
                 "Top 40 most popular songs developers around the world listen to as they code",
-            url: "https://api.software.com/music/top40",
-            cb: null
+            url: "https://api.software.com/music/top40"
         });
 
         menuOptions.items.push({
             label: "Submit an issue on GitHub",
             detail: "Encounter a bug? Submit an issue on our GitHub page",
-            url: "https://github.com/swdotcom/swdc-vscode/issues",
-            cb: null
+            url: "https://github.com/swdotcom/swdc-vscode/issues"
         });
 
         menuOptions.items.push({
             label: "Submit Feedback",
             detail: "Send us an email at cody@software.com.",
-            url: "mailto:cody@software.com",
-            cb: null
+            url: "mailto:cody@software.com"
         });
 
         showQuickPick(menuOptions);

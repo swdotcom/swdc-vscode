@@ -187,6 +187,14 @@ export class MusicStoreManager {
         this._serverTrack = track;
     }
 
+    get currentPlayerType(): PlayerType {
+        return this._currentPlayerType;
+    }
+
+    set currentPlayerType(type: PlayerType) {
+        this._currentPlayerType = type;
+    }
+
     //
     // store functions
     //
@@ -450,19 +458,34 @@ export class MusicStoreManager {
 
         await this.syncSpotifyWebPlaylists(serverIsOnline);
 
-        this._currentPlayerType =
-            this.runningTrack.playerType || PlayerType.NotAssigned;
+        if (
+            this.currentPlayerType === PlayerType.NotAssigned &&
+            this.runningTrack.playerType !== PlayerType.NotAssigned
+        ) {
+            this.currentPlayerType = this.runningTrack.playerType;
+        }
 
-        const playerNotAssigned =
-            !this.runningTrack.playerType ||
-            this.runningTrack.playerType === PlayerType.NotAssigned;
-        const noPlaylistsFound =
-            this.spotifyPlaylists.length === 0 &&
-            (playerNotAssigned || !this.runningTrack.id)
-                ? true
-                : false;
+        // get the current running playlist
+        if (this.currentPlayerType === PlayerType.MacItunesDesktop) {
+            playlists = await getPlaylists(PlayerName.ItunesDesktop);
+            // update so the playlist header shows the spotify related icons
+            commands.executeCommand("setContext", "treeview-type", "itunes");
+            //playlistPlayerType = PlayerType.MacItunesDesktop;
+        } else {
+            playlists = this.spotifyPlaylists;
+            this.currentPlayerType = PlayerType.WebSpotify;
 
-        let playlistPlayerType = PlayerType.NotAssigned;
+            // go through each playlist and find out it's state
+            for (let i = 0; i < playlists.length; i++) {
+                const playlist = playlists[i];
+                let playlistState = await this.getPlaylistState(playlist.id);
+                playlist.state = playlistState;
+            }
+            // update so the playlist header shows the spotify related icons
+            commands.executeCommand("setContext", "treeview-type", "spotify");
+        }
+
+        const noPlaylistsFound = !playlists || playlists.length === 0;
         if (noPlaylistsFound) {
             // no player or track
             let noPlayerFoundItem: PlaylistItem = new PlaylistItem();
@@ -472,40 +495,9 @@ export class MusicStoreManager {
             noPlayerFoundItem.playerType = PlayerType.NotAssigned;
             noPlayerFoundItem.name = "No active music player found";
             playlists.push(noPlayerFoundItem);
-        } else {
-            // get the current running playlist
-            if (this.runningTrack.playerType === PlayerType.MacItunesDesktop) {
-                playlists = await getPlaylists(PlayerName.ItunesDesktop);
-                // update so the playlist header shows the spotify related icons
-                commands.executeCommand(
-                    "setContext",
-                    "treeview-type",
-                    "itunes"
-                );
-                playlistPlayerType = PlayerType.MacItunesDesktop;
-            } else {
-                playlists = this.spotifyPlaylists;
-                this._currentPlayerType = PlayerType.WebSpotify;
-
-                // go through each playlist and find out it's state
-                for (let i = 0; i < playlists.length; i++) {
-                    const playlist = playlists[i];
-                    let playlistState = await this.getPlaylistState(
-                        playlist.id
-                    );
-                    playlist.state = playlistState;
-                }
-                // update so the playlist header shows the spotify related icons
-                commands.executeCommand(
-                    "setContext",
-                    "treeview-type",
-                    "spotify"
-                );
-                playlistPlayerType = PlayerType.WebSpotify;
-            }
         }
 
-        this.updateSettingsItems(serverIsOnline, playlistPlayerType);
+        this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
 
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
@@ -521,7 +513,6 @@ export class MusicStoreManager {
         playlistPlayerType: PlayerType
     ) {
         let settingsList: PlaylistItem[] = [];
-        const musicstoreMgr = MusicStoreManager.getInstance();
 
         if (this.requiresSpotifyAccess()) {
             // add the connect spotify link
@@ -722,14 +713,21 @@ export class MusicStoreManager {
     ) {
         const hasActivePlaylistItems = this.hasActivePlaylistItems();
 
-        if (this.runningTrack.playerType !== this._currentPlayerType) {
+        if (this.runningTrack.playerType !== this.currentPlayerType) {
             // the player type has changed, clear the map
             this._playlistTracks[playlist_id] = null;
         }
         // don't update the current player type if we're already showing the
         // spotify playlist even if the running track is not defined
-        if (!hasActivePlaylistItems) {
-            this._currentPlayerType = this.runningTrack.playerType;
+        if (
+            !hasActivePlaylistItems &&
+            this.runningTrack.playerType !== PlayerType.NotAssigned
+        ) {
+            console.log(
+                "get playlist track info, no active playlists items, setting current player type to: ",
+                this.runningTrack.playerType
+            );
+            this.currentPlayerType = this.runningTrack.playerType;
         }
 
         let playlistItems = [];
@@ -745,19 +743,19 @@ export class MusicStoreManager {
 
         let playlistTracks: CodyResponse;
         let noPlaylistType =
-            !this._currentPlayerType ||
-            this._currentPlayerType === PlayerType.NotAssigned;
+            !this.currentPlayerType ||
+            this.currentPlayerType === PlayerType.NotAssigned;
 
         if (
             noPlaylistType ||
-            this._currentPlayerType === PlayerType.WebSpotify
+            this.currentPlayerType === PlayerType.WebSpotify
         ) {
             // get the playlist tracks
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
                 playlist_id
             );
-        } else if (this._currentPlayerType === PlayerType.MacItunesDesktop) {
+        } else if (this.currentPlayerType === PlayerType.MacItunesDesktop) {
             playlistTracks = await getPlaylistTracks(
                 PlayerName.ItunesDesktop,
                 playlist_id

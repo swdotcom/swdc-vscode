@@ -113,6 +113,11 @@ async function deploy() {
                     command: "musictime.pause",
                     when: "view == music-time-playlists && viewItem == playing",
                     group: "inline"
+                },
+                {
+                    command: "musictime.copy",
+                    when: "view == music-time-playlists",
+                    group: "inline"
                 }
             ],
             "view/title": [
@@ -149,6 +154,14 @@ async function deploy() {
             icon: {
                 light: "resources/light/play-button.svg",
                 dark: "resources/dark/play-button.svg"
+            }
+        });
+        commands.push({
+            command: "musictime.copy",
+            title: "Copy Playlist/Track Link",
+            icon: {
+                light: "resources/light/icons8-copy-to-clipboard-16.png",
+                dark: "resources/dark/icons8-copy-to-clipboard-16.png"
             }
         });
         commands.push({

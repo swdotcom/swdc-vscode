@@ -250,7 +250,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
  * from within the package.json when determining if there should be decoracted context
  * based on that value.
  */
-class PlaylistTreeItem extends TreeItem {
+export class PlaylistTreeItem extends TreeItem {
     private resourcePath: string = path.join(
         __filename,
         "..",
