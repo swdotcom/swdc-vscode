@@ -459,6 +459,7 @@ export class MusicStoreManager {
         await this.syncSpotifyWebPlaylists(serverIsOnline);
 
         if (
+            this.runningTrack.playerType &&
             this.currentPlayerType === PlayerType.NotAssigned &&
             this.runningTrack.playerType !== PlayerType.NotAssigned
         ) {
@@ -470,7 +471,6 @@ export class MusicStoreManager {
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
             // update so the playlist header shows the spotify related icons
             commands.executeCommand("setContext", "treeview-type", "itunes");
-            //playlistPlayerType = PlayerType.MacItunesDesktop;
         } else {
             playlists = this.spotifyPlaylists;
             this.currentPlayerType = PlayerType.WebSpotify;
@@ -495,6 +495,8 @@ export class MusicStoreManager {
             noPlayerFoundItem.playerType = PlayerType.NotAssigned;
             noPlayerFoundItem.name = "No active music player found";
             playlists.push(noPlayerFoundItem);
+
+            this.currentPlayerType = PlayerType.NotAssigned;
         }
 
         this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
@@ -720,13 +722,10 @@ export class MusicStoreManager {
         // don't update the current player type if we're already showing the
         // spotify playlist even if the running track is not defined
         if (
+            this.runningTrack.playerType &&
             !hasActivePlaylistItems &&
             this.runningTrack.playerType !== PlayerType.NotAssigned
         ) {
-            console.log(
-                "get playlist track info, no active playlists items, setting current player type to: ",
-                this.runningTrack.playerType
-            );
             this.currentPlayerType = this.runningTrack.playerType;
         }
 

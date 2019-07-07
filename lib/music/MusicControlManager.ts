@@ -14,7 +14,7 @@ import {
     getSpotifyDevices,
     quitMacPlayer
 } from "cody-music";
-import { workspace, window, ViewColumn } from "vscode";
+import { workspace, window, ViewColumn, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -312,7 +312,7 @@ export class MusicControlManager {
         );
         setTimeout(() => {
             launchPlayer(PlayerName.SpotifyWeb);
-        }, 3000);
+        }, 3200);
     }
 
     async showMenu() {
@@ -354,44 +354,6 @@ export class MusicControlManager {
                 url: null,
                 cb: connectSpotify
             });
-        } else {
-            // check if we already have a playlist
-            const savedPlaylists: PlaylistItem[] = musicstoreMgr.savedPlaylists;
-            const hasSavedPlaylists =
-                savedPlaylists && savedPlaylists.length > 0 ? true : false;
-
-            const codingFavs: any[] = musicstoreMgr.userFavorites;
-            const hasUserFavorites =
-                codingFavs && codingFavs.length > 0 ? true : false;
-
-            const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
-            let personalPlaylistLabel = !personalPlaylistInfo
-                ? "Generate Software Playlist"
-                : "Update Software Playlist";
-            const personalPlaylistTooltip = !personalPlaylistInfo
-                ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
-                : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
-
-            if (!hasSavedPlaylists && hasUserFavorites) {
-                // show the generate playlist menu item
-                menuOptions.items.push({
-                    label: personalPlaylistLabel,
-                    detail: personalPlaylistTooltip,
-                    url: null,
-                    cb: MusicStoreManager.getInstance()
-                        .generateUsersWeeklyTopSongs
-                });
-            }
-
-            if (!spotifyDevices || spotifyDevices.length === 0) {
-                menuOptions.items.push({
-                    label: "Launch Spotify",
-                    detail:
-                        "Launch the Spotify web player to view your playlist",
-                    url: null,
-                    cb: this.launchSpotifyPlayer
-                });
-            }
         }
 
         if (
@@ -416,6 +378,56 @@ export class MusicControlManager {
                     "Copy the current track link to your clipboard to share.",
                 cb: this.copyCurrentTrackLink
             });
+        }
+
+        if (accessToken) {
+            // check if we already have a playlist
+            const savedPlaylists: PlaylistItem[] = musicstoreMgr.savedPlaylists;
+            const hasSavedPlaylists =
+                savedPlaylists && savedPlaylists.length > 0 ? true : false;
+
+            const codingFavs: any[] = musicstoreMgr.userFavorites;
+            const hasUserFavorites =
+                codingFavs && codingFavs.length > 0 ? true : false;
+
+            const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
+            let personalPlaylistLabel = !personalPlaylistInfo
+                ? "Generate Software Playlist"
+                : "Update Software Playlist";
+            const personalPlaylistTooltip = !personalPlaylistInfo
+                ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
+                : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+
+            if (!hasSavedPlaylists && hasUserFavorites) {
+                // show the generate playlist menu item
+                menuOptions.items.push({
+                    label: personalPlaylistLabel,
+                    detail: personalPlaylistTooltip,
+                    cb: MusicStoreManager.getInstance()
+                        .generateUsersWeeklyTopSongs
+                });
+            }
+
+            if (
+                musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify &&
+                (!spotifyDevices || spotifyDevices.length === 0)
+            ) {
+                menuOptions.items.push({
+                    label: "Launch Spotify",
+                    detail:
+                        "Launch the Spotify web player to view your playlist",
+                    command: "musictime.launchSpotify"
+                });
+            } else if (
+                musicstoreMgr.currentPlayerType !== PlayerType.MacItunesDesktop
+            ) {
+                menuOptions.items.push({
+                    label: "Launch iTunes",
+                    detail:
+                        "Launch the iTunes web player to view your playlist",
+                    command: "musictime.launchItunes"
+                });
+            }
         }
 
         if (!userStatus.loggedIn) {

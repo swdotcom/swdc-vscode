@@ -56,7 +56,7 @@ export function getLoggedInCacheState() {
 export async function serverIsAvailable() {
     let nowSec = nowInSecs();
     let diff = nowSec - serverAvailableLastCheck;
-    if (serverAvailableLastCheck === 0 || diff > 30) {
+    if (serverAvailableLastCheck === 0 || diff > 60) {
         serverAvailableLastCheck = nowInSecs();
         serverAvailable = await softwareGet("/ping", null)
             .then(result => {

@@ -1,4 +1,10 @@
-import { window, workspace, QuickPickOptions, ViewColumn } from "vscode";
+import {
+    window,
+    workspace,
+    QuickPickOptions,
+    ViewColumn,
+    commands
+} from "vscode";
 import {
     launchWebUrl,
     getItem,
@@ -57,10 +63,13 @@ export function showQuickPick(pickOptions) {
         if (item) {
             let url = item["url"];
             let cb = item["cb"];
+            let command = item["command"];
             if (url) {
                 launchWebUrl(url);
             } else if (cb) {
                 cb();
+            } else if (command) {
+                commands.executeCommand(command);
             }
         }
     });
