@@ -269,7 +269,7 @@ export class PlaylistTreeItem extends TreeItem {
         // set the track's context value to the playlist item state
         // if it's a track that's playing or paused it will show the appropriate button.
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
-        this.contextValue = treeItem.state;
+        this.contextValue = `${treeItem.type}-item-${treeItem.state}`;
 
         if (treeItem.type === "playlist") {
             if (treeItem.tag === "paw") {

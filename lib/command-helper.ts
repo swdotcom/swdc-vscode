@@ -119,14 +119,21 @@ export function createCommands(): {
         });
         cmds.push(playCmd);
 
-        const copyLinkCmd = commands.registerCommand(
-            "musictime.copy",
+        const copyTrackLinkCmd = commands.registerCommand(
+            "musictime.copyTrack",
             (node: PlaylistTreeItem) => {
-                const isPlaylist = node["type"] === "playlist";
-                controller.copy(node.id, isPlaylist);
+                controller.copy(node.id, false);
             }
         );
-        cmds.push(copyLinkCmd);
+        cmds.push(copyTrackLinkCmd);
+
+        const copyPlaylistLinkCmd = commands.registerCommand(
+            "musictime.copyPlaylist",
+            (node: PlaylistTreeItem) => {
+                controller.copy(node.id, true);
+            }
+        );
+        cmds.push(copyPlaylistLinkCmd);
 
         const pauseCmd = commands.registerCommand("musictime.pause", () => {
             controller.pause();

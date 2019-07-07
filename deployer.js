@@ -106,30 +106,35 @@ async function deploy() {
             "view/item/context": [
                 {
                     command: "musictime.play",
-                    when: "view == music-time-playlists && viewItem == paused",
+                    when: "viewItem =~ /.*item-paused$/",
                     group: "inline"
                 },
                 {
                     command: "musictime.pause",
-                    when: "view == music-time-playlists && viewItem == playing",
+                    when: "viewItem =~ /.*item-playing$/",
                     group: "inline"
                 },
                 {
-                    command: "musictime.copy",
-                    when: "view == music-time-playlists",
+                    command: "musictime.copyPlaylist",
+                    when: "viewItem =~ /playlist-item.*/",
+                    group: "inline"
+                },
+                {
+                    command: "musictime.copyTrack",
+                    when: "viewItem =~ /track-item.*/",
                     group: "inline"
                 }
             ],
             "view/title": [
                 {
                     command: "musictime.itunesPlaylist",
-                    group: "navigation@1",
+                    group: "MusicTimeGroup@1",
                     when:
                         "view == music-time-playlists && treeview-type == itunes"
                 },
                 {
                     command: "musictime.spotifyPlaylist",
-                    group: "navigation@1",
+                    group: "MusicTimeGroup@1",
                     when:
                         "view == music-time-playlists && treeview-type == spotify"
                 }
@@ -157,8 +162,16 @@ async function deploy() {
             }
         });
         commands.push({
-            command: "musictime.copy",
-            title: "Copy Playlist/Track Link",
+            command: "musictime.copyTrack",
+            title: "Copy Track Link",
+            icon: {
+                light: "resources/light/icons8-copy-to-clipboard-16.png",
+                dark: "resources/dark/icons8-copy-to-clipboard-16.png"
+            }
+        });
+        commands.push({
+            command: "musictime.copyPlaylist",
+            title: "Copy Playlist Link",
             icon: {
                 light: "resources/light/icons8-copy-to-clipboard-16.png",
                 dark: "resources/dark/icons8-copy-to-clipboard-16.png"
