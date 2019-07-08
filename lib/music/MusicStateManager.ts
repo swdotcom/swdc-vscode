@@ -7,7 +7,14 @@ import {
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
-import { Track, getRunningTrack, TrackStatus } from "cody-music";
+import {
+    Track,
+    getRunningTrack,
+    TrackStatus,
+    PlayerType,
+    isRunning,
+    PlayerName
+} from "cody-music";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -166,6 +173,17 @@ export class MusicStateManager {
         // this updates the buttons in the status bar and the playlist buttons
         if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
             await this.musicstoreMgr.refreshPlaylists();
+        } else if (
+            !changeStatus.isValidTrack &&
+            this.musicstoreMgr.currentPlayerType === PlayerType.MacItunesDesktop
+        ) {
+            // check to see if it's even running or not
+            const isItunesRunning = await isRunning(PlayerName.ItunesDesktop);
+            if (!isItunesRunning) {
+                // switch to spotify web
+                this.musicstoreMgr.currentPlayerType = PlayerType.WebSpotify;
+                await this.musicstoreMgr.refreshPlaylists();
+            }
         }
 
         this.processingSong = false;
