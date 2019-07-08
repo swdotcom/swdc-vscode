@@ -38,23 +38,6 @@ const createPlaylistTreeItem = (
 };
 
 /**
- * Play an iTunes track from the currently selected playlist
- * @param playlistItem
- */
-export const playItunesTrackFromPlaylist = async (
-    playlistItem: PlaylistItem
-) => {
-    const musicstoreMgr = MusicStoreManager.getInstance();
-    const playlistName = musicstoreMgr.selectedPlaylist.name;
-    const trackName = playlistItem.name;
-    const params = [trackName, playlistName];
-
-    await playTrackInLibrary(PlayerName.ItunesDesktop, params);
-
-    musicstoreMgr.refreshPlaylists();
-};
-
-/**
  * Launch the Spotify player if it's not already launched, then play the track
  * @param track
  * @param spotifyUser
@@ -125,7 +108,6 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
 
                 if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                     if (notPlaying) {
-                        // await playItunesTrackFromPlaylist(playlistItem);
                         const pos: number = playlistItem.position || 1;
                         await playItunesTrackNumberInPlaylist(
                             musicstoreMgr.selectedPlaylist.name,

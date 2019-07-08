@@ -1,7 +1,7 @@
 {
     "name": "music-time",
     "displayName": "Music Time",
-    "version": "0.1.26",
+    "version": "0.1.27",
     "publisher": "softwaredotcom",
     "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
     "author": {
@@ -169,11 +169,15 @@
             "music-time": [
                 {
                     "id": "music-time-playlists",
-                    "name": "Playlists"
+                    "name": "Music Time"
                 },
                 {
-                    "id": "music-time-settings",
-                    "name": "Settings"
+                    "id": "my-playlists",
+                    "name": "My Playlists"
+                },
+                {
+                    "id": "music-time-players",
+                    "name": "Players"
                 }
             ]
         },
@@ -204,12 +208,12 @@
                 {
                     "command": "musictime.itunesPlaylist",
                     "group": "MusicTimeGroup@1",
-                    "when": "view == music-time-playlists && treeview-type == itunes"
+                    "when": "view == my-playlists && treeview-type == itunes"
                 },
                 {
                     "command": "musictime.spotifyPlaylist",
                     "group": "MusicTimeGroup@1",
-                    "when": "view == music-time-playlists && treeview-type == spotify"
+                    "when": "view == my-playlists && treeview-type == spotify"
                 }
             ]
         }

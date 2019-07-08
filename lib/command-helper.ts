@@ -26,6 +26,11 @@ import {
     connectPlaylistTreeView,
     PlaylistTreeItem
 } from "./music/MusicPlaylistProvider";
+import {
+    MusicTimePlaylistProvider,
+    connectMusicTimePlaylistTreeView,
+    MusicTimePlaylistTreeItem
+} from "./music/MusicTimePlaylistProvider";
 import { PlaylistItem, PlayerName } from "cody-music";
 import {
     MusicSettingsProvider,
@@ -179,10 +184,24 @@ export function createCommands(): {
         );
         cmds.push(disconnectSpotifyCommand);
 
+        // music time playlist provider
+        const treeMusicTimePlaylistProvider = new MusicTimePlaylistProvider();
+        const musicTimePlaylistTreeView: TreeView<
+            PlaylistItem
+        > = window.createTreeView("music-time-playlists", {
+            treeDataProvider: treeMusicTimePlaylistProvider,
+            showCollapseAll: false
+        });
+        MusicCommandManager.setMusicTimeTreeProvider(
+            treeMusicTimePlaylistProvider
+        );
+        treeMusicTimePlaylistProvider.bindView(musicTimePlaylistTreeView);
+        cmds.push(connectPlaylistTreeView(musicTimePlaylistTreeView));
+
         // playlist tree view
         const treePlaylistProvider = new MusicPlaylistProvider();
         const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
-            "music-time-playlists",
+            "my-playlists",
             {
                 treeDataProvider: treePlaylistProvider,
                 showCollapseAll: false
@@ -195,7 +214,7 @@ export function createCommands(): {
         // settings tree view
         const treeSettingsProvider = new MusicSettingsProvider();
         const settingsTreeView: TreeView<PlaylistItem> = window.createTreeView(
-            "music-time-settings",
+            "music-time-players",
             {
                 treeDataProvider: treeSettingsProvider,
                 showCollapseAll: false
@@ -205,7 +224,10 @@ export function createCommands(): {
 
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
-            () => treePlaylistProvider.refresh()
+            () => {
+                treePlaylistProvider.refresh();
+                treeMusicTimePlaylistProvider.refresh();
+            }
         );
         cmds.push(refreshPlaylistCommand);
 

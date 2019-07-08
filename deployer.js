@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "1.1.11";
-const MUSIC_TIME_VERSION = "0.1.26";
+const MUSIC_TIME_VERSION = "0.1.27";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
@@ -94,11 +94,15 @@ async function deploy() {
             "music-time": [
                 {
                     id: "music-time-playlists",
-                    name: "Playlists"
+                    name: "Music Time"
                 },
                 {
-                    id: "music-time-settings",
-                    name: "Settings"
+                    id: "my-playlists",
+                    name: "My Playlists"
+                },
+                {
+                    id: "music-time-players",
+                    name: "Players"
                 }
             ]
         };
@@ -129,14 +133,12 @@ async function deploy() {
                 {
                     command: "musictime.itunesPlaylist",
                     group: "MusicTimeGroup@1",
-                    when:
-                        "view == music-time-playlists && treeview-type == itunes"
+                    when: "view == my-playlists && treeview-type == itunes"
                 },
                 {
                     command: "musictime.spotifyPlaylist",
                     group: "MusicTimeGroup@1",
-                    when:
-                        "view == music-time-playlists && treeview-type == spotify"
+                    when: "view == my-playlists && treeview-type == spotify"
                 }
             ]
         };

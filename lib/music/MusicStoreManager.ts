@@ -44,6 +44,7 @@ export class MusicStoreManager {
 
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _runningPlaylists: PlaylistItem[] = [];
+    private _musicTimePlaylists: PlaylistItem[] = [];
     private _runningTrack: Track = new Track();
     private _savedPlaylists: PlaylistItem[] = [];
     private _settings: PlaylistItem[] = [];
@@ -155,6 +156,14 @@ export class MusicStoreManager {
         this._runningPlaylists = list;
     }
 
+    get musicTimePlaylists(): PlaylistItem[] {
+        return this._musicTimePlaylists;
+    }
+
+    set musicTimePlaylists(list: PlaylistItem[]) {
+        this._musicTimePlaylists = list;
+    }
+
     get selectedPlaylist(): PlaylistItem {
         return this._selectedPlaylist;
     }
@@ -210,10 +219,6 @@ export class MusicStoreManager {
         await this.syncRunningPlaylists(serverIsOnline);
         MusicCommandManager.syncControls(this.runningTrack);
         this.refreshing = false;
-    }
-
-    async clearPlaylists() {
-        this.runningPlaylists = [];
     }
 
     async initializeSpotify(serverIsOnline) {
@@ -314,7 +319,7 @@ export class MusicStoreManager {
             }
 
             if (!this.serverTrack) {
-                const api = `/music/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
+                const api = `/music/spotify/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
                 const resp = await softwareGet(api, getItem("jwt"));
                 if (isResponseOk(resp) && resp.data) {
                     let trackData = resp.data;
@@ -504,6 +509,25 @@ export class MusicStoreManager {
 
         this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
 
+        // filter out the music time playlists
+        let musicTimePlaylistItems = [];
+        playlists = playlists
+            .map((item: PlaylistItem) => {
+                // savedPlaylist.id === playlist.id
+                let foundSavedPlaylist = this.savedPlaylists.find(element => {
+                    return element.id === item.id;
+                });
+                if (foundSavedPlaylist) {
+                    // add it to the music time playlists
+                    musicTimePlaylistItems.push(item);
+                    return null;
+                }
+                return item;
+            })
+            .filter(item => item);
+
+        this.musicTimePlaylists = musicTimePlaylistItems;
+
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
@@ -521,8 +545,23 @@ export class MusicStoreManager {
 
         const needsSpotifyAccessToken = this.requiresSpotifyAccess();
 
-        if (needsSpotifyAccessToken) {
-            if (serverIsOnline) {
+        if (!serverIsOnline) {
+            // show that they're offline
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "offline";
+            listItem.id = "offline";
+            listItem.playerType = PlayerType.NotAssigned;
+            listItem.name = "Music Time Offline";
+            listItem.tooltip = "Unable to connect to music time";
+            settingsList.push(listItem);
+        }
+
+        if (
+            serverIsOnline &&
+            this.currentPlayerType === PlayerType.WebSpotify
+        ) {
+            if (needsSpotifyAccessToken) {
                 // add the connect spotify link, but only if we're online
                 let listItem: PlaylistItem = new PlaylistItem();
                 listItem.tracks = new PlaylistTrackInfo();
@@ -534,36 +573,35 @@ export class MusicStoreManager {
                 listItem.tooltip = "Connect Spotify To View Your Playlists";
                 settingsList.push(listItem);
             } else {
-                // show that they're offline
-                let listItem: PlaylistItem = new PlaylistItem();
-                listItem.tracks = new PlaylistTrackInfo();
-                listItem.type = "offline";
-                listItem.id = "offline";
-                listItem.playerType = PlayerType.NotAssigned;
-                listItem.name = "Music Time Offline";
-                listItem.tooltip = "Unable to connect to music time";
-                settingsList.push(listItem);
+                // show that you've connected
+                let connectedItem: PlaylistItem = new PlaylistItem();
+                connectedItem.tracks = new PlaylistTrackInfo();
+                connectedItem.type = "connected";
+                connectedItem.id = "spotifyconnected";
+                connectedItem.playerType = PlayerType.WebSpotify;
+                connectedItem.name = "Spotify Connected";
+                connectedItem.tooltip = "You've connected Spotify";
+                settingsList.push(connectedItem);
+
+                // let disconnectItem: PlaylistItem = new PlaylistItem();
+                // disconnectItem.tracks = new PlaylistTrackInfo();
+                // disconnectItem.type = "spotify";
+                // disconnectItem.id = "disconnectspotify";
+                // disconnectItem.playerType = PlayerType.WebSpotify;
+                // disconnectItem.name = "Disconnect Spotify Access";
+                // disconnectItem.tooltip = "Disconnect Spotify";
+                // disconnectItem.command = "musictime.disconnectSpotify";
+                // settingsList.push(disconnectItem);
             }
-        } else {
-            // show that you've connected
+        } else if (this.currentPlayerType === PlayerType.MacItunesDesktop) {
             let connectedItem: PlaylistItem = new PlaylistItem();
             connectedItem.tracks = new PlaylistTrackInfo();
             connectedItem.type = "connected";
-            connectedItem.id = "spotifyconnected";
+            connectedItem.id = "itunesconnected";
             connectedItem.playerType = PlayerType.WebSpotify;
-            connectedItem.name = "Spotify Connected";
-            connectedItem.tooltip = "You've connected Spotify";
+            connectedItem.name = "iTunes Connected";
+            connectedItem.tooltip = "You've connected iTunes";
             settingsList.push(connectedItem);
-
-            // let disconnectItem: PlaylistItem = new PlaylistItem();
-            // disconnectItem.tracks = new PlaylistTrackInfo();
-            // disconnectItem.type = "spotify";
-            // disconnectItem.id = "disconnectspotify";
-            // disconnectItem.playerType = PlayerType.WebSpotify;
-            // disconnectItem.name = "Disconnect Spotify Access";
-            // disconnectItem.tooltip = "Disconnect Spotify";
-            // disconnectItem.command = "musictime.disconnectSpotify";
-            // settingsList.push(disconnectItem);
         }
 
         const personalPlaylistInfo = this.getExistingPesonalPlaylist();
@@ -573,15 +611,11 @@ export class MusicStoreManager {
         const personalPlaylistTooltip = !personalPlaylistInfo
             ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
             : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
-        let showingSpotifyPlaylist = true;
-        if (
-            this.runningTrack &&
-            this.runningTrack.playerType === PlayerType.MacItunesDesktop
-        ) {
-            showingSpotifyPlaylist = false;
-        }
 
-        if (showingSpotifyPlaylist && !needsSpotifyAccessToken) {
+        if (
+            this.currentPlayerType === PlayerType.WebSpotify &&
+            !needsSpotifyAccessToken
+        ) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
