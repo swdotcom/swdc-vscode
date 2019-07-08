@@ -54,12 +54,23 @@ export class MusicStateManager {
         const stopped = playingTrackState === "stopped";
         const paused = playingTrackState === TrackStatus.Paused;
         const isNewTrack = existingTrackId !== playingTrackId;
-        const endPrevTrack =
-            existingTrackId !== null && (isNewTrack || stopped || paused);
         const trackStateChanged = existingTrackState !== playingTrackState;
         const playing = playingTrackState === TrackStatus.Playing;
 
         const isValidTrack = playingTrack.id ? true : false;
+
+        // to determine if we should end the previous track, the
+        // existing track should be existing and playing
+        let endPrevTrack = false;
+        if (existingTrackId !== playingTrackId) {
+            endPrevTrack = true;
+        } else if (
+            existingTrackId === playingTrackId &&
+            existingTrackState === TrackStatus.Playing &&
+            playingTrackState !== TrackStatus.Playing
+        ) {
+            endPrevTrack = true;
+        }
 
         return {
             isNewTrack,
@@ -120,7 +131,11 @@ export class MusicStateManager {
             await sendMusicData(this.existingTrack);
 
             // set existing track to playing track
-            this.existingTrack = {};
+            if (changeStatus.paused) {
+                this.existingTrack = { ...playingTrack };
+            } else {
+                this.existingTrack = {};
+            }
         }
 
         // do we have a new song
