@@ -346,7 +346,7 @@ export class MusicControlManager {
 
         // check if the user has the spotify_access_token
         const accessToken = getItem("spotify_access_token");
-        if (!accessToken) {
+        if (!accessToken && serverIsOnline) {
             menuOptions.items.push({
                 label: "Connect Spotify",
                 detail:

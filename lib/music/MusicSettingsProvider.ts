@@ -127,6 +127,17 @@ class SettingsTreeItem extends TreeItem {
                 "dark",
                 "wifi.svg"
             );
+        } else if (treeItem.type === "offline") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "nowifi.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "nowifi.svg"
+            );
         } else if (treeItem.type === "paw") {
             this.iconPath.light = path.join(
                 this.resourcePath,

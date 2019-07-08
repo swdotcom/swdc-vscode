@@ -370,9 +370,12 @@ export class MusicStoreManager {
     }
 
     getExistingPesonalPlaylist(): any {
-        return this.savedPlaylists.find(element => {
-            return parseInt(element["playlistTypeId"], 10) === 1;
-        });
+        if (this.savedPlaylists) {
+            return this.savedPlaylists.find(element => {
+                return parseInt(element["playlistTypeId"], 10) === 1;
+            });
+        }
+        return null;
     }
 
     async reconcilePlaylists() {
@@ -516,17 +519,31 @@ export class MusicStoreManager {
     ) {
         let settingsList: PlaylistItem[] = [];
 
-        if (this.requiresSpotifyAccess()) {
-            // add the connect spotify link
-            let listItem: PlaylistItem = new PlaylistItem();
-            listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "spotify";
-            listItem.id = "connectspotify";
-            listItem.command = "musictime.connectSpotify";
-            listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = "Connect Spotify";
-            listItem.tooltip = "Connect Spotify To View Your Playlists";
-            settingsList.push(listItem);
+        const needsSpotifyAccessToken = this.requiresSpotifyAccess();
+
+        if (needsSpotifyAccessToken) {
+            if (serverIsOnline) {
+                // add the connect spotify link, but only if we're online
+                let listItem: PlaylistItem = new PlaylistItem();
+                listItem.tracks = new PlaylistTrackInfo();
+                listItem.type = "spotify";
+                listItem.id = "connectspotify";
+                listItem.command = "musictime.connectSpotify";
+                listItem.playerType = PlayerType.WebSpotify;
+                listItem.name = "Connect Spotify";
+                listItem.tooltip = "Connect Spotify To View Your Playlists";
+                settingsList.push(listItem);
+            } else {
+                // show that they're offline
+                let listItem: PlaylistItem = new PlaylistItem();
+                listItem.tracks = new PlaylistTrackInfo();
+                listItem.type = "offline";
+                listItem.id = "offline";
+                listItem.playerType = PlayerType.NotAssigned;
+                listItem.name = "Music Time Offline";
+                listItem.tooltip = "Unable to connect to music time";
+                settingsList.push(listItem);
+            }
         } else {
             // show that you've connected
             let connectedItem: PlaylistItem = new PlaylistItem();
@@ -564,7 +581,7 @@ export class MusicStoreManager {
             showingSpotifyPlaylist = false;
         }
 
-        if (showingSpotifyPlaylist && !this.requiresSpotifyAccess()) {
+        if (showingSpotifyPlaylist && !needsSpotifyAccessToken) {
             // add the connect spotify link
             let listItem: PlaylistItem = new PlaylistItem();
             listItem.tracks = new PlaylistTrackInfo();
@@ -594,10 +611,6 @@ export class MusicStoreManager {
                 await this.createGlobalTopSongsPlaylist();
             }
         }
-
-        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-        const hasSpotifyDevices =
-            !spotifyDevices || spotifyDevices.length === 0 ? false : true;
 
         // If iTunes is currently playing show .
         // If it's not then show the launch iTunes
@@ -669,7 +682,7 @@ export class MusicStoreManager {
      */
     hasMusicTimePlaylistForType(playlistTypeId: number) {
         let result = false;
-        if (this.spotifyPlaylists.length > 0) {
+        if (this.spotifyPlaylists.length > 0 && this.savedPlaylists) {
             for (let i = 0; i < this.spotifyPlaylists.length; i++) {
                 const playlist: PlaylistItem = this.spotifyPlaylists[i];
 
