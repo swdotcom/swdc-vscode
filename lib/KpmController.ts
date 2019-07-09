@@ -310,6 +310,12 @@ export class KpmController {
         setTimeout(() => keystrokeCount.postData(), 0);
     }
 
+    /**
+     * This function will ensure a file within the aggregate KeystrokeCount
+     * object has a start, local_start, end, and local_end.
+     * @param filename
+     * @param rootPath
+     */
     private async initializeKeystrokesCount(filename, rootPath) {
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || NO_PROJ_NAME;

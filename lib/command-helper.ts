@@ -227,6 +227,10 @@ export function createCommands(): {
             () => {
                 treePlaylistProvider.refresh();
                 treeMusicTimePlaylistProvider.refresh();
+
+                setTimeout(() => {
+                    MusicStoreManager.getInstance().reconcilePlaylists();
+                }, 2000);
             }
         );
         cmds.push(refreshPlaylistCommand);
@@ -243,11 +247,23 @@ export function createCommands(): {
         );
         cmds.push(launchSpotifyCommand);
 
+        const launchSpotifyPlaylistCommand = commands.registerCommand(
+            "musictime.spotifyPlaylist",
+            () => controller.launchTrackPlayer(PlayerName.SpotifyWeb)
+        );
+        cmds.push(launchSpotifyPlaylistCommand);
+
         const launchItunesCommand = commands.registerCommand(
             "musictime.launchItunes",
             () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
         );
         cmds.push(launchItunesCommand);
+
+        const launchItunesPlaylistCommand = commands.registerCommand(
+            "musictime.spotifyPlaylist",
+            () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
+        );
+        cmds.push(launchItunesPlaylistCommand);
 
         const generateWeeklyPlaylistCommand = commands.registerCommand(
             "musictime.generateWeeklyPlaylist",

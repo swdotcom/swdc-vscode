@@ -131,14 +131,19 @@ async function deploy() {
             ],
             "view/title": [
                 {
+                    command: "musictime.playlistRefresh",
+                    group: "navigation",
+                    when: "view  =~ /.*-playlists/"
+                },
+                {
                     command: "musictime.itunesPlaylist",
-                    group: "MusicTimeGroup@1",
-                    when: "view == my-playlists && treeview-type == itunes"
+                    group: "navigation",
+                    when: "view =~ /.*-playlists/ && treeview-type == itunes"
                 },
                 {
                     command: "musictime.spotifyPlaylist",
-                    group: "MusicTimeGroup@1",
-                    when: "view == my-playlists && treeview-type == spotify"
+                    group: "navigation",
+                    when: "view =~ /.*-playlists/ && treeview-type == spotify"
                 }
             ]
         };
@@ -189,7 +194,7 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.itunesPlaylist",
-            title: "iTunes",
+            title: "Launch iTunes",
             icon: {
                 light: "resources/light/icons8-itunes.svg",
                 dark: "resources/dark/icons8-itunes.svg"
@@ -197,10 +202,18 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.spotifyPlaylist",
-            title: "Spotify",
+            title: "Launch Spotify",
             icon: {
                 light: "resources/light/icons8-spotify.svg",
                 dark: "resources/dark/icons8-spotify.svg"
+            }
+        });
+        commands.push({
+            command: "musictime.playlistRefresh",
+            title: "Refresh Playlist",
+            icon: {
+                light: "resources/light/refresh.svg",
+                dark: "resources/dark/refresh.svg"
             }
         });
         commands.push({
