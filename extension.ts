@@ -191,7 +191,7 @@ export async function intializePlugin(
         const half_hour_ms = hourly_interval_ms / 2;
         offline_data_interval = setInterval(() => {
             sendOfflineData();
-        }, half_hour_ms);
+        }, one_min_ms * 2);
 
         // in 2 minutes fetch the historical commits if any
         setTimeout(() => {
