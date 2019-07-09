@@ -107,6 +107,8 @@ export class MusicStateManager {
             return this.existingTrack || new Track();
         }
 
+        console.log("offset seconds: ", getOffsetSecends());
+
         this.processingSong = true;
         let playingTrack = await getRunningTrack();
 
@@ -232,7 +234,8 @@ export class MusicStateManager {
             accumulator["local_start"] = current.local_start;
             accumulator["end"] = current.end;
             accumulator["local_end"] = current.local_end;
-            accumulator["offset"] = getOffsetSecends();
+            // set the minutes offset
+            accumulator["offset"] = getOffsetSecends() / 60;
 
             currObjectKeys.forEach(currObjectKey => {
                 const sourceObj = current[currObjectKey];

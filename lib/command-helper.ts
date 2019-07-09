@@ -260,7 +260,7 @@ export function createCommands(): {
         cmds.push(launchItunesCommand);
 
         const launchItunesPlaylistCommand = commands.registerCommand(
-            "musictime.spotifyPlaylist",
+            "musictime.itunesPlaylist",
             () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
         );
         cmds.push(launchItunesPlaylistCommand);

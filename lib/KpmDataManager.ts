@@ -1,5 +1,5 @@
 import { storePayload, getOs, getVersion, logIt, getNowTimes } from "./Util";
-import { DEFAULT_DURATION_MILLIS, PLUGIN_ID } from "./Constants";
+import { PLUGIN_ID } from "./Constants";
 
 // ? marks that the parameter is optional
 type Project = {
