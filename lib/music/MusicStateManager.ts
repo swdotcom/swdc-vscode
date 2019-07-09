@@ -1,9 +1,12 @@
+import { env } from "vscode";
 import {
     getMusicSessionDataStoreFile,
     deleteFile,
     logIt,
     nowInSecs,
-    getOffsetSecends
+    getOffsetSecends,
+    getOs,
+    getVersion
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
@@ -15,6 +18,7 @@ import {
     isRunning,
     PlayerName
 } from "cody-music";
+import { PLUGIN_ID } from "../Constants";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -69,7 +73,7 @@ export class MusicStateManager {
         // to determine if we should end the previous track, the
         // existing track should be existing and playing
         let endPrevTrack = false;
-        if (existingTrackId !== playingTrackId) {
+        if (existingTrackId && existingTrackId !== playingTrackId) {
             endPrevTrack = true;
         } else if (
             existingTrackId === playingTrackId &&
@@ -107,8 +111,6 @@ export class MusicStateManager {
             return this.existingTrack || new Track();
         }
 
-        console.log("offset seconds: ", getOffsetSecends());
-
         this.processingSong = true;
         let playingTrack = await getRunningTrack();
 
@@ -121,6 +123,12 @@ export class MusicStateManager {
             // subtract a couple of seconds since our timer is every 5 seconds
             this.existingTrack["end"] = now - 2;
             this.existingTrack["coding"] = false;
+            // set the spotify playlistId
+            if (this.existingTrack.playerType === PlayerType.WebSpotify) {
+                this.existingTrack[
+                    "playlistId"
+                ] = this.musicstoreMgr.selectedPlaylist.id;
+            }
             // gather the coding metrics
             this.existingTrack = {
                 ...this.existingTrack,
@@ -278,6 +286,7 @@ export class MusicStateManager {
 
     private getMusicCodingData() {
         const file = getMusicSessionDataStoreFile();
+        const version = `${env.appName}_${getVersion()}`;
         const initialValue = {
             add: 0,
             paste: 0,
@@ -289,6 +298,10 @@ export class MusicStateManager {
             close: 0,
             keystrokes: 0,
             syntax: "",
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            pluginId: PLUGIN_ID,
+            os: getOs(),
+            version,
             source: {}
         };
         try {
@@ -321,6 +334,7 @@ export class MusicStateManager {
                     console.log("MUSIC CODING DATA: ", musicCodingData);
                     return musicCodingData;
                 }
+            } else {
             }
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
