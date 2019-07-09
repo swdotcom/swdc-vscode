@@ -180,6 +180,13 @@ export class MusicStateManager {
             this.existingTrack.state = playingTrack.state;
         }
 
+        if (
+            changeStatus.trackStateChanged &&
+            playingTrack.playerType !== PlayerType.NotAssigned
+        ) {
+            this.musicstoreMgr.currentPlayerType = playingTrack.playerType;
+        }
+
         // this updates the buttons in the status bar and the playlist buttons
         if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
             await this.musicstoreMgr.refreshPlaylists();
