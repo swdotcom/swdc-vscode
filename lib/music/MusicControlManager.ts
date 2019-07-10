@@ -14,7 +14,7 @@ import {
     getSpotifyDevices,
     quitMacPlayer
 } from "cody-music";
-import { workspace, window, ViewColumn, commands } from "vscode";
+import { workspace, window, ViewColumn } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -40,8 +40,8 @@ import {
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
-import { stringify } from "querystring";
-const ncp = require("copy-paste");
+
+const copy = require("clipboard-copy");
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
@@ -272,7 +272,7 @@ export class MusicControlManager {
         }
     }
 
-    copy(id: string, isPlaylist: boolean) {
+    async copy(id: string, isPlaylist: boolean) {
         let link = "";
         let messageContext = "";
         if (isPlaylist) {
@@ -283,7 +283,7 @@ export class MusicControlManager {
             messageContext = "track";
         }
 
-        ncp.copy(link);
+        await copy(link);
         window.showInformationMessage(
             `Spotify ${messageContext} link copied to clipboard.`,
             ...["OK"]
