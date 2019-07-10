@@ -314,7 +314,7 @@ export class MusicControlManager {
             .selectedPlaylist;
         const url = buildSpotifyLink(selectedItem.id, true);
 
-        socialShare.shareIt("facebook", url, "OneOfMyFavs");
+        socialShare.shareIt("facebook", { u: url, hashtag: "OneOfMyFavs" });
     }
 
     launchSpotifyPlayer() {

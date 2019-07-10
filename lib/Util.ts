@@ -822,7 +822,8 @@ export function buildQueryString(obj) {
                 let key = keys[i];
                 let val = obj[key];
                 if (val && val !== undefined) {
-                    params.push(`${key}=${val}`);
+                    let encodedVal = encodeURIComponent(val);
+                    params.push(`${key}=${encodedVal}`);
                 }
             }
         }

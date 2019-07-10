@@ -5,10 +5,6 @@ import { buildSpotifyLink } from "../music/MusicControlManager";
 export class SocialShareManager {
     private static instance: SocialShareManager;
 
-    private shareUrls = {
-        facebook: "https://www.facebook.com/sharer/sharer.php"
-    };
-
     private constructor() {
         //
     }
@@ -21,26 +17,34 @@ export class SocialShareManager {
         return SocialShareManager.instance;
     }
 
-    shareIt(sharer: string, url: string, hashtag: string) {
-        let shareUrl = this.buildShareUrl(sharer, url, hashtag);
+    shareIt(sharer: string, options: any) {
+        let shareUrl = this.getShareUrl(sharer, options);
         launchWebUrl(shareUrl);
     }
 
-    buildShareUrl(sharer: string, url: string, hashtag: string) {
-        sharer = sharer.toLowerCase();
-        let shareUrl = this.shareUrls[sharer];
-
-        if (hashtag.indexOf("#") !== 0) {
-            hashtag = `#${hashtag}`;
-        }
-
-        let options = {
-            u: encodeURIComponent(url),
-            hashtag: `${encodeURIComponent(hashtag)}`
+    getShareUrl(sharer: string, options: any) {
+        const sharers = {
+            facebook: {
+                shareUrl: "https://www.facebook.com/sharer/sharer.php",
+                params: {
+                    u: options["url"],
+                    hashtag: options["hashtag"]
+                }
+            },
+            twitter: {
+                shareUrl: "https://twitter.com/intent/tweet/",
+                params: {
+                    text: options["title"],
+                    url: options["url"],
+                    hashtags: options["hashtags"],
+                    via: options["via"]
+                }
+            }
         };
 
-        shareUrl += buildQueryString(options);
-
+        const sharerObj = sharers[sharer.toLowerCase()];
+        const queryStr = buildQueryString(sharerObj.params);
+        const shareUrl = `${sharerObj.shareUrl}${queryStr}`;
         return shareUrl;
     }
 
@@ -50,9 +54,23 @@ export class SocialShareManager {
         };
 
         const spotifyLinkUrl = buildSpotifyLink(id, true);
+        // facebook needs the hash
         menuOptions.items.push({
             label: "Facebook",
-            url: this.buildShareUrl("facebook", spotifyLinkUrl, "MyFavs!")
+            url: this.getShareUrl("facebook", {
+                url: spotifyLinkUrl,
+                hashtag: "#MyFavs!"
+            })
+        });
+
+        // twitter doesn't need the hash chars, "via" (optional: twitter username without @)
+        menuOptions.items.push({
+            label: "Twitter",
+            url: this.getShareUrl("twitter", {
+                url: spotifyLinkUrl,
+                title: "Xavier's Coding Favorites",
+                hashtags: ["Coding", "MyFavs!"]
+            })
         });
 
         showQuickPick(menuOptions);
