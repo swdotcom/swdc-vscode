@@ -98,6 +98,22 @@
                 }
             },
             {
+                "command": "musictime.shareTrack",
+                "title": "Share Track",
+                "icon": {
+                    "light": "resources/light/share.svg",
+                    "dark": "resources/dark/share.svg"
+                }
+            },
+            {
+                "command": "musictime.sharePlaylist",
+                "title": "Share Playlist",
+                "icon": {
+                    "light": "resources/light/share.svg",
+                    "dark": "resources/dark/share.svg"
+                }
+            },
+            {
                 "command": "musictime.pause",
                 "title": "Pause",
                 "icon": {
@@ -199,6 +215,16 @@
                 {
                     "command": "musictime.pause",
                     "when": "viewItem =~ /.*item-playing$/",
+                    "group": "inline"
+                },
+                {
+                    "command": "musictime.sharePlaylist",
+                    "when": "viewItem =~ /playlist-item.*/",
+                    "group": "inline"
+                },
+                {
+                    "command": "musictime.shareTrack",
+                    "when": "viewItem =~ /track-item.*/",
                     "group": "inline"
                 },
                 {

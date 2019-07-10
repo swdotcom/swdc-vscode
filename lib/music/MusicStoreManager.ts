@@ -17,8 +17,7 @@ import {
     addTracksToPlaylist,
     createPlaylist,
     getUserProfile,
-    replacePlaylistTracks,
-    getSpotifyDevices
+    replacePlaylistTracks
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -466,6 +465,25 @@ export class MusicStoreManager {
 
         await this.syncSpotifyWebPlaylists(serverIsOnline);
 
+        // update the existing playlist that matches the global top 40 playlist with a paw if found
+        const foundGlobalFavorites = this.hasMusicTimePlaylistForType(
+            SOFTWARE_TOP_SONGS_PLID
+        );
+
+        // only create global favorites if the app is online and we're
+        // unable to find the global playlist id for the user
+        if (
+            !foundGlobalFavorites &&
+            serverIsOnline &&
+            !this.requiresSpotifyAccess()
+        ) {
+            if (!this.hasGlobalFavorites) {
+                await this.syncGlobalTopSongs();
+            }
+            // create the global top 40
+            await this.createGlobalTopSongsPlaylist();
+        }
+
         if (
             this.runningTrack.playerType &&
             this.currentPlayerType === PlayerType.NotAssigned &&
@@ -629,21 +647,6 @@ export class MusicStoreManager {
 
             // update the existing playlist that matches the personal playlist with a paw if found
             this.hasMusicTimePlaylistForType(PERSONAL_TOP_SONGS_PLID);
-
-            // update the existing playlist that matches the global top 40 playlist with a paw if found
-            const foundGlobalFavorites = this.hasMusicTimePlaylistForType(
-                SOFTWARE_TOP_SONGS_PLID
-            );
-
-            // only create global favorites if the app is online and we're
-            // unable to find the global playlist id for the user
-            if (!foundGlobalFavorites && serverIsOnline) {
-                if (!this.hasGlobalFavorites) {
-                    await this.syncGlobalTopSongs();
-                }
-                // create the global top 40
-                await this.createGlobalTopSongsPlaylist();
-            }
         }
 
         // If iTunes is currently playing show .

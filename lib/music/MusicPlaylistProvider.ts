@@ -19,11 +19,11 @@ import {
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    playTrackInLibrary,
     playItunesTrackNumberInPlaylist
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
+import { MusicStateManager } from "./MusicStateManager";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -131,11 +131,9 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             }
         }),
         view.onDidChangeVisibility(e => {
-            /**
             if (e.visible) {
-                //
+                MusicStateManager.getInstance().musicStateCheck();
             }
-            **/
         })
     );
 };

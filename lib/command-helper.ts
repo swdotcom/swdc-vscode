@@ -38,6 +38,7 @@ import {
 } from "./music/MusicSettingsProvider";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { MusicStoreManager } from "./music/MusicStoreManager";
+import { SocialShareManager } from "./social/SocialShareManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -139,6 +140,22 @@ export function createCommands(): {
             }
         );
         cmds.push(copyPlaylistLinkCmd);
+
+        const sharePlaylistLinkCmd = commands.registerCommand(
+            "musictime.sharePlaylist",
+            (node: PlaylistTreeItem) => {
+                SocialShareManager.getInstance().showMenu(node.id, true);
+            }
+        );
+        cmds.push(sharePlaylistLinkCmd);
+
+        const shareTrackLinkCmd = commands.registerCommand(
+            "musictime.shareTrack",
+            (node: PlaylistTreeItem) => {
+                SocialShareManager.getInstance().showMenu(node.id, false);
+            }
+        );
+        cmds.push(shareTrackLinkCmd);
 
         const pauseCmd = commands.registerCommand("musictime.pause", () => {
             controller.pause();

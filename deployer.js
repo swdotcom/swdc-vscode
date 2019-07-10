@@ -119,6 +119,16 @@ async function deploy() {
                     group: "inline"
                 },
                 {
+                    command: "musictime.sharePlaylist",
+                    when: "viewItem =~ /playlist-item.*/",
+                    group: "inline"
+                },
+                {
+                    command: "musictime.shareTrack",
+                    when: "viewItem =~ /track-item.*/",
+                    group: "inline"
+                },
+                {
                     command: "musictime.copyPlaylist",
                     when: "viewItem =~ /playlist-item.*/",
                     group: "inline"
@@ -184,6 +194,23 @@ async function deploy() {
                 dark: "resources/dark/icons8-copy-to-clipboard-16.png"
             }
         });
+        commands.push({
+            command: "musictime.shareTrack",
+            title: "Share Track",
+            icon: {
+                light: "resources/light/share.svg",
+                dark: "resources/dark/share.svg"
+            }
+        });
+        commands.push({
+            command: "musictime.sharePlaylist",
+            title: "Share Playlist",
+            icon: {
+                light: "resources/light/share.svg",
+                dark: "resources/dark/share.svg"
+            }
+        });
+
         commands.push({
             command: "musictime.pause",
             title: "Pause",

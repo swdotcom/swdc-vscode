@@ -40,6 +40,7 @@ import {
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
+import { SocialShareManager } from "../social/SocialShareManager";
 
 const clipboardy = require("clipboardy");
 const fs = require("fs");
@@ -273,13 +274,11 @@ export class MusicControlManager {
     }
 
     async copySpotifyLink(id: string, isPlaylist: boolean) {
-        let link = "";
+        let link = buildSpotifyLink(id, true);
         let messageContext = "";
         if (isPlaylist) {
-            link = `https://open.spotify.com/playlist/${id}`;
             messageContext = "playlist";
         } else {
-            link = `https://open.spotify.com/track/${id}`;
             messageContext = "track";
         }
 
@@ -307,6 +306,15 @@ export class MusicControlManager {
         const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
             .selectedPlaylist;
         this.copySpotifyLink(selectedItem.id, true);
+    }
+
+    shareCurrentPlaylist() {
+        const socialShare: SocialShareManager = SocialShareManager.getInstance();
+        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+            .selectedPlaylist;
+        const url = buildSpotifyLink(selectedItem.id, true);
+
+        socialShare.shareIt("facebook", url, "OneOfMyFavs");
     }
 
     launchSpotifyPlayer() {
@@ -360,29 +368,29 @@ export class MusicControlManager {
             });
         }
 
-        if (
-            musicstoreMgr.selectedPlaylist &&
-            musicstoreMgr.selectedPlaylist.id
-        ) {
-            menuOptions.items.push({
-                label: "Copy Current Playlist Link",
-                detail:
-                    "Copy the current playlist link to your clipboard to share.",
-                cb: this.copyCurrentPlaylistLink
-            });
-        }
+        // if (
+        //     musicstoreMgr.selectedPlaylist &&
+        //     musicstoreMgr.selectedPlaylist.id
+        // ) {
+        //     menuOptions.items.push({
+        //         label: "Copy Current Playlist Link",
+        //         detail:
+        //             "Copy the current playlist link to your clipboard to share.",
+        //         cb: this.copyCurrentPlaylistLink
+        //     });
+        // }
 
-        if (
-            musicstoreMgr.selectedTrackItem &&
-            musicstoreMgr.selectedTrackItem.id
-        ) {
-            menuOptions.items.push({
-                label: "Copy Current Track Link",
-                detail:
-                    "Copy the current track link to your clipboard to share.",
-                cb: this.copyCurrentTrackLink
-            });
-        }
+        // if (
+        //     musicstoreMgr.selectedTrackItem &&
+        //     musicstoreMgr.selectedTrackItem.id
+        // ) {
+        //     menuOptions.items.push({
+        //         label: "Copy Current Track Link",
+        //         detail:
+        //             "Copy the current track link to your clipboard to share.",
+        //         cb: this.copyCurrentTrackLink
+        //     });
+        // }
 
         if (accessToken) {
             // check if we already have a playlist
@@ -448,12 +456,23 @@ export class MusicControlManager {
             cb: displayMusicTimeMetricsDashboard
         });
 
-        menuOptions.items.push({
-            label: "Software Top 40",
-            detail:
-                "Top 40 most popular songs developers around the world listen to as they code",
-            url: "https://api.software.com/music/top40"
-        });
+        // if (
+        //     musicstoreMgr.selectedPlaylist &&
+        //     musicstoreMgr.selectedPlaylist.id
+        // ) {
+        //     menuOptions.items.push({
+        //         label: "Share Playlist",
+        //         detail: "Share the current playlist to....",
+        //         cb: this.shareCurrentPlaylist
+        //     });
+        // }
+
+        // menuOptions.items.push({
+        //     label: "Software Top 40",
+        //     detail:
+        //         "Top 40 most popular songs developers around the world listen to as they code",
+        //     url: "https://api.software.com/music/top40"
+        // });
 
         menuOptions.items.push({
             label: "Submit an issue on GitHub",
@@ -469,6 +488,17 @@ export class MusicControlManager {
 
         showQuickPick(menuOptions);
     }
+}
+
+export function buildSpotifyLink(id: string, isPlaylist: boolean) {
+    let link = "";
+    if (isPlaylist) {
+        link = `https://open.spotify.com/playlist/${id}`;
+    } else {
+        link = `https://open.spotify.com/track/${id}`;
+    }
+
+    return link;
 }
 
 export async function displayMusicTimeMetricsDashboard() {
