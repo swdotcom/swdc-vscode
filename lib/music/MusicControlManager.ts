@@ -290,7 +290,7 @@ export class MusicControlManager {
                 ...["OK"]
             );
         } catch (err) {
-            console.log("err: ", err.message);
+            logIt(`Unable to copy to clipboard, error: ${err.message}`);
         }
     }
 
