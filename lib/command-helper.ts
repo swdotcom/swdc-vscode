@@ -144,7 +144,11 @@ export function createCommands(): {
         const sharePlaylistLinkCmd = commands.registerCommand(
             "musictime.sharePlaylist",
             (node: PlaylistTreeItem) => {
-                SocialShareManager.getInstance().showMenu(node.id, true);
+                SocialShareManager.getInstance().showMenu(
+                    node.id,
+                    node.label,
+                    true
+                );
             }
         );
         cmds.push(sharePlaylistLinkCmd);
@@ -152,7 +156,11 @@ export function createCommands(): {
         const shareTrackLinkCmd = commands.registerCommand(
             "musictime.shareTrack",
             (node: PlaylistTreeItem) => {
-                SocialShareManager.getInstance().showMenu(node.id, false);
+                SocialShareManager.getInstance().showMenu(
+                    node.id,
+                    node.label,
+                    false
+                );
             }
         );
         cmds.push(shareTrackLinkCmd);

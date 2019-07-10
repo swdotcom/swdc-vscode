@@ -39,6 +39,31 @@ export class SocialShareManager {
                     hashtags: options["hashtags"],
                     via: options["via"]
                 }
+            },
+            linkedin: {
+                shareUrl: "https://www.linkedin.com/shareArticle",
+                params: {
+                    url: options["url"],
+                    mini: true
+                }
+            },
+            whatsapp: {
+                shareUrl: "https://api.whatsapp.com/send",
+                params: {
+                    text: options["title"] + " " + options["url"]
+                },
+                isLink: true
+            },
+            tumblr: {
+                shareUrl: "http://tumblr.com/widgets/share/tool",
+                params: {
+                    canonicalUrl: options["url"],
+                    content: options["url"],
+                    posttype: "link",
+                    title: options["title"],
+                    caption: options["caption"],
+                    tags: options["tags"]
+                }
             }
         };
 
@@ -48,18 +73,20 @@ export class SocialShareManager {
         return shareUrl;
     }
 
-    async showMenu(id: string, isPlaylist: boolean) {
+    async showMenu(musicId: string, label: string, isPlaylist: boolean) {
         let menuOptions = {
             items: []
         };
 
-        const spotifyLinkUrl = buildSpotifyLink(id, true);
+        const title = `Check out this ${isPlaylist ? "playlist" : "song"}`;
+
+        const spotifyLinkUrl = buildSpotifyLink(musicId, isPlaylist);
         // facebook needs the hash
         menuOptions.items.push({
             label: "Facebook",
             url: this.getShareUrl("facebook", {
                 url: spotifyLinkUrl,
-                hashtag: "#MyFavs!"
+                hashtag: `#MusicTime`
             })
         });
 
@@ -68,8 +95,33 @@ export class SocialShareManager {
             label: "Twitter",
             url: this.getShareUrl("twitter", {
                 url: spotifyLinkUrl,
-                title: "Xavier's Coding Favorites",
-                hashtags: ["Coding", "MyFavs!"]
+                title,
+                hashtags: ["MusicTime"]
+            })
+        });
+
+        menuOptions.items.push({
+            label: "LinkedIn",
+            url: this.getShareUrl("linkedin", {
+                url: spotifyLinkUrl
+            })
+        });
+
+        menuOptions.items.push({
+            label: "WhatsApp",
+            url: this.getShareUrl("whatsapp", {
+                url: spotifyLinkUrl,
+                title
+            })
+        });
+
+        menuOptions.items.push({
+            label: "Tumblr",
+            url: this.getShareUrl("tumblr", {
+                url: spotifyLinkUrl,
+                title,
+                tags: ["MusicTime"],
+                caption: "Software Aduio Share"
             })
         });
 

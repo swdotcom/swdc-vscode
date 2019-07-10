@@ -457,16 +457,22 @@ export class MusicStoreManager {
         return false;
     }
 
+    async syncSavedAndSpotifyPlaylists(serverIsOnline: boolean) {
+        // get the cody playlists
+        await this.fetchSavedPlaylists(serverIsOnline);
+
+        // sync up the spotify playlists
+        await this.syncSpotifyWebPlaylists(serverIsOnline);
+    }
+
     async syncRunningPlaylists(serverIsOnline: boolean) {
         let playlists: PlaylistItem[] = [];
 
         // get the cody playlists
-        await this.fetchSavedPlaylists(serverIsOnline);
-
-        await this.syncSpotifyWebPlaylists(serverIsOnline);
+        await this.syncSavedAndSpotifyPlaylists(serverIsOnline);
 
         // update the existing playlist that matches the global top 40 playlist with a paw if found
-        const foundGlobalFavorites = this.hasMusicTimePlaylistForType(
+        let foundGlobalFavorites = this.hasMusicTimePlaylistForType(
             SOFTWARE_TOP_SONGS_PLID
         );
 
@@ -480,8 +486,17 @@ export class MusicStoreManager {
             if (!this.hasGlobalFavorites) {
                 await this.syncGlobalTopSongs();
             }
-            // create the global top 40
-            await this.createGlobalTopSongsPlaylist();
+            // get the cody playlists one more time to make sure
+            await this.syncSavedAndSpotifyPlaylists(serverIsOnline);
+
+            foundGlobalFavorites = this.hasMusicTimePlaylistForType(
+                SOFTWARE_TOP_SONGS_PLID
+            );
+
+            if (!foundGlobalFavorites) {
+                // create the global top 40
+                await this.createGlobalTopSongsPlaylist();
+            }
         }
 
         if (
