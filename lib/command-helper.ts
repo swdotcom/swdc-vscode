@@ -127,7 +127,7 @@ export function createCommands(): {
         const copyTrackLinkCmd = commands.registerCommand(
             "musictime.copyTrack",
             (node: PlaylistTreeItem) => {
-                controller.copy(node.id, false);
+                controller.copySpotifyLink(node.id, false);
             }
         );
         cmds.push(copyTrackLinkCmd);
@@ -135,7 +135,7 @@ export function createCommands(): {
         const copyPlaylistLinkCmd = commands.registerCommand(
             "musictime.copyPlaylist",
             (node: PlaylistTreeItem) => {
-                controller.copy(node.id, true);
+                controller.copySpotifyLink(node.id, true);
             }
         );
         cmds.push(copyPlaylistLinkCmd);

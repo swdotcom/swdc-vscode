@@ -41,7 +41,7 @@ import {
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 
-const copy = require("clipboard-copy");
+const clipboardy = require("clipboardy");
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
@@ -272,7 +272,7 @@ export class MusicControlManager {
         }
     }
 
-    async copy(id: string, isPlaylist: boolean) {
+    async copySpotifyLink(id: string, isPlaylist: boolean) {
         let link = "";
         let messageContext = "";
         if (isPlaylist) {
@@ -283,11 +283,15 @@ export class MusicControlManager {
             messageContext = "track";
         }
 
-        await copy(link);
-        window.showInformationMessage(
-            `Spotify ${messageContext} link copied to clipboard.`,
-            ...["OK"]
-        );
+        try {
+            clipboardy.writeSync(link);
+            window.showInformationMessage(
+                `Spotify ${messageContext} link copied to clipboard.`,
+                ...["OK"]
+            );
+        } catch (err) {
+            console.log("err: ", err.message);
+        }
     }
 
     copyCurrentTrackLink() {
@@ -295,14 +299,14 @@ export class MusicControlManager {
         // get the current track
         const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
             .selectedTrackItem;
-        this.copy(selectedItem.id, false);
+        this.copySpotifyLink(selectedItem.id, false);
     }
 
     copyCurrentPlaylistLink() {
         // example: https://open.spotify.com/playlist/0mwG8hCL4scWi8Nkt7jyoV
         const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
             .selectedPlaylist;
-        this.copy(selectedItem.id, true);
+        this.copySpotifyLink(selectedItem.id, true);
     }
 
     launchSpotifyPlayer() {
