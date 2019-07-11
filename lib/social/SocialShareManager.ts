@@ -50,7 +50,7 @@ export class SocialShareManager {
             whatsapp: {
                 shareUrl: "https://api.whatsapp.com/send",
                 params: {
-                    text: options["title"] + " " + options["url"]
+                    text: `${options["title"]}: ${options["url"]}`
                 },
                 isLink: true
             },
@@ -78,12 +78,14 @@ export class SocialShareManager {
             items: []
         };
 
-        const title = `Check out this ${isPlaylist ? "playlist" : "song"}`;
+        const context = isPlaylist ? "playlist" : "song";
+        const title = `Check out this ${context}`;
 
         const spotifyLinkUrl = buildSpotifyLink(musicId, isPlaylist);
         // facebook needs the hash
         menuOptions.items.push({
             label: "Facebook",
+            detail: `Share your ${context}, ${label}, on Facebook.`,
             url: this.getShareUrl("facebook", {
                 url: spotifyLinkUrl,
                 hashtag: `#MusicTime`
@@ -93,6 +95,7 @@ export class SocialShareManager {
         // twitter doesn't need the hash chars, "via" (optional: twitter username without @)
         menuOptions.items.push({
             label: "Twitter",
+            detail: `Tweet ${context}, ${label}, on Twitter.`,
             url: this.getShareUrl("twitter", {
                 url: spotifyLinkUrl,
                 title,
@@ -102,6 +105,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "LinkedIn",
+            detail: `Share your ${context}, ${label}, on LinkedIn.`,
             url: this.getShareUrl("linkedin", {
                 url: spotifyLinkUrl
             })
@@ -109,6 +113,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "WhatsApp",
+            detail: `Send your ${context}, ${label}, through WhatsApp.`,
             url: this.getShareUrl("whatsapp", {
                 url: spotifyLinkUrl,
                 title
@@ -117,11 +122,12 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "Tumblr",
+            detail: `Share your ${context}, ${label}, on Tumblr.`,
             url: this.getShareUrl("tumblr", {
                 url: spotifyLinkUrl,
                 title,
                 tags: ["MusicTime"],
-                caption: "Software Aduio Share"
+                caption: "Software Audio Share"
             })
         });
 

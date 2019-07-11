@@ -31,7 +31,7 @@ import {
     connectMusicTimePlaylistTreeView,
     MusicTimePlaylistTreeItem
 } from "./music/MusicTimePlaylistProvider";
-import { PlaylistItem, PlayerName } from "cody-music";
+import { PlaylistItem, PlayerName, PlaylistTrackInfo } from "cody-music";
 import {
     MusicSettingsProvider,
     connectSettingsTreeView
@@ -143,10 +143,10 @@ export function createCommands(): {
 
         const sharePlaylistLinkCmd = commands.registerCommand(
             "musictime.sharePlaylist",
-            (node: PlaylistTreeItem) => {
+            (node: PlaylistItem) => {
                 SocialShareManager.getInstance().showMenu(
                     node.id,
-                    node.label,
+                    node.name,
                     true
                 );
             }
@@ -155,10 +155,10 @@ export function createCommands(): {
 
         const shareTrackLinkCmd = commands.registerCommand(
             "musictime.shareTrack",
-            (node: PlaylistTreeItem) => {
+            (node: PlaylistItem) => {
                 SocialShareManager.getInstance().showMenu(
                     node.id,
-                    node.label,
+                    node.name,
                     false
                 );
             }
