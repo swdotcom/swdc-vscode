@@ -814,17 +814,19 @@ export class MusicStoreManager {
             noPlaylistType ||
             this.currentPlayerType === PlayerType.WebSpotify
         ) {
-            // get the playlist tracks
+            // get the playlist tracks from the spotify api
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyWeb,
                 playlist_id
             );
         } else if (this.currentPlayerType === PlayerType.MacItunesDesktop) {
+            // get the tracks for itunes
             playlistTracks = await getPlaylistTracks(
                 PlayerName.ItunesDesktop,
                 playlist_id
             );
         } else {
+            // get the tracks for spotify desktop
             playlistTracks = await getPlaylistTracks(
                 PlayerName.SpotifyDesktop,
                 playlist_id
