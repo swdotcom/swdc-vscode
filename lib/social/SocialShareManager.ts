@@ -142,7 +142,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: `Copy ${context} Link`,
-            detail: `Copy the ${context.toLowerCase()} link to your clipboard.`,
+            detail: `Copy ${context.toLowerCase()} link to your clipboard.`,
             cb: this.copyLink
         });
 

@@ -524,7 +524,9 @@ export class MusicStoreManager {
             playlists.forEach(async playlist => {
                 let playlistState = await this.getPlaylistState(playlist.id);
                 playlist.state = playlistState;
-                playlist.tag = "spotify";
+                if (playlist.tag !== "paw") {
+                    playlist.tag = "spotify";
+                }
             });
             // update so the playlist header shows the spotify related icons
             commands.executeCommand("setContext", "treeview-type", "spotify");
@@ -548,6 +550,7 @@ export class MusicStoreManager {
 
         // filter out the music time playlists
         let musicTimePlaylistItems = [];
+
         playlists = playlists
             .map((item: PlaylistItem) => {
                 // savedPlaylist.id === playlist.id
@@ -565,6 +568,34 @@ export class MusicStoreManager {
 
         this.musicTimePlaylists = musicTimePlaylistItems;
 
+        const personalPlaylistInfo = this.getExistingPesonalPlaylist();
+        const personalPlaylistLabel = !personalPlaylistInfo
+            ? "Generate Custom Spotify Playlist"
+            : "Refresh Custom Spotify Playlist";
+        const personalPlaylistTooltip = !personalPlaylistInfo
+            ? `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
+            : `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+
+        if (
+            this.currentPlayerType === PlayerType.WebSpotify &&
+            !this.requiresSpotifyAccess()
+        ) {
+            // add the connect spotify link
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "playlist";
+            listItem.tag = "action";
+            listItem.id = "codingfavorites";
+            listItem.command = "musictime.generateWeeklyPlaylist";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = personalPlaylistLabel;
+            listItem.tooltip = personalPlaylistTooltip;
+            musicTimePlaylistItems.push(listItem);
+
+            // update the existing playlist that matches the personal playlist with a paw if found
+            this.hasMusicTimePlaylistForType(PERSONAL_TOP_SONGS_PLID);
+        }
+
         this.runningPlaylists = playlists;
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
@@ -579,8 +610,6 @@ export class MusicStoreManager {
         playlistPlayerType: PlayerType
     ) {
         let settingsList: PlaylistItem[] = [];
-
-        const needsSpotifyAccessToken = this.requiresSpotifyAccess();
 
         if (!serverIsOnline) {
             // show that they're offline
@@ -598,7 +627,7 @@ export class MusicStoreManager {
             serverIsOnline &&
             this.currentPlayerType === PlayerType.WebSpotify
         ) {
-            if (needsSpotifyAccessToken) {
+            if (this.requiresSpotifyAccess()) {
                 // add the connect spotify link, but only if we're online
                 let listItem: PlaylistItem = new PlaylistItem();
                 listItem.tracks = new PlaylistTrackInfo();
@@ -640,33 +669,6 @@ export class MusicStoreManager {
             connectedItem.name = "iTunes Connected";
             connectedItem.tooltip = "You've connected iTunes";
             settingsList.push(connectedItem);
-        }
-
-        const personalPlaylistInfo = this.getExistingPesonalPlaylist();
-        const personalPlaylistLabel = !personalPlaylistInfo
-            ? "Generate Software Playlist"
-            : "Update Software Playlist";
-        const personalPlaylistTooltip = !personalPlaylistInfo
-            ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
-            : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
-
-        if (
-            this.currentPlayerType === PlayerType.WebSpotify &&
-            !needsSpotifyAccessToken
-        ) {
-            // add the connect spotify link
-            let listItem: PlaylistItem = new PlaylistItem();
-            listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "paw";
-            listItem.id = "codingfavorites";
-            listItem.command = "musictime.generateWeeklyPlaylist";
-            listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = personalPlaylistLabel;
-            listItem.tooltip = personalPlaylistTooltip;
-            settingsList.push(listItem);
-
-            // update the existing playlist that matches the personal playlist with a paw if found
-            this.hasMusicTimePlaylistForType(PERSONAL_TOP_SONGS_PLID);
         }
 
         // If iTunes is currently playing show .

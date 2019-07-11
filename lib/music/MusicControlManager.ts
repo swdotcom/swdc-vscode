@@ -404,11 +404,11 @@ export class MusicControlManager {
 
             const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
             let personalPlaylistLabel = !personalPlaylistInfo
-                ? "Generate Software Playlist"
-                : "Update Software Playlist";
+                ? "Generate Custom Spotify Playlist"
+                : "Refresh Custom Spotify Playlist";
             const personalPlaylistTooltip = !personalPlaylistInfo
-                ? `Generate a new Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
-                : `Update your Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+                ? `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
+                : `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 
             if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item

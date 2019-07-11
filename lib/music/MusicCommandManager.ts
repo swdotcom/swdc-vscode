@@ -69,6 +69,12 @@ export class MusicCommandManager {
             this.msMgr = MusicStateManager.getInstance();
         }
         this.createButton(
+            "🎧",
+            "Click to see more from Music Time",
+            "musictime.menu",
+            31
+        );
+        this.createButton(
             "$(chevron-left)",
             "Previous",
             "musictime.previous",
@@ -81,27 +87,21 @@ export class MusicCommandManager {
             "musictime.pause",
             29
         );
+        this.createButton(
+            "$(stop)",
+            "Connect Spotify to add your top productivity tracks",
+            "musictime.connectSpotify",
+            29
+        );
         this.createButton("$(chevron-right)", "Next", "musictime.next", 28);
         this.createButton("♡", "Like", "musictime.like", 27);
         this.createButton("♥", "Unlike", "musictime.unlike", 27);
-        this.createButton(
-            "🎧",
-            "Click to see more from Music Time",
-            "musictime.menu",
-            26
-        );
         // button area for the current song name
         this.createButton(
             "",
             "Click to view track",
             "musictime.currentSong",
-            25
-        );
-        this.createButton(
-            "$(stop)",
-            "Connect Spotify to add your top productivity tracks",
-            "musictime.connectSpotify",
-            24
+            26
         );
 
         const track = await getRunningTrack();

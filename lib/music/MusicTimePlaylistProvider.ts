@@ -274,56 +274,23 @@ export class MusicTimePlaylistTreeItem extends TreeItem {
                     "dark",
                     "pl-paw.svg"
                 );
+            } else if (treeItem.tag === "action") {
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "light",
+                    "refresh.svg"
+                );
+                this.iconPath.light = path.join(
+                    this.resourcePath,
+                    "dark",
+                    "refresh.svg"
+                );
             } else {
                 // for now, don't show the playlist icon
                 delete this.iconPath;
             }
-        } else if (treeItem.type === "title") {
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "light",
-                "icons8-playlist-16.png"
-            );
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "dark",
-                "icons8-playlist-16.png"
-            );
-        } else if (treeItem.type === "spotify") {
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "light",
-                "icons8-spotify.svg"
-            );
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "dark",
-                "icons8-spotify.svg"
-            );
-        } else if (treeItem.type === "track") {
-            if (treeItem.playerType === PlayerType.MacItunesDesktop) {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "light",
-                    "icons8-itunes.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "dark",
-                    "icons8-itunes.svg"
-                );
-            } else {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "light",
-                    "icons8-spotify.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "dark",
-                    "icons8-spotify.svg"
-                );
-            }
+        } else {
+            delete this.iconPath;
         }
     }
 
