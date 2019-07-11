@@ -1,6 +1,12 @@
 import { buildQueryString, launchWebUrl } from "../Util";
 import { showQuickPick } from "../MenuManager";
-import { buildSpotifyLink } from "../music/MusicControlManager";
+import {
+    buildSpotifyLink,
+    MusicControlManager
+} from "../music/MusicControlManager";
+
+let musicId: string = "";
+let playlistSelected: boolean = false;
 
 export class SocialShareManager {
     private static instance: SocialShareManager;
@@ -73,19 +79,22 @@ export class SocialShareManager {
         return shareUrl;
     }
 
-    async showMenu(musicId: string, label: string, isPlaylist: boolean) {
+    async showMenu(id: string, label: string, isPlaylist: boolean) {
+        musicId = id;
+        playlistSelected = isPlaylist;
+
         let menuOptions = {
             items: []
         };
 
-        const context = isPlaylist ? "playlist" : "song";
+        const context = isPlaylist ? "Playlist" : "Song";
         const title = `Check out this ${context}`;
 
         const spotifyLinkUrl = buildSpotifyLink(musicId, isPlaylist);
         // facebook needs the hash
         menuOptions.items.push({
             label: "Facebook",
-            detail: `Share your ${context}, ${label}, on Facebook.`,
+            detail: `Share your ${context.toLowerCase()}, ${label}, on Facebook.`,
             url: this.getShareUrl("facebook", {
                 url: spotifyLinkUrl,
                 hashtag: `#MusicTime`
@@ -95,7 +104,7 @@ export class SocialShareManager {
         // twitter doesn't need the hash chars, "via" (optional: twitter username without @)
         menuOptions.items.push({
             label: "Twitter",
-            detail: `Tweet ${context}, ${label}, on Twitter.`,
+            detail: `Tweet ${context.toLowerCase()}, ${label}, on Twitter.`,
             url: this.getShareUrl("twitter", {
                 url: spotifyLinkUrl,
                 title,
@@ -105,7 +114,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "LinkedIn",
-            detail: `Share your ${context}, ${label}, on LinkedIn.`,
+            detail: `Share your ${context.toLowerCase()}, ${label}, on LinkedIn.`,
             url: this.getShareUrl("linkedin", {
                 url: spotifyLinkUrl
             })
@@ -113,7 +122,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "WhatsApp",
-            detail: `Send your ${context}, ${label}, through WhatsApp.`,
+            detail: `Send your ${context.toLowerCase()}, ${label}, through WhatsApp.`,
             url: this.getShareUrl("whatsapp", {
                 url: spotifyLinkUrl,
                 title
@@ -122,7 +131,7 @@ export class SocialShareManager {
 
         menuOptions.items.push({
             label: "Tumblr",
-            detail: `Share your ${context}, ${label}, on Tumblr.`,
+            detail: `Share your ${context.toLowerCase()}, ${label}, on Tumblr.`,
             url: this.getShareUrl("tumblr", {
                 url: spotifyLinkUrl,
                 title,
@@ -131,6 +140,17 @@ export class SocialShareManager {
             })
         });
 
+        menuOptions.items.push({
+            label: `Copy ${context} Link`,
+            detail: `Copy the ${context.toLowerCase()} link to your clipboard.`,
+            cb: this.copyLink
+        });
+
         showQuickPick(menuOptions);
+    }
+
+    copyLink() {
+        const controller: MusicControlManager = new MusicControlManager();
+        controller.copySpotifyLink(musicId, playlistSelected);
     }
 }

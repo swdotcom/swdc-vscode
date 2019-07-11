@@ -420,21 +420,20 @@ export class MusicControlManager {
                 });
             }
 
-            if (
-                musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify &&
-                (!spotifyDevices || spotifyDevices.length === 0)
-            ) {
+            console.log(
+                "current player type: ",
+                musicstoreMgr.currentPlayerType
+            );
+            if (musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify) {
                 menuOptions.items.push({
-                    label: "Launch Spotify",
+                    label: "Switch to Spotify",
                     detail:
                         "Launch the Spotify web player to view your playlist",
                     command: "musictime.launchSpotify"
                 });
-            } else if (
-                musicstoreMgr.currentPlayerType !== PlayerType.MacItunesDesktop
-            ) {
+            } else {
                 menuOptions.items.push({
-                    label: "Launch iTunes",
+                    label: "Switch to iTunes",
                     detail:
                         "Launch the iTunes web player to view your playlist",
                     command: "musictime.launchItunes"

@@ -251,34 +251,7 @@ export class PlaylistTreeItem extends TreeItem {
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
         this.contextValue = `${treeItem.type}-item-${treeItem.state}`;
 
-        if (treeItem.type === "playlist") {
-            if (treeItem.tag === "paw") {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "light",
-                    "pl-paw.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "dark",
-                    "pl-paw.svg"
-                );
-            } else {
-                // for now, don't show the playlist icon
-                delete this.iconPath;
-            }
-        } else if (treeItem.type === "title") {
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "light",
-                "icons8-playlist-16.png"
-            );
-            this.iconPath.light = path.join(
-                this.resourcePath,
-                "dark",
-                "icons8-playlist-16.png"
-            );
-        } else if (treeItem.type === "spotify") {
+        if (treeItem.tag === "spotify") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -289,31 +262,96 @@ export class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "icons8-spotify.svg"
             );
-        } else if (treeItem.type === "track") {
-            if (treeItem.playerType === PlayerType.MacItunesDesktop) {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "light",
-                    "icons8-itunes.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "dark",
-                    "icons8-itunes.svg"
-                );
-            } else {
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "light",
-                    "icons8-spotify.svg"
-                );
-                this.iconPath.light = path.join(
-                    this.resourcePath,
-                    "dark",
-                    "icons8-spotify.svg"
-                );
-            }
+        } else if (treeItem.tag === "itunes") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "icons8-itunes.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "icons8-itunes.svg"
+            );
+        } else if (treeItem.tag === "paw") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "pl-paw.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "pl-paw.svg"
+            );
+        } else {
+            // no matching tag, remove the tree item icon path
+            delete this.iconPath;
         }
+
+        // if (treeItem.type === "playlist") {
+        //     if (treeItem.tag === "paw") {
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "light",
+        //             "pl-paw.svg"
+        //         );
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "dark",
+        //             "pl-paw.svg"
+        //         );
+        //     } else {
+        //         // for now, don't show the playlist icon
+        //         delete this.iconPath;
+        //     }
+        // } else if (treeItem.type === "title") {
+        //     this.iconPath.light = path.join(
+        //         this.resourcePath,
+        //         "light",
+        //         "icons8-playlist-16.png"
+        //     );
+        //     this.iconPath.light = path.join(
+        //         this.resourcePath,
+        //         "dark",
+        //         "icons8-playlist-16.png"
+        //     );
+        // } else if (treeItem.type === "spotify") {
+        //     this.iconPath.light = path.join(
+        //         this.resourcePath,
+        //         "light",
+        //         "icons8-spotify.svg"
+        //     );
+        //     this.iconPath.light = path.join(
+        //         this.resourcePath,
+        //         "dark",
+        //         "icons8-spotify.svg"
+        //     );
+        // } else if (treeItem.type === "track") {
+        //     if (treeItem.playerType === PlayerType.MacItunesDesktop) {
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "light",
+        //             "icons8-itunes.svg"
+        //         );
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "dark",
+        //             "icons8-itunes.svg"
+        //         );
+        //     } else {
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "light",
+        //             "icons8-spotify.svg"
+        //         );
+        //         this.iconPath.light = path.join(
+        //             this.resourcePath,
+        //             "dark",
+        //             "icons8-spotify.svg"
+        //         );
+        //     }
+        // }
     }
 
     get tooltip(): string {

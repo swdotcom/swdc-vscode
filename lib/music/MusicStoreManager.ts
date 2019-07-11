@@ -512,16 +512,20 @@ export class MusicStoreManager {
             playlists = await getPlaylists(PlayerName.ItunesDesktop);
             // update so the playlist header shows the spotify related icons
             commands.executeCommand("setContext", "treeview-type", "itunes");
+            // go through each playlist and find out it's state
+            playlists.forEach(playlist => {
+                playlist.tag = "itunes";
+            });
         } else {
             playlists = this.spotifyPlaylists;
             this.currentPlayerType = PlayerType.WebSpotify;
 
             // go through each playlist and find out it's state
-            for (let i = 0; i < playlists.length; i++) {
-                const playlist = playlists[i];
+            playlists.forEach(async playlist => {
                 let playlistState = await this.getPlaylistState(playlist.id);
                 playlist.state = playlistState;
-            }
+                playlist.tag = "spotify";
+            });
             // update so the playlist header shows the spotify related icons
             commands.executeCommand("setContext", "treeview-type", "spotify");
         }
@@ -616,6 +620,7 @@ export class MusicStoreManager {
                 connectedItem.tooltip = "You've connected Spotify";
                 settingsList.push(connectedItem);
 
+                // add back if you want to test disconnecting spotify
                 // let disconnectItem: PlaylistItem = new PlaylistItem();
                 // disconnectItem.tracks = new PlaylistTrackInfo();
                 // disconnectItem.type = "spotify";
@@ -673,7 +678,7 @@ export class MusicStoreManager {
             item.id = "title";
             item.command = "musictime.launchItunes";
             item.playerType = PlayerType.MacItunesDesktop;
-            item.name = "Launch iTunes";
+            item.name = "Switch to iTunes";
             settingsList.push(item);
         }
 
@@ -685,7 +690,7 @@ export class MusicStoreManager {
             item.id = "title";
             item.command = "musictime.launchSpotify";
             item.playerType = PlayerType.WebSpotify;
-            item.name = "Launch Spotify";
+            item.name = "Switch to Spotify";
             settingsList.push(item);
         }
 

@@ -127,16 +127,6 @@ async function deploy() {
                     command: "musictime.shareTrack",
                     when: "viewItem =~ /track-item.*/",
                     group: "inline"
-                },
-                {
-                    command: "musictime.copyPlaylist",
-                    when: "viewItem =~ /playlist-item.*/",
-                    group: "inline"
-                },
-                {
-                    command: "musictime.copyTrack",
-                    when: "viewItem =~ /track-item.*/",
-                    group: "inline"
                 }
             ],
             "view/title": [
@@ -144,16 +134,6 @@ async function deploy() {
                     command: "musictime.playlistRefresh",
                     group: "navigation",
                     when: "view  =~ /.*-playlists/"
-                },
-                {
-                    command: "musictime.itunesPlaylist",
-                    group: "navigation",
-                    when: "view =~ /.*-playlists/ && treeview-type == itunes"
-                },
-                {
-                    command: "musictime.spotifyPlaylist",
-                    group: "navigation",
-                    when: "view =~ /.*-playlists/ && treeview-type == spotify"
                 }
             ]
         };
@@ -221,7 +201,7 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.itunesPlaylist",
-            title: "Launch iTunes",
+            title: "Switch to iTunes",
             icon: {
                 light: "resources/light/icons8-itunes.svg",
                 dark: "resources/dark/icons8-itunes.svg"
@@ -229,7 +209,7 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.spotifyPlaylist",
-            title: "Launch Spotify",
+            title: "Switch to Spotify",
             icon: {
                 light: "resources/light/icons8-spotify.svg",
                 dark: "resources/dark/icons8-spotify.svg"

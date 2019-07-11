@@ -125,21 +125,21 @@ export function createCommands(): {
         });
         cmds.push(playCmd);
 
-        const copyTrackLinkCmd = commands.registerCommand(
-            "musictime.copyTrack",
-            (node: PlaylistTreeItem) => {
-                controller.copySpotifyLink(node.id, false);
-            }
-        );
-        cmds.push(copyTrackLinkCmd);
+        // const copyTrackLinkCmd = commands.registerCommand(
+        //     "musictime.copyTrack",
+        //     (node: PlaylistTreeItem) => {
+        //         controller.copySpotifyLink(node.id, false);
+        //     }
+        // );
+        // cmds.push(copyTrackLinkCmd);
 
-        const copyPlaylistLinkCmd = commands.registerCommand(
-            "musictime.copyPlaylist",
-            (node: PlaylistTreeItem) => {
-                controller.copySpotifyLink(node.id, true);
-            }
-        );
-        cmds.push(copyPlaylistLinkCmd);
+        // const copyPlaylistLinkCmd = commands.registerCommand(
+        //     "musictime.copyPlaylist",
+        //     (node: PlaylistTreeItem) => {
+        //         controller.copySpotifyLink(node.id, true);
+        //     }
+        // );
+        // cmds.push(copyPlaylistLinkCmd);
 
         const sharePlaylistLinkCmd = commands.registerCommand(
             "musictime.sharePlaylist",
