@@ -137,17 +137,11 @@ export async function sendOfflineData() {
  * send any music tracks
  */
 export async function sendMusicData(trackData) {
-    if (trackData.album) {
-        delete trackData.album;
-    }
     if (trackData.available_markets) {
         delete trackData.available_markets;
     }
     if (trackData.images) {
         delete trackData.images;
-    }
-    if (trackData.artists) {
-        delete trackData.artists;
     }
     if (trackData.external_urls) {
         delete trackData.external_urls;
