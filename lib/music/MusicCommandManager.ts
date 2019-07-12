@@ -156,7 +156,6 @@ export class MusicCommandManager {
                 this.showPlayControls(track);
             }
         } else {
-            console.log("showing launch player controls");
             this.showLaunchPlayerControls();
         }
     }

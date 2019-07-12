@@ -594,7 +594,6 @@ export class MusicStoreManager {
 
         playlists = playlists
             .map((item: PlaylistItem) => {
-                // savedPlaylist.id === playlist.id
                 let foundSavedPlaylist = this.savedPlaylists.find(element => {
                     return element.id === item.id;
                 });
@@ -609,11 +608,22 @@ export class MusicStoreManager {
 
         this.musicTimePlaylists = musicTimePlaylistItems;
 
+        // update the existing playlist that matches the personal playlist with a paw if found
+        const hasCustomPlaylist = this.hasMusicTimePlaylistForType(
+            PERSONAL_TOP_SONGS_PLID
+        );
+
         const personalPlaylistInfo = this.getExistingPesonalPlaylist();
-        const personalPlaylistLabel = !personalPlaylistInfo
+        // make sure the backend deletes a copy of the previously saved
+        // personal playlist id
+        if (personalPlaylistInfo && !hasCustomPlaylist) {
+            await this.reconcilePlaylists();
+        }
+
+        const personalPlaylistLabel = !hasCustomPlaylist
             ? GENERATE_CUSTOM_PLAYLIST_TITLE
             : REFRESH_CUSTOM_PLAYLIST_TITLE;
-        const personalPlaylistTooltip = !personalPlaylistInfo
+        const personalPlaylistTooltip = !hasCustomPlaylist
             ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
             : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
@@ -632,9 +642,6 @@ export class MusicStoreManager {
             listItem.name = personalPlaylistLabel;
             listItem.tooltip = personalPlaylistTooltip;
             musicTimePlaylistItems.push(listItem);
-
-            // update the existing playlist that matches the personal playlist with a paw if found
-            this.hasMusicTimePlaylistForType(PERSONAL_TOP_SONGS_PLID);
         }
 
         this.runningPlaylists = playlists;
