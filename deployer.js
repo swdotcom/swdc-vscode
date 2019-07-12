@@ -131,7 +131,7 @@ async function deploy() {
             ],
             "view/title": [
                 {
-                    command: "musictime.playlistRefresh",
+                    command: "musictime.refreshReconcile",
                     group: "navigation",
                     when: "view  =~ /.*-playlists/"
                 }
@@ -216,8 +216,8 @@ async function deploy() {
             }
         });
         commands.push({
-            command: "musictime.playlistRefresh",
-            title: "Refresh Playlist",
+            command: "musictime.refreshReconcile",
+            title: "Refresh Playlists",
             icon: {
                 light: "resources/light/refresh.svg",
                 dark: "resources/dark/refresh.svg"

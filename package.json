@@ -138,8 +138,8 @@
                 }
             },
             {
-                "command": "musictime.playlistRefresh",
-                "title": "Refresh Playlist",
+                "command": "musictime.refreshReconcile",
+                "title": "Refresh Playlists",
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
@@ -230,7 +230,7 @@
             ],
             "view/title": [
                 {
-                    "command": "musictime.playlistRefresh",
+                    "command": "musictime.refreshReconcile",
                     "group": "navigation",
                     "when": "view  =~ /.*-playlists/"
                 }

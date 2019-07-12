@@ -247,15 +247,23 @@ export function createCommands(): {
         );
         cmds.push(connectSettingsTreeView(settingsTreeView));
 
+        const refreshReconcileCommand = commands.registerCommand(
+            "musictime.refreshReconcile",
+            () => {
+                MusicStoreManager.getInstance()
+                    .refreshPlaylists()
+                    .then(() => {
+                        MusicStoreManager.getInstance().reconcilePlaylists();
+                    });
+            }
+        );
+        cmds.push(refreshReconcileCommand);
+
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
             () => {
                 treePlaylistProvider.refresh();
                 treeMusicTimePlaylistProvider.refresh();
-
-                setTimeout(() => {
-                    MusicStoreManager.getInstance().reconcilePlaylists();
-                }, 2000);
             }
         );
         cmds.push(refreshPlaylistCommand);
