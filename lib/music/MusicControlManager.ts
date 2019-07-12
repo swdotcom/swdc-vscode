@@ -37,7 +37,6 @@ import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
     api_endpoint,
     LOGIN_LABEL,
-    PERSONAL_TOP_SONGS_NAME,
     REFRESH_CUSTOM_PLAYLIST_TITLE,
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,

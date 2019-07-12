@@ -23,14 +23,9 @@ import {
 import { KpmController } from "./KpmController";
 import {
     MusicPlaylistProvider,
-    connectPlaylistTreeView,
-    PlaylistTreeItem
+    connectPlaylistTreeView
 } from "./music/MusicPlaylistProvider";
-import {
-    MusicTimePlaylistProvider,
-    connectMusicTimePlaylistTreeView,
-    MusicTimePlaylistTreeItem
-} from "./music/MusicTimePlaylistProvider";
+import { MusicTimePlaylistProvider } from "./music/MusicTimePlaylistProvider";
 import { PlaylistItem, PlayerName, PlaylistTrackInfo } from "cody-music";
 import {
     MusicSettingsProvider,
