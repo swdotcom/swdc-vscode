@@ -17,7 +17,8 @@ import {
     addTracksToPlaylist,
     createPlaylist,
     getUserProfile,
-    replacePlaylistTracks
+    replacePlaylistTracks,
+    getSavedTracks
 } from "cody-music";
 import { serverIsAvailable, getSpotifyOauth } from "../DataController";
 
@@ -469,6 +470,10 @@ export class MusicStoreManager {
         await this.syncSpotifyWebPlaylists(serverIsOnline);
     }
 
+    /**
+     * fetch the playlists (playlist names)
+     * @param serverIsOnline
+     */
     async syncRunningPlaylists(serverIsOnline: boolean) {
         let playlists: PlaylistItem[] = [];
 
@@ -529,7 +534,7 @@ export class MusicStoreManager {
                 // create a playlist folder for the desktop spotify track that is playing
                 const desktopTrackPlaylist: PlaylistItem = new PlaylistItem();
                 desktopTrackPlaylist.type = "playlist";
-                desktopTrackPlaylist.id = this.runningTrack.id;
+                desktopTrackPlaylist.id = "";
                 desktopTrackPlaylist.tracks = new PlaylistTrackInfo();
                 desktopTrackPlaylist.tracks.total = 1;
                 desktopTrackPlaylist.playerType = PlayerType.MacSpotifyDesktop;
@@ -539,6 +544,19 @@ export class MusicStoreManager {
                 playlists.push(desktopTrackPlaylist);
             } else {
                 this.currentPlayerType = PlayerType.WebSpotify;
+
+                // add the all playlist folder
+                const likedSongsPlaylist: PlaylistItem = new PlaylistItem();
+                likedSongsPlaylist.type = "playlist";
+                likedSongsPlaylist.id = "";
+                likedSongsPlaylist.tracks = new PlaylistTrackInfo();
+                // set set a number so it shows up
+                likedSongsPlaylist.tracks.total = 1;
+                likedSongsPlaylist.playerType = PlayerType.WebSpotify;
+                likedSongsPlaylist.tag = "spotify";
+                likedSongsPlaylist.name = "Liked Songs";
+
+                playlists.push(likedSongsPlaylist);
 
                 // go through each playlist and find out it's state
                 playlists.forEach(async playlist => {
@@ -846,11 +864,35 @@ export class MusicStoreManager {
             noPlaylistType ||
             this.currentPlayerType === PlayerType.WebSpotify
         ) {
-            // get the playlist tracks from the spotify api
-            playlistTracks = await getPlaylistTracks(
-                PlayerName.SpotifyWeb,
-                playlist_id
-            );
+            if (!playlist_id) {
+                let tracks: Track[] = await getSavedTracks(
+                    PlayerName.SpotifyWeb
+                );
+                if (tracks) {
+                    tracks.forEach((track, idx) => {
+                        const position = idx + 1;
+                        let playlistItem: PlaylistItem = this.createPlaylistItemFromTrack(
+                            track,
+                            position
+                        );
+                        playlistItems.push(playlistItem);
+                        if (
+                            playlistItem.state === TrackStatus.Playing ||
+                            playlistItem.state === TrackStatus.Paused
+                        ) {
+                            playlist_state = playlistItem.state;
+                        }
+                    });
+                }
+                // set to null so we don't iterate over it
+                playlistTracks = null;
+            } else {
+                // get the playlist tracks from the spotify api
+                playlistTracks = await getPlaylistTracks(
+                    PlayerName.SpotifyWeb,
+                    playlist_id
+                );
+            }
         } else if (this.currentPlayerType === PlayerType.MacItunesDesktop) {
             // get the tracks for itunes
             playlistTracks = await getPlaylistTracks(

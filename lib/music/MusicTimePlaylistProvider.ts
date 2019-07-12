@@ -278,12 +278,12 @@ export class MusicTimePlaylistTreeItem extends TreeItem {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "light",
-                    "refresh.svg"
+                    "settings.svg"
                 );
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "dark",
-                    "refresh.svg"
+                    "settings.svg"
                 );
             } else {
                 // for now, don't show the playlist icon

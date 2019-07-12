@@ -124,7 +124,11 @@ export class MusicStateManager {
             this.existingTrack["end"] = now - 2;
             this.existingTrack["coding"] = false;
             // set the spotify playlistId
-            if (this.existingTrack.playerType === PlayerType.WebSpotify) {
+            if (
+                this.existingTrack.playerType === PlayerType.WebSpotify &&
+                this.musicstoreMgr.selectedPlaylist &&
+                this.musicstoreMgr.selectedPlaylist.id
+            ) {
                 this.existingTrack[
                     "playlistId"
                 ] = this.musicstoreMgr.selectedPlaylist.id;
