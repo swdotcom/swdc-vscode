@@ -176,13 +176,17 @@ export class MusicControlManager {
         checkTrackStateAndTryAgainCount: number = 0
     ) {
         const musicstoreMgr = MusicStoreManager.getInstance();
-        const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
+
         let options = {
-            context_uri: playlistUri,
-            track_ids: [playlistItem.id]
+            track_ids: []
         };
         if (spotifyDevices.length > 0) {
             options["device_id"] = spotifyDevices[0].id;
+        }
+        options.track_ids = [playlistItem.id];
+        if (playlistId) {
+            const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
+            options["context_uri"] = playlistUri;
         }
 
         await play(PlayerName.SpotifyWeb, options);

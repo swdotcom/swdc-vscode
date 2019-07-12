@@ -962,11 +962,7 @@ export class MusicStoreManager {
         playlistItem.popularity = track.popularity;
         playlistItem.played_count = track.played_count;
         playlistItem.position = position;
-        if (!track.artists && track.artist) {
-            playlistItem.artists = track.artist;
-        } else if (track.artists) {
-            playlistItem.artists = track.artists.join(", ");
-        }
+        playlistItem["artist"] = track.artist;
         playlistItem.playerType = track.playerType;
         delete playlistItem.tracks;
 
