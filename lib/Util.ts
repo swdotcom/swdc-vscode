@@ -860,3 +860,10 @@ function getDashboardDataDisplay(widthLen, data) {
     }
     return `${content}${data}`;
 }
+
+export function createSpotifyIdFromUri(id: string) {
+    if (id.indexOf("spotify:") === 0) {
+        return id.substring(id.lastIndexOf(":") + 1);
+    }
+    return id;
+}

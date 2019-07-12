@@ -30,13 +30,18 @@ import {
     isLinux,
     logIt,
     launchWebUrl,
-    launchLogin
+    launchLogin,
+    createSpotifyIdFromUri
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
     api_endpoint,
     LOGIN_LABEL,
-    PERSONAL_TOP_SONGS_NAME
+    PERSONAL_TOP_SONGS_NAME,
+    REFRESH_CUSTOM_PLAYLIST_TITLE,
+    GENERATE_CUSTOM_PLAYLIST_TITLE,
+    REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
+    GENERATE_CUSTOM_PLAYLIST_TOOLTIP
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
@@ -212,6 +217,8 @@ export class MusicControlManager {
 
     async launchTrackPlayer(playerName: PlayerName = null) {
         const musicstoreMgr = MusicStoreManager.getInstance();
+
+        const currentlyRunningType = musicstoreMgr.currentPlayerType;
         if (playerName === PlayerName.ItunesDesktop) {
             musicstoreMgr.currentPlayerType = PlayerType.MacItunesDesktop;
         } else {
@@ -258,14 +265,18 @@ export class MusicControlManager {
                 currentTrack.playerType !== PlayerType.MacItunesDesktop
             ) {
                 // end the spotify web track
-                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+                if (currentlyRunningType !== PlayerType.MacSpotifyDesktop) {
+                    musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+                } else {
+                    await quitMacPlayer(PlayerName.SpotifyDesktop);
+                }
             }
             launchPlayer(PlayerName.ItunesDesktop);
         } else {
             // end the itunes track
             // musicCtrlMgr.pause(PlayerName.ItunesDesktop);
             // quit the app
-            let result = await quitMacPlayer(PlayerName.ItunesDesktop);
+            await quitMacPlayer(PlayerName.ItunesDesktop);
             const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
             if (!spotifyDevices || spotifyDevices.length === 0) {
                 this.launchSpotifyPlayer();
@@ -368,30 +379,6 @@ export class MusicControlManager {
             });
         }
 
-        // if (
-        //     musicstoreMgr.selectedPlaylist &&
-        //     musicstoreMgr.selectedPlaylist.id
-        // ) {
-        //     menuOptions.items.push({
-        //         label: "Copy Current Playlist Link",
-        //         detail:
-        //             "Copy the current playlist link to your clipboard to share.",
-        //         cb: this.copyCurrentPlaylistLink
-        //     });
-        // }
-
-        // if (
-        //     musicstoreMgr.selectedTrackItem &&
-        //     musicstoreMgr.selectedTrackItem.id
-        // ) {
-        //     menuOptions.items.push({
-        //         label: "Copy Current Track Link",
-        //         detail:
-        //             "Copy the current track link to your clipboard to share.",
-        //         cb: this.copyCurrentTrackLink
-        //     });
-        // }
-
         if (accessToken) {
             // check if we already have a playlist
             const savedPlaylists: PlaylistItem[] = musicstoreMgr.savedPlaylists;
@@ -404,11 +391,11 @@ export class MusicControlManager {
 
             const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
             let personalPlaylistLabel = !personalPlaylistInfo
-                ? "Generate Custom Spotify Playlist"
-                : "Refresh Custom Spotify Playlist";
+                ? GENERATE_CUSTOM_PLAYLIST_TITLE
+                : REFRESH_CUSTOM_PLAYLIST_TITLE;
             const personalPlaylistTooltip = !personalPlaylistInfo
-                ? `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
-                : `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+                ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
+                : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
             if (!hasSavedPlaylists && hasUserFavorites) {
                 // show the generate playlist menu item
@@ -491,6 +478,7 @@ export class MusicControlManager {
 
 export function buildSpotifyLink(id: string, isPlaylist: boolean) {
     let link = "";
+    id = createSpotifyIdFromUri(id);
     if (isPlaylist) {
         link = `https://open.spotify.com/playlist/${id}`;
     } else {

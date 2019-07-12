@@ -28,3 +28,8 @@ export const PERSONAL_TOP_SONGS_NAME = "My Custom Top 40";
 export const PERSONAL_TOP_SONGS_PLID = 1;
 export const SOFTWARE_TOP_SONGS_NAME = "Software Top 40";
 export const SOFTWARE_TOP_SONGS_PLID = 2;
+export const REFRESH_CUSTOM_PLAYLIST_TITLE = "Refresh Custom Spotify Playlist";
+export const REFRESH_CUSTOM_PLAYLIST_TOOLTIP = `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+export const GENERATE_CUSTOM_PLAYLIST_TITLE =
+    "Generate Custom Spotify Playlist";
+export const GENERATE_CUSTOM_PLAYLIST_TOOLTIP = `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;

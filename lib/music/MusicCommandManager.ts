@@ -142,36 +142,17 @@ export class MusicCommandManager {
             clearTimeout(this._hideSongTimeout);
         }
 
-        if (!track || !track.id) {
+        const playerType: PlayerType =
+            track.playerType || PlayerType.NotAssigned;
+        if (playerType !== PlayerType.NotAssigned) {
+            if (track.state === TrackStatus.Playing) {
+                this.showPauseControls(track);
+            } else {
+                this.showPlayControls(track);
+            }
+        } else {
+            console.log("showing launch player controls");
             this.showLaunchPlayerControls();
-            return;
-        }
-
-        // desktop returned a null track but we've determined there is a player running somewhere.
-        // default by checking the spotify web player state
-        if (track.playerType === PlayerType.WebSpotify) {
-            if (track.state === TrackStatus.Playing) {
-                // show the pause
-                this.showPauseControls(track);
-            } else {
-                // show the play
-                this.showPlayControls(track);
-            }
-            return;
-        }
-
-        // we have a running player (desktop or web). what is the state?
-
-        // get the desktop player track state
-        if (track) {
-            if (track.state === TrackStatus.Playing) {
-                // show the pause
-                this.showPauseControls(track);
-            } else {
-                // show the play
-                this.showPlayControls(track);
-            }
-            return;
         }
     }
 

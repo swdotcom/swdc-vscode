@@ -33,7 +33,11 @@ import {
     PERSONAL_TOP_SONGS_NAME,
     SOFTWARE_TOP_SONGS_NAME,
     PERSONAL_TOP_SONGS_PLID,
-    SOFTWARE_TOP_SONGS_PLID
+    SOFTWARE_TOP_SONGS_PLID,
+    REFRESH_CUSTOM_PLAYLIST_TITLE,
+    GENERATE_CUSTOM_PLAYLIST_TITLE,
+    REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
+    GENERATE_CUSTOM_PLAYLIST_TOOLTIP
 } from "../Constants";
 import { commands, window } from "vscode";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
@@ -518,16 +522,35 @@ export class MusicStoreManager {
             });
         } else {
             playlists = this.spotifyPlaylists;
-            this.currentPlayerType = PlayerType.WebSpotify;
+            if (
+                (!playlists || playlists.length === 0) &&
+                this.currentPlayerType === PlayerType.MacSpotifyDesktop
+            ) {
+                // create a playlist folder for the desktop spotify track that is playing
+                const desktopTrackPlaylist: PlaylistItem = new PlaylistItem();
+                desktopTrackPlaylist.type = "playlist";
+                desktopTrackPlaylist.id = this.runningTrack.id;
+                desktopTrackPlaylist.tracks = new PlaylistTrackInfo();
+                desktopTrackPlaylist.tracks.total = 1;
+                desktopTrackPlaylist.playerType = PlayerType.MacSpotifyDesktop;
+                desktopTrackPlaylist.tag = "spotify";
+                desktopTrackPlaylist.name = "Spotify Desktop";
 
-            // go through each playlist and find out it's state
-            playlists.forEach(async playlist => {
-                let playlistState = await this.getPlaylistState(playlist.id);
-                playlist.state = playlistState;
-                if (playlist.tag !== "paw") {
-                    playlist.tag = "spotify";
-                }
-            });
+                playlists.push(desktopTrackPlaylist);
+            } else {
+                this.currentPlayerType = PlayerType.WebSpotify;
+
+                // go through each playlist and find out it's state
+                playlists.forEach(async playlist => {
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
+                    if (playlist.tag !== "paw") {
+                        playlist.tag = "spotify";
+                    }
+                });
+            }
             // update so the playlist header shows the spotify related icons
             commands.executeCommand("setContext", "treeview-type", "spotify");
         }
@@ -570,11 +593,11 @@ export class MusicStoreManager {
 
         const personalPlaylistInfo = this.getExistingPesonalPlaylist();
         const personalPlaylistLabel = !personalPlaylistInfo
-            ? "Generate Custom Spotify Playlist"
-            : "Refresh Custom Spotify Playlist";
+            ? GENERATE_CUSTOM_PLAYLIST_TITLE
+            : REFRESH_CUSTOM_PLAYLIST_TITLE;
         const personalPlaylistTooltip = !personalPlaylistInfo
-            ? `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`
-            : `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+            ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
+            : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
         if (
             this.currentPlayerType === PlayerType.WebSpotify &&
@@ -817,6 +840,8 @@ export class MusicStoreManager {
             !this.currentPlayerType ||
             this.currentPlayerType === PlayerType.NotAssigned;
 
+        let playlist_state = TrackStatus.NotAssigned;
+
         if (
             noPlaylistType ||
             this.currentPlayerType === PlayerType.WebSpotify
@@ -833,37 +858,38 @@ export class MusicStoreManager {
                 playlist_id
             );
         } else {
-            // get the tracks for spotify desktop
-            playlistTracks = await getPlaylistTracks(
-                PlayerName.SpotifyDesktop,
-                playlist_id
-            );
+            // use the currently running track for the spotify desktop playlist
+            if (this.runningTrack.id) {
+                let playlistItem: PlaylistItem = this.createPlaylistItemFromTrack(
+                    this.runningTrack,
+                    1
+                );
+                playlistItems.push(playlistItem);
+                if (
+                    playlistItem.state === TrackStatus.Playing ||
+                    playlistItem.state === TrackStatus.Paused
+                ) {
+                    playlist_state = playlistItem.state;
+                }
+                // set to null so we don't iterate over it
+                playlistTracks = null;
+            }
         }
 
-        if (playlistTracks.state === CodyResponseType.Success) {
-            let playlist_state = TrackStatus.NotAssigned;
+        if (
+            playlistTracks &&
+            playlistTracks.state === CodyResponseType.Success
+        ) {
             let paginationItem: PaginationItem = playlistTracks.data;
 
             if (paginationItem && paginationItem.items) {
                 playlistItems = paginationItem.items.map(
                     (track: Track, idx: number) => {
-                        let playlistItem: PlaylistItem = new PlaylistItem();
-                        playlistItem.type = "track";
-                        playlistItem.name = track.name;
-                        playlistItem.id = track.id;
-                        playlistItem.popularity = track.popularity;
-                        playlistItem.played_count = track.played_count;
-                        playlistItem.position = idx + 1;
-                        playlistItem.artists = track.artists.join(", ");
-                        playlistItem.playerType = track.playerType;
-                        delete playlistItem.tracks;
-
-                        if (track.id === this.runningTrack.id) {
-                            playlistItem.state = this.runningTrack.state;
-                            this.selectedTrackItem = playlistItem;
-                        } else {
-                            playlistItem.state = TrackStatus.NotAssigned;
-                        }
+                        const position = idx + 1;
+                        let playlistItem: PlaylistItem = this.createPlaylistItemFromTrack(
+                            track,
+                            position
+                        );
 
                         if (
                             playlistItem.state === TrackStatus.Playing ||
@@ -876,13 +902,39 @@ export class MusicStoreManager {
                     }
                 );
             }
-
-            trackInfo.tracks = playlistItems;
-            trackInfo.playlist_state = playlist_state;
-
-            this._playlistTracks[playlist_id] = trackInfo;
         }
+
+        // set the track info
+        trackInfo.tracks = playlistItems;
+        trackInfo.playlist_state = playlist_state;
+
+        this._playlistTracks[playlist_id] = trackInfo;
         return trackInfo;
+    }
+
+    createPlaylistItemFromTrack(track: Track, position: number) {
+        let playlistItem: PlaylistItem = new PlaylistItem();
+        playlistItem.type = "track";
+        playlistItem.name = track.name;
+        playlistItem.id = track.id;
+        playlistItem.popularity = track.popularity;
+        playlistItem.played_count = track.played_count;
+        playlistItem.position = position;
+        if (!track.artists && track.artist) {
+            playlistItem.artists = track.artist;
+        } else if (track.artists) {
+            playlistItem.artists = track.artists.join(", ");
+        }
+        playlistItem.playerType = track.playerType;
+        delete playlistItem.tracks;
+
+        if (track.id === this.runningTrack.id) {
+            playlistItem.state = this.runningTrack.state;
+            this.selectedTrackItem = playlistItem;
+        } else {
+            playlistItem.state = TrackStatus.NotAssigned;
+        }
+        return playlistItem;
     }
 
     async createGlobalTopSongsPlaylist() {
