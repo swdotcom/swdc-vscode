@@ -613,13 +613,6 @@ export class MusicStoreManager {
             PERSONAL_TOP_SONGS_PLID
         );
 
-        const personalPlaylistInfo = this.getExistingPesonalPlaylist();
-        // make sure the backend deletes a copy of the previously saved
-        // personal playlist id
-        if (personalPlaylistInfo && !hasCustomPlaylist) {
-            await this.reconcilePlaylists();
-        }
-
         const personalPlaylistLabel = !hasCustomPlaylist
             ? GENERATE_CUSTOM_PLAYLIST_TITLE
             : REFRESH_CUSTOM_PLAYLIST_TITLE;
