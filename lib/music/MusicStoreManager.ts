@@ -394,6 +394,15 @@ export class MusicStoreManager {
         return null;
     }
 
+    getExistingGlobalPlaylist(): any {
+        if (this.savedPlaylists) {
+            return this.savedPlaylists.find(element => {
+                return parseInt(element["playlistTypeId"], 10) === 2;
+            });
+        }
+        return null;
+    }
+
     async reconcilePlaylists() {
         if (!this.initializedSpotifyPlaylist) {
             // its not ready yet
@@ -952,34 +961,40 @@ export class MusicStoreManager {
     }
 
     async createGlobalTopSongsPlaylist() {
+        let existingGlobalPlaylist = this.getExistingGlobalPlaylist();
         let musicstoreMgr = MusicStoreManager.getInstance();
 
-        // 1st create the empty playlist
-        const playlistResult: CodyResponse = await createPlaylist(
-            SOFTWARE_TOP_SONGS_NAME,
-            true
-        );
-
-        if (playlistResult.state === CodyResponseType.Failed) {
-            window.showErrorMessage(
-                `There was an unexpected error adding tracks to the playlist. ${
-                    playlistResult.message
-                }`,
-                ...["OK"]
+        let playlistId = null;
+        if (!existingGlobalPlaylist) {
+            // 1st create the empty playlist
+            const playlistResult: CodyResponse = await createPlaylist(
+                SOFTWARE_TOP_SONGS_NAME,
+                true
             );
-            return;
-        }
 
-        const playlistId = playlistResult.data.id;
+            if (playlistResult.state === CodyResponseType.Failed) {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        playlistResult.message
+                    }`,
+                    ...["OK"]
+                );
+                return;
+            }
 
-        if (playlistId) {
-            await updateSavedPlaylists(
-                playlistId,
-                2,
-                SOFTWARE_TOP_SONGS_NAME
-            ).catch(err => {
-                logIt("Error updating music time global playlist ID");
-            });
+            playlistId = playlistResult.data.id;
+
+            if (playlistId) {
+                await updateSavedPlaylists(
+                    playlistId,
+                    2,
+                    SOFTWARE_TOP_SONGS_NAME
+                ).catch(err => {
+                    logIt("Error updating music time global playlist ID");
+                });
+            }
+        } else {
+            playlistId = existingGlobalPlaylist.id;
         }
 
         let globalFavs: any[] = musicstoreMgr.globalFavorites;
@@ -987,11 +1002,19 @@ export class MusicStoreManager {
             let tracksToAdd: string[] = globalFavs.map(item => {
                 return item.uri;
             });
-            await addTracks(
-                playlistResult.data.id,
-                SOFTWARE_TOP_SONGS_NAME,
-                tracksToAdd
-            );
+            if (!existingGlobalPlaylist) {
+                await addTracks(
+                    playlistId,
+                    SOFTWARE_TOP_SONGS_NAME,
+                    tracksToAdd
+                );
+            } else {
+                await replacePlaylistTracks(playlistId, tracksToAdd).catch(
+                    err => {
+                        logIt(`Error replacing tracks, error: ${err.message}`);
+                    }
+                );
+            }
         }
 
         // refresh the playlists
