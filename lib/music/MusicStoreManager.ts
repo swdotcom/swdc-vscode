@@ -38,11 +38,18 @@ import {
     REFRESH_CUSTOM_PLAYLIST_TITLE,
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
-    GENERATE_CUSTOM_PLAYLIST_TOOLTIP
+    GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
+    SPOTIFY_CLIENT_ID,
+    SPOTIFY_CLIENT_SECRET,
+    REFRESH_GLOBAL_PLAYLIST_TITLE,
+    REFRESH_GLOBAL_PLAYLIST_TOOLTIP,
+    GENERATE_GLOBAL_PLAYLIST_TITLE,
+    GENERATE_GLOBAL_PLAYLIST_TOOLTIP
 } from "../Constants";
 import { commands, window } from "vscode";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicCommandManager } from "./MusicCommandManager";
+
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
@@ -240,10 +247,10 @@ export class MusicStoreManager {
         if (spotifyOauth) {
             // update the CodyMusic credentials
             let codyConfig: CodyConfig = new CodyConfig();
-            codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
+            codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
             codyConfig.spotifyAccessToken = spotifyOauth.spotify_access_token;
             codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
-            codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
+            codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
             setConfig(codyConfig);
 
             setItem("spotify_access_token", spotifyOauth.spotify_access_token);
@@ -265,10 +272,10 @@ export class MusicStoreManager {
         setItem("spotify_access_token", null);
         setItem("spotify_refresh_token", null);
         let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.spotifyClientId = "eb67e22ba1c6474aad8ec8067480d9dc";
+        codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
         codyConfig.spotifyAccessToken = null;
         codyConfig.spotifyRefreshToken = null;
-        codyConfig.spotifyClientSecret = "2b40b4975b2743189c87f4712c0cd59e";
+        codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
         setConfig(codyConfig);
         this._spotifyUser = null;
     }
@@ -477,34 +484,15 @@ export class MusicStoreManager {
     async syncRunningPlaylists(serverIsOnline: boolean) {
         let playlists: PlaylistItem[] = [];
 
-        // get the cody playlists
-        await this.syncSavedAndSpotifyPlaylists(serverIsOnline);
+        const needsSpotifyAccess = this.requiresSpotifyAccess();
 
-        // update the existing playlist that matches the global top 40 playlist with a paw if found
-        let foundGlobalFavorites = this.hasMusicTimePlaylistForType(
-            SOFTWARE_TOP_SONGS_PLID
-        );
-
-        // only create global favorites if the app is online and we're
-        // unable to find the global playlist id for the user
-        if (
-            !foundGlobalFavorites &&
-            serverIsOnline &&
-            !this.requiresSpotifyAccess()
-        ) {
-            if (!this.hasGlobalFavorites) {
-                await this.syncGlobalTopSongs();
-            }
-            // get the cody playlists one more time to make sure
+        if (serverIsOnline) {
+            // get the cody playlists
             await this.syncSavedAndSpotifyPlaylists(serverIsOnline);
 
-            foundGlobalFavorites = this.hasMusicTimePlaylistForType(
-                SOFTWARE_TOP_SONGS_PLID
-            );
-
-            if (!foundGlobalFavorites) {
-                // create the global top 40
-                await this.createGlobalTopSongsPlaylist();
+            // check if the global favorites are available
+            if (!this.hasGlobalFavorites) {
+                await this.syncGlobalTopSongs();
             }
         }
 
@@ -587,11 +575,11 @@ export class MusicStoreManager {
             this.currentPlayerType = PlayerType.NotAssigned;
         }
 
-        this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
-
         // filter out the music time playlists
         let musicTimePlaylistItems = [];
 
+        // take out the music time playlists out so they can show
+        // in the music time playlist panel
         playlists = playlists
             .map((item: PlaylistItem) => {
                 let foundSavedPlaylist = this.savedPlaylists.find(element => {
@@ -606,38 +594,26 @@ export class MusicStoreManager {
             })
             .filter(item => item);
 
+        // set the music time playlists
         this.musicTimePlaylists = musicTimePlaylistItems;
 
-        // update the existing playlist that matches the personal playlist with a paw if found
-        const hasCustomPlaylist = this.hasMusicTimePlaylistForType(
-            PERSONAL_TOP_SONGS_PLID
-        );
-
-        const personalPlaylistLabel = !hasCustomPlaylist
-            ? GENERATE_CUSTOM_PLAYLIST_TITLE
-            : REFRESH_CUSTOM_PLAYLIST_TITLE;
-        const personalPlaylistTooltip = !hasCustomPlaylist
-            ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
-            : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
-
-        if (
-            this.currentPlayerType === PlayerType.WebSpotify &&
-            !this.requiresSpotifyAccess()
-        ) {
-            // add the connect spotify link
-            let listItem: PlaylistItem = new PlaylistItem();
-            listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "playlist";
-            listItem.tag = "action";
-            listItem.id = "codingfavorites";
-            listItem.command = "musictime.generateWeeklyPlaylist";
-            listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = personalPlaylistLabel;
-            listItem.tooltip = personalPlaylistTooltip;
-            musicTimePlaylistItems.push(listItem);
+        // get the custom playlist button
+        if (serverIsOnline && !needsSpotifyAccess) {
+            const globalPlaylistButton: PlaylistItem = this.getGlobalPlaylistButton();
+            if (globalPlaylistButton) {
+                musicTimePlaylistItems.push(globalPlaylistButton);
+            }
+            const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();
+            if (customPlaylistButton) {
+                musicTimePlaylistItems.push(customPlaylistButton);
+            }
         }
 
         this.runningPlaylists = playlists;
+
+        // update the items for the settings panel
+        this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
+
         commands.executeCommand("musictime.refreshPlaylist");
         commands.executeCommand("musictime.refreshSettings");
     }
@@ -1094,6 +1070,73 @@ export class MusicStoreManager {
         }
         // refresh the playlists
         musicstoreMgr.refreshPlaylists();
+    }
+
+    getGlobalPlaylistButton() {
+        // update the existing playlist that matches the global top 40 playlist with a paw if found
+        let hasGlobalPlaylist = this.hasMusicTimePlaylistForType(
+            SOFTWARE_TOP_SONGS_PLID
+        );
+
+        const personalPlaylistLabel = !hasGlobalPlaylist
+            ? GENERATE_GLOBAL_PLAYLIST_TITLE
+            : REFRESH_GLOBAL_PLAYLIST_TITLE;
+        const personalPlaylistTooltip = !hasGlobalPlaylist
+            ? GENERATE_GLOBAL_PLAYLIST_TOOLTIP
+            : REFRESH_GLOBAL_PLAYLIST_TOOLTIP;
+
+        if (
+            this.currentPlayerType === PlayerType.WebSpotify &&
+            !this.requiresSpotifyAccess()
+        ) {
+            // add the connect spotify link
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "action";
+            listItem.tag = "action";
+            listItem.id = "codingfavorites";
+            listItem.command = "musictime.generateGlobalPlaylist";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = personalPlaylistLabel;
+            listItem.tooltip = personalPlaylistTooltip;
+            return listItem;
+        }
+        return null;
+    }
+
+    // get the custom playlist button by checkinf if the custom playlist
+    // exists or not. if it doesn't exist then it will show the create label,
+    // otherwise, it will show the refresh label
+    getCustomPlaylistButton() {
+        // update the existing playlist that matches the personal playlist with a paw if found
+        const hasCustomPlaylist = this.hasMusicTimePlaylistForType(
+            PERSONAL_TOP_SONGS_PLID
+        );
+
+        const personalPlaylistLabel = !hasCustomPlaylist
+            ? GENERATE_CUSTOM_PLAYLIST_TITLE
+            : REFRESH_CUSTOM_PLAYLIST_TITLE;
+        const personalPlaylistTooltip = !hasCustomPlaylist
+            ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
+            : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
+
+        if (
+            this.currentPlayerType === PlayerType.WebSpotify &&
+            !this.requiresSpotifyAccess()
+        ) {
+            // add the connect spotify link
+            let listItem: PlaylistItem = new PlaylistItem();
+            listItem.tracks = new PlaylistTrackInfo();
+            listItem.type = "action";
+            listItem.tag = "action";
+            listItem.id = "codingfavorites";
+            listItem.command = "musictime.generateWeeklyPlaylist";
+            listItem.playerType = PlayerType.WebSpotify;
+            listItem.name = personalPlaylistLabel;
+            listItem.tooltip = personalPlaylistTooltip;
+            return listItem;
+        }
+        return null;
     }
 }
 

@@ -24,12 +24,21 @@ export const launch_url = "https://app.software.com";
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const MUSIC_TIME_EXT_ID = "softwaredotcom.music-time";
 
+export const SPOTIFY_CLIENT_ID: string = "eb67e22ba1c6474aad8ec8067480d9dc";
+export const SPOTIFY_CLIENT_SECRET: string = "2b40b4975b2743189c87f4712c0cd59e";
+
 export const PERSONAL_TOP_SONGS_NAME = "My Custom Top 40";
 export const PERSONAL_TOP_SONGS_PLID = 1;
 export const SOFTWARE_TOP_SONGS_NAME = "Software Top 40";
 export const SOFTWARE_TOP_SONGS_PLID = 2;
+
 export const REFRESH_CUSTOM_PLAYLIST_TITLE = "Refresh Custom Spotify Playlist";
 export const REFRESH_CUSTOM_PLAYLIST_TOOLTIP = `Refresh custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 export const GENERATE_CUSTOM_PLAYLIST_TITLE =
     "Generate Custom Spotify Playlist";
 export const GENERATE_CUSTOM_PLAYLIST_TOOLTIP = `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
+
+export const REFRESH_GLOBAL_PLAYLIST_TITLE = `Refresh ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
+export const REFRESH_GLOBAL_PLAYLIST_TOOLTIP = `Refresh Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
+export const GENERATE_GLOBAL_PLAYLIST_TITLE = `Generate ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
+export const GENERATE_GLOBAL_PLAYLIST_TOOLTIP = `Generate a Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;

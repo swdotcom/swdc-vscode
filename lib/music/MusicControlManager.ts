@@ -410,10 +410,6 @@ export class MusicControlManager {
                 });
             }
 
-            console.log(
-                "current player type: ",
-                musicstoreMgr.currentPlayerType
-            );
             if (musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify) {
                 menuOptions.items.push({
                     label: "Switch to Spotify",

@@ -299,6 +299,12 @@ export function createCommands(): {
         );
         cmds.push(generateWeeklyPlaylistCommand);
 
+        const generateGlobalPlaylistCommand = commands.registerCommand(
+            "musictime.generateGlobalPlaylist",
+            () => MusicStoreManager.getInstance().createGlobalTopSongsPlaylist()
+        );
+        cmds.push(generateGlobalPlaylistCommand);
+
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
             const kpmController = new KpmController();

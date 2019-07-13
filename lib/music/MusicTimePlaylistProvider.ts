@@ -262,7 +262,7 @@ export class MusicTimePlaylistTreeItem extends TreeItem {
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
         this.contextValue = `${treeItem.type}-item-${treeItem.state}`;
 
-        if (treeItem.type === "playlist") {
+        if (treeItem.type === "playlist" || treeItem.tag === "action") {
             if (treeItem.tag === "paw") {
                 this.iconPath.light = path.join(
                     this.resourcePath,

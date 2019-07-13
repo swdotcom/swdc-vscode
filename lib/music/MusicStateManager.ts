@@ -342,7 +342,7 @@ export class MusicStateManager {
                         this.codingDataReducer,
                         initialValue
                     );
-                    console.log("MUSIC CODING DATA: ", musicCodingData);
+
                     return musicCodingData;
                 }
             } else {
