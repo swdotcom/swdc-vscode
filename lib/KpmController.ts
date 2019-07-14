@@ -19,7 +19,6 @@ let _keystrokeMap = {};
 
 export class KpmController {
     private _disposable: Disposable;
-    private _sendDataInterval: any = null;
 
     constructor() {
         let subscriptions: Disposable[] = [];
@@ -28,13 +27,6 @@ export class KpmController {
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
         this._disposable = Disposable.from(...subscriptions);
-
-        // create the 60 second timer that will post keystroke
-        // events to the pluing manager if there's any data to send
-        this._sendDataInterval = setInterval(
-            this.sendKeystrokeDataIntervalHandler,
-            DEFAULT_DURATION * 1000
-        );
     }
 
     private async sendKeystrokeDataIntervalHandler() {
@@ -351,6 +343,11 @@ export class KpmController {
             keystrokeCount["start"] = nowTimes.now_in_sec;
             keystrokeCount["local_start"] = nowTimes.local_now_in_sec;
             keystrokeCount["keystrokes"] = 0;
+
+            // start the minute timer to send the data
+            setTimeout(() => {
+                this.sendKeystrokeDataIntervalHandler();
+            }, DEFAULT_DURATION * 1000);
         }
 
         let fileInfo = null;
@@ -411,7 +408,6 @@ export class KpmController {
     }
 
     public dispose() {
-        clearInterval(this._sendDataInterval);
         this._disposable.dispose();
     }
 }
