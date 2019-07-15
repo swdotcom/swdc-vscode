@@ -26,7 +26,7 @@ import {
     connectPlaylistTreeView
 } from "./music/MusicPlaylistProvider";
 import { MusicTimePlaylistProvider } from "./music/MusicTimePlaylistProvider";
-import { PlaylistItem, PlayerName, PlaylistTrackInfo } from "cody-music";
+import { PlaylistItem, PlayerName } from "cody-music";
 import {
     MusicSettingsProvider,
     connectSettingsTreeView
