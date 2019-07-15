@@ -168,15 +168,25 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         this._onDidChangeTreeData.fire(parent);
     }
 
+    isTrackInPlaylistRunning(p: PlaylistItem) {
+        return (
+            p.state === TrackStatus.Playing || p.state === TrackStatus.Paused
+        );
+    }
+
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
         let treeItem: PlaylistTreeItem = null;
         if (p.type === "playlist") {
             // it's a track parent (playlist)
+
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
-                return createPlaylistTreeItem(
-                    p,
-                    TreeItemCollapsibleState.Collapsed
-                );
+                const folderState: TreeItemCollapsibleState = this.isTrackInPlaylistRunning(
+                    p
+                )
+                    ? TreeItemCollapsibleState.Expanded
+                    : TreeItemCollapsibleState.Collapsed;
+                console.log("folder state: ", folderState);
+                return createPlaylistTreeItem(p, folderState);
             }
             treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
         } else {
@@ -184,10 +194,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
             treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
 
             // reveal the track state if it's playing or paused
-            if (
-                p.state === TrackStatus.Playing ||
-                p.state === TrackStatus.Paused
-            ) {
+            if (this.isTrackInPlaylistRunning(p)) {
                 // don't "select" it thought. that will invoke the pause/play action
                 this.view.reveal(p, {
                     focus: true,
@@ -201,25 +208,15 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         if (element) {
-            /** example...
-                collaborative:false
-                id:"MostRecents"
-                name:"MostRecents"
-                public:true
-                tracks:PlaylistTrackInfo {href: "", total: 34}
-                type:"playlist"
-                playerType:"MacItunesDesktop"
-             */
-
             // return track of the playlist parent
-            let tracks = await MusicStoreManager.getInstance().getTracksForPlaylistId(
+            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getTracksForPlaylistId(
                 element.id
             );
-
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists = MusicStoreManager.getInstance().runningPlaylists;
+            let playlists: PlaylistItem[] = MusicStoreManager.getInstance()
+                .runningPlaylists;
             return playlists;
         }
     }
