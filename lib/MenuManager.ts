@@ -35,8 +35,7 @@ const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
 let showMusicMetrics = false;
-let lastDashboardFetchTime = 0;
-let day_in_sec = 60 * 60 * 24;
+let lastDayOfMonth = 0;
 
 /**
  * fetch the show music metrics flag
@@ -169,10 +168,11 @@ export async function launchWebDashboardView() {
 export async function fetchCodeTimeMetricsDashboard(summary) {
     let summaryInfoFile = getSummaryInfoFile();
 
-    let nowSec = nowInSecs();
-    let diff = nowSec - lastDashboardFetchTime;
-    if (lastDashboardFetchTime === 0 || diff >= day_in_sec) {
-        lastDashboardFetchTime = nowInSecs();
+    const dayOfMonth = moment()
+        .startOf("day")
+        .date();
+    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+        lastDayOfMonth = dayOfMonth;
 
         logIt("retrieving dashboard metrics");
 
