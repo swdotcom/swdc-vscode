@@ -1,5 +1,11 @@
-import { storePayload, getOs, getVersion, logIt, getNowTimes } from "./Util";
-import { PLUGIN_ID } from "./Constants";
+import {
+    storePayload,
+    getOs,
+    getVersion,
+    logIt,
+    getNowTimes,
+    getPluginId
+} from "./Util";
 
 // ? marks that the parameter is optional
 type Project = {
@@ -24,7 +30,7 @@ export class KpmDataManager {
         (this.source = {}),
             (this.keystrokes = 0),
             (this.project = project),
-            (this.pluginId = PLUGIN_ID);
+            (this.pluginId = getPluginId());
         this.version = getVersion();
         this.os = getOs();
     }

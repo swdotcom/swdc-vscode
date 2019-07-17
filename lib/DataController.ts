@@ -24,7 +24,8 @@ import {
     launchWebUrl,
     logIt,
     isMusicTime,
-    showStatus
+    showStatus,
+    getPluginId
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import {
@@ -32,7 +33,6 @@ import {
     buildWebDashboardUrl,
     fetchCodeTimeMetricsDashboard
 } from "./MenuManager";
-import { PLUGIN_ID } from "./Constants";
 import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
@@ -542,7 +542,7 @@ export async function sendHeartbeat(reason, serverIsOnline) {
     if (serverIsOnline && jwt) {
         const version = `${env.appName}_${getVersion()}`;
         let heartbeat = {
-            pluginId: PLUGIN_ID,
+            pluginId: getPluginId(),
             os: getOs(),
             start: nowInSecs(),
             version,

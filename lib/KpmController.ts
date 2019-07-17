@@ -396,10 +396,12 @@ export class KpmController {
                     lines: 0,
                     linesAdded: 0,
                     linesRemoved: 0,
+                    start: nowTimes.now_in_sec,
+                    local_start: nowTimes.local_now_in_sec,
+                    end: 0,
+                    local_end: 0,
                     syntax: ""
                 };
-                fileInfo["start"] = nowTimes.now_in_sec;
-                fileInfo["local_start"] = nowTimes.local_now_in_sec;
                 keystrokeCount.source[filename] = fileInfo;
             }
         }

@@ -6,7 +6,8 @@ import {
     nowInSecs,
     getOffsetSecends,
     getOs,
-    getVersion
+    getVersion,
+    getPluginId
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import { MusicStoreManager } from "./MusicStoreManager";
@@ -18,7 +19,6 @@ import {
     isRunning,
     PlayerName
 } from "cody-music";
-import { PLUGIN_ID } from "../Constants";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -310,7 +310,7 @@ export class MusicStateManager {
             keystrokes: 0,
             syntax: "",
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            pluginId: PLUGIN_ID,
+            pluginId: getPluginId(),
             os: getOs(),
             version,
             source: {}
@@ -342,7 +342,7 @@ export class MusicStateManager {
                         this.codingDataReducer,
                         initialValue
                     );
-
+                    console.log("music coding data: ", musicCodingData);
                     return musicCodingData;
                 }
             } else {
@@ -350,6 +350,7 @@ export class MusicStateManager {
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
         }
+        console.log("music coding data: ", initialValue);
         return initialValue;
     }
 }

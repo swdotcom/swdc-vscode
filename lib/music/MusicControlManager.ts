@@ -45,12 +45,13 @@ import {
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { SocialShareManager } from "../social/SocialShareManager";
-
+const moment = require("moment-timezone");
 const clipboardy = require("clipboardy");
 const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
+let lastDayOfMonth = 0;
 export class MusicControlManager {
     constructor() {
         //
@@ -533,18 +534,26 @@ export async function disconnectSpotify() {
 export async function fetchMusicTimeMetricsDashboard() {
     let musicTimeFile = getMusicTimeFile();
 
-    const musicSummary = await softwareGet(
-        `/dashboard?plugin=music-time&linux=${isLinux()}`,
-        getItem("jwt")
-    );
+    const dayOfMonth = moment()
+        .startOf("day")
+        .date();
+    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+        lastDayOfMonth = dayOfMonth;
+        const musicSummary = await softwareGet(
+            `/dashboard?plugin=music-time&linux=${isLinux()}`,
+            getItem("jwt")
+        );
 
-    // get the content
-    let content =
-        musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
+        // get the content
+        let content =
+            musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
 
-    fs.writeFileSync(musicTimeFile, content, err => {
-        if (err) {
-            logIt(`Error writing to the Software session file: ${err.message}`);
-        }
-    });
+        fs.writeFileSync(musicTimeFile, content, err => {
+            if (err) {
+                logIt(
+                    `Error writing to the Software session file: ${err.message}`
+                );
+            }
+        });
+    }
 }

@@ -185,7 +185,6 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 )
                     ? TreeItemCollapsibleState.Expanded
                     : TreeItemCollapsibleState.Collapsed;
-                console.log("folder state: ", folderState);
                 return createPlaylistTreeItem(p, folderState);
             }
             treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);

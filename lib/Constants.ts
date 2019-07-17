@@ -12,7 +12,8 @@ export const MILLIS_PER_HOUR = 1000 * 60 * 60;
 export const MILLIS_PER_MINUTE = 1000 * 60;
 export const LONG_THRESHOLD_HOURS = 12;
 export const SHORT_THRESHOLD_HOURS = 1;
-export const PLUGIN_ID = 2;
+export const CODE_TIME_PLUGIN_ID = 2;
+export const MUSIC_TIME_PLUGIN_ID = 13;
 
 // set the api endpoint to use
 // "http://localhost:5000", "https://qaapi.software.com", "https://stagingapi.software.com", "https://api.software.com"

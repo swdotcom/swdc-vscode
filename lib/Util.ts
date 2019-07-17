@@ -5,7 +5,9 @@ import {
     MUSIC_TIME_EXT_ID,
     launch_url,
     NOT_NOW_LABEL,
-    LOGIN_LABEL
+    LOGIN_LABEL,
+    CODE_TIME_PLUGIN_ID,
+    MUSIC_TIME_PLUGIN_ID
 } from "./Constants";
 import {
     refetchUserStatusLazily,
@@ -48,6 +50,16 @@ export function getEditorSessionToken() {
         editorSessiontoken = randomCode();
     }
     return editorSessiontoken;
+}
+
+export function getPluginId() {
+    if (isCodeTime()) {
+        return CODE_TIME_PLUGIN_ID;
+    } else if (isMusicTime()) {
+        return MUSIC_TIME_PLUGIN_ID;
+    }
+    // for now return code time plugin if it doesn't match
+    return CODE_TIME_PLUGIN_ID;
 }
 
 export function getVersion() {
