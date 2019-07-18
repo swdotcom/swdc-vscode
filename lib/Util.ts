@@ -403,6 +403,16 @@ export function getMusicTimeFile() {
     return file;
 }
 
+export function getMusicTimeMarkdownFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\MusicTime.md";
+    } else {
+        file += "/MusicTime.md";
+    }
+    return file;
+}
+
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

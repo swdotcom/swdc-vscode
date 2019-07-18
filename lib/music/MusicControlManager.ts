@@ -31,7 +31,8 @@ import {
     logIt,
     launchWebUrl,
     launchLogin,
-    createSpotifyIdFromUri
+    createSpotifyIdFromUri,
+    getMusicTimeMarkdownFile
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
@@ -439,7 +440,7 @@ export class MusicControlManager {
         menuOptions.items.push({
             label: "Music Time Dashboard",
             detail: "View your latest music metrics right here in your editor",
-            cb: displayMusicTimeMetricsDashboard
+            cb: displayMusicTimeMetricsMarkdownDashboard
         });
 
         // if (
@@ -488,6 +489,28 @@ export function buildSpotifyLink(id: string, isPlaylist: boolean) {
     return link;
 }
 
+const viewOptions = {
+    viewColumn: ViewColumn.One,
+    preserveFocus: false
+};
+const panel = window.createWebviewPanel(
+    "music-time-preview",
+    `Music Time Dashboard`,
+    viewOptions,
+    {
+        enableFindWidget: true,
+        enableScripts: true // enables javascript that may be in the content
+    }
+);
+
+export async function displayMusicTimeMetricsMarkdownDashboard() {
+    let musicTimeFile = getMusicTimeMarkdownFile();
+    await fetchMusicTimeMetricsMarkdownDashboard();
+
+    const content = fs.readFileSync(musicTimeFile).toString();
+    panel.webview.html = content;
+}
+
 export async function displayMusicTimeMetricsDashboard() {
     let musicTimeFile = getMusicTimeFile();
     await fetchMusicTimeMetricsDashboard();
@@ -531,29 +554,45 @@ export async function disconnectSpotify() {
     }
 }
 
-export async function fetchMusicTimeMetricsDashboard() {
-    let musicTimeFile = getMusicTimeFile();
+export async function fetchMusicTimeMetricsMarkdownDashboard() {
+    let file = getMusicTimeMarkdownFile();
 
     const dayOfMonth = moment()
         .startOf("day")
         .date();
     if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
-        const musicSummary = await softwareGet(
-            `/dashboard?plugin=music-time&linux=${isLinux()}`,
-            getItem("jwt")
-        );
-
-        // get the content
-        let content =
-            musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
-
-        fs.writeFileSync(musicTimeFile, content, err => {
-            if (err) {
-                logIt(
-                    `Error writing to the Software session file: ${err.message}`
-                );
-            }
-        });
+        await fetchDashboardData(file, true);
     }
+}
+
+export async function fetchMusicTimeMetricsDashboard() {
+    let file = getMusicTimeFile();
+
+    const dayOfMonth = moment()
+        .startOf("day")
+        .date();
+    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+        lastDayOfMonth = dayOfMonth;
+        await fetchDashboardData(file, false);
+    }
+}
+
+async function fetchDashboardData(fileName: string, isHtml: boolean) {
+    const musicSummary = await softwareGet(
+        `/dashboard?plugin=music-time&linux=${isLinux()}&html=${isHtml}`,
+        getItem("jwt")
+    );
+
+    // get the content
+    let content =
+        musicSummary && musicSummary.data ? musicSummary.data : NO_DATA;
+
+    fs.writeFileSync(fileName, content, err => {
+        if (err) {
+            logIt(
+                `Error writing to the Software dashboard file: ${err.message}`
+            );
+        }
+    });
 }
