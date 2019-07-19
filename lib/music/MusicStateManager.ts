@@ -238,6 +238,7 @@ export class MusicStateManager {
     }
 
     private codingDataReducer(accumulator, current) {
+        const version = `${env.appName}_${getVersion()}`;
         const numberList: string[] = [
             "add",
             "paste",
@@ -287,6 +288,23 @@ export class MusicStateManager {
 
                 Object.keys(sourceObj).forEach(sourceKey => {
                     const fileObj = sourceObj[sourceKey];
+                    if (!fileObj.timezone) {
+                        fileObj[
+                            "timezone"
+                        ] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    }
+                    if (!fileObj.offset) {
+                        fileObj["offset"] = getOffsetSecends() / 60;
+                    }
+                    if (!fileObj.pluginId) {
+                        fileObj["pluginId"] = getPluginId();
+                    }
+                    if (!fileObj.os) {
+                        fileObj["os"] = getOs();
+                    }
+                    if (!fileObj.version) {
+                        fileObj["version"] = version;
+                    }
                     let keystrokesTotal = 0;
                     let foundfile = false;
                     Object.keys(fileObj).forEach(fileKey => {
@@ -336,6 +354,7 @@ export class MusicStateManager {
             keystrokes: 0,
             syntax: "",
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            offset: getOffsetSecends() / 60,
             pluginId: getPluginId(),
             os: getOs(),
             version,
@@ -376,6 +395,7 @@ export class MusicStateManager {
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
         }
+        console.log("initial value: ", initialValue);
         return initialValue;
     }
 }
