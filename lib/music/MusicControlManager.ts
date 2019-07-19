@@ -82,7 +82,7 @@ export class MusicControlManager {
             await next(playerName);
         }
 
-        MusicStoreManager.getInstance().refreshPlaylists();
+        MusicStateManager.getInstance().musicStateCheck();
     }
 
     async previous(playerName: PlayerName = null) {
@@ -100,7 +100,7 @@ export class MusicControlManager {
         } else {
             await previous(playerName);
         }
-        MusicStoreManager.getInstance().refreshPlaylists();
+        MusicStateManager.getInstance().musicStateCheck();
     }
 
     async play(playerName: PlayerName = null) {
@@ -118,7 +118,7 @@ export class MusicControlManager {
         } else {
             await play(playerName);
         }
-        MusicStoreManager.getInstance().refreshPlaylists();
+        MusicStateManager.getInstance().musicStateCheck();
     }
 
     async pause(playerName: PlayerName = null) {
@@ -136,7 +136,7 @@ export class MusicControlManager {
         } else {
             await pause(playerName);
         }
-        MusicStoreManager.getInstance().refreshPlaylists();
+        MusicStateManager.getInstance().musicStateCheck();
     }
 
     async setLiked(liked: boolean) {

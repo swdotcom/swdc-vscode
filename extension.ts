@@ -205,14 +205,35 @@ export async function intializePlugin(
             getUserStatus(serverIsOnline);
             updateLiveshareTime();
         }, one_min_ms * 1);
+
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = false;
+        codyConfig.enableSpotifyDesktop = false;
+        setConfig(codyConfig);
     }
 
     if (isMusicTime()) {
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = true;
+        setConfig(codyConfig);
+
+        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
+
+        // this needs to happen first to enable spotify playlist and control logic
+        await musicstoreMgr.initializeSpotify(serverIsOnline);
+
         MusicStateManager.getInstance().musicStateCheck();
         // 15 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000 * 5);
+
+        // reconcile the playlists every 2 minutes
+        setInterval(() => {
+            musicstoreMgr.refreshPlaylists().then(() => {
+                musicstoreMgr.reconcilePlaylists();
+            });
+        }, 1000 * 60 * 3);
     }
 
     // add the player commands
@@ -256,28 +277,6 @@ async function initializeUserInfo(
         setTimeout(() => {
             sendOfflineData();
         }, 1000);
-
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = false;
-        codyConfig.enableSpotifyDesktop = false;
-        setConfig(codyConfig);
-    } else if (isMusicTime()) {
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = true;
-        setConfig(codyConfig);
-
-        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
-
-        // this needs to happen first to enable spotify playlist and control logic
-        await musicstoreMgr.initializeSpotify(serverIsOnline);
-        await musicstoreMgr.refreshPlaylists();
-
-        // reconcile the playlists every 2 minutes
-        // setInterval(() => {
-        //     musicstoreMgr.refreshPlaylists().then(() => {
-        //         musicstoreMgr.reconcilePlaylists();
-        //     });
-        // }, 1000 * 60 * 2);
     }
 }
 
