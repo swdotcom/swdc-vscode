@@ -489,23 +489,23 @@ export function buildSpotifyLink(id: string, isPlaylist: boolean) {
     return link;
 }
 
-const viewOptions = {
-    viewColumn: ViewColumn.One,
-    preserveFocus: false
-};
-const panel = window.createWebviewPanel(
-    "music-time-preview",
-    `Music Time Dashboard`,
-    viewOptions,
-    {
-        enableFindWidget: true,
-        enableScripts: true // enables javascript that may be in the content
-    }
-);
-
 export async function displayMusicTimeMetricsMarkdownDashboard() {
     let musicTimeFile = getMusicTimeMarkdownFile();
     await fetchMusicTimeMetricsMarkdownDashboard();
+
+    const viewOptions = {
+        viewColumn: ViewColumn.One,
+        preserveFocus: false
+    };
+    const panel = window.createWebviewPanel(
+        "music-time-preview",
+        `Music Time Dashboard`,
+        viewOptions,
+        {
+            enableFindWidget: true,
+            enableScripts: true // enables javascript that may be in the content
+        }
+    );
 
     const content = fs.readFileSync(musicTimeFile).toString();
     panel.webview.html = content;
