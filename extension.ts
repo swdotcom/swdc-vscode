@@ -208,6 +208,7 @@ export async function intializePlugin(
     }
 
     if (isMusicTime()) {
+        MusicStateManager.getInstance().musicStateCheck();
         // 15 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().musicStateCheck();
@@ -272,11 +273,11 @@ async function initializeUserInfo(
         await musicstoreMgr.refreshPlaylists();
 
         // reconcile the playlists every 2 minutes
-        setInterval(() => {
-            musicstoreMgr.refreshPlaylists().then(() => {
-                musicstoreMgr.reconcilePlaylists();
-            });
-        }, 1000 * 60 * 2);
+        // setInterval(() => {
+        //     musicstoreMgr.refreshPlaylists().then(() => {
+        //         musicstoreMgr.reconcilePlaylists();
+        //     });
+        // }, 1000 * 60 * 2);
     }
 }
 
