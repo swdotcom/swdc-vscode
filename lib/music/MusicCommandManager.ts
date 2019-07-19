@@ -252,10 +252,10 @@ export class MusicCommandManager {
                 }`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
-                this._hideSongTimeout = setTimeout(() => {
-                    // hide this name in 10 seconds
-                    this.hideSongDisplay();
-                }, songNameDisplayTimeoutMillis);
+                // this._hideSongTimeout = setTimeout(() => {
+                //     // hide this name in 10 seconds
+                //     this.hideSongDisplay();
+                // }, songNameDisplayTimeoutMillis);
             } else if (btnCmd === "musictime.connectSpotify") {
                 button.statusBarItem.hide();
             } else {
@@ -311,10 +311,10 @@ export class MusicCommandManager {
                 }`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
-                this._hideSongTimeout = setTimeout(() => {
-                    // hide this name in 10 seconds
-                    this.hideSongDisplay();
-                }, songNameDisplayTimeoutMillis);
+                // this._hideSongTimeout = setTimeout(() => {
+                //     // hide this name in 10 seconds
+                //     this.hideSongDisplay();
+                // }, songNameDisplayTimeoutMillis);
             } else if (btnCmd === "musictime.connectSpotify") {
                 button.statusBarItem.hide();
             } else {

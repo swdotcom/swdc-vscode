@@ -53,6 +53,7 @@ import { MusicCommandManager } from "./MusicCommandManager";
 export class MusicStoreManager {
     private static instance: MusicStoreManager;
 
+    private _initialized: boolean = false;
     private _spotifyPlaylists: PlaylistItem[] = [];
     private _runningPlaylists: PlaylistItem[] = [];
     private _musicTimePlaylists: PlaylistItem[] = [];
@@ -86,6 +87,13 @@ export class MusicStoreManager {
     //
     // getters
     //
+
+    get initialized(): boolean {
+        return this._initialized;
+    }
+    set initialized(value: boolean) {
+        this._initialized = value;
+    }
 
     get spotifyUser(): SpotifyUser {
         return this._spotifyUser;
@@ -220,6 +228,7 @@ export class MusicStoreManager {
     //
 
     async refreshPlaylists() {
+        this.initialized = true;
         if (this.refreshing) {
             return;
         }

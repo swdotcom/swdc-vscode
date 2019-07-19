@@ -205,6 +205,9 @@ export class MusicStateManager {
                 this.musicstoreMgr.currentPlayerType = PlayerType.WebSpotify;
                 await this.musicstoreMgr.refreshPlaylists();
             }
+        } else if (!this.musicstoreMgr.initialized) {
+            // refresh to get the playlists
+            await this.musicstoreMgr.refreshPlaylists();
         }
 
         this.processingSong = false;
