@@ -261,8 +261,12 @@ async function initializeUserInfo(
     await getUserStatus(serverIsOnline);
     if (createdAnonUser) {
         showLoginPrompt();
-        if (kpmController) {
-            kpmController.buildBootstrapKpmPayload();
+        if (isCodeTime()) {
+            if (kpmController) {
+                kpmController.buildBootstrapKpmPayload();
+            }
+        } else if (isMusicTime()) {
+            MusicStateManager.getInstance().buildBootstrapSongSession();
         }
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)

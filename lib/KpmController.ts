@@ -10,8 +10,12 @@ import {
     getProjectFolder,
     getDashboardFile,
     logIt,
-    getNowTimes
+    getNowTimes,
+    isCodeTime
 } from "./Util";
+import { Track } from "cody-music";
+import { MusicStateManager } from "./music/MusicStateManager";
+import { sendMusicData } from "./DataController";
 
 const NO_PROJ_NAME = "Unnamed";
 
@@ -276,6 +280,7 @@ export class KpmController {
         let fileName = "Untitled";
         let name = UNTITLED_WORKSPACE;
 
+        // send the code time bootstrap payload
         let keystrokeCount = new KpmDataManager({
             // project.directory is used as an object key, must be string
             directory: rootPath,
@@ -299,7 +304,7 @@ export class KpmController {
         };
         keystrokeCount.source[fileName] = fileInfo;
 
-        setTimeout(() => keystrokeCount.postData(), 0);
+        setTimeout(() => keystrokeCount.postData(true /*sendNow*/), 0);
     }
 
     /**

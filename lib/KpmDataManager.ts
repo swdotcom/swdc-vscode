@@ -6,6 +6,7 @@ import {
     getNowTimes,
     getPluginId
 } from "./Util";
+import { sendBatchPayload } from "./DataController";
 
 // ? marks that the parameter is optional
 type Project = {
@@ -65,7 +66,7 @@ export class KpmDataManager {
     /**
      * send the payload
      */
-    postData() {
+    postData(sendNow: boolean = false) {
         const payload = JSON.parse(JSON.stringify(this));
 
         // set the end time for the session
@@ -95,7 +96,12 @@ export class KpmDataManager {
             payload.project = null;
         }
 
-        storePayload(payload);
-        logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
+        if (sendNow) {
+            sendBatchPayload([payload]);
+            logIt(`posted kpm metrics: ${JSON.stringify(payload)}`);
+        } else {
+            storePayload(payload);
+            logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
+        }
     }
 }

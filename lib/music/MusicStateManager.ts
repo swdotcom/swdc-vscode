@@ -106,6 +106,29 @@ export class MusicStateManager {
         }, isValidTrack: ${changeStatus.isValidTrack}`;
     }
 
+    public buildBootstrapSongSession() {
+        const now = nowInSecs();
+        let d = new Date();
+        // offset is the minutes from GMT. it's positive if it's before, and negative after
+        const offset = d.getTimezoneOffset();
+        const offset_sec = offset * 60;
+        // send the music time bootstrap payload
+        let track: Track = new Track();
+        track.id = "music-time-init";
+        track.name = "music-time-init";
+        track.artist = "music-time-init";
+        track.type = "init";
+        track["start"] = now;
+        track["local_start"] = now - offset_sec;
+        track["end"] = now + 1;
+        track = {
+            ...track,
+            ...this.getMusicCodingData()
+        };
+
+        sendMusicData(track);
+    }
+
     public async gatherMusicInfo(): Promise<any> {
         if (this.processingSong) {
             return this.existingTrack || new Track();
@@ -298,7 +321,7 @@ export class MusicStateManager {
         return accumulator;
     }
 
-    private getMusicCodingData() {
+    public getMusicCodingData() {
         const file = getMusicSessionDataStoreFile();
         const version = `${env.appName}_${getVersion()}`;
         const initialValue = {
@@ -353,7 +376,6 @@ export class MusicStateManager {
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
         }
-        console.log("music coding data: ", initialValue);
         return initialValue;
     }
 }

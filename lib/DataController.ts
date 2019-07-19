@@ -69,7 +69,7 @@ export async function serverIsAvailable() {
     return serverAvailable;
 }
 
-async function sendBatchPayload(batch) {
+export async function sendBatchPayload(batch) {
     await softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
         logIt(`Unable to send plugin data batch, error: ${e.message}`);
     });
