@@ -14,7 +14,7 @@ import {
     getSpotifyDevices,
     quitMacPlayer
 } from "cody-music";
-import { workspace, window, ViewColumn } from "vscode";
+import { workspace, window, ViewColumn, Uri } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -32,7 +32,8 @@ import {
     launchWebUrl,
     launchLogin,
     createSpotifyIdFromUri,
-    getMusicTimeMarkdownFile
+    getMusicTimeMarkdownFile,
+    getSoftwareDir
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
@@ -46,6 +47,7 @@ import {
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { SocialShareManager } from "../social/SocialShareManager";
+import { tmpdir } from "os";
 const moment = require("moment-timezone");
 const clipboardy = require("clipboardy");
 const fs = require("fs");
@@ -497,18 +499,34 @@ export async function displayMusicTimeMetricsMarkdownDashboard() {
         viewColumn: ViewColumn.One,
         preserveFocus: false
     };
+    const localResourceRoots = [Uri.file(getSoftwareDir()), Uri.file(tmpdir())];
     const panel = window.createWebviewPanel(
         "music-time-preview",
         `Music Time Dashboard`,
         viewOptions,
         {
             enableFindWidget: true,
+            localResourceRoots,
             enableScripts: true // enables javascript that may be in the content
         }
     );
 
     const content = fs.readFileSync(musicTimeFile).toString();
     panel.webview.html = content;
+}
+
+function getWebviewContent() {
+    return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Cat Coding</title>
+  </head>
+  <body>
+      <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" width="300" />
+  </body>
+  </html>`;
 }
 
 export async function displayMusicTimeMetricsDashboard() {
@@ -562,7 +580,7 @@ export async function fetchMusicTimeMetricsMarkdownDashboard() {
         .date();
     if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
-        await fetchDashboardData(file, true);
+        await fetchDashboardData(file, "music-time", true);
     }
 }
 
@@ -574,13 +592,17 @@ export async function fetchMusicTimeMetricsDashboard() {
         .date();
     if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
-        await fetchDashboardData(file, false);
+        await fetchDashboardData(file, "music-time", false);
     }
 }
 
-async function fetchDashboardData(fileName: string, isHtml: boolean) {
+async function fetchDashboardData(
+    fileName: string,
+    plugin: string,
+    isHtml: boolean
+) {
     const musicSummary = await softwareGet(
-        `/dashboard?plugin=music-time&linux=${isLinux()}&html=${isHtml}`,
+        `/dashboard?plugin=${plugin}&linux=${isLinux()}&html=${isHtml}`,
         getItem("jwt")
     );
 

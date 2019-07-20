@@ -406,9 +406,9 @@ export function getMusicTimeFile() {
 export function getMusicTimeMarkdownFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
-        file += "\\MusicTime.md";
+        file += "\\MusicTime.html";
     } else {
-        file += "/MusicTime.md";
+        file += "/MusicTime.html";
     }
     return file;
 }
