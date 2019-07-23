@@ -17,6 +17,10 @@ const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
 // copy the scripts data to dist/scripts
+// To build and package music-time
+// node deployer music-time package
+// To build and package code-time
+// node deployer code-time package
 async function deploy() {
     const args = process.argv;
     let packageIt = false;
@@ -39,7 +43,7 @@ async function deploy() {
         console.error(
             `The plugin extension name is not found based on the key: ${key}`
         );
-        console.error("Usage: node deployer name={swdc-vscode|music-time}");
+        console.error("Usage: node deployer <code-time|music-time> [package]");
         process.exit(1);
     }
 
