@@ -56,3 +56,14 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code.
 
 <!--- End: setup --->
+
+
+## FAQs
+
+**Does keeping VSCode affect time tracking/metrics?**
+
+The answer is "No," keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Code Time metrics are correct.
+
+The timer starts when you start typing. It stops after 15 minutes without typing or opening/closing files in the editor. We then truncate the last 15 minutes of inactivity from the data.
+
+Definitely let us know if you have more questions!
