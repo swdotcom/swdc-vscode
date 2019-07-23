@@ -86,7 +86,7 @@ export class MusicCommandManager {
         this.createButton("$(play)", "Play", "musictime.play", 998);
         this.createButton(
             "$(primitive-square)",
-            "Pause",
+            "Stop",
             "musictime.pause",
             998
         );

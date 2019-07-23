@@ -63,7 +63,7 @@ export const launchAndPlayTrack = async (
                 currentPlaylist.id,
                 track,
                 spotifyDevices,
-                10 /* checkTrackStateAndTryAgain */
+                20 /* checkTrackStateAndTryAgain */
             );
         }, 2000);
     } else {
@@ -74,6 +74,64 @@ export const launchAndPlayTrack = async (
             track,
             spotifyDevices
         );
+    }
+};
+
+export const playSelectedItem = async (
+    playlistItem: PlaylistItem,
+    isExpand = true
+) => {
+    const musicCtrlMgr = new MusicControlManager();
+    const musicstoreMgr = MusicStoreManager.getInstance();
+    if (playlistItem.type === "track") {
+        musicstoreMgr.selectedTrackItem = playlistItem;
+
+        const notPlaying =
+            playlistItem.state !== TrackStatus.Playing ? true : false;
+
+        if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
+            if (notPlaying) {
+                const pos: number = playlistItem.position || 1;
+                await playItunesTrackNumberInPlaylist(
+                    musicstoreMgr.selectedPlaylist.name,
+                    pos
+                );
+            } else {
+                musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+            }
+        } else {
+            if (notPlaying) {
+                await launchAndPlayTrack(
+                    playlistItem,
+                    musicstoreMgr.spotifyUser
+                );
+            } else {
+                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+            }
+        }
+    } else {
+        // to play a playlist
+        // {device_id: <spotify_device_id>,
+        //   uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh", "spotify:track:1301WleyT98MSxVHPZCA6M"],
+        //   context_uri: <playlist_uri, album_uri>}
+        musicstoreMgr.selectedPlaylist = playlistItem;
+
+        if (!isExpand) {
+            const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+            if (!spotifyDevices || spotifyDevices.length === 0) {
+                // no spotify devices found, lets launch the web player with the track
+
+                // launch it
+                await launchPlayer(PlayerName.SpotifyWeb);
+            }
+            musicCtrlMgr.playSpotifyTrackFromPlaylist(
+                musicstoreMgr.spotifyUser,
+                playlistItem.id,
+                null /* track */,
+                spotifyDevices,
+                20 /* checkTrackStateAndTryAgain */
+            );
+        }
     }
 };
 
@@ -91,44 +149,8 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
                 return;
             }
 
-            const musicCtrlMgr = new MusicControlManager();
-            const musicstoreMgr = MusicStoreManager.getInstance();
-
-            //
-            // MusicStateManager gatherMusicInfo will be called
-            // after pause or play has been invoked. That will also
-            // update the button states
-            //
-
-            if (playlistItem.type === "track") {
-                musicstoreMgr.selectedTrackItem = playlistItem;
-
-                const notPlaying =
-                    playlistItem.state !== TrackStatus.Playing ? true : false;
-
-                if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
-                    if (notPlaying) {
-                        const pos: number = playlistItem.position || 1;
-                        await playItunesTrackNumberInPlaylist(
-                            musicstoreMgr.selectedPlaylist.name,
-                            pos
-                        );
-                    } else {
-                        musicCtrlMgr.pause(PlayerName.ItunesDesktop);
-                    }
-                } else {
-                    if (notPlaying) {
-                        await launchAndPlayTrack(
-                            playlistItem,
-                            musicstoreMgr.spotifyUser
-                        );
-                    } else {
-                        musicCtrlMgr.pause(PlayerName.SpotifyWeb);
-                    }
-                }
-            } else {
-                musicstoreMgr.selectedPlaylist = playlistItem;
-            }
+            // play it
+            playSelectedItem(playlistItem);
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
@@ -245,10 +267,11 @@ export class PlaylistTreeItem extends TreeItem {
         // set the track's context value to the playlist item state
         // if it's a track that's playing or paused it will show the appropriate button.
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
-        this.contextValue = treeItem.id
-            ? `${treeItem.type}-item-${treeItem.state}`
-            : "";
+        const stateVal =
+            treeItem.state !== TrackStatus.Playing ? "notplaying" : "playing";
+        this.contextValue = `${treeItem.type}-item-${stateVal}`;
 
+        console.log("context value: ", this.contextValue);
         if (treeItem.tag === "spotify") {
             this.iconPath.light = path.join(
                 this.resourcePath,

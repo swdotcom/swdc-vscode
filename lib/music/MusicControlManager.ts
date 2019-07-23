@@ -84,7 +84,9 @@ export class MusicControlManager {
             await next(playerName);
         }
 
-        MusicStateManager.getInstance().musicStateCheck();
+        setTimeout(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000);
     }
 
     async previous(playerName: PlayerName = null) {
@@ -102,7 +104,9 @@ export class MusicControlManager {
         } else {
             await previous(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        setTimeout(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000);
     }
 
     async play(playerName: PlayerName = null) {
@@ -120,7 +124,9 @@ export class MusicControlManager {
         } else {
             await play(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        setTimeout(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000);
     }
 
     async pause(playerName: PlayerName = null) {
@@ -138,7 +144,9 @@ export class MusicControlManager {
         } else {
             await pause(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        setTimeout(() => {
+            MusicStateManager.getInstance().musicStateCheck();
+        }, 1000);
     }
 
     async setLiked(liked: boolean) {
@@ -178,15 +186,15 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
-        const musicstoreMgr = MusicStoreManager.getInstance();
-
-        let options = {
-            track_ids: []
-        };
+        let options = {};
         if (spotifyDevices.length > 0) {
             options["device_id"] = spotifyDevices[0].id;
         }
-        options.track_ids = [playlistItem.id];
+        if (playlistItem) {
+            options["track_ids"] = [playlistItem.id];
+        } else {
+            options["offset"] = { position: 0 };
+        }
         if (playlistId) {
             const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
             options["context_uri"] = playlistUri;
@@ -194,31 +202,28 @@ export class MusicControlManager {
 
         await play(PlayerName.SpotifyWeb, options);
 
-        // invoke the music gather
-        setTimeout(() => {
-            MusicStateManager.getInstance().musicStateCheck();
-        }, 1000);
-
         if (checkTrackStateAndTryAgainCount > 0) {
-            getRunningTrack().then(async track => {
-                if (!track || !track.id) {
-                    checkTrackStateAndTryAgainCount--;
-                    spotifyDevices = await getSpotifyDevices();
-                    setTimeout(() => {
-                        this.playSpotifyTrackFromPlaylist(
-                            spotifyUser,
-                            playlistId,
-                            playlistItem,
-                            spotifyDevices,
-                            checkTrackStateAndTryAgainCount
-                        );
-                    }, 1000);
-                } else {
-                    musicstoreMgr.refreshPlaylists();
-                }
-            });
+            const track: Track = await getRunningTrack();
+            if (playlistItem && track.id === playlistItem.id) {
+                MusicStateManager.getInstance().musicStateCheck();
+            } else if (!playlistItem && track.id) {
+                MusicStateManager.getInstance().musicStateCheck();
+            } else {
+                spotifyDevices = await getSpotifyDevices();
+                setTimeout(() => {
+                    this.playSpotifyTrackFromPlaylist(
+                        spotifyUser,
+                        playlistId,
+                        playlistItem,
+                        spotifyDevices,
+                        checkTrackStateAndTryAgainCount
+                    );
+                }, 500);
+            }
         } else {
-            musicstoreMgr.refreshPlaylists();
+            setTimeout(() => {
+                MusicStateManager.getInstance().musicStateCheck();
+            }, 500);
         }
     }
 

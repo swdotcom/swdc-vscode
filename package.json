@@ -1,7 +1,7 @@
 {
     "name": "music-time",
     "displayName": "Music Time",
-    "version": "0.2.11",
+    "version": "0.2.12",
     "publisher": "softwaredotcom",
     "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
     "author": {
@@ -115,10 +115,10 @@
             },
             {
                 "command": "musictime.pause",
-                "title": "Pause",
+                "title": "Stop",
                 "icon": {
-                    "light": "resources/light/pause-button.svg",
-                    "dark": "resources/dark/pause-button.svg"
+                    "light": "resources/light/stop-button.svg",
+                    "dark": "resources/dark/stop-button.svg"
                 }
             },
             {
@@ -209,7 +209,7 @@
             "view/item/context": [
                 {
                     "command": "musictime.play",
-                    "when": "viewItem =~ /.*item-paused$/",
+                    "when": "viewItem =~ /.*item-notplaying$/",
                     "group": "inline"
                 },
                 {
@@ -247,7 +247,7 @@
         "aws-sdk": "^2.470.0",
         "axios": "^0.19.0",
         "clipboardy": "^2.1.0",
-        "cody-music": "2.6.15",
+        "cody-music": "2.6.17",
         "moment-timezone": "^0.5.25",
         "vsls": "0.3.1291"
     }

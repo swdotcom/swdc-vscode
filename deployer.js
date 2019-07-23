@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "1.1.18";
-const MUSIC_TIME_VERSION = "0.2.11";
+const MUSIC_TIME_VERSION = "0.2.12";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
@@ -110,7 +110,7 @@ async function deploy() {
             "view/item/context": [
                 {
                     command: "musictime.play",
-                    when: "viewItem =~ /.*item-paused$/",
+                    when: "viewItem =~ /.*item-notplaying$/",
                     group: "inline"
                 },
                 {
@@ -193,10 +193,10 @@ async function deploy() {
 
         commands.push({
             command: "musictime.pause",
-            title: "Pause",
+            title: "Stop",
             icon: {
-                light: "resources/light/pause-button.svg",
-                dark: "resources/dark/pause-button.svg"
+                light: "resources/light/stop-button.svg",
+                dark: "resources/dark/stop-button.svg"
             }
         });
         commands.push({

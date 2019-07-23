@@ -260,7 +260,12 @@ export class MusicTimePlaylistTreeItem extends TreeItem {
         // set the track's context value to the playlist item state
         // if it's a track that's playing or paused it will show the appropriate button.
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
-        this.contextValue = `${treeItem.type}-item-${treeItem.state}`;
+        const stateVal =
+            treeItem.state !== TrackStatus.Playing ? "notplaying" : "playing";
+        this.contextValue =
+            treeItem.tag === "action"
+                ? "treeitem-action"
+                : `${treeItem.type}-item-${stateVal}`;
 
         if (treeItem.type === "playlist" || treeItem.tag === "action") {
             if (treeItem.tag === "paw") {

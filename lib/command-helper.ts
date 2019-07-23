@@ -23,7 +23,8 @@ import {
 import { KpmController } from "./KpmController";
 import {
     MusicPlaylistProvider,
-    connectPlaylistTreeView
+    connectPlaylistTreeView,
+    playSelectedItem
 } from "./music/MusicPlaylistProvider";
 import { MusicTimePlaylistProvider } from "./music/MusicTimePlaylistProvider";
 import { PlaylistItem, PlayerName } from "cody-music";
@@ -115,9 +116,16 @@ export function createCommands(): {
         );
         cmds.push(previousCmd);
 
-        const playCmd = commands.registerCommand("musictime.play", () => {
-            controller.play();
-        });
+        const playCmd = commands.registerCommand(
+            "musictime.play",
+            (node: PlaylistItem) => {
+                if (node) {
+                    playSelectedItem(node, false /*isExpand*/);
+                } else {
+                    controller.play();
+                }
+            }
+        );
         cmds.push(playCmd);
 
         // const copyTrackLinkCmd = commands.registerCommand(
