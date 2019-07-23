@@ -46,13 +46,13 @@ export class SocialShareManager {
                     via: options["via"]
                 }
             },
-            linkedin: {
-                shareUrl: "https://www.linkedin.com/shareArticle",
-                params: {
-                    url: options["url"],
-                    mini: true
-                }
-            },
+            // linkedin: {
+            //     shareUrl: "https://www.linkedin.com/shareArticle",
+            //     params: {
+            //         url: options["url"],
+            //         mini: true
+            //     }
+            // },
             whatsapp: {
                 shareUrl: "https://api.whatsapp.com/send",
                 params: {
