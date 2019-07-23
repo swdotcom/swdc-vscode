@@ -12,7 +12,8 @@ import {
     PlaylistItem,
     PlayerDevice,
     getSpotifyDevices,
-    quitMacPlayer
+    quitMacPlayer,
+    playSpotifyTrack
 } from "cody-music";
 import { workspace, window, ViewColumn, Uri } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -42,7 +43,8 @@ import {
     REFRESH_CUSTOM_PLAYLIST_TITLE,
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
-    GENERATE_CUSTOM_PLAYLIST_TOOLTIP
+    GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
+    SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
@@ -186,6 +188,9 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
+        if (playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
+            playlistId = null;
+        }
         let options = {};
         if (spotifyDevices.length > 0) {
             options["device_id"] = spotifyDevices[0].id;
@@ -200,7 +205,21 @@ export class MusicControlManager {
             options["context_uri"] = playlistUri;
         }
 
-        await play(PlayerName.SpotifyWeb, options);
+        /**
+         * to play a track without the play list id
+         * curl -X "PUT" "https://api.spotify.com/v1/me/player/play?device_id=4f38ae14f61b3a2e4ed97d537a5cb3d09cf34ea1"
+         * --data "{\"uris\":[\"spotify:track:2j5hsQvApottzvTn4pFJWF\"]}"
+         */
+
+        if (!playlistId) {
+            // just play by track id
+            const deviceId =
+                spotifyDevices.length > 0 ? spotifyDevices[0].id : "";
+            await playSpotifyTrack(playlistItem.id, deviceId);
+        } else {
+            // we have playlist id within the options, use that
+            await play(PlayerName.SpotifyWeb, options);
+        }
 
         if (checkTrackStateAndTryAgainCount > 0) {
             const track: Track = await getRunningTrack();
@@ -230,12 +249,15 @@ export class MusicControlManager {
     async launchTrackPlayer(playerName: PlayerName = null) {
         const musicstoreMgr = MusicStoreManager.getInstance();
 
+        // update the current player type to what was selected
         const currentlyRunningType = musicstoreMgr.currentPlayerType;
         if (playerName === PlayerName.ItunesDesktop) {
             musicstoreMgr.currentPlayerType = PlayerType.MacItunesDesktop;
         } else {
             musicstoreMgr.currentPlayerType = PlayerType.WebSpotify;
         }
+
+        // launch the player
         const musicCtrlMgr = new MusicControlManager();
         const currentTrack = musicstoreMgr.runningTrack;
         if (!playerName) {

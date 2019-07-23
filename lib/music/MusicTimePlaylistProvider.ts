@@ -223,14 +223,15 @@ export class MusicTimePlaylistProvider
              */
 
             // return track of the playlist parent
-            let tracks = await MusicStoreManager.getInstance().getTracksForPlaylistId(
+            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
                 element.id
             );
 
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists = MusicStoreManager.getInstance().musicTimePlaylists;
+            let playlists: PlaylistItem[] = MusicStoreManager.getInstance()
+                .musicTimePlaylists;
             return playlists;
         }
     }

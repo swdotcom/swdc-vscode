@@ -24,6 +24,7 @@ import {
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
 import { MusicStateManager } from "./MusicStateManager";
+import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -124,17 +125,45 @@ export const playSelectedItem = async (
                 // launch it
                 await launchPlayer(PlayerName.SpotifyWeb);
             }
-            musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                musicstoreMgr.spotifyUser,
-                playlistItem.id,
-                null /* track */,
-                spotifyDevices,
-                20 /* checkTrackStateAndTryAgain */
+
+            // get the tracks
+            const tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
+                playlistItem.id
             );
+            const selectedTrack: PlaylistItem =
+                tracks && tracks.length > 0 ? tracks[0] : null;
+            if (playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
+                // play the 1st track in the non-playlist liked songs folder
+                if (selectedTrack) {
+                    musicCtrlMgr.playSpotifyTrackFromPlaylist(
+                        musicstoreMgr.spotifyUser,
+                        playlistItem.id,
+                        selectedTrack /* track */,
+                        spotifyDevices,
+                        20 /* checkTrackStateAndTryAgain */
+                    );
+                }
+            } else {
+                // use the normal play playlist by offset 0 call
+                musicCtrlMgr.playSpotifyTrackFromPlaylist(
+                    musicstoreMgr.spotifyUser,
+                    playlistItem.id,
+                    null /* track */,
+                    spotifyDevices,
+                    20 /* checkTrackStateAndTryAgain */
+                );
+            }
+
+            if (selectedTrack) {
+                musicstoreMgr.selectedTrackItem = selectedTrack;
+            }
         }
     }
 };
 
+/**
+ * Handles the playlist onDidChangeSelection event
+ */
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
     return Disposable.from(
         view.onDidChangeSelection(async e => {
@@ -230,7 +259,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
         if (element) {
             // return track of the playlist parent
-            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getTracksForPlaylistId(
+            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
                 element.id
             );
             return tracks;
@@ -271,7 +300,6 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem.state !== TrackStatus.Playing ? "notplaying" : "playing";
         this.contextValue = `${treeItem.type}-item-${stateVal}`;
 
-        console.log("context value: ", this.contextValue);
         if (treeItem.tag === "spotify") {
             this.iconPath.light = path.join(
                 this.resourcePath,

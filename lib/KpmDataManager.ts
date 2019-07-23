@@ -73,16 +73,21 @@ export class KpmDataManager {
         let nowTimes = getNowTimes();
         payload["end"] = nowTimes.now_in_sec;
         payload["local_end"] = nowTimes.local_now_in_sec;
-        Object.keys(payload.source).forEach(key => {
-            // ensure there is an end time
-            const end = parseInt(payload.source[key]["end"], 10) || 0;
-            if (end === 0) {
-                // set the end time for this file event
-                let nowTimes = getNowTimes();
-                payload.source[key]["end"] = nowTimes.now_in_sec;
-                payload.source[key]["local_end"] = nowTimes.local_now_in_sec;
+        const keys = Object.keys(payload.source);
+        if (keys && keys.length > 0) {
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                // ensure there is an end time
+                const end = parseInt(payload.source[key]["end"], 10) || 0;
+                if (end === 0) {
+                    // set the end time for this file event
+                    let nowTimes = getNowTimes();
+                    payload.source[key]["end"] = nowTimes.now_in_sec;
+                    payload.source[key]["local_end"] =
+                        nowTimes.local_now_in_sec;
+                }
             }
-        });
+        }
 
         payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 

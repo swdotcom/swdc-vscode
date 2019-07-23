@@ -124,7 +124,9 @@ export class MusicCommandManager {
         const selectedPlaylist: PlaylistItem = musicstoreMgr.selectedPlaylist;
         if (selectedPlaylist) {
             musicstoreMgr.clearPlaylistTracksForId(selectedPlaylist.id);
-            musicstoreMgr.getTracksForPlaylistId(selectedPlaylist.id);
+            musicstoreMgr.getPlaylistItemTracksForPlaylistId(
+                selectedPlaylist.id
+            );
 
             if (this._treeProvider) {
                 this._treeProvider.refreshParent(selectedPlaylist);

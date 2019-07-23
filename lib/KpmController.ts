@@ -358,26 +358,32 @@ export class KpmController {
         let fileInfo = null;
         if (filename) {
             if (keystrokeCount.source) {
-                Object.keys(keystrokeCount.source).forEach(key => {
-                    if (key !== filename) {
-                        // ending a file session that doesn't match the incoming file
-                        const end =
-                            parseInt(keystrokeCount.source[key]["end"], 10) ||
-                            0;
-                        if (end === 0) {
-                            // set the end time for this file event
-                            let nowTimes = getNowTimes();
-                            keystrokeCount.source[key]["end"] =
-                                nowTimes.now_in_sec;
-                            keystrokeCount.source[key]["local_end"] =
-                                nowTimes.local_now_in_sec;
+                const keys = Object.keys(keystrokeCount.source);
+                if (keys && keys.length > 0) {
+                    for (let i = 0; i < keys.length; i++) {
+                        const key = keys[i];
+                        if (key !== filename) {
+                            // ending a file session that doesn't match the incoming file
+                            const end =
+                                parseInt(
+                                    keystrokeCount.source[key]["end"],
+                                    10
+                                ) || 0;
+                            if (end === 0) {
+                                // set the end time for this file event
+                                let nowTimes = getNowTimes();
+                                keystrokeCount.source[key]["end"] =
+                                    nowTimes.now_in_sec;
+                                keystrokeCount.source[key]["local_end"] =
+                                    nowTimes.local_now_in_sec;
+                            }
+                        } else {
+                            // they're working on this file again, zero out the end
+                            keystrokeCount.source[key]["end"] = 0;
+                            keystrokeCount.source[key]["local_end"] = 0;
                         }
-                    } else {
-                        // they're working on this file again, zero out the end
-                        keystrokeCount.source[key]["end"] = 0;
-                        keystrokeCount.source[key]["local_end"] = 0;
                     }
-                });
+                }
             }
 
             //

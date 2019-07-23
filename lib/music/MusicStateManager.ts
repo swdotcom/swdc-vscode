@@ -259,10 +259,14 @@ export class MusicStateManager {
         if (current && accumulator) {
             const currObjectKeys = Object.keys(current);
 
-            let sourceJson = current.source;
-            Object.keys(sourceJson).forEach(file => {
-                accumulator.source[file] = sourceJson[file];
-            });
+            const sourceJson = current.source;
+            const keys = Object.keys(sourceJson);
+            if (keys && keys.length > 0) {
+                for (let i = 0; i < keys.length; i++) {
+                    const file = keys[i];
+                    accumulator.source[file] = sourceJson[file];
+                }
+            }
 
             const keystrokes = parseInt(current.keystrokes, 10) || 0;
             accumulator.keystrokes += keystrokes;
@@ -283,58 +287,78 @@ export class MusicStateManager {
             // set the minutes offset
             accumulator["offset"] = getOffsetSecends() / 60;
 
-            currObjectKeys.forEach(currObjectKey => {
-                const sourceObj = current[currObjectKey];
+            if (currObjectKeys && currObjectKeys.length > 0) {
+                for (let i = 0; i < currObjectKeys.length; i++) {
+                    let currObjectKey = currObjectKeys[i];
 
-                Object.keys(sourceObj).forEach(sourceKey => {
-                    const fileObj = sourceObj[sourceKey];
-                    if (!fileObj.timezone) {
-                        fileObj[
-                            "timezone"
-                        ] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                    }
-                    if (!fileObj.offset) {
-                        fileObj["offset"] = getOffsetSecends() / 60;
-                    }
-                    if (!fileObj.pluginId) {
-                        fileObj["pluginId"] = getPluginId();
-                    }
-                    if (!fileObj.os) {
-                        fileObj["os"] = getOs();
-                    }
-                    if (!fileObj.version) {
-                        fileObj["version"] = version;
-                    }
-                    let keystrokesTotal = 0;
-                    let foundfile = false;
-                    Object.keys(fileObj).forEach(fileKey => {
-                        const val = fileObj[fileKey];
-                        if (numberList.indexOf(fileKey) !== -1) {
-                            foundfile = true;
-                            const intVal = parseInt(val, 10);
-                            if (accumulator[fileKey] && val) {
-                                // aggregate
-                                accumulator[fileKey] =
-                                    intVal + parseInt(accumulator[fileKey], 10);
-                            } else if (val) {
-                                // doesn't exist yet, just set it
-                                accumulator[fileKey] = intVal;
+                    const sourceObj = current[currObjectKey];
+
+                    const sourceObjKeys = Object.keys(sourceObj);
+                    if (sourceObjKeys && sourceObjKeys.length > 0) {
+                        for (let x = 0; x < sourceObjKeys.length; x++) {
+                            const sourceKey = sourceObjKeys[x];
+                            const fileObj = sourceObj[sourceKey];
+                            if (!fileObj.timezone) {
+                                fileObj[
+                                    "timezone"
+                                ] = Intl.DateTimeFormat().resolvedOptions().timeZone;
                             }
-                            // aggregate keystrokes
-                            if (keystrokeList.indexOf(fileKey) !== -1) {
-                                keystrokesTotal += intVal;
+                            if (!fileObj.offset) {
+                                fileObj["offset"] = getOffsetSecends() / 60;
+                            }
+                            if (!fileObj.pluginId) {
+                                fileObj["pluginId"] = getPluginId();
+                            }
+                            if (!fileObj.os) {
+                                fileObj["os"] = getOs();
+                            }
+                            if (!fileObj.version) {
+                                fileObj["version"] = version;
+                            }
+                            let keystrokesTotal = 0;
+                            let foundfile = false;
+
+                            const fileObjKeys = Object.keys(fileObj);
+                            if (fileObjKeys && fileObjKeys.length > 0) {
+                                for (let y = 0; y < fileObjKeys.length; y++) {
+                                    const fileKey = fileObjKeys[y];
+                                    const val = fileObj[fileKey];
+                                    if (numberList.indexOf(fileKey) !== -1) {
+                                        foundfile = true;
+                                        const intVal = parseInt(val, 10);
+                                        if (accumulator[fileKey] && val) {
+                                            // aggregate
+                                            accumulator[fileKey] =
+                                                intVal +
+                                                parseInt(
+                                                    accumulator[fileKey],
+                                                    10
+                                                );
+                                        } else if (val) {
+                                            // doesn't exist yet, just set it
+                                            accumulator[fileKey] = intVal;
+                                        }
+                                        // aggregate keystrokes
+                                        if (
+                                            keystrokeList.indexOf(fileKey) !==
+                                            -1
+                                        ) {
+                                            keystrokesTotal += intVal;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (foundfile) {
+                                // set the keystrokes for this file object
+                                accumulator.source[sourceKey][
+                                    "keystrokes"
+                                ] = keystrokesTotal;
                             }
                         }
-                    });
-
-                    if (foundfile) {
-                        // set the keystrokes for this file object
-                        accumulator.source[sourceKey][
-                            "keystrokes"
-                        ] = keystrokesTotal;
                     }
-                });
-            });
+                }
+            }
         }
         return accumulator;
     }

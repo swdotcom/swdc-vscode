@@ -1,7 +1,7 @@
 {
     "name": "music-time",
     "displayName": "Music Time",
-    "version": "0.2.12",
+    "version": "0.3.0",
     "publisher": "softwaredotcom",
     "description": "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.",
     "author": {
@@ -210,22 +210,22 @@
                 {
                     "command": "musictime.play",
                     "when": "viewItem =~ /.*item-notplaying$/",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "musictime.pause",
                     "when": "viewItem =~ /.*item-playing$/",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "musictime.sharePlaylist",
                     "when": "viewItem =~ /playlist-item.*/",
-                    "group": "inline"
+                    "group": "inline@2"
                 },
                 {
                     "command": "musictime.shareTrack",
                     "when": "viewItem =~ /track-item.*/",
-                    "group": "inline"
+                    "group": "inline@2"
                 }
             ],
             "view/title": [
@@ -247,7 +247,7 @@
         "aws-sdk": "^2.470.0",
         "axios": "^0.19.0",
         "clipboardy": "^2.1.0",
-        "cody-music": "2.6.17",
+        "cody-music": "2.6.19",
         "moment-timezone": "^0.5.25",
         "vsls": "0.3.1291"
     }

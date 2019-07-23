@@ -43,3 +43,5 @@ export const REFRESH_GLOBAL_PLAYLIST_TITLE = `Refresh ${SOFTWARE_TOP_SONGS_NAME}
 export const REFRESH_GLOBAL_PLAYLIST_TOOLTIP = `Refresh Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
 export const GENERATE_GLOBAL_PLAYLIST_TITLE = `Generate ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
 export const GENERATE_GLOBAL_PLAYLIST_TOOLTIP = `Generate a Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
+
+export const SPOTIFY_LIKED_SONGS_PLAYLIST_NAME = "Liked Songs";
