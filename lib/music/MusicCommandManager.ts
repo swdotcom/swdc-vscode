@@ -91,7 +91,7 @@ export class MusicCommandManager {
             998
         );
         this.createButton(
-            "$(stop)",
+            "$(radio-tower)",
             "Connect Spotify to add your top productivity tracks",
             "musictime.connectSpotify",
             998

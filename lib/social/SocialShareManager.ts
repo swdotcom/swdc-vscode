@@ -112,13 +112,13 @@ export class SocialShareManager {
             })
         });
 
-        menuOptions.items.push({
-            label: "LinkedIn",
-            detail: `Share your ${context.toLowerCase()}, ${label}, on LinkedIn.`,
-            url: this.getShareUrl("linkedin", {
-                url: spotifyLinkUrl
-            })
-        });
+        // menuOptions.items.push({
+        //     label: "LinkedIn",
+        //     detail: `Share your ${context.toLowerCase()}, ${label}, on LinkedIn.`,
+        //     url: this.getShareUrl("linkedin", {
+        //         url: spotifyLinkUrl
+        //     })
+        // });
 
         menuOptions.items.push({
             label: "WhatsApp",

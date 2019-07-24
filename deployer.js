@@ -249,6 +249,12 @@ async function deploy() {
             tooltip: "Connect your Spotify account to view your playlists"
         });
         commands.push({
+            command: "musictime.connectSlack",
+            title: "Connect your Slack account",
+            tooltip:
+                "Connect your Slack account to share your playlists or tracks"
+        });
+        commands.push({
             command: "musictime.disconnectSpotify",
             title: "Disconnect your Spotify account",
             tooltip: "Disconnect your Spotify account"

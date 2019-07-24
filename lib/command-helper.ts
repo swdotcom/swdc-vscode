@@ -35,6 +35,7 @@ import {
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { MusicStoreManager } from "./music/MusicStoreManager";
 import { SocialShareManager } from "./social/SocialShareManager";
+import { connectSlack } from "./slack/SlackControlManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -203,6 +204,14 @@ export function createCommands(): {
             }
         );
         cmds.push(spotifyConnectCommand);
+
+        const slackConnectCommand = commands.registerCommand(
+            "musictime.connectSlack",
+            () => {
+                connectSlack();
+            }
+        );
+        cmds.push(slackConnectCommand);
 
         const disconnectSpotifyCommand = commands.registerCommand(
             "musictime.disconnectSpotify",

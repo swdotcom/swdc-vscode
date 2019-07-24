@@ -50,6 +50,7 @@ import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { SocialShareManager } from "../social/SocialShareManager";
 import { tmpdir } from "os";
+import { connectSlack } from "../slack/SlackControlManager";
 const moment = require("moment-timezone");
 const clipboardy = require("clipboardy");
 const fs = require("fs");
@@ -412,6 +413,14 @@ export class MusicControlManager {
                 cb: connectSpotify
             });
         }
+
+        menuOptions.items.push({
+            label: "Connect Slack",
+            detail:
+                "To share a playlist or track on Slack, please connect your account",
+            url: null,
+            cb: connectSlack
+        });
 
         if (accessToken) {
             // check if we already have a playlist
