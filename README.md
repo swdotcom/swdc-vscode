@@ -39,7 +39,7 @@ See your best music for coding and the speed, frequency, and top files across yo
 ## It’s safe, secure, and free
 
 **We never access your code**
-We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect. 
+We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.
 
 **Your data is private**
 We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.
@@ -57,13 +57,20 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 
 <!--- End: setup --->
 
-
 ## FAQs
 
-**Does keeping VSCode affect time tracking/metrics?**
+**What does the rocket ship icon in my status bar mean?**
 
-The answer is "No," keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Code Time metrics are correct.
+In the status bar of your editor/IDE, we show a rocket ship icon when your time code today exceeds your daily code time's 90-day average
+
+**Does keeping VSCode open affect time tracking/metrics?**
+
+The answer is "No", keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Code Time metrics are correct.
 
 The timer starts when you start typing. It stops after 15 minutes without typing or opening/closing files in the editor. We then truncate the last 15 minutes of inactivity from the data.
 
+## Contributing & Feedback
+
 Definitely let us know if you have more questions!
+
+Contact [cody@software.com](mailto:cody@software.com) with any additional questions or comments.

@@ -325,6 +325,24 @@ export class KpmController {
             _keystrokeMap[rootPath] &&
             _keystrokeMap[rootPath].source[filename]
         ) {
+            // we found that we already have this source file
+            // make sure the end time is set to zero since it's getting edited
+            _keystrokeMap[rootPath].source[filename]["end"] = 0;
+            _keystrokeMap[rootPath].source[filename]["local_end"] = 0;
+
+            // check if there are source files that need to get a closing end time
+            Object.keys(_keystrokeMap[rootPath].source).forEach(key => {
+                if (key !== filename) {
+                    if (_keystrokeMap[rootPath].source[key]["end"] === 0) {
+                        let nowTimes = getNowTimes();
+                        _keystrokeMap[rootPath].source[key]["end"] =
+                            nowTimes.now_in_sec;
+                        _keystrokeMap[rootPath].source[key]["local_end"] =
+                            nowTimes.local_now_in_sec;
+                    }
+                }
+            });
+
             return;
         }
 
@@ -377,10 +395,6 @@ export class KpmController {
                                 keystrokeCount.source[key]["local_end"] =
                                     nowTimes.local_now_in_sec;
                             }
-                        } else {
-                            // they're working on this file again, zero out the end
-                            keystrokeCount.source[key]["end"] = 0;
-                            keystrokeCount.source[key]["local_end"] = 0;
                         }
                     }
                 }

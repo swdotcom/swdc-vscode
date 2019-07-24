@@ -42,6 +42,9 @@ export class KpmDataManager {
     hasData() {
         // delete files that don't have any kpm data
         let foundKpmData = false;
+        if (this.keystrokes > 0) {
+            return true;
+        }
         for (const fileName of Object.keys(this.source)) {
             const fileInfoData = this.source[fileName];
             // check if any of the metric values has data
