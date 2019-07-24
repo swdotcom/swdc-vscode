@@ -20,7 +20,11 @@ import {
     replacePlaylistTracks,
     getSpotifyLikedSongs
 } from "cody-music";
-import { serverIsAvailable, getSpotifyOauth } from "../DataController";
+import {
+    serverIsAvailable,
+    getSpotifyOauth,
+    getSlackOauth
+} from "../DataController";
 
 import {
     softwareGet,
@@ -240,6 +244,26 @@ export class MusicStoreManager {
         await this.syncRunningPlaylists(serverIsOnline);
         MusicCommandManager.syncControls(this.runningTrack);
         this.refreshing = false;
+    }
+
+    async initializeSlack(serverIsOnline) {
+        const spotifyOauth = await getSlackOauth(serverIsOnline);
+        if (spotifyOauth) {
+            // update the CodyMusic credentials
+            this.updateSlackAccessInfo(spotifyOauth);
+        } else {
+            setItem("slack_access_token", null);
+        }
+    }
+
+    async updateSlackAccessInfo(slackOauth) {
+        /**
+         * Slack:
+         * {name, email, login, slack_id, permissions, slack_scopes, slack_access_token}
+         */
+        if (slackOauth) {
+            setItem("slack_access_token", slackOauth.slack_access_token);
+        }
     }
 
     async initializeSpotify(serverIsOnline) {

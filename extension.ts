@@ -222,6 +222,9 @@ export async function intializePlugin(
         // this needs to happen first to enable spotify playlist and control logic
         await musicstoreMgr.initializeSpotify(serverIsOnline);
 
+        // check if the user has a slack integration already connected
+        await musicstoreMgr.initializeSlack(serverIsOnline);
+
         MusicStateManager.getInstance().musicStateCheck();
         // 15 second interval to check music info
         gather_music_interval = setInterval(() => {

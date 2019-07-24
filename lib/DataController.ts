@@ -215,6 +215,21 @@ export async function createAnonymousUser(serverIsOnline) {
     return null;
 }
 
+export async function getSlackOauth(serverIsOnline) {
+    let jwt = getItem("jwt");
+    if (serverIsOnline && jwt) {
+        let user = await getUser(serverIsOnline, jwt);
+        if (user && user.oauths && user.oauths.Slack) {
+            /**
+             * Slack:
+             * {name, email, login, slack_id, permissions, slack_scopes, slack_access_token}
+             */
+
+            return user.oauths.Slack;
+        }
+    }
+}
+
 export async function getSpotifyOauth(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
@@ -227,13 +242,8 @@ export async function getSpotifyOauth(serverIsOnline) {
         ) {
             /**
              * Spotify:
-                email:"..."
-                login:"..."
-                name:"..."
-                permissions:Array(0) []
-                spotify_access_token:"BQDcTyejy1MGT..."
-                spotify_id:"citipzzers..."
-                spotify_refresh_token:"AQAEQ-kFK5c3I..."
+             * {email, login, name, permissions,
+             *  spotify_access_token, spotify_id, spotify_refresh_token}
              */
 
             return user.oauths.Spotify;
@@ -490,6 +500,30 @@ export async function updatePreferences() {
                 }
             }
         }
+    }
+}
+
+export function refetchSlackConnectStatusLazily(tryCountUntilFound = 20) {
+    setTimeout(() => {
+        slackConnectStatusHandler(tryCountUntilFound);
+    }, 10000);
+}
+
+async function slackConnectStatusHandler(tryCountUntilFound) {
+    let serverIsOnline = await serverIsAvailable();
+    let oauth = await getSlackOauth(serverIsOnline);
+    if (!oauth) {
+        // try again if the count is not zero
+        if (tryCountUntilFound > 0) {
+            tryCountUntilFound -= 1;
+            refetchSlackConnectStatusLazily(tryCountUntilFound);
+        }
+    } else {
+        const musicstoreMgr = MusicStoreManager.getInstance();
+        // oauth is not null, initialize slack
+        await musicstoreMgr.updateSlackAccessInfo(oauth);
+
+        musicstoreMgr.refreshPlaylists();
     }
 }
 

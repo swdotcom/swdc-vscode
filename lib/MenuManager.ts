@@ -12,7 +12,6 @@ import {
     isLinux,
     toggleStatusBar,
     logIt,
-    nowInSecs,
     getDashboardRow,
     humanizeMinutes,
     getSummaryInfoFile,
@@ -35,7 +34,7 @@ const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
 let showMusicMetrics = false;
-let lastDayOfMonth = 0;
+let lastDayOfMonth = -1;
 
 /**
  * fetch the show music metrics flag
@@ -171,7 +170,7 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
     const dayOfMonth = moment()
         .startOf("day")
         .date();
-    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+    if (lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
 
         logIt("retrieving dashboard metrics");

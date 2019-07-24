@@ -1,11 +1,14 @@
-import { buildQueryString, launchWebUrl } from "../Util";
+import { buildQueryString, launchWebUrl, getItem } from "../Util";
 import { showQuickPick } from "../MenuManager";
 import {
     buildSpotifyLink,
     MusicControlManager
 } from "../music/MusicControlManager";
+const { WebClient } = require("@slack/web-api");
 
 let musicId: string = "";
+let title: string = "";
+let spotifyLinkUrl: string = "";
 let playlistSelected: boolean = false;
 
 export class SocialShareManager {
@@ -37,6 +40,13 @@ export class SocialShareManager {
                     hashtag: options["hashtag"]
                 }
             },
+            // linkedin: {
+            //     shareUrl: "https://www.linkedin.com/shareArticle",
+            //     params: {
+            //         url: options["url"],
+            //         mini: true
+            //     }
+            // },
             twitter: {
                 shareUrl: "https://twitter.com/intent/tweet/",
                 params: {
@@ -45,20 +55,6 @@ export class SocialShareManager {
                     hashtags: options["hashtags"],
                     via: options["via"]
                 }
-            },
-            // linkedin: {
-            //     shareUrl: "https://www.linkedin.com/shareArticle",
-            //     params: {
-            //         url: options["url"],
-            //         mini: true
-            //     }
-            // },
-            whatsapp: {
-                shareUrl: "https://api.whatsapp.com/send",
-                params: {
-                    text: `${options["title"]}: ${options["url"]}`
-                },
-                isLink: true
             },
             tumblr: {
                 shareUrl: "http://tumblr.com/widgets/share/tool",
@@ -70,6 +66,13 @@ export class SocialShareManager {
                     caption: options["caption"],
                     tags: options["tags"]
                 }
+            },
+            whatsapp: {
+                shareUrl: "https://api.whatsapp.com/send",
+                params: {
+                    text: `${options["title"]}: ${options["url"]}`
+                },
+                isLink: true
             }
         };
 
@@ -88,9 +91,9 @@ export class SocialShareManager {
         };
 
         const context = isPlaylist ? "Playlist" : "Song";
-        const title = `Check out this ${context}`;
+        title = `Check out this ${context}`;
 
-        const spotifyLinkUrl = buildSpotifyLink(musicId, isPlaylist);
+        spotifyLinkUrl = buildSpotifyLink(musicId, isPlaylist);
         // facebook needs the hash
         menuOptions.items.push({
             label: "Facebook",
@@ -98,6 +101,31 @@ export class SocialShareManager {
             url: this.getShareUrl("facebook", {
                 url: spotifyLinkUrl,
                 hashtag: `#MusicTime`
+            })
+        });
+
+        menuOptions.items.push({
+            label: "Slack",
+            detail: `Share your ${context.toLowerCase()}, ${label}, on Slack`,
+            cb: this.shareSlack
+        });
+
+        // menuOptions.items.push({
+        //     label: "LinkedIn",
+        //     detail: `Share your ${context.toLowerCase()}, ${label}, on LinkedIn.`,
+        //     url: this.getShareUrl("linkedin", {
+        //         url: spotifyLinkUrl
+        //     })
+        // });
+
+        menuOptions.items.push({
+            label: "Tumblr",
+            detail: `Share your ${context.toLowerCase()}, ${label}, on Tumblr.`,
+            url: this.getShareUrl("tumblr", {
+                url: spotifyLinkUrl,
+                title,
+                tags: ["MusicTime"],
+                caption: "Software Audio Share"
             })
         });
 
@@ -112,31 +140,12 @@ export class SocialShareManager {
             })
         });
 
-        // menuOptions.items.push({
-        //     label: "LinkedIn",
-        //     detail: `Share your ${context.toLowerCase()}, ${label}, on LinkedIn.`,
-        //     url: this.getShareUrl("linkedin", {
-        //         url: spotifyLinkUrl
-        //     })
-        // });
-
         menuOptions.items.push({
             label: "WhatsApp",
             detail: `Send your ${context.toLowerCase()}, ${label}, through WhatsApp.`,
             url: this.getShareUrl("whatsapp", {
                 url: spotifyLinkUrl,
                 title
-            })
-        });
-
-        menuOptions.items.push({
-            label: "Tumblr",
-            detail: `Share your ${context.toLowerCase()}, ${label}, on Tumblr.`,
-            url: this.getShareUrl("tumblr", {
-                url: spotifyLinkUrl,
-                title,
-                tags: ["MusicTime"],
-                caption: "Software Audio Share"
             })
         });
 
@@ -152,5 +161,18 @@ export class SocialShareManager {
     copyLink() {
         const controller: MusicControlManager = new MusicControlManager();
         controller.copySpotifyLink(musicId, playlistSelected);
+    }
+
+    async shareSlack() {
+        const slackAccessToken = getItem("slack_access_token");
+        const web = new WebClient(slackAccessToken);
+        const result = await web.chat
+            .postMessage({
+                text: `${title} : ${spotifyLinkUrl}`,
+                channel: "#vscode-testing"
+            })
+            .catch(err => {
+                console.log("error posting slack message: ", err);
+            });
     }
 }

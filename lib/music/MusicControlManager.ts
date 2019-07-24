@@ -57,7 +57,8 @@ const fs = require("fs");
 
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
-let lastDayOfMonth = 0;
+let lastDayOfMonth = -1;
+
 export class MusicControlManager {
     constructor() {
         //
@@ -414,13 +415,16 @@ export class MusicControlManager {
             });
         }
 
-        menuOptions.items.push({
-            label: "Connect Slack",
-            detail:
-                "To share a playlist or track on Slack, please connect your account",
-            url: null,
-            cb: connectSlack
-        });
+        const slackAccessToken = getItem("slack_access_token");
+        if (!slackAccessToken && serverIsOnline) {
+            menuOptions.items.push({
+                label: "Connect Slack",
+                detail:
+                    "To share a playlist or track on Slack, please connect your account",
+                url: null,
+                cb: connectSlack
+            });
+        }
 
         if (accessToken) {
             // check if we already have a playlist
@@ -614,7 +618,7 @@ export async function fetchMusicTimeMetricsMarkdownDashboard() {
     const dayOfMonth = moment()
         .startOf("day")
         .date();
-    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+    if (lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
         await fetchDashboardData(file, "music-time", true);
     }
@@ -626,7 +630,7 @@ export async function fetchMusicTimeMetricsDashboard() {
     const dayOfMonth = moment()
         .startOf("day")
         .date();
-    if (lastDayOfMonth === 0 || lastDayOfMonth !== dayOfMonth) {
+    if (lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
         await fetchDashboardData(file, "music-time", false);
     }

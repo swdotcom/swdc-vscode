@@ -10,12 +10,10 @@ import {
     getProjectFolder,
     getDashboardFile,
     logIt,
-    getNowTimes,
-    isCodeTime
+    getNowTimes
 } from "./Util";
-import { Track } from "cody-music";
-import { MusicStateManager } from "./music/MusicStateManager";
-import { sendMusicData } from "./DataController";
+import { sendOfflineData } from "./DataController";
+const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";
 
@@ -23,6 +21,7 @@ let _keystrokeMap = {};
 
 export class KpmController {
     private _disposable: Disposable;
+    private _lastDayOfMonth: number = -1;
 
     constructor() {
         let subscriptions: Disposable[] = [];
@@ -45,11 +44,22 @@ export class KpmController {
                 const hasData = keystrokeCount.hasData();
 
                 if (hasData) {
-                    // send the payload
+                    // post the payload offline until the batch interval sends it out
                     setTimeout(() => keystrokeCount.postData(), 0);
                 }
                 delete _keystrokeMap[key];
             }
+        }
+
+        // check if we're in a new day, if so lets send the offline data
+        const dayOfMonth = moment()
+            .startOf("day")
+            .date();
+        if (dayOfMonth !== this._lastDayOfMonth) {
+            this._lastDayOfMonth = dayOfMonth;
+            setTimeout(() => {
+                sendOfflineData();
+            }, 1000 * 2);
         }
     }
 
