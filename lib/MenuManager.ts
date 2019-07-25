@@ -57,6 +57,7 @@ export function showQuickPick(pickOptions): any {
         matchOnDetail: false,
         placeHolder: pickOptions.placeholder || ""
     };
+
     return window.showQuickPick(pickOptions.items, options).then(async item => {
         if (item) {
             let url = item["url"];

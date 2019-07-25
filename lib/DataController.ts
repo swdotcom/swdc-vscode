@@ -26,7 +26,8 @@ import {
     isMusicTime,
     showStatus,
     getPluginId,
-    getExtensionName
+    getExtensionName,
+    isCodeTime
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import {
@@ -572,9 +573,15 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
     } else {
-        window.showInformationMessage(
-            `Successfully logged on to ${getExtensionName()}`
-        );
+        let message = "";
+        if (isCodeTime()) {
+            message = "Successfully logged on to Code Time";
+        } else if (isMusicTime()) {
+            message = "Successfully logged on to Music Time";
+        } else {
+            message = "Successfully logged on";
+        }
+        window.showInformationMessage(message);
     }
 }
 

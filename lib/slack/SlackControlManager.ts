@@ -16,7 +16,8 @@ export async function connectSlack() {
 
 export async function showSlackChannelMenu() {
     let menuOptions = {
-        items: []
+        items: [],
+        placeholder: "Select a channel"
     };
 
     // get the available channels
@@ -36,10 +37,12 @@ export async function showSlackChannelMenu() {
 async function getChannels() {
     const slackAccessToken = getItem("slack_access_token");
     const web = new WebClient(slackAccessToken);
-    const result = await web.channels.list().catch(err => {
-        console.log("Unable to retrieve slack channels: ", err.message);
-        return [];
-    });
+    const result = await web.channels
+        .list({ exclude_archived: true, exclude_members: true })
+        .catch(err => {
+            console.log("Unable to retrieve slack channels: ", err.message);
+            return [];
+        });
     if (result && result.ok) {
         return result.channels;
     }
