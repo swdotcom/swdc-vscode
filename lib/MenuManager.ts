@@ -48,7 +48,7 @@ export function updateShowMusicMetrics(val) {
  * options: {placeholder, items: [{label, description, url, detail, tooltip},...]}
  */
 
-export function showQuickPick(pickOptions) {
+export function showQuickPick(pickOptions): any {
     if (!pickOptions || !pickOptions["items"]) {
         return;
     }
@@ -57,7 +57,7 @@ export function showQuickPick(pickOptions) {
         matchOnDetail: false,
         placeHolder: pickOptions.placeholder || ""
     };
-    window.showQuickPick(pickOptions.items, options).then(async item => {
+    return window.showQuickPick(pickOptions.items, options).then(async item => {
         if (item) {
             let url = item["url"];
             let cb = item["cb"];
@@ -70,6 +70,7 @@ export function showQuickPick(pickOptions) {
                 commands.executeCommand(command);
             }
         }
+        return item;
     });
 }
 

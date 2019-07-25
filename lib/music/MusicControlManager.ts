@@ -453,22 +453,6 @@ export class MusicControlManager {
                         .generateUsersWeeklyTopSongs
                 });
             }
-
-            if (musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify) {
-                menuOptions.items.push({
-                    label: "Switch to Spotify",
-                    detail:
-                        "Launch the Spotify web player to view your playlist",
-                    command: "musictime.launchSpotify"
-                });
-            } else {
-                menuOptions.items.push({
-                    label: "Switch to iTunes",
-                    detail:
-                        "Launch the iTunes web player to view your playlist",
-                    command: "musictime.launchItunes"
-                });
-            }
         }
 
         if (!userStatus.loggedIn) {
@@ -485,24 +469,6 @@ export class MusicControlManager {
             cb: displayMusicTimeMetricsMarkdownDashboard
         });
 
-        // if (
-        //     musicstoreMgr.selectedPlaylist &&
-        //     musicstoreMgr.selectedPlaylist.id
-        // ) {
-        //     menuOptions.items.push({
-        //         label: "Share Playlist",
-        //         detail: "Share the current playlist to....",
-        //         cb: this.shareCurrentPlaylist
-        //     });
-        // }
-
-        // menuOptions.items.push({
-        //     label: "Software Top 40",
-        //     detail:
-        //         "Top 40 most popular songs developers around the world listen to as they code",
-        //     url: "https://api.software.com/music/top40"
-        // });
-
         menuOptions.items.push({
             label: "Submit an issue on GitHub",
             detail: "Encounter a bug? Submit an issue on our GitHub page",
@@ -514,6 +480,20 @@ export class MusicControlManager {
             detail: "Send us an email at cody@software.com.",
             url: "mailto:cody@software.com"
         });
+
+        if (musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify) {
+            menuOptions.items.push({
+                label: "Switch to Spotify",
+                detail: "Launch the Spotify web player to view your playlist",
+                command: "musictime.launchSpotify"
+            });
+        } else {
+            menuOptions.items.push({
+                label: "Switch to iTunes",
+                detail: "Launch the iTunes web player to view your playlist",
+                command: "musictime.launchItunes"
+            });
+        }
 
         showQuickPick(menuOptions);
     }

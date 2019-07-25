@@ -4,6 +4,7 @@ import {
     buildSpotifyLink,
     MusicControlManager
 } from "../music/MusicControlManager";
+import { showSlackChannelMenu } from "../slack/SlackControlManager";
 const { WebClient } = require("@slack/web-api");
 
 let musicId: string = "";
@@ -164,12 +165,13 @@ export class SocialShareManager {
     }
 
     async shareSlack() {
+        const selectedChannel = await showSlackChannelMenu();
         const slackAccessToken = getItem("slack_access_token");
         const web = new WebClient(slackAccessToken);
         const result = await web.chat
             .postMessage({
                 text: `${title} : ${spotifyLinkUrl}`,
-                channel: "#vscode-testing"
+                channel: selectedChannel
             })
             .catch(err => {
                 console.log("error posting slack message: ", err);

@@ -25,7 +25,8 @@ import {
     logIt,
     isMusicTime,
     showStatus,
-    getPluginId
+    getPluginId,
+    getExtensionName
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import {
@@ -523,6 +524,8 @@ async function slackConnectStatusHandler(tryCountUntilFound) {
         // oauth is not null, initialize slack
         await musicstoreMgr.updateSlackAccessInfo(oauth);
 
+        window.showInformationMessage(`Successfully connected to Slack`);
+
         musicstoreMgr.refreshPlaylists();
     }
 }
@@ -547,6 +550,8 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         // oauth is not null, initialize spotify
         await musicstoreMgr.updateSpotifyAccessInfo(oauth);
 
+        window.showInformationMessage(`Successfully connected to Spotify`);
+
         musicstoreMgr.refreshPlaylists();
     }
 }
@@ -567,7 +572,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             refetchUserStatusLazily(tryCountUntilFoundUser);
         }
     } else {
-        window.showInformationMessage(`Successfully logged on to Music Time`);
+        window.showInformationMessage(
+            `Successfully logged on to ${getExtensionName()}`
+        );
     }
 }
 
