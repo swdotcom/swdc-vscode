@@ -899,7 +899,12 @@ export class MusicStoreManager {
         return playlistState;
     }
 
-    async createGlobalTopSongsPlaylist() {
+    async createOrRefreshGlobalTopSongsPlaylist() {
+        if (this.requiresSpotifyAccess()) {
+            // don't create or refresh, no spotify access provided
+            return;
+        }
+
         let existingGlobalPlaylist = this.getExistingGlobalPlaylist();
         let musicstoreMgr = MusicStoreManager.getInstance();
 
@@ -933,6 +938,7 @@ export class MusicStoreManager {
                 });
             }
         } else {
+            // global playlist exists, get the id to refresh
             playlistId = existingGlobalPlaylist.id;
         }
 
@@ -942,12 +948,14 @@ export class MusicStoreManager {
                 return item.uri;
             });
             if (!existingGlobalPlaylist) {
+                // no global playlist, add the tracks for the 1st time
                 await addTracks(
                     playlistId,
                     SOFTWARE_TOP_SONGS_NAME,
                     tracksToAdd
                 );
             } else {
+                // it exists, refresh it with new tracks
                 await replacePlaylistTracks(playlistId, tracksToAdd).catch(
                     err => {
                         logIt(`Error replacing tracks, error: ${err.message}`);
@@ -957,7 +965,9 @@ export class MusicStoreManager {
         }
 
         // refresh the playlists
-        musicstoreMgr.refreshPlaylists();
+        setTimeout(() => {
+            musicstoreMgr.refreshPlaylists();
+        }, 1000);
     }
 
     async generateUsersWeeklyTopSongs() {
@@ -1030,8 +1040,11 @@ export class MusicStoreManager {
                 }
             }
         }
+
         // refresh the playlists
-        musicstoreMgr.refreshPlaylists();
+        setTimeout(() => {
+            musicstoreMgr.refreshPlaylists();
+        }, 1000);
     }
 
     getGlobalPlaylistButton() {

@@ -318,7 +318,8 @@ export function createCommands(): {
 
         const generateGlobalPlaylistCommand = commands.registerCommand(
             "musictime.generateGlobalPlaylist",
-            () => MusicStoreManager.getInstance().createGlobalTopSongsPlaylist()
+            () =>
+                MusicStoreManager.getInstance().createOrRefreshGlobalTopSongsPlaylist()
         );
         cmds.push(generateGlobalPlaylistCommand);
 

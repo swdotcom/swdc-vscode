@@ -33,6 +33,8 @@ import { createCommands } from "./lib/command-helper";
 import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 
+const moment = require("moment-timezone");
+
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
@@ -237,6 +239,17 @@ export async function intializePlugin(
                 musicstoreMgr.reconcilePlaylists();
             });
         }, 1000 * 60 * 3);
+
+        // refresh the global top 40 playlist
+        setInterval(() => {
+            // every 6 hours it checks
+            const existingGlobalPlaylist = musicstoreMgr.getExistingGlobalPlaylist();
+            // refresh on Mondays
+            const dayOfWeek = moment().day();
+            if (existingGlobalPlaylist && dayOfWeek === 1) {
+                musicstoreMgr.createOrRefreshGlobalTopSongsPlaylist();
+            }
+        }, 1000 * 60 * 60 * 6);
     }
 
     // add the player commands
