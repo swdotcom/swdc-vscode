@@ -118,44 +118,52 @@ export const playSelectedItem = async (
         musicstoreMgr.selectedPlaylist = playlistItem;
 
         if (!isExpand) {
-            const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-            if (!spotifyDevices || spotifyDevices.length === 0) {
-                // no spotify devices found, lets launch the web player with the track
+            if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
+                const pos: number = 1;
+                await playItunesTrackNumberInPlaylist(
+                    musicstoreMgr.selectedPlaylist.name,
+                    pos
+                );
+            } else {
+                const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+                if (!spotifyDevices || spotifyDevices.length === 0) {
+                    // no spotify devices found, lets launch the web player with the track
 
-                // launch it
-                await launchPlayer(PlayerName.SpotifyWeb);
-            }
+                    // launch it
+                    await launchPlayer(PlayerName.SpotifyWeb);
+                }
 
-            // get the tracks
-            const tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
-                playlistItem.id
-            );
-            const selectedTrack: PlaylistItem =
-                tracks && tracks.length > 0 ? tracks[0] : null;
-            if (playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
-                // play the 1st track in the non-playlist liked songs folder
-                if (selectedTrack) {
+                // get the tracks
+                const tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
+                    playlistItem.id
+                );
+                const selectedTrack: PlaylistItem =
+                    tracks && tracks.length > 0 ? tracks[0] : null;
+                if (playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
+                    // play the 1st track in the non-playlist liked songs folder
+                    if (selectedTrack) {
+                        musicCtrlMgr.playSpotifyTrackFromPlaylist(
+                            musicstoreMgr.spotifyUser,
+                            playlistItem.id,
+                            selectedTrack /* track */,
+                            spotifyDevices,
+                            20 /* checkTrackStateAndTryAgain */
+                        );
+                    }
+                } else {
+                    // use the normal play playlist by offset 0 call
                     musicCtrlMgr.playSpotifyTrackFromPlaylist(
                         musicstoreMgr.spotifyUser,
                         playlistItem.id,
-                        selectedTrack /* track */,
+                        null /* track */,
                         spotifyDevices,
                         20 /* checkTrackStateAndTryAgain */
                     );
                 }
-            } else {
-                // use the normal play playlist by offset 0 call
-                musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                    musicstoreMgr.spotifyUser,
-                    playlistItem.id,
-                    null /* track */,
-                    spotifyDevices,
-                    20 /* checkTrackStateAndTryAgain */
-                );
-            }
 
-            if (selectedTrack) {
-                musicstoreMgr.selectedTrackItem = selectedTrack;
+                if (selectedTrack) {
+                    musicstoreMgr.selectedTrackItem = selectedTrack;
+                }
             }
         }
     }

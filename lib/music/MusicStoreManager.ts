@@ -45,8 +45,6 @@ import {
     GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
     SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET,
-    REFRESH_GLOBAL_PLAYLIST_TITLE,
-    REFRESH_GLOBAL_PLAYLIST_TOOLTIP,
     GENERATE_GLOBAL_PLAYLIST_TITLE,
     GENERATE_GLOBAL_PLAYLIST_TOOLTIP,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
@@ -556,6 +554,10 @@ export class MusicStoreManager {
             if (playlists && playlists.length > 0) {
                 for (let i = 0; i < playlists.length; i++) {
                     let playlist = playlists[i];
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
                     playlist.tag = "itunes";
                 }
             }
@@ -1038,15 +1040,12 @@ export class MusicStoreManager {
             SOFTWARE_TOP_SONGS_PLID
         );
 
-        const personalPlaylistLabel = !hasGlobalPlaylist
-            ? GENERATE_GLOBAL_PLAYLIST_TITLE
-            : REFRESH_GLOBAL_PLAYLIST_TITLE;
-        const personalPlaylistTooltip = !hasGlobalPlaylist
-            ? GENERATE_GLOBAL_PLAYLIST_TOOLTIP
-            : REFRESH_GLOBAL_PLAYLIST_TOOLTIP;
+        const personalPlaylistLabel = GENERATE_GLOBAL_PLAYLIST_TITLE;
+        const personalPlaylistTooltip = GENERATE_GLOBAL_PLAYLIST_TOOLTIP;
 
         if (
             this.currentPlayerType === PlayerType.WebSpotify &&
+            !hasGlobalPlaylist &&
             !this.requiresSpotifyAccess()
         ) {
             // add the connect spotify link

@@ -39,8 +39,6 @@ export const GENERATE_CUSTOM_PLAYLIST_TITLE =
     "Generate Custom Spotify Playlist";
 export const GENERATE_CUSTOM_PLAYLIST_TOOLTIP = `Generate a new custom Spotify playlist (${PERSONAL_TOP_SONGS_NAME})`;
 
-export const REFRESH_GLOBAL_PLAYLIST_TITLE = `Refresh ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
-export const REFRESH_GLOBAL_PLAYLIST_TOOLTIP = `Refresh Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
 export const GENERATE_GLOBAL_PLAYLIST_TITLE = `Generate ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
 export const GENERATE_GLOBAL_PLAYLIST_TOOLTIP = `Generate a Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
 
