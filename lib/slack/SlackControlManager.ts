@@ -31,7 +31,10 @@ export async function showSlackChannelMenu() {
     });
 
     const pick = await showQuickPick(menuOptions);
-    return pick.label;
+    if (pick && pick.label) {
+        return pick.label;
+    }
+    return null;
 }
 
 async function getChannels() {

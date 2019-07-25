@@ -262,11 +262,12 @@ export function createCommands(): {
         const refreshReconcileCommand = commands.registerCommand(
             "musictime.refreshReconcile",
             () => {
-                MusicStoreManager.getInstance()
-                    .refreshPlaylists()
-                    .then(() => {
-                        MusicStoreManager.getInstance().reconcilePlaylists();
-                    });
+                const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
+                musicstoreMgr.clearPlaylistTracks();
+
+                musicstoreMgr.refreshPlaylists().then(() => {
+                    musicstoreMgr.reconcilePlaylists();
+                });
             }
         );
         cmds.push(refreshReconcileCommand);

@@ -4,7 +4,10 @@ import {
     buildSpotifyLink,
     MusicControlManager
 } from "../music/MusicControlManager";
-import { showSlackChannelMenu } from "../slack/SlackControlManager";
+import {
+    showSlackChannelMenu,
+    connectSlack
+} from "../slack/SlackControlManager";
 const { WebClient } = require("@slack/web-api");
 
 let musicId: string = "";
@@ -105,11 +108,22 @@ export class SocialShareManager {
             })
         });
 
-        menuOptions.items.push({
-            label: "Slack",
-            detail: `Share your ${context.toLowerCase()}, ${label}, on Slack`,
-            cb: this.shareSlack
-        });
+        const slackAccessToken = getItem("slack_access_token");
+        if (slackAccessToken) {
+            menuOptions.items.push({
+                label: "Slack",
+                detail: `Share your ${context.toLowerCase()}, ${label}, on Slack`,
+                cb: this.shareSlack
+            });
+        } else {
+            menuOptions.items.push({
+                label: "Connect Slack",
+                detail:
+                    "To share a playlist or track on Slack, please connect your account",
+                url: null,
+                cb: connectSlack
+            });
+        }
 
         // menuOptions.items.push({
         //     label: "LinkedIn",
@@ -166,6 +180,9 @@ export class SocialShareManager {
 
     async shareSlack() {
         const selectedChannel = await showSlackChannelMenu();
+        if (!selectedChannel) {
+            return;
+        }
         const slackAccessToken = getItem("slack_access_token");
         const web = new WebClient(slackAccessToken);
         const result = await web.chat
