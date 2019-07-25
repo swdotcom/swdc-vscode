@@ -85,7 +85,12 @@ export const playSelectedItem = async (
     const musicCtrlMgr = new MusicControlManager();
     const musicstoreMgr = MusicStoreManager.getInstance();
     if (playlistItem.type === "track") {
+        let currentPlaylistId = playlistItem["playlist_id"];
+
         musicstoreMgr.selectedTrackItem = playlistItem;
+        musicstoreMgr.selectedPlaylist = musicstoreMgr.getPlaylistById(
+            currentPlaylistId
+        );
 
         const notPlaying =
             playlistItem.state !== TrackStatus.Playing ? true : false;

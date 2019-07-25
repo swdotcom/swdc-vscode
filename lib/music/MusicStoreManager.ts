@@ -244,6 +244,18 @@ export class MusicStoreManager {
         this.refreshing = false;
     }
 
+    getPlaylistById(playlist_id: string) {
+        if (this.runningPlaylists && this.runningPlaylists.length > 0) {
+            for (let i = 0; i < this.runningPlaylists.length; i++) {
+                let playlist = this.runningPlaylists[i];
+                if (playlist.id === playlist_id) {
+                    return playlist;
+                }
+            }
+        }
+        return null;
+    }
+
     async initializeSlack(serverIsOnline) {
         const spotifyOauth = await getSlackOauth(serverIsOnline);
         if (spotifyOauth) {
@@ -554,10 +566,14 @@ export class MusicStoreManager {
             if (playlists && playlists.length > 0) {
                 for (let i = 0; i < playlists.length; i++) {
                     let playlist = playlists[i];
-                    let playlistState = await this.getPlaylistState(
-                        playlist.id
-                    );
-                    playlist.state = playlistState;
+                    let playlistItemTracks: PlaylistItem[] = this
+                        ._playlistTracks[playlist.id];
+                    if (playlistItemTracks && playlistItemTracks.length > 0) {
+                        let playlistState = await this.getPlaylistState(
+                            playlist.id
+                        );
+                        playlist.state = playlistState;
+                    }
                     playlist.tag = "itunes";
                 }
             }
@@ -597,10 +613,15 @@ export class MusicStoreManager {
                 // go through each playlist and find out it's state
                 for (let i = 0; i < playlists.length; i++) {
                     let playlist = playlists[i];
-                    let playlistState = await this.getPlaylistState(
-                        playlist.id
-                    );
-                    playlist.state = playlistState;
+
+                    let playlistItemTracks: PlaylistItem[] = this
+                        ._playlistTracks[playlist.id];
+                    if (playlistItemTracks && playlistItemTracks.length > 0) {
+                        let playlistState = await this.getPlaylistState(
+                            playlist.id
+                        );
+                        playlist.state = playlistState;
+                    }
                     playlist.tag = "spotify";
                 }
             }
@@ -875,6 +896,12 @@ export class MusicStoreManager {
             this._playlistTracks[playlist_id] = playlistItemTracks;
         }
 
+        if (playlistItemTracks && playlistItemTracks.length > 0) {
+            for (let i = 0; i < playlistItemTracks.length; i++) {
+                playlistItemTracks[i]["playlist_id"] = playlist_id;
+            }
+        }
+
         return playlistItemTracks;
     }
 
@@ -892,6 +919,9 @@ export class MusicStoreManager {
                 const playlistItem: PlaylistItem = playlistTrackItems[i];
                 if (playlistItem.id === currentRunningTrack.id) {
                     return currentRunningTrack.state;
+                } else {
+                    // update theis track status to not assigned to ensure it's also updated
+                    playlistItem.state = TrackStatus.NotAssigned;
                 }
             }
         }
