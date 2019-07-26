@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, env, window } from "vscode";
+import { workspace, ConfigurationTarget, env, window, commands } from "vscode";
 
 import {
     softwareGet,
@@ -41,6 +41,7 @@ import {
     clearSessionSummaryData,
     saveSessionSummaryToDisk
 } from "./OfflineManager";
+import { MusicManager } from "./music/MusicManager";
 const fs = require("fs");
 
 let loggedInCacheState = null;
@@ -527,7 +528,7 @@ async function slackConnectStatusHandler(tryCountUntilFound) {
 
         window.showInformationMessage(`Successfully connected to Slack`);
 
-        musicstoreMgr.refreshPlaylists();
+        commands.executeCommand("musictime.refreshPlaylist");
     }
 }
 
@@ -547,13 +548,13 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
             refetchSpotifyConnectStatusLazily(tryCountUntilFound);
         }
     } else {
-        const musicstoreMgr = MusicStoreManager.getInstance();
+        const musicMgr = MusicManager.getInstance();
         // oauth is not null, initialize spotify
-        await musicstoreMgr.updateSpotifyAccessInfo(oauth);
+        await musicMgr.updateSpotifyAccessInfo(oauth);
 
         window.showInformationMessage(`Successfully connected to Spotify`);
 
-        musicstoreMgr.refreshPlaylists();
+        commands.executeCommand("musictime.refreshPlaylist");
     }
 }
 

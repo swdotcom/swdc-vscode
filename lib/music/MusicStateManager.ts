@@ -1,4 +1,4 @@
-import { env } from "vscode";
+import { env, commands } from "vscode";
 import {
     getMusicSessionDataStoreFile,
     deleteFile,
@@ -10,7 +10,6 @@ import {
     getPluginId
 } from "../Util";
 import { sendMusicData } from "../DataController";
-import { MusicStoreManager } from "./MusicStoreManager";
 import {
     Track,
     getRunningTrack,
@@ -19,6 +18,7 @@ import {
     isRunning,
     PlayerName
 } from "cody-music";
+import { MusicManager } from "./MusicManager";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -30,12 +30,13 @@ export class MusicStateManager {
     private existingTrack: any = {};
     private processingSong: boolean = false;
 
-    private musicstoreMgr: MusicStoreManager;
+    //private musicstoreMgr: MusicStoreManager;
+    private musicMgr: MusicManager;
 
     private constructor() {
         // private to prevent non-singleton usage
-        if (!this.musicstoreMgr) {
-            this.musicstoreMgr = MusicStoreManager.getInstance();
+        if (!this.musicMgr) {
+            this.musicMgr = MusicManager.getInstance();
         }
     }
 
@@ -48,7 +49,7 @@ export class MusicStateManager {
 
     public async musicStateCheck() {
         const track: Track = await this.gatherMusicInfo();
-        this.musicstoreMgr.runningTrack = track;
+        this.musicMgr.runningTrack = track;
     }
 
     private getChangeStatus(playingTrack: Track): any {
@@ -83,6 +84,33 @@ export class MusicStateManager {
             endPrevTrack = true;
         }
 
+        let playerName = this.musicMgr.currentPlayerName;
+        let playerNameChanged = false;
+        if (
+            playingTrack &&
+            playingTrack.playerType !== PlayerType.NotAssigned
+        ) {
+            // we default to check if spotify is playing over itunes
+            const spotifyPlaying =
+                playingTrack.playerType === PlayerType.WebSpotify &&
+                playingTrack.state === TrackStatus.Playing;
+
+            if (
+                !spotifyPlaying &&
+                playingTrack.playerType === PlayerType.MacItunesDesktop
+            ) {
+                playerName = PlayerName.ItunesDesktop;
+            } else {
+                playerName = PlayerName.SpotifyWeb;
+            }
+            playerNameChanged = playerName !== this.musicMgr.currentPlayerName;
+            //
+            // Update the player name since we've detected that a track
+            // is coming from a different player and it assigned
+            //
+            this.musicMgr.currentPlayerName = playerName;
+        }
+
         return {
             isNewTrack,
             endPrevTrack,
@@ -90,7 +118,8 @@ export class MusicStateManager {
             playing,
             paused,
             stopped,
-            isValidTrack
+            isValidTrack,
+            playerNameChanged
         };
     }
 
@@ -149,12 +178,12 @@ export class MusicStateManager {
             // set the spotify playlistId
             if (
                 this.existingTrack.playerType === PlayerType.WebSpotify &&
-                this.musicstoreMgr.selectedPlaylist &&
-                this.musicstoreMgr.selectedPlaylist.id
+                this.musicMgr.selectedPlaylist &&
+                this.musicMgr.selectedPlaylist.id
             ) {
                 this.existingTrack[
                     "playlistId"
-                ] = this.musicstoreMgr.selectedPlaylist.id;
+                ] = this.musicMgr.selectedPlaylist.id;
             }
             // gather the coding metrics
             this.existingTrack = {
@@ -167,8 +196,8 @@ export class MusicStateManager {
             }
 
             // update the loved state
-            if (this.musicstoreMgr.serverTrack) {
-                this.existingTrack.loved = this.musicstoreMgr.serverTrack.loved;
+            if (this.musicMgr.serverTrack) {
+                this.existingTrack.loved = this.musicMgr.serverTrack.loved;
             }
 
             // send off the ended song session
@@ -188,7 +217,7 @@ export class MusicStateManager {
             changeStatus.playing &&
             changeStatus.isValidTrack
         ) {
-            this.musicstoreMgr.getServerTrack(playingTrack);
+            this.musicMgr.getServerTrack(playingTrack);
 
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after
@@ -207,30 +236,13 @@ export class MusicStateManager {
             this.existingTrack.state = playingTrack.state;
         }
 
-        if (
-            changeStatus.trackStateChanged &&
-            playingTrack.playerType !== PlayerType.NotAssigned
-        ) {
-            this.musicstoreMgr.currentPlayerType = playingTrack.playerType;
-        }
+        const needsRefresh =
+            changeStatus.isNewTrack ||
+            changeStatus.trackStateChanged ||
+            changeStatus.playerNameChanged;
 
-        // this updates the buttons in the status bar and the playlist buttons
-        if (changeStatus.isNewTrack || changeStatus.trackStateChanged) {
-            await this.musicstoreMgr.refreshPlaylists();
-        } else if (
-            !changeStatus.isValidTrack &&
-            this.musicstoreMgr.currentPlayerType === PlayerType.MacItunesDesktop
-        ) {
-            // check to see if it's even running or not
-            const isItunesRunning = await isRunning(PlayerName.ItunesDesktop);
-            if (!isItunesRunning) {
-                // switch to spotify web
-                this.musicstoreMgr.currentPlayerType = PlayerType.WebSpotify;
-                await this.musicstoreMgr.refreshPlaylists();
-            }
-        } else if (!this.musicstoreMgr.initialized) {
-            // refresh to get the playlists
-            await this.musicstoreMgr.refreshPlaylists();
+        if (needsRefresh) {
+            MusicManager.getInstance().refreshPlaylists();
         }
 
         this.processingSong = false;

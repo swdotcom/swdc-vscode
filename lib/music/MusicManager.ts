@@ -11,7 +11,17 @@ import {
     CodyResponseType,
     getSpotifyLikedSongs,
     PlaylistTrackInfo,
-    getRunningTrack
+    getRunningTrack,
+    createPlaylist,
+    addTracksToPlaylist,
+    replacePlaylistTracks,
+    CodyConfig,
+    setConfig,
+    getUserProfile,
+    getSpotifyDevices,
+    launchPlayer,
+    PlayerDevice,
+    quitMacPlayer
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
@@ -28,37 +38,47 @@ import {
     GENERATE_GLOBAL_PLAYLIST_TOOLTIP,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
 } from "../Constants";
-import { commands } from "vscode";
-import { serverIsAvailable } from "../DataController";
-import { getItem } from "../Util";
-import { isResponseOk, softwareGet } from "../HttpClient";
+import { commands, window } from "vscode";
+import {
+    serverIsAvailable,
+    getSpotifyOauth,
+    getSlackOauth
+} from "../DataController";
+import { getItem, logIt, setItem } from "../Util";
+import {
+    isResponseOk,
+    softwareGet,
+    softwarePost,
+    softwareDelete,
+    softwarePut
+} from "../HttpClient";
+import { SpotifyUser } from "cody-music/dist/lib/profile";
+import { MusicCommandManager } from "./MusicCommandManager";
+import { MusicControlManager } from "./MusicControlManager";
 
 export class MusicManager {
     private static instance: MusicManager;
 
     private _itunesPlaylists: PlaylistItem[] = [];
     private _spotifyPlaylists: PlaylistItem[] = [];
+    private _playlistMap: {} = {};
     private _savedPlaylists: PlaylistItem[] = [];
+    private _musictimePlaylists: PlaylistItem[] = [];
+    private _softwareTopSongs: any[] = [];
+    private _userTopSongs: any[] = [];
     private _playlistTrackMap: any = {};
     private _runningTrack: Track = null;
+    // default to starting with spotify
     private _currentPlayerName: PlayerName = PlayerName.SpotifyWeb;
     private _selectedTrackItem: PlaylistItem = null;
     private _selectedPlaylist: PlaylistItem = null;
+    private _spotifyUser: SpotifyUser = null;
+    private _buildingPlaylists: boolean = false;
+    private _serverTrack: Track = null;
 
     private constructor() {
         //
     }
-
-    get currentPlayerName(): PlayerName {
-        return this._currentPlayerName;
-    }
-    get currentPlaylists(): PlaylistItem[] {
-        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
-            return this._itunesPlaylists;
-        }
-        return this._spotifyPlaylists;
-    }
-
     static getInstance(): MusicManager {
         if (!MusicManager.instance) {
             MusicManager.instance = new MusicManager();
@@ -67,30 +87,131 @@ export class MusicManager {
         return MusicManager.instance;
     }
 
-    async init() {
+    get buildingPlaylists() {
+        return this._buildingPlaylists;
+    }
+
+    set runningTrack(track: Track) {
+        this._runningTrack = track;
+    }
+
+    get spotifyUser(): SpotifyUser {
+        return this._spotifyUser;
+    }
+
+    set spotifyUser(user: SpotifyUser) {
+        this._spotifyUser = user;
+    }
+
+    get selectedPlaylist(): PlaylistItem {
+        return this._selectedPlaylist;
+    }
+
+    set selectedPlaylist(playlist: PlaylistItem) {
+        this._selectedPlaylist = playlist;
+    }
+
+    get selectedTrackItem(): PlaylistItem {
+        return this._selectedTrackItem;
+    }
+
+    set selectedTrackItem(trackItem: PlaylistItem) {
+        this._selectedTrackItem = trackItem;
+    }
+
+    get currentPlayerName(): PlayerName {
+        return this._currentPlayerName;
+    }
+
+    set currentPlayerName(playerName: PlayerName) {
+        this._currentPlayerName = playerName;
+    }
+
+    get serverTrack(): Track {
+        return this._serverTrack;
+    }
+
+    set serverTrack(track: Track) {
+        this._serverTrack = track;
+    }
+
+    get currentPlaylists(): PlaylistItem[] {
+        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
+            return this._itunesPlaylists;
+        }
+        return this._spotifyPlaylists;
+    }
+
+    async refreshPlaylists() {
+        if (this._buildingPlaylists) {
+            return;
+        }
+        this._buildingPlaylists = true;
+        let serverIsOnline = await serverIsAvailable();
         this._runningTrack = await getRunningTrack();
-        if (
-            this._runningTrack.playerType === PlayerType.MacItunesDesktop &&
-            this._runningTrack.state !== TrackStatus.NotAssigned
-        ) {
-            this._currentPlayerName = PlayerName.ItunesDesktop;
-            await this.showItunesPlaylists();
+        await this.fetchSavedPlaylists(serverIsOnline);
+        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
+            await this.showItunesPlaylists(serverIsOnline);
         } else {
-            await this.showSpotifyPlaylists();
+            await this.showSpotifyPlaylists(serverIsOnline);
+        }
+        MusicCommandManager.syncControls(this._runningTrack);
+        this._buildingPlaylists = false;
+    }
+
+    getPlaylistById(playlist_id: string) {
+        return this._playlistMap[playlist_id];
+    }
+
+    async refreshPlaylistState() {
+        if (this._spotifyPlaylists.length > 0) {
+            this._spotifyPlaylists.forEach(async playlist => {
+                let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
+                    playlist.id
+                ];
+
+                if (playlistItemTracks && playlistItemTracks.length > 0) {
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
+                }
+            });
+        }
+
+        if (this._itunesPlaylists.length > 0) {
+            this._itunesPlaylists.forEach(async playlist => {
+                let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
+                    playlist.id
+                ];
+
+                if (playlistItemTracks && playlistItemTracks.length > 0) {
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
+                }
+            });
         }
     }
 
-    showItunesPlaylists() {
+    async showItunesPlaylists(serverIsOnline) {
         // if no playlists are found for itunes, then fetch
         if (this._itunesPlaylists.length === 0) {
-            this.getPlaylistsForPlayer(PlayerName.ItunesDesktop);
+            await this.refreshPlaylistForPlayer(
+                PlayerName.ItunesDesktop,
+                serverIsOnline
+            );
         }
     }
 
-    showSpotifyPlaylists() {
+    async showSpotifyPlaylists(serverIsOnline) {
         // if no playlists are found for spotify, then fetch
         if (this._spotifyPlaylists.length === 0) {
-            this.getPlaylistsForPlayer(PlayerName.SpotifyWeb);
+            await this.refreshPlaylistForPlayer(
+                PlayerName.SpotifyWeb,
+                serverIsOnline
+            );
         }
     }
 
@@ -106,8 +227,10 @@ export class MusicManager {
     //
     // Fetch the playlist names for a specific player
     //
-    async getPlaylistsForPlayer(playerName: PlayerName) {
-        let serverIsOnline = await serverIsAvailable();
+    async refreshPlaylistForPlayer(
+        playerName: PlayerName,
+        serverIsOnline: boolean
+    ) {
         let needsSpotifyAccess = this.requiresSpotifyAccess();
 
         let playlists: PlaylistItem[] = [];
@@ -117,6 +240,19 @@ export class MusicManager {
         }
         playlists = await getPlaylists(playerName);
 
+        // sort
+        if (playlists && playlists.length > 0) {
+            playlists.sort((a: PlaylistItem, b: PlaylistItem) => {
+                const nameA = a.name.toLowerCase(),
+                    nameB = b.name.toLowerCase();
+                if (nameA < nameB)
+                    //sort string ascending
+                    return -1;
+                if (nameA > nameB) return 1;
+                return 0; //default return value (no sorting)
+            });
+        }
+
         // update so the playlist header shows the spotify related icons
         commands.executeCommand("setContext", "treeview-type", type);
 
@@ -124,6 +260,7 @@ export class MusicManager {
         if (playlists && playlists.length > 0) {
             for (let i = 0; i < playlists.length; i++) {
                 let playlist = playlists[i];
+                this._playlistMap[playlist.id] = playlist;
                 let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
                     playlist.id
                 ];
@@ -139,6 +276,9 @@ export class MusicManager {
             }
         }
 
+        // filter out the music time playlists into it's own list if we have any
+        this.retrieveMusicTimePlaylist(playlists);
+
         let topItems: PlaylistItem[] = [];
 
         if (!serverIsOnline) {
@@ -150,16 +290,21 @@ export class MusicManager {
         }
 
         if (playerName === PlayerName.ItunesDesktop) {
-            this._itunesPlaylists = playlists;
             // add the action items specific to itunes
             topItems.push(this.getItunesConnectedButton());
             topItems.push(this.getSwitchToSpotifyButton());
-
             topItems.push(this.getLineBreakButton());
 
-            this._spotifyPlaylists = [...topItems, ...this._itunesPlaylists];
+            topItems.forEach(item => {
+                this._itunesPlaylists.push(item);
+            });
+
+            playlists.forEach(item => {
+                this._itunesPlaylists.push(item);
+            });
         } else {
-            this._spotifyPlaylists = playlists;
+            playlists.push(this.getSpotifyLikedPlaylistFolder());
+
             // add the action items specific to spotify
             if (!needsSpotifyAccess) {
                 topItems.push(this.getSpotifyConnectedButton());
@@ -180,10 +325,42 @@ export class MusicManager {
                 }
             }
 
+            // add the music time playlists that were found
+            if (
+                this._musictimePlaylists &&
+                this._musictimePlaylists.length > 0
+            ) {
+                for (let i = 0; i < this._musictimePlaylists.length; i++) {
+                    const musicTimePlaylist = this._musictimePlaylists[i];
+                    musicTimePlaylist.tag = "paw";
+                    topItems.push(musicTimePlaylist);
+                }
+            }
+
             topItems.push(this.getLineBreakButton());
 
-            this._spotifyPlaylists = [...topItems, ...this._spotifyPlaylists];
+            topItems.forEach(item => {
+                this._spotifyPlaylists.push(item);
+            });
+
+            playlists.forEach(item => {
+                this._spotifyPlaylists.push(item);
+            });
         }
+    }
+
+    getSpotifyLikedPlaylistFolder() {
+        const item: PlaylistItem = new PlaylistItem();
+        item.type = "playlist";
+        item.id = SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
+        item.tracks = new PlaylistTrackInfo();
+        // set set a number so it shows up
+        item.tracks.total = 1;
+        item.playerType = PlayerType.WebSpotify;
+        item.tag = "spotify";
+        item["itemType"] = "playlist";
+        item.name = SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
+        return item;
     }
 
     getNoMusicTimeConnectionButton() {
@@ -256,7 +433,7 @@ export class MusicManager {
             "",
             null,
             PlayerType.NotAssigned,
-            "______________________",
+            "--------------------",
             ""
         );
     }
@@ -289,8 +466,6 @@ export class MusicManager {
     async getPlaylistState(playlist_id: string): Promise<TrackStatus> {
         let playlistState: TrackStatus = TrackStatus.NotAssigned;
 
-        const currentRunningTrack: Track = this._runningTrack;
-
         const playlistTrackItems: PlaylistItem[] = await this.getPlaylistItemTracksForPlaylistId(
             playlist_id
         );
@@ -298,8 +473,8 @@ export class MusicManager {
         if (playlistTrackItems && playlistTrackItems.length > 0) {
             for (let i = 0; i < playlistTrackItems.length; i++) {
                 const playlistItem: PlaylistItem = playlistTrackItems[i];
-                if (playlistItem.id === currentRunningTrack.id) {
-                    return currentRunningTrack.state;
+                if (playlistItem.id === this._runningTrack.id) {
+                    return this._runningTrack.state;
                 } else {
                     // update theis track status to not assigned to ensure it's also updated
                     playlistItem.state = TrackStatus.NotAssigned;
@@ -308,6 +483,10 @@ export class MusicManager {
         }
 
         return playlistState;
+    }
+
+    clearPlaylistTracksForId(playlist_id) {
+        this._playlistTrackMap[playlist_id] = null;
     }
 
     //
@@ -416,6 +595,7 @@ export class MusicManager {
         playlistItem.position = position;
         playlistItem["artist"] = track.artist;
         playlistItem.playerType = track.playerType;
+        playlistItem["itemType"] = "track";
         delete playlistItem.tracks;
 
         if (track.id === this._runningTrack.id) {
@@ -434,7 +614,7 @@ export class MusicManager {
 
     getGlobalPlaylistButton() {
         // update the existing playlist that matches the global top 40 playlist with a paw if found
-        let hasGlobalPlaylist = this.hasMusicTimePlaylistForType(
+        let globalPlaylist = this.getMusicTimePlaylistByTypeId(
             SOFTWARE_TOP_SONGS_PLID
         );
 
@@ -443,7 +623,7 @@ export class MusicManager {
 
         if (
             this._currentPlayerName === PlayerName.SpotifyWeb &&
-            !hasGlobalPlaylist &&
+            !globalPlaylist &&
             !this.requiresSpotifyAccess()
         ) {
             // add the connect spotify link
@@ -466,14 +646,14 @@ export class MusicManager {
     // otherwise, it will show the refresh label
     getCustomPlaylistButton() {
         // update the existing playlist that matches the personal playlist with a paw if found
-        const hasCustomPlaylist = this.hasMusicTimePlaylistForType(
+        const customPlaylist = this.getMusicTimePlaylistByTypeId(
             PERSONAL_TOP_SONGS_PLID
         );
 
-        const personalPlaylistLabel = !hasCustomPlaylist
+        const personalPlaylistLabel = !customPlaylist
             ? GENERATE_CUSTOM_PLAYLIST_TITLE
             : REFRESH_CUSTOM_PLAYLIST_TITLE;
-        const personalPlaylistTooltip = !hasCustomPlaylist
+        const personalPlaylistTooltip = !customPlaylist
             ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
             : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
@@ -502,36 +682,49 @@ export class MusicManager {
      * The playlistTypeId is used to match the set ID from music time
      * app. 1 = user's coding favorites, 2 = global top 40
      */
-    hasMusicTimePlaylistForType(playlistTypeId: number) {
-        let result = false;
-        if (this._spotifyPlaylists.length > 0 && this._savedPlaylists) {
-            for (let i = 0; i < this._spotifyPlaylists.length; i++) {
-                const playlist: PlaylistItem = this._spotifyPlaylists[i];
-
-                let foundPlaylist = null;
-                for (let i = 0; i < this._savedPlaylists.length; i++) {
-                    let savedPlaylist = this._savedPlaylists[i];
-                    let savedPlaylistTypeId = parseInt(
-                        savedPlaylist["playlistTypeId"],
-                        10
-                    );
-                    if (
-                        savedPlaylist.id === playlist.id &&
-                        savedPlaylistTypeId === playlistTypeId
-                    ) {
-                        foundPlaylist = savedPlaylist;
-                        break;
-                    }
-                }
-
-                if (foundPlaylist) {
-                    playlist.tag = "paw";
-                    result = true;
+    getMusicTimePlaylistByTypeId(playlistTypeId: number) {
+        if (this._musictimePlaylists.length > 0) {
+            for (let i = 0; i < this._musictimePlaylists.length; i++) {
+                const playlist = this._musictimePlaylists[i];
+                const typeId = parseInt(playlist["playlistTypeId"], 10);
+                if (typeId === playlistTypeId) {
+                    return playlist;
                 }
             }
         }
+        return null;
+    }
 
-        return result;
+    /**
+     * Checks if the user's spotify playlists contains either
+     * the global top 40 or the user's coding favorites playlist.
+     * The playlistTypeId is used to match the set ID from music time
+     * app. 1 = user's coding favorites, 2 = global top 40
+     */
+    retrieveMusicTimePlaylist(playlists: PlaylistItem[]) {
+        if (this._savedPlaylists.length > 0 && playlists.length > 0) {
+            for (let i = 0; i < this._savedPlaylists.length; i++) {
+                let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
+                let savedPlaylistTypeId = parseInt(
+                    savedPlaylist["playlistTypeId"],
+                    10
+                );
+                for (let x = 0; x < playlists.length; x++) {
+                    let playlist: PlaylistItem = playlists[x];
+                    if (playlist.id === savedPlaylist.id) {
+                        playlist["playlistTypeId"] = savedPlaylistTypeId;
+                        playlist.tag = "paw";
+                        break;
+                    }
+                }
+            }
+
+            // now filter out the ones with a playlistTypeId
+            this._musictimePlaylists =
+                playlists.filter(n => n["playlistTypeId"]) || [];
+        } else {
+            this._musictimePlaylists = [];
+        }
     }
 
     async fetchSavedPlaylists(serverIsOnline) {
@@ -552,5 +745,478 @@ export class MusicManager {
             }
         }
         this._savedPlaylists = playlists;
+    }
+
+    async syncGlobalTopSongs() {
+        const response = await softwareGet(
+            "/music/playlist/favorites?global=true",
+            getItem("jwt")
+        );
+
+        if (isResponseOk(response) && response.data.length > 0) {
+            this._softwareTopSongs = response.data;
+        } else {
+            // clear the favorites
+            this._softwareTopSongs = [];
+        }
+    }
+
+    /**
+     * These are the top productivity songs for this user
+     */
+    async syncUsersWeeklyTopSongs() {
+        const response = await softwareGet(
+            "/music/playlist/favorites",
+            getItem("jwt")
+        );
+
+        if (isResponseOk(response) && response.data.length > 0) {
+            this._userTopSongs = response.data;
+        } else {
+            // clear the favorites
+            this._userTopSongs = [];
+        }
+    }
+
+    async createOrRefreshGlobalTopSongsPlaylist() {
+        if (this.requiresSpotifyAccess()) {
+            // don't create or refresh, no spotify access provided
+            return;
+        }
+
+        // get the global top songs
+        await this.syncGlobalTopSongs();
+
+        let globalPlaylist = this.getMusicTimePlaylistByTypeId(
+            SOFTWARE_TOP_SONGS_PLID
+        );
+
+        let playlistId = null;
+        if (!globalPlaylist) {
+            // 1st create the empty playlist
+            const playlistResult: CodyResponse = await createPlaylist(
+                SOFTWARE_TOP_SONGS_NAME,
+                true
+            );
+
+            if (playlistResult.state === CodyResponseType.Failed) {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        playlistResult.message
+                    }`,
+                    ...["OK"]
+                );
+                return;
+            }
+
+            playlistId = playlistResult.data.id;
+
+            if (playlistId) {
+                await this.updateSavedPlaylists(
+                    playlistId,
+                    2,
+                    SOFTWARE_TOP_SONGS_NAME
+                ).catch(err => {
+                    logIt("Error updating music time global playlist ID");
+                });
+            }
+        } else {
+            // global playlist exists, get the id to refresh
+            playlistId = globalPlaylist.id;
+        }
+
+        if (this._softwareTopSongs && this._softwareTopSongs.length > 0) {
+            let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
+                return item.uri;
+            });
+            if (!globalPlaylist) {
+                // no global playlist, add the tracks for the 1st time
+                await this.addTracks(
+                    playlistId,
+                    SOFTWARE_TOP_SONGS_NAME,
+                    tracksToAdd
+                );
+            } else {
+                // it exists, refresh it with new tracks
+                await replacePlaylistTracks(playlistId, tracksToAdd).catch(
+                    err => {
+                        logIt(`Error replacing tracks, error: ${err.message}`);
+                    }
+                );
+            }
+        }
+
+        // rebuild the list
+    }
+
+    async generateUsersWeeklyTopSongs() {
+        let customPlaylist = this.getMusicTimePlaylistByTypeId(
+            PERSONAL_TOP_SONGS_PLID
+        );
+
+        // sync the user's weekly top songs
+        await this.syncUsersWeeklyTopSongs();
+
+        let playlistId = null;
+        if (!customPlaylist) {
+            let playlistResult: CodyResponse = await createPlaylist(
+                PERSONAL_TOP_SONGS_NAME,
+                true
+            );
+
+            if (playlistResult.state === CodyResponseType.Failed) {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        playlistResult.message
+                    }`,
+                    ...["OK"]
+                );
+                return;
+            }
+
+            playlistId = playlistResult.data.id;
+
+            await this.updateSavedPlaylists(
+                playlistId,
+                1,
+                PERSONAL_TOP_SONGS_NAME
+            ).catch(err => {
+                logIt("Error updating music time global playlist ID");
+            });
+        } else {
+            // get the spotify playlist id from the app's existing playlist info
+            playlistId = customPlaylist.id;
+        }
+
+        // get the spotify track ids and create the playlist
+        if (playlistId) {
+            // add the tracks
+            // list of [{uri, artist, name}...]
+            if (this._userTopSongs && this._userTopSongs.length > 0) {
+                let tracksToAdd: string[] = this._userTopSongs.map(item => {
+                    return item.uri;
+                });
+
+                if (!customPlaylist) {
+                    await this.addTracks(
+                        playlistId,
+                        PERSONAL_TOP_SONGS_NAME,
+                        tracksToAdd
+                    );
+                } else {
+                    await replacePlaylistTracks(playlistId, tracksToAdd).catch(
+                        err => {
+                            logIt(
+                                `Error replacing tracks, error: ${err.message}`
+                            );
+                        }
+                    );
+                }
+            }
+        }
+
+        // refresh the playlists
+    }
+
+    async addTracks(playlist_id: string, name: string, tracksToAdd: string[]) {
+        if (playlist_id) {
+            // create the playlist_id in software
+            const addTracksResult: CodyResponse = await addTracksToPlaylist(
+                playlist_id,
+                tracksToAdd
+            );
+
+            if (addTracksResult.state === CodyResponseType.Success) {
+                window.showInformationMessage(
+                    `Successfully created ${name} and added tracks.`,
+                    ...["OK"]
+                );
+            } else {
+                window.showErrorMessage(
+                    `There was an unexpected error adding tracks to the playlist. ${
+                        addTracksResult.message
+                    }`,
+                    ...["OK"]
+                );
+            }
+        }
+    }
+
+    async updateSavedPlaylists(
+        playlist_id: string,
+        playlistTypeId: number,
+        name: string
+    ) {
+        // i.e. playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
+        // playlistTypeId 2 = SOFTWARE_TOP_SONGS_NAME
+        const payload = {
+            playlist_id,
+            playlistTypeId,
+            name
+        };
+        let createResult = await softwarePost(
+            "/music/playlist",
+            payload,
+            getItem("jwt")
+        );
+
+        return createResult;
+    }
+
+    async initializeSlack() {
+        if (!getItem("slack_access_token")) {
+            const serverIsOnline = await serverIsAvailable();
+            const spotifyOauth = await getSlackOauth(serverIsOnline);
+            if (spotifyOauth) {
+                // update the CodyMusic credentials
+                this.updateSlackAccessInfo(spotifyOauth);
+            } else {
+                setItem("slack_access_token", null);
+            }
+        }
+    }
+
+    async updateSlackAccessInfo(slackOauth) {
+        /**
+         * Slack:
+         * {name, email, login, slack_id, permissions, slack_scopes, slack_access_token}
+         */
+        if (slackOauth) {
+            setItem("slack_access_token", slackOauth.slack_access_token);
+        }
+    }
+
+    async initializeSpotify() {
+        if (
+            !getItem("spotify_access_token") ||
+            !getItem("spotify_refresh_token")
+        ) {
+            const serverIsOnline = await serverIsAvailable();
+            const spotifyOauth = await getSpotifyOauth(serverIsOnline);
+            if (spotifyOauth) {
+                // update the CodyMusic credentials
+                this.updateSpotifyAccessInfo(spotifyOauth);
+            } else {
+                setItem("spotify_access_token", null);
+                setItem("spotify_refresh_token", null);
+            }
+        } else {
+            const spotifyOauth = {
+                spotify_access_token: getItem("spotify_access_token"),
+                spotify_refresh_token: getItem("spotify_refresh_token")
+            };
+            this.updateSpotifyAccessInfo(spotifyOauth);
+        }
+    }
+
+    async updateSpotifyAccessInfo(spotifyOauth) {
+        if (spotifyOauth) {
+            // update the CodyMusic credentials
+            let codyConfig: CodyConfig = new CodyConfig();
+            codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
+            codyConfig.spotifyAccessToken = spotifyOauth.spotify_access_token;
+            codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
+            codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
+            setConfig(codyConfig);
+
+            setItem("spotify_access_token", spotifyOauth.spotify_access_token);
+            setItem(
+                "spotify_refresh_token",
+                spotifyOauth.spotify_refresh_token
+            );
+
+            // get the user
+            getUserProfile().then(user => {
+                this._spotifyUser = user;
+            });
+        } else {
+            this.clearSpotifyAccessInfo();
+        }
+    }
+
+    async clearSpotifyAccessInfo() {
+        setItem("spotify_access_token", null);
+        setItem("spotify_refresh_token", null);
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
+        codyConfig.spotifyAccessToken = null;
+        codyConfig.spotifyRefreshToken = null;
+        codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
+        setConfig(codyConfig);
+        this._spotifyUser = null;
+    }
+
+    async reconcilePlaylists() {
+        let hadMismatch = false;
+        // fetch what we have from the app
+        if (this._savedPlaylists.length > 0) {
+            this._savedPlaylists.map(async savedPlaylist => {
+                let foundItem = this._spotifyPlaylists.find(element => {
+                    return element.id === savedPlaylist.id;
+                });
+                if (!foundItem) {
+                    hadMismatch = true;
+                    // remove it from the server
+                    await softwareDelete(
+                        `/music/playlist/${savedPlaylist.id}`,
+                        getItem("jwt")
+                    );
+                } else if (foundItem.name !== savedPlaylist.name) {
+                    hadMismatch = true;
+                    // update the name on software
+                    const payload = {
+                        name: foundItem.name
+                    };
+                    await softwarePut(
+                        `/music/playlist/${savedPlaylist.id}`,
+                        payload,
+                        getItem("jwt")
+                    );
+                }
+            });
+        }
+
+        if (hadMismatch) {
+            // refresh the playlist view
+        }
+    }
+
+    async launchTrackPlayer(playerName: PlayerName = null) {
+        // update the current player type to what was selected
+        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
+            this._currentPlayerName = PlayerName.SpotifyWeb;
+        } else {
+            this._currentPlayerName = PlayerName.ItunesDesktop;
+        }
+
+        // launch the player
+        const musicCtrlMgr = new MusicControlManager();
+        if (!playerName) {
+            await getRunningTrack().then(async (track: Track) => {
+                if (track && track.id) {
+                    let options = {
+                        trackId: track.id
+                    };
+                    let playerType: PlayerType = track.playerType;
+                    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+
+                    if (
+                        playerType === PlayerType.WebSpotify &&
+                        spotifyDevices &&
+                        spotifyDevices.length === 1 &&
+                        !spotifyDevices[0].name.includes("Web Player")
+                    ) {
+                        // launch the spotify desktop only if we have
+                        playerType = PlayerType.MacSpotifyDesktop;
+                    }
+                    if (playerType === PlayerType.NotAssigned) {
+                        playerType = PlayerType.WebSpotify;
+                    }
+
+                    if (playerType === PlayerType.WebSpotify) {
+                        launchPlayer(PlayerName.SpotifyWeb, options);
+                    } else if (playerType === PlayerType.MacItunesDesktop) {
+                        launchPlayer(PlayerName.ItunesDesktop, options);
+                    } else {
+                        launchPlayer(PlayerName.SpotifyDesktop, options);
+                    }
+                }
+            });
+        } else if (playerName === PlayerName.ItunesDesktop) {
+            if (
+                this._runningTrack &&
+                this._runningTrack.playerType !== PlayerType.MacItunesDesktop
+            ) {
+                // end the spotify web track
+                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+            }
+            launchPlayer(PlayerName.ItunesDesktop);
+        } else {
+            // end the itunes track
+            // musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+            // quit the app
+            await quitMacPlayer(PlayerName.ItunesDesktop);
+            const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+            if (!spotifyDevices || spotifyDevices.length === 0) {
+                this.launchSpotifyPlayer();
+            }
+        }
+
+        this.clearPlaylists();
+        commands.executeCommand("musictime.refreshPlaylist");
+    }
+
+    launchSpotifyPlayer() {
+        window.showInformationMessage(
+            `After you select and play your first song in Spotify, standard controls (play, pause, next, etc.) will appear in your status bar.`,
+            ...["OK"]
+        );
+        setTimeout(() => {
+            launchPlayer(PlayerName.SpotifyWeb);
+        }, 3200);
+    }
+
+    async getServerTrack(track: Track) {
+        if (track) {
+            let trackId = track.id;
+            if (trackId.indexOf(":") !== -1) {
+                // strip it down to just the last id part
+                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
+            }
+            let type = "spotify";
+            if (track.playerType === PlayerType.MacItunesDesktop) {
+                type = "itunes";
+            }
+            // use the name and artist as well since we have it
+            let trackName = track.name;
+            let trackArtist = track.artist;
+
+            // check if it's cached before hitting the server
+            if (this.serverTrack) {
+                if (this.serverTrack.id === track.id) {
+                    return this.serverTrack;
+                } else if (
+                    this.serverTrack.name === trackName &&
+                    this.serverTrack.artist === trackArtist
+                ) {
+                    return this.serverTrack;
+                }
+                // it doesn't match, might as well nullify it
+                this.serverTrack = null;
+            }
+
+            if (!this.serverTrack) {
+                const api = `/music/spotify/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
+                const resp = await softwareGet(api, getItem("jwt"));
+                if (isResponseOk(resp) && resp.data) {
+                    let trackData = resp.data;
+                    // set the server track to this one
+                    this.serverTrack = { ...track };
+                    // update the loved state
+                    if (
+                        trackData.liked !== null &&
+                        trackData.liked !== undefined
+                    ) {
+                        // set the boolean value
+                        if (isNaN(trackData.liked)) {
+                            // it's not 0 or 1, use the bool
+                            this.serverTrack.loved = trackData.liked;
+                        } else {
+                            // it's 0 or 1, convert it
+                            this.serverTrack.loved =
+                                trackData.liked === 0 ? false : true;
+                        }
+
+                        track.loved = this.serverTrack.loved;
+                    }
+                } else {
+                    this.serverTrack = { ...track };
+                }
+            }
+        }
+
+        MusicCommandManager.syncControls(track);
+
+        return this.serverTrack;
     }
 }

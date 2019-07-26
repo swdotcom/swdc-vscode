@@ -10,7 +10,6 @@ import {
     createAnonymousUser,
     serverIsAvailable
 } from "./lib/DataController";
-import { MusicStoreManager } from "./lib/music/MusicStoreManager";
 import {
     showStatus,
     nowInSecs,
@@ -33,6 +32,7 @@ import { createCommands } from "./lib/command-helper";
 import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 import { MusicManager } from "./lib/music/MusicManager";
+import { SOFTWARE_TOP_SONGS_PLID } from "./lib/Constants";
 
 const moment = require("moment-timezone");
 
@@ -220,16 +220,14 @@ export async function intializePlugin(
         codyConfig.enableItunesDesktop = true;
         setConfig(codyConfig);
 
-        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
+        const musicMgr: MusicManager = MusicManager.getInstance();
 
         // this needs to happen first to enable spotify playlist and control logic
-        await musicstoreMgr.initializeSpotify(serverIsOnline);
-
+        await musicMgr.initializeSpotify();
         // check if the user has a slack integration already connected
-        await musicstoreMgr.initializeSlack(serverIsOnline);
-
+        await musicMgr.initializeSlack();
         // initialize the music manager
-        await MusicManager.getInstance().init();
+        await musicMgr.refreshPlaylists();
 
         MusicStateManager.getInstance().musicStateCheck();
         // 15 second interval to check music info
@@ -237,21 +235,21 @@ export async function intializePlugin(
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000 * 5);
 
-        // reconcile the playlists every 2 minutes
-        // setInterval(() => {
-        //     musicstoreMgr.refreshPlaylists().then(() => {
-        //         musicstoreMgr.reconcilePlaylists();
-        //     });
-        // }, 1000 * 60 * 3);
+        // reconcile the playlists every 3 minutes
+        setInterval(() => {
+            musicMgr.reconcilePlaylists();
+        }, 1000 * 60 * 3);
 
         // refresh the global top 40 playlist
         setInterval(() => {
             // every 6 hours it checks
-            const existingGlobalPlaylist = musicstoreMgr.getExistingGlobalPlaylist();
+            let globalPlaylist = musicMgr.getMusicTimePlaylistByTypeId(
+                SOFTWARE_TOP_SONGS_PLID
+            );
             // refresh on Mondays
             const dayOfWeek = moment().day();
-            if (existingGlobalPlaylist && dayOfWeek === 1) {
-                musicstoreMgr.createOrRefreshGlobalTopSongsPlaylist();
+            if (globalPlaylist && dayOfWeek === 1) {
+                musicMgr.createOrRefreshGlobalTopSongsPlaylist();
             }
         }, 1000 * 60 * 60 * 6);
     }

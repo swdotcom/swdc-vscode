@@ -31,6 +31,7 @@ import { MusicCommandManager } from "./music/MusicCommandManager";
 import { MusicStoreManager } from "./music/MusicStoreManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
+import { MusicManager } from "./music/MusicManager";
 
 export function createCommands(): {
     dispose: () => void;
@@ -98,6 +99,7 @@ export function createCommands(): {
         cmds.push(configChangesHandler);
     } else if (isMusicTime()) {
         const controller = new MusicControlManager();
+        const musicMgr: MusicManager = MusicManager.getInstance();
 
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.next();
@@ -187,7 +189,7 @@ export function createCommands(): {
         const launchTrackPlayerCmd = commands.registerCommand(
             "musictime.currentSong",
             () => {
-                controller.launchTrackPlayer();
+                musicMgr.launchTrackPlayer();
             }
         );
         cmds.push(launchTrackPlayerCmd);
@@ -232,45 +234,43 @@ export function createCommands(): {
         const refreshReconcileCommand = commands.registerCommand(
             "musictime.refreshReconcile",
             () => {
-                const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
-                musicstoreMgr.clearPlaylistTracks();
-
-                musicstoreMgr.refreshPlaylists().then(() => {
-                    musicstoreMgr.reconcilePlaylists();
-                });
+                MusicManager.getInstance().reconcilePlaylists();
             }
         );
         cmds.push(refreshReconcileCommand);
 
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
-            () => {
-                treePlaylistProvider.refresh();
+            async () => {
+                await MusicManager.getInstance().refreshPlaylists();
+                setTimeout(() => {
+                    treePlaylistProvider.refresh();
+                }, 1000);
             }
         );
         cmds.push(refreshPlaylistCommand);
 
         const launchSpotifyCommand = commands.registerCommand(
             "musictime.launchSpotify",
-            () => controller.launchTrackPlayer(PlayerName.SpotifyWeb)
+            () => musicMgr.launchTrackPlayer(PlayerName.SpotifyWeb)
         );
         cmds.push(launchSpotifyCommand);
 
         const launchSpotifyPlaylistCommand = commands.registerCommand(
             "musictime.spotifyPlaylist",
-            () => controller.launchTrackPlayer(PlayerName.SpotifyWeb)
+            () => musicMgr.launchTrackPlayer(PlayerName.SpotifyWeb)
         );
         cmds.push(launchSpotifyPlaylistCommand);
 
         const launchItunesCommand = commands.registerCommand(
             "musictime.launchItunes",
-            () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
+            () => musicMgr.launchTrackPlayer(PlayerName.ItunesDesktop)
         );
         cmds.push(launchItunesCommand);
 
         const launchItunesPlaylistCommand = commands.registerCommand(
             "musictime.itunesPlaylist",
-            () => controller.launchTrackPlayer(PlayerName.ItunesDesktop)
+            () => musicMgr.launchTrackPlayer(PlayerName.ItunesDesktop)
         );
         cmds.push(launchItunesPlaylistCommand);
 

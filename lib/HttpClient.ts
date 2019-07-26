@@ -38,15 +38,10 @@ export async function spotifyApiPut(api, payload, accessToken) {
     spotifyApi.defaults.headers.common[
         "Authorization"
     ] = `Bearer ${accessToken}`;
-    return await spotifyApi
-        .put(api, payload)
-        .then(resp => {
-            return resp;
-        })
-        .catch(err => {
-            logIt(`error posting data for ${api}, message: ${err.message}`);
-            return err;
-        });
+    return await spotifyApi.put(api, payload).catch(err => {
+        logIt(`error posting data for ${api}, message: ${err.message}`);
+        return err;
+    });
 }
 
 export async function spotifyApiPost(api, payload, accessToken) {
@@ -56,15 +51,10 @@ export async function spotifyApiPost(api, payload, accessToken) {
     spotifyApi.defaults.headers.common[
         "Authorization"
     ] = `Bearer ${accessToken}`;
-    return await spotifyApi
-        .post(api, payload)
-        .then(resp => {
-            return resp;
-        })
-        .catch(err => {
-            logIt(`error posting data for ${api}, message: ${err.message}`);
-            return err;
-        });
+    return await spotifyApi.post(api, payload).catch(err => {
+        logIt(`error posting data for ${api}, message: ${err.message}`);
+        return err;
+    });
 }
 
 /**
@@ -78,15 +68,10 @@ export async function softwareGet(api, jwt) {
         beApi.defaults.headers.common["Authorization"] = jwt;
     }
 
-    return await beApi
-        .get(api)
-        .then(resp => {
-            return resp;
-        })
-        .catch(err => {
-            logIt(`error fetching data for ${api}, message: ${err.message}`);
-            return err;
-        });
+    return await beApi.get(api).catch(err => {
+        logIt(`error fetching data for ${api}, message: ${err.message}`);
+        return err;
+    });
 }
 
 /**
@@ -96,7 +81,7 @@ export async function softwarePut(api, payload, jwt) {
     // PUT the kpm to the PluginManager
     beApi.defaults.headers.common["Authorization"] = jwt;
 
-    return beApi
+    return await beApi
         .put(api, payload)
         .then(resp => {
             return resp;

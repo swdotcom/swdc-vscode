@@ -23,7 +23,6 @@ import {
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
-import { MusicStateManager } from "./MusicStateManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
 
@@ -48,9 +47,9 @@ export const launchAndPlayTrack = async (
     track: PlaylistItem,
     spotifyUser: SpotifyUser
 ) => {
+    const musicMgr: MusicManager = MusicManager.getInstance();
     const musicCtrlMgr = new MusicControlManager();
-    const currentPlaylist: PlaylistItem = MusicStoreManager.getInstance()
-        .selectedPlaylist;
+    const currentPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
     // check if there's any spotify devices
     const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
     if (!spotifyDevices || spotifyDevices.length === 0) {
@@ -84,14 +83,12 @@ export const playSelectedItem = async (
     isExpand = true
 ) => {
     const musicCtrlMgr = new MusicControlManager();
-    const musicstoreMgr = MusicStoreManager.getInstance();
+    const musicMgr = MusicManager.getInstance();
     if (playlistItem.type === "track") {
         let currentPlaylistId = playlistItem["playlist_id"];
 
-        musicstoreMgr.selectedTrackItem = playlistItem;
-        musicstoreMgr.selectedPlaylist = musicstoreMgr.getPlaylistById(
-            currentPlaylistId
-        );
+        musicMgr.selectedTrackItem = playlistItem;
+        musicMgr.selectedPlaylist = musicMgr.getPlaylistById(currentPlaylistId);
 
         const notPlaying =
             playlistItem.state !== TrackStatus.Playing ? true : false;
@@ -100,7 +97,7 @@ export const playSelectedItem = async (
             if (notPlaying) {
                 const pos: number = playlistItem.position || 1;
                 await playItunesTrackNumberInPlaylist(
-                    musicstoreMgr.selectedPlaylist.name,
+                    musicMgr.selectedPlaylist.name,
                     pos
                 );
             } else {
@@ -108,10 +105,7 @@ export const playSelectedItem = async (
             }
         } else {
             if (notPlaying) {
-                await launchAndPlayTrack(
-                    playlistItem,
-                    musicstoreMgr.spotifyUser
-                );
+                await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
             } else {
                 musicCtrlMgr.pause(PlayerName.SpotifyWeb);
             }
@@ -121,13 +115,13 @@ export const playSelectedItem = async (
         // {device_id: <spotify_device_id>,
         //   uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh", "spotify:track:1301WleyT98MSxVHPZCA6M"],
         //   context_uri: <playlist_uri, album_uri>}
-        musicstoreMgr.selectedPlaylist = playlistItem;
+        musicMgr.selectedPlaylist = playlistItem;
 
         if (!isExpand) {
             if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                 const pos: number = 1;
                 await playItunesTrackNumberInPlaylist(
-                    musicstoreMgr.selectedPlaylist.name,
+                    musicMgr.selectedPlaylist.name,
                     pos
                 );
             } else {
@@ -149,7 +143,7 @@ export const playSelectedItem = async (
                     // play the 1st track in the non-playlist liked songs folder
                     if (selectedTrack) {
                         musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                            musicstoreMgr.spotifyUser,
+                            musicMgr.spotifyUser,
                             playlistItem.id,
                             selectedTrack /* track */,
                             spotifyDevices,
@@ -159,7 +153,7 @@ export const playSelectedItem = async (
                 } else {
                     // use the normal play playlist by offset 0 call
                     musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                        musicstoreMgr.spotifyUser,
+                        musicMgr.spotifyUser,
                         playlistItem.id,
                         null /* track */,
                         spotifyDevices,
@@ -168,7 +162,7 @@ export const playSelectedItem = async (
                 }
 
                 if (selectedTrack) {
-                    musicstoreMgr.selectedTrackItem = selectedTrack;
+                    musicMgr.selectedTrackItem = selectedTrack;
                 }
             }
         }
@@ -197,12 +191,11 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
-                MusicStateManager.getInstance().musicStateCheck();
+                //
             }
         })
     );
 };
-
 export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     private _onDidChangeTreeData: EventEmitter<
         PlaylistItem | undefined
@@ -319,6 +312,9 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem["itemType"] === "playlist"
         ) {
             this.contextValue = `${treeItem.type}-item-${stateVal}`;
+        }
+        if (treeItem["itemType"] === "track") {
+            console.log("context value: ", this.contextValue);
         }
 
         if (treeItem.tag === "spotify" || treeItem.type === "spotify") {

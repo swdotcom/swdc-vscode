@@ -11,6 +11,7 @@ import {
 } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
+import { MusicManager } from "./MusicManager";
 
 export interface Button {
     /**
@@ -108,17 +109,36 @@ export class MusicCommandManager {
     /**
      * Sync the music button controls
      */
-    public static async syncControls(track: Track) {
-        const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
+    // public static async syncControls(track: Track) {
+    //     const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
 
-        musicstoreMgr.runningTrack = track;
+    //     musicstoreMgr.runningTrack = track;
+    //     // update the playlist
+    //     const selectedPlaylist: PlaylistItem = musicstoreMgr.selectedPlaylist;
+    //     if (selectedPlaylist) {
+    //         musicstoreMgr.clearPlaylistTracksForId(selectedPlaylist.id);
+    //         musicstoreMgr.getPlaylistItemTracksForPlaylistId(
+    //             selectedPlaylist.id
+    //         );
+
+    //         if (this._treeProvider) {
+    //             this._treeProvider.refreshParent(selectedPlaylist);
+    //         }
+    //     }
+
+    //     // get the current track state
+    //     this.updateButtons();
+    // }
+
+    public static async syncControls(track: Track) {
+        const musicMgr: MusicManager = MusicManager.getInstance();
+
+        musicMgr.runningTrack = track;
         // update the playlist
-        const selectedPlaylist: PlaylistItem = musicstoreMgr.selectedPlaylist;
+        const selectedPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
         if (selectedPlaylist) {
-            musicstoreMgr.clearPlaylistTracksForId(selectedPlaylist.id);
-            musicstoreMgr.getPlaylistItemTracksForPlaylistId(
-                selectedPlaylist.id
-            );
+            musicMgr.clearPlaylistTracksForId(selectedPlaylist.id);
+            musicMgr.getPlaylistItemTracksForPlaylistId(selectedPlaylist.id);
 
             if (this._treeProvider) {
                 this._treeProvider.refreshParent(selectedPlaylist);
