@@ -683,7 +683,6 @@ export class MusicStoreManager {
         this.updateSettingsItems(serverIsOnline, this.currentPlayerType);
 
         commands.executeCommand("musictime.refreshPlaylist");
-        commands.executeCommand("musictime.refreshSettings");
     }
 
     /**

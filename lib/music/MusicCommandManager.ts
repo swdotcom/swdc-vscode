@@ -11,7 +11,6 @@ import {
 } from "cody-music";
 import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
-import { MusicTimePlaylistProvider } from "./MusicTimePlaylistProvider";
 
 export interface Button {
     /**
@@ -39,7 +38,6 @@ export class MusicCommandManager {
     private static _buttons: Button[] = [];
     private static _hideSongTimeout = null;
     private static _treeProvider: MusicPlaylistProvider;
-    private static _musicTimeTreeProvider: MusicTimePlaylistProvider;
 
     private static msMgr: MusicStateManager;
 
@@ -49,12 +47,6 @@ export class MusicCommandManager {
 
     public static setTreeProvider(provider: MusicPlaylistProvider) {
         this._treeProvider = provider;
-    }
-
-    public static setMusicTimeTreeProvider(
-        provider: MusicTimePlaylistProvider
-    ) {
-        this._musicTimeTreeProvider = provider;
     }
 
     /**
@@ -130,9 +122,6 @@ export class MusicCommandManager {
 
             if (this._treeProvider) {
                 this._treeProvider.refreshParent(selectedPlaylist);
-            }
-            if (this._musicTimeTreeProvider) {
-                this._musicTimeTreeProvider.refreshParent(selectedPlaylist);
             }
         }
 

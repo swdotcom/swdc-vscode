@@ -25,6 +25,7 @@ import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
 import { MusicStateManager } from "./MusicStateManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
+import { MusicManager } from "./MusicManager";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -242,7 +243,6 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         let treeItem: PlaylistTreeItem = null;
         if (p.type === "playlist") {
             // it's a track parent (playlist)
-
             if (p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0) {
                 const folderState: TreeItemCollapsibleState = this.isTrackInPlaylistRunning(
                     p
@@ -270,17 +270,17 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     async getChildren(element?: PlaylistItem): Promise<PlaylistItem[]> {
+        const musicMgr: MusicManager = MusicManager.getInstance();
+
         if (element) {
             // return track of the playlist parent
-            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
+            let tracks: PlaylistItem[] = await musicMgr.getPlaylistItemTracksForPlaylistId(
                 element.id
             );
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists: PlaylistItem[] = MusicStoreManager.getInstance()
-                .runningPlaylists;
-            return playlists;
+            return musicMgr.currentPlaylists;
         }
     }
 }
@@ -311,9 +311,17 @@ export class PlaylistTreeItem extends TreeItem {
         // if it's a playlist folder that has a track that is playing or paused it will show the appropriate button
         const stateVal =
             treeItem.state !== TrackStatus.Playing ? "notplaying" : "playing";
-        this.contextValue = `${treeItem.type}-item-${stateVal}`;
+        this.contextValue = "";
+        if (treeItem.tag === "action") {
+            this.contextValue = "treeitem-action";
+        } else if (
+            treeItem["itemType"] === "track" ||
+            treeItem["itemType"] === "playlist"
+        ) {
+            this.contextValue = `${treeItem.type}-item-${stateVal}`;
+        }
 
-        if (treeItem.tag === "spotify") {
+        if (treeItem.tag === "spotify" || treeItem.type === "spotify") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -324,7 +332,7 @@ export class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "icons8-spotify.svg"
             );
-        } else if (treeItem.tag === "itunes") {
+        } else if (treeItem.tag === "itunes" || treeItem.type === "itunes") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -335,7 +343,7 @@ export class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "icons8-itunes.svg"
             );
-        } else if (treeItem.tag === "paw") {
+        } else if (treeItem.tag === "paw" || treeItem.tag === "action") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -345,6 +353,28 @@ export class PlaylistTreeItem extends TreeItem {
                 this.resourcePath,
                 "dark",
                 "pl-paw.svg"
+            );
+        } else if (treeItem.type === "connected") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "wifi.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "wifi.svg"
+            );
+        } else if (treeItem.type === "offline") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "nowifi.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "nowifi.svg"
             );
         } else {
             // no matching tag, remove the tree item icon path

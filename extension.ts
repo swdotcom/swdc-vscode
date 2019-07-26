@@ -32,6 +32,7 @@ import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
+import { MusicManager } from "./lib/music/MusicManager";
 
 const moment = require("moment-timezone");
 
@@ -227,6 +228,9 @@ export async function intializePlugin(
         // check if the user has a slack integration already connected
         await musicstoreMgr.initializeSlack(serverIsOnline);
 
+        // initialize the music manager
+        await MusicManager.getInstance().init();
+
         MusicStateManager.getInstance().musicStateCheck();
         // 15 second interval to check music info
         gather_music_interval = setInterval(() => {
@@ -234,11 +238,11 @@ export async function intializePlugin(
         }, 1000 * 5);
 
         // reconcile the playlists every 2 minutes
-        setInterval(() => {
-            musicstoreMgr.refreshPlaylists().then(() => {
-                musicstoreMgr.reconcilePlaylists();
-            });
-        }, 1000 * 60 * 3);
+        // setInterval(() => {
+        //     musicstoreMgr.refreshPlaylists().then(() => {
+        //         musicstoreMgr.reconcilePlaylists();
+        //     });
+        // }, 1000 * 60 * 3);
 
         // refresh the global top 40 playlist
         setInterval(() => {

@@ -26,12 +26,7 @@ import {
     connectPlaylistTreeView,
     playSelectedItem
 } from "./music/MusicPlaylistProvider";
-import { MusicTimePlaylistProvider } from "./music/MusicTimePlaylistProvider";
 import { PlaylistItem, PlayerName } from "cody-music";
-import {
-    MusicSettingsProvider,
-    connectSettingsTreeView
-} from "./music/MusicSettingsProvider";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { MusicStoreManager } from "./music/MusicStoreManager";
 import { SocialShareManager } from "./social/SocialShareManager";
@@ -221,20 +216,6 @@ export function createCommands(): {
         );
         cmds.push(disconnectSpotifyCommand);
 
-        // music time playlist provider
-        const treeMusicTimePlaylistProvider = new MusicTimePlaylistProvider();
-        const musicTimePlaylistTreeView: TreeView<
-            PlaylistItem
-        > = window.createTreeView("music-time-playlists", {
-            treeDataProvider: treeMusicTimePlaylistProvider,
-            showCollapseAll: false
-        });
-        MusicCommandManager.setMusicTimeTreeProvider(
-            treeMusicTimePlaylistProvider
-        );
-        treeMusicTimePlaylistProvider.bindView(musicTimePlaylistTreeView);
-        cmds.push(connectPlaylistTreeView(musicTimePlaylistTreeView));
-
         // playlist tree view
         const treePlaylistProvider = new MusicPlaylistProvider();
         const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
@@ -247,17 +228,6 @@ export function createCommands(): {
         MusicCommandManager.setTreeProvider(treePlaylistProvider);
         treePlaylistProvider.bindView(playlistTreeView);
         cmds.push(connectPlaylistTreeView(playlistTreeView));
-
-        // settings tree view
-        const treeSettingsProvider = new MusicSettingsProvider();
-        const settingsTreeView: TreeView<PlaylistItem> = window.createTreeView(
-            "music-time-players",
-            {
-                treeDataProvider: treeSettingsProvider,
-                showCollapseAll: false
-            }
-        );
-        cmds.push(connectSettingsTreeView(settingsTreeView));
 
         const refreshReconcileCommand = commands.registerCommand(
             "musictime.refreshReconcile",
@@ -276,16 +246,9 @@ export function createCommands(): {
             "musictime.refreshPlaylist",
             () => {
                 treePlaylistProvider.refresh();
-                treeMusicTimePlaylistProvider.refresh();
             }
         );
         cmds.push(refreshPlaylistCommand);
-
-        const refreshSettingsCommand = commands.registerCommand(
-            "musictime.refreshSettings",
-            () => treeSettingsProvider.refresh()
-        );
-        cmds.push(refreshSettingsCommand);
 
         const launchSpotifyCommand = commands.registerCommand(
             "musictime.launchSpotify",

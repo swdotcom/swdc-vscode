@@ -97,16 +97,8 @@ async function deploy() {
         packageJson.contributes["views"] = {
             "music-time": [
                 {
-                    id: "music-time-playlists",
-                    name: "Music Time"
-                },
-                {
                     id: "my-playlists",
                     name: "My Playlists"
-                },
-                {
-                    id: "music-time-players",
-                    name: "Players"
                 }
             ]
         };
