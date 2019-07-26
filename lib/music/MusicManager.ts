@@ -75,6 +75,7 @@ export class MusicManager {
     private _spotifyUser: SpotifyUser = null;
     private _buildingPlaylists: boolean = false;
     private _serverTrack: Track = null;
+    private _initialized: boolean = false;
 
     private constructor() {
         //
@@ -93,6 +94,18 @@ export class MusicManager {
 
     set runningTrack(track: Track) {
         this._runningTrack = track;
+    }
+
+    get runningTrack(): Track {
+        return this._runningTrack;
+    }
+
+    get savedPlaylists(): PlaylistItem[] {
+        return this._savedPlaylists;
+    }
+
+    get userTopSongs(): PlaylistItem[] {
+        return this._userTopSongs;
     }
 
     get spotifyUser(): SpotifyUser {
@@ -149,6 +162,13 @@ export class MusicManager {
         this._buildingPlaylists = true;
         let serverIsOnline = await serverIsAvailable();
         this._runningTrack = await getRunningTrack();
+        if (
+            !this._initialized &&
+            this._runningTrack.playerType === PlayerType.MacItunesDesktop
+        ) {
+            this._currentPlayerName = PlayerName.ItunesDesktop;
+        }
+        this._initialized = true;
         await this.fetchSavedPlaylists(serverIsOnline);
         if (this._currentPlayerName === PlayerName.ItunesDesktop) {
             await this.showItunesPlaylists(serverIsOnline);
@@ -196,8 +216,11 @@ export class MusicManager {
     }
 
     async showItunesPlaylists(serverIsOnline) {
+        let foundPlaylist = this._itunesPlaylists.find(element => {
+            return element.type === "playlist";
+        });
         // if no playlists are found for itunes, then fetch
-        if (this._itunesPlaylists.length === 0) {
+        if (!foundPlaylist) {
             await this.refreshPlaylistForPlayer(
                 PlayerName.ItunesDesktop,
                 serverIsOnline
@@ -207,7 +230,10 @@ export class MusicManager {
 
     async showSpotifyPlaylists(serverIsOnline) {
         // if no playlists are found for spotify, then fetch
-        if (this._spotifyPlaylists.length === 0) {
+        let foundPlaylist = this._spotifyPlaylists.find(element => {
+            return element.type === "playlist";
+        });
+        if (!foundPlaylist) {
             await this.refreshPlaylistForPlayer(
                 PlayerName.SpotifyWeb,
                 serverIsOnline
@@ -231,6 +257,8 @@ export class MusicManager {
         playerName: PlayerName,
         serverIsOnline: boolean
     ) {
+        let items: PlaylistItem[] = [];
+
         let needsSpotifyAccess = this.requiresSpotifyAccess();
 
         let playlists: PlaylistItem[] = [];
@@ -241,17 +269,7 @@ export class MusicManager {
         playlists = await getPlaylists(playerName);
 
         // sort
-        if (playlists && playlists.length > 0) {
-            playlists.sort((a: PlaylistItem, b: PlaylistItem) => {
-                const nameA = a.name.toLowerCase(),
-                    nameB = b.name.toLowerCase();
-                if (nameA < nameB)
-                    //sort string ascending
-                    return -1;
-                if (nameA > nameB) return 1;
-                return 0; //default return value (no sorting)
-            });
-        }
+        this.sortPlaylists(playlists);
 
         // update so the playlist header shows the spotify related icons
         commands.executeCommand("setContext", "treeview-type", type);
@@ -279,49 +297,47 @@ export class MusicManager {
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
-        let topItems: PlaylistItem[] = [];
-
         if (!serverIsOnline) {
-            topItems.push(this.getNoMusicTimeConnectionButton());
+            items.push(this.getNoMusicTimeConnectionButton());
         }
 
         if (needsSpotifyAccess) {
-            topItems.push(this.getConnectToSpotifyButton());
+            items.push(this.getConnectToSpotifyButton());
         }
 
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
-            topItems.push(this.getItunesConnectedButton());
-            topItems.push(this.getSwitchToSpotifyButton());
-            topItems.push(this.getLineBreakButton());
+            items.push(this.getItunesConnectedButton());
+            items.push(this.getSwitchToSpotifyButton());
 
-            topItems.forEach(item => {
-                this._itunesPlaylists.push(item);
-            });
+            if (playlists.length > 0) {
+                items.push(this.getLineBreakButton());
+            }
 
             playlists.forEach(item => {
-                this._itunesPlaylists.push(item);
+                items.push(item);
             });
-        } else {
-            playlists.push(this.getSpotifyLikedPlaylistFolder());
 
+            this._itunesPlaylists = items;
+        } else {
             // add the action items specific to spotify
             if (!needsSpotifyAccess) {
-                topItems.push(this.getSpotifyConnectedButton());
+                playlists.push(this.getSpotifyLikedPlaylistFolder());
+                items.push(this.getSpotifyConnectedButton());
             }
-            topItems.push(this.getSwitchToItunesButton());
-
-            topItems.push(this.getLineBreakButton());
+            items.push(this.getSwitchToItunesButton());
 
             // get the custom playlist button
             if (serverIsOnline && !needsSpotifyAccess) {
+                items.push(this.getLineBreakButton());
+
                 const globalPlaylistButton: PlaylistItem = this.getGlobalPlaylistButton();
                 if (globalPlaylistButton) {
-                    topItems.push(globalPlaylistButton);
+                    items.push(globalPlaylistButton);
                 }
                 const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();
                 if (customPlaylistButton) {
-                    topItems.push(customPlaylistButton);
+                    items.push(customPlaylistButton);
                 }
             }
 
@@ -333,18 +349,32 @@ export class MusicManager {
                 for (let i = 0; i < this._musictimePlaylists.length; i++) {
                     const musicTimePlaylist = this._musictimePlaylists[i];
                     musicTimePlaylist.tag = "paw";
-                    topItems.push(musicTimePlaylist);
+                    items.push(musicTimePlaylist);
                 }
             }
 
-            topItems.push(this.getLineBreakButton());
-
-            topItems.forEach(item => {
-                this._spotifyPlaylists.push(item);
-            });
+            if (playlists.length > 0) {
+                items.push(this.getLineBreakButton());
+            }
 
             playlists.forEach(item => {
-                this._spotifyPlaylists.push(item);
+                items.push(item);
+            });
+
+            this._spotifyPlaylists = items;
+        }
+    }
+
+    sortPlaylists(playlists) {
+        if (playlists && playlists.length > 0) {
+            playlists.sort((a: PlaylistItem, b: PlaylistItem) => {
+                const nameA = a.name.toLowerCase(),
+                    nameB = b.name.toLowerCase();
+                if (nameA < nameB)
+                    //sort string ascending
+                    return -1;
+                if (nameA > nameB) return 1;
+                return 0; //default return value (no sorting)
             });
         }
     }
@@ -709,19 +739,21 @@ export class MusicManager {
                     savedPlaylist["playlistTypeId"],
                     10
                 );
-                for (let x = 0; x < playlists.length; x++) {
-                    let playlist: PlaylistItem = playlists[x];
+
+                for (let x = playlists.length - 1; x >= 0; x--) {
+                    let playlist = playlists[x];
                     if (playlist.id === savedPlaylist.id) {
                         playlist["playlistTypeId"] = savedPlaylistTypeId;
                         playlist.tag = "paw";
+                        playlists.splice(x, 1);
+                        this._musictimePlaylists.push(playlist);
                         break;
                     }
                 }
             }
 
-            // now filter out the ones with a playlistTypeId
-            this._musictimePlaylists =
-                playlists.filter(n => n["playlistTypeId"]) || [];
+            console.log("playlists: ", playlists);
+            console.log("musictime lists: ", this._musictimePlaylists);
         } else {
             this._musictimePlaylists = [];
         }

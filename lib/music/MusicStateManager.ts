@@ -30,7 +30,6 @@ export class MusicStateManager {
     private existingTrack: any = {};
     private processingSong: boolean = false;
 
-    //private musicstoreMgr: MusicStoreManager;
     private musicMgr: MusicManager;
 
     private constructor() {
@@ -237,11 +236,12 @@ export class MusicStateManager {
         }
 
         const needsRefresh =
-            changeStatus.isNewTrack ||
-            changeStatus.trackStateChanged ||
-            changeStatus.playerNameChanged;
+            changeStatus.isNewTrack || changeStatus.trackStateChanged;
 
-        if (needsRefresh) {
+        if (changeStatus.playerNameChanged) {
+            // refresh the entire tree view
+            commands.executeCommand("musictime.refreshPlaylist");
+        } else if (needsRefresh) {
             MusicManager.getInstance().refreshPlaylists();
         }
 

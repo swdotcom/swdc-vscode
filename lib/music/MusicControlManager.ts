@@ -24,7 +24,6 @@ import {
     refetchSpotifyConnectStatusLazily,
     getLoggedInCacheState
 } from "../DataController";
-import { MusicStoreManager } from "./MusicStoreManager";
 import {
     getItem,
     getMusicTimeFile,
@@ -44,13 +43,15 @@ import {
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
     GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
-    SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+    SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
+    PERSONAL_TOP_SONGS_PLID
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { SocialShareManager } from "../social/SocialShareManager";
 import { tmpdir } from "os";
 import { connectSlack } from "../slack/SlackControlManager";
+import { MusicManager } from "./MusicManager";
 const moment = require("moment-timezone");
 const clipboardy = require("clipboardy");
 const fs = require("fs");
@@ -65,7 +66,7 @@ export class MusicControlManager {
     }
 
     async getPlayer(): Promise<PlayerType> {
-        const track = MusicStoreManager.getInstance().runningTrack;
+        const track = MusicManager.getInstance().runningTrack;
         if (track) {
             return track.playerType;
         }
@@ -154,8 +155,8 @@ export class MusicControlManager {
     }
 
     async setLiked(liked: boolean) {
-        const musicstoreMgr = MusicStoreManager.getInstance();
-        let track: Track = musicstoreMgr.runningTrack;
+        const musicMgr = MusicManager.getInstance();
+        let track: Track = musicMgr.runningTrack;
         if (track) {
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
@@ -167,16 +168,16 @@ export class MusicControlManager {
 
             // set the server track to liked to keep it cached
             // until the song session is sent from the MusicStateManager
-            let serverTrack = musicstoreMgr.serverTrack;
+            let serverTrack = musicMgr.serverTrack;
             if (!serverTrack) {
                 serverTrack = { ...track };
             }
             serverTrack.loved = liked;
-            musicstoreMgr.serverTrack = serverTrack;
+            musicMgr.serverTrack = serverTrack;
 
             // update the music store running track liked state
             track.loved = liked;
-            musicstoreMgr.runningTrack = track;
+            musicMgr.runningTrack = track;
 
             // get the current track state
             MusicCommandManager.syncControls(track);
@@ -271,21 +272,21 @@ export class MusicControlManager {
     copyCurrentTrackLink() {
         // example: https://open.spotify.com/track/7fa9MBXhVfQ8P8Df9OEbD8
         // get the current track
-        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+        const selectedItem: PlaylistItem = MusicManager.getInstance()
             .selectedTrackItem;
         this.copySpotifyLink(selectedItem.id, false);
     }
 
     copyCurrentPlaylistLink() {
         // example: https://open.spotify.com/playlist/0mwG8hCL4scWi8Nkt7jyoV
-        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+        const selectedItem: PlaylistItem = MusicManager.getInstance()
             .selectedPlaylist;
         this.copySpotifyLink(selectedItem.id, true);
     }
 
     shareCurrentPlaylist() {
         const socialShare: SocialShareManager = SocialShareManager.getInstance();
-        const selectedItem: PlaylistItem = MusicStoreManager.getInstance()
+        const selectedItem: PlaylistItem = MusicManager.getInstance()
             .selectedPlaylist;
         const url = buildSpotifyLink(selectedItem.id, true);
 
@@ -329,7 +330,7 @@ export class MusicControlManager {
             items: []
         };
 
-        const musicstoreMgr = MusicStoreManager.getInstance();
+        const musicMgr: MusicManager = MusicManager.getInstance();
 
         // check if the user has the spotify_access_token
         const accessToken = getItem("spotify_access_token");
@@ -355,20 +356,24 @@ export class MusicControlManager {
         }
 
         if (accessToken) {
+            const musicMgr: MusicManager = MusicManager.getInstance();
             // check if we already have a playlist
-            const savedPlaylists: PlaylistItem[] = musicstoreMgr.savedPlaylists;
+            const savedPlaylists: PlaylistItem[] = musicMgr.savedPlaylists;
             const hasSavedPlaylists =
                 savedPlaylists && savedPlaylists.length > 0 ? true : false;
 
-            const codingFavs: any[] = musicstoreMgr.userFavorites;
+            const codingFavs: any[] = musicMgr.userTopSongs;
             const hasUserFavorites =
                 codingFavs && codingFavs.length > 0 ? true : false;
 
-            const personalPlaylistInfo = musicstoreMgr.getExistingPesonalPlaylist();
-            let personalPlaylistLabel = !personalPlaylistInfo
+            const customPlaylist = musicMgr.getMusicTimePlaylistByTypeId(
+                PERSONAL_TOP_SONGS_PLID
+            );
+
+            let personalPlaylistLabel = !customPlaylist
                 ? GENERATE_CUSTOM_PLAYLIST_TITLE
                 : REFRESH_CUSTOM_PLAYLIST_TITLE;
-            const personalPlaylistTooltip = !personalPlaylistInfo
+            const personalPlaylistTooltip = !customPlaylist
                 ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
                 : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
@@ -377,8 +382,7 @@ export class MusicControlManager {
                 menuOptions.items.push({
                     label: personalPlaylistLabel,
                     detail: personalPlaylistTooltip,
-                    cb: MusicStoreManager.getInstance()
-                        .generateUsersWeeklyTopSongs
+                    cb: musicMgr.generateUsersWeeklyTopSongs
                 });
             }
         }
@@ -409,7 +413,7 @@ export class MusicControlManager {
             url: "mailto:cody@software.com"
         });
 
-        if (musicstoreMgr.currentPlayerType !== PlayerType.WebSpotify) {
+        if (musicMgr.currentPlayerName !== PlayerName.SpotifyWeb) {
             menuOptions.items.push({
                 label: "Switch to Spotify",
                 detail: "Launch the Spotify web player to view your playlist",
@@ -507,11 +511,11 @@ export async function disconnectSpotify() {
         );
 
         if (isResponseOk(result)) {
-            const musicstoreMgr = MusicStoreManager.getInstance();
+            const musicMgr = MusicManager.getInstance();
             // oauth is not null, initialize spotify
-            musicstoreMgr.clearSpotifyAccessInfo();
+            musicMgr.clearSpotifyAccessInfo();
 
-            musicstoreMgr.refreshPlaylists();
+            musicMgr.refreshPlaylists();
         }
     } else {
         window.showInformationMessage(

@@ -28,7 +28,6 @@ import {
 } from "./music/MusicPlaylistProvider";
 import { PlaylistItem, PlayerName } from "cody-music";
 import { MusicCommandManager } from "./music/MusicCommandManager";
-import { MusicStoreManager } from "./music/MusicStoreManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
 import { MusicManager } from "./music/MusicManager";
@@ -126,22 +125,6 @@ export function createCommands(): {
         );
         cmds.push(playCmd);
 
-        // const copyTrackLinkCmd = commands.registerCommand(
-        //     "musictime.copyTrack",
-        //     (node: PlaylistTreeItem) => {
-        //         controller.copySpotifyLink(node.id, false);
-        //     }
-        // );
-        // cmds.push(copyTrackLinkCmd);
-
-        // const copyPlaylistLinkCmd = commands.registerCommand(
-        //     "musictime.copyPlaylist",
-        //     (node: PlaylistTreeItem) => {
-        //         controller.copySpotifyLink(node.id, true);
-        //     }
-        // );
-        // cmds.push(copyPlaylistLinkCmd);
-
         const sharePlaylistLinkCmd = commands.registerCommand(
             "musictime.sharePlaylist",
             (node: PlaylistItem) => {
@@ -233,8 +216,12 @@ export function createCommands(): {
 
         const refreshReconcileCommand = commands.registerCommand(
             "musictime.refreshReconcile",
-            () => {
-                MusicManager.getInstance().reconcilePlaylists();
+            async () => {
+                await MusicManager.getInstance().reconcilePlaylists();
+                await MusicManager.getInstance().refreshPlaylists();
+                setTimeout(() => {
+                    treePlaylistProvider.refresh();
+                }, 1000);
             }
         );
         cmds.push(refreshReconcileCommand);
@@ -276,14 +263,13 @@ export function createCommands(): {
 
         const generateWeeklyPlaylistCommand = commands.registerCommand(
             "musictime.generateWeeklyPlaylist",
-            () => MusicStoreManager.getInstance().generateUsersWeeklyTopSongs()
+            () => musicMgr.generateUsersWeeklyTopSongs()
         );
         cmds.push(generateWeeklyPlaylistCommand);
 
         const generateGlobalPlaylistCommand = commands.registerCommand(
             "musictime.generateGlobalPlaylist",
-            () =>
-                MusicStoreManager.getInstance().createOrRefreshGlobalTopSongsPlaylist()
+            () => musicMgr.createOrRefreshGlobalTopSongsPlaylist()
         );
         cmds.push(generateGlobalPlaylistCommand);
 

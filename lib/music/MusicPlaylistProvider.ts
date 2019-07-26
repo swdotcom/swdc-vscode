@@ -10,7 +10,6 @@ import {
     commands
 } from "vscode";
 import * as path from "path";
-import { MusicStoreManager } from "./MusicStoreManager";
 import {
     PlaylistItem,
     PlayerName,
@@ -134,7 +133,7 @@ export const playSelectedItem = async (
                 }
 
                 // get the tracks
-                const tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
+                const tracks: PlaylistItem[] = await MusicManager.getInstance().getPlaylistItemTracksForPlaylistId(
                     playlistItem.id
                 );
                 const selectedTrack: PlaylistItem =
@@ -312,9 +311,6 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem["itemType"] === "playlist"
         ) {
             this.contextValue = `${treeItem.type}-item-${stateVal}`;
-        }
-        if (treeItem["itemType"] === "track") {
-            console.log("context value: ", this.contextValue);
         }
 
         if (treeItem.tag === "spotify" || treeItem.type === "spotify") {

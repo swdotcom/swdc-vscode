@@ -6,7 +6,6 @@ import {
     isResponseOk,
     softwarePost
 } from "./HttpClient";
-import { MusicStoreManager } from "./music/MusicStoreManager";
 import {
     getItem,
     setItem,
@@ -522,13 +521,14 @@ async function slackConnectStatusHandler(tryCountUntilFound) {
             refetchSlackConnectStatusLazily(tryCountUntilFound);
         }
     } else {
-        const musicstoreMgr = MusicStoreManager.getInstance();
         // oauth is not null, initialize slack
-        await musicstoreMgr.updateSlackAccessInfo(oauth);
+        await MusicManager.getInstance().updateSlackAccessInfo(oauth);
 
         window.showInformationMessage(`Successfully connected to Slack`);
 
-        commands.executeCommand("musictime.refreshPlaylist");
+        setTimeout(() => {
+            commands.executeCommand("musictime.refreshPlaylist");
+        }, 1000);
     }
 }
 
@@ -554,7 +554,9 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
 
         window.showInformationMessage(`Successfully connected to Spotify`);
 
-        commands.executeCommand("musictime.refreshPlaylist");
+        setTimeout(() => {
+            commands.executeCommand("musictime.refreshPlaylist");
+        }, 1000);
     }
 }
 
@@ -579,6 +581,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             message = "Successfully logged on to Code Time";
         } else if (isMusicTime()) {
             message = "Successfully logged on to Music Time";
+            setTimeout(() => {
+                commands.executeCommand("musictime.refreshPlaylist");
+            }, 1000);
         } else {
             message = "Successfully logged on";
         }

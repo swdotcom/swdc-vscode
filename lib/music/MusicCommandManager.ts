@@ -9,7 +9,6 @@ import {
     requiresSpotifyAccessInfo,
     PlaylistItem
 } from "cody-music";
-import { MusicStoreManager } from "./MusicStoreManager";
 import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
 import { MusicManager } from "./MusicManager";
 
@@ -106,30 +105,6 @@ export class MusicCommandManager {
         this.syncControls(track);
     }
 
-    /**
-     * Sync the music button controls
-     */
-    // public static async syncControls(track: Track) {
-    //     const musicstoreMgr: MusicStoreManager = MusicStoreManager.getInstance();
-
-    //     musicstoreMgr.runningTrack = track;
-    //     // update the playlist
-    //     const selectedPlaylist: PlaylistItem = musicstoreMgr.selectedPlaylist;
-    //     if (selectedPlaylist) {
-    //         musicstoreMgr.clearPlaylistTracksForId(selectedPlaylist.id);
-    //         musicstoreMgr.getPlaylistItemTracksForPlaylistId(
-    //             selectedPlaylist.id
-    //         );
-
-    //         if (this._treeProvider) {
-    //             this._treeProvider.refreshParent(selectedPlaylist);
-    //         }
-    //     }
-
-    //     // get the current track state
-    //     this.updateButtons();
-    // }
-
     public static async syncControls(track: Track) {
         const musicMgr: MusicManager = MusicManager.getInstance();
 
@@ -153,13 +128,14 @@ export class MusicCommandManager {
      * Update the buttons based on the current track state
      */
     public static async updateButtons() {
-        const track: Track = MusicStoreManager.getInstance().runningTrack;
+        const track: Track = MusicManager.getInstance().runningTrack;
         if (this._hideSongTimeout) {
             clearTimeout(this._hideSongTimeout);
         }
 
-        const playerType: PlayerType =
-            track.playerType || PlayerType.NotAssigned;
+        const playerType: PlayerType = track
+            ? track.playerType || PlayerType.NotAssigned
+            : PlayerType.NotAssigned;
         if (playerType !== PlayerType.NotAssigned) {
             if (track.state === TrackStatus.Playing) {
                 this.showPauseControls(track);
@@ -229,7 +205,7 @@ export class MusicCommandManager {
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
         // get the server track
-        let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let serverTrack = MusicManager.getInstance().serverTrack;
         let showLoved = true;
         if (serverTrack && serverTrack.id !== trackInfo.id) {
             showLoved = false;
@@ -288,7 +264,7 @@ export class MusicCommandManager {
     private static showPauseControls(trackInfo: Track) {
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         // get the server track
-        let serverTrack = MusicStoreManager.getInstance().serverTrack;
+        let serverTrack = MusicManager.getInstance().serverTrack;
         let showLoved = true;
         if (serverTrack && serverTrack.id !== trackInfo.id) {
             showLoved = false;

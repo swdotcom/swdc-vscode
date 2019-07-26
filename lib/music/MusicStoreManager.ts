@@ -408,27 +408,6 @@ export class MusicStoreManager {
         return this.serverTrack;
     }
 
-    async setLiked(track: Track, liked: boolean) {
-        if (track) {
-            // set it to liked
-            let trackId = track.id;
-            if (trackId.indexOf(":") !== -1) {
-                // strip it down to just the last id part
-                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
-            }
-            let type = "spotify";
-            if (track.playerType === PlayerType.MacItunesDesktop) {
-                type = "itunes";
-            }
-            // use the name and artist as well since we have it
-            let trackName = encodeURIComponent(track.name);
-            let trackArtist = encodeURIComponent(track.artist);
-            const api = `/music/liked/track/${trackId}/type/${type}?name=${trackName}&artist=${trackArtist}`;
-            const payload = { liked };
-            await softwarePut(api, payload, getItem("jwt"));
-        }
-    }
-
     getExistingPesonalPlaylist(): any {
         if (this.savedPlaylists) {
             return this.savedPlaylists.find(element => {
