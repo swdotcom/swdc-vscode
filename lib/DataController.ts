@@ -551,7 +551,7 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         const musicMgr = MusicManager.getInstance();
         // oauth is not null, initialize spotify
         await musicMgr.updateSpotifyAccessInfo(oauth);
-
+        MusicManager.getInstance().fetchSavedPlaylists(serverIsOnline);
         window.showInformationMessage(`Successfully connected to Spotify`);
 
         setTimeout(() => {
@@ -581,6 +581,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             message = "Successfully logged on to Code Time";
         } else if (isMusicTime()) {
             message = "Successfully logged on to Music Time";
+            MusicManager.getInstance().fetchSavedPlaylists(serverIsOnline);
             setTimeout(() => {
                 commands.executeCommand("musictime.refreshPlaylist");
             }, 1000);

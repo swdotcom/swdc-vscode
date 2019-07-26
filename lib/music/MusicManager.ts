@@ -751,9 +751,6 @@ export class MusicManager {
                     }
                 }
             }
-
-            console.log("playlists: ", playlists);
-            console.log("musictime lists: ", this._musictimePlaylists);
         } else {
             this._musictimePlaylists = [];
         }

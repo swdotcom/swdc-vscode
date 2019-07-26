@@ -85,29 +85,23 @@ export class MusicStateManager {
 
         let playerName = this.musicMgr.currentPlayerName;
         let playerNameChanged = false;
-        if (
-            playingTrack &&
-            playingTrack.playerType !== PlayerType.NotAssigned
-        ) {
-            // we default to check if spotify is playing over itunes
-            const spotifyPlaying =
-                playingTrack.playerType === PlayerType.WebSpotify &&
-                playingTrack.state === TrackStatus.Playing;
+        // only update the currentPlayerName if the current track running
+        // is "playing" AND the playerType doesn't match the current player type
 
+        if (playing) {
             if (
-                !spotifyPlaying &&
+                playerName === PlayerName.SpotifyWeb &&
                 playingTrack.playerType === PlayerType.MacItunesDesktop
             ) {
-                playerName = PlayerName.ItunesDesktop;
-            } else {
-                playerName = PlayerName.SpotifyWeb;
+                this.musicMgr.currentPlayerName = PlayerName.ItunesDesktop;
+                playerNameChanged = true;
+            } else if (
+                playerName === PlayerName.ItunesDesktop &&
+                playingTrack.playerType === PlayerType.WebSpotify
+            ) {
+                this.musicMgr.currentPlayerName = PlayerName.SpotifyWeb;
+                playerNameChanged = true;
             }
-            playerNameChanged = playerName !== this.musicMgr.currentPlayerName;
-            //
-            // Update the player name since we've detected that a track
-            // is coming from a different player and it assigned
-            //
-            this.musicMgr.currentPlayerName = playerName;
         }
 
         return {
