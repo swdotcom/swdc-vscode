@@ -36,15 +36,18 @@ import {
     SPOTIFY_CLIENT_SECRET,
     GENERATE_GLOBAL_PLAYLIST_TITLE,
     GENERATE_GLOBAL_PLAYLIST_TOOLTIP,
-    SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+    SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
+    LOGIN_LABEL
 } from "../Constants";
 import { commands, window } from "vscode";
 import {
     serverIsAvailable,
     getSpotifyOauth,
-    getSlackOauth
+    getSlackOauth,
+    getLoggedInCacheState,
+    getUserStatus
 } from "../DataController";
-import { getItem, logIt, setItem } from "../Util";
+import { getItem, logIt, setItem, launchLogin } from "../Util";
 import {
     isResponseOk,
     softwareGet,
@@ -297,10 +300,15 @@ export class MusicManager {
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
+        // add the buttons to the playlist
+        await this.addSoftwareLoginButtonIfRequired(serverIsOnline, items);
+
+        // add the no music time connection button if we're not online
         if (!serverIsOnline) {
             items.push(this.getNoMusicTimeConnectionButton());
         }
 
+        // add the connect to spotify if they still need to connect
         if (needsSpotifyAccess) {
             items.push(this.getConnectToSpotifyButton());
         }
@@ -379,6 +387,25 @@ export class MusicManager {
         }
     }
 
+    async addSoftwareLoginButtonIfRequired(
+        serverIsOnline,
+        items: PlaylistItem[]
+    ) {
+        let loggedInCacheState = getLoggedInCacheState();
+        let userStatus = {
+            loggedIn: loggedInCacheState
+        };
+        if (loggedInCacheState === null) {
+            // update it since it's null
+            // {loggedIn: true|false}
+            userStatus = await getUserStatus(serverIsOnline);
+        }
+
+        if (!userStatus.loggedIn) {
+            items.push(this.getSoftwareLoginButton());
+        }
+    }
+
     getSpotifyLikedPlaylistFolder() {
         const item: PlaylistItem = new PlaylistItem();
         item.type = "playlist";
@@ -437,6 +464,19 @@ export class MusicManager {
         );
     }
 
+    getSoftwareLoginButton() {
+        return this.buildActionItem(
+            "login",
+            "login",
+            null,
+            PlayerType.NotAssigned,
+            LOGIN_LABEL,
+            "To see your music data in Music Time, please log in to your account",
+            null,
+            launchLogin
+        );
+    }
+
     getSwitchToSpotifyButton() {
         return this.buildActionItem(
             "title",
@@ -475,13 +515,15 @@ export class MusicManager {
         playerType: PlayerType,
         name,
         tooltip = "",
-        itemType: string = ""
+        itemType: string = "",
+        callback: any = null
     ) {
         let item: PlaylistItem = new PlaylistItem();
         item.tracks = new PlaylistTrackInfo();
         item.type = type;
         item.id = id;
         item.command = command;
+        item["cb"] = callback;
         item.playerType = playerType;
         item.name = name;
         item.tooltip = tooltip;
@@ -763,6 +805,7 @@ export class MusicManager {
                 "/music/playlist",
                 getItem("jwt")
             );
+            console.log("saved playlists: ", response);
             if (isResponseOk(response)) {
                 playlists = response.data.map(item => {
                     // transform the playlist_id to id

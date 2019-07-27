@@ -417,7 +417,6 @@ export class MusicStateManager {
                         this.codingDataReducer,
                         initialValue
                     );
-                    console.log("music coding data: ", musicCodingData);
                     return musicCodingData;
                 }
             } else {
@@ -425,7 +424,6 @@ export class MusicStateManager {
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
         }
-        console.log("initial value: ", initialValue);
         return initialValue;
     }
 }

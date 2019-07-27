@@ -87,7 +87,12 @@ export const playSelectedItem = async (
         let currentPlaylistId = playlistItem["playlist_id"];
 
         musicMgr.selectedTrackItem = playlistItem;
-        musicMgr.selectedPlaylist = musicMgr.getPlaylistById(currentPlaylistId);
+        if (!musicMgr.selectedPlaylist) {
+            const playlist: PlaylistItem = await musicMgr.getPlaylistById(
+                currentPlaylistId
+            );
+            musicMgr.selectedPlaylist = playlist;
+        }
 
         const notPlaying =
             playlistItem.state !== TrackStatus.Playing ? true : false;
@@ -182,6 +187,10 @@ export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
             if (playlistItem.command) {
                 // run the command
                 commands.executeCommand(playlistItem.command);
+                return;
+            } else if (playlistItem["cb"]) {
+                const cbFunc = playlistItem["cb"];
+                cbFunc();
                 return;
             }
 
@@ -335,7 +344,7 @@ export class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "icons8-itunes.svg"
             );
-        } else if (treeItem.tag === "paw" || treeItem.tag === "action") {
+        } else if (treeItem.tag === "paw") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
@@ -367,6 +376,28 @@ export class PlaylistTreeItem extends TreeItem {
                 this.resourcePath,
                 "dark",
                 "nowifi.svg"
+            );
+        } else if (treeItem.type === "action" || treeItem.tag === "action") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "settings.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "settings.svg"
+            );
+        } else if (treeItem.type === "login" || treeItem.tag === "login") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "login.svg"
+            );
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "dark",
+                "login.svg"
             );
         } else {
             // no matching tag, remove the tree item icon path
