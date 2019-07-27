@@ -551,10 +551,10 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         const musicMgr = MusicManager.getInstance();
         // oauth is not null, initialize spotify
         await musicMgr.updateSpotifyAccessInfo(oauth);
-        MusicManager.getInstance().fetchSavedPlaylists(serverIsOnline);
         window.showInformationMessage(`Successfully connected to Spotify`);
 
         setTimeout(() => {
+            musicMgr.clearSpotify();
             commands.executeCommand("musictime.refreshPlaylist");
         }, 1000);
     }

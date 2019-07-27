@@ -158,10 +158,24 @@ export class MusicManager {
         return this._spotifyPlaylists;
     }
 
+    //
+    // Clear all of the playlists and tracks
+    //
+    clearPlaylists() {
+        this._itunesPlaylists = [];
+        this._spotifyPlaylists = [];
+        this._playlistMap = {};
+        this._musictimePlaylists = [];
+        this._playlistTrackMap = {};
+    }
+
+    clearSpotify() {
+        this._spotifyPlaylists = [];
+        this._playlistMap = {};
+        this._playlistTrackMap = {};
+    }
+
     async refreshPlaylists() {
-        if (this._buildingPlaylists) {
-            return;
-        }
         this._buildingPlaylists = true;
         let serverIsOnline = await serverIsAvailable();
         this._runningTrack = await getRunningTrack();
@@ -179,7 +193,6 @@ export class MusicManager {
             await this.showSpotifyPlaylists(serverIsOnline);
         }
         MusicCommandManager.syncControls(this._runningTrack);
-        this._buildingPlaylists = false;
     }
 
     getPlaylistById(playlist_id: string) {
@@ -242,15 +255,6 @@ export class MusicManager {
                 serverIsOnline
             );
         }
-    }
-
-    //
-    // Clear all of the playlists and tracks
-    //
-    clearPlaylists() {
-        this._itunesPlaylists = [];
-        this._spotifyPlaylists = [];
-        this._playlistTrackMap = {};
     }
 
     //
@@ -920,8 +924,6 @@ export class MusicManager {
                 );
             }
         }
-
-        // rebuild the list
     }
 
     async generateUsersWeeklyTopSongs() {
@@ -989,8 +991,6 @@ export class MusicManager {
                 }
             }
         }
-
-        // refresh the playlists
     }
 
     async addTracks(playlist_id: string, name: string, tracksToAdd: string[]) {
@@ -1008,6 +1008,7 @@ export class MusicManager {
                 );
 
                 setTimeout(() => {
+                    this.clearSpotify();
                     commands.executeCommand("musictime.refreshPlaylist");
                 }, 1000);
             } else {

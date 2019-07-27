@@ -217,7 +217,8 @@ export function createCommands(): {
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
             async () => {
-                await MusicManager.getInstance().refreshPlaylists();
+                await musicMgr.clearPlaylists();
+                await musicMgr.refreshPlaylists();
                 setTimeout(() => {
                     treePlaylistProvider.refresh();
                 }, 1000);
