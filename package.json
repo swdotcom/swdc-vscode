@@ -138,7 +138,7 @@
                 }
             },
             {
-                "command": "musictime.refreshReconcile",
+                "command": "musictime.refreshPlaylist",
                 "title": "Refresh Playlists",
                 "icon": {
                     "light": "resources/light/refresh.svg",
@@ -175,10 +175,6 @@
                 "command": "musictime.disconnectSpotify",
                 "title": "Disconnect your Spotify account",
                 "tooltip": "Disconnect your Spotify account"
-            },
-            {
-                "command": "musictime.refreshPlaylist",
-                "title": "Refresh"
             },
             {
                 "command": "musictime.refreshSettings",
@@ -227,7 +223,7 @@
             ],
             "view/title": [
                 {
-                    "command": "musictime.refreshReconcile",
+                    "command": "musictime.refreshPlaylist",
                     "group": "navigation",
                     "when": "view  =~ /.*-playlists/"
                 }

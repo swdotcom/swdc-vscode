@@ -805,7 +805,7 @@ export class MusicManager {
                 "/music/playlist",
                 getItem("jwt")
             );
-            console.log("saved playlists: ", response);
+
             if (isResponseOk(response)) {
                 playlists = response.data.map(item => {
                     // transform the playlist_id to id
@@ -814,6 +814,9 @@ export class MusicManager {
                     delete item.playlist_id;
                     return item;
                 });
+
+                // no need to wait on this, run in asyncronously
+                this.reconcilePlaylists();
             }
         }
         this._savedPlaylists = playlists;
@@ -899,7 +902,7 @@ export class MusicManager {
 
         if (this._softwareTopSongs && this._softwareTopSongs.length > 0) {
             let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
-                return item.uri;
+                return item.trackId;
             });
             if (!globalPlaylist) {
                 // no global playlist, add the tracks for the 1st time
@@ -963,10 +966,10 @@ export class MusicManager {
         // get the spotify track ids and create the playlist
         if (playlistId) {
             // add the tracks
-            // list of [{uri, artist, name}...]
+            // list of [{trackId, artist, name}...]
             if (this._userTopSongs && this._userTopSongs.length > 0) {
                 let tracksToAdd: string[] = this._userTopSongs.map(item => {
-                    return item.uri;
+                    return item.trackId;
                 });
 
                 if (!customPlaylist) {
@@ -1003,6 +1006,10 @@ export class MusicManager {
                     `Successfully created ${name} and added tracks.`,
                     ...["OK"]
                 );
+
+                setTimeout(() => {
+                    commands.executeCommand("musictime.refreshPlaylist");
+                }, 1000);
             } else {
                 window.showErrorMessage(
                     `There was an unexpected error adding tracks to the playlist. ${
@@ -1119,7 +1126,6 @@ export class MusicManager {
     }
 
     async reconcilePlaylists() {
-        let hadMismatch = false;
         // fetch what we have from the app
         if (this._savedPlaylists.length > 0) {
             this._savedPlaylists.map(async savedPlaylist => {
@@ -1127,14 +1133,12 @@ export class MusicManager {
                     return element.id === savedPlaylist.id;
                 });
                 if (!foundItem) {
-                    hadMismatch = true;
                     // remove it from the server
                     await softwareDelete(
                         `/music/playlist/${savedPlaylist.id}`,
                         getItem("jwt")
                     );
                 } else if (foundItem.name !== savedPlaylist.name) {
-                    hadMismatch = true;
                     // update the name on software
                     const payload = {
                         name: foundItem.name
@@ -1146,10 +1150,6 @@ export class MusicManager {
                     );
                 }
             });
-        }
-
-        if (hadMismatch) {
-            // refresh the playlist view
         }
     }
 

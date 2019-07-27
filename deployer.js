@@ -127,7 +127,7 @@ async function deploy() {
             ],
             "view/title": [
                 {
-                    command: "musictime.refreshReconcile",
+                    command: "musictime.refreshPlaylist",
                     group: "navigation",
                     when: "view  =~ /.*-playlists/"
                 }
@@ -212,7 +212,7 @@ async function deploy() {
             }
         });
         commands.push({
-            command: "musictime.refreshReconcile",
+            command: "musictime.refreshPlaylist",
             title: "Refresh Playlists",
             icon: {
                 light: "resources/light/refresh.svg",
@@ -250,10 +250,6 @@ async function deploy() {
             command: "musictime.disconnectSpotify",
             title: "Disconnect your Spotify account",
             tooltip: "Disconnect your Spotify account"
-        });
-        commands.push({
-            command: "musictime.refreshPlaylist",
-            title: "Refresh"
         });
         commands.push({
             command: "musictime.refreshSettings",
