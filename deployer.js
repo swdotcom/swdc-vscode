@@ -127,7 +127,7 @@ async function deploy() {
             ],
             "view/title": [
                 {
-                    command: "musictime.refreshPlaylist",
+                    command: "musictime.reconcilePlaylist",
                     group: "navigation",
                     when: "view  =~ /.*-playlists/"
                 }
@@ -212,8 +212,8 @@ async function deploy() {
             }
         });
         commands.push({
-            command: "musictime.refreshPlaylist",
-            title: "Refresh Playlists",
+            command: "musictime.reconcilePlaylist",
+            title: "Reconcile Playlists",
             icon: {
                 light: "resources/light/refresh.svg",
                 dark: "resources/dark/refresh.svg"
@@ -253,7 +253,11 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.refreshSettings",
-            title: "Refresh"
+            title: "Refresh Settings"
+        });
+        commands.push({
+            command: "musictime.refreshPlaylist",
+            title: "Refresh Playlists"
         });
 
         packageJson.contributes["commands"] = commands;

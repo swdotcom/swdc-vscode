@@ -186,7 +186,7 @@ export class MusicManager {
             this._currentPlayerName = PlayerName.ItunesDesktop;
         }
         this._initialized = true;
-        await this.fetchSavedPlaylists(serverIsOnline);
+
         if (this._currentPlayerName === PlayerName.ItunesDesktop) {
             await this.showItunesPlaylists(serverIsOnline);
         } else {
@@ -274,6 +274,11 @@ export class MusicManager {
             type = "itunes";
         }
         playlists = await getPlaylists(playerName);
+
+        if (playerName === PlayerName.SpotifyWeb) {
+            // fetch and reconcile the saved playlists against the spotify list
+            await this.fetchSavedPlaylists(serverIsOnline);
+        }
 
         // sort
         this.sortPlaylists(playlists);
@@ -818,9 +823,6 @@ export class MusicManager {
                     delete item.playlist_id;
                     return item;
                 });
-
-                // no need to wait on this, run in asyncronously
-                this.reconcilePlaylists();
             }
         }
         this._savedPlaylists = playlists;
@@ -1034,11 +1036,8 @@ export class MusicManager {
             playlistTypeId,
             name
         };
-        let createResult = await softwarePost(
-            "/music/playlist",
-            payload,
-            getItem("jwt")
-        );
+        let jwt = getItem("jwt");
+        let createResult = await softwarePost("/music/playlist", payload, jwt);
 
         return createResult;
     }
@@ -1126,6 +1125,9 @@ export class MusicManager {
         this._spotifyUser = null;
     }
 
+    // reconcile. meaning the user may have deleted the lists our 2 buttons created;
+    // global and custom.  We'll remove them from our db if we're unable to find a matching
+    // playlist_id we have saved.
     async reconcilePlaylists() {
         // fetch what we have from the app
         if (this._savedPlaylists.length > 0) {

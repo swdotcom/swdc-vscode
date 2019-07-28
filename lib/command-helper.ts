@@ -214,6 +214,21 @@ export function createCommands(): {
         treePlaylistProvider.bindView(playlistTreeView);
         cmds.push(connectPlaylistTreeView(playlistTreeView));
 
+        const reconcilePlaylistCommand = commands.registerCommand(
+            "musictime.reconcilePlaylist",
+            async () => {
+                await musicMgr.reconcilePlaylists();
+                setTimeout(async () => {
+                    await musicMgr.clearPlaylists();
+                    await musicMgr.refreshPlaylists();
+                    setTimeout(() => {
+                        treePlaylistProvider.refresh();
+                    }, 1000);
+                }, 1000);
+            }
+        );
+        cmds.push(reconcilePlaylistCommand);
+
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
             async () => {

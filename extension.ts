@@ -235,11 +235,6 @@ export async function intializePlugin(
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000 * 5);
 
-        // reconcile the playlists every 3 minutes
-        setInterval(() => {
-            musicMgr.reconcilePlaylists();
-        }, 1000 * 60 * 3);
-
         // refresh the global top 40 playlist
         setInterval(() => {
             // every 6 hours it checks
