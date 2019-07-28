@@ -11,7 +11,6 @@ import {
 } from "vscode";
 import * as path from "path";
 import { PlaylistItem } from "cody-music";
-import { MusicStoreManager } from "./MusicStoreManager";
 
 const createSettingsTreeItem = (
     p: PlaylistItem,
@@ -32,9 +31,7 @@ export const connectSettingsTreeView = (view: TreeView<PlaylistItem>) => {
                 // run the command
                 commands.executeCommand(playlistItem.command);
                 // clear the selection and refresh the playlist
-                setTimeout(() => {
-                    MusicStoreManager.getInstance().refreshPlaylists();
-                }, 1000);
+                commands.executeCommand("musictime.refreshPlaylist");
             }
         }),
         view.onDidChangeVisibility(e => {
@@ -73,7 +70,7 @@ export class MusicSettingsProvider implements TreeDataProvider<PlaylistItem> {
     getChildren(
         element?: PlaylistItem
     ): import("vscode").ProviderResult<PlaylistItem[]> {
-        return MusicStoreManager.getInstance().settings;
+        return [];
     }
 }
 

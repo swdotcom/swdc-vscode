@@ -91,6 +91,10 @@ export class MusicManager {
         return MusicManager.instance;
     }
 
+    get musictimePlaylists() {
+        return this._musictimePlaylists;
+    }
+
     get buildingPlaylists() {
         return this._buildingPlaylists;
     }

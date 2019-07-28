@@ -10,10 +10,10 @@ import {
     commands
 } from "vscode";
 import * as path from "path";
-import { MusicStoreManager } from "./MusicStoreManager";
 import { PlaylistItem, TrackStatus } from "cody-music";
 import { playSelectedItem } from "./MusicPlaylistProvider";
 import { MusicStateManager } from "./MusicStateManager";
+import { MusicManager } from "./MusicManager";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -125,15 +125,15 @@ export class MusicTimePlaylistProvider
             // {id, type, name, ...}
 
             // return track of the playlist parent
-            let tracks: PlaylistItem[] = await MusicStoreManager.getInstance().getPlaylistItemTracksForPlaylistId(
+            let tracks: PlaylistItem[] = await MusicManager.getInstance().getPlaylistItemTracksForPlaylistId(
                 element.id
             );
 
             return tracks;
         } else {
             // get the top level playlist parents
-            let playlists: PlaylistItem[] = MusicStoreManager.getInstance()
-                .musicTimePlaylists;
+            let playlists: PlaylistItem[] = MusicManager.getInstance()
+                .musictimePlaylists;
             return playlists;
         }
     }
