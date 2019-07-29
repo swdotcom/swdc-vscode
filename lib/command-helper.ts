@@ -219,11 +219,7 @@ export function createCommands(): {
             async () => {
                 await musicMgr.reconcilePlaylists();
                 setTimeout(async () => {
-                    await musicMgr.clearPlaylists();
-                    await musicMgr.refreshPlaylists();
-                    setTimeout(() => {
-                        treePlaylistProvider.refresh();
-                    }, 1000);
+                    commands.executeCommand("musictime.refreshPlaylist");
                 }, 1000);
             }
         );

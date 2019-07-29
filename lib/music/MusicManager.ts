@@ -168,6 +168,7 @@ export class MusicManager {
     clearPlaylists() {
         this._itunesPlaylists = [];
         this._spotifyPlaylists = [];
+        this._savedPlaylists = [];
         this._playlistMap = {};
         this._musictimePlaylists = [];
         this._playlistTrackMap = {};
@@ -279,7 +280,10 @@ export class MusicManager {
         }
         playlists = await getPlaylists(playerName);
 
-        if (playerName === PlayerName.SpotifyWeb) {
+        if (
+            playerName === PlayerName.SpotifyWeb &&
+            this._savedPlaylists.length === 0
+        ) {
             // fetch and reconcile the saved playlists against the spotify list
             await this.fetchSavedPlaylists(serverIsOnline);
         }
@@ -288,7 +292,7 @@ export class MusicManager {
         this.sortPlaylists(playlists);
 
         // update so the playlist header shows the spotify related icons
-        commands.executeCommand("setContext", "treeview-type", type);
+        // commands.executeCommand("setContext", "treeview-type", type);
 
         // go through each playlist and find out it's state
         if (playlists && playlists.length > 0) {
@@ -352,10 +356,16 @@ export class MusicManager {
             if (serverIsOnline && !needsSpotifyAccess) {
                 items.push(this.getLineBreakButton());
 
-                const globalPlaylistButton: PlaylistItem = this.getGlobalPlaylistButton();
-                if (globalPlaylistButton) {
-                    items.push(globalPlaylistButton);
+                if (!this.globalPlaylistIdExists()) {
+                    // server is online, we have spotify access, and no global playlist exists.
+                    // auto-create the global top 40
+                    setTimeout(() => {
+                        commands.executeCommand(
+                            "musictime.generateGlobalPlaylist"
+                        );
+                    }, 1000 * 2);
                 }
+
                 const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();
                 if (customPlaylistButton) {
                     items.push(customPlaylistButton);
@@ -697,35 +707,6 @@ export class MusicManager {
         return spotifyAccessToken ? false : true;
     }
 
-    getGlobalPlaylistButton() {
-        // update the existing playlist that matches the global top 40 playlist with a paw if found
-        let globalPlaylist = this.getMusicTimePlaylistByTypeId(
-            SOFTWARE_TOP_SONGS_PLID
-        );
-
-        const personalPlaylistLabel = GENERATE_GLOBAL_PLAYLIST_TITLE;
-        const personalPlaylistTooltip = GENERATE_GLOBAL_PLAYLIST_TOOLTIP;
-
-        if (
-            this._currentPlayerName === PlayerName.SpotifyWeb &&
-            !globalPlaylist &&
-            !this.requiresSpotifyAccess()
-        ) {
-            // add the connect spotify link
-            let listItem: PlaylistItem = new PlaylistItem();
-            listItem.tracks = new PlaylistTrackInfo();
-            listItem.type = "action";
-            listItem.tag = "action";
-            listItem.id = "codingfavorites";
-            listItem.command = "musictime.generateGlobalPlaylist";
-            listItem.playerType = PlayerType.WebSpotify;
-            listItem.name = personalPlaylistLabel;
-            listItem.tooltip = personalPlaylistTooltip;
-            return listItem;
-        }
-        return null;
-    }
-
     // get the custom playlist button by checkinf if the custom playlist
     // exists or not. if it doesn't exist then it will show the create label,
     // otherwise, it will show the refresh label
@@ -809,6 +790,25 @@ export class MusicManager {
         } else {
             this._musictimePlaylists = [];
         }
+    }
+
+    /**
+     * Returns whether we've created the global playlist or not.
+     */
+    globalPlaylistIdExists() {
+        if (this._savedPlaylists.length > 0) {
+            for (let i = 0; i < this._savedPlaylists.length; i++) {
+                let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
+                let savedPlaylistTypeId = parseInt(
+                    savedPlaylist["playlistTypeId"],
+                    10
+                );
+                if (savedPlaylistTypeId === SOFTWARE_TOP_SONGS_PLID) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     async fetchSavedPlaylists(serverIsOnline) {
@@ -914,20 +914,24 @@ export class MusicManager {
             let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
                 return item.trackId;
             });
-            if (!globalPlaylist) {
-                // no global playlist, add the tracks for the 1st time
-                await this.addTracks(
-                    playlistId,
-                    SOFTWARE_TOP_SONGS_NAME,
-                    tracksToAdd
-                );
-            } else {
-                // it exists, refresh it with new tracks
-                await replacePlaylistTracks(playlistId, tracksToAdd).catch(
-                    err => {
-                        logIt(`Error replacing tracks, error: ${err.message}`);
-                    }
-                );
+            if (tracksToAdd && tracksToAdd.length > 0) {
+                if (!globalPlaylist) {
+                    // no global playlist, add the tracks for the 1st time
+                    await this.addTracks(
+                        playlistId,
+                        SOFTWARE_TOP_SONGS_NAME,
+                        tracksToAdd
+                    );
+                } else {
+                    // it exists, refresh it with new tracks
+                    await replacePlaylistTracks(playlistId, tracksToAdd).catch(
+                        err => {
+                            logIt(
+                                `Error replacing tracks, error: ${err.message}`
+                            );
+                        }
+                    );
+                }
             }
         }
     }
@@ -1025,6 +1029,8 @@ export class MusicManager {
                     ...["OK"]
                 );
             }
+
+            commands.executeCommand("musictime.refreshPlaylist");
         }
     }
 
@@ -1139,6 +1145,9 @@ export class MusicManager {
                 let foundItem = this._spotifyPlaylists.find(element => {
                     return element.id === savedPlaylist.id;
                 });
+                // the backend should protect this from deleting the global top 40
+                // as we're unsure if the playlist we're about to reconcile/delete
+                // is the custom playlist or global top 40
                 if (!foundItem) {
                     // remove it from the server
                     await softwareDelete(

@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment } from "vscode";
+import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     sendOfflineData,
     getUserStatus,
@@ -244,7 +244,7 @@ export async function intializePlugin(
             // refresh on Mondays
             const dayOfWeek = moment().day();
             if (globalPlaylist && dayOfWeek === 1) {
-                musicMgr.createOrRefreshGlobalTopSongsPlaylist();
+                commands.executeCommand("musictime.generateGlobalPlaylist");
             }
         }, 1000 * 60 * 60 * 6);
     }
