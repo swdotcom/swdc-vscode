@@ -112,23 +112,18 @@ export class MusicCommandManager {
         // update the playlist
         const selectedPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
         if (selectedPlaylist) {
-            musicMgr.clearPlaylistTracksForId(selectedPlaylist.id);
-            musicMgr.getPlaylistItemTracksForPlaylistId(selectedPlaylist.id);
+            await musicMgr.clearPlaylistTracksForId(selectedPlaylist.id);
+            // this will get the updated state of the track
+            await musicMgr.getPlaylistItemTracksForPlaylistId(
+                selectedPlaylist.id
+            );
+            await musicMgr.refreshPlaylistState();
 
             if (this._treeProvider) {
                 this._treeProvider.refreshParent(selectedPlaylist);
             }
         }
 
-        // get the current track state
-        this.updateButtons();
-    }
-
-    /**
-     * Update the buttons based on the current track state
-     */
-    public static async updateButtons() {
-        const track: Track = MusicManager.getInstance().runningTrack;
         if (this._hideSongTimeout) {
             clearTimeout(this._hideSongTimeout);
         }

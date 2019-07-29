@@ -230,7 +230,7 @@ export async function intializePlugin(
         await musicMgr.refreshPlaylists();
 
         MusicStateManager.getInstance().musicStateCheck();
-        // 15 second interval to check music info
+        // 5 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000 * 5);

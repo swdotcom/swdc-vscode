@@ -65,7 +65,7 @@ export const launchAndPlayTrack = async (
                 spotifyDevices,
                 20 /* checkTrackStateAndTryAgain */
             );
-        }, 2000);
+        }, 1000);
     } else {
         // a device is found, play using the device
         await musicCtrlMgr.playSpotifyTrackFromPlaylist(

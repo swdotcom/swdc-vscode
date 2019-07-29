@@ -12,7 +12,6 @@ import {
     PlaylistItem,
     PlayerDevice,
     getSpotifyDevices,
-    quitMacPlayer,
     playSpotifyTrack
 } from "cody-music";
 import { workspace, window, ViewColumn, Uri } from "vscode";
@@ -65,45 +64,20 @@ export class MusicControlManager {
         //
     }
 
-    async getPlayer(): Promise<PlayerType> {
-        const track = MusicManager.getInstance().runningTrack;
-        if (track) {
-            return track.playerType;
-        }
-        return null;
-    }
-
     async next(playerName: PlayerName = null) {
         if (!playerName) {
-            const playerType = await this.getPlayer();
-            if (playerType) {
-                if (playerType === PlayerType.WebSpotify) {
-                    await next(PlayerName.SpotifyWeb);
-                } else if (playerType === PlayerType.MacItunesDesktop) {
-                    await next(PlayerName.ItunesDesktop);
-                } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                    await next(PlayerName.SpotifyDesktop);
-                }
-            }
+            let playerName = MusicManager.getInstance().currentPlayerName;
+            await next(playerName);
         } else {
             await next(playerName);
         }
-
         MusicStateManager.getInstance().musicStateCheck();
     }
 
     async previous(playerName: PlayerName = null) {
         if (!playerName) {
-            const playerType = await this.getPlayer();
-            if (playerType) {
-                if (playerType === PlayerType.WebSpotify) {
-                    await previous(PlayerName.SpotifyWeb);
-                } else if (playerType === PlayerType.MacItunesDesktop) {
-                    await previous(PlayerName.ItunesDesktop);
-                } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                    await previous(PlayerName.SpotifyDesktop);
-                }
-            }
+            let playerName = MusicManager.getInstance().currentPlayerName;
+            await previous(playerName);
         } else {
             await previous(playerName);
         }
@@ -112,16 +86,8 @@ export class MusicControlManager {
 
     async play(playerName: PlayerName = null) {
         if (!playerName) {
-            const playerType = await this.getPlayer();
-            if (playerType) {
-                if (playerType === PlayerType.WebSpotify) {
-                    await play(PlayerName.SpotifyWeb);
-                } else if (playerType === PlayerType.MacItunesDesktop) {
-                    await play(PlayerName.ItunesDesktop);
-                } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                    await play(PlayerName.SpotifyDesktop);
-                }
-            }
+            let playerName = MusicManager.getInstance().currentPlayerName;
+            await play(playerName);
         } else {
             await play(playerName);
         }
@@ -130,16 +96,8 @@ export class MusicControlManager {
 
     async pause(playerName: PlayerName = null) {
         if (!playerName) {
-            const playerType = await this.getPlayer();
-            if (playerType) {
-                if (playerType === PlayerType.WebSpotify) {
-                    await pause(PlayerName.SpotifyWeb);
-                } else if (playerType === PlayerType.MacItunesDesktop) {
-                    await pause(PlayerName.ItunesDesktop);
-                } else if (playerType === PlayerType.MacSpotifyDesktop) {
-                    await pause(PlayerName.SpotifyDesktop);
-                }
-            }
+            let playerName = MusicManager.getInstance().currentPlayerName;
+            await pause(playerName);
         } else {
             await pause(playerName);
         }
@@ -232,12 +190,10 @@ export class MusicControlManager {
                         spotifyDevices,
                         checkTrackStateAndTryAgainCount
                     );
-                }, 500);
+                }, 1000);
             }
         } else {
-            setTimeout(() => {
-                MusicStateManager.getInstance().musicStateCheck();
-            }, 500);
+            MusicStateManager.getInstance().musicStateCheck();
         }
     }
 
@@ -315,8 +271,6 @@ export class MusicControlManager {
                 "Our service is temporarily unavailable. Please try again later.";
             loginFunction = null;
         }
-
-        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
 
         let menuOptions = {
             items: []
