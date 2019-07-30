@@ -165,8 +165,15 @@ export class MusicStateManager {
 
         // has the existing track ended?
         if (changeStatus.endPrevTrack) {
+            let d = new Date();
+            // offset is the minutes from GMT. it's positive if it's before, and negative after
+            const offset = d.getTimezoneOffset();
+            const offset_sec = offset * 60;
+
             // subtract a couple of seconds since our timer is every 5 seconds
-            this.existingTrack["end"] = now - 2;
+            let end = now - 2;
+            this.existingTrack["end"] = end;
+            playingTrack["local_end"] = end - offset_sec;
             this.existingTrack["coding"] = false;
             // set the spotify playlistId
             if (
@@ -196,18 +203,15 @@ export class MusicStateManager {
             // send off the ended song session
             await sendMusicData(this.existingTrack);
 
-            // set existing track to playing track
-            if (changeStatus.paused) {
-                this.existingTrack = { ...playingTrack };
-            } else {
-                this.existingTrack = {};
-            }
+            // clear the track.
+            this.existingTrack = {};
         }
 
-        // do we have a new song
+        // do we have a new song or was it paused?
+        // if it was paused we'll create a new start time anyway, so recreate.
         if (
             changeStatus.isNewTrack &&
-            changeStatus.playing &&
+            (changeStatus.playing || changeStatus.paused) &&
             changeStatus.isValidTrack
         ) {
             this.musicMgr.getServerTrack(playingTrack);

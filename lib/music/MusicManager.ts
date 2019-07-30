@@ -168,10 +168,13 @@ export class MusicManager {
     clearPlaylists() {
         this._itunesPlaylists = [];
         this._spotifyPlaylists = [];
-        this._savedPlaylists = [];
         this._playlistMap = {};
         this._musictimePlaylists = [];
         this._playlistTrackMap = {};
+    }
+
+    clearSavedPlaylists() {
+        this._savedPlaylists = [];
     }
 
     clearSpotify() {
@@ -180,8 +183,19 @@ export class MusicManager {
         this._playlistTrackMap = {};
     }
 
+    tryRefreshAgain() {
+        this.refreshPlaylists();
+    }
+
     async refreshPlaylists() {
+        if (this._buildingPlaylists) {
+            // try again in a second
+            setTimeout(() => {
+                this.tryRefreshAgain();
+            }, 1000);
+        }
         this._buildingPlaylists = true;
+
         let serverIsOnline = await serverIsAvailable();
         this._runningTrack = await getRunningTrack();
         if (
@@ -198,6 +212,11 @@ export class MusicManager {
             await this.showSpotifyPlaylists(serverIsOnline);
         }
         MusicCommandManager.syncControls(this._runningTrack);
+
+        // update the context showing that the track play/pause is ready
+        // commands.executeCommand("setContext", "trackReady", true);
+
+        this._buildingPlaylists = false;
     }
 
     getPlaylistById(playlist_id: string) {
@@ -236,7 +255,7 @@ export class MusicManager {
         }
     }
 
-    async showItunesPlaylists(serverIsOnline) {
+    private async showItunesPlaylists(serverIsOnline) {
         let foundPlaylist = this._itunesPlaylists.find(element => {
             return element.type === "playlist";
         });
@@ -249,7 +268,7 @@ export class MusicManager {
         }
     }
 
-    async showSpotifyPlaylists(serverIsOnline) {
+    private async showSpotifyPlaylists(serverIsOnline) {
         // if no playlists are found for spotify, then fetch
         let foundPlaylist = this._spotifyPlaylists.find(element => {
             return element.type === "playlist";
@@ -265,7 +284,7 @@ export class MusicManager {
     //
     // Fetch the playlist names for a specific player
     //
-    async refreshPlaylistForPlayer(
+    private async refreshPlaylistForPlayer(
         playerName: PlayerName,
         serverIsOnline: boolean
     ) {
@@ -280,19 +299,13 @@ export class MusicManager {
         }
         playlists = await getPlaylists(playerName);
 
-        if (
-            playerName === PlayerName.SpotifyWeb &&
-            this._savedPlaylists.length === 0
-        ) {
+        if (this._savedPlaylists.length === 0) {
             // fetch and reconcile the saved playlists against the spotify list
             await this.fetchSavedPlaylists(serverIsOnline);
         }
 
         // sort
         this.sortPlaylists(playlists);
-
-        // update so the playlist header shows the spotify related icons
-        // commands.executeCommand("setContext", "treeview-type", type);
 
         // go through each playlist and find out it's state
         if (playlists && playlists.length > 0) {
@@ -827,6 +840,8 @@ export class MusicManager {
                     delete item.playlist_id;
                     return item;
                 });
+
+                console.log("found the following saved playlists: ", playlists);
             }
         }
         this._savedPlaylists = playlists;
@@ -864,6 +879,15 @@ export class MusicManager {
     }
 
     async createOrRefreshGlobalTopSongsPlaylist() {
+        const serverIsOnline = serverIsAvailable();
+
+        if (!serverIsOnline) {
+            window.showInformationMessage(
+                "Our service is temporarily unavailable, please try again later."
+            );
+            return;
+        }
+
         if (this.requiresSpotifyAccess()) {
             // don't create or refresh, no spotify access provided
             return;
@@ -878,6 +902,7 @@ export class MusicManager {
 
         let playlistId = null;
         if (!globalPlaylist) {
+            console.log("global playlist doesn't exist, creating it");
             // 1st create the empty playlist
             const playlistResult: CodyResponse = await createPlaylist(
                 SOFTWARE_TOP_SONGS_NAME,
@@ -907,6 +932,7 @@ export class MusicManager {
             }
         } else {
             // global playlist exists, get the id to refresh
+            console.log("global playlist exists, refreshing the list");
             playlistId = globalPlaylist.id;
         }
 
@@ -914,6 +940,7 @@ export class MusicManager {
             let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
                 return item.trackId;
             });
+            console.log("setting global playlist with tracks: ", tracksToAdd);
             if (tracksToAdd && tracksToAdd.length > 0) {
                 if (!globalPlaylist) {
                     // no global playlist, add the tracks for the 1st time
@@ -934,9 +961,25 @@ export class MusicManager {
                 }
             }
         }
+
+        await this.fetchSavedPlaylists(serverIsOnline);
     }
 
     async generateUsersWeeklyTopSongs() {
+        const serverIsOnline = serverIsAvailable();
+
+        if (!serverIsOnline) {
+            window.showInformationMessage(
+                "Our service is temporarily unavailable, please try again later."
+            );
+            return;
+        }
+
+        if (this.requiresSpotifyAccess()) {
+            // don't create or refresh, no spotify access provided
+            return;
+        }
+
         let customPlaylist = this.getMusicTimePlaylistByTypeId(
             PERSONAL_TOP_SONGS_PLID
         );
@@ -1001,6 +1044,8 @@ export class MusicManager {
                 }
             }
         }
+
+        await this.fetchSavedPlaylists(serverIsOnline);
     }
 
     async addTracks(playlist_id: string, name: string, tracksToAdd: string[]) {
@@ -1141,8 +1186,11 @@ export class MusicManager {
     async reconcilePlaylists() {
         // fetch what we have from the app
         if (this._savedPlaylists.length > 0) {
+            const currentSpotifyPlaylists = await getPlaylists(
+                PlayerName.SpotifyWeb
+            );
             this._savedPlaylists.map(async savedPlaylist => {
-                let foundItem = this._spotifyPlaylists.find(element => {
+                let foundItem = currentSpotifyPlaylists.find(element => {
                     return element.id === savedPlaylist.id;
                 });
                 // the backend should protect this from deleting the global top 40

@@ -58,7 +58,7 @@ const fs = require("fs");
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 let lastDayOfMonth = -1;
-
+let updatingTrackState = false;
 export class MusicControlManager {
     constructor() {
         //
@@ -71,7 +71,10 @@ export class MusicControlManager {
         } else {
             await next(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        await MusicStateManager.getInstance().musicStateCheck();
+        MusicCommandManager.syncControls(
+            MusicManager.getInstance().runningTrack
+        );
     }
 
     async previous(playerName: PlayerName = null) {
@@ -81,27 +84,46 @@ export class MusicControlManager {
         } else {
             await previous(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        await MusicStateManager.getInstance().musicStateCheck();
+        MusicCommandManager.syncControls(
+            MusicManager.getInstance().runningTrack
+        );
     }
 
     async play(playerName: PlayerName = null) {
+        if (updatingTrackState) {
+            return;
+        }
+        updatingTrackState = true;
         if (!playerName) {
             let playerName = MusicManager.getInstance().currentPlayerName;
             await play(playerName);
         } else {
             await play(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        await MusicStateManager.getInstance().musicStateCheck();
+        MusicCommandManager.syncControls(
+            MusicManager.getInstance().runningTrack
+        );
+        updatingTrackState = false;
     }
 
     async pause(playerName: PlayerName = null) {
+        if (updatingTrackState) {
+            return;
+        }
+        updatingTrackState = true;
         if (!playerName) {
             let playerName = MusicManager.getInstance().currentPlayerName;
             await pause(playerName);
         } else {
             await pause(playerName);
         }
-        MusicStateManager.getInstance().musicStateCheck();
+        await MusicStateManager.getInstance().musicStateCheck();
+        MusicCommandManager.syncControls(
+            MusicManager.getInstance().runningTrack
+        );
+        updatingTrackState = false;
     }
 
     async setLiked(liked: boolean) {
@@ -141,6 +163,10 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
+        if (updatingTrackState) {
+            return;
+        }
+        updatingTrackState = true;
         if (playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
             playlistId = null;
         }
@@ -177,9 +203,11 @@ export class MusicControlManager {
         if (checkTrackStateAndTryAgainCount > 0) {
             const track: Track = await getRunningTrack();
             if (playlistItem && track.id === playlistItem.id) {
-                MusicStateManager.getInstance().musicStateCheck();
+                await MusicStateManager.getInstance().musicStateCheck();
+                updatingTrackState = false;
             } else if (!playlistItem && track.id) {
-                MusicStateManager.getInstance().musicStateCheck();
+                await MusicStateManager.getInstance().musicStateCheck();
+                updatingTrackState = false;
             } else {
                 spotifyDevices = await getSpotifyDevices();
                 setTimeout(() => {
@@ -193,7 +221,8 @@ export class MusicControlManager {
                 }, 1000);
             }
         } else {
-            MusicStateManager.getInstance().musicStateCheck();
+            await MusicStateManager.getInstance().musicStateCheck();
+            updatingTrackState = false;
         }
     }
 

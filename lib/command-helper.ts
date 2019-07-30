@@ -26,7 +26,7 @@ import {
     connectPlaylistTreeView,
     playSelectedItem
 } from "./music/MusicPlaylistProvider";
-import { PlaylistItem, PlayerName } from "cody-music";
+import { PlaylistItem, PlayerName, Track, TrackStatus } from "cody-music";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
@@ -115,9 +115,17 @@ export function createCommands(): {
 
         const playCmd = commands.registerCommand(
             "musictime.play",
-            (node: PlaylistItem) => {
-                if (node) {
-                    playSelectedItem(node, false /*isExpand*/);
+            (p: PlaylistItem) => {
+                const notAssigned =
+                    p && (!p.state || p.state === TrackStatus.NotAssigned);
+                const isPlaylist = p && p["itemType"] === "playlist";
+                const hasTracks =
+                    p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0;
+                if (isPlaylist && !hasTracks) {
+                    return;
+                }
+                if (notAssigned) {
+                    playSelectedItem(p, false /*isExpand*/);
                 } else {
                     controller.play();
                 }
@@ -218,6 +226,7 @@ export function createCommands(): {
             "musictime.reconcilePlaylist",
             async () => {
                 await musicMgr.reconcilePlaylists();
+                await musicMgr.clearSavedPlaylists();
                 setTimeout(async () => {
                     commands.executeCommand("musictime.refreshPlaylist");
                 }, 1000);
