@@ -58,7 +58,7 @@ const fs = require("fs");
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 let lastDayOfMonth = -1;
-let updatingTrackState = false;
+
 export class MusicControlManager {
     constructor() {
         //
@@ -91,10 +91,6 @@ export class MusicControlManager {
     }
 
     async play(playerName: PlayerName = null) {
-        if (updatingTrackState) {
-            return;
-        }
-        updatingTrackState = true;
         if (!playerName) {
             let playerName = MusicManager.getInstance().currentPlayerName;
             await play(playerName);
@@ -105,14 +101,9 @@ export class MusicControlManager {
         MusicCommandManager.syncControls(
             MusicManager.getInstance().runningTrack
         );
-        updatingTrackState = false;
     }
 
     async pause(playerName: PlayerName = null) {
-        if (updatingTrackState) {
-            return;
-        }
-        updatingTrackState = true;
         if (!playerName) {
             let playerName = MusicManager.getInstance().currentPlayerName;
             await pause(playerName);
@@ -123,7 +114,6 @@ export class MusicControlManager {
         MusicCommandManager.syncControls(
             MusicManager.getInstance().runningTrack
         );
-        updatingTrackState = false;
     }
 
     async setLiked(liked: boolean) {
@@ -163,10 +153,6 @@ export class MusicControlManager {
         spotifyDevices: PlayerDevice[],
         checkTrackStateAndTryAgainCount: number = 0
     ) {
-        if (updatingTrackState) {
-            return;
-        }
-        updatingTrackState = true;
         if (playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
             playlistId = null;
         }
@@ -204,10 +190,8 @@ export class MusicControlManager {
             const track: Track = await getRunningTrack();
             if (playlistItem && track.id === playlistItem.id) {
                 await MusicStateManager.getInstance().musicStateCheck();
-                updatingTrackState = false;
             } else if (!playlistItem && track.id) {
                 await MusicStateManager.getInstance().musicStateCheck();
-                updatingTrackState = false;
             } else {
                 spotifyDevices = await getSpotifyDevices();
                 setTimeout(() => {
@@ -222,7 +206,6 @@ export class MusicControlManager {
             }
         } else {
             await MusicStateManager.getInstance().musicStateCheck();
-            updatingTrackState = false;
         }
     }
 
