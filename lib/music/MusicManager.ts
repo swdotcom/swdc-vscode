@@ -840,8 +840,6 @@ export class MusicManager {
                     delete item.playlist_id;
                     return item;
                 });
-
-                console.log("found the following saved playlists: ", playlists);
             }
         }
         this._savedPlaylists = playlists;
@@ -902,7 +900,6 @@ export class MusicManager {
 
         let playlistId = null;
         if (!globalPlaylist) {
-            console.log("global playlist doesn't exist, creating it");
             // 1st create the empty playlist
             const playlistResult: CodyResponse = await createPlaylist(
                 SOFTWARE_TOP_SONGS_NAME,
@@ -932,7 +929,6 @@ export class MusicManager {
             }
         } else {
             // global playlist exists, get the id to refresh
-            console.log("global playlist exists, refreshing the list");
             playlistId = globalPlaylist.id;
         }
 
@@ -940,7 +936,6 @@ export class MusicManager {
             let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
                 return item.trackId;
             });
-            console.log("setting global playlist with tracks: ", tracksToAdd);
             if (tracksToAdd && tracksToAdd.length > 0) {
                 if (!globalPlaylist) {
                     // no global playlist, add the tracks for the 1st time

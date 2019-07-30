@@ -117,10 +117,15 @@ export function createCommands(): {
             "musictime.play",
             (p: PlaylistItem) => {
                 const notAssigned =
-                    p && (!p.state || p.state === TrackStatus.NotAssigned);
-                const isPlaylist = p && p["itemType"] === "playlist";
+                    p && (!p.state || p.state === TrackStatus.NotAssigned)
+                        ? true
+                        : false;
+                const isPlaylist =
+                    p && p["itemType"] === "playlist" ? true : false;
                 const hasTracks =
-                    p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0;
+                    p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0
+                        ? true
+                        : false;
                 if (isPlaylist && !hasTracks) {
                     return;
                 }
