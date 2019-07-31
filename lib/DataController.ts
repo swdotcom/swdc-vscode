@@ -595,12 +595,11 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 export async function sendHeartbeat(reason, serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
-        const version = `${env.appName}_${getVersion()}`;
         let heartbeat = {
             pluginId: getPluginId(),
             os: getOs(),
             start: nowInSecs(),
-            version,
+            version: getVersion(),
             hostname: await getHostname(),
             session_ctime: getSessionFileCreateTime(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

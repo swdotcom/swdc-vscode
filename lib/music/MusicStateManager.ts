@@ -173,7 +173,7 @@ export class MusicStateManager {
             // subtract a couple of seconds since our timer is every 5 seconds
             let end = now - 2;
             this.existingTrack["end"] = end;
-            playingTrack["local_end"] = end - offset_sec;
+            this.existingTrack["local_end"] = end - offset_sec;
             this.existingTrack["coding"] = false;
             // set the spotify playlistId
             if (
@@ -248,7 +248,7 @@ export class MusicStateManager {
     }
 
     private codingDataReducer(accumulator, current) {
-        const version = `${env.appName}_${getVersion()}`;
+        const version = getVersion();
         const numberList: string[] = [
             "add",
             "paste",
@@ -287,7 +287,7 @@ export class MusicStateManager {
             // set the other top level attributes
             accumulator["timezone"] = current.timezone;
             accumulator["os"] = current.os;
-            accumulator["version"] = current.version;
+            accumulator["version"] = getVersion();
             accumulator["pluginId"] = current.pluginId;
             // set the: start, local_start, end, local_end, offset
             accumulator["start"] = current.start;
@@ -375,7 +375,6 @@ export class MusicStateManager {
 
     public getMusicCodingData() {
         const file = getMusicSessionDataStoreFile();
-        const version = `${env.appName}_${getVersion()}`;
         const initialValue = {
             add: 0,
             paste: 0,
@@ -391,7 +390,7 @@ export class MusicStateManager {
             offset: getOffsetSecends() / 60,
             pluginId: getPluginId(),
             os: getOs(),
-            version,
+            version: getVersion(),
             source: {}
         };
         try {

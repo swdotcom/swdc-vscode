@@ -62,6 +62,15 @@ export function getPluginId() {
     return CODE_TIME_PLUGIN_ID;
 }
 
+export function getPluginName() {
+    if (isCodeTime()) {
+        return CODE_TIME_EXT_ID;
+    } else if (isMusicTime()) {
+        return MUSIC_TIME_EXT_ID;
+    }
+    return CODE_TIME_EXT_ID;
+}
+
 export function getVersion() {
     let extension = null;
     if (isCodeTime()) {

@@ -21,7 +21,9 @@ import {
     isCodeTime,
     isMusicTime,
     jwtExists,
-    showLoginPrompt
+    showLoginPrompt,
+    getPluginId,
+    getPluginName
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
@@ -146,7 +148,7 @@ export async function intializePlugin(
     ctx: ExtensionContext,
     createdAnonUser: boolean
 ) {
-    logIt(`Loaded v${getVersion()}`);
+    logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
     let serverIsOnline = await serverIsAvailable();
 
