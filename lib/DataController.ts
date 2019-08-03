@@ -25,8 +25,8 @@ import {
     isMusicTime,
     showStatus,
     getPluginId,
-    getExtensionName,
-    isCodeTime
+    isCodeTime,
+    logEvent
 } from "./Util";
 import { requiresSpotifyAccessInfo } from "cody-music";
 import {
@@ -47,12 +47,22 @@ let loggedInCacheState = null;
 let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
+let toggleFileEventLogging = null;
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
 export function getLoggedInCacheState() {
     return loggedInCacheState;
+}
+
+export function getToggleFileEventLoggingState() {
+    if (toggleFileEventLogging === null) {
+        toggleFileEventLogging = workspace
+            .getConfiguration()
+            .get("toggleFileEventLogging");
+    }
+    return toggleFileEventLogging;
 }
 
 export async function serverIsAvailable() {
@@ -72,6 +82,7 @@ export async function serverIsAvailable() {
 }
 
 export async function sendBatchPayload(batch) {
+    logEvent(`Sending batch payloads: ${batch}`);
     await softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
         logIt(`Unable to send plugin data batch, error: ${e.message}`);
     });
@@ -92,7 +103,7 @@ export async function sendOfflineData() {
             // we're online so just delete the datastore file
             deleteFile(getSoftwareDataStoreFile());
             if (content) {
-                logIt(`sending batch payloads: ${content}`);
+                logEvent(`sending batch payloads: ${content}`);
                 const payloads = content
                     .split(/\r?\n/)
                     .map(item => {
@@ -396,14 +407,14 @@ export async function initializePreferences(serverIsOnline) {
                 await sendPreferencesUpdate(userId, prefs);
             } else {
                 if (prefsShowMusic !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showMusicMetrics",
-                            prefsShowMusic,
-                            ConfigurationTarget.Global
-                        );
-                    updateShowMusicMetrics(prefsShowMusic);
+                    // await workspace
+                    //     .getConfiguration()
+                    //     .update(
+                    //         "showMusicMetrics",
+                    //         prefsShowMusic,
+                    //         ConfigurationTarget.Global
+                    //     );
+                    // updateShowMusicMetrics(prefsShowMusic);
                 }
                 if (prefsShowGit !== null) {
                     await workspace
@@ -430,16 +441,16 @@ export async function initializePreferences(serverIsOnline) {
 
 async function sendPreferencesUpdate(userId, userPrefs) {
     let api = `/users/${userId}`;
-    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
         .getConfiguration()
         .get("showWeeklyRanking");
-    userPrefs["showMusic"] = showMusicMetrics;
+    // userPrefs["showMusic"] = showMusicMetrics;
     userPrefs["showGit"] = showGitMetrics;
     userPrefs["showRank"] = showWeeklyRanking;
 
-    updateShowMusicMetrics(showMusicMetrics);
+    // updateShowMusicMetrics(showMusicMetrics);
 
     // update the preferences
     // /:id/preferences
@@ -451,13 +462,17 @@ async function sendPreferencesUpdate(userId, userPrefs) {
 }
 
 export async function updatePreferences() {
-    let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+    toggleFileEventLogging = workspace
+        .getConfiguration()
+        .get("toggleFileEventLogging");
+
+    // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     let showWeeklyRanking = workspace
         .getConfiguration()
         .get("showWeeklyRanking");
 
-    updateShowMusicMetrics(showMusicMetrics);
+    // updateShowMusicMetrics(showMusicMetrics);
 
     // get the user's preferences and update them if they don't match what we have
     let jwt = getItem("jwt");
@@ -494,7 +509,6 @@ export async function updatePreferences() {
                     prefsShowMusic === null ||
                     prefsShowGit === null ||
                     prefsShowRank === null ||
-                    prefsShowMusic !== showMusicMetrics ||
                     prefsShowGit !== showGitMetrics ||
                     prefsShowRank !== showWeeklyRanking
                 ) {
@@ -674,7 +688,6 @@ export async function getSessionSummaryStatus(forceRefresh = false) {
             })
             .catch(err => {
                 updateStatusBarWithSummaryData();
-                logIt(`error fetching session kpm info: ${err.message}`);
                 return { status: "ERROR", data: sessionSummaryData };
             });
         return result;

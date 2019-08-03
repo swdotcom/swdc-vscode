@@ -924,7 +924,7 @@ export class MusicManager {
                     2,
                     SOFTWARE_TOP_SONGS_NAME
                 ).catch(err => {
-                    logIt("Error updating music time global playlist ID");
+                    // logIt("Error updating music time global playlist ID");
                 });
             }
         } else {
@@ -948,9 +948,9 @@ export class MusicManager {
                     // it exists, refresh it with new tracks
                     await replacePlaylistTracks(playlistId, tracksToAdd).catch(
                         err => {
-                            logIt(
-                                `Error replacing tracks, error: ${err.message}`
-                            );
+                            // logIt(
+                            //     `Error replacing tracks, error: ${err.message}`
+                            // );
                         }
                     );
                 }
@@ -1006,7 +1006,7 @@ export class MusicManager {
                 1,
                 PERSONAL_TOP_SONGS_NAME
             ).catch(err => {
-                logIt("Error updating music time global playlist ID");
+                // logIt("Error updating music time global playlist ID");
             });
         } else {
             // get the spotify playlist id from the app's existing playlist info
@@ -1031,9 +1031,9 @@ export class MusicManager {
                 } else {
                     await replacePlaylistTracks(playlistId, tracksToAdd).catch(
                         err => {
-                            logIt(
-                                `Error replacing tracks, error: ${err.message}`
-                            );
+                            // logIt(
+                            //     `Error replacing tracks, error: ${err.message}`
+                            // );
                         }
                     );
                 }

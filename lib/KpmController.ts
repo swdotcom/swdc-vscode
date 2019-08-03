@@ -9,8 +9,8 @@ import {
     isEmptyObj,
     getProjectFolder,
     getDashboardFile,
-    logIt,
-    getNowTimes
+    getNowTimes,
+    logEvent
 } from "./Util";
 import { sendOfflineData } from "./DataController";
 const moment = require("moment-timezone");
@@ -92,7 +92,7 @@ export class KpmController {
         }
 
         _keystrokeMap[rootPath].source[filename].close += 1;
-        logIt(`File closed: ${filename}`);
+        logEvent(`File closed: ${filename}`);
     }
 
     private async _onOpenHandler(event) {
@@ -124,7 +124,7 @@ export class KpmController {
         }
 
         _keystrokeMap[rootPath].source[filename].open += 1;
-        logIt(`File opened: ${filename}`);
+        logEvent(`File opened: ${filename}`);
     }
 
     /**
@@ -236,16 +236,16 @@ export class KpmController {
             // it's a copy and paste event
             //
             _keystrokeMap[rootPath].source[filename].paste += 1;
-            logIt("Copy+Paste Incremented");
+            logEvent("Copy+Paste Incremented");
         } else if (newCount < 0) {
             _keystrokeMap[rootPath].source[filename].delete += 1;
             // update the overall count
-            logIt("Delete Incremented");
+            logEvent("Delete Incremented");
         } else if (hasNonNewLineData) {
             // update the data for this fileInfo keys count
             _keystrokeMap[rootPath].source[filename].add += 1;
             // update the overall count
-            logIt("KPM incremented");
+            logEvent("KPM incremented");
         }
         // increment keystrokes by 1
         _keystrokeMap[rootPath].keystrokes += 1;
@@ -271,17 +271,17 @@ export class KpmController {
             _keystrokeMap[rootPath].source[filename].linesRemoved += Math.abs(
                 diff
             );
-            logIt("Increment lines removed");
+            logEvent("Increment lines removed");
         } else if (diff > 0) {
             _keystrokeMap[rootPath].source[filename].linesAdded += diff;
-            logIt("Increment lines added");
+            logEvent("Increment lines added");
         }
         if (
             _keystrokeMap[rootPath].source[filename].linesAdded === 0 &&
             isNewLine
         ) {
             _keystrokeMap[rootPath].source[filename].linesAdded = 1;
-            logIt("Increment lines added");
+            logEvent("Increment lines added");
         }
     }
 

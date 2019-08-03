@@ -125,15 +125,15 @@ export async function showMenuOptions() {
         cb: toggleStatusBar
     });
 
-    if (userStatus.loggedIn && showMusicMetrics) {
-        kpmMenuOptions.items.push({
-            label: "Software Top 40",
-            detail:
-                "Top 40 most popular songs developers around the world listen to as they code",
-            url: "https://api.software.com/music/top40",
-            cb: null
-        });
-    }
+    // if (userStatus.loggedIn && showMusicMetrics) {
+    //     kpmMenuOptions.items.push({
+    //         label: "Software Top 40",
+    //         detail:
+    //             "Top 40 most popular songs developers around the world listen to as they code",
+    //         url: "https://api.software.com/music/top40",
+    //         cb: null
+    //     });
+    // }
 
     kpmMenuOptions.items.push({
         label: "Submit an issue on GitHub",
@@ -175,17 +175,15 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
     if (lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
 
-        logIt("retrieving dashboard metrics");
-
-        let showMusicMetrics = workspace
-            .getConfiguration()
-            .get("showMusicMetrics");
+        // let showMusicMetrics = workspace
+        //     .getConfiguration()
+        //     .get("showMusicMetrics");
         let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
         let showWeeklyRanking = workspace
             .getConfiguration()
             .get("showWeeklyRanking");
 
-        let api = `/dashboard?showMusic=${showMusicMetrics}&showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}&showToday=false`;
+        let api = `/dashboard?showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}&showToday=false`;
         const dashboardSummary = await softwareGet(api, getItem("jwt"));
 
         let summaryContent = "";

@@ -11,7 +11,8 @@ import {
 } from "./Constants";
 import {
     refetchUserStatusLazily,
-    fetchSessionSummaryInfo
+    fetchSessionSummaryInfo,
+    getToggleFileEventLoggingState
 } from "./DataController";
 import {
     incrementSessionSummaryData,
@@ -536,6 +537,13 @@ export function getExtensionName() {
         extensionName = "swdc-vscode";
     }
     return extensionName;
+}
+
+export function logEvent(message) {
+    const logEvents = getToggleFileEventLoggingState();
+    if (logEvents) {
+        console.log(`${getExtensionName()}: ${message}`);
+    }
 }
 
 export function logIt(message) {

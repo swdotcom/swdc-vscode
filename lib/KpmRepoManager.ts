@@ -5,8 +5,7 @@ import {
     isWindows,
     getRootPaths,
     normalizeGithubEmail,
-    logIt,
-    nowInSecs
+    logIt
 } from "./Util";
 
 //
@@ -98,14 +97,7 @@ export async function getRepoUsers() {
                 };
 
                 // send this to the backend
-                softwarePost("/repo/members", repoData, getItem("jwt")).then(
-                    resp => {
-                        if (isResponseOk(resp)) {
-                            // everything is fine, delete the offline data file
-                            logIt("repo membership updated");
-                        }
-                    }
-                );
+                softwarePost("/repo/members", repoData, getItem("jwt"));
             }
         }
     }
@@ -336,16 +328,7 @@ export async function getHistoricalCommits(isonline) {
 
         function sendCommits(commitData) {
             // send this to the backend
-            softwarePost("/commits", commitData, getItem("jwt")).then(resp => {
-                if (isResponseOk(resp)) {
-                    if (resp.data) {
-                        logIt(`${resp.data.message}`);
-                    } else {
-                        // everything is fine, delete the offline data file
-                        logIt("repo commits updated");
-                    }
-                }
-            });
+            softwarePost("/commits", commitData, getItem("jwt"));
         }
     }
 }

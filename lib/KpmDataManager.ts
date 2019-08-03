@@ -106,10 +106,9 @@ export class KpmDataManager {
 
         if (sendNow) {
             sendBatchPayload([payload]);
-            logIt(`posted kpm metrics: ${JSON.stringify(payload)}`);
         } else {
             storePayload(payload);
-            logIt(`stored kpm metrics: ${JSON.stringify(payload)}`);
+            logIt(`storing kpm metrics`);
         }
     }
 }

@@ -10,27 +10,6 @@ const beApi = axios.create({
 
 const spotifyApi = axios.create({});
 
-export async function spotifyApiGet(api, accessToken) {
-    if (api.indexOf("https://api.spotify.com") === -1) {
-        api = "https://api.spotify.com" + api;
-    }
-    spotifyApi.defaults.headers.common[
-        "Authorization"
-    ] = `Bearer ${accessToken}`;
-    return await spotifyApi
-        .get(api)
-        .then(resp => {
-            return resp;
-        })
-        .catch(err => {
-            // when a token expires, we'll get the following error data
-            // err.response.status === 401
-            // err.response.statusText = "Unauthorized"
-            logIt(`error fetching data for ${api}, message: ${err.message}`);
-            return err;
-        });
-}
-
 export async function spotifyApiPut(api, payload, accessToken) {
     if (api.indexOf("https://api.spotify.com") === -1) {
         api = "https://api.spotify.com" + api;
@@ -39,19 +18,6 @@ export async function spotifyApiPut(api, payload, accessToken) {
         "Authorization"
     ] = `Bearer ${accessToken}`;
     return await spotifyApi.put(api, payload).catch(err => {
-        logIt(`error posting data for ${api}, message: ${err.message}`);
-        return err;
-    });
-}
-
-export async function spotifyApiPost(api, payload, accessToken) {
-    if (api.indexOf("https://api.spotify.com") === -1) {
-        api = "https://api.spotify.com" + api;
-    }
-    spotifyApi.defaults.headers.common[
-        "Authorization"
-    ] = `Bearer ${accessToken}`;
-    return await spotifyApi.post(api, payload).catch(err => {
         logIt(`error posting data for ${api}, message: ${err.message}`);
         return err;
     });
