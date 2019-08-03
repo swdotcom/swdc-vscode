@@ -55,11 +55,6 @@
                     "default": false,
                     "description": "Git metrics"
                 },
-                "showWeeklyRanking": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Weekly Ranking"
-                },
                 "toggleFileEventLogging": {
                     "type": "boolean",
                     "default": false,

@@ -426,13 +426,13 @@ export async function initializePreferences(serverIsOnline) {
                         );
                 }
                 if (prefsShowRank !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showWeeklyRanking",
-                            prefsShowRank,
-                            ConfigurationTarget.Global
-                        );
+                    // await workspace
+                    //     .getConfiguration()
+                    //     .update(
+                    //         "showWeeklyRanking",
+                    //         prefsShowRank,
+                    //         ConfigurationTarget.Global
+                    //     );
                 }
             }
         }
@@ -443,12 +443,12 @@ async function sendPreferencesUpdate(userId, userPrefs) {
     let api = `/users/${userId}`;
     // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-    let showWeeklyRanking = workspace
-        .getConfiguration()
-        .get("showWeeklyRanking");
+    // let showWeeklyRanking = workspace
+    //     .getConfiguration()
+    //     .get("showWeeklyRanking");
     // userPrefs["showMusic"] = showMusicMetrics;
     userPrefs["showGit"] = showGitMetrics;
-    userPrefs["showRank"] = showWeeklyRanking;
+    // userPrefs["showRank"] = showWeeklyRanking;
 
     // updateShowMusicMetrics(showMusicMetrics);
 
@@ -468,9 +468,9 @@ export async function updatePreferences() {
 
     // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-    let showWeeklyRanking = workspace
-        .getConfiguration()
-        .get("showWeeklyRanking");
+    // let showWeeklyRanking = workspace
+    //     .getConfiguration()
+    //     .get("showWeeklyRanking");
 
     // updateShowMusicMetrics(showMusicMetrics);
 
@@ -505,13 +505,7 @@ export async function updatePreferences() {
                         ? prefs.showRank
                         : null;
 
-                if (
-                    prefsShowMusic === null ||
-                    prefsShowGit === null ||
-                    prefsShowRank === null ||
-                    prefsShowGit !== showGitMetrics ||
-                    prefsShowRank !== showWeeklyRanking
-                ) {
+                if (prefsShowGit === null || prefsShowGit !== showGitMetrics) {
                     await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
                 }
             }

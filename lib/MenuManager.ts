@@ -179,11 +179,11 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
         //     .getConfiguration()
         //     .get("showMusicMetrics");
         let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-        let showWeeklyRanking = workspace
-            .getConfiguration()
-            .get("showWeeklyRanking");
+        // let showWeeklyRanking = workspace
+        //     .getConfiguration()
+        //     .get("showWeeklyRanking");
 
-        let api = `/dashboard?showGit=${showGitMetrics}&showRank=${showWeeklyRanking}&linux=${isLinux()}&showToday=false`;
+        let api = `/dashboard?showMusic=false&showGit=${showGitMetrics}&showRank=false&linux=${isLinux()}&showToday=false`;
         const dashboardSummary = await softwareGet(api, getItem("jwt"));
 
         let summaryContent = "";
