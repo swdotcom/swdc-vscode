@@ -82,7 +82,6 @@ export async function serverIsAvailable() {
 }
 
 export async function sendBatchPayload(batch) {
-    logEvent(`Sending batch payloads: ${batch}`);
     await softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
         logIt(`Unable to send plugin data batch, error: ${e.message}`);
     });
