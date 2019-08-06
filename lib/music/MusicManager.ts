@@ -34,8 +34,6 @@ import {
     GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
     SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET,
-    GENERATE_GLOBAL_PLAYLIST_TITLE,
-    GENERATE_GLOBAL_PLAYLIST_TOOLTIP,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
     LOGIN_LABEL
 } from "../Constants";
@@ -47,7 +45,7 @@ import {
     getLoggedInCacheState,
     getUserStatus
 } from "../DataController";
-import { getItem, logIt, setItem, launchLogin } from "../Util";
+import { getItem, setItem, launchLogin, isMac } from "../Util";
 import {
     isResponseOk,
     softwareGet,
@@ -225,6 +223,7 @@ export class MusicManager {
 
     async refreshPlaylistState() {
         if (this._spotifyPlaylists.length > 0) {
+            // build the spotify playlist
             this._spotifyPlaylists.forEach(async playlist => {
                 let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
                     playlist.id
@@ -239,19 +238,21 @@ export class MusicManager {
             });
         }
 
-        if (this._itunesPlaylists.length > 0) {
-            this._itunesPlaylists.forEach(async playlist => {
-                let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
-                    playlist.id
-                ];
+        if (isMac()) {
+            // build the itunes playlist
+            if (this._itunesPlaylists.length > 0) {
+                this._itunesPlaylists.forEach(async playlist => {
+                    let playlistItemTracks: PlaylistItem[] = this
+                        ._playlistTrackMap[playlist.id];
 
-                if (playlistItemTracks && playlistItemTracks.length > 0) {
-                    let playlistState = await this.getPlaylistState(
-                        playlist.id
-                    );
-                    playlist.state = playlistState;
-                }
-            });
+                    if (playlistItemTracks && playlistItemTracks.length > 0) {
+                        let playlistState = await this.getPlaylistState(
+                            playlist.id
+                        );
+                        playlist.state = playlistState;
+                    }
+                });
+            }
         }
     }
 
@@ -363,7 +364,9 @@ export class MusicManager {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
                 items.push(this.getSpotifyConnectedButton());
             }
-            items.push(this.getSwitchToItunesButton());
+            if (isMac()) {
+                items.push(this.getSwitchToItunesButton());
+            }
 
             // get the custom playlist button
             if (serverIsOnline && !needsSpotifyAccess) {

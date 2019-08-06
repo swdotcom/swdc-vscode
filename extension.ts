@@ -22,8 +22,8 @@ import {
     isMusicTime,
     jwtExists,
     showLoginPrompt,
-    getPluginId,
-    getPluginName
+    getPluginName,
+    isMac
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
@@ -219,7 +219,8 @@ export async function intializePlugin(
 
     if (isMusicTime()) {
         let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = true;
+        codyConfig.enableItunesDesktop = isMac() ? true : false;
+        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
         setConfig(codyConfig);
 
         const musicMgr: MusicManager = MusicManager.getInstance();

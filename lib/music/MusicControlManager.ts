@@ -32,7 +32,8 @@ import {
     launchLogin,
     createSpotifyIdFromUri,
     getMusicTimeMarkdownFile,
-    getSoftwareDir
+    getSoftwareDir,
+    isMac
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
@@ -378,11 +379,14 @@ export class MusicControlManager {
                 command: "musictime.launchSpotify"
             });
         } else {
-            menuOptions.items.push({
-                label: "Switch to iTunes",
-                detail: "Launch the iTunes web player to view your playlist",
-                command: "musictime.launchItunes"
-            });
+            if (isMac()) {
+                menuOptions.items.push({
+                    label: "Switch to iTunes",
+                    detail:
+                        "Launch the iTunes web player to view your playlist",
+                    command: "musictime.launchItunes"
+                });
+            }
         }
 
         showQuickPick(menuOptions);
