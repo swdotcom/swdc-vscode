@@ -175,6 +175,11 @@
                 "tooltip": "Disconnect your Spotify account"
             },
             {
+                "command": "musictime.disconnectSlack",
+                "title": "Disconnect your Slack account",
+                "tooltip": "Disconnect your Slack account"
+            },
+            {
                 "command": "musictime.refreshSettings",
                 "title": "Refresh Settings"
             },

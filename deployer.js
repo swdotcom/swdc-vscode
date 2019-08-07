@@ -254,6 +254,11 @@ async function deploy() {
             tooltip: "Disconnect your Spotify account"
         });
         commands.push({
+            command: "musictime.disconnectSlack",
+            title: "Disconnect your Slack account",
+            tooltip: "Disconnect your Slack account"
+        });
+        commands.push({
             command: "musictime.refreshSettings",
             title: "Refresh Settings"
         });

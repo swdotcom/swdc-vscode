@@ -344,6 +344,11 @@ export class MusicManager {
             items.push(this.getConnectToSpotifyButton());
         }
 
+        if (getItem("slack_access_token")) {
+            // show the disconnect slack button
+            items.push(this.getSlackDisconnectButton());
+        }
+
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
             items.push(this.getItunesConnectedButton());
@@ -478,6 +483,17 @@ export class MusicManager {
             PlayerType.WebSpotify,
             "Spotify Connected",
             "You've connected Spotify"
+        );
+    }
+
+    getSlackDisconnectButton() {
+        return this.buildActionItem(
+            "slackdisconnect",
+            "action",
+            "musictime.disconnectSlack",
+            PlayerType.NotAssigned,
+            "Disconnect Slack",
+            "Disconnect your Slack oauth integration"
         );
     }
 
@@ -1096,8 +1112,8 @@ export class MusicManager {
     }
 
     async initializeSlack() {
-        if (!getItem("slack_access_token")) {
-            const serverIsOnline = await serverIsAvailable();
+        const serverIsOnline = await serverIsAvailable();
+        if (serverIsOnline) {
             const spotifyOauth = await getSlackOauth(serverIsOnline);
             if (spotifyOauth) {
                 // update the CodyMusic credentials
@@ -1115,6 +1131,8 @@ export class MusicManager {
          */
         if (slackOauth) {
             setItem("slack_access_token", slackOauth.slack_access_token);
+        } else {
+            setItem("slack_access_token", null);
         }
     }
 

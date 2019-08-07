@@ -44,7 +44,9 @@ import {
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
     GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
-    PERSONAL_TOP_SONGS_PLID
+    PERSONAL_TOP_SONGS_PLID,
+    NOT_NOW_LABEL,
+    YES_LABEL
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
@@ -450,25 +452,45 @@ export async function connectSpotify() {
 }
 
 export async function disconnectSpotify() {
-    let serverIsOnline = await serverIsAvailable();
-    if (serverIsOnline) {
-        let result = await softwarePut(
-            "/disconnect/spotify",
-            {},
-            getItem("jwt")
-        );
+    disconnectOauth("Spotify");
+}
 
-        if (isResponseOk(result)) {
-            const musicMgr = MusicManager.getInstance();
-            // oauth is not null, initialize spotify
-            musicMgr.clearSpotifyAccessInfo();
+export async function disconnectSlack() {
+    disconnectOauth("Slack");
+}
 
-            musicMgr.refreshPlaylists();
+export async function disconnectOauth(type: string) {
+    const selection = await window.showInformationMessage(
+        `Are you sure you would like to disconnect ${type}?`,
+        ...[NOT_NOW_LABEL, YES_LABEL]
+    );
+
+    if (selection === YES_LABEL) {
+        let serverIsOnline = await serverIsAvailable();
+        if (serverIsOnline) {
+            const type_lc = type.toLowerCase();
+            let result = await softwarePut(
+                `/disconnect/${type_lc}`,
+                {},
+                getItem("jwt")
+            );
+
+            if (isResponseOk(result)) {
+                const musicMgr = MusicManager.getInstance();
+                // oauth is not null, initialize spotify
+                if (type_lc === "slack") {
+                    await this.updateSlackAccessInfo(null);
+                } else if (type_lc === "spotify") {
+                    musicMgr.clearSpotifyAccessInfo();
+                }
+
+                musicMgr.refreshPlaylists();
+            }
+        } else {
+            window.showInformationMessage(
+                `Our service is temporarily unavailable.\n\nPlease try again later.\n`
+            );
         }
-    } else {
-        window.showInformationMessage(
-            `Our service is temporarily unavailable.\n\nPlease try again later.\n`
-        );
     }
 }
 
