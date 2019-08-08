@@ -906,3 +906,20 @@ export function createSpotifyIdFromUri(id: string) {
     }
     return id;
 }
+
+export function isValidJson(val: any) {
+    if (val === null || val === undefined) {
+        return false;
+    }
+    if (typeof val === "string" || typeof val === "number") {
+        return false;
+    }
+    try {
+        const stringifiedVal = JSON.stringify(val);
+        JSON.parse(stringifiedVal);
+        return true;
+    } catch (e) {
+        //
+    }
+    return false;
+}

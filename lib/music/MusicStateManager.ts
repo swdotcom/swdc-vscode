@@ -7,7 +7,8 @@ import {
     getOffsetSecends,
     getOs,
     getVersion,
-    getPluginId
+    getPluginId,
+    isValidJson
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import {
@@ -184,6 +185,18 @@ export class MusicStateManager {
                     "playlistId"
                 ] = this.musicMgr.selectedPlaylist.id;
             }
+
+            // if this track doesn't have album json data null it out
+            if (this.existingTrack.album) {
+                // check if it's a valid json
+                if (!isValidJson(this.existingTrack.album)) {
+                    // null these out. the backend will populate these
+                    this.existingTrack.album = null;
+                    this.existingTrack.artists = null;
+                    this.existingTrack.features = null;
+                }
+            }
+
             // gather the coding metrics
             this.existingTrack = {
                 ...this.existingTrack,
