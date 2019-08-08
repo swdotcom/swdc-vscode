@@ -14,7 +14,7 @@ import {
     getSpotifyDevices,
     playSpotifyTrack
 } from "cody-music";
-import { workspace, window, ViewColumn, Uri } from "vscode";
+import { workspace, window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -484,7 +484,8 @@ export async function disconnectOauth(type: string) {
                     musicMgr.clearSpotifyAccessInfo();
                 }
 
-                musicMgr.refreshPlaylists();
+                // refresh the playlist
+                commands.executeCommand("musictime.refreshPlaylist");
             }
         } else {
             window.showInformationMessage(

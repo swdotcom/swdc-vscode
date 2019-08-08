@@ -60,12 +60,18 @@ export class MusicCommandManager {
         if (!this.msMgr) {
             this.msMgr = MusicStateManager.getInstance();
         }
-        // start with 1000 and go down in sequence
+        // start with 100 0and go down in sequence
         this.createButton(
             "🎧",
             "Click to see more from Music Time",
             "musictime.menu",
             1000
+        );
+        this.createButton(
+            "Connect Spotify",
+            "Connect Spotify to add your top productivity tracks",
+            "musictime.connectSpotify",
+            999
         );
         // play previous
         this.createButton(
@@ -80,12 +86,6 @@ export class MusicCommandManager {
             "$(primitive-square)",
             "Stop",
             "musictime.pause",
-            998
-        );
-        this.createButton(
-            "$(radio-tower)",
-            "Connect Spotify to add your top productivity tracks",
-            "musictime.connectSpotify",
             998
         );
         // play next
@@ -173,7 +173,7 @@ export class MusicCommandManager {
     }
 
     private static async showLaunchPlayerControls() {
-        // hide all except for the launch player button
+        // hide all except for the launch player button and possibly connect spotify button
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
 
@@ -181,10 +181,13 @@ export class MusicCommandManager {
             let isConnectSpotify = btnCmd === "musictime.connectSpotify";
 
             if (isMusicTimeMenu) {
+                // show the headphones button
                 button.statusBarItem.show();
             } else if (isConnectSpotify && requiresSpotifyAccessInfo()) {
+                // show the connect button
                 button.statusBarItem.show();
             } else {
+                // hide the rest
                 button.statusBarItem.hide();
             }
             return button;

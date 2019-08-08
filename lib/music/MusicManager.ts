@@ -323,7 +323,7 @@ export class MusicManager {
                     );
                     playlist.state = playlistState;
                 }
-                playlist["itemType"] = "playlist";
+                playlist.itemType = "playlist";
                 playlist.tag = type;
             }
         }
@@ -342,6 +342,11 @@ export class MusicManager {
         // add the connect to spotify if they still need to connect
         if (needsSpotifyAccess) {
             items.push(this.getConnectToSpotifyButton());
+        }
+
+        if (getItem("spotify_access_token")) {
+            // show the disconnect spotify button
+            items.push(this.getSpotifyDisconnectButton());
         }
 
         if (getItem("slack_access_token")) {
@@ -459,7 +464,7 @@ export class MusicManager {
         item.tracks.total = 1;
         item.playerType = PlayerType.WebSpotify;
         item.tag = "spotify";
-        item["itemType"] = "playlist";
+        item.itemType = "playlist";
         item.name = SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
         return item;
     }
@@ -483,6 +488,17 @@ export class MusicManager {
             PlayerType.WebSpotify,
             "Spotify Connected",
             "You've connected Spotify"
+        );
+    }
+
+    getSpotifyDisconnectButton() {
+        return this.buildActionItem(
+            "spotifydisconnect",
+            "action",
+            "musictime.disconnectSpotify",
+            PlayerType.NotAssigned,
+            "Disconnect Spotify",
+            "Disconnect your Spotify oauth integration"
         );
     }
 
@@ -582,7 +598,7 @@ export class MusicManager {
         item.playerType = playerType;
         item.name = name;
         item.tooltip = tooltip;
-        item["itemType"] = itemType;
+        item.itemType = itemType;
 
         return item;
     }
@@ -720,9 +736,9 @@ export class MusicManager {
         playlistItem.popularity = track.popularity;
         playlistItem.played_count = track.played_count;
         playlistItem.position = position;
-        playlistItem["artist"] = track.artist;
+        playlistItem.artist = track.artist;
         playlistItem.playerType = track.playerType;
-        playlistItem["itemType"] = "track";
+        playlistItem.itemType = "track";
         delete playlistItem.tracks;
 
         if (track.id === this._runningTrack.id) {
@@ -784,7 +800,7 @@ export class MusicManager {
         if (this._musictimePlaylists.length > 0) {
             for (let i = 0; i < this._musictimePlaylists.length; i++) {
                 const playlist = this._musictimePlaylists[i];
-                const typeId = parseInt(playlist["playlistTypeId"], 10);
+                const typeId = playlist.playlistTypeId;
                 if (typeId === playlistTypeId) {
                     return playlist;
                 }
@@ -803,15 +819,12 @@ export class MusicManager {
         if (this._savedPlaylists.length > 0 && playlists.length > 0) {
             for (let i = 0; i < this._savedPlaylists.length; i++) {
                 let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
-                let savedPlaylistTypeId = parseInt(
-                    savedPlaylist["playlistTypeId"],
-                    10
-                );
+                let savedPlaylistTypeId = savedPlaylist.playlistTypeId;
 
                 for (let x = playlists.length - 1; x >= 0; x--) {
                     let playlist = playlists[x];
                     if (playlist.id === savedPlaylist.id) {
-                        playlist["playlistTypeId"] = savedPlaylistTypeId;
+                        playlist.playlistTypeId = savedPlaylistTypeId;
                         playlist.tag = "paw";
                         playlists.splice(x, 1);
                         this._musictimePlaylists.push(playlist);
@@ -831,10 +844,7 @@ export class MusicManager {
         if (this._savedPlaylists.length > 0) {
             for (let i = 0; i < this._savedPlaylists.length; i++) {
                 let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
-                let savedPlaylistTypeId = parseInt(
-                    savedPlaylist["playlistTypeId"],
-                    10
-                );
+                let savedPlaylistTypeId = savedPlaylist.playlistTypeId;
                 if (savedPlaylistTypeId === SOFTWARE_TOP_SONGS_PLID) {
                     return true;
                 }
@@ -854,8 +864,8 @@ export class MusicManager {
             if (isResponseOk(response)) {
                 playlists = response.data.map(item => {
                     // transform the playlist_id to id
-                    item["id"] = item.playlist_id;
-                    item["playlistTypeId"] = item.playlistTypeId;
+                    item.id = item.playlist_id;
+                    item.playlistTypeId = item.playlistTypeId;
                     delete item.playlist_id;
                     return item;
                 });
@@ -1241,6 +1251,20 @@ export class MusicManager {
             this._currentPlayerName = PlayerName.ItunesDesktop;
         }
 
+        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+
+        const hasDevices =
+            spotifyDevices && spotifyDevices.length > 0 ? true : false;
+        const hasWebPlayerDevice =
+            hasDevices &&
+            spotifyDevices.find(el => {
+                return el.name === "Web Player";
+            });
+
+        const hasRunningSpotify =
+            this._runningTrack &&
+            this._runningTrack.playerType !== PlayerType.MacItunesDesktop;
+
         // launch the player
         const musicCtrlMgr = new MusicControlManager();
         if (!playerName) {
@@ -1250,46 +1274,37 @@ export class MusicManager {
                         trackId: track.id
                     };
                     let playerType: PlayerType = track.playerType;
-                    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
 
-                    if (
-                        playerType === PlayerType.WebSpotify &&
-                        spotifyDevices &&
-                        spotifyDevices.length === 1 &&
-                        !spotifyDevices[0].name.includes("Web Player")
-                    ) {
-                        // launch the spotify desktop only if we have
+                    if (!hasWebPlayerDevice) {
+                        // launch the spotify desktop only if we have it
                         playerType = PlayerType.MacSpotifyDesktop;
                     }
                     if (playerType === PlayerType.NotAssigned) {
                         playerType = PlayerType.WebSpotify;
                     }
 
-                    if (playerType === PlayerType.WebSpotify) {
-                        launchPlayer(PlayerName.SpotifyWeb, options);
-                    } else if (playerType === PlayerType.MacItunesDesktop) {
+                    if (playerType === PlayerType.MacItunesDesktop) {
                         launchPlayer(PlayerName.ItunesDesktop, options);
-                    } else {
-                        launchPlayer(PlayerName.SpotifyDesktop, options);
+                    } else if (!hasDevices) {
+                        // launch since we don't see a device
+                        if (playerType === PlayerType.WebSpotify) {
+                            launchPlayer(PlayerName.SpotifyWeb, options);
+                        } else {
+                            launchPlayer(PlayerName.SpotifyDesktop, options);
+                        }
                     }
                 }
             });
         } else if (playerName === PlayerName.ItunesDesktop) {
-            if (
-                this._runningTrack &&
-                this._runningTrack.playerType !== PlayerType.MacItunesDesktop
-            ) {
+            if (hasRunningSpotify) {
                 // end the spotify web track
                 musicCtrlMgr.pause(PlayerName.SpotifyWeb);
             }
             launchPlayer(PlayerName.ItunesDesktop);
         } else {
-            // end the itunes track
-            // musicCtrlMgr.pause(PlayerName.ItunesDesktop);
             // quit the app
             await quitMacPlayer(PlayerName.ItunesDesktop);
-            const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-            if (!spotifyDevices || spotifyDevices.length === 0) {
+            if (!hasDevices) {
                 this.launchSpotifyPlayer();
             }
         }
