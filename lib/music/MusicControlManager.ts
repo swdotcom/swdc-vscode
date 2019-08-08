@@ -12,7 +12,9 @@ import {
     PlaylistItem,
     PlayerDevice,
     getSpotifyDevices,
-    playSpotifyTrack
+    playSpotifyTrack,
+    playTrackInContext,
+    playSpotifyPlaylist
 } from "cody-music";
 import { workspace, window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -159,12 +161,14 @@ export class MusicControlManager {
         if (playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
             playlistId = null;
         }
+        const deviceId = spotifyDevices.length > 0 ? spotifyDevices[0].id : "";
         let options = {};
-        if (spotifyDevices.length > 0) {
-            options["device_id"] = spotifyDevices[0].id;
+        if (deviceId) {
+            options["device_id"] = deviceId;
         }
-        if (playlistItem) {
-            options["track_ids"] = [playlistItem.id];
+        const trackId = playlistItem ? playlistItem.id : "";
+        if (trackId) {
+            options["track_ids"] = [trackId];
         } else {
             options["offset"] = { position: 0 };
         }
@@ -181,12 +185,11 @@ export class MusicControlManager {
 
         if (!playlistId) {
             // just play by track id
-            const deviceId =
-                spotifyDevices.length > 0 ? spotifyDevices[0].id : "";
             await playSpotifyTrack(playlistItem.id, deviceId);
         } else {
             // we have playlist id within the options, use that
-            await play(PlayerName.SpotifyWeb, options);
+            // await play(PlayerName.SpotifyWeb, options);
+            await playSpotifyPlaylist(playlistId, trackId, deviceId);
         }
 
         if (checkTrackStateAndTryAgainCount > 0) {
