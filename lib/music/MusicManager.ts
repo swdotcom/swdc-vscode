@@ -77,6 +77,7 @@ export class MusicManager {
     private _buildingPlaylists: boolean = false;
     private _serverTrack: Track = null;
     private _initialized: boolean = false;
+    private _buildingCustomPlaylist: boolean = false;
 
     private constructor() {
         //
@@ -990,6 +991,9 @@ export class MusicManager {
     }
 
     async generateUsersWeeklyTopSongs() {
+        if (this._buildingCustomPlaylist) {
+            return;
+        }
         const serverIsOnline = serverIsAvailable();
 
         if (!serverIsOnline) {
@@ -1003,6 +1007,8 @@ export class MusicManager {
             // don't create or refresh, no spotify access provided
             return;
         }
+
+        this._buildingCustomPlaylist = true;
 
         let customPlaylist = this.getMusicTimePlaylistByTypeId(
             PERSONAL_TOP_SONGS_PLID
@@ -1025,6 +1031,7 @@ export class MusicManager {
                     }`,
                     ...["OK"]
                 );
+                this._buildingCustomPlaylist = false;
                 return;
             }
 
@@ -1070,6 +1077,9 @@ export class MusicManager {
         }
 
         await this.fetchSavedPlaylists(serverIsOnline);
+
+        // update building custom playlist to false
+        this._buildingCustomPlaylist = false;
     }
 
     async addTracks(playlist_id: string, name: string, tracksToAdd: string[]) {

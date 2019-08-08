@@ -1,4 +1,4 @@
-import { env, commands } from "vscode";
+import { commands } from "vscode";
 import {
     getMusicSessionDataStoreFile,
     deleteFile,
@@ -15,7 +15,6 @@ import {
     getRunningTrack,
     TrackStatus,
     PlayerType,
-    isRunning,
     PlayerName
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
