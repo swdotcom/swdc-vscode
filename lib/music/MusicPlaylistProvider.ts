@@ -399,6 +399,17 @@ export class PlaylistTreeItem extends TreeItem {
                 "dark",
                 "sign-in.svg"
             );
+        } else if (treeItem.type === "divider") {
+            this.iconPath.light = path.join(
+                this.resourcePath,
+                "light",
+                "blue-line-96.png"
+            );
+            this.iconPath.dark = path.join(
+                this.resourcePath,
+                "dark",
+                "blue-line-96.png"
+            );
         } else {
             // no matching tag, remove the tree item icon path
             delete this.iconPath;

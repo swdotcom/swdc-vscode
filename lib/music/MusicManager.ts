@@ -572,10 +572,10 @@ export class MusicManager {
     getLineBreakButton() {
         return this.buildActionItem(
             "title",
-            "",
+            "divider",
             null,
             PlayerType.NotAssigned,
-            "--------------------",
+            "",
             ""
         );
     }

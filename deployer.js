@@ -191,8 +191,8 @@ async function deploy() {
             command: "musictime.pause",
             title: "Stop",
             icon: {
-                light: "resources/light/pause.svg",
-                dark: "resources/dark/pause.svg"
+                light: "resources/light/stop.svg",
+                dark: "resources/dark/stop.svg"
             }
         });
 
