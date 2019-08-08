@@ -180,23 +180,23 @@ export class MusicTimePlaylistTreeItem extends TreeItem {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "light",
-                    "pl-paw.svg"
+                    "sw-paw-circle.svg"
                 );
-                this.iconPath.light = path.join(
+                this.iconPath.dark = path.join(
                     this.resourcePath,
                     "dark",
-                    "pl-paw.svg"
+                    "sw-paw-circle.svg"
                 );
             } else if (treeItem.tag === "action") {
                 this.iconPath.light = path.join(
                     this.resourcePath,
                     "light",
-                    "settings.svg"
+                    "gear.svg"
                 );
-                this.iconPath.light = path.join(
+                this.iconPath.dark = path.join(
                     this.resourcePath,
                     "dark",
-                    "settings.svg"
+                    "gear.svg"
                 );
             } else {
                 // for now, don't show the playlist icon

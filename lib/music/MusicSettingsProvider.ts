@@ -95,23 +95,23 @@ class SettingsTreeItem extends TreeItem {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "icons8-spotify.svg"
+                "spotify-logo.svg"
             );
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "dark",
-                "icons8-spotify.svg"
+                "spotify-logo.svg"
             );
         } else if (treeItem.type === "itunes") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "icons8-itunes.svg"
+                "itunes-logo.svg"
             );
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "dark",
-                "icons8-itunes.svg"
+                "itunes-logo.svg"
             );
         } else if (treeItem.type === "connected") {
             this.iconPath.light = path.join(
@@ -139,12 +139,12 @@ class SettingsTreeItem extends TreeItem {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "pl-paw.svg"
+                "sw-paw-circle.svg"
             );
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "dark",
-                "pl-paw.svg"
+                "sw-paw-circle.svg"
             );
         } else {
             delete this.iconPath;

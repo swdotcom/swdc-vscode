@@ -326,45 +326,45 @@ export class PlaylistTreeItem extends TreeItem {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "icons8-spotify.svg"
+                "spotify-logo.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "icons8-spotify.svg"
+                "spotify-logo.svg"
             );
         } else if (treeItem.tag === "itunes" || treeItem.type === "itunes") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "icons8-itunes.svg"
+                "itunes-logo.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "icons8-itunes.svg"
+                "itunes-logo.svg"
             );
         } else if (treeItem.tag === "paw") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "pl-paw.svg"
+                "sw-paw-circle.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "pl-paw.svg"
+                "sw-paw-circle.svg"
             );
         } else if (treeItem.type === "connected") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "wifi.svg"
+                "radio-tower.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "wifi.svg"
+                "radio-tower.svg"
             );
         } else if (treeItem.type === "offline") {
             this.iconPath.light = path.join(
@@ -372,7 +372,7 @@ export class PlaylistTreeItem extends TreeItem {
                 "light",
                 "nowifi.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
                 "nowifi.svg"
@@ -381,23 +381,23 @@ export class PlaylistTreeItem extends TreeItem {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "settings.svg"
+                "gear.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "settings.svg"
+                "gear.svg"
             );
         } else if (treeItem.type === "login" || treeItem.tag === "login") {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "login.svg"
+                "sign-in.svg"
             );
-            this.iconPath.light = path.join(
+            this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "login.svg"
+                "sign-in.svg"
             );
         } else {
             // no matching tag, remove the tree item icon path

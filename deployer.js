@@ -150,8 +150,8 @@ async function deploy() {
             command: "musictime.play",
             title: "Play",
             icon: {
-                light: "resources/light/play-button.svg",
-                dark: "resources/dark/play-button.svg"
+                light: "resources/light/play.svg",
+                dark: "resources/dark/play.svg"
             }
         });
         commands.push({
@@ -191,8 +191,8 @@ async function deploy() {
             command: "musictime.pause",
             title: "Stop",
             icon: {
-                light: "resources/light/stop-button.svg",
-                dark: "resources/dark/stop-button.svg"
+                light: "resources/light/pause.svg",
+                dark: "resources/dark/pause.svg"
             }
         });
 
@@ -200,8 +200,8 @@ async function deploy() {
             command: "musictime.itunesPlaylist",
             title: "Switch to iTunes",
             icon: {
-                light: "resources/light/icons8-itunes.svg",
-                dark: "resources/dark/icons8-itunes.svg"
+                light: "resources/light/itunes-logo.svg",
+                dark: "resources/dark/itunes-logo.svg"
             }
         });
 
@@ -209,16 +209,16 @@ async function deploy() {
             command: "musictime.spotifyPlaylist",
             title: "Switch to Spotify",
             icon: {
-                light: "resources/light/icons8-spotify.svg",
-                dark: "resources/dark/icons8-spotify.svg"
+                light: "resources/light/spotify-logo.svg",
+                dark: "resources/dark/spotify-logo.svg"
             }
         });
         commands.push({
             command: "musictime.reconcilePlaylist",
             title: "Reconcile Playlists",
             icon: {
-                light: "resources/light/refresh.svg",
-                dark: "resources/dark/refresh.svg"
+                light: "resources/light/sync.svg",
+                dark: "resources/dark/sync.svg"
             }
         });
         commands.push({
