@@ -266,6 +266,12 @@ export function createCommands(): {
         );
         cmds.push(launchSpotifyCommand);
 
+        const spotifyPremiumRequiredCommand = commands.registerCommand(
+            "musictime.spotifyPremiumRequired",
+            () => musicMgr.launchTrackPlayer(PlayerName.SpotifyWeb)
+        );
+        cmds.push(spotifyPremiumRequiredCommand);
+
         const launchSpotifyPlaylistCommand = commands.registerCommand(
             "musictime.spotifyPlaylist",
             () => musicMgr.launchTrackPlayer(PlayerName.SpotifyWeb)

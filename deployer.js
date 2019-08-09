@@ -238,6 +238,11 @@ async function deploy() {
             title: "Click to view track"
         });
         commands.push({
+            command: "musictime.spotifyPremiumRequired",
+            title:
+                "Connect to your premium Spotify account to use the play, pause, next, and previous controls"
+        });
+        commands.push({
             command: "musictime.connectSpotify",
             title: "Connect your Spotify account",
             tooltip: "Connect your Spotify account to view your playlists"

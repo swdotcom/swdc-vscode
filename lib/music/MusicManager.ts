@@ -44,7 +44,7 @@ import {
     getLoggedInCacheState,
     getUserStatus
 } from "../DataController";
-import { getItem, setItem, launchLogin, isMac } from "../Util";
+import { getItem, setItem, launchLogin, isMac, isWindows } from "../Util";
 import {
     isResponseOk,
     softwareGet,
@@ -307,7 +307,14 @@ export class MusicManager {
         if (playerName === PlayerName.ItunesDesktop) {
             type = "itunes";
         }
-        playlists = await getPlaylists(playerName);
+        // there's nothing to get if it's windows and they don't have
+        // a premium spotify account
+        let premiumAccountRequired = false;
+        if (isMac() || this.hasSpotifyPlaybackAccess()) {
+            playlists = await getPlaylists(playerName);
+        } else {
+            premiumAccountRequired = true;
+        }
 
         if (this._savedPlaylists.length === 0) {
             // fetch and reconcile the saved playlists against the spotify list
@@ -346,6 +353,11 @@ export class MusicManager {
         // add the no music time connection button if we're not online
         if (!serverIsOnline) {
             items.push(this.getNoMusicTimeConnectionButton());
+        }
+
+        if (premiumAccountRequired) {
+            // show the spotify premium account required button
+            items.push(this.getSlackPremiumAccountRequiredButton());
         }
 
         // add the connect to spotify if they still need to connect
@@ -519,6 +531,17 @@ export class MusicManager {
             PlayerType.NotAssigned,
             "Disconnect Slack",
             "Disconnect your Slack oauth integration"
+        );
+    }
+
+    getSlackPremiumAccountRequiredButton() {
+        return this.buildActionItem(
+            "spotifypremium",
+            "action",
+            "musictime.spotifyPremiumRequired",
+            PlayerType.NotAssigned,
+            "Spotify Premium Required",
+            "Connect to your premium Spotify account to use the play, pause, next, and previous controls"
         );
     }
 
