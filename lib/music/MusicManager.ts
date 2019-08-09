@@ -21,7 +21,9 @@ import {
     getSpotifyDevices,
     launchPlayer,
     PlayerDevice,
-    quitMacPlayer
+    quitMacPlayer,
+    isSpotifyRunning,
+    isPlayerRunning
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
@@ -1261,70 +1263,34 @@ export class MusicManager {
     }
 
     async launchTrackPlayer(playerName: PlayerName = null) {
-        // update the current player type to what was selected
-        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
-            this._currentPlayerName = PlayerName.SpotifyWeb;
-        } else {
-            this._currentPlayerName = PlayerName.ItunesDesktop;
+        // if the player name is null, this means all we want to do is launch the currently set player
+        if (!playerName) {
+            launchPlayer(this.currentPlayerName);
+            return;
         }
 
-        const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-
-        const hasDevices =
-            spotifyDevices && spotifyDevices.length > 0 ? true : false;
-        const hasWebPlayerDevice =
-            hasDevices &&
-            spotifyDevices.find(el => {
-                return el.name === "Web Player";
-            });
-
-        const hasRunningSpotify =
-            this._runningTrack &&
-            this._runningTrack.playerType !== PlayerType.MacItunesDesktop;
-
-        // launch the player
-        const musicCtrlMgr = new MusicControlManager();
-        if (!playerName) {
-            await getRunningTrack().then(async (track: Track) => {
-                if (track && track.id) {
-                    let options = {
-                        trackId: track.id
-                    };
-                    let playerType: PlayerType = track.playerType;
-
-                    if (!hasWebPlayerDevice) {
-                        // launch the spotify desktop only if we have it
-                        playerType = PlayerType.MacSpotifyDesktop;
-                    }
-                    if (playerType === PlayerType.NotAssigned) {
-                        playerType = PlayerType.WebSpotify;
-                    }
-
-                    if (playerType === PlayerType.MacItunesDesktop) {
-                        launchPlayer(PlayerName.ItunesDesktop, options);
-                    } else if (!hasDevices) {
-                        // launch since we don't see a device
-                        if (playerType === PlayerType.WebSpotify) {
-                            launchPlayer(PlayerName.SpotifyWeb, options);
-                        } else {
-                            launchPlayer(PlayerName.SpotifyDesktop, options);
-                        }
-                    }
-                }
-            });
-        } else if (playerName === PlayerName.ItunesDesktop) {
-            if (hasRunningSpotify) {
-                // end the spotify web track
-                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
-            }
-            launchPlayer(PlayerName.ItunesDesktop);
-        } else {
-            // quit the app
+        // it's not null, this means we want to launch a player and we need to pause the other player
+        if (this.currentPlayerName === PlayerName.ItunesDesktop) {
             await quitMacPlayer(PlayerName.ItunesDesktop);
-            if (!hasDevices) {
+        } else {
+            const musicCtrlMgr = new MusicControlManager();
+            musicCtrlMgr.pause(this.currentPlayerName);
+        }
+
+        if (playerName !== PlayerName.ItunesDesktop) {
+            if (isMac() && isPlayerRunning(PlayerName.SpotifyDesktop)) {
+                // just launch the desktop
+                launchPlayer(PlayerName.SpotifyDesktop);
+            } else {
+                // this will show a prompt as to why we're launching the web player
                 this.launchSpotifyPlayer();
             }
+        } else {
+            launchPlayer(playerName);
         }
+
+        // update the current player type to what was selected
+        this.currentPlayerName = playerName;
 
         this.clearPlaylists();
         commands.executeCommand("musictime.refreshPlaylist");

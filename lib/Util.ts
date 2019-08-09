@@ -692,6 +692,9 @@ export function normalizeGithubEmail(email) {
 }
 
 export function getSongDisplayName(name) {
+    if (!name) {
+        return "";
+    }
     name = name.trim();
     if (name.length > 11) {
         return `${name.substring(0, 10)}...`;
