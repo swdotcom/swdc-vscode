@@ -14,7 +14,8 @@ import {
     getSpotifyDevices,
     playSpotifyTrack,
     playTrackInContext,
-    playSpotifyPlaylist
+    playSpotifyPlaylist,
+    TrackStatus
 } from "cody-music";
 import { workspace, window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -71,38 +72,26 @@ export class MusicControlManager {
 
     async next(playerName: PlayerName = null) {
         if (!playerName) {
-            let playerName = MusicManager.getInstance().currentPlayerName;
-            await next(playerName);
-        } else {
-            await next(playerName);
+            playerName = MusicManager.getInstance().currentPlayerName;
         }
+        await next(playerName);
         await MusicStateManager.getInstance().musicStateCheck();
-        MusicCommandManager.syncControls(
-            MusicManager.getInstance().runningTrack
-        );
     }
 
     async previous(playerName: PlayerName = null) {
         if (!playerName) {
-            let playerName = MusicManager.getInstance().currentPlayerName;
-            await previous(playerName);
-        } else {
-            await previous(playerName);
+            playerName = MusicManager.getInstance().currentPlayerName;
         }
+        await previous(playerName);
         await MusicStateManager.getInstance().musicStateCheck();
-        MusicCommandManager.syncControls(
-            MusicManager.getInstance().runningTrack
-        );
     }
 
     async play(playerName: PlayerName = null) {
         if (!playerName) {
-            let playerName = MusicManager.getInstance().currentPlayerName;
-            await play(playerName);
-        } else {
-            await play(playerName);
+            playerName = MusicManager.getInstance().currentPlayerName;
         }
-        await MusicStateManager.getInstance().musicStateCheck();
+        await play(playerName);
+        MusicManager.getInstance().runningTrack.state = TrackStatus.Playing;
         MusicCommandManager.syncControls(
             MusicManager.getInstance().runningTrack
         );
@@ -110,12 +99,10 @@ export class MusicControlManager {
 
     async pause(playerName: PlayerName = null) {
         if (!playerName) {
-            let playerName = MusicManager.getInstance().currentPlayerName;
-            await pause(playerName);
-        } else {
-            await pause(playerName);
+            playerName = MusicManager.getInstance().currentPlayerName;
         }
-        await MusicStateManager.getInstance().musicStateCheck();
+        await pause(playerName);
+        MusicManager.getInstance().runningTrack.state = TrackStatus.Paused;
         MusicCommandManager.syncControls(
             MusicManager.getInstance().runningTrack
         );
