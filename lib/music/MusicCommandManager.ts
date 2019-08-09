@@ -3,7 +3,6 @@ import { isMusicTime, getSongDisplayName, isMac } from "../Util";
 import { MusicStateManager } from "./MusicStateManager";
 import {
     getRunningTrack,
-    PlayerType,
     TrackStatus,
     Track,
     requiresSpotifyAccessInfo,
@@ -67,19 +66,19 @@ export class MusicCommandManager {
         // start with 100 0and go down in sequence
         this.createButton(
             "🎧",
-            "Click to see more from Music Time",
+            "Click to see more from Music Time.",
             "musictime.menu",
             1000
         );
         this.createButton(
             "Connect Spotify",
-            "Connect Spotify to add your top productivity tracks",
+            "Connect Spotify to add your top productivity tracks.",
             "musictime.connectSpotify",
             999
         );
         this.createButton(
             "Connect Premium",
-            "Connect to your premium Spotify account to use the play, pause, next, and previous controls",
+            "Connect to your premium Spotify account to use the play, pause, next, and previous controls.",
             "musictime.spotifyPremiumRequired",
             999
         );
@@ -187,7 +186,7 @@ export class MusicCommandManager {
     private static async showLaunchPlayerControls() {
         const showPremiumRequired =
             !this.musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo &&
+            !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
                 : false;
@@ -239,7 +238,7 @@ export class MusicCommandManager {
 
         const showPremiumRequired =
             !this.musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo &&
+            !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
                 : false;
@@ -315,7 +314,7 @@ export class MusicCommandManager {
 
         const showPremiumRequired =
             !this.musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo &&
+            !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
                 : false;
