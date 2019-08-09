@@ -128,10 +128,14 @@ export class MusicCommandManager {
             clearTimeout(this._hideSongTimeout);
         }
 
-        const playerType: PlayerType = track
-            ? track.playerType || PlayerType.NotAssigned
-            : PlayerType.NotAssigned;
-        if (playerType !== PlayerType.NotAssigned) {
+        const trackStatus: TrackStatus = track
+            ? track.state
+            : TrackStatus.NotAssigned;
+
+        if (
+            trackStatus === TrackStatus.Paused ||
+            trackStatus === TrackStatus.Playing
+        ) {
             if (track.state === TrackStatus.Playing) {
                 this.showPauseControls(track);
             } else {

@@ -139,6 +139,13 @@ export class MusicManager {
     }
 
     get currentPlayerName(): PlayerName {
+        if (
+            this.requiresSpotifyAccess() &&
+            isMac() &&
+            this._currentPlayerName === PlayerName.SpotifyWeb
+        ) {
+            return PlayerName.SpotifyDesktop;
+        }
         return this._currentPlayerName;
     }
 
