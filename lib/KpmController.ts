@@ -136,10 +136,14 @@ export class KpmController {
         // if it's the dashboard file or a liveshare tmp file then
         // skip event tracking
         let dashboardFile = getDashboardFile();
-        let filename =
-            event && event.document && event.document.fileName
-                ? event.document.fileName
-                : null;
+
+        let filename = null;
+        if (event.fileName) {
+            filename = event.fileName;
+        } else if (event.document && event.document.fileName) {
+            filename = event.document.fileName;
+        }
+
         if (
             !filename ||
             filename === dashboardFile ||
