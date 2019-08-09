@@ -18,11 +18,8 @@ import {
     CodyConfig,
     setConfig,
     getUserProfile,
-    getSpotifyDevices,
     launchPlayer,
-    PlayerDevice,
     quitMacPlayer,
-    isSpotifyRunning,
     isPlayerRunning
 } from "cody-music";
 import {
@@ -996,6 +993,11 @@ export class MusicManager {
             }
         }
 
+        setTimeout(() => {
+            this.clearSpotify();
+            commands.executeCommand("musictime.refreshPlaylist");
+        }, 500);
+
         await this.fetchSavedPlaylists(serverIsOnline);
     }
 
@@ -1081,9 +1083,24 @@ export class MusicManager {
                             // );
                         }
                     );
+
+                    window.showInformationMessage(
+                        `Successfully refreshed ${PERSONAL_TOP_SONGS_NAME}.`,
+                        ...["OK"]
+                    );
                 }
+            } else {
+                window.showInformationMessage(
+                    `Successfully created ${PERSONAL_TOP_SONGS_NAME}, but we're unable to add any songs at the moment.`,
+                    ...["OK"]
+                );
             }
         }
+
+        setTimeout(() => {
+            this.clearSpotify();
+            commands.executeCommand("musictime.refreshPlaylist");
+        }, 500);
 
         await this.fetchSavedPlaylists(serverIsOnline);
 
@@ -1104,11 +1121,6 @@ export class MusicManager {
                     `Successfully created ${name} and added tracks.`,
                     ...["OK"]
                 );
-
-                setTimeout(() => {
-                    this.clearSpotify();
-                    commands.executeCommand("musictime.refreshPlaylist");
-                }, 1000);
             } else {
                 window.showErrorMessage(
                     `There was an unexpected error adding tracks to the playlist. ${
@@ -1117,8 +1129,6 @@ export class MusicManager {
                     ...["OK"]
                 );
             }
-
-            commands.executeCommand("musictime.refreshPlaylist");
         }
     }
 
