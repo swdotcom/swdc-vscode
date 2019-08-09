@@ -1265,7 +1265,7 @@ export class MusicManager {
     async launchTrackPlayer(playerName: PlayerName = null) {
         // if the player name is null, this means all we want to do is launch the currently set player
         if (!playerName) {
-            launchPlayer(this.currentPlayerName);
+            launchPlayer(this.currentPlayerName, { quietly: false });
             return;
         }
 
