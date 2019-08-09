@@ -102,14 +102,14 @@ export function createCommands(): {
         const musicMgr: MusicManager = MusicManager.getInstance();
 
         const nextCmd = commands.registerCommand("musictime.next", () => {
-            controller.next();
+            controller.nextSong();
         });
         cmds.push(nextCmd);
 
         const previousCmd = commands.registerCommand(
             "musictime.previous",
             () => {
-                controller.previous();
+                controller.previousSong();
             }
         );
         cmds.push(previousCmd);
@@ -133,7 +133,7 @@ export function createCommands(): {
                 if (notAssigned) {
                     playSelectedItem(p, false /*isExpand*/);
                 } else {
-                    controller.play();
+                    controller.playSong();
                 }
             }
         );
@@ -164,7 +164,7 @@ export function createCommands(): {
         cmds.push(shareTrackLinkCmd);
 
         const pauseCmd = commands.registerCommand("musictime.pause", () => {
-            controller.pause();
+            controller.pauseSong();
         });
         cmds.push(pauseCmd);
 

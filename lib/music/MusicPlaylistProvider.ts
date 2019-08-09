@@ -105,13 +105,26 @@ export const playSelectedItem = async (
                     pos
                 );
             } else {
-                musicCtrlMgr.pause(PlayerName.ItunesDesktop);
+                musicCtrlMgr.pauseSong(PlayerName.ItunesDesktop);
             }
+        } else if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
+            // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
+            // make sure the track has spotify:track and the playlist has spotify:playlist
+            let track_uri = playlistItem.id.includes("spotify:track:")
+                ? playlistItem.id
+                : `spotify:track:${playlistItem.id}`;
+            let playlist_uri = musicMgr.selectedPlaylist.id.includes(
+                "spotify:playlist:"
+            )
+                ? musicMgr.selectedPlaylist.id
+                : `spotify:playlist:${musicMgr.selectedPlaylist.id}`;
+            let params = [track_uri, playlist_uri];
+            musicCtrlMgr.playSongInContext(params);
         } else {
             if (notPlaying) {
                 await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
             } else {
-                musicCtrlMgr.pause(PlayerName.SpotifyWeb);
+                musicCtrlMgr.pauseSong(PlayerName.SpotifyWeb);
             }
         }
     } else {

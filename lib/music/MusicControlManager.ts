@@ -66,51 +66,52 @@ const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 let lastDayOfMonth = -1;
 
 export class MusicControlManager {
+    private musicMgr: MusicManager = MusicManager.getInstance();
+
     constructor() {
         //
     }
 
-    async next(playerName: PlayerName = null) {
+    async nextSong(playerName: PlayerName = null) {
         if (!playerName) {
-            playerName = MusicManager.getInstance().currentPlayerName;
+            playerName = this.musicMgr.currentPlayerName;
         }
         await next(playerName);
         await MusicStateManager.getInstance().musicStateCheck();
     }
 
-    async previous(playerName: PlayerName = null) {
+    async previousSong(playerName: PlayerName = null) {
         if (!playerName) {
-            playerName = MusicManager.getInstance().currentPlayerName;
+            playerName = this.musicMgr.currentPlayerName;
         }
         await previous(playerName);
         await MusicStateManager.getInstance().musicStateCheck();
     }
 
-    async play(playerName: PlayerName = null) {
+    async playSong(playerName: PlayerName = null) {
         if (!playerName) {
-            playerName = MusicManager.getInstance().currentPlayerName;
+            playerName = this.musicMgr.currentPlayerName;
         }
         await play(playerName);
-        MusicManager.getInstance().runningTrack.state = TrackStatus.Playing;
-        MusicCommandManager.syncControls(
-            MusicManager.getInstance().runningTrack
-        );
+        this.musicMgr.runningTrack.state = TrackStatus.Playing;
+        MusicCommandManager.syncControls(this.musicMgr.runningTrack);
     }
 
-    async pause(playerName: PlayerName = null) {
+    async pauseSong(playerName: PlayerName = null) {
         if (!playerName) {
-            playerName = MusicManager.getInstance().currentPlayerName;
+            playerName = this.musicMgr.currentPlayerName;
         }
         await pause(playerName);
-        MusicManager.getInstance().runningTrack.state = TrackStatus.Paused;
-        MusicCommandManager.syncControls(
-            MusicManager.getInstance().runningTrack
-        );
+        this.musicMgr.runningTrack.state = TrackStatus.Paused;
+        MusicCommandManager.syncControls(this.musicMgr.runningTrack);
+    }
+
+    async playSongInContext(params) {
+        await playTrackInContext(this.musicMgr.currentPlayerName, params);
     }
 
     async setLiked(liked: boolean) {
-        const musicMgr = MusicManager.getInstance();
-        let track: Track = musicMgr.runningTrack;
+        let track: Track = this.musicMgr.runningTrack;
         if (track) {
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
@@ -122,16 +123,16 @@ export class MusicControlManager {
 
             // set the server track to liked to keep it cached
             // until the song session is sent from the MusicStateManager
-            let serverTrack = musicMgr.serverTrack;
+            let serverTrack = this.musicMgr.serverTrack;
             if (!serverTrack) {
                 serverTrack = { ...track };
             }
             serverTrack.loved = liked;
-            musicMgr.serverTrack = serverTrack;
+            this.musicMgr.serverTrack = serverTrack;
 
             // update the music store running track liked state
             track.loved = liked;
-            musicMgr.runningTrack = track;
+            this.musicMgr.runningTrack = track;
 
             // get the current track state
             MusicCommandManager.syncControls(track);

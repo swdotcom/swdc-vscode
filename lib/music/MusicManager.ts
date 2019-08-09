@@ -138,12 +138,14 @@ export class MusicManager {
     }
 
     get currentPlayerName(): PlayerName {
+        const requiresSpotifyAccess = this.requiresSpotifyAccess();
+        const hasSpotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
         if (
-            this.requiresSpotifyAccess() &&
+            this._currentPlayerName === PlayerName.SpotifyWeb &&
             isMac() &&
-            this._currentPlayerName === PlayerName.SpotifyWeb
+            (!hasSpotifyPlaybackAccess || requiresSpotifyAccess)
         ) {
-            return PlayerName.SpotifyDesktop;
+            this._currentPlayerName = PlayerName.SpotifyDesktop;
         }
         return this._currentPlayerName;
     }
@@ -1216,7 +1218,7 @@ export class MusicManager {
 
             // get the user
             getUserProfile().then(user => {
-                this._spotifyUser = user;
+                this.spotifyUser = user;
             });
         } else {
             this.clearSpotifyAccessInfo();
@@ -1232,7 +1234,7 @@ export class MusicManager {
         codyConfig.spotifyRefreshToken = null;
         codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
         setConfig(codyConfig);
-        this._spotifyUser = null;
+        this.spotifyUser = null;
     }
 
     // reconcile. meaning the user may have deleted the lists our 2 buttons created;
@@ -1284,7 +1286,7 @@ export class MusicManager {
             await quitMacPlayer(PlayerName.ItunesDesktop);
         } else {
             const musicCtrlMgr = new MusicControlManager();
-            musicCtrlMgr.pause(this.currentPlayerName);
+            musicCtrlMgr.pauseSong(this.currentPlayerName);
         }
 
         if (playerName !== PlayerName.ItunesDesktop) {
@@ -1378,5 +1380,12 @@ export class MusicManager {
         MusicCommandManager.syncControls(track);
 
         return this.serverTrack;
+    }
+
+    hasSpotifyPlaybackAccess() {
+        if (this.spotifyUser && this.spotifyUser.product === "premium") {
+            return true;
+        }
+        return false;
     }
 }
