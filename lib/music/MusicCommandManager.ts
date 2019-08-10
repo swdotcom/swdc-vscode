@@ -1,6 +1,5 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName, isMac } from "../Util";
-import { MusicStateManager } from "./MusicStateManager";
 import {
     getRunningTrack,
     TrackStatus,
@@ -38,9 +37,6 @@ export class MusicCommandManager {
     private static _hideSongTimeout = null;
     private static _treeProvider: MusicPlaylistProvider;
 
-    private static msMgr: MusicStateManager;
-    private static musicMgr: MusicManager;
-
     private constructor() {
         // private to prevent non-singleton usage
     }
@@ -57,12 +53,7 @@ export class MusicCommandManager {
         if (!isMusicTime()) {
             return;
         }
-        if (!this.msMgr) {
-            this.msMgr = MusicStateManager.getInstance();
-        }
-        if (!this.musicMgr) {
-            this.musicMgr = MusicManager.getInstance();
-        }
+
         // start with 100 0and go down in sequence
         this.createButton(
             "🎧",
@@ -115,16 +106,18 @@ export class MusicCommandManager {
     }
 
     public static async syncControls(track: Track) {
-        this.musicMgr.runningTrack = track;
+        const musicMgr: MusicManager = MusicManager.getInstance();
+
+        musicMgr.runningTrack = track;
         // update the playlist
-        const selectedPlaylist: PlaylistItem = this.musicMgr.selectedPlaylist;
+        const selectedPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
         if (selectedPlaylist) {
-            await this.musicMgr.clearPlaylistTracksForId(selectedPlaylist.id);
+            await musicMgr.clearPlaylistTracksForId(selectedPlaylist.id);
             // this will get the updated state of the track
-            await this.musicMgr.getPlaylistItemTracksForPlaylistId(
+            await musicMgr.getPlaylistItemTracksForPlaylistId(
                 selectedPlaylist.id
             );
-            await this.musicMgr.refreshPlaylistState();
+            await musicMgr.refreshPlaylistState();
 
             if (this._treeProvider) {
                 this._treeProvider.refreshParent(selectedPlaylist);
@@ -184,8 +177,9 @@ export class MusicCommandManager {
     }
 
     private static async showLaunchPlayerControls() {
+        const musicMgr: MusicManager = MusicManager.getInstance();
         const showPremiumRequired =
-            !this.musicMgr.hasSpotifyPlaybackAccess() &&
+            !musicMgr.hasSpotifyPlaybackAccess() &&
             !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
@@ -220,6 +214,8 @@ export class MusicCommandManager {
      * @param trackInfo
      */
     private static async showPlayControls(trackInfo: Track) {
+        const musicMgr: MusicManager = MusicManager.getInstance();
+
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
@@ -237,7 +233,7 @@ export class MusicCommandManager {
         }
 
         const showPremiumRequired =
-            !this.musicMgr.hasSpotifyPlaybackAccess() &&
+            !musicMgr.hasSpotifyPlaybackAccess() &&
             !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
@@ -298,6 +294,7 @@ export class MusicCommandManager {
      * @param trackInfo
      */
     private static showPauseControls(trackInfo: Track) {
+        const musicMgr: MusicManager = MusicManager.getInstance();
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
         // get the server track
         let serverTrack = MusicManager.getInstance().serverTrack;
@@ -313,7 +310,7 @@ export class MusicCommandManager {
         }
 
         const showPremiumRequired =
-            !this.musicMgr.hasSpotifyPlaybackAccess() &&
+            !musicMgr.hasSpotifyPlaybackAccess() &&
             !requiresSpotifyAccessInfo() &&
             !isMac()
                 ? true
