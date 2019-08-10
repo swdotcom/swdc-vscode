@@ -7,7 +7,7 @@ import { showQuickPick } from "../MenuManager";
 export async function connectSlack() {
     // auth/slack/workspace is the other api endpoint to try
     // to get slack to show the workspace prompt but that's not working either
-    const endpoint = `${api_endpoint}/auth/slack?integrate=slack&token=${getItem(
+    const endpoint = `${api_endpoint}/auth/slack?integrate=slack&plugin=musictime&token=${getItem(
         "jwt"
     )}`;
     launchWebUrl(endpoint);

@@ -124,7 +124,7 @@ export const playSelectedItem = async (
             if (notPlaying) {
                 await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
             } else {
-                musicCtrlMgr.pauseSong(PlayerName.SpotifyWeb);
+                musicCtrlMgr.pauseSong(musicMgr.currentPlayerName);
             }
         }
     } else {

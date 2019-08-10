@@ -176,7 +176,6 @@ export class MusicControlManager {
             await playSpotifyTrack(playlistItem.id, deviceId);
         } else {
             // we have playlist id within the options, use that
-            // await play(PlayerName.SpotifyWeb, options);
             await playSpotifyPlaylist(playlistId, trackId, deviceId);
         }
 
@@ -365,7 +364,7 @@ export class MusicControlManager {
             url: "mailto:cody@software.com"
         });
 
-        if (musicMgr.currentPlayerName !== PlayerName.SpotifyWeb) {
+        if (musicMgr.currentPlayerName === PlayerName.ItunesDesktop) {
             menuOptions.items.push({
                 label: "Switch to Spotify",
                 detail: "Launch the Spotify web player to view your playlist",
@@ -470,13 +469,17 @@ export async function disconnectOauth(type: string) {
                 const musicMgr = MusicManager.getInstance();
                 // oauth is not null, initialize spotify
                 if (type_lc === "slack") {
-                    await this.updateSlackAccessInfo(null);
+                    await MusicManager.getInstance().updateSlackAccessInfo(
+                        null
+                    );
                 } else if (type_lc === "spotify") {
                     musicMgr.clearSpotifyAccessInfo();
                 }
 
                 // refresh the playlist
-                commands.executeCommand("musictime.refreshPlaylist");
+                setTimeout(() => {
+                    commands.executeCommand("musictime.refreshPlaylist");
+                }, 1000);
             }
         } else {
             window.showInformationMessage(

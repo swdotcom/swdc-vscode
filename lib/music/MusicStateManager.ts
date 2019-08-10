@@ -88,16 +88,22 @@ export class MusicStateManager {
         // only update the currentPlayerName if the current track running
         // is "playing" AND the playerType doesn't match the current player type
 
+        const isSpotifyPlayer =
+            playerName === PlayerName.SpotifyDesktop ||
+            playerName === PlayerName.SpotifyWeb
+                ? true
+                : false;
+
         if (playing) {
             if (
-                playerName === PlayerName.SpotifyWeb &&
+                isSpotifyPlayer &&
                 playingTrack.playerType === PlayerType.MacItunesDesktop
             ) {
                 this.musicMgr.currentPlayerName = PlayerName.ItunesDesktop;
                 playerNameChanged = true;
             } else if (
                 playerName === PlayerName.ItunesDesktop &&
-                playingTrack.playerType === PlayerType.WebSpotify
+                playingTrack.playerType !== PlayerType.MacItunesDesktop
             ) {
                 this.musicMgr.currentPlayerName = PlayerName.SpotifyWeb;
                 playerNameChanged = true;

@@ -44,7 +44,7 @@ import {
     getLoggedInCacheState,
     getUserStatus
 } from "../DataController";
-import { getItem, setItem, launchLogin, isMac, isWindows } from "../Util";
+import { getItem, setItem, launchLogin, isMac } from "../Util";
 import {
     isResponseOk,
     softwareGet,
@@ -137,6 +137,10 @@ export class MusicManager {
         this._selectedTrackItem = trackItem;
     }
 
+    /**
+     * Even if the _currentPlayer is set to SpotifyWeb
+     * it may return SpotifyDesktop if it's mac and it requires access
+     */
     get currentPlayerName(): PlayerName {
         const requiresSpotifyAccess = this.requiresSpotifyAccess();
         const hasSpotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
@@ -309,11 +313,16 @@ export class MusicManager {
         }
         // there's nothing to get if it's windows and they don't have
         // a premium spotify account
-        let premiumAccountRequired = false;
-        if (isMac() || this.hasSpotifyPlaybackAccess()) {
+        let premiumAccountRequired =
+            !isMac() && !this.hasSpotifyPlaybackAccess() ? true : false;
+
+        let allowPlaylistFetch = true;
+        if (needsSpotifyAccess || premiumAccountRequired) {
+            allowPlaylistFetch = false;
+        }
+
+        if (allowPlaylistFetch) {
             playlists = await getPlaylists(playerName);
-        } else {
-            premiumAccountRequired = true;
         }
 
         if (this._savedPlaylists.length === 0) {
@@ -391,10 +400,11 @@ export class MusicManager {
             this._itunesPlaylists = items;
         } else {
             // add the action items specific to spotify
-            if (!needsSpotifyAccess) {
+            if (!needsSpotifyAccess && !premiumAccountRequired) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
                 items.push(this.getSpotifyConnectedButton());
             }
+
             if (isMac()) {
                 items.push(this.getSwitchToItunesButton());
             }
@@ -804,7 +814,7 @@ export class MusicManager {
             : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
         if (
-            this._currentPlayerName === PlayerName.SpotifyWeb &&
+            this.currentPlayerName !== PlayerName.ItunesDesktop &&
             !this.requiresSpotifyAccess()
         ) {
             // add the connect spotify link
