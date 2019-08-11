@@ -63,7 +63,7 @@ export const launchAndPlayTrack = async (
                 currentPlaylist.id,
                 track,
                 spotifyDevices,
-                20 /* checkTrackStateAndTryAgain */
+                5 /* checkTrackStateAndTryAgain */
             );
         }, 1000);
     } else {
@@ -135,6 +135,15 @@ export const playSelectedItem = async (
         musicMgr.selectedPlaylist = playlistItem;
 
         if (!isExpand) {
+            // get the tracks
+            const tracks: PlaylistItem[] = await MusicManager.getInstance().getPlaylistItemTracksForPlaylistId(
+                playlistItem.id
+            );
+
+            // get the tracks
+            const selectedTrack: PlaylistItem =
+                tracks && tracks.length > 0 ? tracks[0] : null;
+
             if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                 const pos: number = 1;
                 await playItunesTrackNumberInPlaylist(
@@ -143,43 +152,55 @@ export const playSelectedItem = async (
                 );
             } else {
                 const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
+                let checkTrackStateAndTryAgainCount = 3;
                 if (!spotifyDevices || spotifyDevices.length === 0) {
                     // no spotify devices found, lets launch the web player with the track
 
                     // launch it
                     await launchPlayer(PlayerName.SpotifyWeb);
+                    checkTrackStateAndTryAgainCount = 5;
                 }
 
-                // get the tracks
-                const tracks: PlaylistItem[] = await MusicManager.getInstance().getPlaylistItemTracksForPlaylistId(
-                    playlistItem.id
-                );
-                const selectedTrack: PlaylistItem =
-                    tracks && tracks.length > 0 ? tracks[0] : null;
-                if (playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
-                    // play the 1st track in the non-playlist liked songs folder
-                    if (selectedTrack) {
+                if (!selectedTrack) {
+                    return;
+                }
+
+                if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
+                    // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
+                    // make sure the track has spotify:track and the playlist has spotify:playlist
+
+                    let track_uri = `spotify:track:${selectedTrack.id}`;
+                    let playlist_uri = `spotify:playlist:${playlistItem.id}`;
+                    let params = [track_uri, playlist_uri];
+                    musicCtrlMgr.playSongInContext(params);
+                } else {
+                    if (
+                        playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+                    ) {
+                        // play the 1st track in the non-playlist liked songs folder
+                        if (selectedTrack) {
+                            musicCtrlMgr.playSpotifyTrackFromPlaylist(
+                                musicMgr.spotifyUser,
+                                playlistItem.id,
+                                selectedTrack /* track */,
+                                spotifyDevices,
+                                checkTrackStateAndTryAgainCount
+                            );
+                        }
+                    } else {
+                        // use the normal play playlist by offset 0 call
                         musicCtrlMgr.playSpotifyTrackFromPlaylist(
                             musicMgr.spotifyUser,
                             playlistItem.id,
-                            selectedTrack /* track */,
+                            null /* track */,
                             spotifyDevices,
-                            20 /* checkTrackStateAndTryAgain */
+                            checkTrackStateAndTryAgainCount
                         );
                     }
-                } else {
-                    // use the normal play playlist by offset 0 call
-                    musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                        musicMgr.spotifyUser,
-                        playlistItem.id,
-                        null /* track */,
-                        spotifyDevices,
-                        20 /* checkTrackStateAndTryAgain */
-                    );
-                }
 
-                if (selectedTrack) {
-                    musicMgr.selectedTrackItem = selectedTrack;
+                    if (selectedTrack) {
+                        musicMgr.selectedTrackItem = selectedTrack;
+                    }
                 }
             }
         }
