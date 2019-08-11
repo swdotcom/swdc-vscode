@@ -15,7 +15,8 @@ import {
     playSpotifyTrack,
     playTrackInContext,
     playSpotifyPlaylist,
-    TrackStatus
+    TrackStatus,
+    playTrack
 } from "cody-music";
 import { workspace, window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -108,6 +109,10 @@ export class MusicControlManager {
 
     async playSongInContext(params) {
         await playTrackInContext(this.musicMgr.currentPlayerName, params);
+    }
+
+    async playSongById(playerName: PlayerName, trackId: string) {
+        await playTrack(playerName, trackId);
     }
 
     async setLiked(liked: boolean) {

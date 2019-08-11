@@ -18,7 +18,8 @@ import {
     getSpotifyDevices,
     PlayerDevice,
     launchPlayer,
-    playItunesTrackNumberInPlaylist
+    playItunesTrackNumberInPlaylist,
+    playTrack
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
@@ -77,6 +78,29 @@ export const launchAndPlayTrack = async (
     }
 };
 
+export const playSpotifySongInPlaylist = (
+    playlist: PlaylistItem,
+    track: PlaylistItem
+) => {
+    const musicCtrlMgr = new MusicControlManager();
+    let track_uri = track.id.includes("spotify:track")
+        ? track.id
+        : `spotify:track:${track.id}`;
+    let playlist_uri = playlist.id.includes("spotify:playlist")
+        ? playlist.id
+        : `spotify:playlist:${playlist.id}`;
+    let params = [track_uri, playlist_uri];
+    musicCtrlMgr.playSongInContext(params);
+};
+
+export const playSpotifySongById = (track: PlaylistItem) => {
+    const musicCtrlMgr = new MusicControlManager();
+    let track_uri = track.id.includes("spotify:track")
+        ? track.id
+        : `spotify:track:${track.id}`;
+    musicCtrlMgr.playSongById(PlayerName.SpotifyDesktop, track_uri);
+};
+
 export const playSelectedItem = async (
     playlistItem: PlaylistItem,
     isExpand = true
@@ -97,6 +121,11 @@ export const playSelectedItem = async (
         const notPlaying =
             playlistItem.state !== TrackStatus.Playing ? true : false;
 
+        const isLikedSongsPlaylist =
+            musicMgr.selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+                ? true
+                : false;
+
         if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
             if (notPlaying) {
                 const pos: number = playlistItem.position || 1;
@@ -110,16 +139,14 @@ export const playSelectedItem = async (
         } else if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
             // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
             // make sure the track has spotify:track and the playlist has spotify:playlist
-            let track_uri = playlistItem.id.includes("spotify:track:")
-                ? playlistItem.id
-                : `spotify:track:${playlistItem.id}`;
-            let playlist_uri = musicMgr.selectedPlaylist.id.includes(
-                "spotify:playlist:"
-            )
-                ? musicMgr.selectedPlaylist.id
-                : `spotify:playlist:${musicMgr.selectedPlaylist.id}`;
-            let params = [track_uri, playlist_uri];
-            musicCtrlMgr.playSongInContext(params);
+            if (isLikedSongsPlaylist) {
+                playSpotifySongById(playlistItem);
+            } else {
+                playSpotifySongInPlaylist(
+                    musicMgr.selectedPlaylist,
+                    playlistItem
+                );
+            }
         } else {
             if (notPlaying) {
                 await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
@@ -144,6 +171,11 @@ export const playSelectedItem = async (
             const selectedTrack: PlaylistItem =
                 tracks && tracks.length > 0 ? tracks[0] : null;
 
+            const isLikedSongsPlaylist =
+                playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+                    ? true
+                    : false;
+
             if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                 const pos: number = 1;
                 await playItunesTrackNumberInPlaylist(
@@ -166,17 +198,16 @@ export const playSelectedItem = async (
                 }
 
                 if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
-                    // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
-                    // make sure the track has spotify:track and the playlist has spotify:playlist
-
-                    let track_uri = `spotify:track:${selectedTrack.id}`;
-                    let playlist_uri = `spotify:playlist:${playlistItem.id}`;
-                    let params = [track_uri, playlist_uri];
-                    musicCtrlMgr.playSongInContext(params);
+                    if (isLikedSongsPlaylist) {
+                        // just play the 1st track
+                        playSpotifySongById(selectedTrack);
+                    } else {
+                        // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
+                        // make sure the track has spotify:track and the playlist has spotify:playlist
+                        playSpotifySongInPlaylist(playlistItem, selectedTrack);
+                    }
                 } else {
-                    if (
-                        playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
-                    ) {
+                    if (isLikedSongsPlaylist) {
                         // play the 1st track in the non-playlist liked songs folder
                         if (selectedTrack) {
                             musicCtrlMgr.playSpotifyTrackFromPlaylist(
