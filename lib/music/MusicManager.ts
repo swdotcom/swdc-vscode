@@ -316,12 +316,12 @@ export class MusicManager {
         let premiumAccountRequired =
             !isMac() && !this.hasSpotifyPlaybackAccess() ? true : false;
 
-        let allowPlaylistFetch = true;
+        let allowSpotifyPlaylistFetch = true;
         if (needsSpotifyAccess || premiumAccountRequired) {
-            allowPlaylistFetch = false;
+            allowSpotifyPlaylistFetch = false;
         }
 
-        if (allowPlaylistFetch) {
+        if (allowSpotifyPlaylistFetch) {
             playlists = await getPlaylists(playerName);
         }
 
@@ -400,7 +400,7 @@ export class MusicManager {
             this._itunesPlaylists = items;
         } else {
             // add the action items specific to spotify
-            if (!needsSpotifyAccess && !premiumAccountRequired) {
+            if (allowSpotifyPlaylistFetch) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
                 items.push(this.getSpotifyConnectedButton());
             }
@@ -410,7 +410,7 @@ export class MusicManager {
             }
 
             // get the custom playlist button
-            if (serverIsOnline && !needsSpotifyAccess) {
+            if (serverIsOnline && allowSpotifyPlaylistFetch) {
                 items.push(this.getLineBreakButton());
 
                 if (!this.globalPlaylistIdExists()) {
@@ -420,7 +420,7 @@ export class MusicManager {
                         commands.executeCommand(
                             "musictime.generateGlobalPlaylist"
                         );
-                    }, 1000 * 2);
+                    }, 1000);
                 }
 
                 const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();

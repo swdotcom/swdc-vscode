@@ -190,7 +190,7 @@ export const playSelectedItem = async (
 
                     // launch it
                     await launchPlayer(PlayerName.SpotifyWeb);
-                    checkTrackStateAndTryAgainCount = 5;
+                    checkTrackStateAndTryAgainCount = 8;
                 }
 
                 if (!selectedTrack) {

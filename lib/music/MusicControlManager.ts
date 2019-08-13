@@ -170,6 +170,18 @@ export class MusicControlManager {
             options["context_uri"] = playlistUri;
         }
 
+        if (trackId && this.musicMgr.selectedTrackItem) {
+            // check against the currently selected track
+            if (trackId !== this.musicMgr.selectedTrackItem.id) {
+                return;
+            }
+        } else if (playlistId && this.musicMgr.selectedTrackItem) {
+            // check against the currently selected playlist
+            if (playlistId !== this.musicMgr.selectedTrackItem.id) {
+                return;
+            }
+        }
+
         /**
          * to play a track without the play list id
          * curl -X "PUT" "https://api.spotify.com/v1/me/player/play?device_id=4f38ae14f61b3a2e4ed97d537a5cb3d09cf34ea1"
@@ -191,6 +203,7 @@ export class MusicControlManager {
             } else if (!playlistItem && track.id) {
                 await MusicStateManager.getInstance().musicStateCheck();
             } else {
+                checkTrackStateAndTryAgainCount--;
                 spotifyDevices = await getSpotifyDevices();
                 setTimeout(() => {
                     this.playSpotifyTrackFromPlaylist(

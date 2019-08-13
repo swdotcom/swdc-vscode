@@ -188,12 +188,13 @@ export class MusicCommandManager {
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
 
-            let isMusicTimeMenu = btnCmd === "musictime.menu";
-            let isConnectSpotify = btnCmd === "musictime.connectSpotify";
-            let isPremiumButton = btnCmd === "musictime.spotifyPremiumRequired";
+            const isMusicTimeMenu = btnCmd === "musictime.menu";
+            const isConnectSpotify = btnCmd === "musictime.connectSpotify";
+            const isPremiumButton =
+                btnCmd === "musictime.spotifyPremiumRequired";
 
             if (isMusicTimeMenu) {
-                // show the headphones button
+                // always show the headphones button for the launch controls function
                 button.statusBarItem.show();
             } else if (isConnectSpotify && requiresSpotifyAccessInfo()) {
                 // show the connect button
@@ -241,7 +242,12 @@ export class MusicCommandManager {
 
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.pause") {
+            const isMusicTimeMenu = btnCmd === "musictime.menu";
+
+            if (isMusicTimeMenu) {
+                // always show the headphones menu icon
+                button.statusBarItem.show();
+            } else if (btnCmd === "musictime.pause") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
                 if (loved || !showLoved) {
@@ -318,7 +324,12 @@ export class MusicCommandManager {
 
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
-            if (btnCmd === "musictime.play") {
+            const isMusicTimeMenu = btnCmd === "musictime.menu";
+
+            if (isMusicTimeMenu) {
+                // always show the headphones menu icon
+                button.statusBarItem.show();
+            } else if (btnCmd === "musictime.play") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
                 if (loved || !showLoved) {
