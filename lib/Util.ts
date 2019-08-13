@@ -7,7 +7,9 @@ import {
     NOT_NOW_LABEL,
     LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
-    MUSIC_TIME_PLUGIN_ID
+    MUSIC_TIME_PLUGIN_ID,
+    MUSIC_TIME_TYPE,
+    CODE_TIME_TYPE
 } from "./Constants";
 import {
     refetchUserStatusLazily,
@@ -70,6 +72,15 @@ export function getPluginName() {
         return MUSIC_TIME_EXT_ID;
     }
     return CODE_TIME_EXT_ID;
+}
+
+export function getPluginType() {
+    if (isCodeTime()) {
+        return CODE_TIME_TYPE;
+    } else if (isMusicTime()) {
+        return MUSIC_TIME_TYPE;
+    }
+    return CODE_TIME_TYPE;
 }
 
 export function getVersion() {
@@ -809,21 +820,8 @@ export async function showLoginPrompt() {
 export async function buildLoginUrl() {
     let jwt = getItem("jwt");
     if (jwt) {
-        let encodedJwt = encodeURIComponent(jwt);
-        let loginUrl = `${launch_url}/onboarding?token=${encodedJwt}`;
-        return loginUrl;
-    } else {
-        // no need to build an onboarding url if we dn't have the token
-        return launch_url;
-    }
-}
-
-export async function buildSpotifyConnectUrl() {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let encodedJwt = encodeURIComponent(jwt);
-        let loginUrl = `${launch_url}/login`;
-        // let loginUrl = `${launch_url}/spotify?token=${encodedJwt}`;
+        const encodedJwt = encodeURIComponent(jwt);
+        const loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}`;
         return loginUrl;
     } else {
         // no need to build an onboarding url if we dn't have the token
