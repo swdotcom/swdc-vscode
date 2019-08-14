@@ -7,7 +7,8 @@ import {
     Event,
     Disposable,
     TreeView,
-    commands
+    commands,
+    window
 } from "vscode";
 import * as path from "path";
 import {
@@ -19,7 +20,8 @@ import {
     PlayerDevice,
     launchPlayer,
     playItunesTrackNumberInPlaylist,
-    playTrack
+    playTrack,
+    getRunningTrack
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
@@ -78,7 +80,21 @@ export const launchAndPlayTrack = async (
     }
 };
 
-export const playSpotifySongInPlaylist = (
+export const checkSpotifySongState = (track_uri: string) => {
+    setTimeout(async () => {
+        // make sure we get that song, if not then they may not be logged in
+        let playingTrack = await getRunningTrack();
+        if (!playingTrack || playingTrack.uri !== track_uri) {
+            // they're not logged in
+            window.showInformationMessage(
+                "We're unable to play the Spotify track. Please make sure you are logged in to your account.",
+                ...["Ok"]
+            );
+        }
+    }, 2000);
+};
+
+export const playSpotifySongInPlaylist = async (
     playlist: PlaylistItem,
     track: PlaylistItem
 ) => {
@@ -90,7 +106,8 @@ export const playSpotifySongInPlaylist = (
         ? playlist.id
         : `spotify:playlist:${playlist.id}`;
     let params = [track_uri, playlist_uri];
-    musicCtrlMgr.playSongInContext(params);
+    await musicCtrlMgr.playSongInContext(params);
+    checkSpotifySongState(track_uri);
 };
 
 export const playSpotifySongById = (track: PlaylistItem) => {
@@ -99,6 +116,7 @@ export const playSpotifySongById = (track: PlaylistItem) => {
         ? track.id
         : `spotify:track:${track.id}`;
     musicCtrlMgr.playSongById(PlayerName.SpotifyDesktop, track_uri);
+    checkSpotifySongState(track_uri);
 };
 
 export const playSelectedItem = async (
