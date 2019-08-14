@@ -18,7 +18,14 @@ import {
     TrackStatus,
     playTrack
 } from "cody-music";
-import { workspace, window, ViewColumn, Uri, commands } from "vscode";
+import {
+    workspace,
+    window,
+    ViewColumn,
+    Uri,
+    commands,
+    ProgressLocation
+} from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
@@ -65,7 +72,7 @@ const fs = require("fs");
 const NO_DATA = "MUSIC TIME\n\nNo data available\n";
 
 let lastDayOfMonth = -1;
-
+let fetchingMusicTimeMetrics = false;
 export class MusicControlManager {
     private musicMgr: MusicManager = MusicManager.getInstance();
 
@@ -416,7 +423,19 @@ export function buildSpotifyLink(id: string, isPlaylist: boolean) {
 }
 
 export async function displayMusicTimeMetricsMarkdownDashboard() {
-    let musicTimeFile = getMusicTimeMarkdownFile();
+    if (fetchingMusicTimeMetrics) {
+        window.showInformationMessage(
+            `Building Music Time dashboard, please wait.`
+        );
+        return;
+    }
+    fetchingMusicTimeMetrics = true;
+
+    window.showInformationMessage(
+        `Building Music Time dashboard, please wait.`
+    );
+
+    const musicTimeFile = getMusicTimeMarkdownFile();
     await fetchMusicTimeMetricsMarkdownDashboard();
 
     const viewOptions = {
@@ -437,18 +456,9 @@ export async function displayMusicTimeMetricsMarkdownDashboard() {
 
     const content = fs.readFileSync(musicTimeFile).toString();
     panel.webview.html = content;
-}
 
-export async function displayMusicTimeMetricsDashboard() {
-    let musicTimeFile = getMusicTimeFile();
-    await fetchMusicTimeMetricsDashboard();
-
-    workspace.openTextDocument(musicTimeFile).then(doc => {
-        // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
-            // done
-        });
-    });
+    fetchingMusicTimeMetrics = false;
+    window.showInformationMessage(`Completed building Music Time dashboard.`);
 }
 
 export async function connectSpotify() {
@@ -513,7 +523,7 @@ export async function fetchMusicTimeMetricsMarkdownDashboard() {
     const dayOfMonth = moment()
         .startOf("day")
         .date();
-    if (lastDayOfMonth !== dayOfMonth) {
+    if (!fs.existsSync(file) || lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
         await fetchDashboardData(file, "music-time", true);
     }
@@ -525,7 +535,7 @@ export async function fetchMusicTimeMetricsDashboard() {
     const dayOfMonth = moment()
         .startOf("day")
         .date();
-    if (lastDayOfMonth !== dayOfMonth) {
+    if (fs.existsSync(file) || lastDayOfMonth !== dayOfMonth) {
         lastDayOfMonth = dayOfMonth;
         await fetchDashboardData(file, "music-time", false);
     }
