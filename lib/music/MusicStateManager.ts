@@ -217,9 +217,13 @@ export class MusicStateManager {
                     false /*sendLazy*/
                 );
             }
+
+            let songSession = {
+                ...this.existingTrack
+            };
             setTimeout(() => {
-                let songSession = {
-                    ...this.existingTrack,
+                songSession = {
+                    ...songSession,
                     ...this.getMusicCodingData()
                 };
 
