@@ -229,7 +229,7 @@ export class MusicStateManager {
                 }
 
                 // send off the ended song session
-                // sendMusicData(songSession);
+                sendMusicData(songSession);
             }, 1000);
 
             // clear the track.
@@ -324,7 +324,6 @@ export class MusicStateManager {
                         payloads,
                         initialValue
                     );
-                    console.log("keystrokes: ", musicCodingData.keystrokes);
                     return musicCodingData;
                 }
             } else {
