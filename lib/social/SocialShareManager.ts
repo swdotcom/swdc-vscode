@@ -8,6 +8,7 @@ import {
     showSlackChannelMenu,
     connectSlack
 } from "../slack/SlackControlManager";
+import { window } from "vscode";
 const { WebClient } = require("@slack/web-api");
 
 let musicId: string = "";
@@ -178,16 +179,40 @@ export class SocialShareManager {
         controller.copySpotifyLink(musicId, playlistSelected);
     }
 
+    async showSlackMessageInputPrompt() {
+        return await window.showInputBox({
+            value: `${title}`,
+            placeHolder: "Enter a message to appear in the selected channel",
+            validateInput: text => {
+                return !text
+                    ? "Please enter a valid message to continue."
+                    : null;
+            }
+        });
+    }
+
+    async validateMessage(name: string) {
+        // ...validate...
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // return name === 'vscode' ? 'Name not unique' : undefined;
+    }
+
     async shareSlack() {
         const selectedChannel = await showSlackChannelMenu();
         if (!selectedChannel) {
+            return;
+        }
+        // need to use the get instance as this method may be called within a callback
+        // and "this" will be undefined
+        const message = await SocialShareManager.getInstance().showSlackMessageInputPrompt();
+        if (!message) {
             return;
         }
         const slackAccessToken = getItem("slack_access_token");
         const web = new WebClient(slackAccessToken);
         const result = await web.chat
             .postMessage({
-                text: `${title} : ${spotifyLinkUrl}`,
+                text: `${message} ${spotifyLinkUrl}`,
                 channel: selectedChannel
             })
             .catch(err => {
