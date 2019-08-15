@@ -32,7 +32,7 @@ export class KpmController {
         this._disposable = Disposable.from(...subscriptions);
     }
 
-    private async sendKeystrokeDataIntervalHandler() {
+    public async sendKeystrokeDataIntervalHandler(sendLazy: boolean = true) {
         //
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
@@ -45,7 +45,11 @@ export class KpmController {
 
                 if (hasData) {
                     // post the payload offline until the batch interval sends it out
-                    setTimeout(() => keystrokeCount.postData(), 0);
+                    if (sendLazy) {
+                        setTimeout(() => keystrokeCount.postData(), 0);
+                    } else {
+                        await keystrokeCount.postData();
+                    }
                 }
                 delete _keystrokeMap[key];
             }

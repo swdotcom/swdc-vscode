@@ -20,7 +20,6 @@ import {
     PlayerDevice,
     launchPlayer,
     playItunesTrackNumberInPlaylist,
-    playTrack,
     getRunningTrack
 } from "cody-music";
 import { SpotifyUser } from "cody-music/dist/lib/profile";

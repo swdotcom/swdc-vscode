@@ -632,33 +632,32 @@ export function storePayload(payload) {
     }, 1000);
 
     // store the payload into the data.json file
-    fs.appendFile(
-        getSoftwareDataStoreFile(),
-        JSON.stringify(payload) + os.EOL,
-        err => {
-            if (err)
-                logIt(
-                    `Error appending to the Software data store file: ${
-                        err.message
-                    }`
-                );
-        }
-    );
-
-    if (isMusicTime()) {
-        // also store the payload into the MusicSession.json file
+    if (isCodeTime()) {
         fs.appendFile(
-            getMusicSessionDataStoreFile(),
+            getSoftwareDataStoreFile(),
             JSON.stringify(payload) + os.EOL,
             err => {
                 if (err)
                     logIt(
-                        `Error appending to the music session data store file: ${
+                        `Error appending to the Software data store file: ${
                             err.message
                         }`
                     );
             }
         );
+    }
+
+    if (isMusicTime()) {
+        const musicFile = getMusicSessionDataStoreFile();
+        // also store the payload into the MusicSession.json file
+        fs.appendFile(musicFile, JSON.stringify(payload) + os.EOL, err => {
+            if (err)
+                logIt(
+                    `Error appending to the music session data store file: ${
+                        err.message
+                    }`
+                );
+        });
     }
 }
 

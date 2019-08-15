@@ -19,6 +19,7 @@ import {
     PlayerName
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
+import { KpmController } from "../KpmController";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -29,6 +30,8 @@ export class MusicStateManager {
 
     private existingTrack: any = {};
     private processingSong: boolean = false;
+
+    private kpmControllerInstance: KpmController;
 
     private musicMgr: MusicManager;
 
@@ -44,6 +47,10 @@ export class MusicStateManager {
             MusicStateManager.instance = new MusicStateManager();
         }
         return MusicStateManager.instance;
+    }
+
+    public setKpmController(kpmController: KpmController) {
+        this.kpmControllerInstance = kpmController;
     }
 
     public async musicStateCheck() {
@@ -204,22 +211,26 @@ export class MusicStateManager {
             }
 
             // gather the coding metrics
-            this.existingTrack = {
-                ...this.existingTrack,
-                ...this.getMusicCodingData()
-            };
-
-            if (parseInt(this.existingTrack.keystrokes, 10) > 0) {
-                this.existingTrack["coding"] = true;
+            // but first end the kpm data collecting
+            if (this.kpmControllerInstance) {
+                await this.kpmControllerInstance.sendKeystrokeDataIntervalHandler(
+                    false /*sendLazy*/
+                );
             }
+            setTimeout(() => {
+                let songSession = {
+                    ...this.existingTrack,
+                    ...this.getMusicCodingData()
+                };
 
-            // update the loved state
-            if (this.musicMgr.serverTrack) {
-                this.existingTrack.loved = this.musicMgr.serverTrack.loved;
-            }
+                // update the loved state
+                if (songSession.serverTrack) {
+                    songSession.loved = this.musicMgr.serverTrack.loved;
+                }
 
-            // send off the ended song session
-            await sendMusicData(this.existingTrack);
+                // send off the ended song session
+                // sendMusicData(songSession);
+            }, 1000);
 
             // clear the track.
             this.existingTrack = {};
@@ -265,132 +276,6 @@ export class MusicStateManager {
         return this.existingTrack || new Track();
     }
 
-    private codingDataReducer(accumulator, current) {
-        const version = getVersion();
-        const numberList: string[] = [
-            "add",
-            "paste",
-            "delete",
-            "netkeys",
-            "linesRemoved",
-            "linesAdded",
-            "open",
-            "close"
-        ];
-        const keystrokeList: string[] = [
-            "add",
-            "paste",
-            "delete",
-            "linesRemoved",
-            "linesAdded"
-        ];
-        if (current && accumulator) {
-            const currObjectKeys = Object.keys(current);
-
-            const sourceJson = current.source;
-            const keys = Object.keys(sourceJson);
-            if (keys && keys.length > 0) {
-                for (let i = 0; i < keys.length; i++) {
-                    const file = keys[i];
-                    accumulator.source[file] = sourceJson[file];
-                }
-            }
-
-            const keystrokes = parseInt(current.keystrokes, 10) || 0;
-            accumulator.keystrokes += keystrokes;
-            if (!accumulator.syntax) {
-                accumulator.syntax = current.syntax || "";
-            }
-
-            // set the other top level attributes
-            accumulator["timezone"] = current.timezone;
-            accumulator["os"] = current.os;
-            accumulator["version"] = getVersion();
-            accumulator["pluginId"] = current.pluginId;
-            // set the: start, local_start, end, local_end, offset
-            accumulator["start"] = current.start;
-            accumulator["local_start"] = current.local_start;
-            accumulator["end"] = current.end;
-            accumulator["local_end"] = current.local_end;
-            // set the minutes offset
-            accumulator["offset"] = getOffsetSecends() / 60;
-
-            if (currObjectKeys && currObjectKeys.length > 0) {
-                for (let i = 0; i < currObjectKeys.length; i++) {
-                    let currObjectKey = currObjectKeys[i];
-
-                    const sourceObj = current[currObjectKey];
-
-                    const sourceObjKeys = Object.keys(sourceObj);
-                    if (sourceObjKeys && sourceObjKeys.length > 0) {
-                        for (let x = 0; x < sourceObjKeys.length; x++) {
-                            const sourceKey = sourceObjKeys[x];
-                            const fileObj = sourceObj[sourceKey];
-                            if (!fileObj.timezone) {
-                                fileObj[
-                                    "timezone"
-                                ] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                            }
-                            if (!fileObj.offset) {
-                                fileObj["offset"] = getOffsetSecends() / 60;
-                            }
-                            if (!fileObj.pluginId) {
-                                fileObj["pluginId"] = getPluginId();
-                            }
-                            if (!fileObj.os) {
-                                fileObj["os"] = getOs();
-                            }
-                            if (!fileObj.version) {
-                                fileObj["version"] = version;
-                            }
-                            let keystrokesTotal = 0;
-                            let foundfile = false;
-
-                            const fileObjKeys = Object.keys(fileObj);
-                            if (fileObjKeys && fileObjKeys.length > 0) {
-                                for (let y = 0; y < fileObjKeys.length; y++) {
-                                    const fileKey = fileObjKeys[y];
-                                    const val = fileObj[fileKey];
-                                    if (numberList.indexOf(fileKey) !== -1) {
-                                        foundfile = true;
-                                        const intVal = parseInt(val, 10);
-                                        if (accumulator[fileKey] && val) {
-                                            // aggregate
-                                            accumulator[fileKey] =
-                                                intVal +
-                                                parseInt(
-                                                    accumulator[fileKey],
-                                                    10
-                                                );
-                                        } else if (val) {
-                                            // doesn't exist yet, just set it
-                                            accumulator[fileKey] = intVal;
-                                        }
-                                        // aggregate keystrokes
-                                        if (
-                                            keystrokeList.indexOf(fileKey) !==
-                                            -1
-                                        ) {
-                                            keystrokesTotal += intVal;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (foundfile) {
-                                // set the keystrokes for this file object
-                                accumulator.source[sourceKey][
-                                    "keystrokes"
-                                ] = keystrokesTotal;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return accumulator;
-    }
-
     public getMusicCodingData() {
         const file = getMusicSessionDataStoreFile();
         const initialValue = {
@@ -434,16 +319,102 @@ export class MusicStateManager {
                         })
                         .filter(item => item);
 
-                    const musicCodingData = payloads.reduce(
-                        this.codingDataReducer,
+                    // build the aggregated payload
+                    const musicCodingData = this.buildAggregateData(
+                        payloads,
                         initialValue
                     );
+                    console.log("keystrokes: ", musicCodingData.keystrokes);
                     return musicCodingData;
                 }
             } else {
+                console.log("No keystroke data to send with the song session");
             }
         } catch (e) {
             logIt(`Unable to aggregate music session data: ${e.message}`);
+        }
+        return initialValue;
+    }
+
+    /**
+     * 
+     * @param payloads
+     * Should return...
+     *  add: 0,
+        paste: 0,
+        delete: 0,
+        netkeys: 0,
+        linesAdded: 0,
+        linesRemoved: 0,
+        open: 0,
+        close: 0,
+        keystrokes: 0,
+        syntax: "",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        offset: getOffsetSecends() / 60,
+        pluginId: getPluginId(),
+        os: getOs(),
+        version: getVersion(),
+        source: {}
+     */
+    private buildAggregateData(payloads, initialValue) {
+        const numerics = [
+            "add",
+            "paste",
+            "delete",
+            "netkeys",
+            "linesAdded",
+            "linesRemoved",
+            "open",
+            "close",
+            "keystrokes"
+        ];
+        if (payloads && payloads.length > 0) {
+            payloads.forEach(element => {
+                initialValue.keystrokes += element.keystrokes;
+                if (element.source) {
+                    // go through the source object
+                    initialValue.source = element.source;
+                    const keys = Object.keys(element.source);
+                    if (keys && keys.length > 0) {
+                        keys.forEach(key => {
+                            let sourceObj = element.source[key];
+                            const sourceObjKeys = Object.keys(sourceObj);
+                            if (sourceObjKeys && sourceObjKeys.length > 0) {
+                                sourceObjKeys.forEach(sourceObjKey => {
+                                    const val = sourceObj[sourceObjKey];
+                                    if (numerics.includes(sourceObjKey)) {
+                                        // aggregate
+                                        initialValue[sourceObjKey] += val;
+                                    }
+                                });
+                            }
+
+                            if (!initialValue.syntax && sourceObj.syntax) {
+                                initialValue.syntax = sourceObj.syntax;
+                            }
+
+                            if (!sourceObj.timezone) {
+                                sourceObj[
+                                    "timezone"
+                                ] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                            }
+                            if (!sourceObj.offset) {
+                                sourceObj["offset"] = getOffsetSecends() / 60;
+                            }
+                            if (!sourceObj.pluginId) {
+                                sourceObj["pluginId"] = getPluginId();
+                            }
+                            if (!sourceObj.os) {
+                                sourceObj["os"] = getOs();
+                            }
+                            if (!sourceObj.version) {
+                                sourceObj["version"] = getVersion();
+                            }
+                        });
+                    }
+                }
+            });
         }
         return initialValue;
     }

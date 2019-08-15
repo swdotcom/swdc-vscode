@@ -27,22 +27,24 @@ import {
     connectPlaylistTreeView,
     playSelectedItem
 } from "./music/MusicPlaylistProvider";
-import { PlaylistItem, PlayerName, Track, TrackStatus } from "cody-music";
+import { PlaylistItem, PlayerName, TrackStatus } from "cody-music";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
 import { MusicManager } from "./music/MusicManager";
+import { MusicStateManager } from "./music/MusicStateManager";
 
 export function createCommands(): {
     dispose: () => void;
 } {
     let cmds = [];
+
+    //
+    // Add the keystroke controller to the ext ctx, which
+    // will then listen for text document changes.
+    //
+    const kpmController = new KpmController();
     if (isCodeTime()) {
-        //
-        // Add the keystroke controller to the ext ctx, which
-        // will then listen for text document changes.
-        //
-        const kpmController = new KpmController();
         cmds.push(kpmController);
 
         const kpmClickedCmd = commands.registerCommand(
@@ -100,6 +102,8 @@ export function createCommands(): {
     } else if (isMusicTime()) {
         const controller = new MusicControlManager();
         const musicMgr: MusicManager = MusicManager.getInstance();
+
+        MusicStateManager.getInstance().setKpmController(kpmController);
 
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.nextSong();
@@ -304,7 +308,6 @@ export function createCommands(): {
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
-            const kpmController = new KpmController();
             cmds.push(kpmController);
 
             const top40Cmd = commands.registerCommand(
