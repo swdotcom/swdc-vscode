@@ -1,12 +1,12 @@
 [![](https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) [![](https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) [![](https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode)
 [![](https://aka.ms/vsls-badge)](https://aka.ms/vsls)
 
-# Music Time for Visual Studio Code
+# Code Time for Visual Studio Code
 
 > Programming metrics right in VS Code.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-dashboard.gif" alt="Music Time for VS Code" />
+  <img src="https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-dashboard.gif" alt="Code Time for VS Code" />
 </p>
 
 ## Power up your development
@@ -51,9 +51,9 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 
 ## Getting started
 
-1. [Install the Music Time plugin](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) from the Visual Studio Code Marketplace.
+1. [Install the Code Time plugin](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) from the Visual Studio Code Marketplace.
 
-2. After installing Music Time, an alert will appear prompting you to login (you can also click on "Music Time" in the status bar of Visual Studio Code.
+2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code.
 
 <!--- End: setup --->
 
@@ -65,7 +65,7 @@ In the status bar of your editor/IDE, we show a rocket ship icon when your time 
 
 **Does keeping VSCode open affect time tracking/metrics?**
 
-The answer is "No", keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Music Time metrics are correct.
+The answer is "No", keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Code Time metrics are correct.
 
 The timer starts when you start typing. It stops after 15 minutes without typing or opening/closing files in the editor. We then truncate the last 15 minutes of inactivity from the data.
 

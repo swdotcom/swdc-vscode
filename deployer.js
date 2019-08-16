@@ -55,6 +55,9 @@ async function deploy() {
     let packageJson = getJsonFromFile(getPackageFile());
     packageJson["name"] = pluginName;
     if (pluginName === "swdc-vscode") {
+        // update the README with the code time readme
+        updateReadme(getCodeTimeReadmeFile());
+
         // remove contributes.viewsContainers and contributes.views
         if (
             packageJson.contributes &&
@@ -83,6 +86,9 @@ async function deploy() {
         }
         packageJson.contributes["commands"] = codeTimeCommands;
     } else if (pluginName === "music-time") {
+        // update the README with the music time readme
+        updateReadme(getMusicTimeReadmeFile());
+
         //
         // add the viewsContainers and views
         packageJson.contributes["viewsContainers"] = {
@@ -319,6 +325,18 @@ function getPackageFile() {
     return __dirname + "/package.json";
 }
 
+function getReadmeFile() {
+    return __dirname + "/README.md";
+}
+
+function getMusicTimeReadmeFile() {
+    return __dirname + "/musictime.readme.md";
+}
+
+function getCodeTimeReadmeFile() {
+    return __dirname + "/codetime.readme.md";
+}
+
 function getJsonFromFile(filename) {
     let content = fs.readFileSync(filename).toString();
     if (content) {
@@ -347,6 +365,24 @@ function updateJsonContent(packageJson, filename) {
     } catch (e) {
         //
     }
+}
+
+function updateReadme(readmeFile) {
+    try {
+        if (fs.existsSync(readmeFile)) {
+            const readmeContent = fs.readFileSync(readmeFile).toString();
+
+            // update the readme file
+
+            fs.writeFileSync(getReadmeFile(), readmeContent, err => {
+                if (err) {
+                    logIt(
+                        `Error writing to the README.md file: ${err.message}`
+                    );
+                }
+            });
+        }
+    } catch (err) {}
 }
 
 async function runCommand(cmd, execMsg, ignoreError = false) {
