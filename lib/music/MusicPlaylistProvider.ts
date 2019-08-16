@@ -86,7 +86,7 @@ export const checkSpotifySongState = (track_uri: string) => {
         if (!playingTrack || playingTrack.uri !== track_uri) {
             // they're not logged in
             window.showInformationMessage(
-                "We're unable to play the Spotify track. Please make sure you are logged in to your account.",
+                "We're unable to play the selected Spotify track. Please make sure you are logged in to your account. You will need the Spotify desktop app if you have a non-premium Spotify account.",
                 ...["Ok"]
             );
         }
