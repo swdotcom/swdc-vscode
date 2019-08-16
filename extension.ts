@@ -43,6 +43,7 @@ let statusBarItem = null;
 let _ls = null;
 
 let token_check_interval = null;
+let liveshare_update_interval = null;
 let historical_commits_interval = null;
 let gather_music_interval = null;
 let offline_data_interval = null;
@@ -76,6 +77,7 @@ export function deactivate(ctx: ExtensionContext) {
     }
 
     clearInterval(token_check_interval);
+    clearInterval(liveshare_update_interval);
     clearInterval(historical_commits_interval);
     clearInterval(offline_data_interval);
     clearInterval(gather_music_interval);
@@ -203,11 +205,15 @@ export async function intializePlugin(
             getHistoricalCommits(serverIsOnline);
         }, one_min_ms * 2);
 
-        // 1 minute interval tasks
+        // 5 minute interval tasks
         // check if the use has become a registered user
         // if they're already logged on, it will not send a request
         token_check_interval = setInterval(async () => {
             getUserStatus(serverIsOnline);
+        }, one_min_ms * 5);
+
+        // update liveshare in the offline kpm data if it has been initiated
+        liveshare_update_interval = setInterval(async () => {
             updateLiveshareTime();
         }, one_min_ms * 1);
 
