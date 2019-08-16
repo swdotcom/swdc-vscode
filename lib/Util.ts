@@ -752,20 +752,12 @@ export async function wrapExecPromise(cmd, projectDir) {
 
 export function launchWebUrl(url) {
     let open = "open";
-    let args = [`${url}`];
     if (isWindows()) {
         open = "cmd";
-        // adds the following args to the beginning of the array
-        args.unshift("/c", "start", '""');
     } else if (!isMac()) {
         open = "xdg-open";
     }
-
-    let process = cp.execFile(open, args, (error, stdout, stderr) => {
-        if (error != null) {
-            logIt(`Error launching Software web url: ${error.toString()}`);
-        }
-    });
+    cp.exec(`${open} ${url}`);
 }
 
 /**
