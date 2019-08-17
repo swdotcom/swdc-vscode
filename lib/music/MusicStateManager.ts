@@ -234,7 +234,7 @@ export class MusicStateManager {
 
                 // send off the ended song session
                 sendMusicData(songSession);
-            }, 1000);
+            }, 800);
 
             // clear the track.
             this.existingTrack = {};
@@ -247,7 +247,7 @@ export class MusicStateManager {
             (changeStatus.playing || changeStatus.paused) &&
             changeStatus.isValidTrack
         ) {
-            this.musicMgr.getServerTrack(playingTrack);
+            await this.musicMgr.getServerTrack(playingTrack);
 
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after

@@ -83,7 +83,19 @@ export const checkSpotifySongState = (track_uri: string) => {
     setTimeout(async () => {
         // make sure we get that song, if not then they may not be logged in
         let playingTrack = await getRunningTrack();
-        if (!playingTrack || playingTrack.uri !== track_uri) {
+
+        let playingTrackUri = "";
+        if (playingTrack) {
+            if (playingTrack["spotify_url"]) {
+                playingTrackUri = playingTrack["spotify_url"];
+            } else if (playingTrack.uri) {
+                playingTrackUri = playingTrack.uri;
+            } else if (playingTrack.id) {
+                playingTrackUri = playingTrack.id;
+            }
+        }
+
+        if (playingTrackUri !== track_uri) {
             // they're not logged in
             window.showInformationMessage(
                 "We're unable to play the selected Spotify track. Please make sure you are logged in to your account. You will need the Spotify desktop app if you have a non-premium Spotify account.",

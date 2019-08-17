@@ -1381,6 +1381,7 @@ export class MusicManager {
             }
 
             if (!this.serverTrack) {
+                // get the last server track
                 const api = `/music/lastTrack/${trackId}/type/${type}`;
                 const resp = await softwareGet(api, getItem("jwt"));
                 if (isResponseOk(resp) && resp.data) {
