@@ -1381,7 +1381,7 @@ export class MusicManager {
             }
 
             if (!this.serverTrack) {
-                const api = `/music/spotify/track/${trackId}/type/${type}`;
+                const api = `/music/lastTrack/${trackId}/type/${type}`;
                 const resp = await softwareGet(api, getItem("jwt"));
                 if (isResponseOk(resp) && resp.data) {
                     let trackData = resp.data;
