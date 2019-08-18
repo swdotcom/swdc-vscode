@@ -224,9 +224,6 @@ export class MusicManager {
         }
         MusicCommandManager.syncControls(this._runningTrack);
 
-        // update the context showing that the track play/pause is ready
-        // commands.executeCommand("setContext", "trackReady", true);
-
         this._buildingPlaylists = false;
     }
 
@@ -374,11 +371,6 @@ export class MusicManager {
             items.push(this.getConnectToSpotifyButton());
         }
 
-        if (getItem("spotify_access_token")) {
-            // show the disconnect spotify button
-            items.push(this.getSpotifyDisconnectButton());
-        }
-
         if (getItem("slack_access_token")) {
             // show the disconnect slack button
             items.push(this.getSlackDisconnectButton());
@@ -399,6 +391,11 @@ export class MusicManager {
 
             this._itunesPlaylists = items;
         } else {
+            if (getItem("spotify_access_token")) {
+                // show the disconnect spotify button
+                items.push(this.getSpotifyDisconnectButton());
+            }
+
             // add the action items specific to spotify
             if (allowSpotifyPlaylistFetch) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
@@ -1338,7 +1335,9 @@ export class MusicManager {
         this.currentPlayerName = playerName;
 
         this.clearPlaylists();
-        commands.executeCommand("musictime.refreshPlaylist");
+        setTimeout(() => {
+            commands.executeCommand("musictime.refreshPlaylist");
+        }, 500);
     }
 
     launchSpotifyPlayer() {
