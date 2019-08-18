@@ -182,9 +182,9 @@ export class MusicControlManager {
             if (trackId !== this.musicMgr.selectedTrackItem.id) {
                 return;
             }
-        } else if (playlistId && this.musicMgr.selectedTrackItem) {
+        } else if (playlistId && this.musicMgr.selectedPlaylist) {
             // check against the currently selected playlist
-            if (playlistId !== this.musicMgr.selectedTrackItem.id) {
+            if (playlistId !== this.musicMgr.selectedPlaylist.id) {
                 return;
             }
         }
@@ -212,6 +212,7 @@ export class MusicControlManager {
             } else {
                 checkTrackStateAndTryAgainCount--;
                 spotifyDevices = await getSpotifyDevices();
+
                 setTimeout(() => {
                     this.playSpotifyTrackFromPlaylist(
                         spotifyUser,

@@ -26,6 +26,7 @@ import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
+import { version } from "punycode";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -313,6 +314,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     bindView(view: TreeView<PlaylistItem>): void {
+        console.log(`binded view: ${JSON.stringify(view)}`);
         this.view = view;
     }
 
@@ -352,12 +354,24 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
             treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
 
             // reveal the track state if it's playing or paused
-            if (this.isTrackInPlaylistRunning(p)) {
-                // don't "select" it thought. that will invoke the pause/play action
-                this.view.reveal(p, {
-                    focus: true,
-                    select: false
-                });
+            if (
+                this.isTrackInPlaylistRunning(p) &&
+                this.view &&
+                this.view.selection &&
+                this.view.selection.length > 0
+            ) {
+                try {
+                    // don't "select" it thought. that will invoke the pause/play action
+                    this.view.reveal(p, {
+                        focus: true,
+                        select: false
+                    });
+                } catch (err) {
+                    console.log(
+                        "Unable to reveal running track, error: ",
+                        err.message
+                    );
+                }
             }
         }
 
@@ -375,6 +389,12 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
             return tracks;
         } else {
             // get the top level playlist parents
+            let playlistChildren: PlaylistItem[] = musicMgr.currentPlaylists;
+            if (!playlistChildren || playlistChildren.length === 0) {
+                // try again if we've just initialized the plugin
+                await musicMgr.refreshPlaylists();
+                playlistChildren = musicMgr.currentPlaylists;
+            }
             return musicMgr.currentPlaylists;
         }
     }

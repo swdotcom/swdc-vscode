@@ -186,6 +186,28 @@ export async function intializePlugin(
         periodicSessionCheck();
     }, 1000 * 60 * 35);
 
+    let musicMgr: MusicManager = null;
+
+    if (isMusicTime()) {
+        let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = isMac() ? true : false;
+        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
+        setConfig(codyConfig);
+
+        musicMgr = MusicManager.getInstance();
+
+        // this needs to happen first to enable spotify playlist and control logic
+        await musicMgr.initializeSpotify();
+        // check if the user has a slack integration already connected
+        await musicMgr.initializeSlack();
+    }
+
+    //
+    // add the player commands before we show the playlist
+    //
+    ctx.subscriptions.push(createCommands());
+
+    // add the interval jobs
     if (isCodeTime()) {
         // check on new commits once an hour
         historical_commits_interval = setInterval(async () => {
@@ -224,21 +246,10 @@ export async function intializePlugin(
     }
 
     if (isMusicTime()) {
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = isMac() ? true : false;
-        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
-        setConfig(codyConfig);
-
-        const musicMgr: MusicManager = MusicManager.getInstance();
-
-        // this needs to happen first to enable spotify playlist and control logic
-        await musicMgr.initializeSpotify();
-        // check if the user has a slack integration already connected
-        await musicMgr.initializeSlack();
         // initialize the music manager
         await musicMgr.refreshPlaylists();
 
-        MusicStateManager.getInstance().musicStateCheck();
+        // MusicStateManager.getInstance().musicStateCheck();
         // 5 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().musicStateCheck();
@@ -257,9 +268,6 @@ export async function intializePlugin(
             }
         }, 1000 * 60 * 60 * 6);
     }
-
-    // add the player commands
-    ctx.subscriptions.push(createCommands());
 
     initializeLiveshare();
     initializeUserInfo(createdAnonUser, serverIsOnline);

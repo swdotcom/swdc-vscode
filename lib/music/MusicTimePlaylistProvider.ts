@@ -106,8 +106,9 @@ export class MusicTimePlaylistProvider
 
             // reveal the track state if it's playing or paused
             if (
-                p.state === TrackStatus.Playing ||
-                p.state === TrackStatus.Paused
+                this.view &&
+                (p.state === TrackStatus.Playing ||
+                    p.state === TrackStatus.Paused)
             ) {
                 // don't "select" it thought. that will invoke the pause/play action
                 this.view.reveal(p, {
