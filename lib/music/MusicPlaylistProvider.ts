@@ -108,7 +108,7 @@ export const checkSpotifySongState = (track_uri: string) => {
                 ...["Ok"]
             );
         }
-    }, 2000);
+    }, 3000);
 };
 
 export const playSpotifySongInPlaylist = async (
