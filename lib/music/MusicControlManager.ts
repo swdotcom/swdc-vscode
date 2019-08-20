@@ -390,23 +390,6 @@ export class MusicControlManager {
             url: "mailto:cody@software.com"
         });
 
-        if (musicMgr.currentPlayerName === PlayerName.ItunesDesktop) {
-            menuOptions.items.push({
-                label: "Switch to Spotify",
-                detail: "Launch the Spotify web player to view your playlist",
-                command: "musictime.launchSpotify"
-            });
-        } else {
-            if (isMac()) {
-                menuOptions.items.push({
-                    label: "Switch to iTunes",
-                    detail:
-                        "Launch the iTunes web player to view your playlist",
-                    command: "musictime.launchItunes"
-                });
-            }
-        }
-
         showQuickPick(menuOptions);
     }
 }

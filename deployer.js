@@ -204,7 +204,7 @@ async function deploy() {
 
         commands.push({
             command: "musictime.itunesPlaylist",
-            title: "Switch to iTunes",
+            title: "Launch iTunes",
             icon: {
                 light: "resources/light/itunes-logo.svg",
                 dark: "resources/dark/itunes-logo.svg"
@@ -213,7 +213,7 @@ async function deploy() {
 
         commands.push({
             command: "musictime.spotifyPlaylist",
-            title: "Switch to Spotify",
+            title: "Launch Spotify",
             icon: {
                 light: "resources/light/spotify-logo.svg",
                 dark: "resources/dark/spotify-logo.svg"

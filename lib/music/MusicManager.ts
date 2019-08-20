@@ -144,13 +144,22 @@ export class MusicManager {
     get currentPlayerName(): PlayerName {
         const requiresSpotifyAccess = this.requiresSpotifyAccess();
         const hasSpotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
+        const currentlySetToSpotifyWeb =
+            this._currentPlayerName === PlayerName.SpotifyWeb;
+        const currentlySetToItunes =
+            this._currentPlayerName === PlayerName.ItunesDesktop;
+
         if (
-            this._currentPlayerName === PlayerName.SpotifyWeb &&
+            !currentlySetToItunes &&
+            currentlySetToSpotifyWeb &&
             isMac() &&
             (!hasSpotifyPlaybackAccess || requiresSpotifyAccess)
         ) {
             this._currentPlayerName = PlayerName.SpotifyDesktop;
         }
+
+        console.log("CURRENT PLAYER: " + this._currentPlayerName);
+
         return this._currentPlayerName;
     }
 
@@ -213,11 +222,11 @@ export class MusicManager {
             !this._initialized &&
             this._runningTrack.playerType === PlayerType.MacItunesDesktop
         ) {
-            this._currentPlayerName = PlayerName.ItunesDesktop;
+            this.currentPlayerName = PlayerName.ItunesDesktop;
         }
         this._initialized = true;
 
-        if (this._currentPlayerName === PlayerName.ItunesDesktop) {
+        if (this.currentPlayerName === PlayerName.ItunesDesktop) {
             await this.showItunesPlaylists(serverIsOnline);
         } else {
             await this.showSpotifyPlaylists(serverIsOnline);
@@ -270,6 +279,7 @@ export class MusicManager {
         let foundPlaylist = this._itunesPlaylists.find(element => {
             return element.type === "playlist";
         });
+
         // if no playlists are found for itunes, then fetch
         if (!foundPlaylist) {
             await this.refreshPlaylistForPlayer(
@@ -318,7 +328,10 @@ export class MusicManager {
             allowSpotifyPlaylistFetch = false;
         }
 
-        if (allowSpotifyPlaylistFetch) {
+        if (
+            allowSpotifyPlaylistFetch ||
+            playerName === PlayerName.ItunesDesktop
+        ) {
             playlists = await getPlaylists(playerName);
         }
 
@@ -593,7 +606,7 @@ export class MusicManager {
             "spotify",
             "musictime.launchSpotify",
             PlayerType.WebSpotify,
-            "Switch to Spotify"
+            "Launch Spotify"
         );
     }
 
@@ -603,7 +616,7 @@ export class MusicManager {
             "itunes",
             "musictime.launchItunes",
             PlayerType.MacItunesDesktop,
-            "Switch to iTunes"
+            "Launch iTunes"
         );
     }
 
