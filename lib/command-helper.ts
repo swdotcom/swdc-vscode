@@ -105,6 +105,19 @@ export function createCommands(): {
 
         MusicStateManager.getInstance().setKpmController(kpmController);
 
+        // playlist tree view
+        const treePlaylistProvider = new MusicPlaylistProvider();
+        const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
+            "my-playlists",
+            {
+                treeDataProvider: treePlaylistProvider,
+                showCollapseAll: false
+            }
+        );
+        MusicCommandManager.setTreeProvider(treePlaylistProvider);
+        treePlaylistProvider.bindView(playlistTreeView);
+        cmds.push(connectPlaylistTreeView(playlistTreeView));
+
         const nextCmd = commands.registerCommand("musictime.next", () => {
             controller.nextSong();
         });
@@ -226,19 +239,6 @@ export function createCommands(): {
             }
         );
         cmds.push(disconnectSlackCommand);
-
-        // playlist tree view
-        const treePlaylistProvider = new MusicPlaylistProvider();
-        const playlistTreeView: TreeView<PlaylistItem> = window.createTreeView(
-            "my-playlists",
-            {
-                treeDataProvider: treePlaylistProvider,
-                showCollapseAll: false
-            }
-        );
-        MusicCommandManager.setTreeProvider(treePlaylistProvider);
-        treePlaylistProvider.bindView(playlistTreeView);
-        cmds.push(connectPlaylistTreeView(playlistTreeView));
 
         const reconcilePlaylistCommand = commands.registerCommand(
             "musictime.reconcilePlaylist",

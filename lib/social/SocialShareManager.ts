@@ -116,14 +116,6 @@ export class SocialShareManager {
                 detail: `Share your ${context.toLowerCase()}, ${label}, on Slack`,
                 cb: this.shareSlack
             });
-        } else {
-            menuOptions.items.push({
-                label: "Connect Slack",
-                detail:
-                    "To share a playlist or track on Slack, please connect your account",
-                url: null,
-                cb: connectSlack
-            });
         }
 
         // menuOptions.items.push({
@@ -170,6 +162,25 @@ export class SocialShareManager {
             detail: `Copy ${context.toLowerCase()} link to your clipboard.`,
             cb: this.copyLink
         });
+
+        if (!slackAccessToken) {
+            // show divider
+            menuOptions.items.push({
+                label:
+                    "___________________________________________________________________",
+                cb: null,
+                url: null,
+                command: null
+            });
+
+            menuOptions.items.push({
+                label: "Connect Slack",
+                detail:
+                    "To share a playlist or track on Slack, please connect your account",
+                url: null,
+                cb: connectSlack
+            });
+        }
 
         showQuickPick(menuOptions);
     }

@@ -369,6 +369,15 @@ export class MusicManager {
         // add the buttons to the playlist
         await this.addSoftwareLoginButtonIfRequired(serverIsOnline, items);
 
+        if (playerName === PlayerName.ItunesDesktop) {
+            // add the action items specific to itunes
+            items.push(this.getItunesConnectedButton());
+        }
+
+        if (allowSpotifyPlaylistFetch) {
+            items.push(this.getSpotifyConnectedButton());
+        }
+
         // add the no music time connection button if we're not online
         if (!serverIsOnline) {
             items.push(this.getNoMusicTimeConnectionButton());
@@ -391,7 +400,6 @@ export class MusicManager {
 
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
-            items.push(this.getItunesConnectedButton());
             items.push(this.getSwitchToSpotifyButton());
 
             if (playlists.length > 0) {
@@ -412,7 +420,6 @@ export class MusicManager {
             // add the action items specific to spotify
             if (allowSpotifyPlaylistFetch) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
-                items.push(this.getSpotifyConnectedButton());
             }
 
             if (isMac()) {

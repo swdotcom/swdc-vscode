@@ -311,29 +311,9 @@ export class MusicControlManager {
 
         // check if the user has the spotify_access_token
         const accessToken = getItem("spotify_access_token");
-        if (!accessToken && serverIsOnline) {
-            menuOptions.items.push({
-                label: "Connect Spotify",
-                detail:
-                    "To see your Spotify playlists in Music Time, please connect your account",
-                url: null,
-                cb: connectSpotify
-            });
-        }
-
         const slackAccessToken = getItem("slack_access_token");
-        if (!slackAccessToken && serverIsOnline) {
-            menuOptions.items.push({
-                label: "Connect Slack",
-                detail:
-                    "To share a playlist or track on Slack, please connect your account",
-                url: null,
-                cb: connectSlack
-            });
-        }
 
         if (accessToken) {
-            const musicMgr: MusicManager = MusicManager.getInstance();
             // check if we already have a playlist
             const savedPlaylists: PlaylistItem[] = musicMgr.savedPlaylists;
             const hasSavedPlaylists =
@@ -389,6 +369,36 @@ export class MusicControlManager {
             detail: "Send us an email at cody@software.com.",
             url: "mailto:cody@software.com"
         });
+
+        if (!accessToken || !slackAccessToken) {
+            // show divider
+            menuOptions.items.push({
+                label:
+                    "___________________________________________________________________",
+                cb: null,
+                url: null,
+                command: null
+            });
+        }
+
+        if (!accessToken && serverIsOnline) {
+            menuOptions.items.push({
+                label: "Connect Spotify",
+                detail:
+                    "To see your Spotify playlists in Music Time, please connect your account",
+                url: null,
+                cb: connectSpotify
+            });
+        }
+        if (!slackAccessToken && serverIsOnline) {
+            menuOptions.items.push({
+                label: "Connect Slack",
+                detail:
+                    "To share a playlist or track on Slack, please connect your account",
+                url: null,
+                cb: connectSlack
+            });
+        }
 
         showQuickPick(menuOptions);
     }
