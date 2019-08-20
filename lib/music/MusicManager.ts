@@ -158,8 +158,6 @@ export class MusicManager {
             this._currentPlayerName = PlayerName.SpotifyDesktop;
         }
 
-        console.log("CURRENT PLAYER: " + this._currentPlayerName);
-
         return this._currentPlayerName;
     }
 
@@ -374,7 +372,10 @@ export class MusicManager {
             items.push(this.getItunesConnectedButton());
         }
 
-        if (allowSpotifyPlaylistFetch) {
+        if (
+            playerName !== PlayerName.ItunesDesktop &&
+            allowSpotifyPlaylistFetch
+        ) {
             items.push(this.getSpotifyConnectedButton());
         }
 
@@ -393,11 +394,6 @@ export class MusicManager {
             items.push(this.getConnectToSpotifyButton());
         }
 
-        if (getItem("slack_access_token")) {
-            // show the disconnect slack button
-            items.push(this.getSlackDisconnectButton());
-        }
-
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
             items.push(this.getSwitchToSpotifyButton());
@@ -412,11 +408,6 @@ export class MusicManager {
 
             this._itunesPlaylists = items;
         } else {
-            if (getItem("spotify_access_token")) {
-                // show the disconnect spotify button
-                items.push(this.getSpotifyDisconnectButton());
-            }
-
             // add the action items specific to spotify
             if (allowSpotifyPlaylistFetch) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
@@ -453,8 +444,14 @@ export class MusicManager {
             ) {
                 for (let i = 0; i < this._musictimePlaylists.length; i++) {
                     const musicTimePlaylist = this._musictimePlaylists[i];
-                    musicTimePlaylist.tag = "paw";
-                    items.push(musicTimePlaylist);
+                    if (
+                        musicTimePlaylist.playlistTypeId ===
+                            SOFTWARE_TOP_SONGS_PLID ||
+                        musicTimePlaylist.playlistTypeId ===
+                            PERSONAL_TOP_SONGS_PLID
+                    ) {
+                        items.push(musicTimePlaylist);
+                    }
                 }
             }
 
@@ -536,28 +533,6 @@ export class MusicManager {
             PlayerType.WebSpotify,
             "Spotify Connected",
             "You've connected Spotify"
-        );
-    }
-
-    getSpotifyDisconnectButton() {
-        return this.buildActionItem(
-            "spotifydisconnect",
-            "action",
-            "musictime.disconnectSpotify",
-            PlayerType.NotAssigned,
-            "Disconnect Spotify",
-            "Disconnect your Spotify oauth integration"
-        );
-    }
-
-    getSlackDisconnectButton() {
-        return this.buildActionItem(
-            "slackdisconnect",
-            "action",
-            "musictime.disconnectSlack",
-            PlayerType.NotAssigned,
-            "Disconnect Slack",
-            "Disconnect your Slack oauth integration"
         );
     }
 
@@ -875,6 +850,7 @@ export class MusicManager {
      * app. 1 = user's coding favorites, 2 = global top 40
      */
     retrieveMusicTimePlaylist(playlists: PlaylistItem[]) {
+        this._musictimePlaylists = [];
         if (this._savedPlaylists.length > 0 && playlists.length > 0) {
             for (let i = 0; i < this._savedPlaylists.length; i++) {
                 let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
@@ -891,8 +867,6 @@ export class MusicManager {
                     }
                 }
             }
-        } else {
-            this._musictimePlaylists = [];
         }
     }
 

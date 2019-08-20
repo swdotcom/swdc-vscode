@@ -370,7 +370,7 @@ export class MusicControlManager {
             url: "mailto:cody@software.com"
         });
 
-        if (!accessToken || !slackAccessToken) {
+        if (serverIsOnline) {
             // show divider
             menuOptions.items.push({
                 label:
@@ -379,25 +379,39 @@ export class MusicControlManager {
                 url: null,
                 command: null
             });
-        }
 
-        if (!accessToken && serverIsOnline) {
-            menuOptions.items.push({
-                label: "Connect Spotify",
-                detail:
-                    "To see your Spotify playlists in Music Time, please connect your account",
-                url: null,
-                cb: connectSpotify
-            });
-        }
-        if (!slackAccessToken && serverIsOnline) {
-            menuOptions.items.push({
-                label: "Connect Slack",
-                detail:
-                    "To share a playlist or track on Slack, please connect your account",
-                url: null,
-                cb: connectSlack
-            });
+            if (!accessToken) {
+                menuOptions.items.push({
+                    label: "Connect Spotify",
+                    detail:
+                        "To see your Spotify playlists in Music Time, please connect your account",
+                    url: null,
+                    cb: connectSpotify
+                });
+            } else {
+                menuOptions.items.push({
+                    label: "Disconnect Spotify",
+                    detail: "Disconnect your Spotify oauth integration",
+                    url: null,
+                    command: "musictime.disconnectSpotify"
+                });
+            }
+            if (!slackAccessToken) {
+                menuOptions.items.push({
+                    label: "Connect Slack",
+                    detail:
+                        "To share a playlist or track on Slack, please connect your account",
+                    url: null,
+                    cb: connectSlack
+                });
+            } else {
+                menuOptions.items.push({
+                    label: "Disconnect Slack",
+                    detail: "Disconnect your Slack oauth integration",
+                    url: null,
+                    command: "musictime.disconnectSlack"
+                });
+            }
         }
 
         showQuickPick(menuOptions);
