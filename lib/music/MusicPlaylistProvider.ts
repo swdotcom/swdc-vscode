@@ -40,6 +40,8 @@ const createPlaylistTreeItem = (
     return new PlaylistTreeItem(p, cstate);
 };
 
+let checkSpotifyStateTimeout = null;
+
 /**
  * Launch the Spotify player if it's not already launched, then play the track
  * @param track
@@ -81,7 +83,10 @@ export const launchAndPlayTrack = async (
 };
 
 export const checkSpotifySongState = (track_uri: string) => {
-    setTimeout(async () => {
+    if (checkSpotifyStateTimeout) {
+        clearTimeout(checkSpotifyStateTimeout);
+    }
+    checkSpotifyStateTimeout = setTimeout(async () => {
         // make sure we get that song, if not then they may not be logged in
         let playingTrack = await getRunningTrack();
 
