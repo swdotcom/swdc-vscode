@@ -286,6 +286,13 @@ async function isLoggedOn(serverIsOnline, jwt) {
                     // re-initialize preferences
                     initializedPrefs = false;
                 }
+
+                let checkStatus = getItem("check_status");
+                if (checkStatus) {
+                    // update it to null, they've logged in
+                    setItem("check_status", null);
+                }
+
                 return { loggedOn: true, state };
             }
             // return the state that is returned
@@ -333,12 +340,6 @@ export async function getUserStatus(serverIsOnline) {
             setItem("name", null);
         }
     }
-
-    // commands.executeCommand(
-    //     "setContext",
-    //     "codetime:loggedIn",
-    //     userStatus.loggedIn
-    // );
 
     if (
         serverIsOnline &&
@@ -584,6 +585,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
+        } else {
+            // set the check_status to true
+            setItem("check_status", true);
         }
     } else {
         let message = "";

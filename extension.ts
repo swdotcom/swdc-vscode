@@ -23,7 +23,8 @@ import {
     jwtExists,
     showLoginPrompt,
     getPluginName,
-    isMac
+    isMac,
+    getItem
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
@@ -227,12 +228,16 @@ export async function intializePlugin(
             getHistoricalCommits(serverIsOnline);
         }, one_min_ms * 2);
 
-        // 5 minute interval tasks
+        // 10 minute interval tasks
         // check if the use has become a registered user
         // if they're already logged on, it will not send a request
         token_check_interval = setInterval(async () => {
-            getUserStatus(serverIsOnline);
-        }, one_min_ms * 5);
+            let checkStatus = getItem("check_status");
+            // but only if checkStatus is true
+            if (checkStatus !== null && checkStatus) {
+                getUserStatus(serverIsOnline);
+            }
+        }, one_min_ms * 10);
 
         // update liveshare in the offline kpm data if it has been initiated
         liveshare_update_interval = setInterval(async () => {
