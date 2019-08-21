@@ -133,14 +133,17 @@ export class MusicControlManager {
                 });
             }
 
-            // set the server track to liked to keep it cached
-            // until the song session is sent from the MusicStateManager
-            let serverTrack = this.musicMgr.serverTrack;
-            if (!serverTrack) {
-                serverTrack = { ...track };
+            let type = "spotify";
+            if (track.playerType === PlayerType.MacItunesDesktop) {
+                type = "itunes";
             }
-            serverTrack.loved = liked;
-            this.musicMgr.serverTrack = serverTrack;
+            const api = `/music/liked/track/${track.id}/type/${type}`;
+            const resp = await softwarePut(api, { liked }, getItem("jwt"));
+            if (!isResponseOk(resp)) {
+                logIt(`Error updating track like state: ${resp.message}`);
+            }
+
+            this.musicMgr.getServerTrack(track);
 
             // update the music store running track liked state
             track.loved = liked;

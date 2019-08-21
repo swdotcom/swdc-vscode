@@ -220,18 +220,6 @@ export class MusicCommandManager {
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
-        // get the server track
-        let serverTrack = MusicManager.getInstance().serverTrack;
-        let showLoved = true;
-        if (serverTrack && serverTrack.id !== trackInfo.id) {
-            showLoved = false;
-        }
-        let loved = false;
-        if (!serverTrack || serverTrack.id !== trackInfo.id) {
-            loved = trackInfo ? trackInfo.loved || false : false;
-        } else {
-            loved = serverTrack.loved;
-        }
 
         const showPremiumRequired =
             !musicMgr.hasSpotifyPlaybackAccess() &&
@@ -250,13 +238,13 @@ export class MusicCommandManager {
             } else if (btnCmd === "musictime.pause") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
-                if (loved || !showLoved) {
+                if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (btnCmd === "musictime.unlike") {
-                if (loved && showLoved) {
+                if (musicMgr.serverTrack && musicMgr.serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
@@ -302,18 +290,6 @@ export class MusicCommandManager {
     private static showPauseControls(trackInfo: Track) {
         const musicMgr: MusicManager = MusicManager.getInstance();
         const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
-        // get the server track
-        let serverTrack = MusicManager.getInstance().serverTrack;
-        let showLoved = true;
-        if (serverTrack && serverTrack.id !== trackInfo.id) {
-            showLoved = false;
-        }
-        let loved = false;
-        if (!serverTrack || serverTrack.id !== trackInfo.id) {
-            loved = trackInfo ? trackInfo.loved || false : false;
-        } else {
-            loved = serverTrack.loved;
-        }
 
         const showPremiumRequired =
             !musicMgr.hasSpotifyPlaybackAccess() &&
@@ -332,13 +308,13 @@ export class MusicCommandManager {
             } else if (btnCmd === "musictime.play") {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
-                if (loved || !showLoved) {
+                if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (btnCmd === "musictime.unlike") {
-                if (loved && showLoved) {
+                if (musicMgr.serverTrack && musicMgr.serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();

@@ -74,9 +74,10 @@ export class MusicManager {
     private _selectedPlaylist: PlaylistItem = null;
     private _spotifyUser: SpotifyUser = null;
     private _buildingPlaylists: boolean = false;
-    private _serverTrack: Track = null;
+    private _serverTrack: any = null;
     private _initialized: boolean = false;
     private _buildingCustomPlaylist: boolean = false;
+    private _creatingGlobalPlaylist = false;
 
     private constructor() {
         //
@@ -165,11 +166,11 @@ export class MusicManager {
         this._currentPlayerName = playerName;
     }
 
-    get serverTrack(): Track {
+    get serverTrack(): any {
         return this._serverTrack;
     }
 
-    set serverTrack(track: Track) {
+    set serverTrack(track: any) {
         this._serverTrack = track;
     }
 
@@ -425,13 +426,15 @@ export class MusicManager {
                     playlists
                 );
 
-                if (!hasGlobbalPlaylist) {
+                if (!hasGlobbalPlaylist && !this._creatingGlobalPlaylist) {
+                    this._creatingGlobalPlaylist = true;
                     // server is online, we have spotify access, and no global playlist exists.
                     // auto-create the global top 40
                     setTimeout(() => {
                         commands.executeCommand(
                             "musictime.generateGlobalPlaylist"
                         );
+                        this._creatingGlobalPlaylist = false;
                     }, 1000);
                 }
 
@@ -1280,6 +1283,11 @@ export class MusicManager {
     // playlist_id we have saved.
     async reconcilePlaylists() {
         // fetch what we have from the app
+        if (this._savedPlaylists.length === 0) {
+            let serverIsOnline = await serverIsAvailable();
+            // fetch and reconcile the saved playlists against the spotify list
+            await this.fetchSavedPlaylists(serverIsOnline);
+        }
         if (this._savedPlaylists.length > 0) {
             const currentSpotifyPlaylists = await getPlaylists(
                 PlayerName.SpotifyWeb
@@ -1359,68 +1367,33 @@ export class MusicManager {
     }
 
     async getServerTrack(track: Track) {
-        if (track) {
-            let trackId = track.id;
-            if (trackId.indexOf(":") !== -1) {
-                // strip it down to just the last id part
-                trackId = trackId.substring(trackId.lastIndexOf(":") + 1);
-            }
-            let type = "spotify";
-            if (track.playerType === PlayerType.MacItunesDesktop) {
-                type = "itunes";
-            }
-            // use the name and artist as well since we have it
-            let trackName = track.name;
-            let trackArtist = track.artist;
+        // set it to null so neither heart is displayed
+        this.serverTrack = null;
+        let server_track = null;
 
-            // check if it's cached before hitting the server
-            if (this.serverTrack) {
-                if (this.serverTrack.id === track.id) {
-                    return this.serverTrack;
-                } else if (
-                    this.serverTrack.name === trackName &&
-                    this.serverTrack.artist === trackArtist
-                ) {
-                    return this.serverTrack;
-                }
-                // it doesn't match, might as well nullify it
-                this.serverTrack = null;
-            }
-
-            if (!this.serverTrack) {
-                // get the last server track
-                const api = `/music/lastTrack/${trackId}/type/${type}`;
-                const resp = await softwareGet(api, getItem("jwt"));
-                if (isResponseOk(resp) && resp.data) {
-                    let trackData = resp.data;
-                    // set the server track to this one
-                    this.serverTrack = { ...track };
-                    // update the loved state
-                    if (
-                        trackData.liked !== null &&
-                        trackData.liked !== undefined
-                    ) {
-                        // set the boolean value
-                        if (isNaN(trackData.liked)) {
-                            // it's not 0 or 1, use the bool
-                            this.serverTrack.loved = trackData.liked;
-                        } else {
-                            // it's 0 or 1, convert it
-                            this.serverTrack.loved =
-                                trackData.liked === 0 ? false : true;
-                        }
-
-                        track.loved = this.serverTrack.loved;
-                    }
-                } else {
-                    this.serverTrack = { ...track };
-                }
-            }
+        let trackId = track.id;
+        let type = "spotify";
+        if (track.playerType === PlayerType.MacItunesDesktop) {
+            type = "itunes";
+        }
+        const api = `/music/liked/track/${trackId}/type/${type}`;
+        const resp = await softwareGet(api, getItem("jwt"));
+        if (isResponseOk(resp) && resp.data) {
+            server_track = resp.data;
+            server_track.loved = server_track.liked === 1 ? true : false;
+            delete server_track.liked;
         }
 
+        if (!server_track) {
+            server_track = {
+                loved: false,
+                trackId: track.id,
+                type
+            };
+        }
+        track.loved = server_track.loved;
         MusicCommandManager.syncControls(track);
-
-        return this.serverTrack;
+        this.serverTrack = server_track;
     }
 
     hasSpotifyPlaybackAccess() {
