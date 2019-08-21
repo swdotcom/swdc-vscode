@@ -267,7 +267,6 @@ export async function getSpotifyOauth(serverIsOnline) {
 async function isLoggedOn(serverIsOnline, jwt) {
     if (serverIsOnline) {
         let api = "/users/plugin/state";
-        logIt(`Checking login status ${api}`);
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp) && resp.data) {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
@@ -322,7 +321,7 @@ export async function getUserStatus(serverIsOnline) {
         loggedIn = loggedInResp.loggedOn;
     }
 
-    logIt(`Login status: ${loggedIn}`);
+    logIt(`Checking login status, logged in: ${loggedIn}`);
 
     if (serverIsOnline && loggedIn && !initializedPrefs) {
         initializePreferences(serverIsOnline);

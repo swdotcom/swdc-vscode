@@ -58,7 +58,7 @@
                 "toggleFileEventLogging": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable/disable file event debug logging"
+                    "description": "Enable file event logging"
                 }
             }
         },
