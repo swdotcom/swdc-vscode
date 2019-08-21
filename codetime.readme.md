@@ -55,6 +55,8 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 
 2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code.
 
+3. You can visit the web app any time at [https://app.software.com/](https://app.software.com/).
+
 <!--- End: setup --->
 
 ## FAQs
