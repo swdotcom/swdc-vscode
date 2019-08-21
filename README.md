@@ -3,71 +3,98 @@
 
 # Music Time for Visual Studio Code
 
-> Programming metrics right in VS Code.
+> Use AI and data to discover the music that makes you the most productive while coding
 
 <p align="center" style="margin: 0 10%">
   <img src="https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-dashboard.gif" alt="Music Time for VS Code" />
 </p>
 
-## Power up your development
+## Features
 
-**In-editor dashboard**
-Get daily and weekly reports of your programming activity right in your code editor.
+**Integrated music controls**
+Control your music right from the status bar of your editor. 
 
-**Status bar metrics**
-After installing our plugin, your status bar will show real-time metrics about time coded per day.
+**Embedded playlists**
+Browse and play your Spotify and iTunes playlists and songs from your editor.
 
-**Weekly email reports**
-Get a weekly report delivered right to your email inbox.
+**Weekly music dashboard**
+See your top songs, artists, and genres each week by productivity score and plays while coding.
 
-**Data visualizations**
-Go to our web app to get simple data visualizations, such as a rolling heatmap of your best programming times by hour of the day.
+**Metrics profile**
+Explore your music history and coding productivity based on attributes such as tempo, loudness, and speechiness.
 
-**Calendar integration**
-Integrate with Google Calendar to automatically set calendar events to protect your best programming times from meetings and interrupts.
+**Slack integration**
+Share the music that makes you most productive with your team.
 
-**More stats**
-See your best music for coding and the speed, frequency, and top files across your commits.
+**MWeb app visualizations**
+Understand and learn from your music in a whole different way with an array of data visualizations.
 
-## Why you should try it out
+| Feature                           | Plugin            | Plugin + Web App  |
+| --------------------------------- |:-----------------:|:-----------------:|
+| Music controls                    |         X         |         X         |
+| Playlists                         |         X         |         X         |
+| Music dashboard                   |         X         |         X         |
+| Global playlists                  |         X         |         X         |
+| Slack integration                 |         X         |         X         |
+| Sortable playlists                |                   |         X         |
+| Metrics profile                   |                   |         X         |
+| Advanced data visualizations      |                   |         X         |
+| Personalized song recommendations |                   |         X         |
 
--   Automatic time reports by project
--   See what time you code your best—find your “flow”
--   Defend your best code times against meetings and interrupts
--   Find out what you can learn from your data
+## How it works
 
-## It’s safe, secure, and free
+We use the (cody-music)[https://www.npmjs.com/package/cody-music] NPM for all player controls. The NPM uses a Spotify API connection and osascript for player controls.
 
-**We never access your code**
-We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.
+Music Time is fully supported for both Spotify and iTunes on Mac. On Windows and Linux you must integrate your Spotify account to use the player controls. iTunes is currently not supported on Windows or Linux. 
 
-**Your data is private**
-We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.
+| Player controls                   | MacOS             | Windows, Linux    |
+| --------------------------------- |:-----------------:|:-----------------:|
+| Spotify | Premium users, non-premium users with the desktop app installed | Premium users only |
+| iTunes | Supported | Not supported |
 
-**Free for you, forever**
-We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.
+## Slack integration
 
-<!--- Begin: setup --->
+How to install: The "Connect Slack" option is available on Mac. 
 
-## Getting started
-
-1. [Install the Music Time plugin](https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode) from the Visual Studio Code Marketplace.
-
-2. After installing Music Time, an alert will appear prompting you to login (you can also click on "Music Time" in the status bar of Visual Studio Code.
-
-<!--- End: setup --->
+On Mac, we can show the "Generate Playlist" option, but we can't on Windows for either premium or non-premium Spotify users. Since the purpose of the Slack integration is to share playlists, the Slack integration is not available on Windows.
 
 ## FAQs
 
-**What does the rocket ship icon in my status bar mean?**
+**Does it work with a non-premium Spotify account?**
+Unlike premium users, non-premium accounts have limited API access. Non-premium users must have the Spotify desktop app installed to use Music Time on Mac. 
 
-In the status bar of your editor/IDE, we show a rocket ship icon when your time code today exceeds your daily code time's 90-day average
+Both premium and non-premium Spotify users must have a premium account to use the player controls on Windows. Windows users with a non-premium account will be able to see their currently playing track and a heart option, but unlike premium users, they will not see a playlist view.
 
-**Does keeping VSCode open affect time tracking/metrics?**
+**What players are supported?**
+We support iTunes and Spotify. We will support Google Play in the future.
 
-The answer is "No", keeping the editor open should not skew your metrics. You do not need to close VS Code to ensure that Music Time metrics are correct.
+**Why do I need to sign into Spotify?**
+TBD
 
-The timer starts when you start typing. It stops after 15 minutes without typing or opening/closing files in the editor. We then truncate the last 15 minutes of inactivity from the data.
+**How do you calculate my productivity score?**
+TBD
+
+**How are songs recommended?**
+TBD
+
+**How do I sign up for Music Time if I already have a Code Time account?**
+TBD 
+
+**How is my music data correlated with my coding metrics?**
+TBD
+
+**Why is there latency when using the player controls?**
+On Windows, music controls work via the Spotify API which may result in a slight lag in responsiveness.
+
+**Why do only 50 of my playlists appear in my tree view?**
+This is the limit in the Spotify API call.
+
+**What happens to my personalized playlist if I disconnect Spotify?**
+If you disconnect Spotify, your personalized top 40 playlist ID will stay the same. If you connect to another Spotify account, it will now instead show up in your playlists in the bottom section instead of the top.
+
+**When does the global top 40 playlist get created in my Spotify account?**
+The Software Global Top 40 gets created during initialization; if you delete it during the day, we won't try to create it again until the next day or the next time you initialize.
+
 
 ## Contributing & Feedback
 
