@@ -247,7 +247,7 @@ export async function intializePlugin(
 
     if (isMusicTime()) {
         // initialize the music manager
-        await musicMgr.refreshPlaylists();
+        commands.executeCommand("musictime.reconcilePlaylist");
 
         // MusicStateManager.getInstance().musicStateCheck();
         // 5 second interval to check music info

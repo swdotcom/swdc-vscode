@@ -421,7 +421,11 @@ export class MusicManager {
             if (serverIsOnline && allowSpotifyPlaylistFetch) {
                 items.push(this.getLineBreakButton());
 
-                if (!this.globalPlaylistIdExists()) {
+                const hasGlobbalPlaylist = await this.globalPlaylistIdExists(
+                    playlists
+                );
+
+                if (!hasGlobbalPlaylist) {
                     // server is online, we have spotify access, and no global playlist exists.
                     // auto-create the global top 40
                     setTimeout(() => {
@@ -873,13 +877,19 @@ export class MusicManager {
     /**
      * Returns whether we've created the global playlist or not.
      */
-    globalPlaylistIdExists() {
+    async globalPlaylistIdExists(playlists: PlaylistItem[]) {
         if (this._savedPlaylists.length > 0) {
             for (let i = 0; i < this._savedPlaylists.length; i++) {
                 let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
                 let savedPlaylistTypeId = savedPlaylist.playlistTypeId;
                 if (savedPlaylistTypeId === SOFTWARE_TOP_SONGS_PLID) {
-                    return true;
+                    // now check the playlists to see if we have it
+                    let foundPlaylist = playlists.find(element => {
+                        return element.id === savedPlaylist.id;
+                    });
+                    if (foundPlaylist) {
+                        return true;
+                    }
                 }
             }
         }
@@ -895,13 +905,17 @@ export class MusicManager {
             );
 
             if (isResponseOk(response)) {
-                playlists = response.data.map(item => {
-                    // transform the playlist_id to id
-                    item.id = item.playlist_id;
-                    item.playlistTypeId = item.playlistTypeId;
-                    delete item.playlist_id;
-                    return item;
-                });
+                // only return the non-deleted playlists
+                for (let i = 0; i < response.data.length; i++) {
+                    const savedPlaylist = response.data[i];
+                    if (savedPlaylist && savedPlaylist["deleted"] !== 1) {
+                        savedPlaylist.id = savedPlaylist.playlist_id;
+                        savedPlaylist.playlistTypeId =
+                            savedPlaylist.playlistTypeId;
+                        delete savedPlaylist.playlist_id;
+                        playlists.push(savedPlaylist);
+                    }
+                }
             }
         }
         this._savedPlaylists = playlists;

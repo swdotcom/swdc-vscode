@@ -245,9 +245,7 @@ export function createCommands(): {
             async () => {
                 await musicMgr.reconcilePlaylists();
                 await musicMgr.clearSavedPlaylists();
-                setTimeout(async () => {
-                    commands.executeCommand("musictime.refreshPlaylist");
-                }, 1000);
+                commands.executeCommand("musictime.refreshPlaylist");
             }
         );
         cmds.push(reconcilePlaylistCommand);
