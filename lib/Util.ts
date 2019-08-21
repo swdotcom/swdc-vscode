@@ -22,6 +22,7 @@ import {
     getSessionSummaryData
 } from "./OfflineManager";
 
+const open = require("open");
 const { exec } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -751,13 +752,7 @@ export async function wrapExecPromise(cmd, projectDir) {
 }
 
 export function launchWebUrl(url) {
-    let open = "open";
-    if (isWindows()) {
-        open = "cmd";
-    } else if (!isMac()) {
-        open = "xdg-open";
-    }
-    cp.exec(`${open} ${url}`);
+    open(url);
 }
 
 /**
