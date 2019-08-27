@@ -436,14 +436,14 @@ export function buildSpotifyLink(id: string, isPlaylist: boolean) {
 export async function displayMusicTimeMetricsMarkdownDashboard() {
     if (fetchingMusicTimeMetrics) {
         window.showInformationMessage(
-            `Building Music Time dashboard, please wait.`
+            `Still building Music Time dashboard, please wait...`
         );
         return;
     }
     fetchingMusicTimeMetrics = true;
 
     window.showInformationMessage(
-        `Building Music Time dashboard, please wait.`
+        `Building Music Time dashboard, please wait...`
     );
 
     const musicTimeFile = getMusicTimeMarkdownFile();
@@ -468,8 +468,8 @@ export async function displayMusicTimeMetricsMarkdownDashboard() {
     const content = fs.readFileSync(musicTimeFile).toString();
     panel.webview.html = content;
 
-    fetchingMusicTimeMetrics = false;
     window.showInformationMessage(`Completed building Music Time dashboard.`);
+    fetchingMusicTimeMetrics = false;
 }
 
 export async function connectSpotify() {
