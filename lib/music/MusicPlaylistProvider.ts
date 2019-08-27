@@ -366,7 +366,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 this.view.selection.length > 0
             ) {
                 try {
-                    // don't "select" it thought. that will invoke the pause/play action
+                    // don't "select" it though. that will invoke the pause/play action
                     this.view.reveal(p, {
                         focus: true,
                         select: false

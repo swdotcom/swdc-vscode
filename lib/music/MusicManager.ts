@@ -362,6 +362,10 @@ export class MusicManager {
             }
         }
 
+        // before we filter out the music time generated playlists, check
+        // to see if we have them
+        const hasGlobbalPlaylist = await this.globalPlaylistIdExists(playlists);
+
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
@@ -421,10 +425,6 @@ export class MusicManager {
             // get the custom playlist button
             if (serverIsOnline && allowSpotifyPlaylistFetch) {
                 items.push(this.getLineBreakButton());
-
-                const hasGlobbalPlaylist = await this.globalPlaylistIdExists(
-                    playlists
-                );
 
                 if (!hasGlobbalPlaylist && !this._creatingGlobalPlaylist) {
                     this._creatingGlobalPlaylist = true;
@@ -987,9 +987,7 @@ export class MusicManager {
 
             if (playlistResult.state === CodyResponseType.Failed) {
                 window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${
-                        playlistResult.message
-                    }`,
+                    `There was an unexpected error adding tracks to the playlist. ${playlistResult.message}`,
                     ...["OK"]
                 );
                 return;
@@ -1038,6 +1036,7 @@ export class MusicManager {
 
         setTimeout(() => {
             this.clearSpotify();
+            this.clearPlaylists();
             commands.executeCommand("musictime.refreshPlaylist");
         }, 500);
 
@@ -1080,9 +1079,7 @@ export class MusicManager {
 
             if (playlistResult.state === CodyResponseType.Failed) {
                 window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${
-                        playlistResult.message
-                    }`,
+                    `There was an unexpected error adding tracks to the playlist. ${playlistResult.message}`,
                     ...["OK"]
                 );
                 this._buildingCustomPlaylist = false;
@@ -1166,9 +1163,7 @@ export class MusicManager {
                 );
             } else {
                 window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${
-                        addTracksResult.message
-                    }`,
+                    `There was an unexpected error adding tracks to the playlist. ${addTracksResult.message}`,
                     ...["OK"]
                 );
             }
