@@ -775,7 +775,6 @@ export class MusicManager {
         playlistItem.name = track.name;
         playlistItem.id = track.id;
         playlistItem.popularity = track.popularity;
-        playlistItem.played_count = track.played_count;
         playlistItem.position = position;
         playlistItem.artist = track.artist;
         playlistItem.playerType = track.playerType;
