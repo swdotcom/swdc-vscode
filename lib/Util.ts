@@ -319,6 +319,10 @@ export function toggleStatusBar() {
     updateStatusBar(lastMsg, lastTooltip);
 }
 
+export function isStatusBarTextVisible() {
+    return showStatusBarText;
+}
+
 export function isEmptyObj(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
@@ -640,9 +644,7 @@ export function storePayload(payload) {
             err => {
                 if (err)
                     logIt(
-                        `Error appending to the Software data store file: ${
-                            err.message
-                        }`
+                        `Error appending to the Software data store file: ${err.message}`
                     );
             }
         );
@@ -654,9 +656,7 @@ export function storePayload(payload) {
         fs.appendFile(musicFile, JSON.stringify(payload) + os.EOL, err => {
             if (err)
                 logIt(
-                    `Error appending to the music session data store file: ${
-                        err.message
-                    }`
+                    `Error appending to the music session data store file: ${err.message}`
                 );
         });
     }

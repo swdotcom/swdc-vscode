@@ -16,7 +16,8 @@ import {
     humanizeMinutes,
     getSummaryInfoFile,
     launchLogin,
-    getSectionHeader
+    getSectionHeader,
+    isStatusBarTextVisible
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
@@ -118,9 +119,13 @@ export async function showMenuOptions() {
         });
     }
 
+    let toggleStatusBarTextLabel = "Hide Status Bar Metrics";
+    if (!isStatusBarTextVisible()) {
+        toggleStatusBarTextLabel = "Show Status Bar Metrics";
+    }
     kpmMenuOptions.items.push({
-        label: "Show/Hide Status Bar Metrics",
-        detail: "Toggle the Code Time status bar metrics",
+        label: toggleStatusBarTextLabel,
+        detail: "Toggle the Code Time status bar metrics text",
         url: null,
         cb: toggleStatusBar
     });
@@ -198,9 +203,7 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
         fs.writeFileSync(summaryInfoFile, summaryContent, err => {
             if (err) {
                 logIt(
-                    `Error writing to the code time summary content file: ${
-                        err.message
-                    }`
+                    `Error writing to the code time summary content file: ${err.message}`
                 );
             }
         });
@@ -244,9 +247,7 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
     fs.writeFileSync(dashboardFile, dashboardContent, err => {
         if (err) {
             logIt(
-                `Error writing to the code time dashboard content file: ${
-                    err.message
-                }`
+                `Error writing to the code time dashboard content file: ${err.message}`
             );
         }
     });
