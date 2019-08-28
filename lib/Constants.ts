@@ -45,4 +45,4 @@ export const GENERATE_CUSTOM_PLAYLIST_TOOLTIP = `Generate a new custom Spotify p
 export const GENERATE_GLOBAL_PLAYLIST_TITLE = `Generate ${SOFTWARE_TOP_SONGS_NAME} Playlist`;
 export const GENERATE_GLOBAL_PLAYLIST_TOOLTIP = `Generate a Software playlist (${SOFTWARE_TOP_SONGS_NAME})`;
 
-export const SPOTIFY_LIKED_SONGS_PLAYLIST_NAME = "Liked Songs";
+export const SPOTIFY_LIKED_SONGS_PLAYLIST_NAME = "Library";
