@@ -122,7 +122,7 @@ async function deploy() {
                 },
                 {
                     command: "musictime.sharePlaylist",
-                    when: "viewItem =~ /playlist-item.*/",
+                    when: "viewItem =~ /spotify-playlist-item.*/",
                     group: "inline@2"
                 },
                 {

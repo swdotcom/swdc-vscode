@@ -438,7 +438,7 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem["itemType"] === "track" ||
             treeItem["itemType"] === "playlist"
         ) {
-            this.contextValue = `${treeItem.type}-item-${stateVal}`;
+            this.contextValue = `${treeItem.tag}-${treeItem.type}-item-${stateVal}`;
         }
 
         if (treeItem.tag === "spotify" || treeItem.type === "spotify") {
