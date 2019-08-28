@@ -232,7 +232,12 @@ export class MusicControlManager {
     }
 
     async copySpotifyLink(id: string, isPlaylist: boolean) {
-        let link = buildSpotifyLink(id, true);
+        let link = buildSpotifyLink(id, isPlaylist);
+
+        if (id === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
+            link = "https://open.spotify.com/collection/tracks";
+        }
+
         let messageContext = "";
         if (isPlaylist) {
             messageContext = "playlist";
