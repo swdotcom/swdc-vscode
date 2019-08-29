@@ -16,7 +16,9 @@ import {
     playTrackInContext,
     playSpotifyPlaylist,
     TrackStatus,
-    playTrack
+    playTrack,
+    saveToSpotifyLiked,
+    removeFromSpotifyLiked
 } from "cody-music";
 import {
     workspace,
@@ -125,12 +127,21 @@ export class MusicControlManager {
     async setLiked(liked: boolean) {
         let track: Track = this.musicMgr.runningTrack;
         if (track) {
+            let refreshPlaylist = false;
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
                 // the latest version of the itunes track
                 await setItunesLoved(liked).catch(err => {
                     logIt(`Error updating itunes loved state: ${err.message}`);
                 });
+            } else {
+                // save the spotify track to the users liked songs playlist
+                if (liked) {
+                    await saveToSpotifyLiked([track.id]);
+                } else {
+                    await removeFromSpotifyLiked([track.id]);
+                }
+                refreshPlaylist = true;
             }
 
             let type = "spotify";
@@ -149,8 +160,12 @@ export class MusicControlManager {
             track.loved = liked;
             this.musicMgr.runningTrack = track;
 
-            // get the current track state
-            MusicCommandManager.syncControls(track);
+            if (refreshPlaylist) {
+                commands.executeCommand("musictime.refreshPlaylist");
+            } else {
+                // get the current track state
+                MusicCommandManager.syncControls(track);
+            }
         }
     }
 
