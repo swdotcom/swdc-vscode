@@ -130,15 +130,9 @@ export class MusicStateManager {
     }
 
     private getChangeStatusStringResult(changeStatus) {
-        return `{isNewTrack: ${changeStatus.isNewTrack}, endPrevTrack: ${
-            changeStatus.endPrevTrack
-        },
-                trackStateChanged: ${
-                    changeStatus.trackStateChanged
-                }, playing: ${changeStatus.playing},
-                paused: ${changeStatus.paused}, stopped: ${
-            changeStatus.stopped
-        }, isValidTrack: ${changeStatus.isValidTrack}`;
+        return `{isNewTrack: ${changeStatus.isNewTrack}, endPrevTrack: ${changeStatus.endPrevTrack},
+                trackStateChanged: ${changeStatus.trackStateChanged}, playing: ${changeStatus.playing},
+                paused: ${changeStatus.paused}, stopped: ${changeStatus.stopped}, isValidTrack: ${changeStatus.isValidTrack}`;
     }
 
     public buildBootstrapSongSession() {
@@ -226,11 +220,6 @@ export class MusicStateManager {
                     ...songSession,
                     ...this.getMusicCodingData()
                 };
-
-                // update the loved state
-                if (songSession.serverTrack) {
-                    songSession.loved = this.musicMgr.serverTrack.loved;
-                }
 
                 // send off the ended song session
                 sendMusicData(songSession);
