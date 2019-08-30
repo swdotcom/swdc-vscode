@@ -26,7 +26,6 @@ import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
-import { version } from "punycode";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -77,7 +76,8 @@ export const launchAndPlayTrack = async (
             spotifyUser,
             currentPlaylist.id,
             track,
-            spotifyDevices
+            spotifyDevices,
+            2 /* checkTrackStateAndTryAgain */
         );
     }
 };
@@ -108,7 +108,7 @@ export const checkSpotifySongState = (track_uri: string) => {
                 ...["Ok"]
             );
         }
-    }, 3000);
+    }, 5000);
 };
 
 export const playSpotifySongInPlaylist = async (

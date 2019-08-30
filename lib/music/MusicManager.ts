@@ -68,6 +68,7 @@ export class MusicManager {
     private _userTopSongs: any[] = [];
     private _playlistTrackMap: any = {};
     private _runningTrack: Track = null;
+    private _spotifyLikedSongs: Track[] = [];
     // default to starting with spotify
     private _currentPlayerName: PlayerName = PlayerName.SpotifyWeb;
     private _selectedTrackItem: PlaylistItem = null;
@@ -696,9 +697,10 @@ export class MusicManager {
             } else {
                 // fetch from spotify web
                 if (playlist_id === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
-                    let tracks: Track[] = await getSpotifyLikedSongs();
+                    this._spotifyLikedSongs = await getSpotifyLikedSongs();
+
                     playlistItemTracks = this.getPlaylistItemTracksFromTracks(
-                        tracks
+                        this._spotifyLikedSongs
                     );
                 } else {
                     // get the playlist tracks from the spotify api
@@ -874,6 +876,33 @@ export class MusicManager {
                 }
             }
         }
+    }
+
+    /**
+     * Return the next Spotify Track from the Liked Songs list.
+     * It will return null if the Liked Songs list doesn't exist or the current track ID is not assigned.
+     * It will return the 1st track if the current track ID is not assigned and the Liked Songs list exists.
+     */
+    getNextSpotifyLikedSong(): Track {
+        const currentTrackId = this.selectedTrackItem.id;
+        const hasLikedSongs =
+            this._spotifyLikedSongs && this._spotifyLikedSongs.length > 0;
+        if (currentTrackId && hasLikedSongs) {
+            let currTrackIndex = this._spotifyLikedSongs.findIndex(
+                i => i.id === currentTrackId
+            );
+            if (currTrackIndex !== -1) {
+                // if the curr track index is the last element, return zero, else return the next one
+                if (currTrackIndex + 1 < this._spotifyLikedSongs.length) {
+                    return this._spotifyLikedSongs[currTrackIndex + 1];
+                } else {
+                    return this._spotifyLikedSongs[0];
+                }
+            }
+        } else if (!currentTrackId && hasLikedSongs) {
+            return this._spotifyLikedSongs[0];
+        }
+        return null;
     }
 
     /**

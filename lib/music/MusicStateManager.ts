@@ -16,10 +16,13 @@ import {
     getRunningTrack,
     TrackStatus,
     PlayerType,
-    PlayerName
+    PlayerName,
+    PlaylistItem
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
 import { KpmController } from "../KpmController";
+import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
+import { launchAndPlayTrack } from "./MusicPlaylistProvider";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -127,12 +130,6 @@ export class MusicStateManager {
             isValidTrack,
             playerNameChanged
         };
-    }
-
-    private getChangeStatusStringResult(changeStatus) {
-        return `{isNewTrack: ${changeStatus.isNewTrack}, endPrevTrack: ${changeStatus.endPrevTrack},
-                trackStateChanged: ${changeStatus.trackStateChanged}, playing: ${changeStatus.playing},
-                paused: ${changeStatus.paused}, stopped: ${changeStatus.stopped}, isValidTrack: ${changeStatus.isValidTrack}`;
     }
 
     public buildBootstrapSongSession() {
@@ -259,14 +256,48 @@ export class MusicStateManager {
             changeStatus.isNewTrack || changeStatus.trackStateChanged;
 
         if (changeStatus.playerNameChanged) {
+            // new player (i.e. switched from itunes to spotify)
             // refresh the entire tree view
             commands.executeCommand("musictime.refreshPlaylist");
         } else if (needsRefresh) {
+            // it's a new track or the track state changed.
+            // no need to clear the playlists, just refresh the tree
             MusicManager.getInstance().refreshPlaylists();
         }
 
+        // If the current playlist is the Liked Songs,
+        // check if we should start the next track
+        await this.playNextLikedSpotifyCheck(changeStatus);
+
         this.processingSong = false;
         return this.existingTrack || new Track();
+    }
+
+    private async playNextLikedSpotifyCheck(changeStatus) {
+        // If the current playlist is the Liked Songs,
+        // check if we should start the next track
+        const playlistId = this.musicMgr.selectedPlaylist
+            ? this.musicMgr.selectedPlaylist.id
+            : "";
+        if (
+            playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME &&
+            changeStatus.endPrevTrack === true &&
+            (changeStatus.stopped || changeStatus.paused)
+        ) {
+            // play the next song
+            const nextTrack: Track = this.musicMgr.getNextSpotifyLikedSong();
+            if (nextTrack) {
+                let playlistItem: PlaylistItem = this.musicMgr.createPlaylistItemFromTrack(
+                    nextTrack,
+                    0
+                );
+                this.musicMgr.selectedTrackItem = playlistItem;
+                await launchAndPlayTrack(
+                    playlistItem,
+                    this.musicMgr.spotifyUser
+                );
+            }
+        }
     }
 
     public getMusicCodingData() {
