@@ -28,7 +28,11 @@ import {
     isCodeTime,
     logEvent
 } from "./Util";
-import { requiresSpotifyAccessInfo } from "cody-music";
+import {
+    requiresSpotifyAccessInfo,
+    getSpotifyLikedSongs,
+    Track
+} from "cody-music";
 import {
     updateShowMusicMetrics,
     buildWebDashboardUrl,
@@ -562,6 +566,16 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         // oauth is not null, initialize spotify
         await musicMgr.updateSpotifyAccessInfo(oauth);
         window.showInformationMessage(`Successfully connected to Spotify`);
+
+        // send the "Liked Songs" to software app so we can be in sync
+        let tracks: Track[] = await getSpotifyLikedSongs();
+        if (tracks && tracks.length > 0) {
+            let uris = tracks.map(track => {
+                return track.uri;
+            });
+            const api = `/music/liked/tracks/type/spotify`;
+            await softwarePut(api, { liked: true, uris }, getItem("jwt"));
+        }
 
         setTimeout(() => {
             musicMgr.clearSpotify();
