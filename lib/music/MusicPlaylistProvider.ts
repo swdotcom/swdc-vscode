@@ -16,13 +16,10 @@ import {
     PlayerName,
     PlayerType,
     TrackStatus,
-    getSpotifyDevices,
-    PlayerDevice,
-    launchPlayer,
     playItunesTrackNumberInPlaylist,
-    getRunningTrack
+    getRunningTrack,
+    launchAndPlaySpotifyTrack
 } from "cody-music";
-import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
@@ -40,47 +37,6 @@ const createPlaylistTreeItem = (
 };
 
 let checkSpotifyStateTimeout = null;
-
-/**
- * Launch the Spotify player if it's not already launched, then play the track
- * @param track
- * @param spotifyUser
- */
-export const launchAndPlayTrack = async (
-    track: PlaylistItem,
-    spotifyUser: SpotifyUser
-) => {
-    const musicMgr: MusicManager = MusicManager.getInstance();
-    const musicCtrlMgr = new MusicControlManager();
-    const currentPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
-    // check if there's any spotify devices
-    const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-    if (!spotifyDevices || spotifyDevices.length === 0) {
-        // no spotify devices found, lets launch the web player with the track
-
-        // launch it
-        await launchPlayer(PlayerName.SpotifyWeb);
-        // now select it from within the playlist
-        setTimeout(() => {
-            musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                spotifyUser,
-                currentPlaylist.id,
-                track,
-                spotifyDevices,
-                5 /* checkTrackStateAndTryAgain */
-            );
-        }, 1000);
-    } else {
-        // a device is found, play using the device
-        await musicCtrlMgr.playSpotifyTrackFromPlaylist(
-            spotifyUser,
-            currentPlaylist.id,
-            track,
-            spotifyDevices,
-            2 /* checkTrackStateAndTryAgain */
-        );
-    }
-};
 
 export const checkSpotifySongState = (track_uri: string) => {
     if (checkSpotifyStateTimeout) {
@@ -108,7 +64,7 @@ export const checkSpotifySongState = (track_uri: string) => {
                 ...["Ok"]
             );
         }
-    }, 5000);
+    }, 5500);
 };
 
 export const playSpotifySongInPlaylist = async (
@@ -184,7 +140,11 @@ export const playSelectedItem = async (
             }
         } else {
             if (notPlaying) {
-                await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
+                await launchAndPlaySpotifyTrack(
+                    playlistItem.id,
+                    currentPlaylistId
+                );
+                // await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
             } else {
                 musicCtrlMgr.pauseSong(musicMgr.currentPlayerName);
             }
@@ -218,16 +178,6 @@ export const playSelectedItem = async (
                     pos
                 );
             } else {
-                const spotifyDevices: PlayerDevice[] = await getSpotifyDevices();
-                let checkTrackStateAndTryAgainCount = 3;
-                if (!spotifyDevices || spotifyDevices.length === 0) {
-                    // no spotify devices found, lets launch the web player with the track
-
-                    // launch it
-                    await launchPlayer(PlayerName.SpotifyWeb);
-                    checkTrackStateAndTryAgainCount = 8;
-                }
-
                 if (!selectedTrack) {
                     return;
                 }
@@ -245,23 +195,14 @@ export const playSelectedItem = async (
                     if (isLikedSongsPlaylist) {
                         // play the 1st track in the non-playlist liked songs folder
                         if (selectedTrack) {
-                            musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                                musicMgr.spotifyUser,
-                                playlistItem.id,
-                                selectedTrack /* track */,
-                                spotifyDevices,
-                                checkTrackStateAndTryAgainCount
+                            await launchAndPlaySpotifyTrack(
+                                selectedTrack.id,
+                                playlistItem.id
                             );
                         }
                     } else {
                         // use the normal play playlist by offset 0 call
-                        musicCtrlMgr.playSpotifyTrackFromPlaylist(
-                            musicMgr.spotifyUser,
-                            playlistItem.id,
-                            null /* track */,
-                            spotifyDevices,
-                            checkTrackStateAndTryAgainCount
-                        );
+                        await launchAndPlaySpotifyTrack("", playlistItem.id);
                     }
 
                     if (selectedTrack) {

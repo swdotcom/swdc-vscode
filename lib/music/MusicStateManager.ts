@@ -17,12 +17,13 @@ import {
     TrackStatus,
     PlayerType,
     PlayerName,
-    PlaylistItem
+    PlaylistItem,
+    launchAndPlaySpotifyTrack
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
 import { KpmController } from "../KpmController";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
-import { launchAndPlayTrack } from "./MusicPlaylistProvider";
+// import { launchAndPlayTrack } from "./MusicPlaylistProvider";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -292,10 +293,8 @@ export class MusicStateManager {
                     0
                 );
                 this.musicMgr.selectedTrackItem = playlistItem;
-                await launchAndPlayTrack(
-                    playlistItem,
-                    this.musicMgr.spotifyUser
-                );
+                // launch and play the next track
+                await launchAndPlaySpotifyTrack(playlistItem.id, "");
             }
         }
     }
