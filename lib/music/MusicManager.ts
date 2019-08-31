@@ -931,7 +931,7 @@ export class MusicManager {
         let playlists = [];
         if (serverIsOnline) {
             const response = await softwareGet(
-                "/music/playlist",
+                "/music/generatedPlaylist",
                 getItem("jwt")
             );
 
@@ -1211,7 +1211,11 @@ export class MusicManager {
             name
         };
         let jwt = getItem("jwt");
-        let createResult = await softwarePost("/music/playlist", payload, jwt);
+        let createResult = await softwarePost(
+            "/music/generatedPlaylist",
+            payload,
+            jwt
+        );
 
         return createResult;
     }
@@ -1325,7 +1329,7 @@ export class MusicManager {
                 if (!foundItem) {
                     // remove it from the server
                     await softwareDelete(
-                        `/music/playlist/${savedPlaylist.id}`,
+                        `/music/generatedPlaylist/${savedPlaylist.id}`,
                         getItem("jwt")
                     );
                 } else if (foundItem.name !== savedPlaylist.name) {
@@ -1334,7 +1338,7 @@ export class MusicManager {
                         name: foundItem.name
                     };
                     await softwarePut(
-                        `/music/playlist/${savedPlaylist.id}`,
+                        `/music/generatedPlaylist/${savedPlaylist.id}`,
                         payload,
                         getItem("jwt")
                     );
