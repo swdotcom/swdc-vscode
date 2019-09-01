@@ -1,6 +1,5 @@
 import {
     PlayerType,
-    getRunningTrack,
     play,
     pause,
     previous,
@@ -10,11 +9,7 @@ import {
     setItunesLoved,
     launchPlayer,
     PlaylistItem,
-    PlayerDevice,
-    getSpotifyDevices,
-    playSpotifyTrack,
     playTrackInContext,
-    playSpotifyPlaylist,
     TrackStatus,
     playTrack,
     saveToSpotifyLiked,
@@ -54,7 +49,6 @@ import {
     YES_LABEL
 } from "../Constants";
 import { MusicStateManager } from "./MusicStateManager";
-import { SpotifyUser } from "cody-music/dist/lib/profile";
 import { SocialShareManager } from "../social/SocialShareManager";
 import { tmpdir } from "os";
 import { connectSlack } from "../slack/SlackControlManager";
@@ -162,83 +156,6 @@ export class MusicControlManager {
             }
         }
     }
-
-    // async playSpotifyTrackFromPlaylist(
-    //     spotifyUser: SpotifyUser,
-    //     playlistId: string,
-    //     playlistItem: PlaylistItem,
-    //     spotifyDevices: PlayerDevice[],
-    //     checkTrackStateAndTryAgainCount: number = 0
-    // ) {
-    //     if (playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
-    //         playlistId = null;
-    //     }
-    //     const deviceId = spotifyDevices.length > 0 ? spotifyDevices[0].id : "";
-    //     let options = {};
-    //     if (deviceId) {
-    //         options["device_id"] = deviceId;
-    //     }
-    //     const trackId = playlistItem ? playlistItem.id : "";
-    //     if (trackId) {
-    //         options["track_ids"] = [trackId];
-    //     } else {
-    //         options["offset"] = { position: 0 };
-    //     }
-    //     if (playlistId) {
-    //         const playlistUri = `${spotifyUser.uri}:playlist:${playlistId}`;
-    //         options["context_uri"] = playlistUri;
-    //     }
-
-    //     if (trackId && this.musicMgr.selectedTrackItem) {
-    //         // check against the currently selected track
-    //         if (trackId !== this.musicMgr.selectedTrackItem.id) {
-    //             return;
-    //         }
-    //     } else if (playlistId && this.musicMgr.selectedPlaylist) {
-    //         // check against the currently selected playlist
-    //         if (playlistId !== this.musicMgr.selectedPlaylist.id) {
-    //             return;
-    //         }
-    //     }
-
-    //     /**
-    //      * to play a track without the play list id
-    //      * curl -X "PUT" "https://api.spotify.com/v1/me/player/play?device_id=4f38ae14f61b3a2e4ed97d537a5cb3d09cf34ea1"
-    //      * --data "{\"uris\":[\"spotify:track:2j5hsQvApottzvTn4pFJWF\"]}"
-    //      */
-
-    //     if (!playlistId) {
-    //         // just play by track id
-    //         await playSpotifyTrack(playlistItem.id, deviceId);
-    //     } else {
-    //         // we have playlist id within the options, use that
-    //         await playSpotifyPlaylist(playlistId, trackId, deviceId);
-    //     }
-
-    //     if (checkTrackStateAndTryAgainCount > 0) {
-    //         const track: Track = await getRunningTrack();
-    //         if (playlistItem && track.id === playlistItem.id) {
-    //             await this.musicStateMgr.musicStateCheck();
-    //         } else if (!playlistItem && track.id) {
-    //             await this.musicStateMgr.musicStateCheck();
-    //         } else {
-    //             checkTrackStateAndTryAgainCount--;
-    //             spotifyDevices = await getSpotifyDevices();
-
-    //             setTimeout(() => {
-    //                 this.playSpotifyTrackFromPlaylist(
-    //                     spotifyUser,
-    //                     playlistId,
-    //                     playlistItem,
-    //                     spotifyDevices,
-    //                     checkTrackStateAndTryAgainCount
-    //                 );
-    //             }, 1000);
-    //         }
-    //     } else {
-    //         await this.musicStateMgr.musicStateCheck();
-    //     }
-    // }
 
     async copySpotifyLink(id: string, isPlaylist: boolean) {
         let link = buildSpotifyLink(id, isPlaylist);
