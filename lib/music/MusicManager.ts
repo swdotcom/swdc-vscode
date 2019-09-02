@@ -984,17 +984,16 @@ export class MusicManager {
     }
 
     async createOrRefreshGlobalTopSongsPlaylist() {
-        const serverIsOnline = serverIsAvailable();
+        if (this.requiresSpotifyAccess()) {
+            // don't create or refresh, no spotify access provided
+            return;
+        }
+        const serverIsOnline = await serverIsAvailable();
 
         if (!serverIsOnline) {
             window.showInformationMessage(
                 "Our service is temporarily unavailable, please try again later."
             );
-            return;
-        }
-
-        if (this.requiresSpotifyAccess()) {
-            // don't create or refresh, no spotify access provided
             return;
         }
 
@@ -1075,7 +1074,7 @@ export class MusicManager {
         if (this._buildingCustomPlaylist) {
             return;
         }
-        const serverIsOnline = serverIsAvailable();
+        const serverIsOnline = await serverIsAvailable();
 
         if (!serverIsOnline) {
             window.showInformationMessage(
