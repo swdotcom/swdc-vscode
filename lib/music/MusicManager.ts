@@ -516,7 +516,7 @@ export class MusicManager {
         // set set a number so it shows up
         item.tracks.total = 1;
         item.playerType = PlayerType.WebSpotify;
-        item.tag = "spotify";
+        item.tag = "spotify-liked-songs";
         item.itemType = "playlist";
         item.name = SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
         return item;

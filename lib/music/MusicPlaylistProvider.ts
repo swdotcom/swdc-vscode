@@ -355,7 +355,10 @@ export class PlaylistTreeItem extends TreeItem {
             this.contextValue = `${treeItem.tag}-${treeItem.type}-item-${stateVal}`;
         }
 
-        if (treeItem.tag === "spotify" || treeItem.type === "spotify") {
+        if (
+            treeItem.tag.includes("spotify") ||
+            treeItem.type.includes("spotify")
+        ) {
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
