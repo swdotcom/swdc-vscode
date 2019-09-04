@@ -1038,7 +1038,11 @@ export class MusicManager {
 
         if (this._softwareTopSongs && this._softwareTopSongs.length > 0) {
             let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
-                return item.trackId;
+                if (item.trackId) {
+                    return item.trackId;
+                } else if (item.uri) {
+                    return item.uri;
+                }
             });
             if (tracksToAdd && tracksToAdd.length > 0) {
                 if (!globalPlaylist) {
