@@ -20,7 +20,9 @@ import {
     getUserProfile,
     launchPlayer,
     quitMacPlayer,
-    isPlayerRunning
+    isPlayerRunning,
+    getSpotifyDevices,
+    PlayerDevice
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
@@ -414,6 +416,15 @@ export class MusicManager {
 
             this._itunesPlaylists = items;
         } else {
+            // show the devices listening folder if they've already connected oauth
+            if (!this.requiresSpotifyAccess()) {
+                const {
+                    title,
+                    tooltip
+                } = await this.getActiveSpotifyDevicesTitleAndTooltip();
+                items.push(this.createSpotifyDevicesButton(title, tooltip));
+            }
+
             // add the action items specific to spotify
             if (allowSpotifyPlaylistFetch) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
@@ -610,6 +621,17 @@ export class MusicManager {
         );
     }
 
+    createSpotifyDevicesButton(title, tooltip) {
+        return this.buildActionItem(
+            "title",
+            "spotify",
+            null,
+            PlayerType.WebSpotify,
+            title,
+            tooltip
+        );
+    }
+
     getLineBreakButton() {
         return this.buildActionItem(
             "title",
@@ -668,6 +690,38 @@ export class MusicManager {
         }
 
         return playlistState;
+    }
+
+    async getActiveSpotifyDevicesTitleAndTooltip() {
+        const devices = await getSpotifyDevices();
+        let inactiva_devices_names = [];
+        if (devices && devices.length > 0) {
+            for (let i = 0; i < devices.length; i++) {
+                const device: PlayerDevice = devices[i];
+                if (device.is_active) {
+                    // done, found an active device
+                    return {
+                        title: `Listening on ${device.name}`,
+                        tooltip: "Spotify devices available"
+                    };
+                } else {
+                    inactiva_devices_names.push(device.name);
+                }
+            }
+        }
+
+        if (inactiva_devices_names.length > 0) {
+            return {
+                title: `Available on ${inactiva_devices_names.join(", ")}`,
+                tooltip: "Spotify devices found but are not currently active"
+            };
+        }
+
+        return {
+            title: "No Devices Found",
+            tooltip:
+                "No Spotify devices found, you may need to login to your player"
+        };
     }
 
     clearPlaylistTracksForId(playlist_id) {

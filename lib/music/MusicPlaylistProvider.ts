@@ -19,7 +19,8 @@ import {
     playItunesTrackNumberInPlaylist,
     getRunningTrack,
     launchAndPlaySpotifyTrack,
-    playSpotifyMacDesktopTrack
+    playSpotifyMacDesktopTrack,
+    getRecommendationsForTracks
 } from "cody-music";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
