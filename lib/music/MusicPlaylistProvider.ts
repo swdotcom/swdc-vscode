@@ -360,15 +360,19 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem.tag.includes("spotify") ||
             treeItem.type.includes("spotify")
         ) {
+            const spotifySvg =
+                treeItem.tag === "disabled"
+                    ? "spotify-disconnected.svg"
+                    : "spotify-logo.svg";
             this.iconPath.light = path.join(
                 this.resourcePath,
                 "light",
-                "spotify-logo.svg"
+                spotifySvg
             );
             this.iconPath.dark = path.join(
                 this.resourcePath,
                 "dark",
-                "spotify-logo.svg"
+                spotifySvg
             );
         } else if (treeItem.tag === "itunes" || treeItem.type === "itunes") {
             this.iconPath.light = path.join(

@@ -420,9 +420,15 @@ export class MusicManager {
             if (!this.requiresSpotifyAccess()) {
                 const {
                     title,
-                    tooltip
+                    tooltip,
+                    loggedIn
                 } = await this.getActiveSpotifyDevicesTitleAndTooltip();
-                items.push(this.createSpotifyDevicesButton(title, tooltip));
+                const devicesFoundButton = this.createSpotifyDevicesButton(
+                    title,
+                    tooltip,
+                    loggedIn
+                );
+                items.push(devicesFoundButton);
             }
 
             // add the action items specific to spotify
@@ -621,8 +627,8 @@ export class MusicManager {
         );
     }
 
-    createSpotifyDevicesButton(title, tooltip) {
-        return this.buildActionItem(
+    createSpotifyDevicesButton(title, tooltip, loggedIn) {
+        const button = this.buildActionItem(
             "title",
             "spotify",
             null,
@@ -630,6 +636,8 @@ export class MusicManager {
             title,
             tooltip
         );
+        button.tag = loggedIn ? "active" : "disabled";
+        return button;
     }
 
     getLineBreakButton() {
@@ -702,7 +710,8 @@ export class MusicManager {
                     // done, found an active device
                     return {
                         title: `Listening on ${device.name}`,
-                        tooltip: "Spotify devices available"
+                        tooltip: "Spotify devices available",
+                        loggedIn: true
                     };
                 } else {
                     inactiva_devices_names.push(device.name);
@@ -713,14 +722,16 @@ export class MusicManager {
         if (inactiva_devices_names.length > 0) {
             return {
                 title: `Available on ${inactiva_devices_names.join(", ")}`,
-                tooltip: "Spotify devices found but are not currently active"
+                tooltip: "Spotify devices found but are not currently active",
+                loggedIn: true
             };
         }
 
         return {
             title: "No Devices Found",
             tooltip:
-                "No Spotify devices found, you may need to login to your player"
+                "No Spotify devices found, you may need to login to your player",
+            loggedIn: false
         };
     }
 
