@@ -26,12 +26,14 @@ import {
     showStatus,
     getPluginId,
     isCodeTime,
-    logEvent
+    logEvent,
+    getOffsetSecends
 } from "./Util";
 import {
     requiresSpotifyAccessInfo,
     getSpotifyLikedSongs,
-    Track
+    Track,
+    getTopSpotifyTracks
 } from "cody-music";
 import {
     updateShowMusicMetrics,
@@ -568,19 +570,82 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         window.showInformationMessage(`Successfully connected to Spotify`);
 
         // send the "Liked Songs" to software app so we can be in sync
-        let tracks: Track[] = await getSpotifyLikedSongs();
-        if (tracks && tracks.length > 0) {
-            let uris = tracks.map(track => {
-                return track.uri;
-            });
-            const api = `/music/liked/tracks/type/spotify`;
-            await softwarePut(api, { liked: true, uris }, getItem("jwt"));
-        }
+        await seedLikedSongsToSoftware();
+
+        // send the top spotify songs from the users playlists to help seed song sessions
+        await seedTopSpotifySongs();
 
         setTimeout(() => {
             musicMgr.clearSpotify();
             commands.executeCommand("musictime.refreshPlaylist");
         }, 1000);
+    }
+}
+
+async function seedLikedSongsToSoftware() {
+    // send the "Liked Songs" to software app so we can be in sync
+    let tracks: Track[] = await getSpotifyLikedSongs();
+    if (tracks && tracks.length > 0) {
+        let uris = tracks.map(track => {
+            return track.uri;
+        });
+        const api = `/music/liked/tracks/type/spotify`;
+        await softwarePut(api, { liked: true, uris }, getItem("jwt"));
+    }
+}
+
+async function seedTopSpotifySongs() {
+    /**
+     * album:Object {album_type: "ALBUM", artists: Array(1), available_markets: Array(79), …}
+    artists:Array(1) [Object]
+    available_markets:Array(79) ["AD", "AE", "AR", …]
+    disc_number:1
+    duration_ms:251488
+    explicit:false
+    external_ids:Object {isrc: "GBF088590110"}
+    external_urls:Object {spotify: "https://open.spotify.com/track/4RvWPyQ5RL0ao9LPZeS…"}
+    href:"https://api.spotify.com/v1/tracks/4RvWPyQ5RL0ao9LPZeSouE"
+
+     */
+    const fileMetrics = {
+        add: 0,
+        paste: 0,
+        delete: 0,
+        netkeys: 0,
+        linesAdded: 0,
+        linesRemoved: 0,
+        open: 0,
+        close: 0,
+        keystrokes: 0,
+        syntax: "",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        offset: getOffsetSecends() / 60,
+        pluginId: getPluginId(),
+        os: getOs(),
+        version: getVersion(),
+        source: {}
+    };
+    let tracks: Track[] = await getTopSpotifyTracks();
+    if (tracks && tracks.length > 0) {
+        // add the empty file metrics
+        const tracksToSave = tracks.map(track => {
+            return {
+                ...track,
+                ...fileMetrics
+            };
+        });
+
+        let api = `/music/seedTopSpotifyTracks`;
+        return softwarePut(api, { tracks: tracksToSave }, getItem("jwt"))
+            .then(resp => {
+                if (!isResponseOk(resp)) {
+                    return { status: "fail" };
+                }
+                return { status: "ok" };
+            })
+            .catch(e => {
+                return { status: "fail" };
+            });
     }
 }
 
