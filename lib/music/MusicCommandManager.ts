@@ -61,6 +61,7 @@ export class MusicCommandManager {
             "musictime.menu",
             1000
         );
+        this.createButton("...", "updating", "musictime.progress", 999);
         this.createButton(
             "Connect Spotify",
             "Connect Spotify to add your top productivity tracks.",
@@ -103,6 +104,10 @@ export class MusicCommandManager {
 
         const track = await getRunningTrack();
         this.syncControls(track);
+    }
+
+    public static initiateProgress(progressLabel: string) {
+        this.showProgress(progressLabel);
     }
 
     public static async syncControls(track: Track) {
@@ -231,11 +236,13 @@ export class MusicCommandManager {
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             const isMusicTimeMenu = btnCmd === "musictime.menu";
+            const isProgressButton = btnCmd === "musictime.progress";
+            const isPauseButton = btnCmd === "musictime.pause";
 
             if (isMusicTimeMenu) {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
-            } else if (btnCmd === "musictime.pause") {
+            } else if (isPauseButton || isProgressButton) {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
                 if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
@@ -250,9 +257,7 @@ export class MusicCommandManager {
                     button.statusBarItem.hide();
                 }
             } else if (btnCmd === "musictime.currentSong") {
-                button.statusBarItem.tooltip = `(${trackInfo.name}) ${
-                    button.tooltip
-                }`;
+                button.statusBarItem.tooltip = `(${trackInfo.name}) ${button.tooltip}`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
                 // this._hideSongTimeout = setTimeout(() => {
@@ -271,9 +276,7 @@ export class MusicCommandManager {
                 if (!showPremiumRequired) {
                     if (songInfo && btnCmd === "musictime.play") {
                         // show the song info over the play button
-                        button.statusBarItem.tooltip = `${
-                            button.tooltip
-                        } - ${songInfo}`;
+                        button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
                     }
                     button.statusBarItem.show();
                 } else {
@@ -301,11 +304,13 @@ export class MusicCommandManager {
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             const isMusicTimeMenu = btnCmd === "musictime.menu";
+            const isProgressButton = btnCmd === "musictime.progress";
+            const isPlayButton = btnCmd === "musictime.play";
 
             if (isMusicTimeMenu) {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
-            } else if (btnCmd === "musictime.play") {
+            } else if (isPlayButton || isProgressButton) {
                 button.statusBarItem.hide();
             } else if (btnCmd === "musictime.like") {
                 if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
@@ -320,9 +325,7 @@ export class MusicCommandManager {
                     button.statusBarItem.hide();
                 }
             } else if (btnCmd === "musictime.currentSong") {
-                button.statusBarItem.tooltip = `(${trackInfo.name}) ${
-                    button.tooltip
-                }`;
+                button.statusBarItem.tooltip = `(${trackInfo.name}) ${button.tooltip}`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
                 // this._hideSongTimeout = setTimeout(() => {
@@ -340,14 +343,31 @@ export class MusicCommandManager {
             } else {
                 if (!showPremiumRequired) {
                     if (btnCmd === "musictime.pause") {
-                        button.statusBarItem.tooltip = `${
-                            button.tooltip
-                        } - ${songInfo}`;
+                        button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
                     }
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
                 }
+            }
+        });
+    }
+
+    private static showProgress(progressLabel: string) {
+        this._buttons.map(button => {
+            const btnCmd = button.statusBarItem.command;
+            const isMusicTimeMenu = btnCmd === "musictime.menu";
+            const isMusicTimeProgress = btnCmd === "musictime.progress";
+
+            if (isMusicTimeMenu || isMusicTimeProgress) {
+                if (isMusicTimeProgress) {
+                    button.statusBarItem.text = progressLabel;
+                }
+                // show progress and headphones menu buttons
+                button.statusBarItem.show();
+            } else {
+                // hide the rest
+                button.statusBarItem.hide();
             }
         });
     }

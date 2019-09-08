@@ -20,11 +20,12 @@ import {
     getRunningTrack,
     launchAndPlaySpotifyTrack,
     playSpotifyMacDesktopTrack,
-    getRecommendationsForTracks
+    getSpotifyDevices
 } from "cody-music";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
+import { MusicCommandManager } from "./MusicCommandManager";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -40,7 +41,7 @@ const createPlaylistTreeItem = (
 
 let checkSpotifyStateTimeout = null;
 
-export const checkSpotifySongState = (trackId: string) => {
+export const checkSpotifySongState = (missingDevices: boolean) => {
     if (checkSpotifyStateTimeout) {
         clearTimeout(checkSpotifyStateTimeout);
     }
@@ -48,14 +49,21 @@ export const checkSpotifySongState = (trackId: string) => {
         // make sure we get that song, if not then they may not be logged in
         let playingTrack = await getRunningTrack();
 
-        if (!playingTrack || playingTrack.id !== trackId) {
+        if (
+            !playingTrack ||
+            (playingTrack.state !== TrackStatus.Paused &&
+                playingTrack.state !== TrackStatus.Playing)
+        ) {
             // they're not logged in
             window.showInformationMessage(
                 "We're unable to play the selected Spotify track. Please make sure you are logged in to your account. You will need the Spotify desktop app if you have a non-premium Spotify account.",
                 ...["Ok"]
             );
+        } else if (missingDevices) {
+            // refresh the playlist
+            commands.executeCommand("musictime.refreshPlaylist");
         }
-    }, 5500);
+    }, 8000);
 };
 
 export const playSelectedItem = async (
@@ -64,11 +72,16 @@ export const playSelectedItem = async (
 ) => {
     const musicCtrlMgr = new MusicControlManager();
     const musicMgr = MusicManager.getInstance();
+
+    // is this a track or playlist item?
     if (playlistItem.type === "track") {
         let currentPlaylistId = playlistItem["playlist_id"];
 
+        // !important! set the selected track
         musicMgr.selectedTrackItem = playlistItem;
+
         if (!musicMgr.selectedPlaylist) {
+            // make sure we have a selected playlist
             const playlist: PlaylistItem = await musicMgr.getPlaylistById(
                 currentPlaylistId
             );
@@ -77,11 +90,6 @@ export const playSelectedItem = async (
 
         const notPlaying =
             playlistItem.state !== TrackStatus.Playing ? true : false;
-
-        const isLikedSongsPlaylist =
-            musicMgr.selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
-                ? true
-                : false;
 
         if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
             if (notPlaying) {
@@ -96,38 +104,16 @@ export const playSelectedItem = async (
         } else if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
             // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
             // make sure the track has spotify:track and the playlist has spotify:playlist
-
-            if (isLikedSongsPlaylist) {
-                // send the track id
-                playSpotifyMacDesktopTrack(playlistItem.id);
-            } else {
-                // send the track id and playlist id
-                playSpotifyMacDesktopTrack(
-                    playlistItem.id,
-                    musicMgr.selectedPlaylist.id
-                );
-            }
-            checkSpotifySongState(playlistItem.id);
+            playSpotifyDesktopPlaylistTrack();
         } else {
-            if (notPlaying) {
-                await launchAndPlaySpotifyTrack(
-                    playlistItem.id,
-                    currentPlaylistId
-                );
-                // await launchAndPlayTrack(playlistItem, musicMgr.spotifyUser);
-            } else {
-                musicCtrlMgr.pauseSong(musicMgr.currentPlayerName);
-            }
+            launchAndPlaySpotifyWebPlaylistTrack(true /*isTrack*/);
         }
     } else {
-        // to play a playlist
-        // {device_id: <spotify_device_id>,
-        //   uris: ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh", "spotify:track:1301WleyT98MSxVHPZCA6M"],
-        //   context_uri: <playlist_uri, album_uri>}
+        // !important! set the selected playlist
         musicMgr.selectedPlaylist = playlistItem;
 
         if (!isExpand) {
-            // get the tracks
+            // it's a play request, not just an expand. get the tracks
             const tracks: PlaylistItem[] = await MusicManager.getInstance().getPlaylistItemTracksForPlaylistId(
                 playlistItem.id
             );
@@ -136,10 +122,13 @@ export const playSelectedItem = async (
             const selectedTrack: PlaylistItem =
                 tracks && tracks.length > 0 ? tracks[0] : null;
 
-            const isLikedSongsPlaylist =
-                playlistItem.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
-                    ? true
-                    : false;
+            if (!selectedTrack) {
+                // no tracks in this playlist, return out
+                return;
+            }
+
+            // !important! set the selected track now since it's not null
+            musicMgr.selectedTrackItem = selectedTrack;
 
             if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
                 const pos: number = 1;
@@ -148,42 +137,98 @@ export const playSelectedItem = async (
                     pos
                 );
             } else {
-                if (!selectedTrack) {
-                    return;
-                }
-
                 if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
-                    if (isLikedSongsPlaylist) {
-                        // just play the 1st track
-                        playSpotifyMacDesktopTrack(selectedTrack.id);
-                    } else {
-                        // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
-                        // make sure the track has spotify:track and the playlist has spotify:playlist
-                        playSpotifyMacDesktopTrack(
-                            selectedTrack.id,
-                            playlistItem.id
-                        );
-                    }
-                    checkSpotifySongState(selectedTrack.id);
+                    playSpotifyDesktopPlaylistTrack();
                 } else {
-                    if (isLikedSongsPlaylist) {
-                        // play the 1st track in the non-playlist liked songs folder
-                        if (selectedTrack) {
-                            await launchAndPlaySpotifyTrack(
-                                selectedTrack.id,
-                                playlistItem.id
-                            );
-                        }
-                    } else {
-                        // use the normal play playlist by offset 0 call
-                        await launchAndPlaySpotifyTrack("", playlistItem.id);
-                    }
-
-                    if (selectedTrack) {
-                        musicMgr.selectedTrackItem = selectedTrack;
-                    }
+                    launchAndPlaySpotifyWebPlaylistTrack(false /*isTrack*/);
                 }
             }
+        }
+    }
+
+    // check spotify song state if the device list is empty. this will
+    // alert the user they may need to log on to spotify if we're unable to
+    // play a track
+    if (playlistItem.playerType !== PlayerType.MacItunesDesktop) {
+        const devices = await getSpotifyDevices();
+        if (!devices || devices.length === 0) {
+            checkSpotifySongState(true /*missingDevices*/);
+        }
+    }
+};
+
+/**
+ * Helper function to play a track or playlist if we've determined to play
+ * against the mac spotify desktop app.
+ */
+export const playSpotifyDesktopPlaylistTrack = () => {
+    const musicMgr = MusicManager.getInstance();
+    // get the selected playlist
+    const selectedPlaylist = musicMgr.selectedPlaylist;
+    // get the selected track
+    const selectedTrack = musicMgr.selectedTrackItem;
+    const isLikedSongsPlaylist =
+        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+            ? true
+            : false;
+    if (isLikedSongsPlaylist) {
+        // just play the 1st track
+        playSpotifyMacDesktopTrack(selectedTrack.id);
+    } else {
+        // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
+        // make sure the track has spotify:track and the playlist has spotify:playlist
+        playSpotifyMacDesktopTrack(selectedTrack.id, selectedPlaylist.id);
+    }
+};
+
+/**
+ * Launch and play a spotify track via the web player.
+ * @param isTrack boolean
+ */
+export const launchAndPlaySpotifyWebPlaylistTrack = async (
+    isTrack: boolean
+) => {
+    const musicMgr = MusicManager.getInstance();
+
+    // get the selected playlist
+    const selectedPlaylist = musicMgr.selectedPlaylist;
+    // get the selected track
+    const selectedTrack = musicMgr.selectedTrackItem;
+
+    const notPlaying =
+        selectedTrack.state !== TrackStatus.Playing ? true : false;
+    const progressLabel = notPlaying
+        ? `Playing ${selectedTrack.name}`
+        : `Pausing ${selectedTrack.name}`;
+
+    MusicCommandManager.initiateProgress(progressLabel);
+
+    const isLikedSongsPlaylist =
+        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
+            ? true
+            : false;
+    if (isTrack) {
+        // a track was selected, check if we should play or pause it
+        const musicCtrlMgr = new MusicControlManager();
+
+        if (notPlaying) {
+            await launchAndPlaySpotifyTrack(
+                selectedTrack.id,
+                selectedPlaylist.id
+            );
+        } else {
+            musicCtrlMgr.pauseSong(musicMgr.currentPlayerName);
+        }
+    } else {
+        if (isLikedSongsPlaylist) {
+            // play the 1st track in the non-playlist liked songs folder
+            await launchAndPlaySpotifyTrack(
+                selectedTrack.id,
+                selectedPlaylist.id
+            );
+        } else {
+            // use the normal play playlist by offset 0 call
+            await launchAndPlaySpotifyTrack("", selectedPlaylist.id);
         }
     }
 };
