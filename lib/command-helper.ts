@@ -133,7 +133,7 @@ export function createCommands(): {
 
         const playCmd = commands.registerCommand(
             "musictime.play",
-            (p: PlaylistItem) => {
+            async (p: PlaylistItem) => {
                 const notAssigned =
                     p && (!p.state || p.state === TrackStatus.NotAssigned)
                         ? true
@@ -148,7 +148,12 @@ export function createCommands(): {
                     return;
                 }
                 if (notAssigned) {
-                    playSelectedItem(p, false /*isExpand*/);
+                    if (p.type === "track") {
+                        treePlaylistProvider.selectTrack(p);
+                    } else {
+                        treePlaylistProvider.selectPlaylist(p);
+                        playSelectedItem(p, false /*isExpand*/);
+                    }
                 } else {
                     controller.playSong();
                 }

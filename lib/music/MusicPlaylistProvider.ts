@@ -207,6 +207,7 @@ export const launchAndPlaySpotifyWebPlaylistTrack = async (
         selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
             ? true
             : false;
+
     if (isTrack) {
         // a track was selected, check if we should play or pause it
         const musicCtrlMgr = new MusicControlManager();
@@ -237,7 +238,9 @@ export const launchAndPlaySpotifyWebPlaylistTrack = async (
  * Handles the playlist onDidChangeSelection event
  */
 export const connectPlaylistTreeView = (view: TreeView<PlaylistItem>) => {
+    // view is {selection: Array[n], visible, message}
     return Disposable.from(
+        // e is {selection: Array[n]}
         view.onDidChangeSelection(async e => {
             if (!e.selection || e.selection.length === 0) {
                 return;
@@ -279,7 +282,6 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     bindView(view: TreeView<PlaylistItem>): void {
-        console.log(`binded view: ${JSON.stringify(view)}`);
         this.view = view;
     }
 
@@ -296,9 +298,38 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
     }
 
     isTrackInPlaylistRunning(p: PlaylistItem) {
-        return (
-            p.state === TrackStatus.Playing || p.state === TrackStatus.Paused
-        );
+        const selectedTrack: PlaylistItem = MusicManager.getInstance()
+            .selectedTrackItem;
+        if (selectedTrack && selectedTrack["playlist_id"] === p.id) {
+            // this.selectTrack(selectedTrack, false /* select */);
+            return true;
+        }
+        return false;
+    }
+
+    selectTrack(p: PlaylistItem, select: boolean = true) {
+        // reveal the track state if it's playing or paused
+        try {
+            // don't "select" it though. that will invoke the pause/play action
+            this.view.reveal(p, {
+                focus: true,
+                select
+            });
+        } catch (err) {
+            console.log("Unable to reveal running track, error: ", err.message);
+        }
+    }
+
+    selectPlaylist(p: PlaylistItem) {
+        try {
+            // don't "select" it though. that will invoke the pause/play action
+            this.view.reveal(p, {
+                focus: true,
+                select: true
+            });
+        } catch (err) {
+            console.log("Unable to select playlist, error: ", err.message);
+        }
     }
 
     getTreeItem(p: PlaylistItem): PlaylistTreeItem {
@@ -317,27 +348,6 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         } else {
             // it's a track or a title
             treeItem = createPlaylistTreeItem(p, TreeItemCollapsibleState.None);
-
-            // reveal the track state if it's playing or paused
-            if (
-                this.isTrackInPlaylistRunning(p) &&
-                this.view &&
-                this.view.selection &&
-                this.view.selection.length > 0
-            ) {
-                try {
-                    // don't "select" it though. that will invoke the pause/play action
-                    this.view.reveal(p, {
-                        focus: true,
-                        select: false
-                    });
-                } catch (err) {
-                    console.log(
-                        "Unable to reveal running track, error: ",
-                        err.message
-                    );
-                }
-            }
         }
 
         return treeItem;
