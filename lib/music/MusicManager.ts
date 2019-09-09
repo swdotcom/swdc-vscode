@@ -22,13 +22,12 @@ import {
     quitMacPlayer,
     isPlayerRunning,
     getSpotifyDevices,
-    PlayerDevice
+    PlayerDevice,
+    getSpotifyPlaylist
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
-    SOFTWARE_TOP_SONGS_NAME,
     PERSONAL_TOP_SONGS_PLID,
-    SOFTWARE_TOP_SONGS_PLID,
     REFRESH_CUSTOM_PLAYLIST_TITLE,
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
@@ -36,7 +35,8 @@ import {
     SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
-    LOGIN_LABEL
+    LOGIN_LABEL,
+    SOFTWARE_TOP_40_PLAYLIST_ID
 } from "../Constants";
 import { commands, window } from "vscode";
 import {
@@ -80,7 +80,6 @@ export class MusicManager {
     private _serverTrack: any = null;
     private _initialized: boolean = false;
     private _buildingCustomPlaylist: boolean = false;
-    private _creatingGlobalPlaylist = false;
 
     private constructor() {
         //
@@ -365,10 +364,6 @@ export class MusicManager {
             }
         }
 
-        // before we filter out the music time generated playlists, check
-        // to see if we have them
-        const hasGlobbalPlaylist = await this.globalPlaylistIdExists(playlists);
-
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
@@ -444,22 +439,21 @@ export class MusicManager {
             if (serverIsOnline && allowSpotifyPlaylistFetch) {
                 items.push(this.getLineBreakButton());
 
-                if (!hasGlobbalPlaylist && !this._creatingGlobalPlaylist) {
-                    this._creatingGlobalPlaylist = true;
-                    // server is online, we have spotify access, and no global playlist exists.
-                    // auto-create the global top 40
-                    setTimeout(() => {
-                        commands.executeCommand(
-                            "musictime.generateGlobalPlaylist"
-                        );
-                        this._creatingGlobalPlaylist = false;
-                    }, 1000);
-                }
-
                 const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();
                 if (customPlaylistButton) {
                     items.push(customPlaylistButton);
                 }
+            }
+
+            // get the Software Top 40 Playlist
+            const softwareTop40: PlaylistItem = await getSpotifyPlaylist(
+                SOFTWARE_TOP_40_PLAYLIST_ID
+            );
+            if (softwareTop40) {
+                softwareTop40.itemType = "playlist";
+                softwareTop40.tag = "paw";
+                // add it to music time playlist
+                items.push(softwareTop40);
             }
 
             // add the music time playlists that were found
@@ -471,9 +465,7 @@ export class MusicManager {
                     const musicTimePlaylist = this._musictimePlaylists[i];
                     if (
                         musicTimePlaylist.playlistTypeId ===
-                            SOFTWARE_TOP_SONGS_PLID ||
-                        musicTimePlaylist.playlistTypeId ===
-                            PERSONAL_TOP_SONGS_PLID
+                        PERSONAL_TOP_SONGS_PLID
                     ) {
                         items.push(musicTimePlaylist);
                     }
@@ -970,28 +962,6 @@ export class MusicManager {
         return null;
     }
 
-    /**
-     * Returns whether we've created the global playlist or not.
-     */
-    async globalPlaylistIdExists(playlists: PlaylistItem[]) {
-        if (this._savedPlaylists.length > 0) {
-            for (let i = 0; i < this._savedPlaylists.length; i++) {
-                let savedPlaylist: PlaylistItem = this._savedPlaylists[i];
-                let savedPlaylistTypeId = savedPlaylist.playlistTypeId;
-                if (savedPlaylistTypeId === SOFTWARE_TOP_SONGS_PLID) {
-                    // now check the playlists to see if we have it
-                    let foundPlaylist = playlists.find(element => {
-                        return element.id === savedPlaylist.id;
-                    });
-                    if (foundPlaylist) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     async fetchSavedPlaylists(serverIsOnline) {
         let playlists = [];
         if (serverIsOnline) {
@@ -1017,20 +987,6 @@ export class MusicManager {
         this._savedPlaylists = playlists;
     }
 
-    async syncGlobalTopSongs() {
-        const response = await softwareGet(
-            "/music/playlist/favorites?global=true",
-            getItem("jwt")
-        );
-
-        if (isResponseOk(response) && response.data.length > 0) {
-            this._softwareTopSongs = response.data;
-        } else {
-            // clear the favorites
-            this._softwareTopSongs = [];
-        }
-    }
-
     /**
      * These are the top productivity songs for this user
      */
@@ -1046,97 +1002,6 @@ export class MusicManager {
             // clear the favorites
             this._userTopSongs = [];
         }
-    }
-
-    async createOrRefreshGlobalTopSongsPlaylist() {
-        if (this.requiresSpotifyAccess()) {
-            // don't create or refresh, no spotify access provided
-            return;
-        }
-        const serverIsOnline = await serverIsAvailable();
-
-        if (!serverIsOnline) {
-            window.showInformationMessage(
-                "Our service is temporarily unavailable, please try again later."
-            );
-            return;
-        }
-
-        // get the global top songs
-        await this.syncGlobalTopSongs();
-
-        let globalPlaylist = this.getMusicTimePlaylistByTypeId(
-            SOFTWARE_TOP_SONGS_PLID
-        );
-
-        let playlistId = null;
-        if (!globalPlaylist) {
-            // 1st create the empty playlist
-            const playlistResult: CodyResponse = await createPlaylist(
-                SOFTWARE_TOP_SONGS_NAME,
-                true
-            );
-
-            if (playlistResult.state === CodyResponseType.Failed) {
-                window.showErrorMessage(
-                    `There was an unexpected error adding tracks to the playlist. ${playlistResult.message}`,
-                    ...["OK"]
-                );
-                return;
-            }
-
-            playlistId = playlistResult.data.id;
-
-            if (playlistId) {
-                await this.updateSavedPlaylists(
-                    playlistId,
-                    2,
-                    SOFTWARE_TOP_SONGS_NAME
-                ).catch(err => {
-                    // logIt("Error updating music time global playlist ID");
-                });
-            }
-        } else {
-            // global playlist exists, get the id to refresh
-            playlistId = globalPlaylist.id;
-        }
-
-        if (this._softwareTopSongs && this._softwareTopSongs.length > 0) {
-            let tracksToAdd: string[] = this._softwareTopSongs.map(item => {
-                if (item.trackId) {
-                    return item.trackId;
-                } else if (item.uri) {
-                    return item.uri;
-                }
-            });
-            if (tracksToAdd && tracksToAdd.length > 0) {
-                if (!globalPlaylist) {
-                    // no global playlist, add the tracks for the 1st time
-                    await this.addTracks(
-                        playlistId,
-                        SOFTWARE_TOP_SONGS_NAME,
-                        tracksToAdd
-                    );
-                } else {
-                    // it exists, refresh it with new tracks
-                    await replacePlaylistTracks(playlistId, tracksToAdd).catch(
-                        err => {
-                            // logIt(
-                            //     `Error replacing tracks, error: ${err.message}`
-                            // );
-                        }
-                    );
-                }
-            }
-        }
-
-        setTimeout(() => {
-            this.clearSpotify();
-            this.clearPlaylists();
-            commands.executeCommand("musictime.refreshPlaylist");
-        }, 500);
-
-        await this.fetchSavedPlaylists(serverIsOnline);
     }
 
     async generateUsersWeeklyTopSongs() {
@@ -1271,8 +1136,7 @@ export class MusicManager {
         playlistTypeId: number,
         name: string
     ) {
-        // i.e. playlistTypeId 1 = TOP_PRODUCIVITY_TRACKS
-        // playlistTypeId 2 = SOFTWARE_TOP_SONGS_NAME
+        // playlistTypeId 1 = personal custom top 40
         const payload = {
             playlist_id,
             playlistTypeId,

@@ -27,7 +27,12 @@ import {
     connectPlaylistTreeView,
     playSelectedItem
 } from "./music/MusicPlaylistProvider";
-import { PlaylistItem, PlayerName, TrackStatus } from "cody-music";
+import {
+    PlaylistItem,
+    PlayerName,
+    TrackStatus,
+    launchAndPlaySpotifyTrack
+} from "cody-music";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
@@ -302,12 +307,6 @@ export function createCommands(): {
             () => musicMgr.generateUsersWeeklyTopSongs()
         );
         cmds.push(generateWeeklyPlaylistCommand);
-
-        const generateGlobalPlaylistCommand = commands.registerCommand(
-            "musictime.generateGlobalPlaylist",
-            () => musicMgr.createOrRefreshGlobalTopSongsPlaylist()
-        );
-        cmds.push(generateGlobalPlaylistCommand);
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time

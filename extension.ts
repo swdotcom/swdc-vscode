@@ -35,9 +35,6 @@ import { createCommands } from "./lib/command-helper";
 import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 import { MusicManager } from "./lib/music/MusicManager";
-import { SOFTWARE_TOP_SONGS_PLID } from "./lib/Constants";
-
-const moment = require("moment-timezone");
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -254,24 +251,10 @@ export async function intializePlugin(
         // initialize the music manager
         commands.executeCommand("musictime.reconcilePlaylist");
 
-        // MusicStateManager.getInstance().musicStateCheck();
         // 5 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().musicStateCheck();
         }, 1000 * 5);
-
-        // refresh the global top 40 playlist
-        setInterval(() => {
-            // every 6 hours it checks
-            let globalPlaylist = musicMgr.getMusicTimePlaylistByTypeId(
-                SOFTWARE_TOP_SONGS_PLID
-            );
-            // refresh on Mondays
-            const dayOfWeek = moment().day();
-            if (globalPlaylist && dayOfWeek === 1) {
-                commands.executeCommand("musictime.generateGlobalPlaylist");
-            }
-        }, 1000 * 60 * 60 * 6);
     }
 
     initializeLiveshare();
