@@ -168,7 +168,7 @@ export class MusicStateManager {
         const now = nowInSecs();
 
         // has the existing track ended?
-        if (changeStatus.endPrevTrack && this.existingTrack.name) {
+        if (changeStatus.endPrevTrack && this.existingTrack.id) {
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after
             const offset = d.getTimezoneOffset();

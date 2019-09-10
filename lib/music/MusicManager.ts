@@ -449,7 +449,7 @@ export class MusicManager {
             const softwareTop40: PlaylistItem = await getSpotifyPlaylist(
                 SOFTWARE_TOP_40_PLAYLIST_ID
             );
-            if (softwareTop40) {
+            if (softwareTop40 && softwareTop40.id) {
                 softwareTop40.itemType = "playlist";
                 softwareTop40.tag = "paw";
                 // add it to music time playlist

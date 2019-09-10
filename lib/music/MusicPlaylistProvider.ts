@@ -73,6 +73,9 @@ export const playSelectedItem = async (
     const musicCtrlMgr = new MusicControlManager();
     const musicMgr = MusicManager.getInstance();
 
+    const isTrackOrPlaylist =
+        playlistItem.type === "track" || playlistItem.type === "playlist";
+
     // is this a track or playlist item?
     if (playlistItem.type === "track") {
         let currentPlaylistId = playlistItem["playlist_id"];
@@ -149,7 +152,11 @@ export const playSelectedItem = async (
     // check spotify song state if the device list is empty. this will
     // alert the user they may need to log on to spotify if we're unable to
     // play a track
-    if (playlistItem.playerType !== PlayerType.MacItunesDesktop) {
+    if (
+        !isExpand &&
+        isTrackOrPlaylist &&
+        playlistItem.playerType !== PlayerType.MacItunesDesktop
+    ) {
         const devices = await getSpotifyDevices();
         if (!devices || devices.length === 0) {
             checkSpotifySongState(true /*missingDevices*/);
