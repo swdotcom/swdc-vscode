@@ -84,12 +84,11 @@ export class MusicStateManager {
         // to determine if we should end the previous track, the
         // existing track should be existing and playing
         let endPrevTrack = false;
-        if (existingTrackId && existingTrackId !== playingTrackId) {
-            endPrevTrack = true;
-        } else if (
-            existingTrackId === playingTrackId &&
-            existingTrackState === TrackStatus.Playing &&
-            playingTrackState !== TrackStatus.Playing
+        const tracksMatch = existingTrackId === playingTrackId;
+        if (
+            (!playingTrackId && existingTrackId) ||
+            (!existingTrackId && playingTrackId) ||
+            !tracksMatch
         ) {
             endPrevTrack = true;
         }
@@ -169,7 +168,7 @@ export class MusicStateManager {
         const now = nowInSecs();
 
         // has the existing track ended?
-        if (changeStatus.endPrevTrack) {
+        if (changeStatus.endPrevTrack && this.existingTrack.name) {
             let d = new Date();
             // offset is the minutes from GMT. it's positive if it's before, and negative after
             const offset = d.getTimezoneOffset();
@@ -213,15 +212,15 @@ export class MusicStateManager {
             let songSession = {
                 ...this.existingTrack
             };
-            setTimeout(() => {
+            setTimeout(async () => {
                 songSession = {
                     ...songSession,
                     ...this.getMusicCodingData()
                 };
 
                 // send off the ended song session
-                sendMusicData(songSession);
-            }, 800);
+                await sendMusicData(songSession);
+            }, 500);
 
             // clear the track.
             this.existingTrack = {};
