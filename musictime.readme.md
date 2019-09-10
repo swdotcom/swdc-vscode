@@ -29,18 +29,6 @@ Share the music that makes you most productive with your team.
 **Data visualizations**
 Learn more about your music with a range of music metrics and data visualizations.
 
-| Feature                           | Plugin            | Plugin + Web App  |
-| --------------------------------- |:-----------------:|:-----------------:|
-| Music controls                    |         X         |         X         |
-| Playlists                         |         X         |         X         |
-| Music dashboard                   |         X         |         X         |
-| Global playlists                  |         X         |         X         |
-| Slack integration                 |         X         |         X         |
-| Sortable playlists                |                   |         X         |
-| Metrics profile                   |                   |         X         |
-| Advanced data visualizations      |                   |         X         |
-| Personalized song recommendations |                   |         X         |
-
 ## Player controls support
 
 On Mac, player controls are fully supported for both Spotify and iTunes. On Windows and Linux, users must integrate a premium Spotify account to use the player controls. iTunes is currently not supported on Windows or Linux.
