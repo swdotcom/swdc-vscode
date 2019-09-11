@@ -149,15 +149,20 @@ export function createCommands(): {
                     p && p.tracks && p.tracks["total"] && p.tracks["total"] > 0
                         ? true
                         : false;
+
+                // if it's a playlist without any tracks break out
                 if (isPlaylist && !hasTracks) {
                     return;
                 }
                 if (notAssigned) {
+                    // track status is not yet assigned, play it
                     if (p.type === "track") {
-                        treePlaylistProvider.selectTrack(p);
+                        await treePlaylistProvider.selectTrack(p);
                     } else {
-                        treePlaylistProvider.selectPlaylist(p);
-                        playSelectedItem(p, false /*isExpand*/);
+                        await treePlaylistProvider.selectPlaylist(p);
+                        setTimeout(() => {
+                            playSelectedItem(p, false /*isExpand*/);
+                        }, 0);
                     }
                 } else {
                     controller.playSong();
