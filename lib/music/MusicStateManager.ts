@@ -23,7 +23,6 @@ import {
 import { MusicManager } from "./MusicManager";
 import { KpmController } from "../KpmController";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
-// import { launchAndPlayTrack } from "./MusicPlaylistProvider";
 const fs = require("fs");
 
 export class MusicStateManager {
@@ -34,6 +33,7 @@ export class MusicStateManager {
 
     private existingTrack: any = {};
     private processingSong: boolean = false;
+    private currentAlbumImage: any = null;
 
     private kpmControllerInstance: KpmController;
 
@@ -164,6 +164,19 @@ export class MusicStateManager {
         let playingTrack = await getRunningTrack();
 
         const changeStatus = this.getChangeStatus(playingTrack);
+
+        if (changeStatus.isNewTrack) {
+            // set the current album image
+            if (
+                playingTrack &&
+                playingTrack.album &&
+                playingTrack.album.images &&
+                playingTrack.album.images.length > 0
+            ) {
+                this.currentAlbumImage = playingTrack.album.images[0].url;
+                // this.fillSidePanelWithAlbumImage(this.currentAlbumImage);
+            }
+        }
 
         const now = nowInSecs();
 

@@ -239,7 +239,14 @@
                     "when": "view =~ /.*-playlists/"
                 }
             ]
-        }
+        },
+        "themes": [
+            {
+                "label": "MusicTime",
+                "uiTheme": "vs-dark",
+                "path": "./themes/music-time.json"
+            }
+        ]
     },
     "devDependencies": {
         "@types/mocha": "5.2.6",
