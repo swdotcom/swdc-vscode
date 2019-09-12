@@ -1335,7 +1335,7 @@ export class MusicManager {
         if (track.playerType === PlayerType.MacItunesDesktop) {
             type = "itunes";
         }
-        const api = `/music/liked/track/${trackId}/type/${type}`;
+        const api = `/music/liked/track/${trackId}?type=${type}`;
         const resp = await softwareGet(api, getItem("jwt"));
         if (isResponseOk(resp) && resp.data) {
             server_track = resp.data;

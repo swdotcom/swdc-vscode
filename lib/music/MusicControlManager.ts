@@ -136,7 +136,7 @@ export class MusicControlManager {
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 type = "itunes";
             }
-            const api = `/music/liked/track/${track.id}/type/${type}`;
+            const api = `/music/liked/track/${track.id}?type=${type}`;
             const resp = await softwarePut(api, { liked }, getItem("jwt"));
             if (!isResponseOk(resp)) {
                 logIt(`Error updating track like state: ${resp.message}`);

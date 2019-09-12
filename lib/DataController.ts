@@ -589,7 +589,7 @@ async function seedLikedSongsToSoftware() {
         let uris = tracks.map(track => {
             return track.uri;
         });
-        const api = `/music/liked/tracks/type/spotify`;
+        const api = `/music/liked/tracks?type=spotify`;
         await softwarePut(api, { liked: true, uris }, getItem("jwt"));
     }
 }

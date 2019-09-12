@@ -416,6 +416,8 @@ export class PlaylistTreeItem extends TreeItem {
             treeItem["itemType"] === "playlist"
         ) {
             if (treeItem.tag === "paw") {
+                // we use the paw to show as the music time playlist, but
+                // make sure the contextValue has spotify in it
                 this.contextValue = `spotify-${treeItem.type}-item-${stateVal}`;
             } else {
                 this.contextValue = `${treeItem.tag}-${treeItem.type}-item-${stateVal}`;
