@@ -68,17 +68,20 @@ export class KpmController {
     }
 
     private async _onCloseHandler(event) {
-        if (!event || !event.fileName) {
+        if (!event) {
             return;
         }
-        const filename = event.fileName;
+        const { filename, languageId } = this.getFileNameAndLanguageId(event);
+        if (!filename) {
+            return;
+        }
+
+        if (!this.isTrueEventFile(event, filename)) {
+            return;
+        }
 
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(false);
-        }
-
-        if (!this.isTrueEventFile(event)) {
-            return;
         }
 
         let rootPath = getRootPathForFile(filename);
@@ -93,6 +96,10 @@ export class KpmController {
             _keystrokeMap[rootPath].source[
                 filename
             ].length = event.document.getText().length;
+        }
+
+        if (!_keystrokeMap[rootPath].source[filename]) {
+            _keystrokeMap[rootPath].source[filename].syntax = languageId;
         }
 
         _keystrokeMap[rootPath].source[filename].close += 1;
@@ -100,17 +107,22 @@ export class KpmController {
     }
 
     private async _onOpenHandler(event) {
-        if (!event || !event.fileName) {
+        if (!event) {
             return;
         }
-        const filename = event.fileName;
+        const { filename, languageId } = this.getFileNameAndLanguageId(event);
+        if (!filename) {
+            return;
+        }
+
+        if (!this.isTrueEventFile(event, filename)) {
+            return;
+        }
+
         if (isCodeTimeMetricsFile(filename)) {
             updateCodeTimeMetricsFileFocus(true);
         } else {
             updateCodeTimeMetricsFileFocus(false);
-        }
-        if (!this.isTrueEventFile(event)) {
-            return;
         }
 
         let rootPath = getRootPathForFile(filename);
@@ -127,8 +139,31 @@ export class KpmController {
             ].length = event.document.getText().length;
         }
 
+        _keystrokeMap[rootPath].source[filename].syntax = languageId;
         _keystrokeMap[rootPath].source[filename].open += 1;
         logEvent(`File opened: ${filename}`);
+    }
+
+    private getFileNameAndLanguageId(event) {
+        let filename = "";
+        let languageId = "";
+        if (event.fileName) {
+            filename = event.fileName;
+            if (event.languageId) {
+                languageId = event.languageId;
+            }
+        } else if (event.document && event.document.fileName) {
+            filename = event.document.fileName;
+            if (event.document.languageId) {
+                languageId = event.document.languageId;
+            }
+        }
+
+        if (!languageId && filename.indexOf(".") !== -1) {
+            languageId = filename.substring(filename.lastIndexOf(".") + 1);
+        }
+
+        return { filename, languageId };
     }
 
     /**
@@ -136,21 +171,19 @@ export class KpmController {
      * want to send events for .git or other event triggers
      * such as extension.js.map events
      */
-    private isTrueEventFile(event) {
+    private isTrueEventFile(event, filename) {
         // if it's the dashboard file or a liveshare tmp file then
         // skip event tracking
-        let dashboardFile = getDashboardFile();
 
-        let filename = null;
-        if (event.fileName) {
-            filename = event.fileName;
-        } else if (event.document && event.document.fileName) {
-            filename = event.document.fileName;
+        let scheme = "";
+        if (event.uri && event.uri.scheme) {
+            scheme = event.uri.scheme;
         }
 
         if (
             !filename ||
-            filename === dashboardFile ||
+            filename === getDashboardFile() ||
+            scheme === "vscode-userdata" ||
             (filename &&
                 filename.includes(".code-workspace") &&
                 filename.includes("vsliveshare") &&
@@ -164,13 +197,12 @@ export class KpmController {
     }
 
     private async _onEventHandler(event) {
-        if (!this.isTrueEventFile(event)) {
+        const { filename, languageId } = this.getFileNameAndLanguageId(event);
+
+        if (!this.isTrueEventFile(event, filename)) {
             return;
         }
 
-        let filename = event.document.fileName;
-
-        let languageId = event.document.languageId || "";
         let lines = event.document.lineCount || 0;
 
         let rootPath = getRootPathForFile(filename);
