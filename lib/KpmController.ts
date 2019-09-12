@@ -111,6 +111,7 @@ export class KpmController {
             return;
         }
         const { filename, languageId } = this.getFileNameAndLanguageId(event);
+
         if (!filename) {
             return;
         }
@@ -178,12 +179,21 @@ export class KpmController {
         let scheme = "";
         if (event.uri && event.uri.scheme) {
             scheme = event.uri.scheme;
+        } else if (
+            event.document &&
+            event.document.uri &&
+            event.document.uri.scheme
+        ) {
+            scheme = event.document.uri.scheme;
+        }
+
+        // other scheme types I know of "vscode-userdata", "git"
+        if (!filename || (scheme !== "file" && scheme !== "untitled")) {
+            return false;
         }
 
         if (
-            !filename ||
             filename === getDashboardFile() ||
-            scheme === "vscode-userdata" ||
             (filename &&
                 filename.includes(".code-workspace") &&
                 filename.includes("vsliveshare") &&
