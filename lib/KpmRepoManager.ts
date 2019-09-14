@@ -7,7 +7,7 @@ import {
     normalizeGithubEmail
 } from "./Util";
 
-function getProjectDir() {
+function getProjectDir(fileName = null) {
     let projectDirs = getRootPaths();
 
     if (!projectDirs || projectDirs.length === 0) {
@@ -16,15 +16,24 @@ function getProjectDir() {
 
     // VSCode allows having multiple workspaces.
     // for now we only support using the 1st project directory
-    // in a given set of workspaces.
+    // in a given set of workspaces if the provided fileName is null.
     if (projectDirs && projectDirs.length > 0) {
-        return projectDirs[0];
+        if (!fileName) {
+            return projectDirs[0];
+        }
+
+        for (let i = 0; i < projectDirs.length; i++) {
+            const dir = projectDirs[i];
+            if (fileName.includes(dir)) {
+                return dir;
+            }
+        }
     }
     return null;
 }
 
-export async function getRepoFileCount() {
-    const projectDir = getProjectDir();
+export async function getRepoFileCount(fileName) {
+    const projectDir = getProjectDir(fileName);
     if (!projectDir) {
         return null;
     }
@@ -48,8 +57,8 @@ export async function getRepoFileCount() {
     return devList.length;
 }
 
-export async function getRepoContributorInfo() {
-    const projectDir = getProjectDir();
+export async function getRepoContributorInfo(fileName) {
+    const projectDir = getProjectDir(fileName);
     if (!projectDir) {
         return null;
     }
@@ -141,8 +150,8 @@ export async function getResourceInfo(projectDir) {
 /**
  * get the git repo users
  */
-export async function getRepoUsers() {
-    const repoContributorInfo = getRepoContributorInfo();
+export async function getRepoUsers(fileName) {
+    const repoContributorInfo = getRepoContributorInfo(fileName);
 
     if (repoContributorInfo) {
         // send this to the backend
@@ -157,8 +166,8 @@ function buildRepoKey(identifier, branch, tag) {
 /**
  * get the last git commit from the app server
  */
-async function getLastCommit() {
-    const projectDir = getProjectDir();
+async function getLastCommit(fileName) {
+    const projectDir = getProjectDir(fileName);
     if (!projectDir) {
         return null;
     }
@@ -200,7 +209,7 @@ export async function getHistoricalCommits(isonline) {
     if (!isonline) {
         return;
     }
-    const projectDir = getProjectDir();
+    const projectDir = getProjectDir(null);
     if (!projectDir) {
         return null;
     }
@@ -212,7 +221,7 @@ export async function getHistoricalCommits(isonline) {
         let tag = resourceInfo.tag;
         let branch = resourceInfo.branch;
 
-        let latestCommit = await getLastCommit();
+        let latestCommit = await getLastCommit(null);
 
         let sinceOption = "";
         if (latestCommit) {

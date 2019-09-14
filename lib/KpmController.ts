@@ -20,6 +20,7 @@ const moment = require("moment-timezone");
 const NO_PROJ_NAME = "Unnamed";
 
 let _keystrokeMap = {};
+let _staticInfoMap = {};
 
 export class KpmController {
     private _disposable: Disposable;
@@ -53,9 +54,14 @@ export class KpmController {
                         await keystrokeCount.postData();
                     }
                 }
-                delete _keystrokeMap[key];
             }
         }
+
+        // clear out the keystroke map
+        _keystrokeMap = {};
+
+        // clear out the static info map
+        _staticInfoMap = {};
 
         // check if we're in a new day, if so lets send the offline data
         const dayOfMonth = moment()
@@ -95,10 +101,10 @@ export class KpmController {
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
 
-        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
-        this.updateStaticValues(sourceObj, staticInfo);
+        const rootObj = _keystrokeMap[rootPath];
+        this.updateStaticValues(rootObj, staticInfo);
 
-        _keystrokeMap[rootPath].source[staticInfo.filename].close += 1;
+        rootObj.source[staticInfo.filename].close += 1;
         logEvent(`File closed: ${staticInfo.filename}`);
     }
 
@@ -130,10 +136,10 @@ export class KpmController {
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
 
-        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
-        this.updateStaticValues(sourceObj, staticInfo);
+        const rootObj = _keystrokeMap[rootPath];
+        this.updateStaticValues(rootObj, staticInfo);
 
-        _keystrokeMap[rootPath].source[staticInfo.filename].open += 1;
+        rootObj.source[staticInfo.filename].open += 1;
         logEvent(`File opened: ${staticInfo.filename}`);
     }
 
@@ -163,8 +169,9 @@ export class KpmController {
             return;
         }
 
-        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
-        this.updateStaticValues(_keystrokeMap[rootPath], staticInfo);
+        const rootObj = _keystrokeMap[rootPath];
+        const sourceObj = rootObj.source[staticInfo.filename];
+        this.updateStaticValues(rootObj, staticInfo);
 
         //
         // Map all of the contentChanges objects then use the
@@ -230,7 +237,7 @@ export class KpmController {
             logEvent("KPM incremented");
         }
         // increment keystrokes by 1
-        _keystrokeMap[rootPath].keystrokes += 1;
+        rootObj.keystrokes += 1;
 
         // "netkeys" = add - delete
         sourceObj.netkeys = sourceObj.add - sourceObj.delete;
@@ -318,10 +325,18 @@ export class KpmController {
             }
         }
 
+        let staticInfo = _staticInfoMap[filename];
+
+        if (staticInfo) {
+            return staticInfo;
+        }
+
         // get the repo count and repo file count
-        const contributorInfo = await getRepoContributorInfo();
-        const repoContributorCount = contributorInfo.count;
-        const repoFileCount = await getRepoFileCount();
+        const contributorInfo = await getRepoContributorInfo(filename);
+        const repoContributorCount = contributorInfo
+            ? contributorInfo.count
+            : 0;
+        const repoFileCount = await getRepoFileCount(filename);
 
         // get the age of this file
         const fileAgeDays = getFileAgeInDays(filename);
@@ -331,7 +346,7 @@ export class KpmController {
             languageId = filename.substring(filename.lastIndexOf(".") + 1);
         }
 
-        return {
+        staticInfo = {
             filename,
             languageId,
             length,
@@ -340,6 +355,10 @@ export class KpmController {
             repoFileCount,
             lineCount
         };
+
+        _staticInfoMap[filename] = staticInfo;
+
+        return staticInfo;
     }
 
     /**
@@ -431,23 +450,19 @@ export class KpmController {
         }
 
         let keystrokeCount = _keystrokeMap[rootPath];
-        if (
-            _keystrokeMap[rootPath] &&
-            _keystrokeMap[rootPath].source[filename]
-        ) {
+        if (keystrokeCount && keystrokeCount.source[filename]) {
             // we found that we already have this source file
             // make sure the end time is set to zero since it's getting edited
-            _keystrokeMap[rootPath].source[filename]["end"] = 0;
-            _keystrokeMap[rootPath].source[filename]["local_end"] = 0;
+            keystrokeCount.source[filename]["end"] = 0;
+            keystrokeCount.source[filename]["local_end"] = 0;
 
             // check if there are source files that need to get a closing end time
-            Object.keys(_keystrokeMap[rootPath].source).forEach(key => {
+            Object.keys(keystrokeCount.source).forEach(key => {
                 if (key !== filename) {
-                    if (_keystrokeMap[rootPath].source[key]["end"] === 0) {
+                    if (keystrokeCount.source[key]["end"] === 0) {
                         let nowTimes = getNowTimes();
-                        _keystrokeMap[rootPath].source[key]["end"] =
-                            nowTimes.now_in_sec;
-                        _keystrokeMap[rootPath].source[key]["local_end"] =
+                        keystrokeCount.source[key]["end"] = nowTimes.now_in_sec;
+                        keystrokeCount.source[key]["local_end"] =
                             nowTimes.local_now_in_sec;
                     }
                 }
