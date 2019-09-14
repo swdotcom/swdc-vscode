@@ -10,9 +10,11 @@ import {
     getProjectFolder,
     getDashboardFile,
     getNowTimes,
-    logEvent
+    logEvent,
+    getFileAgeInDays
 } from "./Util";
 import { sendOfflineData } from "./DataController";
+import { getRepoContributorInfo, getRepoFileCount } from "./KpmRepoManager";
 const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";
@@ -67,153 +69,86 @@ export class KpmController {
         }
     }
 
+    /**
+     * File Close Handler
+     * @param event
+     */
     private async _onCloseHandler(event) {
         if (!event) {
             return;
         }
-        const { filename, languageId } = this.getFileNameAndLanguageId(event);
-        if (!filename) {
+        const staticInfo = await this.getStaticEventInfo(event);
+
+        if (!this.isTrueEventFile(event, staticInfo.filename)) {
             return;
         }
 
-        if (!this.isTrueEventFile(event, filename)) {
-            return;
-        }
-
-        if (isCodeTimeMetricsFile(filename)) {
+        if (isCodeTimeMetricsFile(staticInfo.filename)) {
             updateCodeTimeMetricsFileFocus(false);
         }
 
-        let rootPath = getRootPathForFile(filename);
+        let rootPath = getRootPathForFile(staticInfo.filename);
 
         if (!rootPath) {
             rootPath = UNTITLED;
         }
 
-        await this.initializeKeystrokesCount(filename, rootPath);
+        await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
 
-        if (event.document && event.document.getText()) {
-            _keystrokeMap[rootPath].source[
-                filename
-            ].length = event.document.getText().length;
-        }
+        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
+        this.updateStaticValues(sourceObj, staticInfo);
 
-        if (!_keystrokeMap[rootPath].source[filename]) {
-            _keystrokeMap[rootPath].source[filename].syntax = languageId;
-        }
-
-        _keystrokeMap[rootPath].source[filename].close += 1;
-        logEvent(`File closed: ${filename}`);
+        _keystrokeMap[rootPath].source[staticInfo.filename].close += 1;
+        logEvent(`File closed: ${staticInfo.filename}`);
     }
 
+    /**
+     * File Open Handler
+     * @param event
+     */
     private async _onOpenHandler(event) {
         if (!event) {
             return;
         }
-        const { filename, languageId } = this.getFileNameAndLanguageId(event);
+        const staticInfo = await this.getStaticEventInfo(event);
 
-        if (!filename) {
+        if (!this.isTrueEventFile(event, staticInfo.filename)) {
             return;
         }
 
-        if (!this.isTrueEventFile(event, filename)) {
-            return;
-        }
-
-        if (isCodeTimeMetricsFile(filename)) {
+        if (isCodeTimeMetricsFile(staticInfo.filename)) {
             updateCodeTimeMetricsFileFocus(true);
         } else {
             updateCodeTimeMetricsFileFocus(false);
         }
 
-        let rootPath = getRootPathForFile(filename);
+        let rootPath = getRootPathForFile(staticInfo.filename);
 
         if (!rootPath) {
             rootPath = UNTITLED;
         }
 
-        await this.initializeKeystrokesCount(filename, rootPath);
+        await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
 
-        if (event.document && event.document.getText()) {
-            _keystrokeMap[rootPath].source[
-                filename
-            ].length = event.document.getText().length;
-        }
+        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
+        this.updateStaticValues(sourceObj, staticInfo);
 
-        _keystrokeMap[rootPath].source[filename].syntax = languageId;
-        _keystrokeMap[rootPath].source[filename].open += 1;
-        logEvent(`File opened: ${filename}`);
-    }
-
-    private getFileNameAndLanguageId(event) {
-        let filename = "";
-        let languageId = "";
-        if (event.fileName) {
-            filename = event.fileName;
-            if (event.languageId) {
-                languageId = event.languageId;
-            }
-        } else if (event.document && event.document.fileName) {
-            filename = event.document.fileName;
-            if (event.document.languageId) {
-                languageId = event.document.languageId;
-            }
-        }
-
-        if (!languageId && filename.indexOf(".") !== -1) {
-            languageId = filename.substring(filename.lastIndexOf(".") + 1);
-        }
-
-        return { filename, languageId };
+        _keystrokeMap[rootPath].source[staticInfo.filename].open += 1;
+        logEvent(`File opened: ${staticInfo.filename}`);
     }
 
     /**
-     * This will return true if it's a true file. we don't
-     * want to send events for .git or other event triggers
-     * such as extension.js.map events
+     * File Change Event Handler
+     * @param event
      */
-    private isTrueEventFile(event, filename) {
-        // if it's the dashboard file or a liveshare tmp file then
-        // skip event tracking
-
-        let scheme = "";
-        if (event.uri && event.uri.scheme) {
-            scheme = event.uri.scheme;
-        } else if (
-            event.document &&
-            event.document.uri &&
-            event.document.uri.scheme
-        ) {
-            scheme = event.document.uri.scheme;
-        }
-
-        // other scheme types I know of "vscode-userdata", "git"
-        if (!filename || (scheme !== "file" && scheme !== "untitled")) {
-            return false;
-        }
-
-        if (
-            filename === getDashboardFile() ||
-            (filename &&
-                filename.includes(".code-workspace") &&
-                filename.includes("vsliveshare") &&
-                filename.includes("tmp-"))
-        ) {
-            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
-            // don't handle this event (it's a tmp file that may not bring back a real project name)
-            return false;
-        }
-        return true;
-    }
-
     private async _onEventHandler(event) {
-        const { filename, languageId } = this.getFileNameAndLanguageId(event);
+        const staticInfo = await this.getStaticEventInfo(event);
+
+        const filename = staticInfo.filename;
 
         if (!this.isTrueEventFile(event, filename)) {
             return;
         }
-
-        let lines = event.document.lineCount || 0;
 
         let rootPath = getRootPathForFile(filename);
 
@@ -228,11 +163,8 @@ export class KpmController {
             return;
         }
 
-        if (event.document && event.document.getText()) {
-            _keystrokeMap[rootPath].source[
-                filename
-            ].length = event.document.getText().length;
-        }
+        const sourceObj = _keystrokeMap[rootPath].source[staticInfo.filename];
+        this.updateStaticValues(_keystrokeMap[rootPath], staticInfo);
 
         //
         // Map all of the contentChanges objects then use the
@@ -285,15 +217,15 @@ export class KpmController {
             //
             // it's a copy and paste event
             //
-            _keystrokeMap[rootPath].source[filename].paste += 1;
+            sourceObj.paste += 1;
             logEvent("Copy+Paste Incremented");
         } else if (newCount < 0) {
-            _keystrokeMap[rootPath].source[filename].delete += 1;
+            sourceObj.delete += 1;
             // update the overall count
             logEvent("Delete Incremented");
         } else if (hasNonNewLineData) {
             // update the data for this fileInfo keys count
-            _keystrokeMap[rootPath].source[filename].add += 1;
+            sourceObj.add += 1;
             // update the overall count
             logEvent("KPM incremented");
         }
@@ -301,38 +233,155 @@ export class KpmController {
         _keystrokeMap[rootPath].keystrokes += 1;
 
         // "netkeys" = add - delete
-        _keystrokeMap[rootPath].source[filename].netkeys =
-            _keystrokeMap[rootPath].source[filename].add -
-            _keystrokeMap[rootPath].source[filename].delete;
+        sourceObj.netkeys = sourceObj.add - sourceObj.delete;
 
-        // set the linesAdded: 0, linesRemoved: 0, syntax: ""
-        if (!_keystrokeMap[rootPath].source[filename].syntax) {
-            _keystrokeMap[rootPath].source[filename].syntax = languageId;
-        }
         let diff = 0;
-        if (
-            _keystrokeMap[rootPath].source[filename].lines &&
-            _keystrokeMap[rootPath].source[filename].lines >= 0
-        ) {
-            diff = lines - _keystrokeMap[rootPath].source[filename].lines;
+        if (sourceObj.lines && sourceObj.lines >= 0) {
+            diff = staticInfo.lineCount - sourceObj.lines;
         }
-        _keystrokeMap[rootPath].source[filename].lines = lines;
+        sourceObj.lines = staticInfo.lineCount;
         if (diff < 0) {
-            _keystrokeMap[rootPath].source[filename].linesRemoved += Math.abs(
-                diff
-            );
+            sourceObj.linesRemoved += Math.abs(diff);
             logEvent("Increment lines removed");
         } else if (diff > 0) {
-            _keystrokeMap[rootPath].source[filename].linesAdded += diff;
+            sourceObj.linesAdded += diff;
             logEvent("Increment lines added");
         }
+        if (sourceObj.linesAdded === 0 && isNewLine) {
+            sourceObj.linesAdded = 1;
+            logEvent("Increment lines added");
+        }
+    }
+
+    /**
+     * Update some of the basic/static attributes
+     * @param sourceObj
+     * @param staticInfo
+     */
+    private updateStaticValues(payload, staticInfo) {
+        const sourceObj = payload.source[staticInfo.filename];
+        // set the repoContributorCount
         if (
-            _keystrokeMap[rootPath].source[filename].linesAdded === 0 &&
-            isNewLine
+            staticInfo.repoContributorCount &&
+            payload.repoContributorCount === 0
         ) {
-            _keystrokeMap[rootPath].source[filename].linesAdded = 1;
-            logEvent("Increment lines added");
+            payload.repoContributorCount = staticInfo.repoContributorCount;
         }
+
+        // set the repoFileCount
+        if (staticInfo.repoFileCount && payload.repoFileCount === 0) {
+            payload.repoFileCount = staticInfo.repoFileCount;
+        }
+
+        // syntax
+        if (!sourceObj.syntax) {
+            sourceObj.syntax = staticInfo.languageId;
+        }
+        // fileAgeDays
+        if (!sourceObj.fileAgeDays) {
+            sourceObj.fileAgeDays = staticInfo.fileAgeDays;
+        }
+
+        // length
+        sourceObj.length = staticInfo.length;
+    }
+
+    private async getStaticEventInfo(event) {
+        let filename = "";
+        let languageId = "";
+        let length = 0;
+        let lineCount = 0;
+
+        // get the filename, length of the file, and the languageId
+        if (event.fileName) {
+            filename = event.fileName;
+            if (event.languageId) {
+                languageId = event.languageId;
+            }
+            if (event.getText()) {
+                length = event.getText().length;
+            }
+            if (event.lineCount) {
+                lineCount = event.lineCount;
+            }
+        } else if (event.document && event.document.fileName) {
+            filename = event.document.fileName;
+            if (event.document.languageId) {
+                languageId = event.document.languageId;
+            }
+            if (event.document.getText()) {
+                length = event.document.getText().length;
+            }
+
+            if (event.document.lineCount) {
+                lineCount = event.document.lineCount;
+            }
+        }
+
+        // get the repo count and repo file count
+        const contributorInfo = await getRepoContributorInfo();
+        const repoContributorCount = contributorInfo.count;
+        const repoFileCount = await getRepoFileCount();
+
+        // get the age of this file
+        const fileAgeDays = getFileAgeInDays(filename);
+
+        // if the languageId is not assigned, use the file type
+        if (!languageId && filename.indexOf(".") !== -1) {
+            languageId = filename.substring(filename.lastIndexOf(".") + 1);
+        }
+
+        return {
+            filename,
+            languageId,
+            length,
+            fileAgeDays,
+            repoContributorCount,
+            repoFileCount,
+            lineCount
+        };
+    }
+
+    /**
+     * This will return true if it's a true file. we don't
+     * want to send events for .git or other event triggers
+     * such as extension.js.map events
+     */
+    private isTrueEventFile(event, filename) {
+        if (!filename) {
+            return false;
+        }
+        // if it's the dashboard file or a liveshare tmp file then
+        // skip event tracking
+
+        let scheme = "";
+        if (event.uri && event.uri.scheme) {
+            scheme = event.uri.scheme;
+        } else if (
+            event.document &&
+            event.document.uri &&
+            event.document.uri.scheme
+        ) {
+            scheme = event.document.uri.scheme;
+        }
+
+        // other scheme types I know of "vscode-userdata", "git"
+        if (scheme !== "file" && scheme !== "untitled") {
+            return false;
+        }
+
+        if (
+            filename === getDashboardFile() ||
+            (filename &&
+                filename.includes(".code-workspace") &&
+                filename.includes("vsliveshare") &&
+                filename.includes("tmp-"))
+        ) {
+            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
+            // don't handle this event (it's a tmp file that may not bring back a real project name)
+            return false;
+        }
+        return true;
     }
 
     public buildBootstrapKpmPayload() {
@@ -360,7 +409,8 @@ export class KpmController {
             lines: 0,
             linesAdded: 0,
             linesRemoved: 0,
-            syntax: ""
+            syntax: "",
+            fileAgeDays: 0
         };
         keystrokeCount.source[fileName] = fileInfo;
 
@@ -485,7 +535,8 @@ export class KpmController {
                     local_start: nowTimes.local_now_in_sec,
                     end: 0,
                     local_end: 0,
-                    syntax: ""
+                    syntax: "",
+                    fileAgeDays: 0
                 };
                 keystrokeCount.source[filename] = fileInfo;
             }

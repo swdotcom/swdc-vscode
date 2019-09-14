@@ -222,6 +222,15 @@ export class MusicStateManager {
                 );
             }
 
+            // make sure duration_ms is set. it may not be defined
+            // if it's coming from one of the players
+            if (
+                !this.existingTrack.duration_ms &&
+                this.existingTrack.duration
+            ) {
+                this.existingTrack.duration_ms = this.existingTrack.duration;
+            }
+
             let songSession = {
                 ...this.existingTrack
             };
@@ -329,7 +338,9 @@ export class MusicStateManager {
             pluginId: getPluginId(),
             os: getOs(),
             version: getVersion(),
-            source: {}
+            source: {},
+            repoFileCount: 0,
+            repoContributorCount: 0
         };
         try {
             if (fs.existsSync(file)) {
@@ -389,7 +400,9 @@ export class MusicStateManager {
         pluginId: getPluginId(),
         os: getOs(),
         version: getVersion(),
-        source: {}
+        source: {},
+        repoFileCount: 0,
+        repoContributorCount: 0
      */
     private buildAggregateData(payloads, initialValue) {
         const numerics = [
@@ -405,6 +418,17 @@ export class MusicStateManager {
         ];
         if (payloads && payloads.length > 0) {
             payloads.forEach(element => {
+                // set repoContributorCount and repoFileCount
+                // if not already set
+                if (initialValue.repoFileCount === 0) {
+                    initialValue.repoFileCount = element.repoFileCount;
+                }
+                if (initialValue.repoContributorCount === 0) {
+                    initialValue.repoContributorCount =
+                        element.repoContributorCount;
+                }
+
+                // sum the keystrokes
                 initialValue.keystrokes += element.keystrokes;
                 if (element.source) {
                     // go through the source object

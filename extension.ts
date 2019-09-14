@@ -152,6 +152,11 @@ export async function intializePlugin(
 
     let serverIsOnline = await serverIsAvailable();
 
+    //
+    // add the player commands before we show the playlist
+    //
+    ctx.subscriptions.push(createCommands());
+
     let one_min_ms = 1000 * 60;
 
     if (isCodeTime()) {
@@ -199,11 +204,6 @@ export async function intializePlugin(
         // check if the user has a slack integration already connected
         await musicMgr.initializeSlack();
     }
-
-    //
-    // add the player commands before we show the playlist
-    //
-    ctx.subscriptions.push(createCommands());
 
     // add the interval jobs
     if (isCodeTime()) {

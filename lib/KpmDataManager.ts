@@ -26,6 +26,8 @@ export class KpmDataManager {
     public pluginId: Number;
     public version: String;
     public os: String;
+    public repoContributorCount: Number;
+    public repoFileCount: Number;
 
     constructor(project: Project) {
         (this.source = {}),

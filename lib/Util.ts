@@ -21,6 +21,7 @@ import {
     saveSessionSummaryToDisk,
     getSessionSummaryData
 } from "./OfflineManager";
+const moment = require("moment-timezone");
 
 const open = require("open");
 const { exec } = require("child_process");
@@ -151,6 +152,27 @@ export function getSessionFileCreateTime() {
         return stat.birthtime;
     }
     return stat.ctime;
+}
+
+/**
+ * This method is sync, no need to await on it.
+ * @param file
+ */
+export function getFileAgeInDays(file) {
+    if (!fs.existsSync(file)) {
+        return 0;
+    }
+    const stat = fs.statSync(file);
+    let creationTimeSec = stat.birthtimeMs || stat.ctimeMs;
+    // convert to seconds
+    creationTimeSec /= 1000;
+
+    const daysDiff = moment
+        .duration(moment().diff(moment.unix(creationTimeSec)))
+        .asDays();
+
+    // if days diff is 0 then use 200, otherwise 100 per day, which is equal to a 9000 limit for 90 days
+    return daysDiff > 1 ? parseInt(daysDiff, 10) : 1;
 }
 
 export function getRootPaths() {
@@ -744,8 +766,11 @@ export async function wrapExecPromise(cmd, projectDir) {
             projectDir !== undefined && projectDir !== null
                 ? { cwd: projectDir }
                 : {};
-        result = await execPromise(cmd, opts);
+        result = await execPromise(cmd, opts).catch(e => {
+            console.log("exec promise error: ", e);
+        });
     } catch (e) {
+        console.log("exec error: ", e);
         result = null;
     }
     return result;

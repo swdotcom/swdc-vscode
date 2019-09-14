@@ -623,7 +623,9 @@ async function seedTopSpotifySongs() {
         pluginId: getPluginId(),
         os: getOs(),
         version: getVersion(),
-        source: {}
+        source: {},
+        repoFileCount: 0,
+        repoContributorCount: 0
     };
     let tracks: Track[] = await getTopSpotifyTracks();
     if (tracks && tracks.length > 0) {
