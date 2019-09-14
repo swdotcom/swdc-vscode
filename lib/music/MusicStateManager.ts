@@ -32,7 +32,6 @@ export class MusicStateManager {
     private static instance: MusicStateManager;
 
     private existingTrack: any = {};
-    private processingSong: boolean = false;
     private currentAlbumImage: any = null;
 
     private kpmControllerInstance: KpmController;
@@ -60,6 +59,41 @@ export class MusicStateManager {
     public async musicStateCheck() {
         const track: Track = await this.gatherMusicInfo();
         this.musicMgr.runningTrack = track;
+    }
+
+    private updateCurrentAlbumImage(track) {
+        // set the current album image
+        if (
+            track &&
+            track.album &&
+            track.album.images &&
+            track.album.images.length > 0
+        ) {
+            this.currentAlbumImage = track.album.images[0].url;
+            // this.fillSidePanelWithAlbumImage(this.currentAlbumImage);
+        }
+    }
+
+    /**
+     * Get the selected playlis or find it from the list of playlists
+     * @param track
+     */
+    private updateTrackPlaylistId(track) {
+        const selectedPlaylist = this.musicMgr.selectedPlaylist;
+        if (selectedPlaylist) {
+            track["playlistId"] = selectedPlaylist.id;
+        }
+    }
+
+    private getUtcAndLocal() {
+        const utc = nowInSecs();
+        let d = new Date();
+        // offset is the minutes from GMT. it's positive if it's before, and negative after
+        const offset = d.getTimezoneOffset();
+        const offset_sec = offset * 60;
+        const local = utc - offset_sec;
+
+        return { utc, local };
     }
 
     private getChangeStatus(playingTrack: Track): any {
@@ -120,9 +154,12 @@ export class MusicStateManager {
             }
         }
 
+        const isActiveTrack = playing || paused;
+
         return {
             isNewTrack,
             endPrevTrack,
+            isActiveTrack,
             trackStateChanged,
             playing,
             paused,
@@ -155,53 +192,28 @@ export class MusicStateManager {
         sendMusicData(track);
     }
 
+    /**
+     * Core logic in gathering tracks. This is called every 5 seconds.
+     */
     public async gatherMusicInfo(): Promise<any> {
-        if (this.processingSong) {
-            return this.existingTrack || new Track();
-        }
-
-        this.processingSong = true;
         let playingTrack = await getRunningTrack();
 
         const changeStatus = this.getChangeStatus(playingTrack);
 
         if (changeStatus.isNewTrack) {
+            // update the playlistId
+            this.updateTrackPlaylistId(playingTrack);
+
             // set the current album image
-            if (
-                playingTrack &&
-                playingTrack.album &&
-                playingTrack.album.images &&
-                playingTrack.album.images.length > 0
-            ) {
-                this.currentAlbumImage = playingTrack.album.images[0].url;
-                // this.fillSidePanelWithAlbumImage(this.currentAlbumImage);
-            }
+            this.updateCurrentAlbumImage(playingTrack);
         }
 
-        const now = nowInSecs();
+        const utcLocalTimes = this.getUtcAndLocal();
 
         // has the existing track ended?
         if (changeStatus.endPrevTrack && this.existingTrack.id) {
-            let d = new Date();
-            // offset is the minutes from GMT. it's positive if it's before, and negative after
-            const offset = d.getTimezoneOffset();
-            const offset_sec = offset * 60;
-
-            // subtract a couple of seconds since our timer is every 5 seconds
-            let end = now - 2;
-            this.existingTrack["end"] = end;
-            this.existingTrack["local_end"] = end - offset_sec;
-            this.existingTrack["coding"] = false;
-            // set the spotify playlistId
-            if (
-                this.existingTrack.playerType === PlayerType.WebSpotify &&
-                this.musicMgr.selectedPlaylist &&
-                this.musicMgr.selectedPlaylist.id
-            ) {
-                this.existingTrack[
-                    "playlistId"
-                ] = this.musicMgr.selectedPlaylist.id;
-            }
+            this.existingTrack["end"] = utcLocalTimes.utc - 2;
+            this.existingTrack["local_end"] = utcLocalTimes.local;
 
             // if this track doesn't have album json data null it out
             if (this.existingTrack.album) {
@@ -231,9 +243,12 @@ export class MusicStateManager {
                 this.existingTrack.duration_ms = this.existingTrack.duration;
             }
 
+            // copy the existing track to "songSession"
             let songSession = {
                 ...this.existingTrack
             };
+
+            // send songSession in a second due to waiting on the data file processing
             setTimeout(async () => {
                 songSession = {
                     ...songSession,
@@ -242,7 +257,7 @@ export class MusicStateManager {
 
                 // send off the ended song session
                 await sendMusicData(songSession);
-            }, 500);
+            }, 1000);
 
             // clear the track.
             this.existingTrack = {};
@@ -252,18 +267,13 @@ export class MusicStateManager {
         // if it was paused we'll create a new start time anyway, so recreate.
         if (
             changeStatus.isNewTrack &&
-            (changeStatus.playing || changeStatus.paused) &&
+            changeStatus.isActiveTrack &&
             changeStatus.isValidTrack
         ) {
             await this.musicMgr.getServerTrack(playingTrack);
 
-            let d = new Date();
-            // offset is the minutes from GMT. it's positive if it's before, and negative after
-            const offset = d.getTimezoneOffset();
-            const offset_sec = offset * 60;
-
-            playingTrack["start"] = now;
-            playingTrack["local_start"] = now - offset_sec;
+            playingTrack["start"] = utcLocalTimes.utc;
+            playingTrack["local_start"] = utcLocalTimes.local;
             playingTrack["end"] = 0;
 
             this.existingTrack = { ...playingTrack };
@@ -291,7 +301,6 @@ export class MusicStateManager {
         // check if we should start the next track
         await this.playNextLikedSpotifyCheck(changeStatus);
 
-        this.processingSong = false;
         return this.existingTrack || new Track();
     }
 

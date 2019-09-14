@@ -30,12 +30,15 @@ export class KpmDataManager {
     public repoFileCount: Number;
 
     constructor(project: Project) {
-        (this.source = {}),
-            (this.keystrokes = 0),
-            (this.project = project),
-            (this.pluginId = getPluginId());
+        this.source = {};
+        this.keystrokes = 0;
+        this.project = project;
+        this.pluginId = getPluginId();
         this.version = getVersion();
         this.os = getOs();
+        this.repoContributorCount = 0;
+        this.repoFileCount = 0;
+        this.keystrokes = 0;
     }
 
     /**
