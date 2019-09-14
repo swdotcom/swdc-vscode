@@ -29,8 +29,8 @@ export async function getRepoFileCount() {
         return null;
     }
 
-    // git ls-files | wc -l
-    let cmd = `git ls-files | wc -l`;
+    // windows doesn't support the wc -l so we'll just count the list
+    let cmd = `git ls-files`;
     // get the author name and email
     let devOutput = await wrapExecPromise(cmd, projectDir);
     if (!devOutput) {
@@ -38,7 +38,14 @@ export async function getRepoFileCount() {
         return null;
     }
     devOutput = devOutput.trim();
-    return parseInt(devOutput, 10);
+    let devList = devOutput
+        .replace(/\r\n/g, "\r")
+        .replace(/\n/g, "\r")
+        .replace(/^\s+/g, " ")
+        .replace(/</g, "")
+        .replace(/>/g, "")
+        .split(/\r/);
+    return devList.length;
 }
 
 export async function getRepoContributorInfo() {
