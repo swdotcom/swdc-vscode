@@ -155,9 +155,6 @@ export function createCommands(): {
                         await treePlaylistProvider.selectTrack(p);
                     } else {
                         await treePlaylistProvider.selectPlaylist(p);
-                        setTimeout(() => {
-                            playSelectedItem(p, false /*isExpand*/);
-                        }, 0);
                     }
                 } else {
                     controller.playSong();

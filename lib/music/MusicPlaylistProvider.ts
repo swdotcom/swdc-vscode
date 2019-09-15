@@ -26,6 +26,7 @@ import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
 import { MusicManager } from "./MusicManager";
 import { MusicCommandManager } from "./MusicCommandManager";
+import { logIt } from "../Util";
 
 /**
  * Create the playlist tree item (root or leaf)
@@ -323,19 +324,21 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
                 select
             });
         } catch (err) {
-            console.log("Unable to reveal running track, error: ", err.message);
+            logIt(`Unable to select track: ${err.message}`);
         }
     }
 
-    selectPlaylist(p: PlaylistItem) {
+    async selectPlaylist(p: PlaylistItem) {
         try {
             // don't "select" it though. that will invoke the pause/play action
-            this.view.reveal(p, {
+            await this.view.reveal(p, {
                 focus: true,
-                select: true
+                select: false,
+                expand: true
             });
+            playSelectedItem(p, false);
         } catch (err) {
-            console.log("Unable to select playlist, error: ", err.message);
+            logIt(`Unable to select playlist: ${err.message}`);
         }
     }
 
