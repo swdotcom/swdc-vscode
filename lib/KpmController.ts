@@ -14,7 +14,11 @@ import {
     getFileAgeInDays
 } from "./Util";
 import { sendOfflineData } from "./DataController";
-import { getRepoContributorInfo, getRepoFileCount } from "./KpmRepoManager";
+import {
+    getRepoContributorInfo,
+    getRepoFileCount,
+    getFileContributorCount
+} from "./KpmRepoManager";
 const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";
@@ -280,6 +284,15 @@ export class KpmController {
             payload.repoFileCount = staticInfo.repoFileCount;
         }
 
+        // update the repoFileContributorCount
+        if (
+            staticInfo.repoFileContributorCount &&
+            payload.repoFileContributorCount === 0
+        ) {
+            payload.repoFileContributorCount =
+                staticInfo.repoFileContributorCount;
+        }
+
         // syntax
         if (!sourceObj.syntax) {
             sourceObj.syntax = staticInfo.languageId;
@@ -338,6 +351,11 @@ export class KpmController {
             : 0;
         const repoFileCount = await getRepoFileCount(filename);
 
+        // get the file contributor count
+        const repoFileContributorCount = await getFileContributorCount(
+            filename
+        );
+
         // get the age of this file
         const fileAgeDays = getFileAgeInDays(filename);
 
@@ -353,7 +371,8 @@ export class KpmController {
             fileAgeDays,
             repoContributorCount,
             repoFileCount,
-            lineCount
+            lineCount,
+            repoFileContributorCount
         };
 
         _staticInfoMap[filename] = staticInfo;

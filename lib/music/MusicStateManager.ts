@@ -349,7 +349,8 @@ export class MusicStateManager {
             version: getVersion(),
             source: {},
             repoFileCount: 0,
-            repoContributorCount: 0
+            repoContributorCount: 0,
+            repoFileContributorCount: 0
         };
         try {
             if (fs.existsSync(file)) {
@@ -411,7 +412,8 @@ export class MusicStateManager {
         version: getVersion(),
         source: {},
         repoFileCount: 0,
-        repoContributorCount: 0
+        repoContributorCount: 0,
+        repoFileContributorCount: 0
      */
     private buildAggregateData(payloads, initialValue) {
         const numerics = [
@@ -427,7 +429,7 @@ export class MusicStateManager {
         ];
         if (payloads && payloads.length > 0) {
             payloads.forEach(element => {
-                // set repoContributorCount and repoFileCount
+                // set repoContributorCount and repoFileCount and repoFileContributorCount
                 // if not already set
                 if (initialValue.repoFileCount === 0) {
                     initialValue.repoFileCount = element.repoFileCount;
@@ -435,6 +437,10 @@ export class MusicStateManager {
                 if (initialValue.repoContributorCount === 0) {
                     initialValue.repoContributorCount =
                         element.repoContributorCount;
+                }
+                if (initialValue.repoFileContributorCount === 0) {
+                    initialValue.repoFileContributorCount =
+                        element.repoFileContributorCount;
                 }
 
                 // sum the keystrokes

@@ -27,7 +27,6 @@ const open = require("open");
 const { exec } = require("child_process");
 const fs = require("fs");
 const os = require("os");
-const cp = require("child_process");
 const crypto = require("crypto");
 
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

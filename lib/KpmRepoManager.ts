@@ -6,6 +6,7 @@ import {
     getRootPaths,
     normalizeGithubEmail
 } from "./Util";
+const path = require("path");
 
 function getProjectDir(fileName = null) {
     let projectDirs = getRootPaths();
@@ -32,29 +33,70 @@ function getProjectDir(fileName = null) {
     return null;
 }
 
-export async function getRepoFileCount(fileName) {
-    const projectDir = getProjectDir(fileName);
-    if (!projectDir) {
-        return null;
-    }
-
-    // windows doesn't support the wc -l so we'll just count the list
-    let cmd = `git ls-files`;
-    // get the author name and email
-    let devOutput = await wrapExecPromise(cmd, projectDir);
-    if (!devOutput) {
+async function getCommandResult(cmd, projectDir) {
+    let result = await wrapExecPromise(cmd, projectDir);
+    if (!result) {
         // something went wrong, but don't try to parse a null or undefined str
         return null;
     }
-    devOutput = devOutput.trim();
-    let devList = devOutput
+    result = result.trim();
+    let resultList = result
         .replace(/\r\n/g, "\r")
         .replace(/\n/g, "\r")
         .replace(/^\s+/g, " ")
         .replace(/</g, "")
         .replace(/>/g, "")
         .split(/\r/);
-    return devList.length;
+    return resultList;
+}
+
+export async function getFileContributorCount(fileName) {
+    const projectDir = getProjectDir(fileName);
+    if (!projectDir) {
+        return null;
+    }
+
+    // all we need is the filename of the path
+    // const baseName = path.basename(fileName);
+
+    const cmd = `git log --pretty="%an" ${fileName}`;
+
+    // get the list of users that modified this file
+    let resultList = await getCommandResult(cmd, projectDir);
+    if (!resultList) {
+        // something went wrong, but don't try to parse a null or undefined str
+        return 0;
+    }
+
+    if (resultList.length > 0) {
+        let map = {};
+        for (let i = 0; i < resultList.length; i++) {
+            const name = resultList[i];
+            if (!map[name]) {
+                map[name] = name;
+            }
+        }
+        return Object.keys(map).length;
+    }
+    return 0;
+}
+
+export async function getRepoFileCount(fileName) {
+    const projectDir = getProjectDir(fileName);
+    if (!projectDir) {
+        return 0;
+    }
+
+    // windows doesn't support the wc -l so we'll just count the list
+    let cmd = `git ls-files`;
+    // get the author name and email
+    let resultList = await getCommandResult(cmd, projectDir);
+    if (!resultList) {
+        // something went wrong, but don't try to parse a null or undefined str
+        return 0;
+    }
+
+    return resultList.length;
 }
 
 export async function getRepoContributorInfo(fileName) {
@@ -86,26 +128,17 @@ export async function getRepoContributorInfo(fileName) {
             cmd += " | uniq";
         }
         // get the author name and email
-        let devOutput = await wrapExecPromise(cmd, projectDir);
-        if (!devOutput) {
+        let resultList = await getCommandResult(cmd, projectDir);
+        if (!resultList) {
             // something went wrong, but don't try to parse a null or undefined str
             return repoContributorInfo;
         }
-        devOutput = devOutput.trim();
-        // clean up the extra spaces and line breaks
-        let devList = devOutput
-            .replace(/\r\n/g, "\r")
-            .replace(/\n/g, "\r")
-            .replace(/^\s+/g, " ")
-            .replace(/</g, "")
-            .replace(/>/g, "")
-            .split(/\r/);
 
         let map = {};
-        if (devList && devList.length > 0) {
+        if (resultList && resultList.length > 0) {
             // count name email
-            devList.forEach(devListInfo => {
-                const devInfo = devListInfo.split(",");
+            resultList.forEach(listInfo => {
+                const devInfo = listInfo.split(",");
                 const name = devInfo[0];
                 const email = normalizeGithubEmail(devInfo[1]);
                 if (!map[email]) {
@@ -230,122 +263,102 @@ export async function getHistoricalCommits(isonline) {
             sinceOption = " --max-count=100";
         }
 
-        const gitCmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${resourceInfo.email}${sinceOption}`;
+        const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${resourceInfo.email}${sinceOption}`;
 
         // git log --stat --pretty="COMMIT:%H, %ct, %cI, %s, %ae"
-        let commitHistory = await wrapExecPromise(gitCmd, projectDir);
+        let resultList = await getCommandResult(cmd, projectDir);
 
-        if (!commitHistory) {
+        if (!resultList) {
             // something went wrong, but don't try to parse a null or undefined str
             return null;
         }
 
-        let commitHistoryList = commitHistory
-            .replace(/\r\n/g, "\r")
-            .replace(/\n/g, "\r")
-            .split(/\r/);
-
-        if (commitHistoryList && commitHistoryList.length > 0) {
-            let commits = [];
-            let commit = null;
-            for (let i = 0; i < commitHistoryList.length; i++) {
-                let line = commitHistoryList[i].trim();
-                if (line && line.length > 0) {
-                    if (line.indexOf("COMMIT:") === 0) {
-                        line = line.substring("COMMIT:".length);
-                        if (commit) {
-                            // add it to the commits
-                            commits.push(commit);
-                        }
-                        // split by comma
-                        let commitInfos = line.split(",");
-                        if (commitInfos && commitInfos.length > 3) {
-                            let commitId = commitInfos[0].trim();
-                            if (
-                                latestCommit &&
-                                commitId === latestCommit.commitId
-                            ) {
-                                commit = null;
-                                // go to the next one
-                                continue;
-                            }
-                            let timestamp = parseInt(commitInfos[1].trim(), 10);
-                            let date = commitInfos[2].trim();
-                            let message = commitInfos[3].trim();
-                            commit = {
-                                commitId,
-                                timestamp,
-                                date,
-                                message,
-                                changes: {
-                                    __sftwTotal__: {
-                                        insertions: 0,
-                                        deletions: 0
-                                    }
-                                }
-                            };
-                        }
-                    } else if (commit && line.indexOf("|") !== -1) {
-                        // get the file and changes
-                        // i.e. backend/app.js                | 20 +++++++++-----------
-                        line = line.replace(/ +/g, " ");
-                        // split by the pipe
-                        let lineInfos = line.split("|");
-                        if (lineInfos && lineInfos.length > 1) {
-                            let file = lineInfos[0].trim();
-                            let metricsLine = lineInfos[1].trim();
-                            let metricsInfos = metricsLine.split(" ");
-                            if (metricsInfos && metricsInfos.length > 1) {
-                                let addAndDeletes = metricsInfos[1].trim();
-                                // count the number of plus signs and negative signs to find
-                                // out how many additions and deletions per file
-                                let len = addAndDeletes.length;
-                                let lastPlusIdx = addAndDeletes.lastIndexOf(
-                                    "+"
-                                );
-                                let insertions = 0;
-                                let deletions = 0;
-                                if (lastPlusIdx !== -1) {
-                                    insertions = lastPlusIdx + 1;
-                                    deletions = len - insertions;
-                                } else if (len > 0) {
-                                    // all deletions
-                                    deletions = len;
-                                }
-                                commit.changes[file] = {
-                                    insertions,
-                                    deletions
-                                };
-                                commit.changes.__sftwTotal__.insertions += insertions;
-                                commit.changes.__sftwTotal__.deletions += deletions;
-                            }
-                        }
+        let commits = [];
+        let commit = null;
+        for (let i = 0; i < resultList.length; i++) {
+            let line = resultList[i].trim();
+            if (line && line.length > 0) {
+                if (line.indexOf("COMMIT:") === 0) {
+                    line = line.substring("COMMIT:".length);
+                    if (commit) {
+                        // add it to the commits
+                        commits.push(commit);
                     }
-                }
-            }
-            if (commit) {
-                // add it to the commits
-                commits.push(commit);
-            }
-
-            // send in batches of 25 (backend has a 100k body limit)
-            if (commits && commits.length > 0) {
-                let batchCommits = [];
-                for (let i = 0; i < commits.length; i++) {
-                    batchCommits.push(commits[i]);
-                    if (i > 0 && i % 25 === 0) {
-                        let commitData = {
-                            commits: batchCommits,
-                            identifier,
-                            tag,
-                            branch
+                    // split by comma
+                    let commitInfos = line.split(",");
+                    if (commitInfos && commitInfos.length > 3) {
+                        let commitId = commitInfos[0].trim();
+                        if (
+                            latestCommit &&
+                            commitId === latestCommit.commitId
+                        ) {
+                            commit = null;
+                            // go to the next one
+                            continue;
+                        }
+                        let timestamp = parseInt(commitInfos[1].trim(), 10);
+                        let date = commitInfos[2].trim();
+                        let message = commitInfos[3].trim();
+                        commit = {
+                            commitId,
+                            timestamp,
+                            date,
+                            message,
+                            changes: {
+                                __sftwTotal__: {
+                                    insertions: 0,
+                                    deletions: 0
+                                }
+                            }
                         };
-                        await sendCommits(commitData);
-                        batchCommits = [];
+                    }
+                } else if (commit && line.indexOf("|") !== -1) {
+                    // get the file and changes
+                    // i.e. backend/app.js                | 20 +++++++++-----------
+                    line = line.replace(/ +/g, " ");
+                    // split by the pipe
+                    let lineInfos = line.split("|");
+                    if (lineInfos && lineInfos.length > 1) {
+                        let file = lineInfos[0].trim();
+                        let metricsLine = lineInfos[1].trim();
+                        let metricsInfos = metricsLine.split(" ");
+                        if (metricsInfos && metricsInfos.length > 1) {
+                            let addAndDeletes = metricsInfos[1].trim();
+                            // count the number of plus signs and negative signs to find
+                            // out how many additions and deletions per file
+                            let len = addAndDeletes.length;
+                            let lastPlusIdx = addAndDeletes.lastIndexOf("+");
+                            let insertions = 0;
+                            let deletions = 0;
+                            if (lastPlusIdx !== -1) {
+                                insertions = lastPlusIdx + 1;
+                                deletions = len - insertions;
+                            } else if (len > 0) {
+                                // all deletions
+                                deletions = len;
+                            }
+                            commit.changes[file] = {
+                                insertions,
+                                deletions
+                            };
+                            commit.changes.__sftwTotal__.insertions += insertions;
+                            commit.changes.__sftwTotal__.deletions += deletions;
+                        }
                     }
                 }
+            }
+        }
+        if (commit) {
+            // add it to the commits
+            commits.push(commit);
+        }
 
-                if (batchCommits.length > 0) {
+        // send in batches of 25 (backend has a 100k body limit)
+        if (commits && commits.length > 0) {
+            let batchCommits = [];
+            for (let i = 0; i < commits.length; i++) {
+                batchCommits.push(commits[i]);
+                if (i > 0 && i % 25 === 0) {
                     let commitData = {
                         commits: batchCommits,
                         identifier,
@@ -356,9 +369,21 @@ export async function getHistoricalCommits(isonline) {
                     batchCommits = [];
                 }
             }
-        }
 
-        /**
+            if (batchCommits.length > 0) {
+                let commitData = {
+                    commits: batchCommits,
+                    identifier,
+                    tag,
+                    branch
+                };
+                await sendCommits(commitData);
+                batchCommits = [];
+            }
+        }
+    }
+
+    /**
              * We'll get commitId, unixTimestamp, unixDate, commitMessage, authorEmail
              * then we'll gather the files
              * COMMIT:52d0ac19236ac69cae951b2a2a0b4700c0c525db, 1545507646, 2018-12-22T11:40:46-08:00, updated wlb to use local_start, xavluiz@gmail.com
@@ -369,7 +394,6 @@ export async function getHistoricalCommits(isonline) {
                 backend/app/lib/sessions.js     | 25 +++++++++++++++----------
                 4 files changed, 25 insertions(+), 38 deletions(-)
             */
-    }
 
     function sendCommits(commitData) {
         // send this to the backend
