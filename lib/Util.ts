@@ -767,6 +767,7 @@ export async function wrapExecPromise(cmd, projectDir) {
                 : {};
         result = await execPromise(cmd, opts).catch(e => {
             console.log("exec promise error: ", e);
+            return null;
         });
     } catch (e) {
         console.log("exec error: ", e);
@@ -933,4 +934,14 @@ export function isValidJson(val: any) {
         //
     }
     return false;
+}
+
+export function getFileType(fileName: string) {
+    let fileType = "";
+    const lastDotIdx = fileName.lastIndexOf(".");
+    const len = fileName.length;
+    if (lastDotIdx !== -1 && lastDotIdx < len - 1) {
+        fileType = fileName.substring(lastDotIdx + 1);
+    }
+    return fileType;
 }

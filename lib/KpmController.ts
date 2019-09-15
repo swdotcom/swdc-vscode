@@ -1,4 +1,4 @@
-import { workspace, Disposable } from "vscode";
+import { workspace, Disposable, languages } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
@@ -11,7 +11,8 @@ import {
     getDashboardFile,
     getNowTimes,
     logEvent,
-    getFileAgeInDays
+    getFileAgeInDays,
+    getFileType
 } from "./Util";
 import { sendOfflineData } from "./DataController";
 import {
@@ -361,7 +362,10 @@ export class KpmController {
 
         // if the languageId is not assigned, use the file type
         if (!languageId && filename.indexOf(".") !== -1) {
-            languageId = filename.substring(filename.lastIndexOf(".") + 1);
+            let fileType = getFileType(filename);
+            if (fileType) {
+                languageId = fileType;
+            }
         }
 
         staticInfo = {

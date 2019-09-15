@@ -4,9 +4,9 @@ import {
     getItem,
     isWindows,
     getRootPaths,
-    normalizeGithubEmail
+    normalizeGithubEmail,
+    getFileType
 } from "./Util";
-const path = require("path");
 
 function getProjectDir(fileName = null) {
     let projectDirs = getRootPaths();
@@ -51,6 +51,12 @@ async function getCommandResult(cmd, projectDir) {
 }
 
 export async function getFileContributorCount(fileName) {
+    let fileType = getFileType(fileName);
+
+    if (fileType === "git") {
+        return;
+    }
+
     const projectDir = getProjectDir(fileName);
     if (!projectDir) {
         return null;
