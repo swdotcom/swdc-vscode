@@ -1,12 +1,4 @@
-import {
-    commands,
-    Disposable,
-    workspace,
-    window,
-    TreeView,
-    languages,
-    Hover
-} from "vscode";
+import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
     MusicControlManager,
     connectSpotify,
@@ -35,12 +27,7 @@ import {
     connectPlaylistTreeView,
     playSelectedItem
 } from "./music/MusicPlaylistProvider";
-import {
-    PlaylistItem,
-    PlayerName,
-    TrackStatus,
-    launchAndPlaySpotifyTrack
-} from "cody-music";
+import { PlaylistItem, PlayerName, TrackStatus } from "cody-music";
 import { MusicCommandManager } from "./music/MusicCommandManager";
 import { SocialShareManager } from "./social/SocialShareManager";
 import { connectSlack } from "./slack/SlackControlManager";
@@ -338,14 +325,6 @@ export function createCommands(): {
             );
             cmds.push(configChangesHandler);
         }
-
-        // add the hover provider
-        // const hoverProvider = languages.registerHoverProvider("java", {
-        //     provideHover(document, position, token) {
-        //         return new Hover("I am a hover!");
-        //     }
-        // });
-        // cmds.push(hoverProvider);
     }
 
     return Disposable.from(...cmds);
