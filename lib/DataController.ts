@@ -625,7 +625,6 @@ async function seedTopSpotifySongs() {
         version: getVersion(),
         source: {},
         repoFileCount: 0,
-        repoFileContributorCount: 0,
         repoContributorCount: 0
     };
     let tracks: Track[] = await getTopSpotifyTracks();

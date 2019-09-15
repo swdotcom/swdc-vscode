@@ -28,7 +28,6 @@ export class KpmDataManager {
     public os: String;
     public repoContributorCount: Number;
     public repoFileCount: Number;
-    public repoFileContributorCount: Number;
 
     constructor(project: Project) {
         this.source = {};
@@ -40,7 +39,6 @@ export class KpmDataManager {
         this.repoContributorCount = 0;
         this.repoFileCount = 0;
         this.keystrokes = 0;
-        this.repoFileContributorCount = 0;
     }
 
     /**

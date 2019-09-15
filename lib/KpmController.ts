@@ -286,11 +286,8 @@ export class KpmController {
         }
 
         // update the repoFileContributorCount
-        if (
-            staticInfo.repoFileContributorCount &&
-            payload.repoFileContributorCount === 0
-        ) {
-            payload.repoFileContributorCount =
+        if (!sourceObj.repoFileContributorCount) {
+            sourceObj.repoFileContributorCount =
                 staticInfo.repoFileContributorCount;
         }
 
@@ -452,7 +449,8 @@ export class KpmController {
             linesAdded: 0,
             linesRemoved: 0,
             syntax: "",
-            fileAgeDays: 0
+            fileAgeDays: 0,
+            repoFileContributorCount: 0
         };
         keystrokeCount.source[fileName] = fileInfo;
 
@@ -574,7 +572,8 @@ export class KpmController {
                     end: 0,
                     local_end: 0,
                     syntax: "",
-                    fileAgeDays: 0
+                    fileAgeDays: 0,
+                    repoFileContributorCount: 0
                 };
                 keystrokeCount.source[filename] = fileInfo;
             }
