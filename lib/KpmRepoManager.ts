@@ -54,12 +54,12 @@ export async function getFileContributorCount(fileName) {
     let fileType = getFileType(fileName);
 
     if (fileType === "git") {
-        return;
+        return 0;
     }
 
     const projectDir = getProjectDir(fileName);
     if (!projectDir) {
-        return null;
+        return 0;
     }
 
     // all we need is the filename of the path
