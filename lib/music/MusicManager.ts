@@ -1249,7 +1249,8 @@ export class MusicManager {
         }
         if (this._savedPlaylists.length > 0) {
             const currentSpotifyPlaylists = await getPlaylists(
-                PlayerName.SpotifyWeb
+                PlayerName.SpotifyWeb,
+                { all: true, limit: 100, offset: 0 }
             );
             this._savedPlaylists.map(async savedPlaylist => {
                 let foundItem = currentSpotifyPlaylists.find(element => {
