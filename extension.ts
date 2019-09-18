@@ -192,8 +192,10 @@ export async function intializePlugin(
     let musicMgr: MusicManager = null;
 
     if (isMusicTime()) {
+        // configure cody music (disable itunes for now)
         let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = isMac() ? true : false;
+        codyConfig.enableItunesDesktop = false;
+        codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
         codyConfig.enableSpotifyDesktop = isMac() ? true : false;
         setConfig(codyConfig);
 
@@ -241,9 +243,11 @@ export async function intializePlugin(
             updateLiveshareTime();
         }, one_min_ms * 1);
 
+        // ensure cody music config is not set for code time
         let codyConfig: CodyConfig = new CodyConfig();
         codyConfig.enableItunesDesktop = false;
         codyConfig.enableSpotifyDesktop = false;
+        codyConfig.enableItunesDesktopSongTracking = false;
         setConfig(codyConfig);
     }
 

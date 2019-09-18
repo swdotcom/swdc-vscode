@@ -23,7 +23,8 @@ import {
     isPlayerRunning,
     getSpotifyDevices,
     PlayerDevice,
-    getSpotifyPlaylist
+    getSpotifyPlaylist,
+    isItunesDesktopEnabled
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
@@ -258,7 +259,7 @@ export class MusicManager {
             });
         }
 
-        if (isMac()) {
+        if (isItunesDesktopEnabled() && isMac()) {
             // build the itunes playlist
             if (this._itunesPlaylists.length > 0) {
                 this._itunesPlaylists.forEach(async playlist => {
@@ -431,7 +432,7 @@ export class MusicManager {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
             }
 
-            if (isMac()) {
+            if (isItunesDesktopEnabled() && isMac()) {
                 items.push(this.getSwitchToItunesButton());
             }
 
@@ -1208,6 +1209,9 @@ export class MusicManager {
             codyConfig.spotifyAccessToken = spotifyOauth.spotify_access_token;
             codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
             codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
+            codyConfig.enableItunesDesktop = false;
+            codyConfig.enableSpotifyDesktop = isMac() ? true : false;
+            codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
             setConfig(codyConfig);
 
             setItem("spotify_access_token", spotifyOauth.spotify_access_token);
