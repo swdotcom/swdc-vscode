@@ -18,7 +18,8 @@ import {
     PlayerType,
     PlayerName,
     PlaylistItem,
-    launchAndPlaySpotifyTrack
+    launchAndPlaySpotifyTrack,
+    isItunesDesktopEnabled
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
 import { KpmController } from "../KpmController";
@@ -141,7 +142,8 @@ export class MusicStateManager {
         if (playing) {
             if (
                 isSpotifyPlayer &&
-                playingTrack.playerType === PlayerType.MacItunesDesktop
+                playingTrack.playerType === PlayerType.MacItunesDesktop &&
+                isItunesDesktopEnabled()
             ) {
                 this.musicMgr.currentPlayerName = PlayerName.ItunesDesktop;
                 playerNameChanged = true;

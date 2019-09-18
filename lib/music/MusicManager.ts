@@ -222,7 +222,8 @@ export class MusicManager {
         this._runningTrack = await getRunningTrack();
         if (
             !this._initialized &&
-            this._runningTrack.playerType === PlayerType.MacItunesDesktop
+            this._runningTrack.playerType === PlayerType.MacItunesDesktop &&
+            isItunesDesktopEnabled()
         ) {
             this.currentPlayerName = PlayerName.ItunesDesktop;
         }
