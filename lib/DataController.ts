@@ -261,16 +261,22 @@ export async function getSpotifyOauth(serverIsOnline) {
             // get the one that is "spotify"
             for (let i = 0; i < user.auths.length; i++) {
                 if (user.auths[i].type === "spotify") {
-                    return user.auths[i];
+                    // update jwt to what the jwt is for this spotify user
+                    setItem("name", user.email);
+                    setItem("jwt", user.plugin_jwt);
+                    // update it to null, they've logged in
+                    setItem("check_status", null);
+                    return { loggedOn: true, state: "OK", auth: user.auths[i] };
                 }
             }
         }
     }
-    return null;
+    return { loggedOn: false, state: "UNKNOWN", auth: null };
 }
 
-async function isLoggedOn(serverIsOnline, jwt) {
-    if (serverIsOnline) {
+async function isLoggedOn(serverIsOnline) {
+    let jwt = getItem("jwt");
+    if (serverIsOnline && jwt) {
         let api = "/users/plugin/state";
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp) && resp.data) {
@@ -316,12 +322,15 @@ export async function getUserStatus(serverIsOnline) {
         return { loggedIn: true };
     }
 
-    let jwt = getItem("jwt");
-
     let loggedIn = false;
     if (serverIsOnline) {
         // refetch the jwt then check if they're logged on
-        let loggedInResp = await isLoggedOn(serverIsOnline, jwt);
+        let loggedInResp = null;
+        if (isCodeTime()) {
+            loggedInResp = await isLoggedOn(serverIsOnline);
+        } else {
+            loggedInResp = await getSpotifyOauth(serverIsOnline);
+        }
         // set the loggedIn bool value
         loggedIn = loggedInResp.loggedOn;
     }
@@ -568,8 +577,8 @@ export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 20) {
 
 async function spotifyConnectStatusHandler(tryCountUntilFound) {
     let serverIsOnline = await serverIsAvailable();
-    let oauth = await getSpotifyOauth(serverIsOnline);
-    if (!oauth) {
+    let oauthResult = await getSpotifyOauth(serverIsOnline);
+    if (!oauthResult.auth) {
         // try again if the count is not zero
         if (tryCountUntilFound > 0) {
             tryCountUntilFound -= 1;
@@ -578,7 +587,7 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
     } else {
         const musicMgr = MusicManager.getInstance();
         // oauth is not null, initialize spotify
-        await musicMgr.updateSpotifyAccessInfo(oauth);
+        await musicMgr.updateSpotifyAccessInfo(oauthResult.auth);
         window.showInformationMessage(`Successfully connected to Spotify`);
 
         // send the "Liked Songs" to software app so we can be in sync

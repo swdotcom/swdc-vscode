@@ -1186,10 +1186,10 @@ export class MusicManager {
             !getItem("spotify_refresh_token")
         ) {
             const serverIsOnline = await serverIsAvailable();
-            const spotifyOauth = await getSpotifyOauth(serverIsOnline);
-            if (spotifyOauth) {
+            const oauthResult = await getSpotifyOauth(serverIsOnline);
+            if (oauthResult.auth) {
                 // update the CodyMusic credentials
-                this.updateSpotifyAccessInfo(spotifyOauth);
+                this.updateSpotifyAccessInfo(oauthResult.auth);
             } else {
                 setItem("spotify_access_token", null);
                 setItem("spotify_refresh_token", null);
@@ -1216,7 +1216,7 @@ export class MusicManager {
             codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
             setConfig(codyConfig);
 
-            setItem("spotify_access_token", spotifyOauth.spotify_access_token);
+            setItem("spotify_access_token", spotifyOauth.access_token);
             setItem(
                 "spotify_refresh_token",
                 spotifyOauth.spotify_refresh_token
