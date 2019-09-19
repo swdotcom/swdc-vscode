@@ -369,8 +369,9 @@ export class MusicManager {
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
+        // -- Removing the support to login without Spotify connect: 9/18/19 --
         // add the buttons to the playlist
-        await this.addSoftwareLoginButtonIfRequired(serverIsOnline, items);
+        // await this.addSoftwareLoginButtonIfRequired(serverIsOnline, items);
 
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
@@ -1207,8 +1208,8 @@ export class MusicManager {
             // update the CodyMusic credentials
             let codyConfig: CodyConfig = new CodyConfig();
             codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
-            codyConfig.spotifyAccessToken = spotifyOauth.spotify_access_token;
-            codyConfig.spotifyRefreshToken = spotifyOauth.spotify_refresh_token;
+            codyConfig.spotifyAccessToken = spotifyOauth.access_token;
+            codyConfig.spotifyRefreshToken = spotifyOauth.refresh_token;
             codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
             codyConfig.enableItunesDesktop = false;
             codyConfig.enableSpotifyDesktop = isMac() ? true : false;

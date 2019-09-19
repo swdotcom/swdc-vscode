@@ -251,20 +251,19 @@ export async function getSlackOauth(serverIsOnline) {
 export async function getSpotifyOauth(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
-        let user = await getUser(serverIsOnline, jwt);
-        if (
-            user &&
-            user.oauths &&
-            user.oauths.Spotify &&
-            user.oauths.Spotify.spotify_access_token
-        ) {
+        let user = await getSpotifyUser(serverIsOnline, jwt);
+        if (user && user.auths) {
             /**
              * Spotify:
              * {email, login, name, permissions,
              *  spotify_access_token, spotify_id, spotify_refresh_token}
              */
-
-            return user.oauths.Spotify;
+            // get the one that is "spotify"
+            for (let i = 0; i < user.auths.length; i++) {
+                if (user.auths[i].type === "spotify") {
+                    return user.auths[i];
+                }
+            }
         }
     }
     return null;
@@ -372,6 +371,19 @@ export async function getUserStatus(serverIsOnline) {
     loggedInCacheState = loggedIn;
 
     return userStatus;
+}
+
+export async function getSpotifyUser(serverIsOnline, jwt) {
+    if (jwt && serverIsOnline) {
+        const api = `/auth/spotify/user`;
+        const resp = await softwareGet(api, jwt);
+        if (isResponseOk(resp)) {
+            if (resp && resp.data) {
+                return resp.data;
+            }
+        }
+    }
+    return null;
 }
 
 export async function getUser(serverIsOnline, jwt) {

@@ -404,9 +404,7 @@ export async function displayMusicTimeMetricsMarkdownDashboard() {
 }
 
 export async function connectSpotify() {
-    const endpoint = `${api_endpoint}/auth/spotify?integrate=spotify&token=${getItem(
-        "jwt"
-    )}`;
+    const endpoint = `${api_endpoint}/auth/spotify?token=${getItem("jwt")}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily();
 }

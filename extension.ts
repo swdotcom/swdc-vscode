@@ -109,7 +109,7 @@ export async function activate(ctx: ExtensionContext) {
     } else {
         // check session.json existence
         const serverIsOnline = await serverIsAvailable();
-        if (!softwareSessionFileExists() || !jwtExists()) {
+        if (isCodeTime() && (!softwareSessionFileExists() || !jwtExists())) {
             // session file doesn't exist
             // check if the server is online before creating the anon user
             if (!serverIsOnline) {
@@ -347,7 +347,11 @@ async function initializeLiveshare() {
 
 async function periodicSessionCheck() {
     const serverIsOnline = await serverIsAvailable();
-    if (serverIsOnline && (!softwareSessionFileExists() || !jwtExists())) {
+    if (
+        isCodeTime() &&
+        serverIsOnline &&
+        (!softwareSessionFileExists() || !jwtExists())
+    ) {
         // session file doesn't exist
         // create the anon user
         let createdJwt = await createAnonymousUser(serverIsOnline);
