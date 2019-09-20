@@ -1196,8 +1196,8 @@ export class MusicManager {
             }
         } else {
             const spotifyOauth = {
-                spotify_access_token: getItem("spotify_access_token"),
-                spotify_refresh_token: getItem("spotify_refresh_token")
+                access_token: getItem("spotify_access_token"),
+                refresh_token: getItem("spotify_refresh_token")
             };
             this.updateSpotifyAccessInfo(spotifyOauth);
         }
@@ -1217,10 +1217,7 @@ export class MusicManager {
             setConfig(codyConfig);
 
             setItem("spotify_access_token", spotifyOauth.access_token);
-            setItem(
-                "spotify_refresh_token",
-                spotifyOauth.spotify_refresh_token
-            );
+            setItem("spotify_refresh_token", spotifyOauth.refresh_token);
 
             // get the user
             getUserProfile().then(user => {

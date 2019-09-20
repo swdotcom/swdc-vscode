@@ -266,6 +266,7 @@ export async function getSpotifyOauth(serverIsOnline) {
                     setItem("jwt", user.plugin_jwt);
                     // update it to null, they've logged in
                     setItem("check_status", null);
+
                     return { loggedOn: true, state: "OK", auth: user.auths[i] };
                 }
             }

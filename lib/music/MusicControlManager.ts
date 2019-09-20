@@ -22,7 +22,8 @@ import {
     getUserStatus,
     serverIsAvailable,
     refetchSpotifyConnectStatusLazily,
-    getLoggedInCacheState
+    getLoggedInCacheState,
+    getAppJwt
 } from "../DataController";
 import {
     getItem,
@@ -33,7 +34,8 @@ import {
     launchLogin,
     createSpotifyIdFromUri,
     getMusicTimeMarkdownFile,
-    getSoftwareDir
+    getSoftwareDir,
+    setItem
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
@@ -404,7 +406,19 @@ export async function displayMusicTimeMetricsMarkdownDashboard() {
 }
 
 export async function connectSpotify() {
-    const endpoint = `${api_endpoint}/auth/spotify?token=${getItem("jwt")}`;
+    let serverIsOnline = await serverIsAvailable();
+    if (!serverIsOnline) {
+        window.showInformationMessage(
+            `Our service is temporarily unavailable.\n\nPlease try again later.\n`
+        );
+        return;
+    }
+    let jwt = getItem("jwt");
+    if (!jwt) {
+        jwt = await getAppJwt(true);
+        await setItem("jwt", jwt);
+    }
+    const endpoint = `${api_endpoint}/auth/spotify?token=${jwt}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily();
 }
