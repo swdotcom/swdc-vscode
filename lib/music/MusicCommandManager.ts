@@ -138,8 +138,9 @@ export class MusicCommandManager {
             : TrackStatus.NotAssigned;
 
         if (
-            trackStatus === TrackStatus.Paused ||
-            trackStatus === TrackStatus.Playing
+            !requiresSpotifyAccessInfo() &&
+            (trackStatus === TrackStatus.Paused ||
+                trackStatus === TrackStatus.Playing)
         ) {
             if (track.state === TrackStatus.Playing) {
                 this.showPauseControls(track);
