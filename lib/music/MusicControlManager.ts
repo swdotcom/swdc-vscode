@@ -442,7 +442,7 @@ export async function disconnectOauth(type: string) {
         if (serverIsOnline) {
             const type_lc = type.toLowerCase();
             let result = await softwarePut(
-                `/disconnect/${type_lc}`,
+                `/auth/${type_lc}/disconnect`,
                 {},
                 getItem("jwt")
             );
