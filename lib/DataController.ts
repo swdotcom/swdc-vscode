@@ -589,6 +589,8 @@ async function spotifyConnectStatusHandler(tryCountUntilFound) {
         const musicMgr = MusicManager.getInstance();
         // oauth is not null, initialize spotify
         await musicMgr.updateSpotifyAccessInfo(oauthResult.auth);
+        // update the login status
+        await getUserStatus(serverIsOnline);
         window.showInformationMessage(`Successfully connected to Spotify`);
 
         // send the "Liked Songs" to software app so we can be in sync

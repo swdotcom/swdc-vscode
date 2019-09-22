@@ -230,14 +230,14 @@ export class MusicControlManager {
             userStatus = await getUserStatus(serverIsOnline);
         }
 
-        let loginFunction = launchLogin;
-        let loginMsgDetail =
-            "To see your music data in Music Time, please log in to your account";
-        if (!serverIsOnline) {
-            loginMsgDetail =
-                "Our service is temporarily unavailable. Please try again later.";
-            loginFunction = null;
-        }
+        // let loginFunction = launchLogin;
+        // let loginMsgDetail =
+        //     "To see your music data in Music Time, please log in to your account";
+        // if (!serverIsOnline) {
+        //     loginMsgDetail =
+        //         "Our service is temporarily unavailable. Please try again later.";
+        //     loginFunction = null;
+        // }
 
         let menuOptions = {
             items: []
@@ -280,13 +280,13 @@ export class MusicControlManager {
             }
         }
 
-        if (!userStatus.loggedIn) {
-            menuOptions.items.push({
-                label: LOGIN_LABEL,
-                detail: loginMsgDetail,
-                cb: loginFunction
-            });
-        }
+        // if (!userStatus.loggedIn) {
+        //     menuOptions.items.push({
+        //         label: LOGIN_LABEL,
+        //         detail: loginMsgDetail,
+        //         cb: loginFunction
+        //     });
+        // }
 
         menuOptions.items.push({
             label: "Music Time Dashboard",

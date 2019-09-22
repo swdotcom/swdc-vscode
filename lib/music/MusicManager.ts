@@ -501,6 +501,11 @@ export class MusicManager {
         }
     }
 
+    /**
+     * The call to add this button has been commented out.
+     * @param serverIsOnline
+     * @param items
+     */
     async addSoftwareLoginButtonIfRequired(
         serverIsOnline,
         items: PlaylistItem[]
