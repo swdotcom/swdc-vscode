@@ -117,6 +117,11 @@ export class MusicControlManager {
     async setLiked(liked: boolean) {
         let track: Track = this.musicMgr.runningTrack;
         if (track) {
+            // update the state right away. perform the api update asyn
+            track.loved = liked;
+            this.musicMgr.runningTrack = track;
+            MusicCommandManager.syncControls(track);
+
             let refreshPlaylist = false;
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
@@ -146,15 +151,8 @@ export class MusicControlManager {
 
             this.musicMgr.getServerTrack(track);
 
-            // update the music store running track liked state
-            track.loved = liked;
-            this.musicMgr.runningTrack = track;
-
             if (refreshPlaylist) {
                 commands.executeCommand("musictime.refreshPlaylist");
-            } else {
-                // get the current track state
-                MusicCommandManager.syncControls(track);
             }
         }
     }
