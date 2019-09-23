@@ -1175,11 +1175,10 @@ export class MusicManager {
 
     async updateSlackAccessInfo(slackOauth) {
         /**
-         * Slack:
-         * {name, email, login, slack_id, permissions, slack_scopes, slack_access_token}
+         * {access_token, refresh_token}
          */
         if (slackOauth) {
-            setItem("slack_access_token", slackOauth.slack_access_token);
+            setItem("slack_access_token", slackOauth.access_token);
         } else {
             setItem("slack_access_token", null);
         }

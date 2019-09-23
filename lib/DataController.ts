@@ -237,13 +237,13 @@ export async function getSlackOauth(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let user = await getUser(serverIsOnline, jwt);
-        if (user && user.oauths && user.oauths.Slack) {
-            /**
-             * Slack:
-             * {name, email, login, slack_id, permissions, slack_scopes, slack_access_token}
-             */
-
-            return user.oauths.Slack;
+        if (user && user.auths) {
+            // get the one that is "slack"
+            for (let i = 0; i < user.auths.length; i++) {
+                if (user.auths[i].type === "slack") {
+                    return user.auths[i];
+                }
+            }
         }
     }
 }
@@ -253,11 +253,6 @@ export async function getSpotifyOauth(serverIsOnline) {
     if (serverIsOnline && jwt) {
         let user = await getSpotifyUser(serverIsOnline, jwt);
         if (user && user.auths) {
-            /**
-             * Spotify:
-             * {email, login, name, permissions,
-             *  spotify_access_token, spotify_id, spotify_refresh_token}
-             */
             // get the one that is "spotify"
             for (let i = 0; i < user.auths.length; i++) {
                 if (user.auths[i].type === "spotify") {
