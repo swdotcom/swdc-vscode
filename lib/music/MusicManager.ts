@@ -47,7 +47,7 @@ import {
     getLoggedInCacheState,
     getUserStatus
 } from "../DataController";
-import { getItem, setItem, launchLogin, isMac } from "../Util";
+import { getItem, setItem, launchLogin, isMac, logIt } from "../Util";
 import {
     isResponseOk,
     softwareGet,
@@ -1062,7 +1062,7 @@ export class MusicManager {
                 1,
                 PERSONAL_TOP_SONGS_NAME
             ).catch(err => {
-                // logIt("Error updating music time global playlist ID");
+                logIt("Error updating music time with generated playlist ID");
             });
         } else {
             // get the spotify playlist id from the app's existing playlist info
@@ -1236,6 +1236,9 @@ export class MusicManager {
         setItem("spotify_access_token", null);
         setItem("spotify_refresh_token", null);
         let codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = false;
+        codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
+        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
         codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
         codyConfig.spotifyAccessToken = null;
         codyConfig.spotifyRefreshToken = null;
