@@ -20,7 +20,9 @@ import {
     getRunningTrack,
     launchAndPlaySpotifyTrack,
     playSpotifyMacDesktopTrack,
-    getSpotifyDevices
+    getSpotifyDevices,
+    isSpotifyRunning,
+    launchPlayer
 } from "cody-music";
 import { MusicControlManager } from "./MusicControlManager";
 import { SPOTIFY_LIKED_SONGS_PLAYLIST_NAME } from "../Constants";
@@ -169,7 +171,7 @@ export const playSelectedItem = async (
  * Helper function to play a track or playlist if we've determined to play
  * against the mac spotify desktop app.
  */
-export const playSpotifyDesktopPlaylistTrack = () => {
+export const playSpotifyDesktopPlaylistTrack = async () => {
     const musicMgr = MusicManager.getInstance();
     // get the selected playlist
     const selectedPlaylist = musicMgr.selectedPlaylist;
@@ -179,6 +181,14 @@ export const playSpotifyDesktopPlaylistTrack = () => {
         selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
             ? true
             : false;
+
+    const devices = await getSpotifyDevices();
+
+    // launch the app if it's not already running
+    if (!devices || devices.length === 0) {
+        await launchPlayer(PlayerName.SpotifyDesktop, { quietly: false });
+    }
+
     if (isLikedSongsPlaylist) {
         // just play the 1st track
         playSpotifyMacDesktopTrack(selectedTrack.id);

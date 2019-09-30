@@ -71,7 +71,7 @@ export class MusicCommandManager {
         this.createButton(
             "Connect Premium",
             "Connect to your premium Spotify account to use the play, pause, next, and previous controls.",
-            "musictime.spotifyPremiumRequired",
+            "musictime.connectSpotify",
             999
         );
         // play previous

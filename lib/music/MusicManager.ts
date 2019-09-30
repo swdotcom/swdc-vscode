@@ -146,8 +146,6 @@ export class MusicManager {
      * it may return SpotifyDesktop if it's mac and it requires access
      */
     get currentPlayerName(): PlayerName {
-        const requiresSpotifyAccess = this.requiresSpotifyAccess();
-        const hasSpotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
         const currentlySetToSpotifyWeb =
             this._currentPlayerName === PlayerName.SpotifyWeb;
         const currentlySetToItunes =
@@ -157,7 +155,7 @@ export class MusicManager {
             !currentlySetToItunes &&
             currentlySetToSpotifyWeb &&
             isMac() &&
-            (!hasSpotifyPlaybackAccess || requiresSpotifyAccess)
+            (!this.hasSpotifyPlaybackAccess() || this.requiresSpotifyAccess())
         ) {
             this._currentPlayerName = PlayerName.SpotifyDesktop;
         }
@@ -393,6 +391,12 @@ export class MusicManager {
         if (premiumAccountRequired) {
             // show the spotify premium account required button
             items.push(this.getSlackPremiumAccountRequiredButton());
+            items.push(this.getSlackConnectPremiumButton());
+        } else if (
+            !this.hasSpotifyPlaybackAccess() ||
+            this.requiresSpotifyAccess()
+        ) {
+            items.push(this.getSlackConnectPremiumButton());
         }
 
         // add the connect to spotify if they still need to connect
@@ -568,6 +572,17 @@ export class MusicManager {
             "musictime.spotifyPremiumRequired",
             PlayerType.NotAssigned,
             "Spotify Premium Required",
+            "Connect to your premium Spotify account to use the play, pause, next, and previous controls"
+        );
+    }
+
+    getSlackConnectPremiumButton() {
+        return this.buildActionItem(
+            "spotifypremium",
+            "action",
+            "musictime.connectSpotify",
+            PlayerType.NotAssigned,
+            "Connect Premium",
             "Connect to your premium Spotify account to use the play, pause, next, and previous controls"
         );
     }
