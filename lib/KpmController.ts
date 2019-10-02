@@ -573,7 +573,8 @@ export class KpmController {
                     local_end: 0,
                     syntax: "",
                     fileAgeDays: 0,
-                    repoFileContributorCount: 0
+                    repoFileContributorCount: 0,
+                    keystrokes: 0
                 };
                 keystrokeCount.source[filename] = fileInfo;
             }

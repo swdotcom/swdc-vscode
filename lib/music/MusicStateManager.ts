@@ -427,6 +427,7 @@ export class MusicStateManager {
             "close",
             "keystrokes"
         ];
+        let totalKeystrokes = 0;
         if (payloads && payloads.length > 0) {
             payloads.forEach(element => {
                 // set repoContributorCount and repoFileCount
@@ -439,8 +440,6 @@ export class MusicStateManager {
                         element.repoContributorCount;
                 }
 
-                // sum the keystrokes
-                initialValue.keystrokes += element.keystrokes;
                 if (element.source) {
                     // go through the source object
                     initialValue.source = element.source;
@@ -458,6 +457,16 @@ export class MusicStateManager {
                                     }
                                 });
                             }
+
+                            // set the sourceObj.keystrokes
+                            sourceObj.keystrokes =
+                                sourceObj.paste +
+                                sourceObj.add +
+                                sourceObj.delete +
+                                sourceObj.linesAdded +
+                                sourceObj.linesRemoved;
+                            // sum the keystrokes
+                            totalKeystrokes += sourceObj.keystrokes;
 
                             if (!initialValue.syntax && sourceObj.syntax) {
                                 initialValue.syntax = sourceObj.syntax;
@@ -485,6 +494,7 @@ export class MusicStateManager {
                 }
             });
         }
+        initialValue.keystrokes = totalKeystrokes;
         return initialValue;
     }
 }
