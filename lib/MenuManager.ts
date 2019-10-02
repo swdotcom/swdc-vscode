@@ -35,7 +35,11 @@ const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
 let showMusicMetrics = false;
-let lastDayOfMonth = -1;
+let lastMomentDate = null;
+
+export function clearLastMomentDate() {
+    lastMomentDate = null;
+}
 
 /**
  * fetch the show music metrics flag
@@ -174,11 +178,12 @@ export async function launchWebDashboardView() {
 export async function fetchCodeTimeMetricsDashboard(summary) {
     let summaryInfoFile = getSummaryInfoFile();
 
-    const dayOfMonth = moment()
-        .startOf("day")
-        .date();
-    if (lastDayOfMonth !== dayOfMonth) {
-        lastDayOfMonth = dayOfMonth;
+    const duration = lastMomentDate
+        ? moment.duration(moment().diff(lastMomentDate))
+        : null;
+    const hours = duration ? duration.asHours() : 6;
+    if (hours >= 6) {
+        lastMomentDate = moment();
 
         // let showMusicMetrics = workspace
         //     .getConfiguration()

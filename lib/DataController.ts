@@ -38,7 +38,8 @@ import {
 import {
     updateShowMusicMetrics,
     buildWebDashboardUrl,
-    fetchCodeTimeMetricsDashboard
+    fetchCodeTimeMetricsDashboard,
+    clearLastMomentDate
 } from "./MenuManager";
 import {
     getSessionSummaryData,
@@ -691,6 +692,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     } else {
         let message = "";
         if (isCodeTime()) {
+            clearLastMomentDate();
             message = "Successfully logged on to Code Time";
         } else if (isMusicTime()) {
             message = "Successfully logged on to Music Time";
