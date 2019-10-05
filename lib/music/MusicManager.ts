@@ -391,10 +391,12 @@ export class MusicManager {
         if (premiumAccountRequired) {
             // show the spotify premium account required button
             items.push(this.getSlackPremiumAccountRequiredButton());
-            items.push(this.getSlackConnectPremiumButton());
+            if (!needsSpotifyAccess) {
+                items.push(this.getSlackConnectPremiumButton());
+            }
         } else if (
-            !this.hasSpotifyPlaybackAccess() ||
-            this.requiresSpotifyAccess()
+            !needsSpotifyAccess &&
+            (!this.hasSpotifyPlaybackAccess() || this.requiresSpotifyAccess())
         ) {
             items.push(this.getSlackConnectPremiumButton());
         }
