@@ -1,5 +1,5 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
-import { isMusicTime, getSongDisplayName, isMac } from "../Util";
+import { isMusicTime, getSongDisplayName, isMac, getItem } from "../Util";
 import {
     getRunningTrack,
     TrackStatus,
@@ -54,13 +54,14 @@ export class MusicCommandManager {
             return;
         }
 
+        const name = getItem("name");
+        let musicTimeTooltip = "Click to see more from Music Time";
+        if (name) {
+            musicTimeTooltip = `${musicTimeTooltip} (${name})`;
+        }
+
         // start with 100 0and go down in sequence
-        this.createButton(
-            "🎧",
-            "Click to see more from Music Time.",
-            "musictime.menu",
-            1000
-        );
+        this.createButton("🎧", musicTimeTooltip, "musictime.menu", 1000);
         this.createButton("...", "updating", "musictime.progress", 999);
         this.createButton(
             "Connect Spotify",

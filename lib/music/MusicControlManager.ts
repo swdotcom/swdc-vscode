@@ -31,16 +31,15 @@ import {
     isLinux,
     logIt,
     launchWebUrl,
-    launchLogin,
     createSpotifyIdFromUri,
     getMusicTimeMarkdownFile,
     getSoftwareDir,
-    setItem
+    setItem,
+    isMac
 } from "../Util";
 import { softwareGet, softwarePut, isResponseOk } from "../HttpClient";
 import {
     api_endpoint,
-    LOGIN_LABEL,
     REFRESH_CUSTOM_PLAYLIST_TITLE,
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
@@ -416,7 +415,8 @@ export async function connectSpotify() {
         jwt = await getAppJwt(true);
         await setItem("jwt", jwt);
     }
-    const endpoint = `${api_endpoint}/auth/spotify?token=${jwt}`;
+    const qryStr = `token=${jwt}&mac=${isMac()}`;
+    const endpoint = `${api_endpoint}/auth/spotify?${qryStr}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily();
 }

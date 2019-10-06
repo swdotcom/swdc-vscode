@@ -166,7 +166,13 @@ export async function intializePlugin(
                 StatusBarAlignment.Right,
                 10
             );
-            statusBarItem.tooltip = "Click to see more from Code Time";
+            // add the name to the tooltip if we have it
+            const name = getItem("name");
+            let tooltip = "Click to see more from Code Time";
+            if (name) {
+                tooltip = `${tooltip} (${name})`;
+            }
+            statusBarItem.tooltip = tooltip;
             statusBarItem.command = "extension.softwarePaletteMenu";
             statusBarItem.show();
 
