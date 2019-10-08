@@ -415,7 +415,8 @@ export async function connectSpotify() {
         jwt = await getAppJwt(true);
         await setItem("jwt", jwt);
     }
-    const qryStr = `token=${jwt}&mac=${isMac()}`;
+    const encodedJwt = encodeURIComponent(jwt);
+    const qryStr = `token=${encodedJwt}&mac=${isMac()}`;
     const endpoint = `${api_endpoint}/auth/spotify?${qryStr}`;
     launchWebUrl(endpoint);
     refetchSpotifyConnectStatusLazily();

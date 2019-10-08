@@ -211,6 +211,7 @@ export async function createAnonymousUser(serverIsOnline) {
         const jwt = getItem("jwt");
         // check one more time before creating the anon user
         if (!jwt) {
+            const encodedJwt = encodeURIComponent(appJwt);
             const creation_annotation = "NO_SESSION_FILE";
             const username = await getOsUsername();
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -223,7 +224,7 @@ export async function createAnonymousUser(serverIsOnline) {
                     creation_annotation,
                     hostname
                 },
-                appJwt
+                encodedJwt
             );
             if (isResponseOk(resp) && resp.data && resp.data.jwt) {
                 setItem("jwt", resp.data.jwt);
