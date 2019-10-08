@@ -390,20 +390,17 @@ export class MusicManager {
 
         if (premiumAccountRequired) {
             // show the spotify premium account required button
-            items.push(this.getSlackPremiumAccountRequiredButton());
-            if (!needsSpotifyAccess) {
-                items.push(this.getSlackConnectPremiumButton());
-            }
-        } else if (
-            !needsSpotifyAccess &&
-            (!this.hasSpotifyPlaybackAccess() || this.requiresSpotifyAccess())
-        ) {
-            items.push(this.getSlackConnectPremiumButton());
+            items.push(this.getSpotifyPremiumAccountRequiredButton());
         }
+
+        // show the spotify connect premium button if they're connected
+        // and premium account is still required
 
         // add the connect to spotify if they still need to connect
         if (needsSpotifyAccess) {
             items.push(this.getConnectToSpotifyButton());
+        } else if (premiumAccountRequired) {
+            items.push(this.getSpotifyConnectPremiumButton());
         }
 
         if (playerName === PlayerName.ItunesDesktop) {
@@ -567,7 +564,7 @@ export class MusicManager {
         );
     }
 
-    getSlackPremiumAccountRequiredButton() {
+    getSpotifyPremiumAccountRequiredButton() {
         return this.buildActionItem(
             "spotifypremium",
             "action",
@@ -578,7 +575,7 @@ export class MusicManager {
         );
     }
 
-    getSlackConnectPremiumButton() {
+    getSpotifyConnectPremiumButton() {
         return this.buildActionItem(
             "spotifypremium",
             "action",

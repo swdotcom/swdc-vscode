@@ -12,7 +12,7 @@ const CODE_TIME_DESC =
 const MUSIC_TIME_DESC =
     "Music Time is an open source plugin that curates and launches playlists for coding right from your editor.";
 const CODE_TIME_VERSION = "1.1.30";
-const MUSIC_TIME_VERSION = "1.0.0";
+const MUSIC_TIME_VERSION = "1.0.1";
 const CODE_TIME_DISPLAY = "Code Time";
 const MUSIC_TIME_DISPLAY = "Music Time";
 
@@ -284,8 +284,9 @@ async function deploy() {
     updateJsonContent(extInfoJson, getExtensionFile());
     updateJsonContent(packageJson, getPackageFile());
 
-    const copyCmd = !isWindows() ? "cp" : "copy";
+    const copyCmd = !isWindows() ? "cp -R" : "xcopy";
     const pathSep = !isWindows() ? "/" : "\\";
+    const winCopyOptions = isWindows() ? " /O /X /E /H /K" : "";
     await runCommand(
         `mkdir -p out${pathSep}lib`,
         "Creating the out/lib directory if it doesn't exist",
@@ -299,12 +300,12 @@ async function deploy() {
     );
 
     await runCommand(
-        `${copyCmd} lib${pathSep}extensioninfo.json out${pathSep}lib${pathSep}.`,
+        `${copyCmd} lib${pathSep}extensioninfo.json out${pathSep}lib${pathSep}.${winCopyOptions}`,
         "Copy the extensioninfo.json to the out/lib directory"
     );
 
     await runCommand(
-        `${copyCmd} -R resources${pathSep}* out${pathSep}resources${pathSep}.`,
+        `${copyCmd} resources${pathSep}* out${pathSep}resources${pathSep}.${winCopyOptions}`,
         "Copy the resources to the out dir"
     );
 
