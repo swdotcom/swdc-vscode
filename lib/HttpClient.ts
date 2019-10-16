@@ -1,7 +1,8 @@
 import axios from "axios";
 
 import { api_endpoint } from "./Constants";
-import { showErrorStatus, getItem, logIt } from "./Util";
+
+import { showErrorStatus, logIt } from "./Util";
 
 // build the axios api base url
 const beApi = axios.create({
