@@ -33,7 +33,7 @@ export class MusicStateManager {
     private static instance: MusicStateManager;
 
     private existingTrack: any = {};
-    private currentAlbumImage: any = null;
+    private endInRangeTrackId: string = "";
 
     private kpmControllerInstance: KpmController;
 
@@ -62,19 +62,6 @@ export class MusicStateManager {
         this.musicMgr.runningTrack = track;
     }
 
-    private updateCurrentAlbumImage(track) {
-        // set the current album image
-        if (
-            track &&
-            track.album &&
-            track.album.images &&
-            track.album.images.length > 0
-        ) {
-            this.currentAlbumImage = track.album.images[0].url;
-            // this.fillSidePanelWithAlbumImage(this.currentAlbumImage);
-        }
-    }
-
     /**
      * Get the selected playlis or find it from the list of playlists
      * @param track
@@ -95,6 +82,11 @@ export class MusicStateManager {
         const local = utc - offset_sec;
 
         return { utc, local };
+    }
+
+    private isEndInRange(progress_ms, duration_ms) {
+        const buffer = duration_ms * 0.06;
+        return progress_ms >= duration_ms - buffer;
     }
 
     private getChangeStatus(playingTrack: Track): any {
@@ -118,15 +110,9 @@ export class MusicStateManager {
 
         // to determine if we should end the previous track, the
         // existing track should be existing and playing
-        let endPrevTrack = false;
+
         const tracksMatch = existingTrackId === playingTrackId;
-        if (
-            (!playingTrackId && existingTrackId) ||
-            (!existingTrackId && playingTrackId) ||
-            !tracksMatch
-        ) {
-            endPrevTrack = true;
-        }
+        const endPrevTrack = !tracksMatch && existingTrackId;
 
         let playerName = this.musicMgr.currentPlayerName;
         let playerNameChanged = false;
@@ -158,6 +144,35 @@ export class MusicStateManager {
 
         const isActiveTrack = playing || paused;
 
+        // update the endInRange state
+        let endInRange = false;
+        if (
+            playingTrackId &&
+            playingTrack.progress_ms &&
+            this.isEndInRange(
+                playingTrack.progress_ms,
+                playingTrack.duration_ms
+            )
+        ) {
+            endInRange = true;
+        }
+
+        // update the ended state
+        let ended = false;
+        if (endInRange) {
+            this.endInRangeTrackId = playingTrackId;
+        } else if (
+            this.endInRangeTrackId === playingTrackId &&
+            playingTrack.progress_ms === 0
+        ) {
+            // clear this and set ended to true
+            this.endInRangeTrackId = "";
+            ended = true;
+        } else {
+            // clear this
+            this.endInRangeTrackId = "";
+        }
+
         return {
             isNewTrack,
             endPrevTrack,
@@ -167,7 +182,9 @@ export class MusicStateManager {
             paused,
             stopped,
             isValidTrack,
-            playerNameChanged
+            playerNameChanged,
+            endInRange,
+            ended
         };
     }
 
@@ -205,9 +222,6 @@ export class MusicStateManager {
         if (changeStatus.isNewTrack) {
             // update the playlistId
             this.updateTrackPlaylistId(playingTrack);
-
-            // set the current album image
-            this.updateCurrentAlbumImage(playingTrack);
         }
 
         const utcLocalTimes = this.getUtcAndLocal();
@@ -312,10 +326,10 @@ export class MusicStateManager {
         const playlistId = this.musicMgr.selectedPlaylist
             ? this.musicMgr.selectedPlaylist.id
             : "";
+
         if (
             playlistId === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME &&
-            changeStatus.endPrevTrack === true &&
-            (changeStatus.stopped || changeStatus.paused)
+            changeStatus.ended
         ) {
             // play the next song
             const nextTrack: Track = this.musicMgr.getNextSpotifyLikedSong();
