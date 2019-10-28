@@ -49,6 +49,7 @@ import {
 } from "./OfflineManager";
 import { MusicManager } from "./music/MusicManager";
 const fs = require("fs");
+const moment = require("moment-timezone");
 
 let loggedInCacheState = null;
 let initializedPrefs = false;
@@ -58,6 +59,17 @@ let toggleFileEventLogging = null;
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
+
+let currentDay = null;
+
+export function isNewDay() {
+    const day = moment().format("YYYY-MM-DD");
+    if (!currentDay || day !== currentDay) {
+        currentDay = day;
+        return true;
+    }
+    return false;
+}
 
 export function getLoggedInCacheState() {
     return loggedInCacheState;
@@ -145,11 +157,8 @@ export async function sendOfflineData() {
         //
     }
 
-    // clear the stats cache
-    clearSessionSummaryData();
-
-    // update the statusbar
-    await fetchSessionSummaryInfo(true /*forceRefresh*/);
+    // update the statusbar (only fetch if it's a new day)
+    await fetchSessionSummaryInfo();
 }
 
 /**
@@ -358,10 +367,6 @@ export async function getUserStatus(serverIsOnline) {
     ) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
         setTimeout(() => {
-            // update the status bar
-            // clear the stats cache
-            clearSessionSummaryData();
-
             // update the statusbar
             fetchSessionSummaryInfo();
         }, 1000);
@@ -754,18 +759,22 @@ export async function handleKpmClickedEvent() {
     launchWebUrl(webUrl);
 }
 
-export async function fetchSessionSummaryInfo(forceRefresh = false) {
+export async function fetchSessionSummaryInfo() {
     // make sure we send the beginning of the day
-    let result = await getSessionSummaryStatus(forceRefresh);
+    let result = await getSessionSummaryStatus();
 
     if (result.status === "OK") {
         fetchCodeTimeMetricsDashboard(result.data);
     }
 }
 
-export async function getSessionSummaryStatus(forceRefresh = false) {
+export async function getSessionSummaryStatus() {
     let sessionSummaryData = getSessionSummaryData();
-    if (sessionSummaryData.currentDayMinutes === 0 || forceRefresh) {
+    if (isNewDay()) {
+        // clear the stats cache so we can fetch new data
+        clearSessionSummaryData();
+    }
+    if (sessionSummaryData.currentDayMinutes === 0) {
         let serverIsOnline = await serverIsAvailable();
         if (!serverIsOnline) {
             showStatus(
