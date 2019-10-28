@@ -60,12 +60,11 @@ let toggleFileEventLogging = null;
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
-let currentDay = null;
-
 export function isNewDay() {
+    let currentDay = getItem("currentDay");
     const day = moment().format("YYYY-MM-DD");
     if (!currentDay || day !== currentDay) {
-        currentDay = day;
+        setItem("currentDay", day);
         return true;
     }
     return false;
@@ -773,6 +772,7 @@ export async function getSessionSummaryStatus() {
     if (isNewDay()) {
         // clear the stats cache so we can fetch new data
         clearSessionSummaryData();
+        sessionSummaryData = getSessionSummaryData();
     }
     if (sessionSummaryData.currentDayMinutes === 0) {
         let serverIsOnline = await serverIsAvailable();
