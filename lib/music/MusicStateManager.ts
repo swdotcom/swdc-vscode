@@ -228,6 +228,8 @@ export class MusicStateManager {
 
         // has the existing track ended?
         if (changeStatus.endPrevTrack && this.existingTrack.id) {
+            // just set it to playing
+            this.existingTrack.state = TrackStatus.Playing;
             this.existingTrack["end"] = utcLocalTimes.utc - 2;
             this.existingTrack["local_end"] = utcLocalTimes.local;
 
