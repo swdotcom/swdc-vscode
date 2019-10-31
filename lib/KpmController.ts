@@ -457,147 +457,107 @@ export class KpmController {
         setTimeout(() => keystrokeCount.postData(true /*sendNow*/), 0);
     }
 
-    /**
-     * This function will ensure a file within the aggregate KeystrokeCount
-     * object has a start, local_start, end, and local_end.
-     * @param filename
-     * @param rootPath
-     */
     private async initializeKeystrokesCount(filename, rootPath) {
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || NO_PROJ_NAME;
+        // if we don't even have a _keystrokeMap then create it and take the
+        // path of adding this file with a start time of now
         if (!_keystrokeMap) {
             _keystrokeMap = {};
         }
 
-        let keystrokeCount = _keystrokeMap[rootPath];
-        if (keystrokeCount && keystrokeCount.source[filename]) {
-            // we found that we already have this source file
-            // make sure the end time is set to zero since it's getting edited
-            keystrokeCount.source[filename]["end"] = 0;
-            keystrokeCount.source[filename]["local_end"] = 0;
-
-            // check if there are source files that need to get a closing end time
-            Object.keys(keystrokeCount.source).forEach(key => {
-                if (key !== filename) {
-                    if (keystrokeCount.source[key]["end"] === 0) {
-                        let nowTimes = getNowTimes();
-                        keystrokeCount.source[key]["end"] = nowTimes.now_in_sec;
-                        keystrokeCount.source[key]["local_end"] =
-                            nowTimes.local_now_in_sec;
-                    }
-                }
-            });
-
-            return;
-        }
-
-        let workspaceFolder = getProjectFolder(filename);
-        let name = workspaceFolder ? workspaceFolder.name : UNTITLED_WORKSPACE;
-
         const nowTimes = getNowTimes();
 
-        //
-        // Create the keystroke count and add it to the map
-        //
+        let keystrokeCount = _keystrokeMap[rootPath];
+
+        // create the keystroke count if it doesn't exist
         if (!keystrokeCount) {
-            keystrokeCount = new KpmDataManager({
-                // project.directory is used as an object key, must be string
-                directory: rootPath,
-                name,
-                identifier: "",
-                resource: {}
-            });
-
-            keystrokeCount["start"] = nowTimes.now_in_sec;
-            keystrokeCount["local_start"] = nowTimes.local_now_in_sec;
-            keystrokeCount["keystrokes"] = 0;
-
-            // start the minute timer to send the data
-            setTimeout(() => {
-                this.sendKeystrokeDataIntervalHandler();
-            }, DEFAULT_DURATION * 1000);
+            // add keystroke count wrapper
+            keystrokeCount = this.createKeystrokeCounter(
+                filename,
+                rootPath,
+                nowTimes
+            );
         }
 
-        let fileInfo = null;
-        if (filename) {
-            if (keystrokeCount.source) {
-                const keys = Object.keys(keystrokeCount.source);
-                if (keys && keys.length > 0) {
-                    for (let i = 0; i < keys.length; i++) {
-                        const key = keys[i];
-                        if (key !== filename) {
-                            // ending a file session that doesn't match the incoming file
-                            const end =
-                                parseInt(
-                                    keystrokeCount.source[key]["end"],
-                                    10
-                                ) || 0;
-                            if (end === 0) {
-                                // set the end time for this file event
-                                let nowTimes = getNowTimes();
-                                keystrokeCount.source[key]["end"] =
-                                    nowTimes.now_in_sec;
-                                keystrokeCount.source[key]["local_end"] =
-                                    nowTimes.local_now_in_sec;
-                            }
-                        }
-                    }
-                }
-            }
+        // check if we have this file or not
+        const hasFile = keystrokeCount.source[filename];
 
-            //
-            // Look for an existing file source. create it if it doesn't exist
-            // or use it if it does and increment it's data value
-            //
-            fileInfo = findFileInfoInSource(keystrokeCount.source, filename);
-            // "add" = additive keystrokes
-            // "netkeys" = add - delete
-            // "delete" = delete keystrokes
-            if (!fileInfo) {
-                // initialize and add it
-                fileInfo = {
-                    add: 0,
-                    netkeys: 0,
-                    paste: 0,
-                    open: 0,
-                    close: 0,
-                    delete: 0,
-                    length: 0,
-                    lines: 0,
-                    linesAdded: 0,
-                    linesRemoved: 0,
-                    start: nowTimes.now_in_sec,
-                    local_start: nowTimes.local_now_in_sec,
-                    end: 0,
-                    local_end: 0,
-                    syntax: "",
-                    fileAgeDays: 0,
-                    repoFileContributorCount: 0,
-                    keystrokes: 0
-                };
-                keystrokeCount.source[filename] = fileInfo;
-            }
+        if (!hasFile) {
+            // no file, start anew
+            this.addFile(filename, nowTimes, keystrokeCount);
+        } else if (parseInt(keystrokeCount.source[filename].end, 10) !== 0) {
+            // re-initialize it since we ended it before the minute was up
+            keystrokeCount.source[filename].end = 0;
+            keystrokeCount.source[filename].local_end = 0;
+        }
+
+        // close any existing
+        const fileKeys = Object.keys(keystrokeCount.source);
+        if (fileKeys.length > 1) {
+            // set the end time to now for the other files that don't match this file
+            fileKeys.forEach(key => {
+                let sourceObj = keystrokeCount.source[key];
+                if (key !== filename && sourceObj.end === 0) {
+                    sourceObj.end = nowTimes.now_in_sec;
+                    sourceObj.local_end = nowTimes.local_now_in_sec;
+                }
+            });
         }
 
         _keystrokeMap[rootPath] = keystrokeCount;
     }
 
+    private addFile(filename, nowTimes, keystrokeCount) {
+        const fileInfo = {
+            add: 0,
+            netkeys: 0,
+            paste: 0,
+            open: 0,
+            close: 0,
+            delete: 0,
+            length: 0,
+            lines: 0,
+            linesAdded: 0,
+            linesRemoved: 0,
+            start: nowTimes.now_in_sec,
+            local_start: nowTimes.local_now_in_sec,
+            end: 0,
+            local_end: 0,
+            syntax: "",
+            fileAgeDays: 0,
+            repoFileContributorCount: 0,
+            keystrokes: 0
+        };
+        keystrokeCount.source[filename] = fileInfo;
+    }
+
+    private createKeystrokeCounter(filename, rootPath, nowTimes) {
+        const workspaceFolder = getProjectFolder(filename);
+        const name = workspaceFolder
+            ? workspaceFolder.name
+            : UNTITLED_WORKSPACE;
+        let keystrokeCount = new KpmDataManager({
+            // project.directory is used as an object key, must be string
+            directory: rootPath,
+            name,
+            identifier: "",
+            resource: {}
+        });
+
+        keystrokeCount["start"] = nowTimes.now_in_sec;
+        keystrokeCount["local_start"] = nowTimes.local_now_in_sec;
+        keystrokeCount["keystrokes"] = 0;
+
+        // start the minute timer to send the data
+        setTimeout(() => {
+            this.sendKeystrokeDataIntervalHandler();
+        }, DEFAULT_DURATION * 1000);
+
+        return keystrokeCount;
+    }
+
     public dispose() {
         this._disposable.dispose();
     }
-}
-
-//
-// This will return the object in an object array
-// based on a key and the key's value.
-//
-function findFileInfoInSource(source, filenameToMatch) {
-    if (
-        source[filenameToMatch] !== undefined &&
-        source[filenameToMatch] !== null
-    ) {
-        return source[filenameToMatch];
-    }
-    return null;
 }
