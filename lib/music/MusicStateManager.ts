@@ -231,6 +231,12 @@ export class MusicStateManager {
             (changeStatus.ended || changeStatus.endPrevTrack) &&
             this.existingTrack.id
         ) {
+            // gather the coding metrics
+            // but first end the kpm data collecting
+            if (this.kpmControllerInstance) {
+                await this.kpmControllerInstance.sendKeystrokeDataIntervalHandler();
+            }
+
             // just set it to playing
             this.existingTrack.state = TrackStatus.Playing;
             this.existingTrack["end"] = utcLocalTimes.utc - 2;
@@ -245,14 +251,6 @@ export class MusicStateManager {
                     this.existingTrack.artists = null;
                     this.existingTrack.features = null;
                 }
-            }
-
-            // gather the coding metrics
-            // but first end the kpm data collecting
-            if (this.kpmControllerInstance) {
-                await this.kpmControllerInstance.sendKeystrokeDataIntervalHandler(
-                    false /*sendLazy*/
-                );
             }
 
             // make sure duration_ms is set. it may not be defined

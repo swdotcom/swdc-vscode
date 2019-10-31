@@ -12,7 +12,9 @@ import {
     getNowTimes,
     logEvent,
     getFileAgeInDays,
-    getFileType
+    getFileType,
+    isCodeTime,
+    isMusicTime
 } from "./Util";
 import { sendOfflineData } from "./DataController";
 import {
@@ -40,23 +42,27 @@ export class KpmController {
         this._disposable = Disposable.from(...subscriptions);
     }
 
-    public async sendKeystrokeDataIntervalHandler(sendLazy: boolean = true) {
+    public async sendKeystrokeDataIntervalHandler() {
         //
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
         if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
-            for (const key of Object.keys(_keystrokeMap)) {
+            let keys = Object.keys(_keystrokeMap);
+            // use a normal for loop since we have an await within the loop
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
                 const keystrokeCount = _keystrokeMap[key];
 
                 const hasData = keystrokeCount.hasData();
 
                 if (hasData) {
                     // post the payload offline until the batch interval sends it out
-                    if (sendLazy) {
-                        setTimeout(() => keystrokeCount.postData(), 0);
-                    } else {
+                    if (isMusicTime()) {
+                        // post it to the file right away so the song session can obtain it
                         await keystrokeCount.postData();
+                    } else {
+                        setTimeout(() => keystrokeCount.postData(), 0);
                     }
                 }
             }
@@ -69,14 +75,16 @@ export class KpmController {
         _staticInfoMap = {};
 
         // check if we're in a new day, if so lets send the offline data
-        const dayOfMonth = moment()
-            .startOf("day")
-            .date();
-        if (dayOfMonth !== this._lastDayOfMonth) {
-            this._lastDayOfMonth = dayOfMonth;
-            setTimeout(() => {
-                sendOfflineData();
-            }, 1000 * 2);
+        if (!isMusicTime()) {
+            const dayOfMonth = moment()
+                .startOf("day")
+                .date();
+            if (dayOfMonth !== this._lastDayOfMonth) {
+                this._lastDayOfMonth = dayOfMonth;
+                setTimeout(() => {
+                    sendOfflineData();
+                }, 1000 * 2);
+            }
         }
     }
 
