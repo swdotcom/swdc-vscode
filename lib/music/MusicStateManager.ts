@@ -112,7 +112,7 @@ export class MusicStateManager {
         // existing track should be existing and playing
 
         const tracksMatch = existingTrackId === playingTrackId;
-        const endPrevTrack = !tracksMatch && existingTrackId;
+        const endPrevTrack = !tracksMatch && existingTrackId ? true : false;
 
         let playerName = this.musicMgr.currentPlayerName;
         let playerNameChanged = false;
@@ -226,8 +226,11 @@ export class MusicStateManager {
 
         const utcLocalTimes = this.getUtcAndLocal();
 
-        // has the existing track ended?
-        if (changeStatus.endPrevTrack && this.existingTrack.id) {
+        // has the existing track ended or have we started a new track?
+        if (
+            (changeStatus.ended || changeStatus.endPrevTrack) &&
+            this.existingTrack.id
+        ) {
             // just set it to playing
             this.existingTrack.state = TrackStatus.Playing;
             this.existingTrack["end"] = utcLocalTimes.utc - 2;
