@@ -412,6 +412,7 @@ export async function connectSpotify() {
     }
     let jwt = getItem("jwt");
     if (!jwt) {
+        // no jwt, get the app jwt
         jwt = await getAppJwt(true);
         await setItem("jwt", jwt);
     }

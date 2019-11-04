@@ -67,7 +67,6 @@ export class MusicManager {
     private _playlistMap: {} = {};
     private _savedPlaylists: PlaylistItem[] = [];
     private _musictimePlaylists: PlaylistItem[] = [];
-    private _softwareTopSongs: any[] = [];
     private _userTopSongs: any[] = [];
     private _playlistTrackMap: any = {};
     private _runningTrack: Track = null;
@@ -1267,13 +1266,12 @@ export class MusicManager {
             // fetch and reconcile the saved playlists against the spotify list
             await this.fetchSavedPlaylists(serverIsOnline);
         }
-        if (this._savedPlaylists.length > 0) {
-            const currentSpotifyPlaylists = await getPlaylists(
-                PlayerName.SpotifyWeb,
-                { all: true, limit: 100, offset: 0 }
-            );
+        if (
+            this._savedPlaylists.length > 0 &&
+            this._spotifyPlaylists.length > 0
+        ) {
             this._savedPlaylists.map(async savedPlaylist => {
-                let foundItem = currentSpotifyPlaylists.find(element => {
+                let foundItem = this._spotifyPlaylists.find(element => {
                     return element.id === savedPlaylist.id;
                 });
                 // the backend should protect this from deleting the global top 40
