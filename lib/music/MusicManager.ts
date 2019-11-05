@@ -33,11 +33,11 @@ import {
     GENERATE_CUSTOM_PLAYLIST_TITLE,
     REFRESH_CUSTOM_PLAYLIST_TOOLTIP,
     GENERATE_CUSTOM_PLAYLIST_TOOLTIP,
-    SPOTIFY_CLIENT_ID,
-    SPOTIFY_CLIENT_SECRET,
     SPOTIFY_LIKED_SONGS_PLAYLIST_NAME,
     LOGIN_LABEL,
-    SOFTWARE_TOP_40_PLAYLIST_ID
+    SOFTWARE_TOP_40_PLAYLIST_ID,
+    SPOTIFY_CLIENT_ID,
+    SPOTIFY_CLIENT_SECRET
 } from "../Constants";
 import { commands, window } from "vscode";
 import {
@@ -45,7 +45,8 @@ import {
     getSpotifyOauth,
     getSlackOauth,
     getLoggedInCacheState,
-    getUserStatus
+    getUserStatus,
+    getAppJwt
 } from "../DataController";
 import { getItem, setItem, launchLogin, isMac, logIt } from "../Util";
 import {
@@ -80,6 +81,8 @@ export class MusicManager {
     private _serverTrack: any = null;
     private _initialized: boolean = false;
     private _buildingCustomPlaylist: boolean = false;
+    private _spotifyClientId: string = "";
+    private _spotifyClientSecret: string = "";
 
     private constructor() {
         //
@@ -1194,11 +1197,31 @@ export class MusicManager {
     }
 
     async initializeSpotify() {
+        const serverIsOnline = await serverIsAvailable();
+
+        // get the client id and secret
+        let clientId = SPOTIFY_CLIENT_ID;
+        let clientSecret = SPOTIFY_CLIENT_SECRET;
+        if (serverIsOnline) {
+            let jwt = getItem("jwt");
+            if (!jwt) {
+                jwt = await getAppJwt(serverIsOnline);
+            }
+            const resp = await softwareGet("/auth/spotify/clientInfo", jwt);
+            if (isResponseOk(resp)) {
+                // get the clientId and clientSecret
+                clientId = resp.data.clientId;
+                clientSecret = resp.data.clientSecret;
+            }
+        }
+
+        this._spotifyClientId = clientId;
+        this._spotifyClientSecret = clientSecret;
+
         if (
             !getItem("spotify_access_token") ||
             !getItem("spotify_refresh_token")
         ) {
-            const serverIsOnline = await serverIsAvailable();
             const oauthResult = await getSpotifyOauth(serverIsOnline);
             if (oauthResult.auth) {
                 // update the CodyMusic credentials
@@ -1220,10 +1243,10 @@ export class MusicManager {
         if (spotifyOauth) {
             // update the CodyMusic credentials
             let codyConfig: CodyConfig = new CodyConfig();
-            codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
+            codyConfig.spotifyClientId = this._spotifyClientId;
             codyConfig.spotifyAccessToken = spotifyOauth.access_token;
             codyConfig.spotifyRefreshToken = spotifyOauth.refresh_token;
-            codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
+            codyConfig.spotifyClientSecret = this._spotifyClientSecret;
             codyConfig.enableItunesDesktop = false;
             codyConfig.enableSpotifyDesktop = isMac() ? true : false;
             codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
@@ -1248,10 +1271,10 @@ export class MusicManager {
         codyConfig.enableItunesDesktop = false;
         codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
         codyConfig.enableSpotifyDesktop = isMac() ? true : false;
-        codyConfig.spotifyClientId = SPOTIFY_CLIENT_ID;
+        codyConfig.spotifyClientId = this._spotifyClientId;
         codyConfig.spotifyAccessToken = null;
         codyConfig.spotifyRefreshToken = null;
-        codyConfig.spotifyClientSecret = SPOTIFY_CLIENT_SECRET;
+        codyConfig.spotifyClientSecret = this._spotifyClientSecret;
         setConfig(codyConfig);
         this.spotifyUser = null;
     }
