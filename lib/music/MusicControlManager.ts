@@ -86,6 +86,7 @@ export class MusicControlManager {
 
     async playSong() {
         await play(this.musicMgr.currentPlayerName);
+        MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
@@ -93,6 +94,7 @@ export class MusicControlManager {
     async pauseSong(needsRefresh = true) {
         await pause(this.musicMgr.currentPlayerName);
         if (needsRefresh) {
+            MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
             // fetch the new track info
             await this.musicStateMgr.gatherMusicInfo();
         }
@@ -100,12 +102,14 @@ export class MusicControlManager {
 
     async playSongInContext(params) {
         await playTrackInContext(this.musicMgr.currentPlayerName, params);
+        MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
     async playSongById(playerName: PlayerName, trackId: string) {
         await playTrack(playerName, trackId);
+        MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }

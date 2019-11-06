@@ -145,20 +145,6 @@ export class MusicManager {
      * Get the current player: spotify-web, spotify, itunes
      */
     get currentPlayerName(): PlayerName {
-        if (this._currentPlayerName === PlayerName.SpotifyWeb) {
-            // check if their a mac user and don't have playback access.
-            // if so, then we'll try with the desktop
-            const spotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
-            if (
-                !spotifyPlaybackAccess &&
-                this._currentPlayerName === PlayerName.SpotifyWeb &&
-                isMac()
-            ) {
-                // just so we can listen to tracks at least
-                this._currentPlayerName = PlayerName.SpotifyDesktop;
-            }
-        }
-
         return this._currentPlayerName;
     }
 
@@ -1268,9 +1254,8 @@ export class MusicManager {
             this.updateCodyConfig();
 
             // get the user
-            getUserProfile().then(user => {
-                this.spotifyUser = user;
-            });
+            this.spotifyUser = await getUserProfile();
+            console.log("spotify user: ", this.spotifyUser);
         } else {
             this.clearSpotifyAccessInfo();
         }
