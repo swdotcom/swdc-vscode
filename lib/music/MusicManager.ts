@@ -81,6 +81,7 @@ export class MusicManager {
     private _buildingCustomPlaylist: boolean = false;
     private _spotifyClientId: string = "";
     private _spotifyClientSecret: string = "";
+    private _initialized: boolean = false;
 
     private constructor() {
         //
@@ -91,6 +92,10 @@ export class MusicManager {
         }
 
         return MusicManager.instance;
+    }
+
+    set initialized(initializedMgr: boolean) {
+        this._initialized = initializedMgr;
     }
 
     get musictimePlaylists() {
@@ -145,16 +150,6 @@ export class MusicManager {
      * Get the current player: spotify-web or itunes
      */
     get currentPlayerName(): PlayerName {
-        // if you're offline you may still have spotify desktop player abilities.
-        // check if the current player is spotify and we don't have web access.
-        // if no web access, then use the desktop player
-        if (
-            this._currentPlayerName === PlayerName.SpotifyWeb &&
-            isMac() &&
-            !this.hasSpotifyPlaybackAccess()
-        ) {
-            return PlayerName.SpotifyDesktop;
-        }
         return this._currentPlayerName;
     }
 
@@ -217,6 +212,9 @@ export class MusicManager {
     }
 
     async refreshPlaylists() {
+        if (!this._initialized) {
+            return;
+        }
         if (this._buildingPlaylists) {
             // try again in a second
             setTimeout(() => {
@@ -1262,6 +1260,10 @@ export class MusicManager {
             };
             this.updateSpotifyAccessInfo(spotifyOauth);
         }
+
+        this.initialized = true;
+
+        commands.executeCommand("musictime.refreshPlaylist");
     }
 
     async updateSpotifyAccessInfo(spotifyOauth) {
@@ -1274,7 +1276,6 @@ export class MusicManager {
 
             // get the user
             this.spotifyUser = await getUserProfile();
-            console.log("spotify user: ", this.spotifyUser);
         } else {
             this.clearSpotifyAccessInfo();
         }
@@ -1415,5 +1416,19 @@ export class MusicManager {
 
     hasSpotifyUser() {
         return this.spotifyUser && this.spotifyUser.product ? true : false;
+    }
+
+    getPlayerNameForPauseAction() {
+        // if you're offline you may still have spotify desktop player abilities.
+        // check if the current player is spotify and we don't have web access.
+        // if no web access, then use the desktop player
+        if (
+            this._currentPlayerName === PlayerName.SpotifyWeb &&
+            isMac() &&
+            !this.hasSpotifyPlaybackAccess()
+        ) {
+            return PlayerName.SpotifyDesktop;
+        }
+        return this._currentPlayerName;
     }
 }

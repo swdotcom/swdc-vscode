@@ -92,7 +92,8 @@ export class MusicControlManager {
     }
 
     async pauseSong(needsRefresh = true) {
-        await pause(this.musicMgr.currentPlayerName);
+        const playerForPause = this.musicMgr.getPlayerNameForPauseAction();
+        await pause(playerForPause);
         if (needsRefresh) {
             MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
             // fetch the new track info
