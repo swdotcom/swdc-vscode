@@ -17,11 +17,9 @@ import {
     PlayerType,
     TrackStatus,
     playItunesTrackNumberInPlaylist,
-    getRunningTrack,
     launchAndPlaySpotifyTrack,
     playSpotifyMacDesktopTrack,
     getSpotifyDevices,
-    isSpotifyRunning,
     launchPlayer
 } from "cody-music";
 import { MusicControlManager } from "./MusicControlManager";
@@ -49,8 +47,9 @@ export const checkSpotifySongState = (missingDevices: boolean) => {
         clearTimeout(checkSpotifyStateTimeout);
     }
     checkSpotifyStateTimeout = setTimeout(async () => {
+        const musicMgr = MusicManager.getInstance();
         // make sure we get that song, if not then they may not be logged in
-        let playingTrack = await getRunningTrack();
+        let playingTrack = musicMgr.runningTrack;
 
         if (
             !playingTrack ||
@@ -94,8 +93,7 @@ export const playSelectedItem = async (
             musicMgr.selectedPlaylist = playlist;
         }
 
-        const notPlaying =
-            playlistItem.state !== TrackStatus.Playing ? true : false;
+        const notPlaying = playlistItem.state !== TrackStatus.Playing;
 
         if (playlistItem.playerType === PlayerType.MacItunesDesktop) {
             if (notPlaying) {
@@ -105,7 +103,7 @@ export const playSelectedItem = async (
                     pos
                 );
             } else {
-                musicCtrlMgr.pauseSong(PlayerName.ItunesDesktop);
+                musicCtrlMgr.pauseSong();
             }
         } else if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
             // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
@@ -178,9 +176,7 @@ export const playSpotifyDesktopPlaylistTrack = async () => {
     // get the selected track
     const selectedTrack = musicMgr.selectedTrackItem;
     const isLikedSongsPlaylist =
-        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
-            ? true
-            : false;
+        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
 
     const devices = await getSpotifyDevices();
 
@@ -213,8 +209,7 @@ export const launchAndPlaySpotifyWebPlaylistTrack = async (
     // get the selected track
     const selectedTrack = musicMgr.selectedTrackItem;
 
-    const notPlaying =
-        selectedTrack.state !== TrackStatus.Playing ? true : false;
+    const notPlaying = selectedTrack.state !== TrackStatus.Playing;
     const progressLabel = notPlaying
         ? `Playing ${selectedTrack.name}`
         : `Pausing ${selectedTrack.name}`;
@@ -222,9 +217,7 @@ export const launchAndPlaySpotifyWebPlaylistTrack = async (
     MusicCommandManager.initiateProgress(progressLabel);
 
     const isLikedSongsPlaylist =
-        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME
-            ? true
-            : false;
+        selectedPlaylist.name === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME;
 
     if (isTrack) {
         // a track was selected, check if we should play or pause it
@@ -236,7 +229,7 @@ export const launchAndPlaySpotifyWebPlaylistTrack = async (
                 selectedPlaylist.id
             );
         } else {
-            musicCtrlMgr.pauseSong(musicMgr.currentPlayerName);
+            musicCtrlMgr.pauseSong();
         }
     } else {
         if (isLikedSongsPlaylist) {
@@ -319,7 +312,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         const selectedTrack: PlaylistItem = MusicManager.getInstance()
             .selectedTrackItem;
         if (selectedTrack && selectedTrack["playlist_id"] === p.id) {
-            // this.selectTrack(selectedTrack, false /* select */);
+            this.selectTrack(selectedTrack, false /* select */);
             return true;
         }
         return false;
@@ -539,7 +532,14 @@ export class PlaylistTreeItem extends TreeItem {
     }
 
     get tooltip(): string {
-        return `${this.treeItem.tooltip}`;
+        if (!this.treeItem) {
+            return "";
+        }
+        if (this.treeItem.tooltip) {
+            return `${this.treeItem.tooltip}`;
+        } else {
+            return `${this.treeItem.name}`;
+        }
     }
 
     iconPath = {

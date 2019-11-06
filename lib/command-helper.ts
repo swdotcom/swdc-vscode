@@ -152,7 +152,7 @@ export function createCommands(): {
                 if (notAssigned) {
                     // track status is not yet assigned, play it
                     if (p.type === "track") {
-                        await treePlaylistProvider.selectTrack(p);
+                        await treePlaylistProvider.selectTrack(p, true);
                     } else {
                         await treePlaylistProvider.selectPlaylist(p);
                     }

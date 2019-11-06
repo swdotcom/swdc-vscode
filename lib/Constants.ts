@@ -42,3 +42,5 @@ export const GENERATE_CUSTOM_PLAYLIST_TOOLTIP = `Generate My AI Playlist (${PERS
 export const SOFTWARE_TOP_40_PLAYLIST_ID = "6jCkTED0V5NEuM8sKbGG1Z";
 
 export const SPOTIFY_LIKED_SONGS_PLAYLIST_NAME = "Liked Songs";
+
+export const SHOW_ITUNES_LAUNCH_BUTTON = true;

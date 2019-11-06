@@ -1,12 +1,6 @@
 import { window, StatusBarAlignment, StatusBarItem } from "vscode";
 import { isMusicTime, getSongDisplayName, isMac, getItem } from "../Util";
-import {
-    getRunningTrack,
-    TrackStatus,
-    Track,
-    requiresSpotifyAccessInfo,
-    PlaylistItem
-} from "cody-music";
+import { TrackStatus, Track, PlaylistItem, PlayerName } from "cody-music";
 import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
 import { MusicManager } from "./MusicManager";
 
@@ -102,9 +96,16 @@ export class MusicCommandManager {
             "musictime.currentSong",
             995
         );
+        // not online button
+        this.createButton(
+            "Not Online",
+            "Go online to see your Spotify playlists.",
+            null,
+            995
+        );
 
-        const track = await getRunningTrack();
-        this.syncControls(track);
+        const musicMgr: MusicManager = MusicManager.getInstance();
+        await this.syncControls(musicMgr.runningTrack);
     }
 
     public static initiateProgress(progressLabel: string) {
@@ -114,7 +115,6 @@ export class MusicCommandManager {
     public static async syncControls(track: Track) {
         const musicMgr: MusicManager = MusicManager.getInstance();
 
-        musicMgr.runningTrack = track;
         // update the playlist
         const selectedPlaylist: PlaylistItem = musicMgr.selectedPlaylist;
         if (selectedPlaylist) {
@@ -138,8 +138,10 @@ export class MusicCommandManager {
             ? track.state
             : TrackStatus.NotAssigned;
 
+        const { needsSpotifyAccess } = this.getSpotifyState();
+
         if (
-            !requiresSpotifyAccessInfo() &&
+            !needsSpotifyAccess &&
             (trackStatus === TrackStatus.Paused ||
                 trackStatus === TrackStatus.Playing)
         ) {
@@ -184,26 +186,37 @@ export class MusicCommandManager {
     }
 
     private static async showLaunchPlayerControls() {
-        const musicMgr: MusicManager = MusicManager.getInstance();
-        const showPremiumRequired =
-            !musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo() &&
-            !isMac()
-                ? true
-                : false;
+        if (!this._buttons || this._buttons.length === 0) {
+            return;
+        }
+        const {
+            needsSpotifyAccess,
+            hasSpotifyUser,
+            showPremiumRequired,
+            type
+        } = this.getSpotifyState();
         // hide all except for the launch player button and possibly connect spotify button
         this._buttons = this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
 
-            const isMusicTimeMenu = btnCmd === "musictime.menu";
-            const isConnectSpotify = btnCmd === "musictime.connectSpotify";
+            const isMusicTimeMenuButton = btnCmd === "musictime.menu";
+            const notOnlineButton = button.statusBarItem.text === "Not Online";
+            const isConnectSpotifyButton =
+                btnCmd === "musictime.connectSpotify";
             const isPremiumButton =
                 btnCmd === "musictime.spotifyPremiumRequired";
 
-            if (isMusicTimeMenu) {
+            if (isMusicTimeMenuButton) {
                 // always show the headphones button for the launch controls function
                 button.statusBarItem.show();
-            } else if (isConnectSpotify && requiresSpotifyAccessInfo()) {
+            } else if (
+                notOnlineButton &&
+                !needsSpotifyAccess &&
+                !hasSpotifyUser &&
+                type === "spotify"
+            ) {
+                button.statusBarItem.show();
+            } else if (isConnectSpotifyButton && needsSpotifyAccess) {
                 // show the connect button
                 button.statusBarItem.show();
             } else if (isPremiumButton && showPremiumRequired) {
@@ -222,43 +235,52 @@ export class MusicCommandManager {
      * @param trackInfo
      */
     private static async showPlayControls(trackInfo: Track) {
-        const musicMgr: MusicManager = MusicManager.getInstance();
+        if (!this._buttons || this._buttons.length === 0) {
+            return;
+        }
+        const { showPremiumRequired, serverTrack } = this.getSpotifyState();
 
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
             : null;
 
-        const showPremiumRequired =
-            !musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo() &&
-            !isMac()
-                ? true
-                : false;
-
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
-            const isMusicTimeMenu = btnCmd === "musictime.menu";
+            const isMusicTimeMenuButton = btnCmd === "musictime.menu";
             const isProgressButton = btnCmd === "musictime.progress";
+            const isPlayButton = btnCmd === "musictime.play";
             const isPauseButton = btnCmd === "musictime.pause";
+            const isLikedButton = btnCmd === "musictime.like";
+            const isUnLikedButton = btnCmd === "musictime.unlike";
+            const currentSongButton = btnCmd === "musictime.currentSong";
+            const notOnlineButton = button.statusBarItem.text === "Not Online";
+            const connectSpotifyButton = btnCmd === "musictime.connectSpotify";
+            const spotifyPremiumReqButton =
+                btnCmd === "musictime.spotifyPremiumRequired";
 
-            if (isMusicTimeMenu) {
+            if (isMusicTimeMenuButton) {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
-            } else if (isPauseButton || isProgressButton) {
+            } else if (
+                isPauseButton ||
+                isProgressButton ||
+                connectSpotifyButton ||
+                notOnlineButton
+            ) {
                 button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.like") {
-                if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
+            } else if (isLikedButton) {
+                if (!serverTrack || serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
-            } else if (btnCmd === "musictime.unlike") {
-                if (musicMgr.serverTrack && musicMgr.serverTrack.loved) {
+            } else if (isUnLikedButton) {
+                if (serverTrack && serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
                 }
-            } else if (btnCmd === "musictime.currentSong") {
+            } else if (currentSongButton) {
                 button.statusBarItem.tooltip = `(${trackInfo.name}) ${button.tooltip}`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
@@ -266,9 +288,7 @@ export class MusicCommandManager {
                 //     // hide this name in 10 seconds
                 //     this.hideSongDisplay();
                 // }, songNameDisplayTimeoutMillis);
-            } else if (btnCmd === "musictime.connectSpotify") {
-                button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.spotifyPremiumRequired") {
+            } else if (spotifyPremiumReqButton) {
                 if (showPremiumRequired) {
                     button.statusBarItem.show();
                 } else {
@@ -276,7 +296,7 @@ export class MusicCommandManager {
                 }
             } else {
                 if (!showPremiumRequired) {
-                    if (songInfo && btnCmd === "musictime.play") {
+                    if (songInfo && isPlayButton) {
                         // show the song info over the play button
                         button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
                     }
@@ -293,40 +313,52 @@ export class MusicCommandManager {
      * @param trackInfo
      */
     private static showPauseControls(trackInfo: Track) {
-        const musicMgr: MusicManager = MusicManager.getInstance();
-        const songInfo = `${trackInfo.name} (${trackInfo.artist})`;
+        if (!this._buttons || this._buttons.length === 0) {
+            return;
+        }
+        const { showPremiumRequired, serverTrack } = this.getSpotifyState();
 
-        const showPremiumRequired =
-            !musicMgr.hasSpotifyPlaybackAccess() &&
-            !requiresSpotifyAccessInfo() &&
-            !isMac()
-                ? true
-                : false;
+        const songInfo = trackInfo
+            ? `${trackInfo.name} (${trackInfo.artist})`
+            : null;
 
         this._buttons.map(button => {
             const btnCmd = button.statusBarItem.command;
             const isMusicTimeMenu = btnCmd === "musictime.menu";
             const isProgressButton = btnCmd === "musictime.progress";
             const isPlayButton = btnCmd === "musictime.play";
+            const isPauseButton = btnCmd === "musictime.pause";
+            const isLikedButton = btnCmd === "musictime.like";
+            const isUnLikedButton = btnCmd === "musictime.unlike";
+            const currentSongButton = btnCmd === "musictime.currentSong";
+            const notOnlineButton = button.statusBarItem.text === "Not Online";
+            const connectSpotifyButton = btnCmd === "musictime.connectSpotify";
+            const spotifyPremiumReqButton =
+                btnCmd === "musictime.spotifyPremiumRequired";
 
             if (isMusicTimeMenu) {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
-            } else if (isPlayButton || isProgressButton) {
+            } else if (
+                isPlayButton ||
+                isProgressButton ||
+                connectSpotifyButton ||
+                notOnlineButton
+            ) {
                 button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.like") {
-                if (!musicMgr.serverTrack || musicMgr.serverTrack.loved) {
+            } else if (isLikedButton) {
+                if (!serverTrack || serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
-            } else if (btnCmd === "musictime.unlike") {
-                if (musicMgr.serverTrack && musicMgr.serverTrack.loved) {
+            } else if (isUnLikedButton) {
+                if (serverTrack && serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
                 }
-            } else if (btnCmd === "musictime.currentSong") {
+            } else if (currentSongButton) {
                 button.statusBarItem.tooltip = `(${trackInfo.name}) ${button.tooltip}`;
                 button.statusBarItem.text = getSongDisplayName(trackInfo.name);
                 button.statusBarItem.show();
@@ -334,9 +366,7 @@ export class MusicCommandManager {
                 //     // hide this name in 10 seconds
                 //     this.hideSongDisplay();
                 // }, songNameDisplayTimeoutMillis);
-            } else if (btnCmd === "musictime.connectSpotify") {
-                button.statusBarItem.hide();
-            } else if (btnCmd === "musictime.spotifyPremiumRequired") {
+            } else if (spotifyPremiumReqButton) {
                 if (showPremiumRequired) {
                     button.statusBarItem.show();
                 } else {
@@ -344,7 +374,7 @@ export class MusicCommandManager {
                 }
             } else {
                 if (!showPremiumRequired) {
-                    if (btnCmd === "musictime.pause") {
+                    if (songInfo && isPauseButton) {
                         button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
                     }
                     button.statusBarItem.show();
@@ -372,6 +402,28 @@ export class MusicCommandManager {
                 button.statusBarItem.hide();
             }
         });
+    }
+
+    private static getSpotifyState() {
+        const musicMgr: MusicManager = MusicManager.getInstance();
+        const needsSpotifyAccess = musicMgr.requiresSpotifyAccess();
+        const hasSpotifyPlaybackAccess = musicMgr.hasSpotifyPlaybackAccess();
+        const hasSpotifyUser = musicMgr.hasSpotifyUser();
+        const serverTrack = musicMgr.serverTrack;
+        const type =
+            musicMgr.currentPlayerName === PlayerName.ItunesDesktop
+                ? "itunes"
+                : "spotify";
+        const showPremiumRequired =
+            isMac() && !hasSpotifyPlaybackAccess && hasSpotifyUser;
+        return {
+            needsSpotifyAccess,
+            hasSpotifyPlaybackAccess,
+            hasSpotifyUser,
+            showPremiumRequired,
+            serverTrack,
+            type
+        };
     }
 
     /**

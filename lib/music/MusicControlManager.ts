@@ -76,7 +76,7 @@ export class MusicControlManager {
             playerName = this.musicMgr.currentPlayerName;
         }
         await next(playerName);
-        await this.musicStateMgr.musicStateCheck();
+        await this.musicStateMgr.gatherMusicInfo();
     }
 
     async previousSong(playerName: PlayerName = null) {
@@ -84,7 +84,7 @@ export class MusicControlManager {
             playerName = this.musicMgr.currentPlayerName;
         }
         await previous(playerName);
-        await this.musicStateMgr.musicStateCheck();
+        await this.musicStateMgr.gatherMusicInfo();
     }
 
     async playSong(playerName: PlayerName = null) {
@@ -96,13 +96,11 @@ export class MusicControlManager {
         MusicCommandManager.syncControls(this.musicMgr.runningTrack);
     }
 
-    async pauseSong(playerName: PlayerName = null) {
-        if (!playerName) {
-            playerName = this.musicMgr.currentPlayerName;
+    async pauseSong(needsRefresh = true) {
+        await pause(this.musicMgr.currentPlayerName);
+        if (needsRefresh) {
+            commands.executeCommand("musictime.refreshPlaylist");
         }
-        await pause(playerName);
-        this.musicMgr.runningTrack.state = TrackStatus.Paused;
-        MusicCommandManager.syncControls(this.musicMgr.runningTrack);
     }
 
     async playSongInContext(params) {
@@ -118,8 +116,6 @@ export class MusicControlManager {
         if (track) {
             // update the state right away. perform the api update asyn
             track.loved = liked;
-            this.musicMgr.runningTrack = track;
-            MusicCommandManager.syncControls(track);
 
             let refreshPlaylist = false;
             if (track.playerType === PlayerType.MacItunesDesktop) {
@@ -250,7 +246,7 @@ export class MusicControlManager {
             // check if we already have a playlist
             const savedPlaylists: PlaylistItem[] = musicMgr.savedPlaylists;
             const hasSavedPlaylists =
-                savedPlaylists && savedPlaylists.length > 0 ? true : false;
+                savedPlaylists && savedPlaylists.length > 0;
 
             const codingFavs: any[] = musicMgr.userTopSongs;
             const hasUserFavorites =

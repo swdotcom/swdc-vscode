@@ -8,7 +8,8 @@ import {
     getOs,
     getVersion,
     getPluginId,
-    isValidJson
+    isValidJson,
+    isMac
 } from "../Util";
 import { sendMusicData } from "../DataController";
 import {
@@ -18,8 +19,7 @@ import {
     PlayerType,
     PlayerName,
     PlaylistItem,
-    launchAndPlaySpotifyTrack,
-    isItunesDesktopEnabled
+    launchAndPlaySpotifyTrack
 } from "cody-music";
 import { MusicManager } from "./MusicManager";
 import { KpmController } from "../KpmController";
@@ -55,11 +55,6 @@ export class MusicStateManager {
 
     public setKpmController(kpmController: KpmController) {
         this.kpmControllerInstance = kpmController;
-    }
-
-    public async musicStateCheck() {
-        const track: Track = await this.gatherMusicInfo();
-        this.musicMgr.runningTrack = track;
     }
 
     /**
@@ -119,7 +114,7 @@ export class MusicStateManager {
         // only update the currentPlayerName if the current track running
         // is "playing" AND the playerType doesn't match the current player type
 
-        const isSpotifyPlayer =
+        const isCurrentlySpotifyPlayer =
             playerName === PlayerName.SpotifyDesktop ||
             playerName === PlayerName.SpotifyWeb
                 ? true
@@ -127,15 +122,15 @@ export class MusicStateManager {
 
         if (playing) {
             if (
-                isSpotifyPlayer &&
                 playingTrack.playerType === PlayerType.MacItunesDesktop &&
-                isItunesDesktopEnabled()
+                isCurrentlySpotifyPlayer
             ) {
+                // they've switch from spotify to itunes
                 this.musicMgr.currentPlayerName = PlayerName.ItunesDesktop;
                 playerNameChanged = true;
             } else if (
-                playerName === PlayerName.ItunesDesktop &&
-                playingTrack.playerType !== PlayerType.MacItunesDesktop
+                playingTrack.playerType !== PlayerType.MacItunesDesktop &&
+                !isCurrentlySpotifyPlayer
             ) {
                 this.musicMgr.currentPlayerName = PlayerName.SpotifyWeb;
                 playerNameChanged = true;
@@ -211,11 +206,26 @@ export class MusicStateManager {
         sendMusicData(track);
     }
 
+    private allowSetRunningTrack() {
+        // if it's spotify and we need to check if it's online or not.
+        // if it's not online, we can't show the playlist forlder
+        const type =
+            this.musicMgr.currentPlayerName === PlayerName.ItunesDesktop
+                ? "itunes"
+                : "spotify";
+        const hasSpotifyUser = this.musicMgr.hasSpotifyUser();
+
+        if (type === "spotify" && !hasSpotifyUser) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Core logic in gathering tracks. This is called every 5 seconds.
      */
     public async gatherMusicInfo(): Promise<any> {
-        let playingTrack = await getRunningTrack();
+        const playingTrack = (await getRunningTrack()) || new Track();
 
         const changeStatus = this.getChangeStatus(playingTrack);
 
@@ -304,23 +314,30 @@ export class MusicStateManager {
         }
 
         const needsRefresh =
-            changeStatus.isNewTrack || changeStatus.trackStateChanged;
+            changeStatus.isNewTrack ||
+            changeStatus.trackStateChanged ||
+            changeStatus.playerNameChanged;
 
-        if (changeStatus.playerNameChanged) {
+        if (needsRefresh) {
             // new player (i.e. switched from itunes to spotify)
             // refresh the entire tree view
             commands.executeCommand("musictime.refreshPlaylist");
-        } else if (needsRefresh) {
-            // it's a new track or the track state changed.
-            // no need to clear the playlists, just refresh the tree
-            MusicManager.getInstance().refreshPlaylists();
         }
 
         // If the current playlist is the Liked Songs,
         // check if we should start the next track
         await this.playNextLikedSpotifyCheck(changeStatus);
 
-        return this.existingTrack || new Track();
+        // !Important! This should be the only place in the code
+        // that sets the running track. If the user is offline and
+        // wanting to use spotify, then we can't set the running track due
+        // do not being able to control it, but the uer can listen to it without
+        // the editors controls
+        if (this.allowSetRunningTrack()) {
+            this.musicMgr.runningTrack = this.existingTrack;
+        } else {
+            this.musicMgr.runningTrack = new Track();
+        }
     }
 
     private async playNextLikedSpotifyCheck(changeStatus) {

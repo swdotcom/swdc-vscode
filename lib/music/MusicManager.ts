@@ -11,7 +11,6 @@ import {
     CodyResponseType,
     getSpotifyLikedSongs,
     PlaylistTrackInfo,
-    getRunningTrack,
     createPlaylist,
     addTracksToPlaylist,
     replacePlaylistTracks,
@@ -23,8 +22,7 @@ import {
     isPlayerRunning,
     getSpotifyDevices,
     PlayerDevice,
-    getSpotifyPlaylist,
-    isItunesDesktopEnabled
+    getSpotifyPlaylist
 } from "cody-music";
 import {
     PERSONAL_TOP_SONGS_NAME,
@@ -37,7 +35,8 @@ import {
     LOGIN_LABEL,
     SOFTWARE_TOP_40_PLAYLIST_ID,
     SPOTIFY_CLIENT_ID,
-    SPOTIFY_CLIENT_SECRET
+    SPOTIFY_CLIENT_SECRET,
+    SHOW_ITUNES_LAUNCH_BUTTON
 } from "../Constants";
 import { commands, window } from "vscode";
 import {
@@ -70,7 +69,7 @@ export class MusicManager {
     private _musictimePlaylists: PlaylistItem[] = [];
     private _userTopSongs: any[] = [];
     private _playlistTrackMap: any = {};
-    private _runningTrack: Track = null;
+    private _runningTrack: Track = new Track();
     private _spotifyLikedSongs: Track[] = [];
     // default to starting with spotify
     private _currentPlayerName: PlayerName = PlayerName.SpotifyWeb;
@@ -79,7 +78,6 @@ export class MusicManager {
     private _spotifyUser: SpotifyUser = null;
     private _buildingPlaylists: boolean = false;
     private _serverTrack: any = null;
-    private _initialized: boolean = false;
     private _buildingCustomPlaylist: boolean = false;
     private _spotifyClientId: string = "";
     private _spotifyClientSecret: string = "";
@@ -144,29 +142,33 @@ export class MusicManager {
     }
 
     /**
-     * Even if the _currentPlayer is set to SpotifyWeb
-     * it may return SpotifyDesktop if it's mac and it requires access
+     * Get the current player: spotify-web, spotify, itunes
      */
     get currentPlayerName(): PlayerName {
-        const currentlySetToSpotifyWeb =
-            this._currentPlayerName === PlayerName.SpotifyWeb;
-        const currentlySetToItunes =
-            this._currentPlayerName === PlayerName.ItunesDesktop;
-
-        if (
-            !currentlySetToItunes &&
-            currentlySetToSpotifyWeb &&
-            isMac() &&
-            (!this.hasSpotifyPlaybackAccess() || this.requiresSpotifyAccess())
-        ) {
-            this._currentPlayerName = PlayerName.SpotifyDesktop;
+        if (this._currentPlayerName === PlayerName.SpotifyWeb) {
+            // check if their a mac user and don't have playback access.
+            // if so, then we'll try with the desktop
+            const spotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
+            if (
+                !spotifyPlaybackAccess &&
+                this._currentPlayerName === PlayerName.SpotifyWeb &&
+                isMac()
+            ) {
+                // just so we can listen to tracks at least
+                this._currentPlayerName = PlayerName.SpotifyDesktop;
+            }
         }
 
         return this._currentPlayerName;
     }
 
     set currentPlayerName(playerName: PlayerName) {
+        const shouldUpdateCodyConfig =
+            playerName !== this._currentPlayerName ? true : false;
         this._currentPlayerName = playerName;
+        if (shouldUpdateCodyConfig) {
+            this.updateCodyConfig();
+        }
     }
 
     get serverTrack(): any {
@@ -219,15 +221,6 @@ export class MusicManager {
         this._buildingPlaylists = true;
 
         let serverIsOnline = await serverIsAvailable();
-        this._runningTrack = await getRunningTrack();
-        if (
-            !this._initialized &&
-            this._runningTrack.playerType === PlayerType.MacItunesDesktop &&
-            isItunesDesktopEnabled()
-        ) {
-            this.currentPlayerName = PlayerName.ItunesDesktop;
-        }
-        this._initialized = true;
 
         if (this.currentPlayerName === PlayerName.ItunesDesktop) {
             await this.showItunesPlaylists(serverIsOnline);
@@ -243,8 +236,37 @@ export class MusicManager {
         return this._playlistMap[playlist_id];
     }
 
+    /**
+     * Update the cody config settings for cody-music
+     */
+    updateCodyConfig() {
+        const accessToken = getItem("spotify_access_token");
+        const refreshToken = getItem("spotify_refresh_token");
+
+        const type =
+            this.currentPlayerName === PlayerName.ItunesDesktop
+                ? "itunes"
+                : "spotify";
+        const enableSpotifyDesktop = isMac() && type === "spotify";
+        const enableItunesDesktop = isMac() && type === "itunes";
+
+        const codyConfig: CodyConfig = new CodyConfig();
+        codyConfig.enableItunesDesktop = enableItunesDesktop;
+        codyConfig.enableItunesDesktopSongTracking = isMac();
+        codyConfig.enableSpotifyDesktop = enableSpotifyDesktop;
+        codyConfig.spotifyClientId = this._spotifyClientId;
+        codyConfig.spotifyAccessToken = accessToken;
+        codyConfig.spotifyRefreshToken = refreshToken;
+        codyConfig.spotifyClientSecret = this._spotifyClientSecret;
+        setConfig(codyConfig);
+    }
+
     async refreshPlaylistState() {
-        if (this._spotifyPlaylists.length > 0) {
+        const type =
+            this.currentPlayerName === PlayerName.ItunesDesktop
+                ? "itunes"
+                : "spotify";
+        if (type === "spotify" && this._spotifyPlaylists.length > 0) {
             // build the spotify playlist
             this._spotifyPlaylists.forEach(async playlist => {
                 let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
@@ -258,23 +280,20 @@ export class MusicManager {
                     playlist.state = playlistState;
                 }
             });
-        }
-
-        if (isItunesDesktopEnabled() && isMac()) {
+        } else if (type === "itunes" && this._itunesPlaylists.length > 0) {
             // build the itunes playlist
-            if (this._itunesPlaylists.length > 0) {
-                this._itunesPlaylists.forEach(async playlist => {
-                    let playlistItemTracks: PlaylistItem[] = this
-                        ._playlistTrackMap[playlist.id];
+            this._itunesPlaylists.forEach(async playlist => {
+                let playlistItemTracks: PlaylistItem[] = this._playlistTrackMap[
+                    playlist.id
+                ];
 
-                    if (playlistItemTracks && playlistItemTracks.length > 0) {
-                        let playlistState = await this.getPlaylistState(
-                            playlist.id
-                        );
-                        playlist.state = playlistState;
-                    }
-                });
-            }
+                if (playlistItemTracks && playlistItemTracks.length > 0) {
+                    let playlistState = await this.getPlaylistState(
+                        playlist.id
+                    );
+                    playlist.state = playlistState;
+                }
+            });
         }
     }
 
@@ -285,10 +304,7 @@ export class MusicManager {
 
         // if no playlists are found for itunes, then fetch
         if (!foundPlaylist) {
-            await this.refreshPlaylistForPlayer(
-                PlayerName.ItunesDesktop,
-                serverIsOnline
-            );
+            await this.refreshPlaylistForPlayer(serverIsOnline);
         }
     }
 
@@ -298,48 +314,42 @@ export class MusicManager {
             return element.type === "playlist";
         });
         if (!foundPlaylist) {
-            await this.refreshPlaylistForPlayer(
-                PlayerName.SpotifyWeb,
-                serverIsOnline
-            );
+            await this.refreshPlaylistForPlayer(serverIsOnline);
         }
     }
 
     //
     // Fetch the playlist names for a specific player
     //
-    private async refreshPlaylistForPlayer(
-        playerName: PlayerName,
-        serverIsOnline: boolean
-    ) {
+    private async refreshPlaylistForPlayer(serverIsOnline: boolean) {
+        const playerName = this.currentPlayerName;
         let items: PlaylistItem[] = [];
 
-        let needsSpotifyAccess = this.requiresSpotifyAccess();
+        const needsSpotifyAccess = this.requiresSpotifyAccess();
+        const spotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
+        const hasSpotifyUser = this.hasSpotifyUser();
 
-        let playlists: PlaylistItem[] = [];
-        let type = "spotify";
-        if (playerName === PlayerName.ItunesDesktop) {
-            type = "itunes";
-        }
-        // there's nothing to get if it's windows and they don't have
-        // a premium spotify account
-        let premiumAccountRequired =
-            !isMac() && !this.hasSpotifyPlaybackAccess() ? true : false;
+        const type =
+            playerName === PlayerName.ItunesDesktop ? "itunes" : "spotify";
 
-        let allowSpotifyPlaylistFetch = true;
-        if (needsSpotifyAccess || premiumAccountRequired) {
-            allowSpotifyPlaylistFetch = false;
-        }
+        // Do they require premium spotify?
+        const premiumAccountRequired =
+            isMac() && !spotifyPlaybackAccess && hasSpotifyUser;
 
-        if (
-            allowSpotifyPlaylistFetch ||
-            playerName === PlayerName.ItunesDesktop
-        ) {
-            playlists = await getPlaylists(playerName);
-        }
+        // Do they have spotify playback control?
+        const allowSpotifyPlaylistFetch =
+            !needsSpotifyAccess && !premiumAccountRequired;
 
+        // is this a non premium connected spotify user?
+        const isNonPremiumConnectedSpotify =
+            !needsSpotifyAccess && !spotifyPlaybackAccess && hasSpotifyUser;
+
+        // fetch the playlists
+        const playlists: PlaylistItem[] =
+            (await getPlaylists(playerName)) || [];
+
+        // fetch the saved playlists from software app
         if (this._savedPlaylists.length === 0) {
-            // fetch and reconcile the saved playlists against the spotify list
             await this.fetchSavedPlaylists(serverIsOnline);
         }
 
@@ -369,29 +379,27 @@ export class MusicManager {
         // filter out the music time playlists into it's own list if we have any
         this.retrieveMusicTimePlaylist(playlists);
 
-        // -- Removing the support to login without Spotify connect: 9/18/19 --
-        // add the buttons to the playlist
-        // await this.addSoftwareLoginButtonIfRequired(serverIsOnline, items);
-
+        // if itunes, show the itunes connected button
         if (playerName === PlayerName.ItunesDesktop) {
             // add the action items specific to itunes
             items.push(this.getItunesConnectedButton());
-        }
-
-        if (
-            playerName !== PlayerName.ItunesDesktop &&
-            allowSpotifyPlaylistFetch
-        ) {
+        } else if (allowSpotifyPlaylistFetch && hasSpotifyUser) {
+            // show the spotify connected button if we allow playlist fetch
             items.push(this.getSpotifyConnectedButton());
         }
 
         // add the no music time connection button if we're not online
-        if (!serverIsOnline) {
+        if (!serverIsOnline && !needsSpotifyAccess && hasSpotifyUser) {
             items.push(this.getNoMusicTimeConnectionButton());
         }
 
-        // show the spotify connect premium button if they're connected
-        if (!needsSpotifyAccess && premiumAccountRequired) {
+        if (!needsSpotifyAccess && !hasSpotifyUser && type === "spotify") {
+            // show that we're unable to connect to spotify at the moment
+            items.push(this.getNoSpotifyConnectionButton());
+        }
+
+        // show the spotify connect premium button if they're connected and a non-premium account
+        if (isNonPremiumConnectedSpotify) {
             // show the spotify premium account required button
             items.push(this.getSpotifyPremiumAccountRequiredButton());
         }
@@ -416,7 +424,7 @@ export class MusicManager {
             this._itunesPlaylists = items;
         } else {
             // show the devices listening folder if they've already connected oauth
-            if (!this.requiresSpotifyAccess()) {
+            if (!needsSpotifyAccess && hasSpotifyUser) {
                 const {
                     title,
                     tooltip,
@@ -431,11 +439,11 @@ export class MusicManager {
             }
 
             // add the action items specific to spotify
-            if (allowSpotifyPlaylistFetch) {
+            if (allowSpotifyPlaylistFetch && hasSpotifyUser) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
             }
 
-            if (isItunesDesktopEnabled() && isMac()) {
+            if (isMac() && SHOW_ITUNES_LAUNCH_BUTTON) {
                 items.push(this.getSwitchToItunesButton());
             }
 
@@ -548,6 +556,17 @@ export class MusicManager {
             PlayerType.NotAssigned,
             "Music Time Offline",
             "Unable to connect to Music Time"
+        );
+    }
+
+    getNoSpotifyConnectionButton() {
+        return this.buildActionItem(
+            "offline",
+            "offline",
+            null,
+            PlayerType.NotAssigned,
+            "Go Online To Load Playlists",
+            "Unable to connect to Spotify"
         );
     }
 
@@ -734,15 +753,16 @@ export class MusicManager {
         if (inactiva_devices_names.length > 0) {
             return {
                 title: `Available on ${inactiva_devices_names.join(", ")}`,
-                tooltip: "Spotify devices found but are not currently active",
+                tooltip:
+                    "Spotify devices detected but are not currently active",
                 loggedIn: true
             };
         }
 
         return {
-            title: "No Devices Found",
+            title: "No Devices Detected",
             tooltip:
-                "No Spotify devices found, you may need to login to your player",
+                "No Spotify devices detected, you may need to login to your player",
             loggedIn: false
         };
     }
@@ -1242,18 +1262,10 @@ export class MusicManager {
     async updateSpotifyAccessInfo(spotifyOauth) {
         if (spotifyOauth) {
             // update the CodyMusic credentials
-            let codyConfig: CodyConfig = new CodyConfig();
-            codyConfig.spotifyClientId = this._spotifyClientId;
-            codyConfig.spotifyAccessToken = spotifyOauth.access_token;
-            codyConfig.spotifyRefreshToken = spotifyOauth.refresh_token;
-            codyConfig.spotifyClientSecret = this._spotifyClientSecret;
-            codyConfig.enableItunesDesktop = false;
-            codyConfig.enableSpotifyDesktop = isMac() ? true : false;
-            codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
-            setConfig(codyConfig);
-
             setItem("spotify_access_token", spotifyOauth.access_token);
             setItem("spotify_refresh_token", spotifyOauth.refresh_token);
+
+            this.updateCodyConfig();
 
             // get the user
             getUserProfile().then(user => {
@@ -1267,16 +1279,8 @@ export class MusicManager {
     async clearSpotifyAccessInfo() {
         setItem("spotify_access_token", null);
         setItem("spotify_refresh_token", null);
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = false;
-        codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
-        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
-        codyConfig.spotifyClientId = this._spotifyClientId;
-        codyConfig.spotifyAccessToken = null;
-        codyConfig.spotifyRefreshToken = null;
-        codyConfig.spotifyClientSecret = this._spotifyClientSecret;
-        setConfig(codyConfig);
         this.spotifyUser = null;
+        this.updateCodyConfig();
     }
 
     // reconcile. meaning the user may have deleted the lists our 2 buttons created;
@@ -1330,14 +1334,19 @@ export class MusicManager {
 
         // it's not null, this means we want to launch a player and we need to pause the other player
         if (this.currentPlayerName === PlayerName.ItunesDesktop) {
+            // quit the mac player as the user is switching to spotify
             await quitMacPlayer(PlayerName.ItunesDesktop);
         } else {
+            // pause the spotify song as they're switching to itunes
             const musicCtrlMgr = new MusicControlManager();
-            musicCtrlMgr.pauseSong(this.currentPlayerName);
+            musicCtrlMgr.pauseSong(false);
         }
 
+        // update the current player type to what was selected
+        this.currentPlayerName = playerName;
+
         if (playerName !== PlayerName.ItunesDesktop) {
-            if (isMac() && isPlayerRunning(PlayerName.SpotifyDesktop)) {
+            if (isMac()) {
                 // just launch the desktop
                 launchPlayer(PlayerName.SpotifyDesktop);
             } else {
@@ -1347,9 +1356,6 @@ export class MusicManager {
         } else {
             launchPlayer(playerName);
         }
-
-        // update the current player type to what was selected
-        this.currentPlayerName = playerName;
 
         this.clearPlaylists();
         setTimeout(() => {
@@ -1398,9 +1404,12 @@ export class MusicManager {
     }
 
     hasSpotifyPlaybackAccess() {
-        if (this.spotifyUser && this.spotifyUser.product === "premium") {
-            return true;
-        }
-        return false;
+        return this.spotifyUser && this.spotifyUser.product === "premium"
+            ? true
+            : false;
+    }
+
+    hasSpotifyUser() {
+        return this.spotifyUser && this.spotifyUser.product ? true : false;
     }
 }

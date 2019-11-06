@@ -23,7 +23,6 @@ import {
     jwtExists,
     showLoginPrompt,
     getPluginName,
-    isMac,
     getItem
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
@@ -32,7 +31,6 @@ import * as vsls from "vsls/vscode";
 import { MusicStateManager } from "./lib/music/MusicStateManager";
 import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
-import { setConfig, CodyConfig } from "cody-music";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 import { MusicManager } from "./lib/music/MusicManager";
 
@@ -198,15 +196,9 @@ export async function intializePlugin(
     let musicMgr: MusicManager = null;
 
     if (isMusicTime()) {
-        // configure cody music (disable itunes for now)
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = false;
-        codyConfig.enableItunesDesktopSongTracking = isMac() ? true : false;
-        codyConfig.enableSpotifyDesktop = isMac() ? true : false;
-        setConfig(codyConfig);
-
+        // init the music manager and cody config
         musicMgr = MusicManager.getInstance();
-
+        musicMgr.updateCodyConfig();
         // this needs to happen first to enable spotify playlist and control logic
         await musicMgr.initializeSpotify();
         // check if the user has a slack integration already connected
@@ -248,13 +240,6 @@ export async function intializePlugin(
         liveshare_update_interval = setInterval(async () => {
             updateLiveshareTime();
         }, one_min_ms * 1);
-
-        // ensure cody music config is not set for code time
-        let codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = false;
-        codyConfig.enableSpotifyDesktop = false;
-        codyConfig.enableItunesDesktopSongTracking = false;
-        setConfig(codyConfig);
     }
 
     if (isMusicTime()) {
@@ -263,7 +248,7 @@ export async function intializePlugin(
 
         // 5 second interval to check music info
         gather_music_interval = setInterval(() => {
-            MusicStateManager.getInstance().musicStateCheck();
+            MusicStateManager.getInstance().gatherMusicInfo();
         }, 1000 * 5);
     }
 
