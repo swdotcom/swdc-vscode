@@ -13,7 +13,8 @@ import {
     TrackStatus,
     playTrack,
     saveToSpotifyLiked,
-    removeFromSpotifyLiked
+    removeFromSpotifyLiked,
+    getRunningTrack
 } from "cody-music";
 import { window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -71,44 +72,42 @@ export class MusicControlManager {
         //
     }
 
-    async nextSong(playerName: PlayerName = null) {
-        if (!playerName) {
-            playerName = this.musicMgr.currentPlayerName;
-        }
-        await next(playerName);
+    async nextSong() {
+        await next(this.musicMgr.currentPlayerName);
+        // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
-    async previousSong(playerName: PlayerName = null) {
-        if (!playerName) {
-            playerName = this.musicMgr.currentPlayerName;
-        }
-        await previous(playerName);
+    async previousSong() {
+        await previous(this.musicMgr.currentPlayerName);
+        // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
-    async playSong(playerName: PlayerName = null) {
-        if (!playerName) {
-            playerName = this.musicMgr.currentPlayerName;
-        }
-        await play(playerName);
-        this.musicMgr.runningTrack.state = TrackStatus.Playing;
-        MusicCommandManager.syncControls(this.musicMgr.runningTrack);
+    async playSong() {
+        await play(this.musicMgr.currentPlayerName);
+        // fetch the new track info
+        await this.musicStateMgr.gatherMusicInfo();
     }
 
     async pauseSong(needsRefresh = true) {
         await pause(this.musicMgr.currentPlayerName);
         if (needsRefresh) {
-            commands.executeCommand("musictime.refreshPlaylist");
+            // fetch the new track info
+            await this.musicStateMgr.gatherMusicInfo();
         }
     }
 
     async playSongInContext(params) {
         await playTrackInContext(this.musicMgr.currentPlayerName, params);
+        // fetch the new track info
+        await this.musicStateMgr.gatherMusicInfo();
     }
 
     async playSongById(playerName: PlayerName, trackId: string) {
         await playTrack(playerName, trackId);
+        // fetch the new track info
+        await this.musicStateMgr.gatherMusicInfo();
     }
 
     async setLiked(liked: boolean) {
