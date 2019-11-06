@@ -63,6 +63,7 @@ const batch_limit = 50;
 export function isNewDay() {
     let currentDay = getItem("currentDay");
     const day = moment().format("YYYY-MM-DD");
+
     if (!currentDay || day !== currentDay) {
         setItem("currentDay", day);
         return true;
@@ -769,12 +770,14 @@ export async function fetchSessionSummaryInfo() {
 
 export async function getSessionSummaryStatus() {
     let sessionSummaryData = getSessionSummaryData();
+    let status = "OK";
+
+    // check if we need to get new dashboard data
     if (isNewDay()) {
         // clear the stats cache so we can fetch new data
         clearSessionSummaryData();
         sessionSummaryData = getSessionSummaryData();
-    }
-    if (sessionSummaryData.currentDayMinutes === 0) {
+
         let serverIsOnline = await serverIsAvailable();
         if (!serverIsOnline) {
             showStatus(
@@ -783,26 +786,33 @@ export async function getSessionSummaryStatus() {
             );
             return { data: sessionSummaryData, status: "CONN_ERR" };
         }
-        let result = await softwareGet(`/sessions/summary`, getItem("jwt"))
-            .then(resp => {
-                if (isResponseOk(resp)) {
-                    // update the cache summary
-                    sessionSummaryData = resp.data;
-                    // update the file
-                    saveSessionSummaryToDisk(sessionSummaryData);
-                    // update the status bar
-                    updateStatusBarWithSummaryData();
-                    return { data: sessionSummaryData, status: "OK" };
-                }
-                return { status: "NO_DATA", data: sessionSummaryData };
-            })
-            .catch(err => {
-                updateStatusBarWithSummaryData();
-                return { status: "ERROR", data: sessionSummaryData };
-            });
-        return result;
-    } else {
-        updateStatusBarWithSummaryData();
-        return { data: sessionSummaryData, status: "OK" };
+        // Provides...
+        // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
+        // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
+        // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
+        // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
+        // volumePercent:851 }
+        // but we only need "averageDailyMinutes" and "averageDailyKeystrokes"
+        const result = await softwareGet(
+            `/sessions/summary`,
+            getItem("jwt")
+        ).catch(err => {
+            return null;
+        });
+        if (isResponseOk(result) && result.data) {
+            // update the cache summary
+            // all we need out of this are "averageDailyMinutes" and "averageDailyKeystrokes"
+            sessionSummaryData.averageDailyMinutes =
+                result.data.averageDailyMinutes || 0;
+            sessionSummaryData.averageDailyKeystrokes =
+                result.data.averageDailyKeystrokes || 0;
+            // update the file
+            saveSessionSummaryToDisk(sessionSummaryData);
+        } else {
+            status = "NO_DATA";
+        }
     }
+
+    updateStatusBarWithSummaryData();
+    return { data: sessionSummaryData, status };
 }

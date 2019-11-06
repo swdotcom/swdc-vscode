@@ -10,6 +10,7 @@ import {
 } from "cody-music";
 import { MusicPlaylistProvider } from "./MusicPlaylistProvider";
 import { MusicManager } from "./MusicManager";
+import { serverIsAvailable } from "../DataController";
 
 export interface Button {
     /**
@@ -266,6 +267,7 @@ export class MusicCommandManager {
      * @param trackInfo
      */
     private static async showPlayControls(trackInfo: Track) {
+        const serverIsOnline = await serverIsAvailable();
         if (!this._buttons || this._buttons.length === 0) {
             return;
         }
@@ -291,13 +293,13 @@ export class MusicCommandManager {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
             } else if (isLikedButton) {
-                if (!serverTrack || serverTrack.loved) {
+                if (!serverIsOnline || !serverTrack || serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (isUnLikedButton) {
-                if (serverTrack && serverTrack.loved) {
+                if (serverIsOnline && serverTrack && serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();
@@ -332,7 +334,8 @@ export class MusicCommandManager {
      * Show the buttons to pause a track
      * @param trackInfo
      */
-    private static showPauseControls(trackInfo: Track) {
+    private static async showPauseControls(trackInfo: Track) {
+        const serverIsOnline = await serverIsAvailable();
         if (!this._buttons || this._buttons.length === 0) {
             return;
         }
@@ -358,13 +361,13 @@ export class MusicCommandManager {
                 // always show the headphones menu icon
                 button.statusBarItem.show();
             } else if (isLikedButton) {
-                if (!serverTrack || serverTrack.loved) {
+                if (!serverIsOnline || !serverTrack || serverTrack.loved) {
                     button.statusBarItem.hide();
                 } else {
                     button.statusBarItem.show();
                 }
             } else if (isUnLikedButton) {
-                if (serverTrack && serverTrack.loved) {
+                if (serverIsOnline && serverTrack && serverTrack.loved) {
                     button.statusBarItem.show();
                 } else {
                     button.statusBarItem.hide();

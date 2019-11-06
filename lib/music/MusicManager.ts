@@ -142,16 +142,35 @@ export class MusicManager {
     }
 
     /**
-     * Get the current player: spotify-web, spotify, itunes
+     * Get the current player: spotify-web or itunes
      */
     get currentPlayerName(): PlayerName {
+        // if you're offline you may still have spotify desktop player abilities.
+        // check if the current player is spotify and we don't have web access.
+        // if no web access, then use the desktop player
+        if (
+            this._currentPlayerName === PlayerName.SpotifyWeb &&
+            isMac() &&
+            !this.hasSpotifyPlaybackAccess()
+        ) {
+            return PlayerName.SpotifyDesktop;
+        }
         return this._currentPlayerName;
     }
 
     set currentPlayerName(playerName: PlayerName) {
+        // override any calls setting this to spotify desktop back to spotify-web
+        if (playerName === PlayerName.SpotifyDesktop) {
+            playerName = PlayerName.SpotifyWeb;
+        }
+
+        // check if it's change in player type
         const shouldUpdateCodyConfig =
             playerName !== this._currentPlayerName ? true : false;
         this._currentPlayerName = playerName;
+
+        // if it's a player type change, update cody config so it
+        // can disable the other player until it is selected
         if (shouldUpdateCodyConfig) {
             this.updateCodyConfig();
         }
@@ -1360,15 +1379,13 @@ export class MusicManager {
 
     async getServerTrack(track: Track) {
         // set it to null so neither heart is displayed
-        this.serverTrack = null;
         let server_track = null;
 
-        let trackId = track.id;
         let type = "spotify";
         if (track.playerType === PlayerType.MacItunesDesktop) {
             type = "itunes";
         }
-        const api = `/music/liked/track/${trackId}?type=${type}`;
+        const api = `/music/liked/track/${track.id}?type=${type}`;
         const resp = await softwareGet(api, getItem("jwt"));
         if (isResponseOk(resp) && resp.data) {
             server_track = resp.data;
@@ -1384,8 +1401,10 @@ export class MusicManager {
             };
         }
         track.loved = server_track.loved;
-        MusicCommandManager.syncControls(track);
         this.serverTrack = server_track;
+
+        // sycn the controls so it shows the correct state
+        MusicCommandManager.syncControls(track);
     }
 
     hasSpotifyPlaybackAccess() {

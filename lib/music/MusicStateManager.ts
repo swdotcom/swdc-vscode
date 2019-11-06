@@ -115,8 +115,8 @@ export class MusicStateManager {
         // is "playing" AND the playerType doesn't match the current player type
 
         const isCurrentlySpotifyPlayer =
-            playerName === PlayerName.SpotifyDesktop ||
-            playerName === PlayerName.SpotifyWeb
+            playerName === PlayerName.SpotifyWeb ||
+            playerName === PlayerName.SpotifyDesktop
                 ? true
                 : false;
 

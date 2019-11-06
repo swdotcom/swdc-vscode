@@ -116,11 +116,10 @@ export class MusicControlManager {
 
     async setLiked(liked: boolean) {
         let track: Track = this.musicMgr.runningTrack;
-        if (track) {
-            // update the state right away. perform the api update asyn
-            track.loved = liked;
+        if (track && track.id) {
+            // show loading until the liked/unliked is complete
+            MusicCommandManager.syncControls(track, true);
 
-            let refreshPlaylist = false;
             if (track.playerType === PlayerType.MacItunesDesktop) {
                 // await so that the stateCheckHandler fetches
                 // the latest version of the itunes track
@@ -134,7 +133,6 @@ export class MusicControlManager {
                 } else {
                     await removeFromSpotifyLiked([track.id]);
                 }
-                refreshPlaylist = true;
             }
 
             let type = "spotify";
@@ -147,11 +145,8 @@ export class MusicControlManager {
                 logIt(`Error updating track like state: ${resp.message}`);
             }
 
-            this.musicMgr.getServerTrack(track);
-
-            if (refreshPlaylist) {
-                commands.executeCommand("musictime.refreshPlaylist");
-            }
+            // get the server track. this will sync the controls
+            await this.musicMgr.getServerTrack(track);
         }
     }
 
