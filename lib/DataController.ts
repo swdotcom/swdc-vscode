@@ -792,7 +792,6 @@ export async function getSessionSummaryStatus() {
         // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
         // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
         // volumePercent:851 }
-        // but we only need "averageDailyMinutes" and "averageDailyKeystrokes"
         const result = await softwareGet(
             `/sessions/summary`,
             getItem("jwt")
@@ -800,12 +799,7 @@ export async function getSessionSummaryStatus() {
             return null;
         });
         if (isResponseOk(result) && result.data) {
-            // update the cache summary
-            // all we need out of this are "averageDailyMinutes" and "averageDailyKeystrokes"
-            sessionSummaryData.averageDailyMinutes =
-                result.data.averageDailyMinutes || 0;
-            sessionSummaryData.averageDailyKeystrokes =
-                result.data.averageDailyKeystrokes || 0;
+            sessionSummaryData = result.data;
             // update the file
             saveSessionSummaryToDisk(sessionSummaryData);
         } else {
