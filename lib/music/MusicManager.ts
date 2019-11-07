@@ -1418,7 +1418,7 @@ export class MusicManager {
         return this.spotifyUser && this.spotifyUser.product ? true : false;
     }
 
-    getPlayerNameForPauseAction() {
+    getPlayerNameForPlayback() {
         // if you're offline you may still have spotify desktop player abilities.
         // check if the current player is spotify and we don't have web access.
         // if no web access, then use the desktop player

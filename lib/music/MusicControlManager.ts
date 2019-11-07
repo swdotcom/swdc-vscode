@@ -73,27 +73,30 @@ export class MusicControlManager {
     }
 
     async nextSong() {
-        await next(this.musicMgr.currentPlayerName);
+        const playerName = this.musicMgr.getPlayerNameForPlayback();
+        await next(playerName);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
     async previousSong() {
-        await previous(this.musicMgr.currentPlayerName);
+        const playerName = this.musicMgr.getPlayerNameForPlayback();
+        await previous(playerName);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
     async playSong() {
-        await play(this.musicMgr.currentPlayerName);
+        const playerName = this.musicMgr.getPlayerNameForPlayback();
+        await play(playerName);
         MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();
     }
 
     async pauseSong(needsRefresh = true) {
-        const playerForPause = this.musicMgr.getPlayerNameForPauseAction();
-        await pause(playerForPause);
+        const playerName = this.musicMgr.getPlayerNameForPlayback();
+        await pause(playerName);
         if (needsRefresh) {
             MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
             // fetch the new track info
@@ -102,7 +105,8 @@ export class MusicControlManager {
     }
 
     async playSongInContext(params) {
-        await playTrackInContext(this.musicMgr.currentPlayerName, params);
+        const playerName = this.musicMgr.getPlayerNameForPlayback();
+        await playTrackInContext(playerName, params);
         MusicCommandManager.syncControls(this.musicMgr.runningTrack, true);
         // fetch the new track info
         await this.musicStateMgr.gatherMusicInfo();

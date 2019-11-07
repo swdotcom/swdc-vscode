@@ -47,7 +47,7 @@ export const checkSpotifySongState = (missingDevices: boolean) => {
         clearTimeout(checkSpotifyStateTimeout);
     }
     checkSpotifyStateTimeout = setTimeout(async () => {
-        const musicMgr = MusicManager.getInstance();
+        const musicMgr: MusicManager = MusicManager.getInstance();
         // make sure we get that song, if not then they may not be logged in
         let playingTrack = musicMgr.runningTrack;
 
@@ -73,10 +73,12 @@ export const playSelectedItem = async (
     isExpand = true
 ) => {
     const musicCtrlMgr = new MusicControlManager();
-    const musicMgr = MusicManager.getInstance();
+    const musicMgr: MusicManager = MusicManager.getInstance();
 
     const isTrackOrPlaylist =
         playlistItem.type === "track" || playlistItem.type === "playlist";
+
+    const playerName = musicMgr.getPlayerNameForPlayback();
 
     // is this a track or playlist item?
     if (playlistItem.type === "track") {
@@ -105,7 +107,7 @@ export const playSelectedItem = async (
             } else {
                 musicCtrlMgr.pauseSong();
             }
-        } else if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
+        } else if (playerName === PlayerName.SpotifyDesktop) {
             // ex: ["spotify:track:0R8P9KfGJCDULmlEoBagcO", "spotify:playlist:6ZG5lRT77aJ3btmArcykra"]
             // make sure the track has spotify:track and the playlist has spotify:playlist
             playSpotifyDesktopPlaylistTrack();
@@ -141,7 +143,7 @@ export const playSelectedItem = async (
                     pos
                 );
             } else {
-                if (musicMgr.currentPlayerName === PlayerName.SpotifyDesktop) {
+                if (playerName === PlayerName.SpotifyDesktop) {
                     playSpotifyDesktopPlaylistTrack();
                 } else {
                     launchAndPlaySpotifyWebPlaylistTrack(false /*isTrack*/);

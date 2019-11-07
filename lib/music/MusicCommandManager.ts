@@ -271,7 +271,7 @@ export class MusicCommandManager {
         if (!this._buttons || this._buttons.length === 0) {
             return;
         }
-        const { showPremiumRequired, serverTrack } = this.getSpotifyState();
+        const { serverTrack } = this.getSpotifyState();
 
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
@@ -310,7 +310,7 @@ export class MusicCommandManager {
                 //     // hide this name in 10 seconds
                 //     this.hideSongDisplay();
                 // }, songNameDisplayTimeoutMillis);
-            } else if (isPlayButton && !showPremiumRequired) {
+            } else if (isPlayButton) {
                 if (songInfo) {
                     // show the song info over the play button
                     button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
@@ -331,7 +331,7 @@ export class MusicCommandManager {
         if (!this._buttons || this._buttons.length === 0) {
             return;
         }
-        const { showPremiumRequired, serverTrack } = this.getSpotifyState();
+        const { serverTrack } = this.getSpotifyState();
 
         const songInfo = trackInfo
             ? `${trackInfo.name} (${trackInfo.artist})`
@@ -370,7 +370,7 @@ export class MusicCommandManager {
                 //     // hide this name in 10 seconds
                 //     this.hideSongDisplay();
                 // }, songNameDisplayTimeoutMillis);
-            } else if (isPauseButton && !showPremiumRequired) {
+            } else if (isPauseButton) {
                 if (songInfo) {
                     button.statusBarItem.tooltip = `${button.tooltip} - ${songInfo}`;
                 }
