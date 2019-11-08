@@ -779,31 +779,28 @@ export async function getSessionSummaryStatus() {
         sessionSummaryData = getSessionSummaryData();
 
         let serverIsOnline = await serverIsAvailable();
-        if (!serverIsOnline) {
-            showStatus(
-                "Code Time",
-                "The code time app is currently not available, we'll try retrieving your dashboard metrics again later."
-            );
-            return { data: sessionSummaryData, status: "CONN_ERR" };
-        }
-        // Provides...
-        // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
-        // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
-        // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
-        // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
-        // volumePercent:851 }
-        const result = await softwareGet(
-            `/sessions/summary`,
-            getItem("jwt")
-        ).catch(err => {
-            return null;
-        });
-        if (isResponseOk(result) && result.data) {
-            sessionSummaryData = result.data;
-            // update the file
-            saveSessionSummaryToDisk(sessionSummaryData);
+        if (serverIsOnline) {
+            // Provides...
+            // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
+            // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
+            // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
+            // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
+            // volumePercent:851 }
+            const result = await softwareGet(
+                `/sessions/summary`,
+                getItem("jwt")
+            ).catch(err => {
+                return null;
+            });
+            if (isResponseOk(result) && result.data) {
+                sessionSummaryData = result.data;
+                // update the file
+                saveSessionSummaryToDisk(sessionSummaryData);
+            } else {
+                status = "NO_DATA";
+            }
         } else {
-            status = "NO_DATA";
+            saveSessionSummaryToDisk(sessionSummaryData);
         }
     }
 
