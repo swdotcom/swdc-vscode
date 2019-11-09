@@ -23,7 +23,6 @@ import {
     launchWebUrl,
     logIt,
     isMusicTime,
-    showStatus,
     getPluginId,
     isCodeTime,
     logEvent,
@@ -59,6 +58,10 @@ let toggleFileEventLogging = null;
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
+
+export function clearCurrentDay() {
+    setItem("currentDay", null);
+}
 
 export function isNewDay() {
     let currentDay = getItem("currentDay");
@@ -697,7 +700,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     } else {
         let message = "";
         if (isCodeTime()) {
+            // clear the last moment date to be able to retrieve the user's dashboard metrics
             clearLastMomentDate();
+            // clear the last day fetched to be able to retrieve the user's statusbar metrics
+            clearCurrentDay();
             message = "Successfully logged on to Code Time";
         } else if (isMusicTime()) {
             message = "Successfully logged on to Music Time";

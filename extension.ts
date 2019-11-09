@@ -8,7 +8,8 @@ import {
     getUserStatus,
     sendHeartbeat,
     createAnonymousUser,
-    serverIsAvailable
+    serverIsAvailable,
+    getSessionSummaryStatus
 } from "./lib/DataController";
 import {
     showStatus,
@@ -175,7 +176,12 @@ export async function intializePlugin(
             statusBarItem.show();
 
             showStatus("Code Time", null);
-        }, 100);
+        }, 0);
+
+        // show the local stats in 5 seconds
+        setTimeout(() => {
+            getSessionSummaryStatus();
+        }, 1000 * 5);
     }
 
     if (isMusicTime()) {

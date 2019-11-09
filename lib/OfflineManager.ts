@@ -84,9 +84,7 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
         fs.writeFileSync(getSessionSummaryFile(), content, err => {
             if (err)
                 logIt(
-                    `Deployer: Error writing session summary data: ${
-                        err.message
-                    }`
+                    `Deployer: Error writing session summary data: ${err.message}`
                 );
         });
     } catch (e) {
