@@ -246,17 +246,10 @@ export class MusicManager {
         const accessToken = getItem("spotify_access_token");
         const refreshToken = getItem("spotify_refresh_token");
 
-        const type =
-            this.currentPlayerName === PlayerName.ItunesDesktop
-                ? "itunes"
-                : "spotify";
-        const enableSpotifyDesktop = isMac() && type === "spotify";
-        const enableItunesDesktop = isMac() && type === "itunes";
-
         const codyConfig: CodyConfig = new CodyConfig();
-        codyConfig.enableItunesDesktop = enableItunesDesktop;
+        codyConfig.enableItunesDesktop = false;
         codyConfig.enableItunesDesktopSongTracking = isMac();
-        codyConfig.enableSpotifyDesktop = enableSpotifyDesktop;
+        codyConfig.enableSpotifyDesktop = isMac();
         codyConfig.spotifyClientId = this._spotifyClientId;
         codyConfig.spotifyAccessToken = accessToken;
         codyConfig.spotifyRefreshToken = refreshToken;
@@ -1272,6 +1265,7 @@ export class MusicManager {
             setItem("spotify_access_token", spotifyOauth.access_token);
             setItem("spotify_refresh_token", spotifyOauth.refresh_token);
 
+            // update cody config
             this.updateCodyConfig();
 
             // get the user
@@ -1285,6 +1279,8 @@ export class MusicManager {
         setItem("spotify_access_token", null);
         setItem("spotify_refresh_token", null);
         this.spotifyUser = null;
+
+        // update cody config
         this.updateCodyConfig();
     }
 
