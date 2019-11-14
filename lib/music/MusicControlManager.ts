@@ -454,7 +454,10 @@ export async function disconnectOauth(type: string) {
                         null
                     );
                 } else if (type_lc === "spotify") {
-                    musicMgr.clearSpotifyAccessInfo();
+                    await musicMgr.clearSpotifyAccessInfo();
+
+                    // delete the saved playlists
+                    await musicMgr.deleteSavedPlaylists();
                 }
 
                 // refresh the playlist

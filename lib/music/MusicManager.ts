@@ -322,23 +322,18 @@ export class MusicManager {
         let items: PlaylistItem[] = [];
 
         const needsSpotifyAccess = this.requiresSpotifyAccess();
-        const spotifyPlaybackAccess = this.hasSpotifyPlaybackAccess();
         const hasSpotifyUser = this.hasSpotifyUser();
+        const isSpotifyPremium = this.isSpotifyPremium();
 
         const type =
             playerName === PlayerName.ItunesDesktop ? "itunes" : "spotify";
 
-        // Do they require premium spotify?
-        const premiumAccountRequired =
-            isMac() && !spotifyPlaybackAccess && hasSpotifyUser;
-
         // Do they have spotify playback control?
-        const allowSpotifyPlaylistFetch =
-            !needsSpotifyAccess && !premiumAccountRequired;
+        const allowSpotifyPlaylistFetch = !needsSpotifyAccess && hasSpotifyUser;
 
         // is this a non premium connected spotify user?
         const isNonPremiumConnectedSpotify =
-            !needsSpotifyAccess && !spotifyPlaybackAccess && hasSpotifyUser;
+            allowSpotifyPlaylistFetch && !isSpotifyPremium;
 
         // fetch the playlists
         const playlists: PlaylistItem[] =
@@ -435,7 +430,7 @@ export class MusicManager {
             }
 
             // add the action items specific to spotify
-            if (allowSpotifyPlaylistFetch && hasSpotifyUser) {
+            if (allowSpotifyPlaylistFetch && isSpotifyPremium) {
                 playlists.push(this.getSpotifyLikedPlaylistFolder());
             }
 
@@ -443,10 +438,10 @@ export class MusicManager {
                 items.push(this.getSwitchToItunesButton());
             }
 
+            items.push(this.getLineBreakButton());
+
             // get the custom playlist button
             if (serverIsOnline && allowSpotifyPlaylistFetch) {
-                items.push(this.getLineBreakButton());
-
                 const customPlaylistButton: PlaylistItem = this.getCustomPlaylistButton();
                 if (customPlaylistButton) {
                     items.push(customPlaylistButton);
@@ -1241,7 +1236,7 @@ export class MusicManager {
             const oauthResult = await getSpotifyOauth(serverIsOnline);
             if (oauthResult.auth) {
                 // update the CodyMusic credentials
-                this.updateSpotifyAccessInfo(oauthResult.auth);
+                await this.updateSpotifyAccessInfo(oauthResult.auth);
             } else {
                 setItem("spotify_access_token", null);
                 setItem("spotify_refresh_token", null);
@@ -1251,7 +1246,7 @@ export class MusicManager {
                 access_token: getItem("spotify_access_token"),
                 refresh_token: getItem("spotify_refresh_token")
             };
-            this.updateSpotifyAccessInfo(spotifyOauth);
+            await this.updateSpotifyAccessInfo(spotifyOauth);
         }
 
         this.initialized = true;
@@ -1282,6 +1277,18 @@ export class MusicManager {
 
         // update cody config
         this.updateCodyConfig();
+    }
+
+    deleteSavedPlaylists() {
+        if (this._savedPlaylists && this._savedPlaylists.length > 0) {
+            this._savedPlaylists.map(async savedPlaylist => {
+                // delete
+                await softwareDelete(
+                    `/music/generatedPlaylist/${savedPlaylist.id}`,
+                    getItem("jwt")
+                );
+            });
+        }
     }
 
     // reconcile. meaning the user may have deleted the lists our 2 buttons created;
@@ -1412,6 +1419,12 @@ export class MusicManager {
 
     hasSpotifyUser() {
         return this.spotifyUser && this.spotifyUser.product ? true : false;
+    }
+
+    isSpotifyPremium() {
+        return this.hasSpotifyUser() && this.spotifyUser.product === "premium"
+            ? true
+            : false;
     }
 
     getPlayerNameForPlayback() {
