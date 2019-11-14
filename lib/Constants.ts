@@ -15,10 +15,13 @@ export const SHORT_THRESHOLD_HOURS = 1;
 export const CODE_TIME_PLUGIN_ID = 2;
 export const MUSIC_TIME_PLUGIN_ID = 13;
 
-// set the api endpoint to use
+// API ENDPOINT
+//
 // "http://localhost:5000", "https://qaapi.software.com", "https://stagingapi.software.com", "https://api.software.com"
 export const api_endpoint = "https://api.software.com";
-// set the launch url to use
+
+// DASHBOARD URL
+//
 // "http://localhost:3000", "https://qa.software.com", "https://staging.software.com", "https://app.software.com"
 export const launch_url = "https://app.software.com";
 

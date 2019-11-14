@@ -10,11 +10,9 @@ import {
     launchPlayer,
     PlaylistItem,
     playTrackInContext,
-    TrackStatus,
     playTrack,
     saveToSpotifyLiked,
-    removeFromSpotifyLiked,
-    getRunningTrack
+    removeFromSpotifyLiked
 } from "cody-music";
 import { window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
@@ -455,9 +453,6 @@ export async function disconnectOauth(type: string) {
                     );
                 } else if (type_lc === "spotify") {
                     await musicMgr.clearSpotifyAccessInfo();
-
-                    // delete the saved playlists
-                    await musicMgr.deleteSavedPlaylists();
                 }
 
                 // refresh the playlist
