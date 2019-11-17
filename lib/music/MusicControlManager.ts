@@ -18,10 +18,8 @@ import { window, ViewColumn, Uri, commands } from "vscode";
 import { MusicCommandManager } from "./MusicCommandManager";
 import { showQuickPick } from "../MenuManager";
 import {
-    getUserStatus,
     serverIsAvailable,
     refetchSpotifyConnectStatusLazily,
-    getLoggedInCacheState,
     getAppJwt
 } from "../DataController";
 import {
@@ -213,25 +211,7 @@ export class MusicControlManager {
     }
 
     async showMenu() {
-        let loggedInCacheState = getLoggedInCacheState();
         let serverIsOnline = await serverIsAvailable();
-        let userStatus = {
-            loggedIn: loggedInCacheState
-        };
-        if (loggedInCacheState === null) {
-            // update it since it's null
-            // {loggedIn: true|false}
-            userStatus = await getUserStatus(serverIsOnline);
-        }
-
-        // let loginFunction = launchLogin;
-        // let loginMsgDetail =
-        //     "To see your music data in Music Time, please log in to your account";
-        // if (!serverIsOnline) {
-        //     loginMsgDetail =
-        //         "Our service is temporarily unavailable. Please try again later.";
-        //     loginFunction = null;
-        // }
 
         let menuOptions = {
             items: []
@@ -239,11 +219,13 @@ export class MusicControlManager {
 
         const musicMgr: MusicManager = MusicManager.getInstance();
 
-        // check if the user has the spotify_access_token
-        const accessToken = getItem("spotify_access_token");
+        // check if they need to connect to spotify
+        const needsSpotifyAccess = musicMgr.requiresSpotifyAccess();
+
+        // check to see if they have the slack access token
         const slackAccessToken = getItem("slack_access_token");
 
-        if (accessToken) {
+        if (!needsSpotifyAccess) {
             // check if we already have a playlist
             const savedPlaylists: PlaylistItem[] = musicMgr.savedPlaylists;
             const hasSavedPlaylists =
@@ -274,19 +256,14 @@ export class MusicControlManager {
             }
         }
 
-        // if (!userStatus.loggedIn) {
-        //     menuOptions.items.push({
-        //         label: LOGIN_LABEL,
-        //         detail: loginMsgDetail,
-        //         cb: loginFunction
-        //     });
-        // }
-
-        menuOptions.items.push({
-            label: "Music Time Dashboard",
-            detail: "View your latest music metrics right here in your editor",
-            cb: displayMusicTimeMetricsMarkdownDashboard
-        });
+        if (!needsSpotifyAccess) {
+            menuOptions.items.push({
+                label: "Music Time Dashboard",
+                detail:
+                    "View your latest music metrics right here in your editor",
+                cb: displayMusicTimeMetricsMarkdownDashboard
+            });
+        }
 
         menuOptions.items.push({
             label: "Submit an issue on GitHub",
@@ -310,7 +287,7 @@ export class MusicControlManager {
                 command: null
             });
 
-            if (!accessToken) {
+            if (needsSpotifyAccess) {
                 menuOptions.items.push({
                     label: "Connect Spotify",
                     detail:

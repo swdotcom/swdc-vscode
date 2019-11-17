@@ -56,6 +56,10 @@ let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 let toggleFileEventLogging = null;
 
+let slackFetchTimeout = null;
+let spotifyFetchTimeout = null;
+let userFetchTimeout = null;
+
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
@@ -547,8 +551,12 @@ export async function updatePreferences() {
     }
 }
 
-export function refetchSlackConnectStatusLazily(tryCountUntilFound = 20) {
-    setTimeout(() => {
+export function refetchSlackConnectStatusLazily(tryCountUntilFound = 40) {
+    if (slackFetchTimeout) {
+        return;
+    }
+    slackFetchTimeout = setTimeout(() => {
+        slackFetchTimeout = null;
         slackConnectStatusHandler(tryCountUntilFound);
     }, 10000);
 }
@@ -574,8 +582,12 @@ async function slackConnectStatusHandler(tryCountUntilFound) {
     }
 }
 
-export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 20) {
-    setTimeout(() => {
+export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 40) {
+    if (spotifyFetchTimeout) {
+        return;
+    }
+    spotifyFetchTimeout = setTimeout(() => {
+        spotifyFetchTimeout = null;
         spotifyConnectStatusHandler(tryCountUntilFound);
     }, 10000);
 }
@@ -679,8 +691,12 @@ async function seedTopSpotifySongs() {
     }
 }
 
-export function refetchUserStatusLazily(tryCountUntilFoundUser = 20) {
-    setTimeout(() => {
+export function refetchUserStatusLazily(tryCountUntilFoundUser = 40) {
+    if (userFetchTimeout) {
+        return;
+    }
+    userFetchTimeout = setTimeout(() => {
+        userFetchTimeout = null;
         userStatusFetchHandler(tryCountUntilFoundUser);
     }, 10000);
 }
