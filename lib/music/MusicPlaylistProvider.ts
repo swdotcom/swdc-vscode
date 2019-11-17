@@ -372,7 +372,7 @@ export class MusicPlaylistProvider implements TreeDataProvider<PlaylistItem> {
         const musicMgr: MusicManager = MusicManager.getInstance();
 
         if (element) {
-            // return track of the playlist parent
+            // return the playlist tracks
             let tracks: PlaylistItem[] = await musicMgr.getPlaylistItemTracksForPlaylistId(
                 element.id
             );

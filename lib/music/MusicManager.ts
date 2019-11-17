@@ -19,7 +19,6 @@ import {
     getUserProfile,
     launchPlayer,
     quitMacPlayer,
-    isPlayerRunning,
     getSpotifyDevices,
     PlayerDevice,
     getSpotifyPlaylist
@@ -442,7 +441,14 @@ export class MusicManager {
 
             // add the action items specific to spotify
             if (allowSpotifyPlaylistFetch && isSpotifyPremium) {
-                playlists.push(this.getSpotifyLikedPlaylistFolder());
+                // only add the "Liked Songs" playlist if there are tracks found in that playlist
+                this._spotifyLikedSongs = await getSpotifyLikedSongs();
+                if (
+                    this._spotifyLikedSongs &&
+                    this._spotifyLikedSongs.length > 0
+                ) {
+                    playlists.push(this.getSpotifyLikedPlaylistFolder());
+                }
             }
 
             if (isMac() && SHOW_ITUNES_LAUNCH_BUTTON) {
@@ -796,8 +802,6 @@ export class MusicManager {
             } else {
                 // fetch from spotify web
                 if (playlist_id === SPOTIFY_LIKED_SONGS_PLAYLIST_NAME) {
-                    this._spotifyLikedSongs = await getSpotifyLikedSongs();
-
                     playlistItemTracks = this.getPlaylistItemTracksFromTracks(
                         this._spotifyLikedSongs
                     );
