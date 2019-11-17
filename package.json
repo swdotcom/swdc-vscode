@@ -33,9 +33,6 @@
     "activationEvents": [
         "*"
     ],
-    "engines": {
-        "vscode": "^1.35.0"
-    },
     "main": "./out/extension",
     "scripts": {
         "prebuildcodetime": "node deployer code-time && tsc -watch -p ./",
