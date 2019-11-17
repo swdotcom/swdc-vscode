@@ -250,8 +250,6 @@ export function createCommands(): {
         const reconcilePlaylistCommand = commands.registerCommand(
             "musictime.reconcilePlaylist",
             async () => {
-                await musicMgr.reconcilePlaylists();
-                await musicMgr.clearSavedPlaylists();
                 commands.executeCommand("musictime.refreshPlaylist");
             }
         );

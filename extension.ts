@@ -249,9 +249,6 @@ export async function intializePlugin(
     }
 
     if (isMusicTime()) {
-        // initialize the music manager
-        commands.executeCommand("musictime.reconcilePlaylist");
-
         // 5 second interval to check music info
         gather_music_interval = setInterval(() => {
             MusicStateManager.getInstance().gatherMusicInfo();

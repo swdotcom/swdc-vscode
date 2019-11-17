@@ -344,6 +344,17 @@ export class MusicManager {
             await this.fetchSavedPlaylists(serverIsOnline);
         }
 
+        // reconcile in case the fetched playlists don't contain
+        // one we've generated, or the name has changed
+        if (
+            serverIsOnline &&
+            playerName === PlayerName.SpotifyWeb &&
+            this._savedPlaylists.length > 0 &&
+            playlists.length > 0
+        ) {
+            await this.reconcilePlaylists(playlists);
+        }
+
         // sort
         this.sortPlaylists(playlists);
 
@@ -1294,42 +1305,35 @@ export class MusicManager {
     // reconcile. meaning the user may have deleted the lists our 2 buttons created;
     // global and custom.  We'll remove them from our db if we're unable to find a matching
     // playlist_id we have saved.
-    async reconcilePlaylists() {
-        // fetch what we have from the app
-        if (this._savedPlaylists.length === 0) {
-            let serverIsOnline = await serverIsAvailable();
-            // fetch and reconcile the saved playlists against the spotify list
-            await this.fetchSavedPlaylists(serverIsOnline);
-        }
-        if (
-            this._savedPlaylists.length > 0 &&
-            this._spotifyPlaylists.length > 0
-        ) {
-            this._savedPlaylists.map(async savedPlaylist => {
-                let foundItem = this._spotifyPlaylists.find(element => {
-                    return element.id === savedPlaylist.id;
-                });
-                // the backend should protect this from deleting the global top 40
-                // as we're unsure if the playlist we're about to reconcile/delete
-                // is the custom playlist or global top 40
-                if (!foundItem) {
-                    // remove it from the server
-                    await softwareDelete(
-                        `/music/generatedPlaylist/${savedPlaylist.id}`,
-                        getItem("jwt")
-                    );
-                } else if (foundItem.name !== savedPlaylist.name) {
-                    // update the name on software
-                    const payload = {
-                        name: foundItem.name
-                    };
-                    await softwarePut(
-                        `/music/generatedPlaylist/${savedPlaylist.id}`,
-                        payload,
-                        getItem("jwt")
-                    );
-                }
+    async reconcilePlaylists(playlists: PlaylistItem[]) {
+        for (let i = 0; i < this._savedPlaylists.length; i++) {
+            const savedPlaylist = this._savedPlaylists[i];
+
+            // find the saved playlist in the spotify playlist list
+            let foundItem = playlists.find(element => {
+                return element.id === savedPlaylist.id;
             });
+
+            // the backend should protect this from deleting the global top 40
+            // as we're unsure if the playlist we're about to reconcile/delete
+            // is the custom playlist or global top 40
+            if (!foundItem) {
+                // remove it from the server
+                await softwareDelete(
+                    `/music/generatedPlaylist/${savedPlaylist.id}`,
+                    getItem("jwt")
+                );
+            } else if (foundItem.name !== savedPlaylist.name) {
+                // update the name on software
+                const payload = {
+                    name: foundItem.name
+                };
+                await softwarePut(
+                    `/music/generatedPlaylist/${savedPlaylist.id}`,
+                    payload,
+                    getItem("jwt")
+                );
+            }
         }
     }
 
