@@ -149,7 +149,7 @@
             },
             {
                 "command": "musictime.sortToOriginal",
-                "title": "Sort Original"
+                "title": "Sort Latest"
             },
             {
                 "command": "musictime.like",

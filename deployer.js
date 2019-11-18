@@ -243,7 +243,7 @@ async function deploy() {
         });
         commands.push({
             command: "musictime.sortToOriginal",
-            title: "Sort Original"
+            title: "Sort Latest"
         });
         commands.push({
             command: "musictime.like",
