@@ -81,6 +81,7 @@ export class MusicManager {
     private _spotifyClientId: string = "";
     private _spotifyClientSecret: string = "";
     private _initialized: boolean = false;
+    private _sortAlphabetically: boolean = true;
 
     private constructor() {
         //
@@ -143,6 +144,14 @@ export class MusicManager {
 
     set selectedTrackItem(trackItem: PlaylistItem) {
         this._selectedTrackItem = trackItem;
+    }
+
+    get sortAlphabetically() {
+        return this._sortAlphabetically;
+    }
+
+    set sortAlphabetically(sortAlpha: boolean) {
+        this._sortAlphabetically = sortAlpha;
     }
 
     /**
@@ -336,7 +345,9 @@ export class MusicManager {
 
         // fetch the playlists
         const playlists: PlaylistItem[] =
-            (await getPlaylists(playerName)) || [];
+            (await getPlaylists(playerName, {
+                all: true
+            })) || [];
 
         // fetch the saved playlists from software app
         if (this._savedPlaylists.length === 0) {
@@ -355,7 +366,9 @@ export class MusicManager {
         }
 
         // sort
-        this.sortPlaylists(playlists);
+        if (this.sortAlphabetically) {
+            this.sortPlaylists(playlists);
+        }
 
         // go through each playlist and find out it's state
         if (playlists && playlists.length > 0) {

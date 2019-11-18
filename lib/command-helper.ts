@@ -255,6 +255,24 @@ export function createCommands(): {
         );
         cmds.push(reconcilePlaylistCommand);
 
+        const sortPlaylistAlphabeticallyCommand = commands.registerCommand(
+            "musictime.sortAlphabetically",
+            async () => {
+                musicMgr.sortAlphabetically = true;
+                commands.executeCommand("musictime.refreshPlaylist");
+            }
+        );
+        cmds.push(sortPlaylistAlphabeticallyCommand);
+
+        const sortPlaylistToOriginalCommand = commands.registerCommand(
+            "musictime.sortToOriginal",
+            async () => {
+                musicMgr.sortAlphabetically = false;
+                commands.executeCommand("musictime.refreshPlaylist");
+            }
+        );
+        cmds.push(sortPlaylistToOriginalCommand);
+
         const refreshPlaylistCommand = commands.registerCommand(
             "musictime.refreshPlaylist",
             async () => {
