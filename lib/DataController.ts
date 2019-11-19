@@ -63,18 +63,16 @@ let userFetchTimeout = null;
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
-export function clearCurrentDay() {
-    setItem("currentDay", null);
-}
+let currentDay = null;
 
 export function isNewDay() {
-    let currentDay = getItem("currentDay");
     const day = moment().format("YYYY-MM-DD");
 
     if (!currentDay || day !== currentDay) {
-        setItem("currentDay", day);
+        currentDay = day;
         return true;
     }
+
     return false;
 }
 
@@ -718,8 +716,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         if (isCodeTime()) {
             // clear the last moment date to be able to retrieve the user's dashboard metrics
             clearLastMomentDate();
-            // clear the last day fetched to be able to retrieve the user's statusbar metrics
-            clearCurrentDay();
             message = "Successfully logged on to Code Time";
         } else if (isMusicTime()) {
             message = "Successfully logged on to Music Time";
@@ -796,10 +792,6 @@ export async function getSessionSummaryStatus() {
 
     // check if we need to get new dashboard data
     if (isNewDay()) {
-        // clear the stats cache so we can fetch new data
-        clearSessionSummaryData();
-        sessionSummaryData = getSessionSummaryData();
-
         let serverIsOnline = await serverIsAvailable();
         if (serverIsOnline) {
             // Provides...
@@ -815,14 +807,13 @@ export async function getSessionSummaryStatus() {
                 return null;
             });
             if (isResponseOk(result) && result.data) {
+                // update it from the app
                 sessionSummaryData = result.data;
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
             } else {
                 status = "NO_DATA";
             }
-        } else {
-            saveSessionSummaryToDisk(sessionSummaryData);
         }
     }
 

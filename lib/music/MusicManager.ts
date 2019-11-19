@@ -1087,9 +1087,6 @@ export class MusicManager {
             PERSONAL_TOP_SONGS_PLID
         );
 
-        // sync the user's weekly top songs
-        await this.syncUsersWeeklyTopSongs();
-
         let playlistId = null;
         if (!customPlaylist) {
             let playlistResult: CodyResponse = await createPlaylist(
@@ -1122,6 +1119,9 @@ export class MusicManager {
 
         // get the spotify track ids and create the playlist
         if (playlistId) {
+            // sync the user's weekly top songs
+            await this.syncUsersWeeklyTopSongs();
+
             // add the tracks
             // list of [{trackId, artist, name}...]
             if (this._userTopSongs && this._userTopSongs.length > 0) {

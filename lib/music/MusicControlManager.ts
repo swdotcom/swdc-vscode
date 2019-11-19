@@ -231,10 +231,7 @@ export class MusicControlManager {
             const hasSavedPlaylists =
                 savedPlaylists && savedPlaylists.length > 0;
 
-            const codingFavs: any[] = musicMgr.userTopSongs;
-            const hasUserFavorites =
-                codingFavs && codingFavs.length > 0 ? true : false;
-
+            // check if they've generated a playlist yet
             const customPlaylist = musicMgr.getMusicTimePlaylistByTypeId(
                 PERSONAL_TOP_SONGS_PLID
             );
@@ -246,7 +243,7 @@ export class MusicControlManager {
                 ? GENERATE_CUSTOM_PLAYLIST_TOOLTIP
                 : REFRESH_CUSTOM_PLAYLIST_TOOLTIP;
 
-            if (!hasSavedPlaylists && hasUserFavorites) {
+            if (!hasSavedPlaylists) {
                 // show the generate playlist menu item
                 menuOptions.items.push({
                     label: personalPlaylistLabel,
