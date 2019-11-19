@@ -648,11 +648,10 @@ export function storePayload(payload) {
     // calculate it and call
     // add to the minutes
     let keystrokes = parseInt(payload.keystrokes, 10) || 0;
-    incrementSessionSummaryData(1 /*minutes*/, keystrokes);
+    // this will increment and store it offline
+    incrementSessionSummaryData(keystrokes);
 
     setTimeout(() => {
-        // push the stats to the file so other editor windows can have it
-        saveSessionSummaryToDisk(getSessionSummaryData());
         // update the statusbar
         fetchSessionSummaryInfo();
     }, 1000);

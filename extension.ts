@@ -9,7 +9,8 @@ import {
     sendHeartbeat,
     createAnonymousUser,
     serverIsAvailable,
-    getSessionSummaryStatus
+    getSessionSummaryStatus,
+    initializePreferences
 } from "./lib/DataController";
 import {
     showStatus,
@@ -150,6 +151,9 @@ export async function intializePlugin(
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
     let serverIsOnline = await serverIsAvailable();
+
+    // get the user preferences whether it's music time or code time
+    await initializePreferences(serverIsOnline);
 
     //
     // add the player commands before we show the playlist

@@ -47,6 +47,7 @@ import {
     saveSessionSummaryToDisk
 } from "./OfflineManager";
 import { MusicManager } from "./music/MusicManager";
+import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
@@ -285,7 +286,45 @@ export async function getSpotifyOauth(serverIsOnline) {
     return { loggedOn: false, state: "UNKNOWN", auth: null };
 }
 
+async function isNonAnonUser(serverIsOnline) {
+    const user = await getUser(serverIsOnline, getItem("jwt"));
+    if (user) {
+        // check if they have a password, google access token,
+        // or github access token
+        if (
+            user.password ||
+            user.google_access_token ||
+            user.github_access_token
+        ) {
+            return true;
+        }
+
+        // check if they have a spotify access token
+        if (user.auths && user.auths.length > 0) {
+            for (let i = 0; i < user.auths.length; i++) {
+                if (
+                    user.auths[i].type === "spotify" &&
+                    user.auths[i].access_token
+                ) {
+                    return true;
+                }
+            }
+        }
+    } else if (!serverIsOnline) {
+        // do we have an email in the session.json?
+        const email = getItem("name");
+        if (email) {
+            return true;
+        }
+    }
+    return false;
+}
+
 async function isLoggedOn(serverIsOnline) {
+    if (await isNonAnonUser(serverIsOnline)) {
+        return { loggedOn: true, state: "OK" };
+    }
+
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let api = "/users/plugin/state";
@@ -348,11 +387,6 @@ export async function getUserStatus(serverIsOnline) {
 
     logIt(`Checking login status, logged in: ${loggedIn}`);
 
-    if (serverIsOnline && loggedIn && !initializedPrefs) {
-        initializePreferences(serverIsOnline);
-        initializedPrefs = true;
-    }
-
     let userStatus = {
         loggedIn
     };
@@ -371,6 +405,12 @@ export async function getUserStatus(serverIsOnline) {
         loggedInCacheState !== loggedIn
     ) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
+
+        if (loggedIn) {
+            // they've logged in, update the preferences
+            initializePreferences(serverIsOnline);
+        }
+
         setTimeout(() => {
             // update the statusbar
             fetchSessionSummaryInfo();
@@ -417,9 +457,17 @@ export async function getUser(serverIsOnline, jwt) {
 
 export async function initializePreferences(serverIsOnline) {
     let jwt = getItem("jwt");
+    // use a default if we're unable to get the user or preferences
+    let sessionThresholdInSec = DEFAULT_SESSION_THRESHOLD_SECONDS;
+
     if (jwt && serverIsOnline) {
         let user = await getUser(serverIsOnline, jwt);
         if (user && user.preferences) {
+            // obtain the session threshold in seconds "sessionThresholdInSec"
+            sessionThresholdInSec =
+                user.preferences.sessionThresholdInSec ||
+                DEFAULT_SESSION_THRESHOLD_SECONDS;
+
             let userId = parseInt(user.id, 10);
             let prefs = user.preferences;
             let prefsShowMusic =
@@ -473,6 +521,9 @@ export async function initializePreferences(serverIsOnline) {
             }
         }
     }
+
+    // update the session threshold in seconds config
+    setItem("sessionThresholdInSec", sessionThresholdInSec);
 }
 
 async function sendPreferencesUpdate(userId, userPrefs) {
@@ -807,8 +858,11 @@ export async function getSessionSummaryStatus() {
                 return null;
             });
             if (isResponseOk(result) && result.data) {
+                // get the lastStart
+                const lastStart = sessionSummaryData.lastStart;
                 // update it from the app
                 sessionSummaryData = result.data;
+                sessionSummaryData.lastStart = lastStart;
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
             } else {
