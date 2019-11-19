@@ -63,13 +63,13 @@ let userFetchTimeout = null;
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
-let currentDay = null;
+let currentDayHour = null;
 
-export function isNewDay() {
-    const day = moment().format("YYYY-MM-DD");
+export function isNewHour() {
+    const dayHr = moment().format("YYYY-MM-DD-HH");
 
-    if (!currentDay || day !== currentDay) {
-        currentDay = day;
+    if (!currentDayHour || dayHr !== currentDayHour) {
+        currentDayHour = dayHr;
         return true;
     }
 
@@ -791,7 +791,7 @@ export async function getSessionSummaryStatus() {
     let status = "OK";
 
     // check if we need to get new dashboard data
-    if (isNewDay()) {
+    if (isNewHour()) {
         let serverIsOnline = await serverIsAvailable();
         if (serverIsOnline) {
             // Provides...
