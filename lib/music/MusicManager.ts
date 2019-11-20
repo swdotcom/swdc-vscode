@@ -452,22 +452,11 @@ export class MusicManager {
                 items.push(devicesFoundButton);
             }
 
-            // add the action items specific to spotify
-            if (allowSpotifyPlaylistFetch) {
-                // only add the "Liked Songs" playlist if there are tracks found in that playlist
-                this._spotifyLikedSongs = await getSpotifyLikedSongs();
-                if (
-                    this._spotifyLikedSongs &&
-                    this._spotifyLikedSongs.length > 0
-                ) {
-                    playlists.push(this.getSpotifyLikedPlaylistFolder());
-                }
-            }
-
             if (isMac() && SHOW_ITUNES_LAUNCH_BUTTON) {
                 items.push(this.getSwitchToItunesButton());
             }
 
+            // line break between actions and software playlist section
             items.push(this.getLineBreakButton());
 
             // get the custom playlist button
@@ -489,7 +478,7 @@ export class MusicManager {
                 items.push(softwareTop40);
             }
 
-            // add the music time playlists that were found
+            // Add the AI generated playlist
             if (
                 this._musictimePlaylists &&
                 this._musictimePlaylists.length > 0
@@ -505,10 +494,24 @@ export class MusicManager {
                 }
             }
 
+            // add Liked Songs folder within the software playlist section
+            if (allowSpotifyPlaylistFetch) {
+                // only add the "Liked Songs" playlist if there are tracks found in that playlist
+                this._spotifyLikedSongs = await getSpotifyLikedSongs();
+                if (
+                    this._spotifyLikedSongs &&
+                    this._spotifyLikedSongs.length > 0
+                ) {
+                    items.push(this.getSpotifyLikedPlaylistFolder());
+                }
+            }
+
+            // line break between software playlist section and normal playlists
             if (playlists.length > 0) {
                 items.push(this.getLineBreakButton());
             }
 
+            // normal playlists
             playlists.forEach(item => {
                 items.push(item);
             });
