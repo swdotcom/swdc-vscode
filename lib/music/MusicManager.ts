@@ -453,7 +453,7 @@ export class MusicManager {
             }
 
             // add the action items specific to spotify
-            if (allowSpotifyPlaylistFetch && isSpotifyPremium) {
+            if (allowSpotifyPlaylistFetch) {
                 // only add the "Liked Songs" playlist if there are tracks found in that playlist
                 this._spotifyLikedSongs = await getSpotifyLikedSongs();
                 if (
@@ -1430,6 +1430,8 @@ export class MusicManager {
 
         // sycn the controls so it shows the correct state
         MusicCommandManager.syncControls(track);
+
+        commands.executeCommand("musictime.refreshPlaylist");
     }
 
     hasSpotifyPlaybackAccess() {
