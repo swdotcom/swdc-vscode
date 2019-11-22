@@ -4,11 +4,13 @@ import { refetchSlackConnectStatusLazily } from "../DataController";
 const { WebClient } = require("@slack/web-api");
 import { showQuickPick } from "../MenuManager";
 
+/**
+ * This won't be available until they've connected to spotify
+ */
 export async function connectSlack() {
+    const jwt = getItem("jwt");
     // authorize the user for slack
-    const endpoint = `${api_endpoint}/auth/slack?integrate=slack&plugin=musictime&token=${getItem(
-        "jwt"
-    )}`;
+    const endpoint = `${api_endpoint}/auth/slack?integrate=slack&plugin=musictime&token=${jwt}`;
     launchWebUrl(endpoint);
     refetchSlackConnectStatusLazily();
 }

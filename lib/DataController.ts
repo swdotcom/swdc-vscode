@@ -257,6 +257,9 @@ export async function getSlackOauth(serverIsOnline) {
             // get the one that is "slack"
             for (let i = 0; i < user.auths.length; i++) {
                 if (user.auths[i].type === "slack") {
+                    await MusicManager.getInstance().updateSlackAccessInfo(
+                        user.auths[i]
+                    );
                     return user.auths[i];
                 }
             }
@@ -267,20 +270,30 @@ export async function getSlackOauth(serverIsOnline) {
 export async function getSpotifyOauth(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
-        let user = await getSpotifyUser(serverIsOnline, jwt);
+        let spotifyOauth = null;
+        const loggedInState = await isLoggedOn(serverIsOnline);
+        let user = null;
+        if (loggedInState.loggedOn) {
+            // logged on, we've updated the JWT in the isLoggedOn call
+            // update the new jwt
+            jwt = getItem("jwt");
+            user = await getUser(serverIsOnline, jwt);
+        }
         if (user && user.auths) {
             // get the one that is "spotify"
             for (let i = 0; i < user.auths.length; i++) {
                 if (user.auths[i].type === "spotify") {
-                    // update jwt to what the jwt is for this spotify user
-                    setItem("name", user.email);
-                    setItem("jwt", user.plugin_jwt);
                     // update it to null, they've logged in
                     setItem("check_status", null);
-
-                    return { loggedOn: true, state: "OK", auth: user.auths[i] };
+                    spotifyOauth = user.auths[i];
+                    break;
                 }
             }
+        }
+
+        await MusicManager.getInstance().updateSpotifyAccessInfo(spotifyOauth);
+        if (spotifyOauth) {
+            return { loggedOn: true, state: "OK", auth: spotifyOauth };
         }
     }
     return { loggedOn: false, state: "UNKNOWN", auth: null };
@@ -429,25 +442,16 @@ export async function getUserStatus(serverIsOnline) {
     return userStatus;
 }
 
-export async function getSpotifyUser(serverIsOnline, jwt) {
-    if (jwt && serverIsOnline) {
-        const api = `/auth/spotify/user`;
-        const resp = await softwareGet(api, jwt);
-        if (isResponseOk(resp)) {
-            if (resp && resp.data) {
-                return resp.data;
-            }
-        }
-    }
-    return null;
-}
-
 export async function getUser(serverIsOnline, jwt) {
     if (jwt && serverIsOnline) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
             if (resp && resp.data && resp.data.data) {
+                const user = resp.data.data;
+                // update jwt to what the jwt is for this spotify user
+                setItem("name", user.email);
+                setItem("jwt", user.plugin_jwt);
                 return resp.data.data;
             }
         }
@@ -620,9 +624,6 @@ async function slackConnectStatusHandler(tryCountUntilFound) {
             refetchSlackConnectStatusLazily(tryCountUntilFound);
         }
     } else {
-        // oauth is not null, initialize slack
-        await MusicManager.getInstance().updateSlackAccessInfo(oauth);
-
         window.showInformationMessage(`Successfully connected to Slack`);
 
         setTimeout(() => {

@@ -299,22 +299,23 @@ export class MusicControlManager {
                     url: null,
                     command: "musictime.disconnectSpotify"
                 });
-            }
-            if (!slackAccessToken) {
-                menuOptions.items.push({
-                    label: "Connect Slack",
-                    detail:
-                        "To share a playlist or track on Slack, please connect your account",
-                    url: null,
-                    cb: connectSlack
-                });
-            } else {
-                menuOptions.items.push({
-                    label: "Disconnect Slack",
-                    detail: "Disconnect your Slack oauth integration",
-                    url: null,
-                    command: "musictime.disconnectSlack"
-                });
+
+                if (!slackAccessToken) {
+                    menuOptions.items.push({
+                        label: "Connect Slack",
+                        detail:
+                            "To share a playlist or track on Slack, please connect your account",
+                        url: null,
+                        cb: connectSlack
+                    });
+                } else {
+                    menuOptions.items.push({
+                        label: "Disconnect Slack",
+                        detail: "Disconnect your Slack oauth integration",
+                        url: null,
+                        command: "musictime.disconnectSlack"
+                    });
+                }
             }
         }
 

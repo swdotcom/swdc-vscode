@@ -1238,6 +1238,22 @@ export class MusicManager {
         }
     }
 
+    async updateSpotifyAccessInfo(spotifyOauth) {
+        if (spotifyOauth) {
+            // update the CodyMusic credentials
+            setItem("spotify_access_token", spotifyOauth.access_token);
+            setItem("spotify_refresh_token", spotifyOauth.refresh_token);
+
+            // update cody config
+            this.updateCodyConfig();
+
+            // get the user
+            this.spotifyUser = await getUserProfile();
+        } else {
+            this.clearSpotifyAccessInfo();
+        }
+    }
+
     async initializeSpotify() {
         const serverIsOnline = await serverIsAvailable();
 
@@ -1264,14 +1280,8 @@ export class MusicManager {
             !getItem("spotify_access_token") ||
             !getItem("spotify_refresh_token")
         ) {
-            const oauthResult = await getSpotifyOauth(serverIsOnline);
-            if (oauthResult.auth) {
-                // update the CodyMusic credentials
-                await this.updateSpotifyAccessInfo(oauthResult.auth);
-            } else {
-                setItem("spotify_access_token", null);
-                setItem("spotify_refresh_token", null);
-            }
+            // initialize spotify oauth
+            await getSpotifyOauth(serverIsOnline);
         } else {
             const spotifyOauth = {
                 access_token: getItem("spotify_access_token"),
@@ -1280,25 +1290,12 @@ export class MusicManager {
             await this.updateSpotifyAccessInfo(spotifyOauth);
         }
 
+        // initialize slack
+        await getSlackOauth(serverIsOnline);
+
         this.initialized = true;
 
         commands.executeCommand("musictime.refreshPlaylist");
-    }
-
-    async updateSpotifyAccessInfo(spotifyOauth) {
-        if (spotifyOauth) {
-            // update the CodyMusic credentials
-            setItem("spotify_access_token", spotifyOauth.access_token);
-            setItem("spotify_refresh_token", spotifyOauth.refresh_token);
-
-            // update cody config
-            this.updateCodyConfig();
-
-            // get the user
-            this.spotifyUser = await getUserProfile();
-        } else {
-            this.clearSpotifyAccessInfo();
-        }
     }
 
     async clearSpotifyAccessInfo() {
