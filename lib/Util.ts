@@ -765,11 +765,15 @@ export async function wrapExecPromise(cmd, projectDir) {
                 ? { cwd: projectDir }
                 : {};
         result = await execPromise(cmd, opts).catch(e => {
-            console.log("exec promise error: ", e);
+            if (e.message) {
+                console.log("task error: ", e.message);
+            }
             return null;
         });
     } catch (e) {
-        console.log("exec error: ", e);
+        if (e.message) {
+            console.log("task error: ", e.message);
+        }
         result = null;
     }
     return result;

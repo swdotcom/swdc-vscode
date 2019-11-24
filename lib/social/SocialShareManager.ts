@@ -227,7 +227,9 @@ export class SocialShareManager {
                 channel: selectedChannel
             })
             .catch(err => {
-                console.log("error posting slack message: ", err);
+                if (err.message) {
+                    console.log("error posting slack message: ", err.message);
+                }
             });
     }
 }
