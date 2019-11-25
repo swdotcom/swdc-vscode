@@ -456,6 +456,10 @@ export class MusicManager {
                 items.push(this.getSwitchToItunesButton());
             }
 
+            if (!needsSpotifyAccess) {
+                items.push(this.getWebAnalyticsButton());
+            }
+
             // line break between actions and software playlist section
             items.push(this.getLineBreakButton());
 
@@ -914,6 +918,20 @@ export class MusicManager {
     requiresSpotifyAccess() {
         let spotifyAccessToken = getItem("spotify_access_token");
         return spotifyAccessToken ? false : true;
+    }
+
+    getWebAnalyticsButton() {
+        // See web analytics
+        let listItem: PlaylistItem = new PlaylistItem();
+        listItem.tracks = new PlaylistTrackInfo();
+        listItem.type = "action";
+        listItem.tag = "paw";
+        listItem.id = "launchmusicanalytics";
+        listItem.command = "musictime.launchAnalytics";
+        listItem.playerType = PlayerType.WebSpotify;
+        listItem.name = "See web analytics";
+        listItem.tooltip = "See music analytics in the web app";
+        return listItem;
     }
 
     // get the custom playlist button by checkinf if the custom playlist

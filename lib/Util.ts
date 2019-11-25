@@ -783,6 +783,10 @@ export function launchWebUrl(url) {
     open(url);
 }
 
+export function launchMusicAnalytics() {
+    open(`${launch_url}/music`);
+}
+
 /**
  * humanize the minutes
  */

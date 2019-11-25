@@ -270,9 +270,17 @@ export class MusicControlManager {
 
         menuOptions.items.push({
             label: "Submit Feedback",
-            detail: "Send us an email at cody@software.com.",
+            detail: "Send us an email at cody@software.com",
             url: "mailto:cody@software.com"
         });
+
+        if (!needsSpotifyAccess) {
+            menuOptions.items.push({
+                label: "See web analytics",
+                detail: "See music analytics in the web app",
+                command: "musictime.launchAnalytics"
+            });
+        }
 
         if (serverIsOnline) {
             // show divider

@@ -19,7 +19,8 @@ import {
     handleCodeTimeStatusToggle,
     isMusicTime,
     isCodeTime,
-    codeTimeExtInstalled
+    codeTimeExtInstalled,
+    launchMusicAnalytics
 } from "./Util";
 import { KpmController } from "./KpmController";
 import {
@@ -320,6 +321,12 @@ export function createCommands(): {
             () => musicMgr.generateUsersWeeklyTopSongs()
         );
         cmds.push(generateWeeklyPlaylistCommand);
+
+        const launchMusicAnalyticsCommand = commands.registerCommand(
+            "musictime.launchAnalytics",
+            () => launchMusicAnalytics()
+        );
+        cmds.push(launchMusicAnalyticsCommand);
 
         if (!codeTimeExtInstalled()) {
             // code time is not installed, load the kpm controller for music time
