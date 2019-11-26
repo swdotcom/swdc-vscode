@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, env, window, commands } from "vscode";
+import { workspace, ConfigurationTarget, window, commands } from "vscode";
 
 import {
     softwareGet,
@@ -22,20 +22,10 @@ import {
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    isMusicTime,
     getPluginId,
-    isCodeTime,
-    logEvent,
-    getOffsetSecends
+    logEvent
 } from "./Util";
 import {
-    requiresSpotifyAccessInfo,
-    getSpotifyLikedSongs,
-    Track,
-    getTopSpotifyTracks
-} from "cody-music";
-import {
-    updateShowMusicMetrics,
     buildWebDashboardUrl,
     fetchCodeTimeMetricsDashboard,
     clearLastMomentDate
@@ -43,22 +33,17 @@ import {
 import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
-    clearSessionSummaryData,
     saveSessionSummaryToDisk
 } from "./OfflineManager";
-import { MusicManager } from "./music/MusicManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
 let loggedInCacheState = null;
-let initializedPrefs = false;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 let toggleFileEventLogging = null;
 
-let slackFetchTimeout = null;
-let spotifyFetchTimeout = null;
 let userFetchTimeout = null;
 
 // batch offline payloads in 50. backend has a 100k body limit
@@ -249,56 +234,6 @@ export async function createAnonymousUser(serverIsOnline) {
     return null;
 }
 
-export async function getSlackOauth(serverIsOnline) {
-    let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
-        let user = await getUser(serverIsOnline, jwt);
-        if (user && user.auths) {
-            // get the one that is "slack"
-            for (let i = 0; i < user.auths.length; i++) {
-                if (user.auths[i].type === "slack") {
-                    await MusicManager.getInstance().updateSlackAccessInfo(
-                        user.auths[i]
-                    );
-                    return user.auths[i];
-                }
-            }
-        }
-    }
-}
-
-export async function getSpotifyOauth(serverIsOnline) {
-    let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
-        let spotifyOauth = null;
-        const loggedInState = await isLoggedOn(serverIsOnline);
-        let user = null;
-        if (loggedInState.loggedOn) {
-            // logged on, we've updated the JWT in the isLoggedOn call
-            // update the new jwt
-            jwt = getItem("jwt");
-            user = await getUser(serverIsOnline, jwt);
-        }
-        if (user && user.auths) {
-            // get the one that is "spotify"
-            for (let i = 0; i < user.auths.length; i++) {
-                if (user.auths[i].type === "spotify") {
-                    // update it to null, they've logged in
-                    setItem("check_status", null);
-                    spotifyOauth = user.auths[i];
-                    break;
-                }
-            }
-        }
-
-        await MusicManager.getInstance().updateSpotifyAccessInfo(spotifyOauth);
-        if (spotifyOauth) {
-            return { loggedOn: true, state: "OK", auth: spotifyOauth };
-        }
-    }
-    return { loggedOn: false, state: "UNKNOWN", auth: null };
-}
-
 async function isNonAnonUser(serverIsOnline) {
     const user = await getUser(serverIsOnline, getItem("jwt"));
     if (user) {
@@ -356,8 +291,6 @@ async function isLoggedOn(serverIsOnline) {
                 if (pluginJwt && pluginJwt !== jwt) {
                     // update it
                     setItem("jwt", pluginJwt);
-                    // re-initialize preferences
-                    initializedPrefs = false;
                 }
 
                 let checkStatus = getItem("check_status");
@@ -388,12 +321,7 @@ export async function getUserStatus(serverIsOnline) {
     let loggedIn = false;
     if (serverIsOnline) {
         // refetch the jwt then check if they're logged on
-        let loggedInResp = null;
-        if (isCodeTime()) {
-            loggedInResp = await isLoggedOn(serverIsOnline);
-        } else {
-            loggedInResp = await getSpotifyOauth(serverIsOnline);
-        }
+        const loggedInResp = await isLoggedOn(serverIsOnline);
         // set the loggedIn bool value
         loggedIn = loggedInResp.loggedOn;
     }
@@ -428,13 +356,6 @@ export async function getUserStatus(serverIsOnline) {
             // update the statusbar
             fetchSessionSummaryInfo();
         }, 1000);
-
-        if (requiresSpotifyAccessInfo() && isMusicTime()) {
-            // check if they have a connected spotify auth
-            setTimeout(() => {
-                refetchSpotifyConnectStatusLazily(1);
-            }, 1000);
-        }
     }
 
     loggedInCacheState = loggedIn;
@@ -604,143 +525,6 @@ export async function updatePreferences() {
     }
 }
 
-export function refetchSlackConnectStatusLazily(tryCountUntilFound = 40) {
-    if (slackFetchTimeout) {
-        return;
-    }
-    slackFetchTimeout = setTimeout(() => {
-        slackFetchTimeout = null;
-        slackConnectStatusHandler(tryCountUntilFound);
-    }, 10000);
-}
-
-async function slackConnectStatusHandler(tryCountUntilFound) {
-    let serverIsOnline = await serverIsAvailable();
-    let oauth = await getSlackOauth(serverIsOnline);
-    if (!oauth) {
-        // try again if the count is not zero
-        if (tryCountUntilFound > 0) {
-            tryCountUntilFound -= 1;
-            refetchSlackConnectStatusLazily(tryCountUntilFound);
-        }
-    } else {
-        window.showInformationMessage(`Successfully connected to Slack`);
-
-        setTimeout(() => {
-            commands.executeCommand("musictime.refreshPlaylist");
-        }, 1000);
-    }
-}
-
-export function refetchSpotifyConnectStatusLazily(tryCountUntilFound = 40) {
-    if (spotifyFetchTimeout) {
-        return;
-    }
-    spotifyFetchTimeout = setTimeout(() => {
-        spotifyFetchTimeout = null;
-        spotifyConnectStatusHandler(tryCountUntilFound);
-    }, 10000);
-}
-
-async function spotifyConnectStatusHandler(tryCountUntilFound) {
-    let serverIsOnline = await serverIsAvailable();
-    let oauthResult = await getSpotifyOauth(serverIsOnline);
-    if (!oauthResult.auth) {
-        // try again if the count is not zero
-        if (tryCountUntilFound > 0) {
-            tryCountUntilFound -= 1;
-            refetchSpotifyConnectStatusLazily(tryCountUntilFound);
-        }
-    } else {
-        const musicMgr = MusicManager.getInstance();
-        // oauth is not null, initialize spotify
-        await musicMgr.updateSpotifyAccessInfo(oauthResult.auth);
-        // update the login status
-        await getUserStatus(serverIsOnline);
-        window.showInformationMessage(`Successfully connected to Spotify`);
-
-        // send the "Liked Songs" to software app so we can be in sync
-        await seedLikedSongsToSoftware();
-
-        // send the top spotify songs from the users playlists to help seed song sessions
-        await seedTopSpotifySongs();
-
-        setTimeout(() => {
-            musicMgr.clearSpotify();
-            commands.executeCommand("musictime.refreshPlaylist");
-        }, 1000);
-    }
-}
-
-async function seedLikedSongsToSoftware() {
-    // send the "Liked Songs" to software app so we can be in sync
-    let tracks: Track[] = await getSpotifyLikedSongs();
-    if (tracks && tracks.length > 0) {
-        let uris = tracks.map(track => {
-            return track.uri;
-        });
-        const api = `/music/liked/tracks?type=spotify`;
-        await softwarePut(api, { liked: true, uris }, getItem("jwt"));
-    }
-}
-
-async function seedTopSpotifySongs() {
-    /**
-     * album:Object {album_type: "ALBUM", artists: Array(1), available_markets: Array(79), …}
-    artists:Array(1) [Object]
-    available_markets:Array(79) ["AD", "AE", "AR", …]
-    disc_number:1
-    duration_ms:251488
-    explicit:false
-    external_ids:Object {isrc: "GBF088590110"}
-    external_urls:Object {spotify: "https://open.spotify.com/track/4RvWPyQ5RL0ao9LPZeS…"}
-    href:"https://api.spotify.com/v1/tracks/4RvWPyQ5RL0ao9LPZeSouE"
-
-     */
-    const fileMetrics = {
-        add: 0,
-        paste: 0,
-        delete: 0,
-        netkeys: 0,
-        linesAdded: 0,
-        linesRemoved: 0,
-        open: 0,
-        close: 0,
-        keystrokes: 0,
-        syntax: "",
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        offset: getOffsetSecends() / 60,
-        pluginId: getPluginId(),
-        os: getOs(),
-        version: getVersion(),
-        source: {},
-        repoFileCount: 0,
-        repoContributorCount: 0
-    };
-    let tracks: Track[] = await getTopSpotifyTracks();
-    if (tracks && tracks.length > 0) {
-        // add the empty file metrics
-        const tracksToSave = tracks.map(track => {
-            return {
-                ...track,
-                ...fileMetrics
-            };
-        });
-
-        let api = `/music/seedTopSpotifyTracks`;
-        return softwarePut(api, { tracks: tracksToSave }, getItem("jwt"))
-            .then(resp => {
-                if (!isResponseOk(resp)) {
-                    return { status: "fail" };
-                }
-                return { status: "ok" };
-            })
-            .catch(e => {
-                return { status: "fail" };
-            });
-    }
-}
-
 export function refetchUserStatusLazily(tryCountUntilFoundUser = 40) {
     if (userFetchTimeout) {
         return;
@@ -764,20 +548,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             setItem("check_status", true);
         }
     } else {
-        let message = "";
-        if (isCodeTime()) {
-            // clear the last moment date to be able to retrieve the user's dashboard metrics
-            clearLastMomentDate();
-            message = "Successfully logged on to Code Time";
-        } else if (isMusicTime()) {
-            message = "Successfully logged on to Music Time";
-            MusicManager.getInstance().fetchSavedPlaylists(serverIsOnline);
-            setTimeout(() => {
-                commands.executeCommand("musictime.refreshPlaylist");
-            }, 1000);
-        } else {
-            message = "Successfully logged on";
-        }
+        // clear the last moment date to be able to retrieve the user's dashboard metrics
+        clearLastMomentDate();
+        const message = "Successfully logged on to Code Time";
+
         window.showInformationMessage(message);
     }
 }

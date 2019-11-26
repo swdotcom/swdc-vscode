@@ -1,4 +1,4 @@
-import { workspace, Disposable, languages } from "vscode";
+import { workspace, Disposable } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
@@ -12,9 +12,7 @@ import {
     getNowTimes,
     logEvent,
     getFileAgeInDays,
-    getFileType,
-    isCodeTime,
-    isMusicTime
+    getFileType
 } from "./Util";
 import { sendOfflineData } from "./DataController";
 import {
@@ -58,12 +56,7 @@ export class KpmController {
 
                 if (hasData) {
                     // post the payload offline until the batch interval sends it out
-                    if (isMusicTime()) {
-                        // post it to the file right away so the song session can obtain it
-                        await keystrokeCount.postData();
-                    } else {
-                        setTimeout(() => keystrokeCount.postData(), 0);
-                    }
+                    setTimeout(() => keystrokeCount.postData(), 0);
                 }
             }
         }
@@ -75,16 +68,15 @@ export class KpmController {
         _staticInfoMap = {};
 
         // check if we're in a new day, if so lets send the offline data
-        if (!isMusicTime()) {
-            const dayOfMonth = moment()
-                .startOf("day")
-                .date();
-            if (dayOfMonth !== this._lastDayOfMonth) {
-                this._lastDayOfMonth = dayOfMonth;
-                setTimeout(() => {
-                    sendOfflineData();
-                }, 1000 * 2);
-            }
+
+        const dayOfMonth = moment()
+            .startOf("day")
+            .date();
+        if (dayOfMonth !== this._lastDayOfMonth) {
+            this._lastDayOfMonth = dayOfMonth;
+            setTimeout(() => {
+                sendOfflineData();
+            }, 1000 * 2);
         }
     }
 

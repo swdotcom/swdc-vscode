@@ -20,8 +20,6 @@ import {
     softwareSessionFileExists,
     showOfflinePrompt,
     logIt,
-    isCodeTime,
-    isMusicTime,
     jwtExists,
     showLoginPrompt,
     getPluginName,
@@ -30,11 +28,8 @@ import {
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
-import { MusicStateManager } from "./lib/music/MusicStateManager";
-import { MusicCommandManager } from "./lib/music/MusicCommandManager";
 import { createCommands } from "./lib/command-helper";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
-import { MusicManager } from "./lib/music/MusicManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -109,7 +104,7 @@ export async function activate(ctx: ExtensionContext) {
     } else {
         // check session.json existence
         const serverIsOnline = await serverIsAvailable();
-        if (isCodeTime() && (!softwareSessionFileExists() || !jwtExists())) {
+        if (!softwareSessionFileExists() || !jwtExists()) {
             // session file doesn't exist
             // check if the server is online before creating the anon user
             if (!serverIsOnline) {
@@ -162,38 +157,29 @@ export async function intializePlugin(
 
     let one_min_ms = 1000 * 60;
 
-    if (isCodeTime()) {
-        // only code time will show the status bar text info
-        setTimeout(() => {
-            statusBarItem = window.createStatusBarItem(
-                StatusBarAlignment.Right,
-                10
-            );
-            // add the name to the tooltip if we have it
-            const name = getItem("name");
-            let tooltip = "Click to see more from Code Time";
-            if (name) {
-                tooltip = `${tooltip} (${name})`;
-            }
-            statusBarItem.tooltip = tooltip;
-            statusBarItem.command = "extension.softwarePaletteMenu";
-            statusBarItem.show();
+    // only code time will show the status bar text info
+    setTimeout(() => {
+        statusBarItem = window.createStatusBarItem(
+            StatusBarAlignment.Right,
+            10
+        );
+        // add the name to the tooltip if we have it
+        const name = getItem("name");
+        let tooltip = "Click to see more from Code Time";
+        if (name) {
+            tooltip = `${tooltip} (${name})`;
+        }
+        statusBarItem.tooltip = tooltip;
+        statusBarItem.command = "extension.softwarePaletteMenu";
+        statusBarItem.show();
 
-            showStatus("Code Time", null);
-        }, 0);
+        showStatus("Code Time", null);
+    }, 0);
 
-        // show the local stats in 5 seconds
-        setTimeout(() => {
-            getSessionSummaryStatus();
-        }, 1000 * 5);
-    }
-
-    if (isMusicTime()) {
-        // initialize the music player
-        setTimeout(() => {
-            MusicCommandManager.initialize();
-        }, 1000);
-    }
+    // show the local stats in 5 seconds
+    setTimeout(() => {
+        getSessionSummaryStatus();
+    }, 1000 * 5);
 
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;
@@ -203,61 +189,41 @@ export async function intializePlugin(
         periodicSessionCheck();
     }, 1000 * 60 * 35);
 
-    let musicMgr: MusicManager = null;
-
-    if (isMusicTime()) {
-        // init the music manager and cody config
-        musicMgr = MusicManager.getInstance();
-        musicMgr.updateCodyConfig();
-        // this needs to happen first to enable spotify playlist and control logic
-        await musicMgr.initializeSpotify();
-        // check if the user has a slack integration already connected
-        await musicMgr.initializeSlack();
-    }
-
     // add the interval jobs
-    if (isCodeTime()) {
-        // check on new commits once an hour
-        historical_commits_interval = setInterval(async () => {
-            let isonline = await serverIsAvailable();
-            sendHeartbeat("HOURLY", isonline);
-            getHistoricalCommits(isonline);
-        }, hourly_interval_ms);
 
-        // every half hour, send offline data
-        const half_hour_ms = hourly_interval_ms / 2;
-        offline_data_interval = setInterval(() => {
-            sendOfflineData();
-        }, half_hour_ms);
+    // check on new commits once an hour
+    historical_commits_interval = setInterval(async () => {
+        let isonline = await serverIsAvailable();
+        sendHeartbeat("HOURLY", isonline);
+        getHistoricalCommits(isonline);
+    }, hourly_interval_ms);
 
-        // in 2 minutes fetch the historical commits if any
-        setTimeout(() => {
-            getHistoricalCommits(serverIsOnline);
-        }, one_min_ms * 2);
+    // every half hour, send offline data
+    const half_hour_ms = hourly_interval_ms / 2;
+    offline_data_interval = setInterval(() => {
+        sendOfflineData();
+    }, half_hour_ms);
 
-        // 10 minute interval tasks
-        // check if the use has become a registered user
-        // if they're already logged on, it will not send a request
-        token_check_interval = setInterval(async () => {
-            let checkStatus = getItem("check_status");
-            // but only if checkStatus is true
-            if (checkStatus !== null && checkStatus) {
-                getUserStatus(serverIsOnline);
-            }
-        }, one_min_ms * 10);
+    // in 2 minutes fetch the historical commits if any
+    setTimeout(() => {
+        getHistoricalCommits(serverIsOnline);
+    }, one_min_ms * 2);
 
-        // update liveshare in the offline kpm data if it has been initiated
-        liveshare_update_interval = setInterval(async () => {
-            updateLiveshareTime();
-        }, one_min_ms * 1);
-    }
+    // 10 minute interval tasks
+    // check if the use has become a registered user
+    // if they're already logged on, it will not send a request
+    token_check_interval = setInterval(async () => {
+        let checkStatus = getItem("check_status");
+        // but only if checkStatus is true
+        if (checkStatus !== null && checkStatus) {
+            getUserStatus(serverIsOnline);
+        }
+    }, one_min_ms * 10);
 
-    if (isMusicTime()) {
-        // 5 second interval to check music info
-        gather_music_interval = setInterval(() => {
-            MusicStateManager.getInstance().gatherMusicInfo();
-        }, 1000 * 5);
-    }
+    // update liveshare in the offline kpm data if it has been initiated
+    liveshare_update_interval = setInterval(async () => {
+        updateLiveshareTime();
+    }, one_min_ms * 1);
 
     initializeLiveshare();
     initializeUserInfo(createdAnonUser, serverIsOnline);
@@ -281,12 +247,9 @@ async function initializeUserInfo(
     await getUserStatus(serverIsOnline);
     if (createdAnonUser) {
         showLoginPrompt();
-        if (isCodeTime()) {
-            if (kpmController) {
-                kpmController.buildBootstrapKpmPayload();
-            }
-        } else if (isMusicTime()) {
-            MusicStateManager.getInstance().buildBootstrapSongSession();
+
+        if (kpmController) {
+            kpmController.buildBootstrapKpmPayload();
         }
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
@@ -296,12 +259,10 @@ async function initializeUserInfo(
         sendHeartbeat("INITIALIZED", serverIsOnline);
     }
 
-    if (isCodeTime()) {
-        // initiate kpm fetch by sending any offline data
-        setTimeout(() => {
-            sendOfflineData();
-        }, 1000);
-    }
+    // initiate kpm fetch by sending any offline data
+    setTimeout(() => {
+        sendOfflineData();
+    }, 1000);
 }
 
 function updateLiveshareTime() {
@@ -345,11 +306,7 @@ async function initializeLiveshare() {
 
 async function periodicSessionCheck() {
     const serverIsOnline = await serverIsAvailable();
-    if (
-        isCodeTime() &&
-        serverIsOnline &&
-        (!softwareSessionFileExists() || !jwtExists())
-    ) {
+    if (serverIsOnline && (!softwareSessionFileExists() || !jwtExists())) {
         // session file doesn't exist
         // create the anon user
         let createdJwt = await createAnonymousUser(serverIsOnline);

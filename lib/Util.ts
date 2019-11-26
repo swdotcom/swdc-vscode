@@ -2,13 +2,10 @@ import { getStatusBarItem } from "../extension";
 import { workspace, extensions, window } from "vscode";
 import {
     CODE_TIME_EXT_ID,
-    MUSIC_TIME_EXT_ID,
     launch_url,
     NOT_NOW_LABEL,
     LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
-    MUSIC_TIME_PLUGIN_ID,
-    MUSIC_TIME_TYPE,
     CODE_TIME_TYPE
 } from "./Constants";
 import {
@@ -16,11 +13,7 @@ import {
     fetchSessionSummaryInfo,
     getToggleFileEventLoggingState
 } from "./DataController";
-import {
-    incrementSessionSummaryData,
-    saveSessionSummaryToDisk,
-    getSessionSummaryData
-} from "./OfflineManager";
+import { incrementSessionSummaryData } from "./OfflineManager";
 const moment = require("moment-timezone");
 
 const open = require("open");
@@ -57,40 +50,19 @@ export function getEditorSessionToken() {
 }
 
 export function getPluginId() {
-    if (isCodeTime()) {
-        return CODE_TIME_PLUGIN_ID;
-    } else if (isMusicTime()) {
-        return MUSIC_TIME_PLUGIN_ID;
-    }
-    // for now return code time plugin if it doesn't match
     return CODE_TIME_PLUGIN_ID;
 }
 
 export function getPluginName() {
-    if (isCodeTime()) {
-        return CODE_TIME_EXT_ID;
-    } else if (isMusicTime()) {
-        return MUSIC_TIME_EXT_ID;
-    }
     return CODE_TIME_EXT_ID;
 }
 
 export function getPluginType() {
-    if (isCodeTime()) {
-        return CODE_TIME_TYPE;
-    } else if (isMusicTime()) {
-        return MUSIC_TIME_TYPE;
-    }
     return CODE_TIME_TYPE;
 }
 
 export function getVersion() {
-    let extension = null;
-    if (isCodeTime()) {
-        extension = extensions.getExtension(CODE_TIME_EXT_ID);
-    } else if (isMusicTime()) {
-        extension = extensions.getExtension(MUSIC_TIME_EXT_ID);
-    }
+    const extension = extensions.getExtension(CODE_TIME_EXT_ID);
     return extension.packageJSON.version;
 }
 
@@ -120,28 +92,9 @@ export function isCodeTimeMetricsFile(fileName) {
     return false;
 }
 
-export function isMusicTime() {
-    if (whoami === null) {
-        whoami = getExtensionName();
-    }
-    return whoami === "music-time" ? true : false;
-}
-
-export function isCodeTime() {
-    if (whoami === null) {
-        whoami = getExtensionName();
-    }
-    return whoami === "swdc-vscode" ? true : false;
-}
-
 export function codeTimeExtInstalled() {
     const codeTimeExt = extensions.getExtension(CODE_TIME_EXT_ID);
     return codeTimeExt ? true : false;
-}
-
-export function musicTimeExtInstalled() {
-    const musicTimeExt = extensions.getExtension(MUSIC_TIME_EXT_ID);
-    return musicTimeExt ? true : false;
 }
 
 export function getSessionFileCreateTime() {
@@ -657,29 +610,17 @@ export function storePayload(payload) {
     }, 1000);
 
     // store the payload into the data.json file
-    if (isCodeTime()) {
-        fs.appendFile(
-            getSoftwareDataStoreFile(),
-            JSON.stringify(payload) + os.EOL,
-            err => {
-                if (err)
-                    logIt(
-                        `Error appending to the Software data store file: ${err.message}`
-                    );
-            }
-        );
-    }
 
-    if (isMusicTime()) {
-        const musicFile = getMusicSessionDataStoreFile();
-        // also store the payload into the MusicSession.json file
-        fs.appendFile(musicFile, JSON.stringify(payload) + os.EOL, err => {
+    fs.appendFile(
+        getSoftwareDataStoreFile(),
+        JSON.stringify(payload) + os.EOL,
+        err => {
             if (err)
                 logIt(
-                    `Error appending to the music session data store file: ${err.message}`
+                    `Error appending to the Software data store file: ${err.message}`
                 );
-        });
-    }
+        }
+    );
 }
 
 export function randomCode() {

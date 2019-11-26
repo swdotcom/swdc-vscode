@@ -13,7 +13,6 @@ export const MILLIS_PER_MINUTE = 1000 * 60;
 export const LONG_THRESHOLD_HOURS = 12;
 export const SHORT_THRESHOLD_HOURS = 1;
 export const CODE_TIME_PLUGIN_ID = 2;
-export const MUSIC_TIME_PLUGIN_ID = 13;
 
 // API ENDPOINT
 //
@@ -28,10 +27,8 @@ export const launch_url = "https://app.software.com";
 export const DEFAULT_SESSION_THRESHOLD_SECONDS = 60 * 15;
 
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
-export const MUSIC_TIME_EXT_ID = "softwaredotcom.music-time";
 
 export const CODE_TIME_TYPE = "codetime";
-export const MUSIC_TIME_TYPE = "musictime";
 
 export const SPOTIFY_CLIENT_ID: string = "eb67e22ba1c6474aad8ec8067480d9dc";
 export const SPOTIFY_CLIENT_SECRET: string = "2b40b4975b2743189c87f4712c0cd59e";
