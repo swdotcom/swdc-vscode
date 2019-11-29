@@ -23,7 +23,6 @@ import { softwareGet, isResponseOk } from "./HttpClient";
 import {
     getUserStatus,
     serverIsAvailable,
-    getLoggedInCacheState,
     getSessionSummaryStatus
 } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
@@ -35,11 +34,10 @@ const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
 let showMusicMetrics = false;
-let lastMomentDate = null;
-let lastCacheCheckTime = null;
+let metricsDashboardLastCheckDate = null;
 
-export function clearLastMomentDate() {
-    lastMomentDate = null;
+export function clearMetricsDashboardLastCheckDate() {
+    metricsDashboardLastCheckDate = null;
 }
 
 /**
@@ -86,23 +84,9 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
-    let loggedInCacheState = getLoggedInCacheState();
     let serverIsOnline = await serverIsAvailable();
-    let userStatus = {
-        loggedIn: loggedInCacheState
-    };
-    const nowInSec = moment().unix();
-    const threshold = 60 * 5; // 5 minutes
-    if (
-        loggedInCacheState === null ||
-        lastCacheCheckTime === null ||
-        nowInSec - lastCacheCheckTime > threshold
-    ) {
-        // update it since it's null
-        // {loggedIn: true|false}
-        userStatus = await getUserStatus(serverIsOnline);
-        lastCacheCheckTime = nowInSec;
-    }
+
+    const loggedInState = await getUserStatus(serverIsOnline);
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -122,7 +106,7 @@ export async function showMenuOptions() {
         loginMsgDetail =
             "Our service is temporarily unavailable. Please try again later.";
     }
-    if (!userStatus.loggedIn) {
+    if (!loggedInState.loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             detail: loginMsgDetail,
@@ -166,7 +150,7 @@ export async function showMenuOptions() {
         cb: null
     });
 
-    if (userStatus.loggedIn) {
+    if (loggedInState.loggedIn) {
         kpmMenuOptions.items.push({
             label: "Web Dashboard",
             detail: "See rich data visualizations in the web app",
@@ -186,12 +170,12 @@ export async function launchWebDashboardView() {
 export async function fetchCodeTimeMetricsDashboard(summary) {
     let summaryInfoFile = getSummaryInfoFile();
 
-    const duration = lastMomentDate
-        ? moment.duration(moment().diff(lastMomentDate))
+    const duration = metricsDashboardLastCheckDate
+        ? moment.duration(moment().diff(metricsDashboardLastCheckDate))
         : null;
     const hours = duration ? duration.asHours() : 6;
     if (hours >= 6) {
-        lastMomentDate = moment();
+        metricsDashboardLastCheckDate = moment();
 
         // let showMusicMetrics = workspace
         //     .getConfiguration()

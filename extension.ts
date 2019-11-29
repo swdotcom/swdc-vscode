@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
+import { window, ExtensionContext, StatusBarAlignment } from "vscode";
 import {
     sendOfflineData,
     getUserStatus,
@@ -148,16 +148,15 @@ export async function intializePlugin(
     let serverIsOnline = await serverIsAvailable();
 
     // get the user preferences whether it's music time or code time
+    // this will also fetch the user and update loggedInCacheState if it's found
     await initializePreferences(serverIsOnline);
 
-    //
-    // add the player commands before we show the playlist
-    //
+    // add the code time commands
     ctx.subscriptions.push(createCommands());
 
     let one_min_ms = 1000 * 60;
 
-    // only code time will show the status bar text info
+    // show the status bar text info
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
             StatusBarAlignment.Right,
@@ -170,7 +169,7 @@ export async function intializePlugin(
             tooltip = `${tooltip} (${name})`;
         }
         statusBarItem.tooltip = tooltip;
-        statusBarItem.command = "extension.softwarePaletteMenu";
+        statusBarItem.command = "codetime.softwarePaletteMenu";
         statusBarItem.show();
 
         showStatus("Code Time", null);
@@ -226,25 +225,10 @@ export async function intializePlugin(
     }, one_min_ms * 1);
 
     initializeLiveshare();
-    initializeUserInfo(createdAnonUser, serverIsOnline);
-}
 
-function handlePauseMetricsEvent() {
-    TELEMETRY_ON = false;
-    showStatus("Code Time Paused", "Enable metrics to resume");
-}
-
-function handleEnableMetricsEvent() {
-    TELEMETRY_ON = true;
-    showStatus("Code Time", null);
-}
-
-async function initializeUserInfo(
-    createdAnonUser: boolean,
-    serverIsOnline: boolean
-) {
     // {loggedIn: true|false}
     await getUserStatus(serverIsOnline);
+
     if (createdAnonUser) {
         showLoginPrompt();
 
@@ -263,6 +247,16 @@ async function initializeUserInfo(
     setTimeout(() => {
         sendOfflineData();
     }, 1000);
+}
+
+function handlePauseMetricsEvent() {
+    TELEMETRY_ON = false;
+    showStatus("Code Time Paused", "Enable metrics to resume");
+}
+
+function handleEnableMetricsEvent() {
+    TELEMETRY_ON = true;
+    showStatus("Code Time", null);
 }
 
 function updateLiveshareTime() {

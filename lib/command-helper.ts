@@ -25,20 +25,20 @@ export function createCommands(): {
     cmds.push(kpmController);
 
     const kpmClickedCmd = commands.registerCommand(
-        "extension.softwareKpmDashboard",
+        "codetime.softwareKpmDashboard",
         () => {
             handleKpmClickedEvent();
         }
     );
     cmds.push(kpmClickedCmd);
 
-    const loginCmd = commands.registerCommand("extension.codeTimeLogin", () => {
+    const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
         handleCodeTimeLogin();
     });
     cmds.push(loginCmd);
 
     const codeTimeMetricsCmd = commands.registerCommand(
-        "extension.codeTimeMetrics",
+        "codetime.codeTimeMetrics",
         () => {
             displayCodeTimeMetricsDashboard();
         }
@@ -46,7 +46,7 @@ export function createCommands(): {
     cmds.push(codeTimeMetricsCmd);
 
     const paletteMenuCmd = commands.registerCommand(
-        "extension.softwarePaletteMenu",
+        "codetime.softwarePaletteMenu",
         () => {
             showMenuOptions();
         }
@@ -54,7 +54,7 @@ export function createCommands(): {
     cmds.push(paletteMenuCmd);
 
     const top40Cmd = commands.registerCommand(
-        "extension.viewSoftwareTop40",
+        "codetime.viewSoftwareTop40",
         () => {
             launchWebUrl("https://api.software.com/music/top40");
         }
@@ -62,7 +62,7 @@ export function createCommands(): {
     cmds.push(top40Cmd);
 
     const toggleStatusInfoCmd = commands.registerCommand(
-        "extension.codeTimeStatusToggle",
+        "codetime.codeTimeStatusToggle",
         () => {
             handleCodeTimeStatusToggle();
         }

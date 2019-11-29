@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, window, commands } from "vscode";
+import { workspace, ConfigurationTarget, window } from "vscode";
 
 import {
     softwareGet,
@@ -28,7 +28,7 @@ import {
 import {
     buildWebDashboardUrl,
     fetchCodeTimeMetricsDashboard,
-    clearLastMomentDate
+    clearMetricsDashboardLastCheckDate
 } from "./MenuManager";
 import {
     getSessionSummaryData,
@@ -40,6 +40,7 @@ const fs = require("fs");
 const moment = require("moment-timezone");
 
 let loggedInCacheState = null;
+let lastLoggedInCheckTime = null;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
 let toggleFileEventLogging = null;
@@ -49,17 +50,26 @@ let userFetchTimeout = null;
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
-let currentDayHour = null;
+let statusBarLastDayHour = null;
 
 export function isNewHour() {
     const dayHr = moment().format("YYYY-MM-DD-HH");
 
-    if (!currentDayHour || dayHr !== currentDayHour) {
-        currentDayHour = dayHr;
+    if (!statusBarLastDayHour || dayHr !== statusBarLastDayHour) {
+        statusBarLastDayHour = dayHr;
         return true;
     }
 
     return false;
+}
+
+export function clearStatusBarLastDayHour() {
+    statusBarLastDayHour = null;
+}
+
+async function resetFetchTimeChecks() {
+    clearMetricsDashboardLastCheckDate();
+    clearStatusBarLastDayHour();
 }
 
 export function getLoggedInCacheState() {
@@ -275,12 +285,21 @@ async function isLoggedOn(serverIsOnline) {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus(serverIsOnline, ignoreCache = false) {
-    if (
-        !ignoreCache &&
-        loggedInCacheState !== null &&
-        loggedInCacheState === true
-    ) {
-        return { loggedIn: true };
+    if (!ignoreCache && loggedInCacheState) {
+        // ignore cache is true and we have a logged in cache state
+        if (lastLoggedInCheckTime) {
+            const threshold = 60 * 5;
+            // check to see if we should invalide the check time
+            if (moment().unix() - lastLoggedInCheckTime > threshold) {
+                // set logged in cache state to null as well as the check time
+                lastLoggedInCheckTime = null;
+                loggedInCacheState = null;
+            }
+        } else {
+            // it's null, set it
+            lastLoggedInCheckTime = moment().unix();
+        }
+        return loggedInCacheState;
     }
 
     let loggedIn = false;
@@ -293,7 +312,7 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
 
     logIt(`Checking login status, logged in: ${loggedIn}`);
 
-    let userStatus = {
+    loggedInCacheState = {
         loggedIn
     };
 
@@ -305,11 +324,7 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         }
     }
 
-    if (
-        serverIsOnline &&
-        loggedInCacheState !== null &&
-        loggedInCacheState !== loggedIn
-    ) {
+    if (serverIsOnline && loggedIn) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
 
         if (loggedIn) {
@@ -323,9 +338,7 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         }, 1000);
     }
 
-    loggedInCacheState = loggedIn;
-
-    return userStatus;
+    return loggedInCacheState;
 }
 
 export async function getUser(serverIsOnline, jwt) {
@@ -335,10 +348,13 @@ export async function getUser(serverIsOnline, jwt) {
         if (isResponseOk(resp)) {
             if (resp && resp.data && resp.data.data) {
                 const user = resp.data.data;
-                // update jwt to what the jwt is for this spotify user
-                setItem("name", user.email);
-                setItem("jwt", user.plugin_jwt);
-                return resp.data.data;
+                if (user.registered === 1) {
+                    // update jwt to what the jwt is for this spotify user
+                    setItem("name", user.email);
+
+                    loggedInCacheState = { loggedIn: true };
+                }
+                return user;
             }
         }
     }
@@ -514,7 +530,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         }
     } else {
         // clear the last moment date to be able to retrieve the user's dashboard metrics
-        clearLastMomentDate();
+        resetFetchTimeChecks();
         const message = "Successfully logged on to Code Time";
 
         window.showInformationMessage(message);
