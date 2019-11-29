@@ -36,6 +36,7 @@ const SERVICE_NOT_AVAIL =
 
 let showMusicMetrics = false;
 let lastMomentDate = null;
+let lastCacheCheckTime = null;
 
 export function clearLastMomentDate() {
     lastMomentDate = null;
@@ -90,10 +91,17 @@ export async function showMenuOptions() {
     let userStatus = {
         loggedIn: loggedInCacheState
     };
-    if (loggedInCacheState === null) {
+    const nowInSec = moment().unix();
+    const threshold = 60 * 5; // 5 minutes
+    if (
+        loggedInCacheState === null ||
+        lastCacheCheckTime === null ||
+        nowInSec - lastCacheCheckTime > threshold
+    ) {
         // update it since it's null
         // {loggedIn: true|false}
         userStatus = await getUserStatus(serverIsOnline);
+        lastCacheCheckTime = nowInSec;
     }
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}

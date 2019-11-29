@@ -274,9 +274,12 @@ async function isLoggedOn(serverIsOnline) {
  * check if the user is registered or not
  * return {loggedIn: true|false}
  */
-export async function getUserStatus(serverIsOnline) {
-    if (loggedInCacheState !== null && loggedInCacheState === true) {
-        // commands.executeCommand("setContext", "codetime:loggedIn", true);
+export async function getUserStatus(serverIsOnline, ignoreCache = false) {
+    if (
+        !ignoreCache &&
+        loggedInCacheState !== null &&
+        loggedInCacheState === true
+    ) {
         return { loggedIn: true };
     }
 
@@ -499,7 +502,7 @@ export function refetchUserStatusLazily(tryCountUntilFoundUser = 40) {
 
 async function userStatusFetchHandler(tryCountUntilFoundUser) {
     let serverIsOnline = await serverIsAvailable();
-    let userStatus = await getUserStatus(serverIsOnline);
+    let userStatus = await getUserStatus(serverIsOnline, true);
     if (!userStatus.loggedIn) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
