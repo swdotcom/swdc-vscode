@@ -33,18 +33,10 @@ const fs = require("fs");
 const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
-let showMusicMetrics = false;
 let metricsDashboardLastCheckDate = null;
 
 export function clearMetricsDashboardLastCheckDate() {
     metricsDashboardLastCheckDate = null;
-}
-
-/**
- * fetch the show music metrics flag
- */
-export function updateShowMusicMetrics(val) {
-    showMusicMetrics = val;
 }
 
 /**
@@ -126,16 +118,6 @@ export async function showMenuOptions() {
         cb: toggleStatusBar
     });
 
-    // if (userStatus.loggedIn && showMusicMetrics) {
-    //     kpmMenuOptions.items.push({
-    //         label: "Software Top 40",
-    //         detail:
-    //             "Top 40 most popular songs developers around the world listen to as they code",
-    //         url: "https://api.software.com/music/top40",
-    //         cb: null
-    //     });
-    // }
-
     kpmMenuOptions.items.push({
         label: "Submit an issue on GitHub",
         detail: "Encounter a bug? Submit an issue on our GitHub page",
@@ -177,9 +159,6 @@ export async function fetchCodeTimeMetricsDashboard(summary) {
     if (hours >= 6) {
         metricsDashboardLastCheckDate = moment();
 
-        // let showMusicMetrics = workspace
-        //     .getConfiguration()
-        //     .get("showMusicMetrics");
         let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
         // let showWeeklyRanking = workspace
         //     .getConfiguration()

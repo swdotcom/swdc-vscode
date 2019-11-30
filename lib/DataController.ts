@@ -163,39 +163,6 @@ export async function sendOfflineData() {
 }
 
 /**
- * send any music tracks
- */
-export async function sendMusicData(trackData) {
-    if (trackData.available_markets) {
-        delete trackData.available_markets;
-    }
-    if (trackData.images) {
-        delete trackData.images;
-    }
-    if (trackData.external_urls) {
-        delete trackData.external_urls;
-    }
-    if (trackData.href) {
-        delete trackData.href;
-    }
-
-    logIt(`sending ${JSON.stringify(trackData)}`);
-    // add the "local_start", "start", and "end"
-    // POST the kpm to the PluginManager
-    let api = `/music/session`;
-    return softwarePost(api, trackData, getItem("jwt"))
-        .then(resp => {
-            if (!isResponseOk(resp)) {
-                return { status: "fail" };
-            }
-            return { status: "ok" };
-        })
-        .catch(e => {
-            return { status: "fail" };
-        });
-}
-
-/**
  * get the app jwt
  */
 export async function getAppJwt(serverIsOnline) {
@@ -376,10 +343,6 @@ export async function initializePreferences(serverIsOnline) {
 
             let userId = parseInt(user.id, 10);
             let prefs = user.preferences;
-            let prefsShowMusic =
-                prefs.showMusic !== null && prefs.showMusic !== undefined
-                    ? prefs.showMusic
-                    : null;
             let prefsShowGit =
                 prefs.showGit !== null && prefs.showGit !== undefined
                     ? prefs.showGit
@@ -389,23 +352,9 @@ export async function initializePreferences(serverIsOnline) {
                     ? prefs.showRank
                     : null;
 
-            if (
-                prefsShowMusic === null ||
-                prefsShowGit === null ||
-                prefsShowRank === null
-            ) {
+            if (prefsShowGit === null || prefsShowRank === null) {
                 await sendPreferencesUpdate(userId, prefs);
             } else {
-                if (prefsShowMusic !== null) {
-                    // await workspace
-                    //     .getConfiguration()
-                    //     .update(
-                    //         "showMusicMetrics",
-                    //         prefsShowMusic,
-                    //         ConfigurationTarget.Global
-                    //     );
-                    // updateShowMusicMetrics(prefsShowMusic);
-                }
                 if (prefsShowGit !== null) {
                     await workspace
                         .getConfiguration()
@@ -434,16 +383,13 @@ export async function initializePreferences(serverIsOnline) {
 
 async function sendPreferencesUpdate(userId, userPrefs) {
     let api = `/users/${userId}`;
-    // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
+
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     // let showWeeklyRanking = workspace
     //     .getConfiguration()
     //     .get("showWeeklyRanking");
-    // userPrefs["showMusic"] = showMusicMetrics;
     userPrefs["showGit"] = showGitMetrics;
     // userPrefs["showRank"] = showWeeklyRanking;
-
-    // updateShowMusicMetrics(showMusicMetrics);
 
     // update the preferences
     // /:id/preferences
@@ -459,13 +405,10 @@ export async function updatePreferences() {
         .getConfiguration()
         .get("toggleFileEventLogging");
 
-    // let showMusicMetrics = workspace.getConfiguration().get("showMusicMetrics");
     let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
     // let showWeeklyRanking = workspace
     //     .getConfiguration()
     //     .get("showWeeklyRanking");
-
-    // updateShowMusicMetrics(showMusicMetrics);
 
     // get the user's preferences and update them if they don't match what we have
     let jwt = getItem("jwt");
@@ -485,10 +428,6 @@ export async function updatePreferences() {
                 resp.data.data.preferences
             ) {
                 let prefs = resp.data.data.preferences;
-                let prefsShowMusic =
-                    prefs.showMusic !== null && prefs.showMusic !== undefined
-                        ? prefs.showMusic
-                        : null;
                 let prefsShowGit =
                     prefs.showGit !== null && prefs.showGit !== undefined
                         ? prefs.showGit

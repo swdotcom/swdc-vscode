@@ -24,15 +24,6 @@
     },
     "tasks": [
         {
-            "label": "prebuildmusictime",
-            "type": "npm",
-            "script": "prebuildmusictime",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
             "label": "prebuildcodetime",
             "type": "npm",
             "script": "prebuildcodetime",
