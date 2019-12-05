@@ -192,15 +192,23 @@ export async function intializePlugin(
 
     // check on new commits once an hour
     historical_commits_interval = setInterval(async () => {
-        let isonline = await serverIsAvailable();
-        sendHeartbeat("HOURLY", isonline);
-        getHistoricalCommits(isonline);
+        if (window.state.focused) {
+            let isonline = await serverIsAvailable();
+            sendHeartbeat("HOURLY", isonline);
+            getHistoricalCommits(isonline);
+        }
     }, hourly_interval_ms);
 
     // every half hour, send offline data
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(() => {
-        sendOfflineData();
+        if (!window.state.focused) {
+            setTimeout(() => {
+                sendOfflineData();
+            }, 5000);
+        } else {
+            sendOfflineData();
+        }
     }, half_hour_ms);
 
     // in 2 minutes fetch the historical commits if any
@@ -212,16 +220,20 @@ export async function intializePlugin(
     // check if the use has become a registered user
     // if they're already logged on, it will not send a request
     token_check_interval = setInterval(async () => {
-        let checkStatus = getItem("check_status");
-        // but only if checkStatus is true
-        if (checkStatus !== null && checkStatus) {
-            getUserStatus(serverIsOnline);
+        if (window.state.focused) {
+            const name = getItem("name");
+            // but only if checkStatus is true
+            if (!name) {
+                getUserStatus(serverIsOnline);
+            }
         }
     }, one_min_ms * 10);
 
     // update liveshare in the offline kpm data if it has been initiated
     liveshare_update_interval = setInterval(async () => {
-        updateLiveshareTime();
+        if (window.state.focused) {
+            updateLiveshareTime();
+        }
     }, one_min_ms * 1);
 
     initializeLiveshare();

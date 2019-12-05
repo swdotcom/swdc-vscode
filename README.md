@@ -9,6 +9,7 @@
   <img src="https://s3-us-west-1.amazonaws.com/swdc-static-assets/vs-code-dashboard.gif" alt="Code Time for VS Code" />
 </p>
 
+
 ## Power up your development
 
 **In-editor dashboard**
