@@ -202,13 +202,7 @@ export async function intializePlugin(
     // every half hour, send offline data
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(() => {
-        if (!window.state.focused) {
-            setTimeout(() => {
-                sendOfflineData();
-            }, 5000);
-        } else {
-            sendOfflineData();
-        }
+        sendOfflineData();
     }, half_hour_ms);
 
     // in 2 minutes fetch the historical commits if any

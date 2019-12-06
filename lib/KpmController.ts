@@ -85,7 +85,7 @@ export class KpmController {
      * @param event
      */
     private async _onCloseHandler(event) {
-        if (!event || !window.state.focused) {
+        if (!event) {
             return;
         }
         const staticInfo = await this.getStaticEventInfo(event);
@@ -118,7 +118,7 @@ export class KpmController {
      * @param event
      */
     private async _onOpenHandler(event) {
-        if (!event || !window.state.focused) {
+        if (!event) {
             return;
         }
         const staticInfo = await this.getStaticEventInfo(event);
@@ -153,9 +153,6 @@ export class KpmController {
      * @param event
      */
     private async _onEventHandler(event) {
-        if (!window.state.focused) {
-            return;
-        }
         const staticInfo = await this.getStaticEventInfo(event);
 
         const filename = staticInfo.filename;
