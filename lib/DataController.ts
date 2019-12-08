@@ -266,7 +266,9 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
             // it's null, set it
             lastLoggedInCheckTime = moment().unix();
         }
-        return loggedInCacheState;
+        if (loggedInCacheState) {
+            return loggedInCacheState;
+        }
     }
 
     let loggedIn = false;

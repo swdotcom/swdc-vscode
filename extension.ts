@@ -186,7 +186,7 @@ export async function intializePlugin(
     // 35 min interval to check if the session file exists or not
     session_check_interval = setInterval(() => {
         periodicSessionCheck();
-    }, 1000 * 60 * 35);
+    }, 1000 * 60 * 30);
 
     // add the interval jobs
 
@@ -233,7 +233,7 @@ export async function intializePlugin(
     initializeLiveshare();
 
     // {loggedIn: true|false}
-    await getUserStatus(serverIsOnline);
+    await getUserStatus(serverIsOnline, true);
 
     if (createdAnonUser) {
         showLoginPrompt();
