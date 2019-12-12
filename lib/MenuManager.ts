@@ -17,7 +17,8 @@ import {
     getSummaryInfoFile,
     launchLogin,
     getSectionHeader,
-    isStatusBarTextVisible
+    isStatusBarTextVisible,
+    isNewHourForCodetimeMetricsDashboard
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
@@ -32,12 +33,6 @@ const fs = require("fs");
 
 const SERVICE_NOT_AVAIL =
     "Our service is temporarily unavailable.\n\nPlease try again later.\n";
-
-let metricsDashboardLastCheckDate = null;
-
-export function clearMetricsDashboardLastCheckDate() {
-    metricsDashboardLastCheckDate = null;
-}
 
 /**
  * Pass in the following array of objects
@@ -152,13 +147,7 @@ export async function launchWebDashboardView() {
 export async function fetchCodeTimeMetricsDashboard(summary) {
     let summaryInfoFile = getSummaryInfoFile();
 
-    const duration = metricsDashboardLastCheckDate
-        ? moment.duration(moment().diff(metricsDashboardLastCheckDate))
-        : null;
-    const hours = duration ? duration.asHours() : 6;
-    if (hours >= 6) {
-        metricsDashboardLastCheckDate = moment();
-
+    if (isNewHourForCodetimeMetricsDashboard()) {
         let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
         // let showWeeklyRanking = workspace
         //     .getConfiguration()

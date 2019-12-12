@@ -41,6 +41,39 @@ let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
 
+let codeTimeMetricsDashboardLastDayHour = null;
+let statusBarLastDayHour = null;
+
+export function isNewHourForCodetimeMetricsDashboard() {
+    const dayHr = moment().format("YYYY-MM-DD-HH");
+
+    if (
+        !codeTimeMetricsDashboardLastDayHour ||
+        dayHr !== codeTimeMetricsDashboardLastDayHour
+    ) {
+        codeTimeMetricsDashboardLastDayHour = dayHr;
+        return true;
+    }
+
+    return false;
+}
+
+export function isNewHourForStatusBarData() {
+    const dayHr = moment().format("YYYY-MM-DD-HH");
+
+    if (!statusBarLastDayHour || dayHr !== statusBarLastDayHour) {
+        statusBarLastDayHour = dayHr;
+        return true;
+    }
+
+    return false;
+}
+
+export function clearDayHourVals() {
+    codeTimeMetricsDashboardLastDayHour = null;
+    statusBarLastDayHour = null;
+}
+
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
         editorSessiontoken = randomCode();
@@ -392,26 +425,6 @@ export function getSummaryInfoFile() {
     return file;
 }
 
-export function getMusicTimeFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\MusicTime.txt";
-    } else {
-        file += "/MusicTime.txt";
-    }
-    return file;
-}
-
-export function getMusicTimeMarkdownFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\MusicTime.html";
-    } else {
-        file += "/MusicTime.html";
-    }
-    return file;
-}
-
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;
@@ -456,16 +469,6 @@ export function getSoftwareDataStoreFile() {
         file += "\\data.json";
     } else {
         file += "/data.json";
-    }
-    return file;
-}
-
-export function getMusicSessionDataStoreFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\MusicSession.json";
-    } else {
-        file += "/MusicSession.json";
     }
     return file;
 }

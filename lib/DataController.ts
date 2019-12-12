@@ -23,12 +23,13 @@ import {
     launchWebUrl,
     logIt,
     getPluginId,
-    logEvent
+    logEvent,
+    isNewHourForStatusBarData,
+    clearDayHourVals
 } from "./Util";
 import {
     buildWebDashboardUrl,
-    fetchCodeTimeMetricsDashboard,
-    clearMetricsDashboardLastCheckDate
+    fetchCodeTimeMetricsDashboard
 } from "./MenuManager";
 import {
     getSessionSummaryData,
@@ -49,28 +50,6 @@ let userFetchTimeout = null;
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
-
-let statusBarLastDayHour = null;
-
-export function isNewHour() {
-    const dayHr = moment().format("YYYY-MM-DD-HH");
-
-    if (!statusBarLastDayHour || dayHr !== statusBarLastDayHour) {
-        statusBarLastDayHour = dayHr;
-        return true;
-    }
-
-    return false;
-}
-
-export function clearStatusBarLastDayHour() {
-    statusBarLastDayHour = null;
-}
-
-async function resetFetchTimeChecks() {
-    clearMetricsDashboardLastCheckDate();
-    clearStatusBarLastDayHour();
-}
 
 export function getLoggedInCacheState() {
     return loggedInCacheState;
@@ -471,7 +450,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         }
     } else {
         // clear the last moment date to be able to retrieve the user's dashboard metrics
-        resetFetchTimeChecks();
+        clearDayHourVals();
         const message = "Successfully logged on to Code Time";
 
         window.showInformationMessage(message);
@@ -539,7 +518,7 @@ export async function getSessionSummaryStatus() {
     let status = "OK";
 
     // check if we need to get new dashboard data
-    if (isNewHour()) {
+    if (isNewHourForStatusBarData()) {
         let serverIsOnline = await serverIsAvailable();
         if (serverIsOnline) {
             // Provides...
