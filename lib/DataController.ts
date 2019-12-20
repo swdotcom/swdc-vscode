@@ -27,10 +27,7 @@ import {
     isNewHourForStatusBarData,
     clearDayHourVals
 } from "./Util";
-import {
-    buildWebDashboardUrl,
-    fetchCodeTimeMetricsDashboard
-} from "./MenuManager";
+import { buildWebDashboardUrl } from "./MenuManager";
 import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
@@ -136,9 +133,6 @@ export async function sendOfflineData() {
     } catch (e) {
         //
     }
-
-    // update the statusbar (only fetch if it's a new day)
-    await fetchSessionSummaryInfo();
 }
 
 /**
@@ -282,7 +276,7 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
 
         setTimeout(() => {
             // update the statusbar
-            fetchSessionSummaryInfo();
+            getSessionSummaryStatus();
         }, 1000);
     }
 
@@ -504,21 +498,16 @@ export async function handleKpmClickedEvent() {
     launchWebUrl(webUrl);
 }
 
-export async function fetchSessionSummaryInfo() {
-    // make sure we send the beginning of the day
-    let result = await getSessionSummaryStatus();
-
-    if (result.status === "OK") {
-        fetchCodeTimeMetricsDashboard(result.data);
-    }
-}
-
 export async function getSessionSummaryStatus() {
     let sessionSummaryData = getSessionSummaryData();
     let status = "OK";
 
     // check if we need to get new dashboard data
-    if (isNewHourForStatusBarData()) {
+    if (
+        !sessionSummaryData ||
+        sessionSummaryData.currentDayMinutes === 0 ||
+        isNewHourForStatusBarData()
+    ) {
         let serverIsOnline = await serverIsAvailable();
         if (serverIsOnline) {
             // Provides...

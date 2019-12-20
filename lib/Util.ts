@@ -10,8 +10,8 @@ import {
 } from "./Constants";
 import {
     refetchUserStatusLazily,
-    fetchSessionSummaryInfo,
-    getToggleFileEventLoggingState
+    getToggleFileEventLoggingState,
+    getSessionSummaryStatus
 } from "./DataController";
 import { incrementSessionSummaryData } from "./OfflineManager";
 const moment = require("moment-timezone");
@@ -41,27 +41,12 @@ let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
 
-let codeTimeMetricsDashboardLastDayHour = null;
 let statusBarLastDayHour = null;
-
-export function isNewHourForCodetimeMetricsDashboard() {
-    const dayHr = moment().format("YYYY-MM-DD-HH");
-
-    if (
-        !codeTimeMetricsDashboardLastDayHour ||
-        dayHr !== codeTimeMetricsDashboardLastDayHour
-    ) {
-        codeTimeMetricsDashboardLastDayHour = dayHr;
-        return true;
-    }
-
-    return false;
-}
 
 export function isNewHourForStatusBarData() {
     const dayHr = moment().format("YYYY-MM-DD-HH");
 
-    if (!statusBarLastDayHour || dayHr !== statusBarLastDayHour) {
+    if (statusBarLastDayHour && dayHr !== statusBarLastDayHour) {
         statusBarLastDayHour = dayHr;
         return true;
     }
@@ -70,7 +55,6 @@ export function isNewHourForStatusBarData() {
 }
 
 export function clearDayHourVals() {
-    codeTimeMetricsDashboardLastDayHour = null;
     statusBarLastDayHour = null;
 }
 
@@ -608,7 +592,7 @@ export function storePayload(payload) {
 
     setTimeout(() => {
         // update the statusbar
-        fetchSessionSummaryInfo();
+        getSessionSummaryStatus();
     }, 1000);
 
     // store the payload into the data.json file

@@ -17,8 +17,7 @@ import {
     getSummaryInfoFile,
     launchLogin,
     getSectionHeader,
-    isStatusBarTextVisible,
-    isNewHourForCodetimeMetricsDashboard
+    isStatusBarTextVisible
 } from "./Util";
 import { softwareGet, isResponseOk } from "./HttpClient";
 import {
@@ -71,7 +70,7 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
-    let serverIsOnline = await serverIsAvailable();
+    const serverIsOnline = await serverIsAvailable();
 
     const loggedInState = await getUserStatus(serverIsOnline);
 
@@ -145,9 +144,11 @@ export async function launchWebDashboardView() {
 }
 
 export async function fetchCodeTimeMetricsDashboard(summary) {
+    const serverIsOnline = await serverIsAvailable();
     let summaryInfoFile = getSummaryInfoFile();
 
-    if (isNewHourForCodetimeMetricsDashboard()) {
+    // fetch the dashboard if the server is online
+    if (serverIsOnline) {
         let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
         // let showWeeklyRanking = workspace
         //     .getConfiguration()
@@ -222,9 +223,9 @@ export async function displayCodeTimeMetricsDashboard() {
     let filePath = getDashboardFile();
 
     let result = await getSessionSummaryStatus();
-
     if (result.status === "OK") {
-        fetchCodeTimeMetricsDashboard(result.data);
+        // wait for this to fetch the dashboard content in that file
+        await fetchCodeTimeMetricsDashboard(result.data);
     }
 
     workspace.openTextDocument(filePath).then(doc => {

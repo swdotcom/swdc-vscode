@@ -175,10 +175,10 @@ export async function intializePlugin(
         showStatus("Code Time", null);
     }, 0);
 
-    // show the local stats in 5 seconds
+    // update the status bar
     setTimeout(() => {
         getSessionSummaryStatus();
-    }, 1000 * 5);
+    }, 1000);
 
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;

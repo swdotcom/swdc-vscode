@@ -60,7 +60,8 @@ export function incrementSessionSummaryData(keystrokes) {
     if (sessionSummaryData.lastStart) {
         const lastStart = parseInt(sessionSummaryData.lastStart, 10);
         // get the diff from the prev start
-        const diffInSec = nowInSec - lastStart;
+        // (minus a fuzzy minute to account for the payload time that triggered this call)
+        const diffInSec = nowInSec - lastStart - 65;
         // If it's less or equal to the session threshold seconds
         // then add to the minutes increment. But check if it's a positive
         // number in case the system clock has been moved to the future
@@ -95,6 +96,19 @@ export function updateStatusBarWithSummaryData() {
 }
 
 export function getSessionSummaryData() {
+    sessionSummaryData = getSessionSummaryFileAsJson();
+    // make sure it's a valid structure
+    if (!sessionSummaryData || !sessionSummaryData.currentDayMinutes) {
+        // set the defaults
+        sessionSummaryData = {
+            currentDayMinutes: 0,
+            averageDailyMinutes: 0,
+            averageDailyKeystrokes: 0,
+            currentDayKeystrokes: 0,
+            liveshareMinutes: null,
+            lastStart: null
+        };
+    }
     return sessionSummaryData;
 }
 
