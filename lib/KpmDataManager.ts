@@ -45,28 +45,50 @@ export class KpmDataManager {
      * check if the payload should be sent or not
      */
     hasData() {
+        const keys = Object.keys(this.source);
+        if (!keys || keys.length === 0) {
+            return false;
+        }
+
         // delete files that don't have any kpm data
         let foundKpmData = false;
         if (this.keystrokes > 0) {
-            return true;
+            foundKpmData = true;
         }
-        for (const fileName of Object.keys(this.source)) {
-            const fileInfoData = this.source[fileName];
-            // check if any of the metric values has data
+
+        // Now remove files that don't have any keystrokes that only
+        // have an open or close associated with them. If they have
+        // open AND close then it's ok, keep it.
+        let keystrokesTally = 0;
+        keys.forEach(key => {
+            const data = this.source[key];
+
+            const hasOpen = data.open > 0;
+            const hasClose = data.close > 0;
+            // tally the keystrokes for this file
+            data.keystrokes =
+                data.add +
+                data.paste +
+                data.delete +
+                data.linesAdded +
+                data.linesRemoved;
+            const hasKeystrokes = data.keystrokes > 0;
+            keystrokesTally += data.keystrokes;
             if (
-                fileInfoData &&
-                (fileInfoData.add > 0 ||
-                    fileInfoData.paste > 0 ||
-                    fileInfoData.open > 0 ||
-                    fileInfoData.close > 0 ||
-                    fileInfoData.delete > 0 ||
-                    fileInfoData.linesAdded > 0 ||
-                    fileInfoData.linesRemoved > 0)
+                (hasOpen && !hasClose && !hasKeystrokes) ||
+                (hasClose && !hasOpen && !hasKeystrokes)
             ) {
+                // delete it, no keystrokes and only an open
+                delete this.source[key];
+            } else if (!foundKpmData && hasOpen && hasClose) {
                 foundKpmData = true;
-            } else {
-                delete this.source[fileName];
             }
+        });
+
+        if (keystrokesTally > 0 && keystrokesTally !== this.keystrokes) {
+            // use the keystrokes tally
+            foundKpmData = true;
+            this.keystrokes = keystrokesTally;
         }
         return foundKpmData;
     }

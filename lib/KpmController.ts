@@ -4,7 +4,6 @@ import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
 import {
     getRootPathForFile,
-    updateCodeTimeMetricsFileFocus,
     isCodeTimeMetricsFile,
     isEmptyObj,
     getProjectFolder,
@@ -94,10 +93,6 @@ export class KpmController {
             return;
         }
 
-        if (isCodeTimeMetricsFile(staticInfo.filename)) {
-            updateCodeTimeMetricsFileFocus(false);
-        }
-
         let rootPath = getRootPathForFile(staticInfo.filename);
 
         if (!rootPath) {
@@ -125,12 +120,6 @@ export class KpmController {
 
         if (!this.isTrueEventFile(event, staticInfo.filename)) {
             return;
-        }
-
-        if (isCodeTimeMetricsFile(staticInfo.filename)) {
-            updateCodeTimeMetricsFileFocus(true);
-        } else {
-            updateCodeTimeMetricsFileFocus(false);
         }
 
         let rootPath = getRootPathForFile(staticInfo.filename);

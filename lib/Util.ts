@@ -29,10 +29,6 @@ export const MARKER_WIDTH = 4;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
-// start off as focused as the editor may have
-// had that file in the tabs. any close or tab
-// switch will set this to false if the file isn't CodeTime
-let codeTimeMetricsIsFocused = true;
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
 let lastMsg = null;
@@ -80,24 +76,6 @@ export function getPluginType() {
 export function getVersion() {
     const extension = extensions.getExtension(CODE_TIME_EXT_ID);
     return extension.packageJSON.version;
-}
-
-export function isCodeTimeMetricsFocused() {
-    if (!codeTimeMetricsIsFocused) {
-        // check if it's the only one in the editor. the other files
-        // may have been closed
-        if (
-            getNumberOfTextDocumentsOpen() === 1 &&
-            isFileOpen(getDashboardFile())
-        ) {
-            codeTimeMetricsIsFocused = true;
-        }
-    }
-    return codeTimeMetricsIsFocused;
-}
-
-export function updateCodeTimeMetricsFileFocus(isFocused) {
-    codeTimeMetricsIsFocused = isFocused;
 }
 
 export function isCodeTimeMetricsFile(fileName) {

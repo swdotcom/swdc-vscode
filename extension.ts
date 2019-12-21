@@ -186,18 +186,23 @@ export async function intializePlugin(
     // 35 min interval to check if the session file exists or not
     session_check_interval = setInterval(() => {
         periodicSessionCheck();
-    }, 1000 * 60 * 30);
+    }, 1000 * 60 * 35);
 
     // add the interval jobs
 
     // check on new commits once an hour
     historical_commits_interval = setInterval(async () => {
         if (window.state.focused) {
-            let isonline = await serverIsAvailable();
-            sendHeartbeat("HOURLY", isonline);
+            const isonline = await serverIsAvailable();
             getHistoricalCommits(isonline);
         }
     }, hourly_interval_ms);
+
+    // send heartbeats every 2 hours
+    setInterval(async () => {
+        const isonline = await serverIsAvailable();
+        sendHeartbeat("HOURLY", isonline);
+    }, hourly_interval_ms * 2);
 
     // every half hour, send offline data
     const half_hour_ms = hourly_interval_ms / 2;
