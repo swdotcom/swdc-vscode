@@ -377,6 +377,16 @@ export function getDashboardFile() {
     return file;
 }
 
+export function getCommitSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\CommitSummary.txt";
+    } else {
+        file += "/CommitSummary.txt";
+    }
+    return file;
+}
+
 export function getSummaryInfoFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
@@ -405,7 +415,7 @@ export function getSoftwareDir(autoCreate = true) {
 
 export function softwareSessionFileExists() {
     // don't auto create the file
-    const file = getSoftwareSessionFile(false);
+    const file = getSoftwareSessionFile();
     // check if it exists
     return fs.existsSync(file);
 }
@@ -415,7 +425,7 @@ export function jwtExists() {
     return !jwt ? false : true;
 }
 
-export function getSoftwareSessionFile(autoCreate = true) {
+export function getSoftwareSessionFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
         file += "\\session.json";
@@ -650,12 +660,6 @@ export async function getGitEmail() {
 
         let email = await wrapExecPromise("git config user.email", projectDir);
         if (email) {
-            /**
-             * // normalize the email, possible github email types
-             * shupac@users.noreply.github.com
-             * 37358488+rick-software@users.noreply.github.com
-             */
-            email = normalizeGithubEmail(email);
             return email;
         }
     }

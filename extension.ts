@@ -190,13 +190,11 @@ export async function intializePlugin(
 
     // add the interval jobs
 
-    // check on new commits once an hour
+    // check on new commits every 45 minutes
     historical_commits_interval = setInterval(async () => {
-        if (window.state.focused) {
-            const isonline = await serverIsAvailable();
-            getHistoricalCommits(isonline);
-        }
-    }, hourly_interval_ms);
+        const isonline = await serverIsAvailable();
+        getHistoricalCommits(isonline);
+    }, 1000 * 60 * 45);
 
     // send heartbeats every 2 hours
     setInterval(async () => {

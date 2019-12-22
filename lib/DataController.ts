@@ -25,7 +25,14 @@ import {
     getPluginId,
     logEvent,
     isNewHourForStatusBarData,
-    clearDayHourVals
+    clearDayHourVals,
+    getCommitSummaryFile,
+    getSummaryInfoFile,
+    getSectionHeader,
+    humanizeMinutes,
+    getDashboardRow,
+    getDashboardFile,
+    isLinux
 } from "./Util";
 import { buildWebDashboardUrl } from "./MenuManager";
 import {
@@ -496,6 +503,119 @@ export async function handleKpmClickedEvent() {
         refetchUserStatusLazily();
     }
     launchWebUrl(webUrl);
+}
+
+export async function writeCommitSummaryData() {
+    const filePath = getCommitSummaryFile();
+    const serverIsOnline = await serverIsAvailable();
+    if (serverIsOnline) {
+        const result = await softwareGet(
+            `/dashboard/commits`,
+            getItem("jwt")
+        ).catch(err => {
+            return null;
+        });
+        if (isResponseOk(result) && result.data) {
+            // get the string content out
+            const content = result.data;
+            fs.writeFileSync(filePath, content, err => {
+                if (err) {
+                    logIt(
+                        `Error writing to the weekly commit summary content file: ${err.message}`
+                    );
+                }
+            });
+        }
+    }
+
+    if (!fs.existsSync(filePath)) {
+        // just create an empty file
+        fs.writeFileSync(filePath, "WEEKLY COMMIT SUMMARY", err => {
+            if (err) {
+                logIt(
+                    `Error writing to the weekly commit summary content file: ${err.message}`
+                );
+            }
+        });
+    }
+}
+
+export async function writeCodeTimeMetricsDashboard() {
+    const summaryInfoFile = getSummaryInfoFile();
+    const serverIsOnline = await serverIsAvailable();
+
+    // write the code time metrics summary to the summaryInfo file
+    if (serverIsOnline) {
+        let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
+
+        let api = `/dashboard?showMusic=false&showGit=${showGitMetrics}&showRank=false&linux=${isLinux()}&showToday=false`;
+        const result = await softwareGet(api, getItem("jwt"));
+
+        if (isResponseOk(result)) {
+            // get the string content out
+            const content = result.data;
+            fs.writeFileSync(summaryInfoFile, content, err => {
+                if (err) {
+                    logIt(
+                        `Error writing to the code time summary content file: ${err.message}`
+                    );
+                }
+            });
+        }
+    }
+
+    // create the header
+    let dashboardContent = "";
+    const formattedDate = moment().format("ddd, MMM Do h:mma");
+    dashboardContent = `CODE TIME          (Last updated on ${formattedDate})`;
+    dashboardContent += "\n\n";
+
+    const todayStr = moment().format("ddd, MMM Do");
+    dashboardContent += getSectionHeader(`Today (${todayStr})`);
+
+    // get the top section of the dashboard content (today's data)
+    const sessionSummary = await getSessionSummaryStatus();
+    if (sessionSummary && sessionSummary.data) {
+        let averageTime = humanizeMinutes(
+            sessionSummary.data.averageDailyMinutes
+        );
+        let hoursCodedToday = humanizeMinutes(
+            sessionSummary.data.currentDayMinutes
+        );
+        let liveshareTime = null;
+        if (sessionSummary.data.liveshareMinutes) {
+            liveshareTime = humanizeMinutes(
+                sessionSummary.data.liveshareMinutes
+            );
+        }
+        dashboardContent += getDashboardRow(
+            "Hours coded today",
+            hoursCodedToday
+        );
+        dashboardContent += getDashboardRow("90-day avg", averageTime);
+        if (liveshareTime) {
+            dashboardContent += getDashboardRow("Live Share", liveshareTime);
+        }
+        dashboardContent += "\n";
+    }
+
+    // get the summary info we just made a call for and add it to the dashboard content
+    if (fs.existsSync(summaryInfoFile)) {
+        const summaryContent = fs.readFileSync(summaryInfoFile).toString();
+
+        // create the dashboard file
+        dashboardContent += summaryContent;
+    }
+
+    // now write it all out to the dashboard file
+    const dashboardFile = getDashboardFile();
+    fs.writeFileSync(dashboardFile, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the code time dashboard content file: ${err.message}`
+            );
+        }
+    });
 }
 
 export async function getSessionSummaryStatus() {

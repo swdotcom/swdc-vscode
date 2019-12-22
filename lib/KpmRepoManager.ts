@@ -7,6 +7,9 @@ import {
     normalizeGithubEmail,
     getFileType
 } from "./Util";
+import { serverIsAvailable } from "./DataController";
+
+let myRepoInfo = [];
 
 function getProjectDir(fileName = null) {
     let projectDirs = getRootPaths();
@@ -31,6 +34,22 @@ function getProjectDir(fileName = null) {
         }
     }
     return null;
+}
+
+export async function getMyRepoInfo() {
+    if (myRepoInfo.length > 0) {
+        return myRepoInfo;
+    }
+    const serverAvailable = await serverIsAvailable();
+    const jwt = getItem("jwt");
+    if (serverAvailable && jwt) {
+        // list of [{identifier, tag, branch}]
+        const resp = await softwareGet("/repo/info", jwt);
+        if (isResponseOk(resp)) {
+            myRepoInfo = resp.data;
+        }
+    }
+    return myRepoInfo;
 }
 
 async function getCommandResult(cmd, projectDir) {
@@ -166,17 +185,16 @@ export async function getRepoContributorInfo(fileName) {
 // use "git symbolic-ref --short HEAD" to get the git branch
 // use "git config --get remote.origin.url" to get the remote url
 export async function getResourceInfo(projectDir) {
-    let branch = await wrapExecPromise(
+    const branch = await wrapExecPromise(
         "git symbolic-ref --short HEAD",
         projectDir
     );
-    let identifier = await wrapExecPromise(
+    const identifier = await wrapExecPromise(
         "git config --get remote.origin.url",
         projectDir
     );
     let email = await wrapExecPromise("git config user.email", projectDir);
-    email = normalizeGithubEmail(email);
-    let tag = await wrapExecPromise("git describe --all", projectDir);
+    const tag = await wrapExecPromise("git describe --all", projectDir);
 
     // both should be valid to return the resource info
     if (branch && identifier) {
@@ -198,32 +216,26 @@ export async function getRepoUsers(fileName) {
     }
 }
 
-function buildRepoKey(identifier, branch, tag) {
-    return `${identifier}_${branch}_${tag}`;
-}
-
 /**
  * get the last git commit from the app server
  */
-async function getLastCommit(fileName) {
-    const projectDir = getProjectDir(fileName);
+async function getLastCommit() {
+    const projectDir = getProjectDir();
     if (!projectDir) {
         return null;
     }
 
     // get the repo url, branch, and tag
-    let resourceInfo = await getResourceInfo(projectDir);
-    let key = null;
+    const resourceInfo = await getResourceInfo(projectDir);
     let commit = null;
     if (resourceInfo && resourceInfo.identifier) {
-        let identifier = resourceInfo.identifier;
-        let tag = resourceInfo.tag;
-        let branch = resourceInfo.branch;
-        key = buildRepoKey(identifier, branch, tag);
+        const identifier = resourceInfo.identifier;
+        const tag = resourceInfo.tag;
+        const branch = resourceInfo.branch;
 
-        let encodedIdentifier = encodeURIComponent(identifier);
-        let encodedTag = encodeURIComponent(tag);
-        let encodedBranch = encodeURIComponent(branch);
+        const encodedIdentifier = encodeURIComponent(identifier);
+        const encodedTag = encodeURIComponent(tag);
+        const encodedBranch = encodeURIComponent(branch);
         // call the app
         commit = await softwareGet(
             `/commits/latest?identifier=${encodedIdentifier}&tag=${encodedTag}&branch=${encodedBranch}`,
@@ -248,23 +260,25 @@ export async function getHistoricalCommits(isonline) {
     if (!isonline) {
         return;
     }
-    const projectDir = getProjectDir(null);
+    const projectDir = getProjectDir();
     if (!projectDir) {
         return null;
     }
 
     // get the repo url, branch, and tag
-    let resourceInfo = await getResourceInfo(projectDir);
+    const resourceInfo = await getResourceInfo(projectDir);
     if (resourceInfo && resourceInfo.identifier) {
-        let identifier = resourceInfo.identifier;
-        let tag = resourceInfo.tag;
-        let branch = resourceInfo.branch;
+        const identifier = resourceInfo.identifier;
+        const tag = resourceInfo.tag;
+        const branch = resourceInfo.branch;
 
-        let latestCommit = await getLastCommit(null);
+        const latestCommit = await getLastCommit();
 
         let sinceOption = "";
         if (latestCommit) {
-            sinceOption = ` --since=${parseInt(latestCommit.timestamp, 10)}`;
+            // add a second
+            const newTimestamp = parseInt(latestCommit.timestamp, 10) + 1;
+            sinceOption = ` --since=${newTimestamp}`;
         } else {
             sinceOption = " --max-count=100";
         }
@@ -272,7 +286,7 @@ export async function getHistoricalCommits(isonline) {
         const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${resourceInfo.email}${sinceOption}`;
 
         // git log --stat --pretty="COMMIT:%H, %ct, %cI, %s, %ae"
-        let resultList = await getCommandResult(cmd, projectDir);
+        const resultList = await getCommandResult(cmd, projectDir);
 
         if (!resultList) {
             // something went wrong, but don't try to parse a null or undefined str
@@ -310,12 +324,7 @@ export async function getHistoricalCommits(isonline) {
                             timestamp,
                             date,
                             message,
-                            changes: {
-                                __sftwTotal__: {
-                                    insertions: 0,
-                                    deletions: 0
-                                }
-                            }
+                            changes: {}
                         };
                     }
                 } else if (commit && line.indexOf("|") !== -1) {
@@ -347,8 +356,6 @@ export async function getHistoricalCommits(isonline) {
                                 insertions,
                                 deletions
                             };
-                            commit.changes.__sftwTotal__.insertions += insertions;
-                            commit.changes.__sftwTotal__.deletions += deletions;
                         }
                     }
                 }
@@ -359,7 +366,7 @@ export async function getHistoricalCommits(isonline) {
             commits.push(commit);
         }
 
-        // send in batches of 25 (backend has a 100k body limit)
+        // send in batches of 25 (backend has a 2mb body limit)
         if (commits && commits.length > 0) {
             let batchCommits = [];
             for (let i = 0; i < commits.length; i++) {
@@ -387,19 +394,22 @@ export async function getHistoricalCommits(isonline) {
                 batchCommits = [];
             }
         }
+
+        // clear out the repo info in case they've added another one
+        myRepoInfo = [];
     }
 
     /**
-             * We'll get commitId, unixTimestamp, unixDate, commitMessage, authorEmail
-             * then we'll gather the files
-             * COMMIT:52d0ac19236ac69cae951b2a2a0b4700c0c525db, 1545507646, 2018-12-22T11:40:46-08:00, updated wlb to use local_start, xavluiz@gmail.com
+     * We'll get commitId, unixTimestamp, unixDate, commitMessage, authorEmail
+     * then we'll gather the files
+     * COMMIT:52d0ac19236ac69cae951b2a2a0b4700c0c525db, 1545507646, 2018-12-22T11:40:46-08:00, updated wlb to use local_start, xavluiz@gmail.com
 
-                backend/app.js                  | 20 +++++++++-----------
-                backend/app/lib/audio.js        |  5 -----
-                backend/app/lib/feed_helpers.js | 13 +------------
-                backend/app/lib/sessions.js     | 25 +++++++++++++++----------
-                4 files changed, 25 insertions(+), 38 deletions(-)
-            */
+        backend/app.js                  | 20 +++++++++-----------
+        backend/app/lib/audio.js        |  5 -----
+        backend/app/lib/feed_helpers.js | 13 +------------
+        backend/app/lib/sessions.js     | 25 +++++++++++++++----------
+        4 files changed, 25 insertions(+), 38 deletions(-)
+    */
 
     function sendCommits(commitData) {
         // send this to the backend
