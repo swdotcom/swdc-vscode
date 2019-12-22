@@ -622,7 +622,11 @@ export async function getSessionSummaryStatus() {
     let sessionSummaryData = getSessionSummaryData();
     let status = "OK";
 
-    // check if we need to get new dashboard data
+    // check if we need to get new dashboard data.
+    // Important, only fetch from the backend if it's..
+    // new hour/day
+    // OR there's no existing sessionSummary data i.e. sessionSummary.json doesn't exist
+    // OR the sessionSummary data current day minutes is equal to 0, meaning it won't hurt to fetch from the backend
     if (
         !sessionSummaryData ||
         sessionSummaryData.currentDayMinutes === 0 ||
@@ -650,8 +654,6 @@ export async function getSessionSummaryStatus() {
                 sessionSummaryData.lastStart = lastStart;
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
-            } else {
-                status = "NO_DATA";
             }
         }
     }
