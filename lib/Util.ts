@@ -37,13 +37,13 @@ let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
 
-let statusBarLastDayHour = null;
+let statusBarLastDay = null;
 
-export function isNewHourForStatusBarData() {
-    const dayHr = moment().format("YYYY-MM-DD-HH");
+export function isNewDayForStatusBarData() {
+    const day = moment().format("YYYY-MM-DD");
 
-    if (statusBarLastDayHour && dayHr !== statusBarLastDayHour) {
-        statusBarLastDayHour = dayHr;
+    if (!statusBarLastDay || day !== statusBarLastDay) {
+        statusBarLastDay = day;
         return true;
     }
 
@@ -51,7 +51,7 @@ export function isNewHourForStatusBarData() {
 }
 
 export function clearDayHourVals() {
-    statusBarLastDayHour = null;
+    statusBarLastDay = null;
 }
 
 export function getEditorSessionToken() {

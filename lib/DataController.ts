@@ -24,7 +24,6 @@ import {
     logIt,
     getPluginId,
     logEvent,
-    isNewHourForStatusBarData,
     clearDayHourVals,
     getCommitSummaryFile,
     getSummaryInfoFile,
@@ -32,13 +31,15 @@ import {
     humanizeMinutes,
     getDashboardRow,
     getDashboardFile,
-    isLinux
+    isLinux,
+    isNewDayForStatusBarData
 } from "./Util";
 import { buildWebDashboardUrl } from "./MenuManager";
 import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
-    saveSessionSummaryToDisk
+    saveSessionSummaryToDisk,
+    clearSessionSummaryData
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 const fs = require("fs");
@@ -450,6 +451,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             setItem("check_status", true);
         }
     } else {
+        // clear it to fetch
+        clearSessionSummaryData();
         // clear the last moment date to be able to retrieve the user's dashboard metrics
         clearDayHourVals();
         const message = "Successfully logged on to Code Time";
@@ -618,43 +621,42 @@ export async function writeCodeTimeMetricsDashboard() {
     });
 }
 
+/**
+ * Fetch the status bar data, which is also used for the today summary in the dashboard.
+ */
 export async function getSessionSummaryStatus() {
+    const jwt = getItem("jwt");
+    const serverIsOnline = await serverIsAvailable();
+
+    let isNewDay = false;
+    if (isNewDayForStatusBarData()) {
+        // new day, clear the session summary data
+        clearSessionSummaryData();
+        isNewDay = true;
+    }
     let sessionSummaryData = getSessionSummaryData();
     let status = "OK";
 
-    // check if we need to get new dashboard data.
-    // Important, only fetch from the backend if it's..
-    // new hour/day
-    // OR there's no existing sessionSummary data i.e. sessionSummary.json doesn't exist
-    // OR the sessionSummary data current day minutes is equal to 0, meaning it won't hurt to fetch from the backend
-    if (
-        !sessionSummaryData ||
-        sessionSummaryData.currentDayMinutes === 0 ||
-        isNewHourForStatusBarData()
-    ) {
-        let serverIsOnline = await serverIsAvailable();
-        if (serverIsOnline) {
-            // Provides...
-            // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
-            // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
-            // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
-            // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
-            // volumePercent:851 }
-            const result = await softwareGet(
-                `/sessions/summary`,
-                getItem("jwt")
-            ).catch(err => {
+    if (serverIsOnline && jwt && (!sessionSummaryData || isNewDay)) {
+        // Returns:
+        // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
+        // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
+        // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
+        // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
+        // volumePercent:851 }
+        const result = await softwareGet(`/sessions/summary`, jwt).catch(
+            err => {
                 return null;
-            });
-            if (isResponseOk(result) && result.data) {
-                // get the lastStart
-                const lastStart = sessionSummaryData.lastStart;
-                // update it from the app
-                sessionSummaryData = result.data;
-                sessionSummaryData.lastStart = lastStart;
-                // update the file
-                saveSessionSummaryToDisk(sessionSummaryData);
             }
+        );
+        if (isResponseOk(result) && result.data) {
+            // get the lastStart
+            const lastStart = sessionSummaryData.lastStart;
+            // update it from the app
+            sessionSummaryData = result.data;
+            sessionSummaryData.lastStart = lastStart;
+            // update the file
+            saveSessionSummaryToDisk(sessionSummaryData);
         }
     }
 
