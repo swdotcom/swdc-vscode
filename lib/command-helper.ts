@@ -11,16 +11,12 @@ import {
 import { launchWebUrl, handleCodeTimeStatusToggle } from "./Util";
 import { KpmController } from "./KpmController";
 
-export function createCommands(): {
+export function createCommands(
+    kpmController: KpmController
+): {
     dispose: () => void;
 } {
     let cmds = [];
-
-    //
-    // Add the keystroke controller to the ext ctx, which
-    // will then listen for text document changes.
-    //
-    const kpmController = new KpmController();
 
     cmds.push(kpmController);
 

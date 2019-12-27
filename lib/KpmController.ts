@@ -426,6 +426,11 @@ export class KpmController {
             resource: {}
         });
         keystrokeCount["keystrokes"] = 1;
+        let nowTimes = getNowTimes();
+        const start = nowTimes.now_in_sec - 60;
+        const local_start = nowTimes.local_now_in_sec - 60;
+        keystrokeCount["start"] = start;
+        keystrokeCount["local_start"] = local_start;
         let fileInfo = {
             add: 1,
             netkeys: 0,
@@ -439,7 +444,9 @@ export class KpmController {
             linesRemoved: 0,
             syntax: "",
             fileAgeDays: 0,
-            repoFileContributorCount: 0
+            repoFileContributorCount: 0,
+            start,
+            local_start
         };
         keystrokeCount.source[fileName] = fileInfo;
 

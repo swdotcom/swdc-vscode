@@ -30,6 +30,7 @@ import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
+import { KpmController } from "./lib/KpmController";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -41,7 +42,6 @@ let historical_commits_interval = null;
 let gather_music_interval = null;
 let offline_data_interval = null;
 let session_check_interval = null;
-let kpmController = null;
 
 const check_online_interval_ms = 1000 * 60 * 10;
 
@@ -151,8 +151,14 @@ export async function intializePlugin(
     // this will also fetch the user and update loggedInCacheState if it's found
     await initializePreferences(serverIsOnline);
 
+    //
+    // Add the keystroke controller to the ext ctx, which
+    // will then listen for text document changes.
+    //
+    const kpmController = new KpmController();
+
     // add the code time commands
-    ctx.subscriptions.push(createCommands());
+    ctx.subscriptions.push(createCommands(kpmController));
 
     let one_min_ms = 1000 * 60;
 
