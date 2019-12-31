@@ -11,16 +11,18 @@ import {
     getCommitSummaryFile,
     toggleStatusBar,
     launchLogin,
-    isStatusBarTextVisible
+    isStatusBarTextVisible,
+    clearDayHourVals
 } from "./Util";
 import {
     getUserStatus,
     serverIsAvailable,
     writeCommitSummaryData,
-    writeCodeTimeMetricsDashboard
+    writeCodeTimeMetricsDashboard,
+    getLoggedInCacheState
 } from "./DataController";
-import { getMyRepoInfo } from "./KpmRepoManager";
 import { launch_url, LOGIN_LABEL } from "./Constants";
+import { clearSessionSummaryData } from "./OfflineManager";
 
 /**
  * Pass in the following array of objects
@@ -61,9 +63,20 @@ export async function buildWebDashboardUrl() {
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
 
-    const loggedInState = await getUserStatus(serverIsOnline);
+    let loggedInState = await getLoggedInCacheState();
 
-    // const myRepoInfoP = getMyRepoInfo();
+    if (serverIsOnline && !loggedInState.loggedIn) {
+        // check if they're logged in yet
+
+        loggedInState = await getUserStatus(serverIsOnline, true);
+        if (loggedInState.loggedIn) {
+            // clear it to fetch
+            clearSessionSummaryData();
+            // clear the last moment date to be able to
+            // retrieve the user's dashboard metrics
+            clearDayHourVals();
+        }
+    }
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
@@ -125,18 +138,6 @@ export async function showMenuOptions() {
             cb: launchWebDashboardView
         });
     }
-
-    // if (loggedInState.loggedIn) {
-    //     const myRepoInfo = await myRepoInfoP;
-    //     if (myRepoInfo && myRepoInfo.length > 0) {
-    //         kpmMenuOptions.items.push({
-    //             label: "Weekly Commit Summary",
-    //             detail: "View your weekly commit summary",
-    //             url: null,
-    //             cb: displayWeeklyCommitSummary
-    //         });
-    //     }
-    // }
 
     showQuickPick(kpmMenuOptions);
 }
