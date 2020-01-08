@@ -12,6 +12,7 @@ import {
     getSessionSummaryStatus,
     initializePreferences
 } from "./lib/DataController";
+import { onboardPlugin } from "./lib/OnboardManager";
 import {
     showStatus,
     nowInSecs,
@@ -42,11 +43,6 @@ let historical_commits_interval = null;
 let gather_music_interval = null;
 let offline_data_interval = null;
 let session_check_interval = null;
-
-const check_online_interval_ms = 1000 * 60 * 10;
-
-let retry_counter = 0;
-let secondary_window_activate_counter = 0;
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;
@@ -90,53 +86,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-    let windowState = window.state;
-    // check if window state is focused or not and the
-    // secondary_window_activate_counter is equal to zero
-    if (!windowState.focused && secondary_window_activate_counter === 0) {
-        // This window is not focused, call activate in 1 minute in case
-        // there's another vscode editor that is focused. Allow that one
-        // to activate right away.
-        setTimeout(() => {
-            secondary_window_activate_counter++;
-            activate(ctx);
-        }, 1000 * 5);
-    } else {
-        // check session.json existence
-        const serverIsOnline = await serverIsAvailable();
-        if (!softwareSessionFileExists() || !jwtExists()) {
-            // session file doesn't exist
-            // check if the server is online before creating the anon user
-            if (!serverIsOnline) {
-                if (retry_counter === 0) {
-                    showOfflinePrompt(true);
-                }
-                // call activate again later
-                setTimeout(() => {
-                    retry_counter++;
-                    activate(ctx);
-                }, check_online_interval_ms);
-            } else {
-                // create the anon user
-                const result = await createAnonymousUser(serverIsOnline);
-                if (!result) {
-                    if (retry_counter === 0) {
-                        showOfflinePrompt(true);
-                    }
-                    // call activate again later
-                    setTimeout(() => {
-                        retry_counter++;
-                        activate(ctx);
-                    }, check_online_interval_ms);
-                } else {
-                    intializePlugin(ctx, true);
-                }
-            }
-        } else {
-            // has a session file, continue with initialization of the plugin
-            intializePlugin(ctx, false);
-        }
-    }
+    onboardPlugin(ctx, intializePlugin);
 }
 
 export async function intializePlugin(
