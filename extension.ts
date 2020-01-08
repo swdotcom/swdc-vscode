@@ -19,7 +19,6 @@ import {
     getOffsetSecends,
     getVersion,
     softwareSessionFileExists,
-    showOfflinePrompt,
     logIt,
     jwtExists,
     showLoginPrompt,
@@ -86,7 +85,8 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-    onboardPlugin(ctx, intializePlugin);
+    // onboard the user as anonymous if it's being installed
+    onboardPlugin(ctx, intializePlugin /*successFunction*/);
 }
 
 export async function intializePlugin(
