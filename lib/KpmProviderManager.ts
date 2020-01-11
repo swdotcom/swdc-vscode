@@ -1,11 +1,9 @@
 import { KpmItem, SessionSummary } from "./models";
-import {
-    isLoggedOn,
-    serverIsAvailable,
-    getCachedLoggedInState
-} from "./DataController";
+import { getCachedLoggedInState } from "./DataController";
 import { getSessionSummaryData } from "./OfflineManager";
-import { humanizeMinutes } from "./Util";
+import { humanizeMinutes, getWorkspaceFolders } from "./Util";
+import { getCurrentChanges } from "./KpmRepoManager";
+import { WorkspaceFolder } from "vscode";
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -23,22 +21,42 @@ export class KpmProviderManager {
     }
 
     async getTreeParents(): Promise<KpmItem[]> {
+        const folders: WorkspaceFolder[] = getWorkspaceFolders();
         const treeItems: KpmItem[] = [];
         const loggedInCachState = await getCachedLoggedInState();
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
         if (!loggedInCachState.loggedOn) {
-            const codyConnectButton: KpmItem = this.getCodyConnectButton();
-            treeItems.push(codyConnectButton);
+            treeItems.push(this.getCodyConnectButton());
         }
 
-        const codetimeDashboardButton: KpmItem = this.getCodeTimeDashboardButton();
-        treeItems.push(codetimeDashboardButton);
+        treeItems.push(this.getCodeTimeDashboardButton());
+
+        treeItems.push(this.getLineBreakItem());
 
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
             sessionSummaryData
         );
         treeItems.push(...currentKeystrokesItems);
+
+        if (folders && folders.length > 0) {
+            treeItems.push(this.getLineBreakItem());
+            for (let i = 0; i < folders.length; i++) {
+                const workspaceFolder = folders[i];
+                const { insertions, deletions } = await getCurrentChanges(
+                    workspaceFolder.uri.fsPath
+                );
+                // get the folder name from the path
+                const name = workspaceFolder.name;
+
+                treeItems.push(this.buildTitleItem(name, "folder.svg"));
+
+                treeItems.push(
+                    this.buildMetricItem("Insertion(s)", insertions)
+                );
+                treeItems.push(this.buildMetricItem("Deletion(s)", deletions));
+            }
+        }
 
         return treeItems;
     }
@@ -52,6 +70,14 @@ export class KpmProviderManager {
         item.command = "codetime.codeTimeLogin";
         item.icon = "sw-paw-circle.svg";
         item.contextValue = "action_button";
+        return item;
+    }
+
+    getLineBreakItem(): KpmItem {
+        const item: KpmItem = new KpmItem();
+        item.id = "linebreak";
+        item.contextValue = "linebreak";
+        item.icon = "blue-line-96.png";
         return item;
     }
 
@@ -71,31 +97,29 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(this.buildSessionSummaryItrem("Time", codeHours));
+        items.push(this.buildMetricItem("Time", codeHours));
 
         items.push(
-            this.buildSessionSummaryItrem(
-                "Keystrokes",
-                data.currentDayKeystrokes
-            )
+            this.buildMetricItem("Keystrokes", data.currentDayKeystrokes)
         );
 
         items.push(
-            this.buildSessionSummaryItrem(
-                "Chars +",
-                data.currentCharactersAdded
-            )
+            this.buildMetricItem("Chars added", data.currentCharactersAdded)
         );
         items.push(
-            this.buildSessionSummaryItrem(
-                "Chars -",
-                data.currentCharactersDeleted
-            )
+            this.buildMetricItem("Chars removed", data.currentCharactersDeleted)
         );
+
+        items.push(this.buildMetricItem("Lines added", data.currentLinesAdded));
+        items.push(
+            this.buildMetricItem("Lines removed", data.currentLinesRemoved)
+        );
+
+        items.push(this.buildMetricItem("Copy+paste", data.currentPastes));
         return items;
     }
 
-    buildSessionSummaryItrem(label, value) {
+    buildMetricItem(label, value) {
         const item: KpmItem = new KpmItem();
         item.label = `${label}: ${value}`;
         item.id = `${label}_metric`;
@@ -103,21 +127,12 @@ export class KpmProviderManager {
         return item;
     }
 
-    getInsertionsItem(sessionSummaryData): KpmItem {
+    buildTitleItem(label, icon = null) {
         const item: KpmItem = new KpmItem();
-        item.tooltip = "";
-        item.label = `Insertions: ${sessionSummaryData.currentDayKeystrokes}`;
-        item.id = "current_insertions";
-        item.contextValue = "metric_item";
-        return item;
-    }
-
-    getDeletionsItem(sessionSummaryData): KpmItem {
-        const item: KpmItem = new KpmItem();
-        item.tooltip = "";
-        item.label = `Deletions: ${sessionSummaryData.currentDayKeystrokes}`;
-        item.id = "current_deletions";
-        item.contextValue = "metric_item";
+        item.label = label;
+        item.id = `${label}_title`;
+        item.contextValue = "title_item";
+        item.icon = icon;
         return item;
     }
 }

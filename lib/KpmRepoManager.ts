@@ -3,7 +3,7 @@ import {
     wrapExecPromise,
     getItem,
     isWindows,
-    getRootPaths,
+    getWorkspaceFolders,
     normalizeGithubEmail,
     getFileType
 } from "./Util";
@@ -12,22 +12,22 @@ import { serverIsAvailable } from "./DataController";
 let myRepoInfo = [];
 
 function getProjectDir(fileName = null) {
-    let projectDirs = getRootPaths();
+    let workspaceFolders = getWorkspaceFolders();
 
-    if (!projectDirs || projectDirs.length === 0) {
+    if (!workspaceFolders || workspaceFolders.length === 0) {
         return null;
     }
 
     // VSCode allows having multiple workspaces.
     // for now we only support using the 1st project directory
     // in a given set of workspaces if the provided fileName is null.
-    if (projectDirs && projectDirs.length > 0) {
+    if (workspaceFolders && workspaceFolders.length > 0) {
         if (!fileName) {
-            return projectDirs[0];
+            return workspaceFolders[0].uri.fsPath;
         }
 
-        for (let i = 0; i < projectDirs.length; i++) {
-            const dir = projectDirs[i];
+        for (let i = 0; i < workspaceFolders.length; i++) {
+            const dir = workspaceFolders[i].uri.fsPath;
             if (fileName.includes(dir)) {
                 return dir;
             }
@@ -124,12 +124,50 @@ export async function getRepoFileCount(fileName) {
     return resultList.length;
 }
 
-export async function getCurrentChanges() {
+export async function getCurrentChanges(projectDir) {
+    if (!projectDir) {
+        return null;
+    }
     /**
      * xaviers-mbp-2:swdc-vscode xavierluiz$ git diff --stat
         lib/KpmProviderManager.ts | 22 ++++++++++++++++++++--
         1 file changed, 20 insertions(+), 2 deletions(-)
+
+        for multiple files it will look like this...
+        7 files changed, 137 insertions(+), 55 deletions(-)
      */
+    let cmd = `git diff --stat`;
+    const resultList = await getCommandResult(cmd, projectDir);
+
+    if (!resultList) {
+        // something went wrong, but don't try to parse a null or undefined str
+        return null;
+    }
+
+    // just look for the line with "insertions" and "deletions"
+    let insertions = 0;
+    let deletions = 0;
+    for (let i = 0; i < resultList.length; i++) {
+        const line = resultList[i].trim();
+        if (line.includes("insertion") && line.includes("deletion")) {
+            // split by space, then the number before the keyword is our value
+            const parts = line.split(" ");
+            for (let x = 0; x < parts.length; x++) {
+                const part = parts[x];
+                if (part.includes("insertion")) {
+                    insertions = parseInt(parts[x - 1], 10);
+                } else if (part.includes("deletion")) {
+                    deletions = parseInt(parts[x - 1], 10);
+                }
+            }
+            break;
+        }
+    }
+
+    return {
+        insertions,
+        deletions
+    };
 }
 
 export async function getRepoContributorInfo(fileName) {

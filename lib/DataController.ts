@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, window } from "vscode";
+import { workspace, ConfigurationTarget, window, commands } from "vscode";
 
 import {
     softwareGet,
@@ -226,6 +226,10 @@ export async function isLoggedOn(serverIsOnline) {
         }
     }
     return { loggedOn: false, state: "UNKNOWN" };
+}
+
+export function clearCachedLoggedInState() {
+    loggedInCacheState = null;
 }
 
 export async function getCachedLoggedInState() {
@@ -460,12 +464,11 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
             setItem("check_status", true);
         }
     } else {
-        // clear it to fetch
-        clearSessionSummaryData();
+        clearCachedLoggedInState();
         // clear the last moment date to be able to retrieve the user's dashboard metrics
         clearDayHourVals();
         const message = "Successfully logged on to Code Time";
-
+        commands.executeCommand("codetime.refreshKpmTree");
         window.showInformationMessage(message);
     }
 }

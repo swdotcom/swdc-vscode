@@ -5,7 +5,8 @@ import {
     window,
     Uri,
     commands,
-    ViewColumn
+    ViewColumn,
+    WorkspaceFolder
 } from "vscode";
 import {
     CODE_TIME_EXT_ID,
@@ -129,18 +130,24 @@ export function getFileAgeInDays(file) {
     return daysDiff > 1 ? parseInt(daysDiff, 10) : 1;
 }
 
-export function getRootPaths() {
-    let paths = [];
+/**
+ * These will return the workspace folders.
+ * use the uri.fsPath to get the full path
+ * use the name to get the folder name
+ */
+export function getWorkspaceFolders(): WorkspaceFolder[] {
+    let folders = [];
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {
             let workspaceFolder = workspace.workspaceFolders[i];
             let folderUri = workspaceFolder.uri;
             if (folderUri && folderUri.fsPath) {
-                paths.push(folderUri.fsPath);
+                // paths.push(folderUri.fsPath);
+                folders.push(workspaceFolder);
             }
         }
     }
-    return paths;
+    return folders;
 }
 
 export function getNumberOfTextDocumentsOpen() {
@@ -235,7 +242,7 @@ export function showErrorStatus(errorTooltip) {
     let fullMsg = `$(${"alert"}) ${"Code Time"}`;
     if (!errorTooltip) {
         errorTooltip =
-            "To see your coding data in Code Time, please log in to your account.";
+            "To see your coding data in Code Time, please connect to your account";
     }
     showStatus(fullMsg, errorTooltip);
 }
@@ -613,38 +620,26 @@ export function getNowTimes() {
     };
 }
 
+/**
+ * this should only be called if there's file data in the source
+ * @param payload
+ */
 export function storePayload(payload) {
-    // calculate it and call
-    // add to the minutes
-    const keystrokes = parseInt(payload.keystrokes, 10) || 0;
-
-    const reducer = (acc, cur) => {
-        acc.add += cur.add;
-        acc.close += cur.close;
-        acc.delete += cur.delete;
-        acc.keystrokes += cur.keystrokes;
-        acc.linesAdded += cur.linesAdded;
-        acc.linesRemoved += cur.linesRemoved;
-        acc.open += cur.open;
-        acc.paste += cur.paste;
-        return acc;
-    };
-
-    const aggregates = payload.source.reduce(reducer, {
-        add: 0,
-        close: 0,
-        delete: 0,
-        linesAdded: 0,
-        linesRemoved: 0,
-        open: 0,
-        paste: 0,
-        keystrokes: 0
+    const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
+    Object.keys(payload.source).forEach(key => {
+        const fileInfo = payload.source[key];
+        aggregate.add += fileInfo.add;
+        aggregate.close += fileInfo.close;
+        aggregate.delete += fileInfo.delete;
+        aggregate.keystrokes += fileInfo.keystrokes;
+        aggregate.linesAdded += fileInfo.linesAdded;
+        aggregate.linesRemoved += fileInfo.linesRemoved;
+        aggregate.open += fileInfo.open;
+        aggregate.paste += fileInfo.paste;
     });
-    console.log("top level keystrokes: ", keystrokes);
-    console.log("aggregate keystrokes: ", aggregates.keystrokes);
 
     // this will increment and store it offline
-    incrementSessionSummaryData(aggregates);
+    incrementSessionSummaryData(aggregate);
 
     commands.executeCommand("codetime.refreshKpmTree");
 
@@ -719,14 +714,14 @@ export function getSongDisplayName(name) {
 }
 
 export async function getGitEmail() {
-    let projectDirs = getRootPaths();
+    let workspaceFolders = getWorkspaceFolders();
 
-    if (!projectDirs || projectDirs.length === 0) {
+    if (!workspaceFolders || workspaceFolders.length === 0) {
         return null;
     }
 
-    for (let i = 0; i < projectDirs.length; i++) {
-        let projectDir = projectDirs[i];
+    for (let i = 0; i < workspaceFolders.length; i++) {
+        let projectDir = workspaceFolders[i].uri.fsPath;
 
         let email = await wrapExecPromise("git config user.email", projectDir);
         if (email) {
@@ -800,8 +795,7 @@ export async function launchLogin() {
  * check if the user needs to see the login prompt or not
  */
 export async function showLoginPrompt() {
-    let extDisplayName = getExtensionDisplayName();
-    let infoMsg = `To see your coding data in ${extDisplayName}, please log in to your account.`;
+    const infoMsg = `To see your coding data in Code Time, please connect to your account`;
     // set the last update time so we don't try to ask too frequently
     window
         .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])

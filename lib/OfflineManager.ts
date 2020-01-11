@@ -13,15 +13,7 @@ import { KeystrokeAggregate, SessionSummary } from "./models";
 import { Session } from "inspector";
 const fs = require("fs");
 
-/**
- * {
-    "currentDayMinutes": 2,
-    "averageDailyMinutes": 1.516144578313253,
-    "averageDailyKeystrokes": 280.07014725568945,
-    "currentDayKeystrokes": 49,
-    "liveshareMinutes": null
-    }
-    */
+// initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
 
 export function clearSessionSummaryData() {
@@ -41,6 +33,9 @@ export function getSessionThresholdSeconds() {
 }
 
 export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
+    // fill in missing attributes
+    sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
+
     // what is the gap from the previous start
     const nowTimes = getNowTimes();
     const nowInSec = nowTimes.now_in_sec;
@@ -63,6 +58,9 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentCharactersAdded += aggregates.add;
     sessionSummaryData.currentCharactersDeleted += aggregates.delete;
+    sessionSummaryData.currentPastes += aggregates.paste;
+    sessionSummaryData.currentLinesAdded += aggregates.linesAdded;
+    sessionSummaryData.currentLinesRemoved += aggregates.linesRemoved;
     sessionSummaryData.lastStart = nowInSec;
 
     saveSessionSummaryToDisk(sessionSummaryData);

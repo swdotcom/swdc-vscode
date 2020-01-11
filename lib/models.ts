@@ -28,6 +28,9 @@ export class SessionSummary {
     currentDayKeystrokes: number = 0;
     currentCharactersAdded: number = 0;
     currentCharactersDeleted: number = 0;
+    currentLinesAdded: number = 0;
+    currentLinesRemoved: number = 0;
+    currentPastes: number = 0;
     liveshareMinutes: any = null;
     lastStart: any = null;
 }
