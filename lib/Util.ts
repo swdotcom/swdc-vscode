@@ -613,24 +613,24 @@ export function getNowTimes() {
     };
 }
 
-const reducer = (acc: any, cur: any) => {
-    acc.add += cur.add;
-    acc.close += cur.close;
-    acc.delete += cur.delete;
-    acc.keystrokes += cur.keystrokes;
-    acc.linesAdded += cur.linesAdded;
-    acc.linesRemoved += cur.linesRemoved;
-    acc.open += cur.open;
-    acc.paste += cur.paste;
-    return acc;
-};
-
 export function storePayload(payload) {
     // calculate it and call
     // add to the minutes
     const keystrokes = parseInt(payload.keystrokes, 10) || 0;
 
-    const aggregates: KeystrokeAggregate = payload.source.reduce(reducer, {
+    const reducer = (acc, cur) => {
+        acc.add += cur.add;
+        acc.close += cur.close;
+        acc.delete += cur.delete;
+        acc.keystrokes += cur.keystrokes;
+        acc.linesAdded += cur.linesAdded;
+        acc.linesRemoved += cur.linesRemoved;
+        acc.open += cur.open;
+        acc.paste += cur.paste;
+        return acc;
+    };
+
+    const aggregates = payload.source.reduce(reducer, {
         add: 0,
         close: 0,
         delete: 0,
