@@ -10,6 +10,9 @@ import {
 } from "vscode";
 import { KpmItem } from "./models";
 import { KpmProviderManager } from "./KpmProviderManager";
+import * as path from "path";
+
+const resourcePath: string = path.join(__filename, "..", "resources");
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
@@ -123,6 +126,9 @@ export class KpmTreeItem extends TreeItem {
 }
 
 function getPlaylistIcon(treeItem: KpmItem): any {
+    const iconName = treeItem.icon || "Blank_button.svg";
+    const lightPath = path.join(resourcePath, "light", iconName);
+    const darkPath = path.join(resourcePath, "dark", iconName);
     return { lightPath: "", darkPath: "", contextValue: "" };
 }
 

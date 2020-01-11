@@ -6,4 +6,5 @@ export class KpmItem {
     command: string = "";
     type: string = "";
     callback: any = null;
+    icon: string = "";
 }
