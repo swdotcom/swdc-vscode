@@ -23,7 +23,8 @@ import {
     jwtExists,
     showLoginPrompt,
     getPluginName,
-    getItem
+    getItem,
+    displayReadmeIfNotExists
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
@@ -212,6 +213,9 @@ export async function intializePlugin(
     setTimeout(() => {
         sendOfflineData();
     }, 1000);
+
+    // show the readme if it doesn't exist
+    displayReadmeIfNotExists();
 }
 
 function handlePauseMetricsEvent() {

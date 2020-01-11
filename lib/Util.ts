@@ -1,5 +1,12 @@
 import { getStatusBarItem } from "../extension";
-import { workspace, extensions, window } from "vscode";
+import {
+    workspace,
+    extensions,
+    window,
+    Uri,
+    commands,
+    ViewColumn
+} from "vscode";
 import {
     CODE_TIME_EXT_ID,
     launch_url,
@@ -443,6 +450,40 @@ export function getSoftwareDataStoreFile() {
         file += "/data.json";
     }
     return file;
+}
+
+export function getLocalREADMEFile() {
+    let file = __dirname;
+    if (isWindows()) {
+        file += "\\README.md";
+    } else {
+        file += "/README.md";
+    }
+    return file;
+}
+
+export function getImagesDir() {
+    let dir = __dirname;
+    if (isWindows()) {
+        dir += "\\images";
+    } else {
+        dir += "/images";
+    }
+    return dir;
+}
+
+export function displayReadmeIfNotExists() {
+    const displayedReadme = getItem("displayedCtReadme");
+    if (!displayedReadme) {
+        const readmeUri = Uri.file(getLocalREADMEFile());
+
+        commands.executeCommand(
+            "markdown.showPreview",
+            readmeUri,
+            ViewColumn.One
+        );
+        setItem("displayedCtReadme", true);
+    }
 }
 
 export function getExtensionDisplayName() {
