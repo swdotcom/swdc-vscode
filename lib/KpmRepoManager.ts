@@ -124,6 +124,14 @@ export async function getRepoFileCount(fileName) {
     return resultList.length;
 }
 
+export async function getCurrentChanges() {
+    /**
+     * xaviers-mbp-2:swdc-vscode xavierluiz$ git diff --stat
+        lib/KpmProviderManager.ts | 22 ++++++++++++++++++++--
+        1 file changed, 20 insertions(+), 2 deletions(-)
+     */
+}
+
 export async function getRepoContributorInfo(fileName) {
     const projectDir = getProjectDir(fileName);
     if (!projectDir) {

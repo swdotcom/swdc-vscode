@@ -1,6 +1,11 @@
-import { KpmItem } from "./models";
-import { isLoggedOn, serverIsAvailable } from "./DataController";
+import { KpmItem, SessionSummary } from "./models";
+import {
+    isLoggedOn,
+    serverIsAvailable,
+    getCachedLoggedInState
+} from "./DataController";
 import { getSessionSummaryData } from "./OfflineManager";
+import { humanizeMinutes } from "./Util";
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -19,11 +24,10 @@ export class KpmProviderManager {
 
     async getTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
-        const serverIsOnline = await serverIsAvailable();
-        const loggedInResp = await isLoggedOn(serverIsOnline);
-        const sessionSummaryData = getSessionSummaryData(true /*useCache*/);
+        const loggedInCachState = await getCachedLoggedInState();
+        const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
-        if (!loggedInResp.loggedOn) {
+        if (!loggedInCachState.loggedOn) {
             const codyConnectButton: KpmItem = this.getCodyConnectButton();
             treeItems.push(codyConnectButton);
         }
@@ -31,10 +35,10 @@ export class KpmProviderManager {
         const codetimeDashboardButton: KpmItem = this.getCodeTimeDashboardButton();
         treeItems.push(codetimeDashboardButton);
 
-        const currentKeystrokesItem: KpmItem = this.getCurrentKeystrokesItem(
+        const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
             sessionSummaryData
         );
-        treeItems.push(currentKeystrokesItem);
+        treeItems.push(...currentKeystrokesItems);
 
         return treeItems;
     }
@@ -63,11 +67,56 @@ export class KpmProviderManager {
         return item;
     }
 
-    getCurrentKeystrokesItem(sessionSummaryData): KpmItem {
+    getSessionSummaryItems(data: SessionSummary): KpmItem[] {
+        const items: KpmItem[] = [];
+
+        const codeHours = humanizeMinutes(data.currentDayMinutes);
+        items.push(this.buildSessionSummaryItrem("Time", codeHours));
+
+        items.push(
+            this.buildSessionSummaryItrem(
+                "Keystrokes",
+                data.currentDayKeystrokes
+            )
+        );
+
+        items.push(
+            this.buildSessionSummaryItrem(
+                "Chars +",
+                data.currentCharactersAdded
+            )
+        );
+        items.push(
+            this.buildSessionSummaryItrem(
+                "Chars -",
+                data.currentCharactersDeleted
+            )
+        );
+        return items;
+    }
+
+    buildSessionSummaryItrem(label, value) {
+        const item: KpmItem = new KpmItem();
+        item.label = `${label}: ${value}`;
+        item.id = `${label}_metric`;
+        item.contextValue = "metric_item";
+        return item;
+    }
+
+    getInsertionsItem(sessionSummaryData): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip = "";
-        item.label = `Current KPM:    ${sessionSummaryData.currentDayKeystrokes}`;
-        item.id = "current_kpm";
+        item.label = `Insertions: ${sessionSummaryData.currentDayKeystrokes}`;
+        item.id = "current_insertions";
+        item.contextValue = "metric_item";
+        return item;
+    }
+
+    getDeletionsItem(sessionSummaryData): KpmItem {
+        const item: KpmItem = new KpmItem();
+        item.tooltip = "";
+        item.label = `Deletions: ${sessionSummaryData.currentDayKeystrokes}`;
+        item.id = "current_deletions";
         item.contextValue = "metric_item";
         return item;
     }

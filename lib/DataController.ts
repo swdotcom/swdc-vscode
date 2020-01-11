@@ -31,7 +31,7 @@ import {
     getDashboardRow,
     getDashboardFile,
     isLinux,
-    isNewDayForStatusBarData
+    shouldClearSessionData
 } from "./Util";
 import { buildWebDashboardUrl } from "./MenuManager";
 import {
@@ -41,6 +41,7 @@ import {
     clearSessionSummaryData
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
+import { SessionSummary } from "./models";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
@@ -225,6 +226,15 @@ export async function isLoggedOn(serverIsOnline) {
         }
     }
     return { loggedOn: false, state: "UNKNOWN" };
+}
+
+export async function getCachedLoggedInState() {
+    if (!loggedInCacheState) {
+        const serverIsOnline = await serverIsAvailable();
+        // doesn't exist yet, use the api
+        await getUserStatus(serverIsOnline, true);
+    }
+    return loggedInCacheState;
 }
 
 /**
@@ -617,12 +627,12 @@ export async function getSessionSummaryStatus() {
     const serverIsOnline = await serverIsAvailable();
 
     let isNewDay = false;
-    if (isNewDayForStatusBarData()) {
+    if (shouldClearSessionData()) {
         // new day, clear the session summary data
         clearSessionSummaryData();
         isNewDay = true;
     }
-    let sessionSummaryData = getSessionSummaryData();
+    let sessionSummaryData: SessionSummary = getSessionSummaryData();
     let status = "OK";
 
     if (serverIsOnline && jwt && (!sessionSummaryData || isNewDay)) {

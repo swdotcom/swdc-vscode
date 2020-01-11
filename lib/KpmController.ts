@@ -1,4 +1,4 @@
-import { workspace, Disposable } from "vscode";
+import { workspace, Disposable, window } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
@@ -93,7 +93,7 @@ export class KpmController {
      * @param event
      */
     private async _onCloseHandler(event) {
-        if (!event) {
+        if (!event || !window.state.focused) {
             return;
         }
         const staticInfo = await this.getStaticEventInfo(event);
@@ -122,7 +122,7 @@ export class KpmController {
      * @param event
      */
     private async _onOpenHandler(event) {
-        if (!event) {
+        if (!event || !window.state.focused) {
             return;
         }
         const staticInfo = await this.getStaticEventInfo(event);
@@ -151,6 +151,9 @@ export class KpmController {
      * @param event
      */
     private async _onEventHandler(event) {
+        if (!event || !window.state.focused) {
+            return;
+        }
         const staticInfo = await this.getStaticEventInfo(event);
 
         const filename = staticInfo.filename;

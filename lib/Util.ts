@@ -21,6 +21,7 @@ import {
     getSessionSummaryStatus
 } from "./DataController";
 import { incrementSessionSummaryData } from "./OfflineManager";
+import { KeystrokeAggregate } from "./models";
 const moment = require("moment-timezone");
 
 const open = require("open");
@@ -46,10 +47,10 @@ let extensionDisplayName = null; // Code Time or Music Time
 
 let statusBarLastDay = null;
 
-export function isNewDayForStatusBarData() {
+export function shouldClearSessionData() {
     const day = moment().format("YYYY-MM-DD");
 
-    if (!statusBarLastDay || day !== statusBarLastDay) {
+    if (statusBarLastDay && day !== statusBarLastDay) {
         statusBarLastDay = day;
         return true;
     }
@@ -612,12 +613,40 @@ export function getNowTimes() {
     };
 }
 
+const reducer = (acc: any, cur: any) => {
+    acc.add += cur.add;
+    acc.close += cur.close;
+    acc.delete += cur.delete;
+    acc.keystrokes += cur.keystrokes;
+    acc.linesAdded += cur.linesAdded;
+    acc.linesRemoved += cur.linesRemoved;
+    acc.open += cur.open;
+    acc.paste += cur.paste;
+    return acc;
+};
+
 export function storePayload(payload) {
     // calculate it and call
     // add to the minutes
-    let keystrokes = parseInt(payload.keystrokes, 10) || 0;
+    const keystrokes = parseInt(payload.keystrokes, 10) || 0;
+
+    const aggregates: KeystrokeAggregate = payload.source.reduce(reducer, {
+        add: 0,
+        close: 0,
+        delete: 0,
+        linesAdded: 0,
+        linesRemoved: 0,
+        open: 0,
+        paste: 0,
+        keystrokes: 0
+    });
+    console.log("top level keystrokes: ", keystrokes);
+    console.log("aggregate keystrokes: ", aggregates.keystrokes);
+
     // this will increment and store it offline
-    incrementSessionSummaryData(keystrokes);
+    incrementSessionSummaryData(aggregates);
+
+    commands.executeCommand("codetime.refreshKpmTree");
 
     setTimeout(() => {
         // update the statusbar

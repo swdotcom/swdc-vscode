@@ -9,6 +9,8 @@ import {
     getItem
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
+import { KeystrokeAggregate, SessionSummary } from "./models";
+import { Session } from "inspector";
 const fs = require("fs");
 
 /**
@@ -20,24 +22,10 @@ const fs = require("fs");
     "liveshareMinutes": null
     }
     */
-let sessionSummaryData = {
-    currentDayMinutes: 0,
-    averageDailyMinutes: 0,
-    averageDailyKeystrokes: 0,
-    currentDayKeystrokes: 0,
-    liveshareMinutes: null,
-    lastStart: null
-};
+let sessionSummaryData: SessionSummary = new SessionSummary();
 
 export function clearSessionSummaryData() {
-    sessionSummaryData = {
-        currentDayMinutes: 0,
-        averageDailyMinutes: 0,
-        averageDailyKeystrokes: 0,
-        currentDayKeystrokes: 0,
-        liveshareMinutes: null,
-        lastStart: null
-    };
+    sessionSummaryData = new SessionSummary();
 
     saveSessionSummaryToDisk(sessionSummaryData);
 }
@@ -52,7 +40,7 @@ export function getSessionThresholdSeconds() {
     return thresholdSeconds;
 }
 
-export function incrementSessionSummaryData(keystrokes) {
+export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     // what is the gap from the previous start
     const nowTimes = getNowTimes();
     const nowInSec = nowTimes.now_in_sec;
@@ -72,7 +60,9 @@ export function incrementSessionSummaryData(keystrokes) {
         }
     }
     sessionSummaryData.currentDayMinutes += incrementMinutes;
-    sessionSummaryData.currentDayKeystrokes += keystrokes;
+    sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
+    sessionSummaryData.currentCharactersAdded += aggregates.add;
+    sessionSummaryData.currentCharactersDeleted += aggregates.delete;
     sessionSummaryData.lastStart = nowInSec;
 
     saveSessionSummaryToDisk(sessionSummaryData);
@@ -95,24 +85,27 @@ export function updateStatusBarWithSummaryData() {
     showStatus(msg, null);
 }
 
-export function getSessionSummaryData(useCache = false) {
-    if (useCache) {
-        return sessionSummaryData;
-    }
+export function getSessionSummaryData(): SessionSummary {
     sessionSummaryData = getSessionSummaryFileAsJson();
     // make sure it's a valid structure
-    if (!sessionSummaryData || !sessionSummaryData.currentDayMinutes) {
+    if (!sessionSummaryData) {
         // set the defaults
-        sessionSummaryData = {
-            currentDayMinutes: 0,
-            averageDailyMinutes: 0,
-            averageDailyKeystrokes: 0,
-            currentDayKeystrokes: 0,
-            liveshareMinutes: null,
-            lastStart: null
-        };
+        sessionSummaryData = new SessionSummary();
     }
+    // fill in missing attributes
+    sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
     return sessionSummaryData;
+}
+
+function coalesceMissingAttributes(data): SessionSummary {
+    // ensure all attributes are defined
+    const template: SessionSummary = new SessionSummary();
+    Object.keys(template).forEach(key => {
+        if (!data[key]) {
+            data[key] = 0;
+        }
+    });
+    return data;
 }
 
 export function getSessionSummaryFile() {
