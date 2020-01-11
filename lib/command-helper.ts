@@ -1,14 +1,10 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import {
-    handleCodeTimeLogin,
-    handleKpmClickedEvent,
-    updatePreferences
-} from "./DataController";
+import { handleKpmClickedEvent, updatePreferences } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions
 } from "./MenuManager";
-import { launchWebUrl, handleCodeTimeStatusToggle } from "./Util";
+import { launchWebUrl, handleCodeTimeStatusToggle, launchLogin } from "./Util";
 import { KpmController } from "./KpmController";
 import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
 import { KpmItem } from "./models";
@@ -23,15 +19,15 @@ export function createCommands(
     cmds.push(kpmController);
 
     // playlist tree view
-    const treeProvider = new KpmProvider();
+    const kpmTreeProvider = new KpmProvider();
     const kpmTreeView: TreeView<KpmItem> = window.createTreeView(
         "kpm-metrics",
         {
-            treeDataProvider: treeProvider,
+            treeDataProvider: kpmTreeProvider,
             showCollapseAll: false
         }
     );
-    treeProvider.bindView(kpmTreeView);
+    kpmTreeProvider.bindView(kpmTreeView);
     cmds.push(connectKpmTreeView(kpmTreeView));
 
     const kpmClickedCmd = commands.registerCommand(
@@ -43,9 +39,17 @@ export function createCommands(
     cmds.push(kpmClickedCmd);
 
     const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
-        handleCodeTimeLogin();
+        launchLogin();
     });
     cmds.push(loginCmd);
+
+    const refreshKpmTreeCmd = commands.registerCommand(
+        "codetime.refreshKpmTree",
+        () => {
+            kpmTreeProvider.refresh();
+        }
+    );
+    cmds.push(refreshKpmTreeCmd);
 
     const codeTimeMetricsCmd = commands.registerCommand(
         "codetime.codeTimeMetrics",

@@ -192,7 +192,7 @@ export async function createAnonymousUser(serverIsOnline) {
     return null;
 }
 
-async function isLoggedOn(serverIsOnline) {
+export async function isLoggedOn(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let api = "/users/plugin/state";
@@ -481,17 +481,6 @@ export async function sendHeartbeat(reason, serverIsOnline) {
                 logIt("unable to send heartbeat ping");
             }
         });
-    }
-}
-
-export async function handleCodeTimeLogin() {
-    if (!(await serverIsAvailable())) {
-        showOfflinePrompt(false);
-    } else {
-        let loginUrl = await buildLoginUrl();
-        launchWebUrl(loginUrl);
-        // each retry is 10 seconds long
-        refetchUserStatusLazily();
     }
 }
 

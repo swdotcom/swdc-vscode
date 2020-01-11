@@ -96,7 +96,7 @@ export async function intializePlugin(
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
-    let serverIsOnline = await serverIsAvailable();
+    const serverIsOnline = await serverIsAvailable();
 
     // get the user preferences whether it's music time or code time
     // this will also fetch the user and update loggedInCacheState if it's found

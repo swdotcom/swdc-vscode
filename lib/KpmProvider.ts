@@ -6,15 +6,21 @@ import {
     EventEmitter,
     Event,
     Disposable,
-    TreeView
+    TreeView,
+    commands
 } from "vscode";
 import { KpmItem } from "./models";
 import { KpmProviderManager } from "./KpmProviderManager";
 import * as path from "path";
+import { logIt } from "./Util";
 
-const resourcePath: string = path.join(__filename, "..", "resources");
+// this current path is in the out/lib. We need to find the resource files
+// which are in out/resources
+const resourcePath: string = path.join(__filename, "..", "..", "resources");
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
+
+let initializedTreeView = false;
 
 export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
     // view is {selection: Array[n], visible, message}
@@ -24,9 +30,20 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             if (!e.selection || e.selection.length === 0) {
                 return;
             }
+
+            const item: KpmItem = e.selection[0];
+
+            if (item.command) {
+                // run the command
+                return commands.executeCommand(item.command);
+            }
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
+                if (initializedTreeView) {
+                    commands.executeCommand("codetime.refreshKpmTree");
+                }
+                initializedTreeView = true;
             }
         })
     );
@@ -93,7 +110,7 @@ export class KpmTreeItem extends TreeItem {
         public readonly collapsibleState: TreeItemCollapsibleState,
         public readonly command?: Command
     ) {
-        super(treeItem.name, collapsibleState);
+        super(treeItem.label, collapsibleState);
 
         const { lightPath, darkPath, contextValue } = getPlaylistIcon(treeItem);
         if (lightPath && darkPath) {
@@ -111,9 +128,9 @@ export class KpmTreeItem extends TreeItem {
             return "";
         }
         if (this.treeItem.tooltip) {
-            return `${this.treeItem.tooltip}`;
+            return this.treeItem.tooltip;
         } else {
-            return `${this.treeItem.name}`;
+            return this.treeItem.label;
         }
     }
 
@@ -122,14 +139,15 @@ export class KpmTreeItem extends TreeItem {
         dark: ""
     };
 
-    contextValue = "playlistItem";
+    contextValue = "treeItem";
 }
 
 function getPlaylistIcon(treeItem: KpmItem): any {
     const iconName = treeItem.icon || "Blank_button.svg";
     const lightPath = path.join(resourcePath, "light", iconName);
     const darkPath = path.join(resourcePath, "dark", iconName);
-    return { lightPath: "", darkPath: "", contextValue: "" };
+    const contextValue = treeItem.contextValue;
+    return { lightPath, darkPath, contextValue };
 }
 
 /**
