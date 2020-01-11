@@ -41,11 +41,11 @@ import {
     clearSessionSummaryData
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { SessionSummary } from "./models";
+import { SessionSummary, LoggedInState } from "./models";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
-let loggedInCacheState = null;
+let connectState: LoggedInState = null;
 let lastLoggedInCheckTime = null;
 let serverAvailable = true;
 let serverAvailableLastCheck = 0;
@@ -56,8 +56,8 @@ let userFetchTimeout = null;
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
-export function getLoggedInCacheState() {
-    return loggedInCacheState;
+export function getConnectState() {
+    return connectState;
 }
 
 export function getToggleFileEventLoggingState() {
@@ -229,16 +229,16 @@ export async function isLoggedOn(serverIsOnline) {
 }
 
 export function clearCachedLoggedInState() {
-    loggedInCacheState = null;
+    connectState = null;
 }
 
-export async function getCachedLoggedInState() {
-    if (!loggedInCacheState) {
+export async function getCachedLoggedInState(): Promise<LoggedInState> {
+    if (!connectState) {
         const serverIsOnline = await serverIsAvailable();
         // doesn't exist yet, use the api
         await getUserStatus(serverIsOnline, true);
     }
-    return loggedInCacheState;
+    return connectState;
 }
 
 /**
@@ -246,7 +246,7 @@ export async function getCachedLoggedInState() {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus(serverIsOnline, ignoreCache = false) {
-    if (!ignoreCache && loggedInCacheState) {
+    if (!ignoreCache && connectState) {
         // ignore cache is true and we have a logged in cache state
         if (lastLoggedInCheckTime) {
             const threshold = 60 * 5;
@@ -254,14 +254,14 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
             if (moment().unix() - lastLoggedInCheckTime > threshold) {
                 // set logged in cache state to null as well as the check time
                 lastLoggedInCheckTime = null;
-                loggedInCacheState = null;
+                connectState = null;
             }
         } else {
             // it's null, set it
             lastLoggedInCheckTime = moment().unix();
         }
-        if (loggedInCacheState) {
-            return loggedInCacheState;
+        if (connectState) {
+            return connectState;
         }
     }
 
@@ -275,9 +275,8 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
 
     logIt(`Checking login status, logged in: ${loggedIn}`);
 
-    loggedInCacheState = {
-        loggedIn
-    };
+    connectState = new LoggedInState();
+    connectState.loggedIn = loggedIn;
 
     if (!loggedIn) {
         let name = getItem("name");
@@ -301,7 +300,7 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         }, 1000);
     }
 
-    return loggedInCacheState;
+    return connectState;
 }
 
 export async function getUser(serverIsOnline, jwt) {
@@ -315,7 +314,10 @@ export async function getUser(serverIsOnline, jwt) {
                     // update jwt to what the jwt is for this spotify user
                     setItem("name", user.email);
 
-                    loggedInCacheState = { loggedIn: true };
+                    if (!connectState) {
+                        connectState = new LoggedInState();
+                    }
+                    connectState.loggedIn = true;
                 }
                 return user;
             }

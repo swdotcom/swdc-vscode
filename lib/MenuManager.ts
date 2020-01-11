@@ -19,10 +19,11 @@ import {
     serverIsAvailable,
     writeCommitSummaryData,
     writeCodeTimeMetricsDashboard,
-    getLoggedInCacheState
+    getConnectState
 } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
 import { clearSessionSummaryData } from "./OfflineManager";
+import { LoggedInState } from "./models";
 
 /**
  * Pass in the following array of objects
@@ -63,7 +64,7 @@ export async function buildWebDashboardUrl() {
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
 
-    let loggedInState = await getLoggedInCacheState();
+    let loggedInState: LoggedInState = await getConnectState();
 
     if (serverIsOnline && !loggedInState.loggedIn) {
         // check if they're logged in yet

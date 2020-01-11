@@ -1,4 +1,4 @@
-import { KpmItem, SessionSummary } from "./models";
+import { KpmItem, SessionSummary, LoggedInState } from "./models";
 import { getCachedLoggedInState } from "./DataController";
 import { getSessionSummaryData } from "./OfflineManager";
 import { humanizeMinutes, getWorkspaceFolders } from "./Util";
@@ -23,10 +23,10 @@ export class KpmProviderManager {
     async getTreeParents(): Promise<KpmItem[]> {
         const folders: WorkspaceFolder[] = getWorkspaceFolders();
         const treeItems: KpmItem[] = [];
-        const loggedInCachState = await getCachedLoggedInState();
+        const loggedInCachState: LoggedInState = await getCachedLoggedInState();
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
-        if (!loggedInCachState.loggedOn) {
+        if (!loggedInCachState.loggedIn) {
             treeItems.push(this.getCodyConnectButton());
         }
 

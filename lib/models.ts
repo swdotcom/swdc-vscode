@@ -34,3 +34,7 @@ export class SessionSummary {
     liveshareMinutes: any = null;
     lastStart: any = null;
 }
+
+export class LoggedInState {
+    loggedIn: boolean = false;
+}
