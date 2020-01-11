@@ -105,7 +105,7 @@ export async function intializePlugin(
     // Add the keystroke controller to the ext ctx, which
     // will then listen for text document changes.
     //
-    const kpmController = new KpmController();
+    const kpmController = KpmController.getInstance();
 
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));

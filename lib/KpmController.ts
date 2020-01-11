@@ -26,6 +26,8 @@ let _keystrokeMap = {};
 let _staticInfoMap = {};
 
 export class KpmController {
+    private static instance: KpmController;
+
     private _disposable: Disposable;
     private _lastDayOfMonth: number = -1;
 
@@ -36,6 +38,14 @@ export class KpmController {
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
         this._disposable = Disposable.from(...subscriptions);
+    }
+
+    static getInstance(): KpmController {
+        if (!KpmController.instance) {
+            KpmController.instance = new KpmController();
+        }
+
+        return KpmController.instance;
     }
 
     public async sendKeystrokeDataIntervalHandler() {

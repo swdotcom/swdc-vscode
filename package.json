@@ -59,7 +59,24 @@
                 }
             }
         },
-        "commands": []
+        "commands": [],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "code-time",
+                    "title": "Code Time",
+                    "icon": "resources/dark/headphone-symbol.svg"
+                }
+            ]
+        },
+        "views": {
+            "code-time": [
+                {
+                    "id": "kpm-metrics",
+                    "name": "KPM Metrics"
+                }
+            ]
+        }
     },
     "devDependencies": {
         "@types/mocha": "5.2.6",

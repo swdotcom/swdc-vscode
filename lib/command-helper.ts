@@ -1,4 +1,4 @@
-import { commands, Disposable, workspace } from "vscode";
+import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
     handleCodeTimeLogin,
     handleKpmClickedEvent,
@@ -10,6 +10,8 @@ import {
 } from "./MenuManager";
 import { launchWebUrl, handleCodeTimeStatusToggle } from "./Util";
 import { KpmController } from "./KpmController";
+import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
+import { KpmItem } from "./models";
 
 export function createCommands(
     kpmController: KpmController
@@ -19,6 +21,18 @@ export function createCommands(
     let cmds = [];
 
     cmds.push(kpmController);
+
+    // playlist tree view
+    const treeProvider = new KpmProvider();
+    const kpmTreeView: TreeView<KpmItem> = window.createTreeView(
+        "kpm-metrics",
+        {
+            treeDataProvider: treeProvider,
+            showCollapseAll: false
+        }
+    );
+    treeProvider.bindView(kpmTreeView);
+    cmds.push(connectKpmTreeView(kpmTreeView));
 
     const kpmClickedCmd = commands.registerCommand(
         "codetime.softwareKpmDashboard",
