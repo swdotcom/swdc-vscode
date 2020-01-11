@@ -18,7 +18,6 @@ import {
     getVersion,
     getHostname,
     getEditorSessionToken,
-    showOfflinePrompt,
     buildLoginUrl,
     launchWebUrl,
     logIt,

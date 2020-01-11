@@ -1,5 +1,6 @@
 import { KpmItem } from "./models";
 import { isLoggedOn, serverIsAvailable } from "./DataController";
+import { getSessionSummaryData } from "./OfflineManager";
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -20,14 +21,20 @@ export class KpmProviderManager {
         const treeItems: KpmItem[] = [];
         const serverIsOnline = await serverIsAvailable();
         const loggedInResp = await isLoggedOn(serverIsOnline);
+        const sessionSummaryData = getSessionSummaryData(true /*useCache*/);
 
         if (!loggedInResp.loggedOn) {
             const codyConnectButton: KpmItem = this.getCodyConnectButton();
             treeItems.push(codyConnectButton);
         }
 
-        const keystrokesCountButton: KpmItem = this.getKeystrokeCountButton();
-        treeItems.push(keystrokesCountButton);
+        const codetimeDashboardButton: KpmItem = this.getCodeTimeDashboardButton();
+        treeItems.push(codetimeDashboardButton);
+
+        const currentKeystrokesItem: KpmItem = this.getCurrentKeystrokesItem(
+            sessionSummaryData
+        );
+        treeItems.push(currentKeystrokesItem);
 
         return treeItems;
     }
@@ -44,7 +51,7 @@ export class KpmProviderManager {
         return item;
     }
 
-    getKeystrokeCountButton(): KpmItem {
+    getCodeTimeDashboardButton(): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip =
             "View your latest coding metrics right here in your editor";
@@ -52,6 +59,15 @@ export class KpmProviderManager {
         item.id = "dashboard";
         item.command = "codetime.codeTimeMetrics";
         item.icon = "activity.svg";
+        item.contextValue = "action_button";
+        return item;
+    }
+
+    getCurrentKeystrokesItem(sessionSummaryData): KpmItem {
+        const item: KpmItem = new KpmItem();
+        item.tooltip = "";
+        item.label = `Current KPM:    ${sessionSummaryData.currentDayKeystrokes}`;
+        item.id = "current_kpm";
         item.contextValue = "metric_item";
         return item;
     }

@@ -95,7 +95,10 @@ export function updateStatusBarWithSummaryData() {
     showStatus(msg, null);
 }
 
-export function getSessionSummaryData() {
+export function getSessionSummaryData(useCache = false) {
+    if (useCache) {
+        return sessionSummaryData;
+    }
     sessionSummaryData = getSessionSummaryFileAsJson();
     // make sure it's a valid structure
     if (!sessionSummaryData || !sessionSummaryData.currentDayMinutes) {
