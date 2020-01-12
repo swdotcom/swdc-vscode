@@ -1,8 +1,7 @@
 export const NOT_NOW_LABEL = "Not now";
 export const OK_LABEL = "Ok";
 export const YES_LABEL = "Yes";
-export const LOGIN_LABEL = "Log in";
-export const SIGNUP_LABEL = "Sign up";
+export const LOGIN_LABEL = "Connect";
 export const LOGOUT_LABEL = "Log out";
 export const UNTITLED = "Untitled";
 export const UNTITLED_WORKSPACE = "UntitledWorkspace";
