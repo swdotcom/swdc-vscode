@@ -499,6 +499,18 @@ export function displayReadmeIfNotExists() {
     }
 }
 
+export function openFileInEditor(file) {
+    // const uri = Uri.file(file);
+    // commands.executeCommand("vscode.open", uri, ViewColumn.One);
+
+    workspace.openTextDocument(file).then(doc => {
+        // only focus if it's not already open
+        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+            // done
+        });
+    });
+}
+
 export function getExtensionDisplayName() {
     if (extensionDisplayName) {
         return extensionDisplayName;
@@ -644,6 +656,7 @@ export function storePayload(payload) {
         fileInfo.name = baseName;
         fileInfo.fsPath = key;
         fileInfo.projectDir = payload.project.directory;
+        fileInfo.duration_seconds = fileInfo.end - fileInfo.start;
 
         // update the aggregate info
         aggregate.add += fileInfo.add;
@@ -674,6 +687,7 @@ export function storePayload(payload) {
             existingFileInfo.linesRemoved += fileInfo.linesRemoved;
             existingFileInfo.open += fileInfo.open;
             existingFileInfo.paste += fileInfo.paste;
+            existingFileInfo.duration_seconds += fileInfo.duration_seconds;
 
             // non aggregates, just set
             existingFileInfo.lines = fileInfo.lines;

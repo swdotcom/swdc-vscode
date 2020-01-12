@@ -4,7 +4,12 @@ import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions
 } from "./MenuManager";
-import { launchWebUrl, handleCodeTimeStatusToggle, launchLogin } from "./Util";
+import {
+    launchWebUrl,
+    handleCodeTimeStatusToggle,
+    launchLogin,
+    openFileInEditor
+} from "./Util";
 import { KpmController } from "./KpmController";
 import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
 import { KpmItem } from "./models";
@@ -37,6 +42,14 @@ export function createCommands(
         }
     );
     cmds.push(kpmClickedCmd);
+
+    const openFileInEditorCmd = commands.registerCommand(
+        "codetime.openFileInEditor",
+        file => {
+            openFileInEditor(file);
+        }
+    );
+    cmds.push(openFileInEditorCmd);
 
     const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
         launchLogin();

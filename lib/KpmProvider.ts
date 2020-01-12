@@ -33,8 +33,13 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             const item: KpmItem = e.selection[0];
 
             if (item.command) {
-                // run the command
-                return commands.executeCommand(item.command);
+                const args = item.commandArgs || null;
+                if (args) {
+                    return commands.executeCommand(item.command, ...args);
+                } else {
+                    // run the command
+                    return commands.executeCommand(item.command);
+                }
             }
         }),
         view.onDidChangeVisibility(e => {

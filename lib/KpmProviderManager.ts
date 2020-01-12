@@ -93,7 +93,7 @@ export class KpmProviderManager {
                 (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
             );
             treeItems.push(this.buildTitleItem("Highest KPM", "medal.svg"));
-            treeItems.push(this.buildTitleItem(kpmSortedArray[0].fsPath));
+            treeItems.push(this.buildFileItem(kpmSortedArray[0].fsPath));
             treeItems.push(
                 this.buildMetricItem("KPM", kpmSortedArray[0].kpm.toFixed(1))
             );
@@ -102,10 +102,23 @@ export class KpmProviderManager {
             const lengthSortedArray = fileChangeInfos.sort(
                 (a: FileChangeInfo, b: FileChangeInfo) => b.length - a.length
             );
-            treeItems.push(this.buildTitleItem(lengthSortedArray[0].fsPath));
+            treeItems.push(this.buildFileItem(lengthSortedArray[0].fsPath));
             treeItems.push(
                 this.buildMetricItem("Characters", lengthSortedArray[0].length)
             );
+
+            treeItems.push(
+                this.buildTitleItem("Longest Keystroke Time", "medal.svg")
+            );
+            const durationSortedArray = fileChangeInfos.sort(
+                (a: FileChangeInfo, b: FileChangeInfo) =>
+                    b.duration_seconds - a.duration_seconds
+            );
+            treeItems.push(this.buildFileItem(durationSortedArray[0].fsPath));
+            const duration_minutes =
+                durationSortedArray[0].duration_seconds / 60;
+            const codeHours = humanizeMinutes(duration_minutes);
+            treeItems.push(this.buildMetricItem("Time", codeHours));
         }
 
         return treeItems;
@@ -137,8 +150,9 @@ export class KpmProviderManager {
     getLineBreakItem(): KpmItem {
         const item: KpmItem = new KpmItem();
         item.id = "linebreak";
+        item.label = "---------------------";
         item.contextValue = "linebreak";
-        item.icon = "blue-line-96.png";
+        // item.icon = "blue-line-96.png";
         return item;
     }
 
@@ -193,6 +207,17 @@ export class KpmProviderManager {
         item.label = label;
         item.id = `${label}_title`;
         item.contextValue = "title_item";
+        item.icon = icon;
+        return item;
+    }
+
+    buildFileItem(label, icon = null) {
+        const item: KpmItem = new KpmItem();
+        item.command = "codetime.openFileInEditor";
+        item.commandArgs = [label];
+        item.label = label;
+        item.id = `${label}_file`;
+        item.contextValue = "file_item";
         item.icon = icon;
         return item;
     }

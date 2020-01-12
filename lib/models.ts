@@ -4,6 +4,7 @@ export class KpmItem {
     description: string = "";
     tooltip: string = "";
     command: string = "";
+    commandArgs: any[] = [];
     type: string = "";
     contextValue: string = "";
     callback: any = null;
@@ -45,6 +46,7 @@ export class FileChangeInfo {
     local_start: number = 0;
     local_end: number = 0;
     update_count: number = 0;
+    duration_seconds: number = 0;
 }
 
 export class SessionSummary {

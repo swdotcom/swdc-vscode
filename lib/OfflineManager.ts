@@ -46,8 +46,7 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     if (sessionSummaryData.lastStart) {
         const lastStart = parseInt(sessionSummaryData.lastStart, 10);
         // get the diff from the prev start
-        // (minus a fuzzy minute to account for the payload time that triggered this call)
-        const diffInSec = nowInSec - lastStart - 65;
+        const diffInSec = nowInSec - lastStart - 60;
         // If it's less or equal to the session threshold seconds
         // then add to the minutes increment. But check if it's a positive
         // number in case the system clock has been moved to the future
