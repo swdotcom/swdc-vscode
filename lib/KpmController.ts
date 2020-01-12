@@ -1,4 +1,4 @@
-import { workspace, Disposable, window } from "vscode";
+import { workspace, Disposable, window, commands } from "vscode";
 import { KpmDataManager } from "./KpmDataManager";
 import { UNTITLED, UNTITLED_WORKSPACE } from "./Constants";
 import { DEFAULT_DURATION } from "./Constants";
@@ -25,6 +25,7 @@ const NO_PROJ_NAME = "Unnamed";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
+let _treeRefreshTimer = null;
 
 export class KpmController {
     private static instance: KpmController;
@@ -218,6 +219,7 @@ export class KpmController {
             textChangeLen = event.contentChanges[0].rangeLength / -1;
         }
 
+        this.lazilyRefreshCommitTreeInfo();
         if (textChangeLen === 0 && !isNewLine && !isLineDelete) {
             return;
         }
@@ -272,6 +274,18 @@ export class KpmController {
             sourceObj.linesAdded += diff;
             logEvent(`Added ${diff} lines`);
         }
+    }
+
+    private lazilyRefreshCommitTreeInfo() {
+        // "codetime.refreshKpmTree"
+        if (_treeRefreshTimer) {
+            clearTimeout(_treeRefreshTimer);
+            _treeRefreshTimer = null;
+        }
+        _treeRefreshTimer = setTimeout(() => {
+            commands.executeCommand("codetime.refreshCommitTree");
+            _treeRefreshTimer = null;
+        }, 2000);
     }
 
     /**
