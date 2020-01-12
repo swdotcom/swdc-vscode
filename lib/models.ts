@@ -40,6 +40,11 @@ export class FileChangeInfo {
     syntax: string = "";
     fileAgeDays: number = 0;
     repoFileContributorCount: number = 0;
+    start: number = 0;
+    end: number = 0;
+    local_start: number = 0;
+    local_end: number = 0;
+    update_count: number = 0;
 }
 
 export class SessionSummary {

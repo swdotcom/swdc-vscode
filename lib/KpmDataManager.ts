@@ -7,6 +7,7 @@ import {
     getPluginId
 } from "./Util";
 import { sendBatchPayload } from "./DataController";
+import { FileChangeInfo } from "./models";
 
 // ? marks that the parameter is optional
 type Project = {
@@ -61,7 +62,7 @@ export class KpmDataManager {
         // open AND close then it's ok, keep it.
         let keystrokesTally = 0;
         keys.forEach(key => {
-            const data = this.source[key];
+            const data: FileChangeInfo = this.source[key];
 
             const hasOpen = data.open > 0;
             const hasClose = data.close > 0;

@@ -108,17 +108,6 @@ function coalesceMissingAttributes(data): SessionSummary {
 // returns a map of file change info
 // {fileName => FileChangeInfo, fileName => FileChangeInfo}
 export function getFileChangeInfoMap(): any {
-    const map = {};
-    const infos = getFileChangeSummaryFileAsJson();
-    if (infos.length > 0) {
-        infos.forEach((info: FileChangeInfo) => {
-            map[info.fsPath] = info;
-        });
-    }
-    return map;
-}
-
-export function getFileChangeInfos(): FileChangeInfo[] {
     return getFileChangeSummaryFileAsJson();
 }
 
@@ -143,10 +132,11 @@ export function getFileChangeSummaryFile() {
 }
 
 export function saveSessionSummaryToDisk(sessionSummaryData) {
+    const file = getSessionSummaryFile();
     try {
         // JSON.stringify(data, replacer, number of spaces)
         const content = JSON.stringify(sessionSummaryData, null, 4);
-        fs.writeFileSync(getSessionSummaryFile(), content, err => {
+        fs.writeFileSync(file, content, err => {
             if (err)
                 logIt(
                     `Deployer: Error writing session summary data: ${err.message}`
@@ -157,9 +147,35 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
     }
 }
 
+export function saveFileChangeInfoToDisk(fileChangeInnfoData) {
+    const file = getFileChangeSummaryFile();
+    if (fileChangeInnfoData) {
+        try {
+            const content = JSON.stringify(fileChangeInnfoData, null, 4);
+            fs.writeFileSync(file, content, err => {
+                if (err)
+                    logIt(
+                        `Deployer: Error writing session summary data: ${err.message}`
+                    );
+            });
+        } catch (e) {
+            //
+        }
+    }
+}
+
 export function getSessionSummaryFileAsJson() {
-    let data = null;
     const file = getSessionSummaryFile();
+    return getFileDataAsJson(file);
+}
+
+export function getFileChangeSummaryFileAsJson(): FileChangeInfo[] {
+    const file = getFileChangeSummaryFile();
+    return getFileDataAsJson(file);
+}
+
+export function getFileDataAsJson(file) {
+    let data = null;
     if (fs.existsSync(file)) {
         const content = fs.readFileSync(file).toString();
         if (content) {
@@ -174,31 +190,4 @@ export function getSessionSummaryFileAsJson() {
         }
     }
     return data ? data : {};
-}
-
-export function getFileChangeSummaryFileAsJson(): FileChangeInfo[] {
-    const file = getFileChangeSummaryFile();
-    if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file).toString();
-        if (content) {
-            const fileInfos = content
-                .split(/\r?\n/)
-                .map(item => {
-                    let obj = null;
-                    if (item) {
-                        try {
-                            obj = JSON.parse(item);
-                        } catch (e) {
-                            //
-                        }
-                    }
-                    if (obj) {
-                        return obj;
-                    }
-                })
-                .filter(item => item);
-            return fileInfos;
-        }
-    }
-    return [];
 }

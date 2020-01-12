@@ -23,9 +23,10 @@ import {
 } from "./DataController";
 import {
     incrementSessionSummaryData,
-    getFileChangeInfoMap
+    getFileChangeInfoMap,
+    saveFileChangeInfoToDisk
 } from "./OfflineManager";
-import { KeystrokeAggregate } from "./models";
+import { KeystrokeAggregate, FileChangeInfo } from "./models";
 const moment = require("moment-timezone");
 
 const open = require("open");
@@ -633,7 +634,7 @@ export function storePayload(payload) {
 
     const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
     Object.keys(payload.source).forEach(key => {
-        const fileInfo = payload.source[key];
+        const fileInfo: FileChangeInfo = payload.source[key];
         aggregate.add += fileInfo.add;
         aggregate.close += fileInfo.close;
         aggregate.delete += fileInfo.delete;
@@ -643,13 +644,37 @@ export function storePayload(payload) {
         aggregate.open += fileInfo.open;
         aggregate.paste += fileInfo.paste;
 
-        if (!fileChangeInfoMap[key]) {
-            //
+        const existingFileInfo: FileChangeInfo = fileChangeInfoMap[key];
+        if (!existingFileInfo) {
+            fileInfo.update_count = 1;
+            fileInfo.kpm = aggregate.keystrokes;
+            fileChangeInfoMap[key] = fileInfo;
+        } else {
+            // aggregate
+            existingFileInfo.update_count += 1;
+            existingFileInfo.keystrokes += fileInfo.keystrokes;
+            existingFileInfo.kpm =
+                existingFileInfo.keystrokes / existingFileInfo.update_count;
+            existingFileInfo.add += fileInfo.add;
+            existingFileInfo.close += fileInfo.close;
+            existingFileInfo.delete += fileInfo.delete;
+            existingFileInfo.keystrokes += fileInfo.keystrokes;
+            existingFileInfo.linesAdded += fileInfo.linesAdded;
+            existingFileInfo.linesRemoved += fileInfo.linesRemoved;
+            existingFileInfo.open += fileInfo.open;
+            existingFileInfo.paste += fileInfo.paste;
+
+            // non aggregates, just set
+            existingFileInfo.lines = fileInfo.lines;
+            existingFileInfo.length = fileInfo.length;
         }
     });
 
     // this will increment and store it offline
     incrementSessionSummaryData(aggregate);
+
+    // write the fileChangeInfoMap
+    saveFileChangeInfoToDisk(fileChangeInfoMap);
 
     commands.executeCommand("codetime.refreshKpmTree");
 

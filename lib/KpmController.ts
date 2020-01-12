@@ -18,6 +18,7 @@ import {
     getRepoFileCount,
     getFileContributorCount
 } from "./KpmRepoManager";
+import { FileChangeInfo } from "./models";
 const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";
@@ -176,7 +177,7 @@ export class KpmController {
         }
 
         const rootObj = _keystrokeMap[rootPath];
-        const sourceObj = rootObj.source[staticInfo.filename];
+        const sourceObj: FileChangeInfo = rootObj.source[staticInfo.filename];
         const currLineCount =
             event.document && event.document.lineCount
                 ? event.document.lineCount
@@ -279,7 +280,7 @@ export class KpmController {
      * @param staticInfo
      */
     private updateStaticValues(payload, staticInfo) {
-        const sourceObj = payload.source[staticInfo.filename];
+        const sourceObj: FileChangeInfo = payload.source[staticInfo.filename];
         // set the repoContributorCount
         if (
             staticInfo.repoContributorCount &&
@@ -450,23 +451,11 @@ export class KpmController {
         const local_start = nowTimes.local_now_in_sec - 60;
         keystrokeCount["start"] = start;
         keystrokeCount["local_start"] = local_start;
-        let fileInfo = {
-            add: 1,
-            netkeys: 0,
-            paste: 0,
-            open: 0,
-            close: 0,
-            delete: 0,
-            length: 0,
-            lines: 0,
-            linesAdded: 0,
-            linesRemoved: 0,
-            syntax: "",
-            fileAgeDays: 0,
-            repoFileContributorCount: 0,
-            start,
-            local_start
-        };
+        const fileInfo = new FileChangeInfo();
+        fileInfo.add = 1;
+        fileInfo.keystrokes = 1;
+        fileInfo.start = start;
+        fileInfo.local_start = local_start;
         keystrokeCount.source[fileName] = fileInfo;
 
         setTimeout(() => keystrokeCount.postData(true /*sendNow*/), 0);
@@ -512,7 +501,7 @@ export class KpmController {
         if (fileKeys.length > 1) {
             // set the end time to now for the other files that don't match this file
             fileKeys.forEach(key => {
-                let sourceObj = keystrokeCount.source[key];
+                let sourceObj: FileChangeInfo = keystrokeCount.source[key];
                 if (key !== filename && sourceObj.end === 0) {
                     sourceObj.end = nowTimes.now_in_sec;
                     sourceObj.local_end = nowTimes.local_now_in_sec;
@@ -524,26 +513,9 @@ export class KpmController {
     }
 
     private addFile(filename, nowTimes, keystrokeCount) {
-        const fileInfo = {
-            add: 0,
-            netkeys: 0,
-            paste: 0,
-            open: 0,
-            close: 0,
-            delete: 0,
-            length: 0,
-            lines: 0,
-            linesAdded: 0,
-            linesRemoved: 0,
-            start: nowTimes.now_in_sec,
-            local_start: nowTimes.local_now_in_sec,
-            end: 0,
-            local_end: 0,
-            syntax: "",
-            fileAgeDays: 0,
-            repoFileContributorCount: 0,
-            keystrokes: 0
-        };
+        const fileInfo = new FileChangeInfo();
+        fileInfo.start = nowTimes.now_in_sec;
+        fileInfo.local_end = nowTimes.local_now_in_sec;
         keystrokeCount.source[filename] = fileInfo;
     }
 
