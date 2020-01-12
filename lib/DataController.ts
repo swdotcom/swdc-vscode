@@ -38,7 +38,8 @@ import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
     saveSessionSummaryToDisk,
-    clearSessionSummaryData
+    clearSessionSummaryData,
+    clearFileChangeInfoSummaryData
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { SessionSummary, LoggedInState } from "./models";
@@ -635,6 +636,7 @@ export async function getSessionSummaryStatus() {
     if (shouldClearSessionData()) {
         // new day, clear the session summary data
         clearSessionSummaryData();
+        clearFileChangeInfoSummaryData();
         isNewDay = true;
     }
     let sessionSummaryData: SessionSummary = getSessionSummaryData();

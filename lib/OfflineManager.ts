@@ -21,6 +21,10 @@ export function clearSessionSummaryData() {
     saveSessionSummaryToDisk(sessionSummaryData);
 }
 
+export function clearFileChangeInfoSummaryData() {
+    saveFileChangeInfoToDisk({});
+}
+
 export function setSessionSummaryLiveshareMinutes(minutes) {
     sessionSummaryData.liveshareMinutes = minutes;
 }

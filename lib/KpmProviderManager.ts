@@ -1,6 +1,11 @@
-import { KpmItem, SessionSummary, LoggedInState } from "./models";
+import {
+    KpmItem,
+    SessionSummary,
+    LoggedInState,
+    FileChangeInfo
+} from "./models";
 import { getCachedLoggedInState } from "./DataController";
-import { getSessionSummaryData } from "./OfflineManager";
+import { getSessionSummaryData, getFileChangeInfoMap } from "./OfflineManager";
 import { humanizeMinutes, getWorkspaceFolders } from "./Util";
 import { getCurrentChanges } from "./KpmRepoManager";
 import { WorkspaceFolder } from "vscode";
@@ -28,17 +33,33 @@ export class KpmProviderManager {
 
         if (!loggedInCachState.loggedIn) {
             treeItems.push(this.getCodyConnectButton());
+        } else {
+            // show the web dashboard button
+            treeItems.push(this.getWebViewDashboardButton());
         }
 
+        // codetime metrics editor dashboard
         treeItems.push(this.getCodeTimeDashboardButton());
 
         treeItems.push(this.getLineBreakItem());
 
+        // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
             sessionSummaryData
         );
+
+        // show the metrics per line
         treeItems.push(...currentKeystrokesItems);
 
+        const fileChangeInfoMap = getFileChangeInfoMap();
+        const filesChanged = fileChangeInfoMap
+            ? Object.keys(fileChangeInfoMap).length
+            : 0;
+        if (filesChanged > 0) {
+            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
+        }
+
+        // show the git insertions and deletions
         if (folders && folders.length > 0) {
             treeItems.push(this.getLineBreakItem());
             for (let i = 0; i < folders.length; i++) {
@@ -58,6 +79,35 @@ export class KpmProviderManager {
             }
         }
 
+        // get the file change info
+        if (filesChanged) {
+            treeItems.push(this.getLineBreakItem());
+
+            // turn this into an array
+            const fileChangeInfos = Object.keys(fileChangeInfoMap).map(key => {
+                return fileChangeInfoMap[key];
+            });
+
+            // show the file with the highest kpm (desc)
+            const kpmSortedArray = fileChangeInfos.sort(
+                (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
+            );
+            treeItems.push(this.buildTitleItem("Highest KPM", "medal.svg"));
+            treeItems.push(this.buildTitleItem(kpmSortedArray[0].fsPath));
+            treeItems.push(
+                this.buildMetricItem("KPM", kpmSortedArray[0].kpm.toFixed(1))
+            );
+
+            treeItems.push(this.buildTitleItem("Largest File", "medal.svg"));
+            const lengthSortedArray = fileChangeInfos.sort(
+                (a: FileChangeInfo, b: FileChangeInfo) => b.length - a.length
+            );
+            treeItems.push(this.buildTitleItem(lengthSortedArray[0].fsPath));
+            treeItems.push(
+                this.buildMetricItem("Characters", lengthSortedArray[0].length)
+            );
+        }
+
         return treeItems;
     }
 
@@ -68,6 +118,17 @@ export class KpmProviderManager {
         item.label = "Connect";
         item.id = "connect";
         item.command = "codetime.codeTimeLogin";
+        item.icon = "sw-paw-circle.svg";
+        item.contextValue = "action_button";
+        return item;
+    }
+
+    getWebViewDashboardButton(): KpmItem {
+        const item: KpmItem = new KpmItem();
+        item.tooltip = "See rich data visualizations in the web app";
+        item.label = "Web Dashboard";
+        item.id = "connect";
+        item.command = "codetime.softwareKpmDashboard";
         item.icon = "sw-paw-circle.svg";
         item.contextValue = "action_button";
         return item;
