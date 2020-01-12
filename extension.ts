@@ -24,7 +24,8 @@ import {
     showLoginPrompt,
     getPluginName,
     getItem,
-    displayReadmeIfNotExists
+    displayReadmeIfNotExists,
+    setItem
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
@@ -195,18 +196,20 @@ export async function intializePlugin(
     // {loggedIn: true|false}
     await getUserStatus(serverIsOnline, true);
 
-    if (createdAnonUser) {
-        showLoginPrompt();
-
-        if (kpmController) {
-            kpmController.buildBootstrapKpmPayload();
-        }
+    const initializedVscodePlugin = getItem("vscodeCtInit");
+    if (!initializedVscodePlugin) {
+        setItem("vscodeCtInit", true);
+        kpmController.buildBootstrapKpmPayload();
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
         sendHeartbeat("INSTALLED", serverIsOnline);
     } else {
         // send a heartbeat
         sendHeartbeat("INITIALIZED", serverIsOnline);
+    }
+
+    if (createdAnonUser) {
+        showLoginPrompt();
     }
 
     // initiate kpm fetch by sending any offline data
