@@ -195,13 +195,16 @@ export class KpmController {
                 const range = event.contentChanges[i].range;
                 contentText = event.contentChanges[i].text;
                 if (contentText.match(/[\n\r]/g)) {
+                    // it's a new line
                     isNewLine = true;
                     contentText = "";
                 } else if (contentText.length > 0) {
+                    // has text changes
                     hasNonNewLineData = true;
                     textChangeLen += contentText.length;
                     rangeChangeLen += event.contentChanges[i].rangeLength || 0;
                 } else if (range && !range.isEmpty && !range.isSingleLine) {
+                    // it's an empty line delete
                     isLineDelete = true;
                 }
             }
