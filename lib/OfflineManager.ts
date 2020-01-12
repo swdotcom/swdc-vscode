@@ -9,12 +9,12 @@ import {
     getItem
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { KeystrokeAggregate, SessionSummary } from "./models";
-import { Session } from "inspector";
+import { KeystrokeAggregate, SessionSummary, FileChangeInfo } from "./models";
 const fs = require("fs");
 
 // initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
+let fileChangeInfos: FileChangeInfo[] = [];
 
 export function clearSessionSummaryData() {
     sessionSummaryData = new SessionSummary();
@@ -106,12 +106,26 @@ function coalesceMissingAttributes(data): SessionSummary {
     return data;
 }
 
+export function getFileChangeInfos(): FileChangeInfo[] {
+    return getFileChangeSummaryFileAsJson();
+}
+
 export function getSessionSummaryFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
         file += "\\sessionSummary.json";
     } else {
         file += "/sessionSummary.json";
+    }
+    return file;
+}
+
+export function getFileChangeSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\fileChangeSummary.json";
+    } else {
+        file += "/fileChangeSummary.json";
     }
     return file;
 }
@@ -133,7 +147,7 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
 
 export function getSessionSummaryFileAsJson() {
     let data = null;
-    let file = getSessionSummaryFile();
+    const file = getSessionSummaryFile();
     if (fs.existsSync(file)) {
         const content = fs.readFileSync(file).toString();
         if (content) {
@@ -148,4 +162,31 @@ export function getSessionSummaryFileAsJson() {
         }
     }
     return data ? data : {};
+}
+
+export function getFileChangeSummaryFileAsJson(): FileChangeInfo[] {
+    const file = getFileChangeSummaryFile();
+    if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file).toString();
+        if (content) {
+            const fileInfos = content
+                .split(/\r?\n/)
+                .map(item => {
+                    let obj = null;
+                    if (item) {
+                        try {
+                            obj = JSON.parse(item);
+                        } catch (e) {
+                            //
+                        }
+                    }
+                    if (obj) {
+                        return obj;
+                    }
+                })
+                .filter(item => item);
+            return fileInfos;
+        }
+    }
+    return [];
 }
