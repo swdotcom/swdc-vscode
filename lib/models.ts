@@ -23,7 +23,7 @@ export class KeystrokeAggregate {
 
 export class FileChangeInfo {
     name: string = "";
-    path: string = "";
+    fsPath: string = "";
     projectDir: string = "";
     kpm: number = 0;
     keystrokes: number = 0;

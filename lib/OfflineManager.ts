@@ -14,7 +14,6 @@ const fs = require("fs");
 
 // initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
-let fileChangeInfos: FileChangeInfo[] = [];
 
 export function clearSessionSummaryData() {
     sessionSummaryData = new SessionSummary();
@@ -104,6 +103,19 @@ function coalesceMissingAttributes(data): SessionSummary {
         }
     });
     return data;
+}
+
+// returns a map of file change info
+// {fileName => FileChangeInfo, fileName => FileChangeInfo}
+export function getFileChangeInfoMap(): any {
+    const map = {};
+    const infos = getFileChangeSummaryFileAsJson();
+    if (infos.length > 0) {
+        infos.forEach((info: FileChangeInfo) => {
+            map[info.fsPath] = info;
+        });
+    }
+    return map;
 }
 
 export function getFileChangeInfos(): FileChangeInfo[] {

@@ -21,7 +21,10 @@ import {
     getToggleFileEventLoggingState,
     getSessionSummaryStatus
 } from "./DataController";
-import { incrementSessionSummaryData } from "./OfflineManager";
+import {
+    incrementSessionSummaryData,
+    getFileChangeInfoMap
+} from "./OfflineManager";
 import { KeystrokeAggregate } from "./models";
 const moment = require("moment-timezone");
 
@@ -625,6 +628,9 @@ export function getNowTimes() {
  * @param payload
  */
 export function storePayload(payload) {
+    // get a mapping of the current files
+    const fileChangeInfoMap = getFileChangeInfoMap();
+
     const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
     Object.keys(payload.source).forEach(key => {
         const fileInfo = payload.source[key];
@@ -636,6 +642,10 @@ export function storePayload(payload) {
         aggregate.linesRemoved += fileInfo.linesRemoved;
         aggregate.open += fileInfo.open;
         aggregate.paste += fileInfo.paste;
+
+        if (!fileChangeInfoMap[key]) {
+            //
+        }
     });
 
     // this will increment and store it offline
