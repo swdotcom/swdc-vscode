@@ -72,7 +72,7 @@ export class KpmProviderManager {
         if (folders && folders.length > 0) {
             for (let i = 0; i < folders.length; i++) {
                 const workspaceFolder = folders[i];
-                const { insertions, deletions } = await getCurrentChanges(
+                const currentChagesSummary = await getCurrentChanges(
                     workspaceFolder.uri.fsPath
                 );
                 // get the folder name from the path
@@ -81,9 +81,17 @@ export class KpmProviderManager {
                 treeItems.push(this.buildTitleItem(name, "folder.svg"));
 
                 treeItems.push(
-                    this.buildMetricItem("Insertion(s)", insertions)
+                    this.buildMetricItem(
+                        "Insertion(s)",
+                        currentChagesSummary.insertions
+                    )
                 );
-                treeItems.push(this.buildMetricItem("Deletion(s)", deletions));
+                treeItems.push(
+                    this.buildMetricItem(
+                        "Deletion(s)",
+                        currentChagesSummary.deletions
+                    )
+                );
             }
         }
 

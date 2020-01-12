@@ -125,11 +125,12 @@ export async function getRepoFileCount(fileName) {
 }
 
 export async function getCurrentChanges(projectDir) {
+    let currentChagesSummary = {
+        insertions: 0,
+        deletions: 0
+    };
     if (!projectDir) {
-        return {
-            insertions: 0,
-            deletions: 0
-        };
+        return currentChagesSummary;
     }
     /**
      * xaviers-mbp-2:swdc-vscode xavierluiz$ git diff --stat
@@ -159,18 +160,21 @@ export async function getCurrentChanges(projectDir) {
                 const part = parts[x];
                 if (part.includes("insertion")) {
                     insertions = parseInt(parts[x - 1], 10);
+                    if (insertions) {
+                        currentChagesSummary.insertions = insertions;
+                    }
                 } else if (part.includes("deletion")) {
                     deletions = parseInt(parts[x - 1], 10);
+                    if (deletions) {
+                        currentChagesSummary.deletions = deletions;
+                    }
                 }
             }
             break;
         }
     }
 
-    return {
-        insertions,
-        deletions
-    };
+    return currentChagesSummary;
 }
 
 export async function getRepoContributorInfo(fileName) {
