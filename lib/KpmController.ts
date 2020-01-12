@@ -177,62 +177,54 @@ export class KpmController {
 
         const rootObj = _keystrokeMap[rootPath];
         const sourceObj = rootObj.source[staticInfo.filename];
+        const currLineCount =
+            event.document && event.document.lineCount
+                ? event.document.lineCount
+                : event.lineCount || 0;
         this.updateStaticValues(rootObj, staticInfo);
 
-        //
-        // Map all of the contentChanges objects then use the
-        // reduce function to add up all of the lengths from each
-        // contentChanges.text.length value, but only if the text
-        // has a length.
-        //
-
+        // Use the contentChanges to figure out most of the events
         let isNewLine = false;
+        let isLineDelete = false;
         let hasNonNewLineData = false;
-
-        // get the content changes text
-        let text = "";
-
-        let hasCotentText =
-            event.contentChanges && event.contentChanges.length === 1
-                ? true
-                : false;
-        if (hasCotentText) {
-            text = event.contentChanges[0].text || "";
+        let textChangeLen = 0;
+        let rangeChangeLen = 0;
+        let contentText = "";
+        if (event.contentChanges && event.contentChanges.length) {
+            for (let i = 0; i < event.contentChanges.length; i++) {
+                const range = event.contentChanges[i].range;
+                contentText = event.contentChanges[i].text;
+                if (contentText.match(/[\n\r]/g)) {
+                    isNewLine = true;
+                    contentText = "";
+                } else if (contentText.length > 0) {
+                    hasNonNewLineData = true;
+                    textChangeLen += contentText.length;
+                    rangeChangeLen += event.contentChanges[i].rangeLength || 0;
+                } else if (range && !range.isEmpty && !range.isSingleLine) {
+                    isLineDelete = true;
+                }
+            }
         }
-
-        // check if the text has a new line
-        if (text && text.match(/[\n\r]/g)) {
-            isNewLine = true;
-        } else if (text && text.length > 0) {
-            hasNonNewLineData = true;
-        }
-
-        let newCount = text ? text.length : 0;
 
         // check if its a character deletion
-        if (
-            newCount === 0 &&
-            event.contentChanges &&
-            event.contentChanges.length === 1 &&
-            event.contentChanges[0].rangeLength &&
-            event.contentChanges[0].rangeLength > 0
-        ) {
+        if (textChangeLen === 0 && rangeChangeLen > 0) {
             // since new count is zero, check the range length.
             // if there's range length then it's a deletion
-            newCount = event.contentChanges[0].rangeLength / -1;
+            textChangeLen = event.contentChanges[0].rangeLength / -1;
         }
 
-        if (newCount === 0) {
+        if (textChangeLen === 0 && !isNewLine && !isLineDelete) {
             return;
         }
 
-        if (newCount > 8) {
+        if (textChangeLen > 8) {
             //
             // it's a copy and paste event
             //
             sourceObj.paste += 1;
             logEvent("Copy+Paste Incremented");
-        } else if (newCount < 0) {
+        } else if (textChangeLen < 0) {
             sourceObj.delete += 1;
             // update the overall count
             logEvent("Delete Incremented");
@@ -249,20 +241,32 @@ export class KpmController {
         sourceObj.netkeys = sourceObj.add - sourceObj.delete;
 
         let diff = 0;
-        if (sourceObj.lines && sourceObj.lines >= 0) {
-            diff = staticInfo.lineCount - sourceObj.lines;
+
+        // check if the line count has changed since the initial
+        // time we've set the static info line count for this file
+        if (sourceObj.lines > 0 && currLineCount !== sourceObj.lines) {
+            // i.e. it's now 229 but was 230 before, it'll set
+            // diff to -1 which triggers our condition to
+            // increment the linesRemoved
+            diff = currLineCount - sourceObj.lines;
         }
-        sourceObj.lines = staticInfo.lineCount;
-        if (diff < 0) {
-            sourceObj.linesRemoved += Math.abs(diff);
-            logEvent("Increment lines removed");
-        } else if (diff > 0) {
+
+        sourceObj.lines = currLineCount;
+
+        if (isLineDelete) {
+            // make the diff absolute as we're just incrementing
+            // the linesRemoved value
+            diff = Math.abs(diff);
+            diff = Math.max(diff, 1);
+            sourceObj.linesRemoved += diff;
+            logEvent(`Removed ${diff} lines`);
+        } else if (isNewLine) {
+            // when hitting the enter key it doesn't change the currLineCount
+            // but the contentChanges has the "\n" to provide that a newline
+            // has happened
+            diff = Math.max(diff, 1);
             sourceObj.linesAdded += diff;
-            logEvent("Increment lines added");
-        }
-        if (sourceObj.linesAdded === 0 && isNewLine) {
-            sourceObj.linesAdded = 1;
-            logEvent("Increment lines added");
+            logEvent(`Added ${diff} lines`);
         }
     }
 
