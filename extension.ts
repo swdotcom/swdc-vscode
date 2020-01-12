@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment } from "vscode";
+import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     sendOfflineData,
     getUserStatus,
@@ -152,7 +152,8 @@ export async function intializePlugin(
     historical_commits_interval = setInterval(async () => {
         const isonline = await serverIsAvailable();
         getHistoricalCommits(isonline);
-    }, 1000 * 60 * 45);
+        commands.executeCommand("codetime.refreshCommitTree");
+    }, 1000 * 60 * 30);
 
     // send heartbeats every 2 hours
     setInterval(async () => {

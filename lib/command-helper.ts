@@ -87,9 +87,18 @@ export function createCommands(
         "codetime.refreshKpmTree",
         () => {
             kpmTreeProvider.refresh();
+            fileChangeTreeProvider.refresh();
         }
     );
     cmds.push(refreshKpmTreeCmd);
+
+    const refreshCommitTreeCmd = commands.registerCommand(
+        "codetime.refreshCommitTree",
+        () => {
+            commitTreeProvider.refresh();
+        }
+    );
+    cmds.push(refreshCommitTreeCmd);
 
     const codeTimeMetricsCmd = commands.registerCommand(
         "codetime.codeTimeMetrics",
