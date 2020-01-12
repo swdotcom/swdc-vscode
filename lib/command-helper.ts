@@ -11,8 +11,11 @@ import {
     openFileInEditor
 } from "./Util";
 import { KpmController } from "./KpmController";
-import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
+import { KpmProvider } from "./KpmProvider";
+import { FileChangeProvider } from "./FileChangeProvider";
+import { CommitProvider } from "./CommitProvider";
 import { KpmItem } from "./models";
+import { connectTreeView } from "./KpmProviderManager";
 
 export function createCommands(
     kpmController: KpmController
@@ -23,17 +26,41 @@ export function createCommands(
 
     cmds.push(kpmController);
 
-    // playlist tree view
+    // kpm tree view
     const kpmTreeProvider = new KpmProvider();
     const kpmTreeView: TreeView<KpmItem> = window.createTreeView(
-        "kpm-metrics",
+        "kpm-metrics-tree",
         {
             treeDataProvider: kpmTreeProvider,
             showCollapseAll: false
         }
     );
     kpmTreeProvider.bindView(kpmTreeView);
-    cmds.push(connectKpmTreeView(kpmTreeView));
+    cmds.push(connectTreeView(kpmTreeView));
+
+    // file change tree view
+    const commitTreeProvider = new CommitProvider();
+    const commitTreeView: TreeView<KpmItem> = window.createTreeView(
+        "commit-tree",
+        {
+            treeDataProvider: commitTreeProvider,
+            showCollapseAll: false
+        }
+    );
+    commitTreeProvider.bindView(commitTreeView);
+    cmds.push(connectTreeView(commitTreeView));
+
+    // commit tree view
+    const fileChangeTreeProvider = new FileChangeProvider();
+    const fileChangeTreeView: TreeView<KpmItem> = window.createTreeView(
+        "file-change-tree",
+        {
+            treeDataProvider: fileChangeTreeProvider,
+            showCollapseAll: false
+        }
+    );
+    fileChangeTreeProvider.bindView(fileChangeTreeView);
+    cmds.push(connectTreeView(fileChangeTreeView));
 
     const kpmClickedCmd = commands.registerCommand(
         "codetime.softwareKpmDashboard",

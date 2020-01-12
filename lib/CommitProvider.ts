@@ -1,20 +1,16 @@
 import {
     TreeDataProvider,
-    TreeItem,
     TreeItemCollapsibleState,
-    Command,
     EventEmitter,
     Event,
-    Disposable,
-    TreeView,
-    commands
+    TreeView
 } from "vscode";
 import { KpmItem } from "./models";
 import { KpmProviderManager, KpmTreeItem } from "./KpmProviderManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
-export class KpmProvider implements TreeDataProvider<KpmItem> {
+export class CommitProvider implements TreeDataProvider<KpmItem> {
     private _onDidChangeTreeData: EventEmitter<
         KpmItem | undefined
     > = new EventEmitter<KpmItem | undefined>();
@@ -59,7 +55,7 @@ export class KpmProvider implements TreeDataProvider<KpmItem> {
             // return the children of this element
         } else {
             // return the parent elements
-            kpmItems = await kpmProviderMgr.getKpmTreeParents();
+            kpmItems = await kpmProviderMgr.getCommitTreeParents();
         }
         return kpmItems;
     }

@@ -126,7 +126,10 @@ export async function getRepoFileCount(fileName) {
 
 export async function getCurrentChanges(projectDir) {
     if (!projectDir) {
-        return null;
+        return {
+            insertions: 0,
+            deletions: 0
+        };
     }
     /**
      * xaviers-mbp-2:swdc-vscode xavierluiz$ git diff --stat

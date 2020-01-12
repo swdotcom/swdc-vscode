@@ -8,7 +8,20 @@ import { getCachedLoggedInState } from "./DataController";
 import { getSessionSummaryData, getFileChangeInfoMap } from "./OfflineManager";
 import { humanizeMinutes, getWorkspaceFolders } from "./Util";
 import { getCurrentChanges } from "./KpmRepoManager";
-import { WorkspaceFolder } from "vscode";
+import {
+    WorkspaceFolder,
+    TreeItem,
+    TreeItemCollapsibleState,
+    Command,
+    commands,
+    Disposable,
+    TreeView
+} from "vscode";
+import * as path from "path";
+
+// this current path is in the out/lib. We need to find the resource files
+// which are in out/resources
+const resourcePath: string = path.join(__filename, "..", "..", "resources");
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -25,8 +38,7 @@ export class KpmProviderManager {
         return KpmProviderManager.instance;
     }
 
-    async getTreeParents(): Promise<KpmItem[]> {
-        const folders: WorkspaceFolder[] = getWorkspaceFolders();
+    async getKpmTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
         const loggedInCachState: LoggedInState = await getCachedLoggedInState();
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
@@ -41,8 +53,6 @@ export class KpmProviderManager {
         // codetime metrics editor dashboard
         treeItems.push(this.getCodeTimeDashboardButton());
 
-        treeItems.push(this.getLineBreakItem());
-
         // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
             sessionSummaryData
@@ -51,17 +61,15 @@ export class KpmProviderManager {
         // show the metrics per line
         treeItems.push(...currentKeystrokesItems);
 
-        const fileChangeInfoMap = getFileChangeInfoMap();
-        const filesChanged = fileChangeInfoMap
-            ? Object.keys(fileChangeInfoMap).length
-            : 0;
-        if (filesChanged > 0) {
-            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
-        }
+        return treeItems;
+    }
+
+    async getCommitTreeParents(): Promise<KpmItem[]> {
+        const folders: WorkspaceFolder[] = getWorkspaceFolders();
+        const treeItems: KpmItem[] = [];
 
         // show the git insertions and deletions
         if (folders && folders.length > 0) {
-            treeItems.push(this.getLineBreakItem());
             for (let i = 0; i < folders.length; i++) {
                 const workspaceFolder = folders[i];
                 const { insertions, deletions } = await getCurrentChanges(
@@ -79,10 +87,22 @@ export class KpmProviderManager {
             }
         }
 
+        return treeItems;
+    }
+
+    async getFileChangeTreeParents(): Promise<KpmItem[]> {
+        const treeItems: KpmItem[] = [];
+
+        const fileChangeInfoMap = getFileChangeInfoMap();
+        const filesChanged = fileChangeInfoMap
+            ? Object.keys(fileChangeInfoMap).length
+            : 0;
+        if (filesChanged > 0) {
+            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
+        }
+
         // get the file change info
         if (filesChanged) {
-            treeItems.push(this.getLineBreakItem());
-
             // turn this into an array
             const fileChangeInfos = Object.keys(fileChangeInfoMap).map(key => {
                 return fileChangeInfoMap[key];
@@ -222,3 +242,88 @@ export class KpmProviderManager {
         return item;
     }
 }
+
+/**
+ * The TreeItem contains the "contextValue", which is represented as the "viewItem"
+ * from within the package.json when determining if there should be decoracted context
+ * based on that value.
+ */
+export class KpmTreeItem extends TreeItem {
+    constructor(
+        private readonly treeItem: KpmItem,
+        public readonly collapsibleState: TreeItemCollapsibleState,
+        public readonly command?: Command
+    ) {
+        super(treeItem.label, collapsibleState);
+
+        const { lightPath, darkPath, contextValue } = getTreeItemIcon(treeItem);
+        if (lightPath && darkPath) {
+            this.iconPath.light = lightPath;
+            this.iconPath.dark = darkPath;
+        } else {
+            // no matching tag, remove the tree item icon path
+            delete this.iconPath;
+        }
+        this.contextValue = contextValue;
+    }
+
+    get tooltip(): string {
+        if (!this.treeItem) {
+            return "";
+        }
+        if (this.treeItem.tooltip) {
+            return this.treeItem.tooltip;
+        } else {
+            return this.treeItem.label;
+        }
+    }
+
+    iconPath = {
+        light: "",
+        dark: ""
+    };
+
+    contextValue = "treeItem";
+}
+
+function getTreeItemIcon(treeItem: KpmItem): any {
+    const iconName = treeItem.icon || "Blank_button.svg";
+    const lightPath = path.join(resourcePath, "light", iconName);
+    const darkPath = path.join(resourcePath, "dark", iconName);
+    const contextValue = treeItem.contextValue;
+    return { lightPath, darkPath, contextValue };
+}
+
+let initializedTreeView = false;
+
+export const connectTreeView = (view: TreeView<KpmItem>) => {
+    // view is {selection: Array[n], visible, message}
+    return Disposable.from(
+        // e is {selection: Array[n]}
+        view.onDidChangeSelection(async e => {
+            if (!e.selection || e.selection.length === 0) {
+                return;
+            }
+
+            const item: KpmItem = e.selection[0];
+
+            if (item.command) {
+                const args = item.commandArgs || null;
+                if (args) {
+                    return commands.executeCommand(item.command, ...args);
+                } else {
+                    // run the command
+                    return commands.executeCommand(item.command);
+                }
+            }
+        }),
+        view.onDidChangeVisibility(e => {
+            if (e.visible) {
+                // if (initializedTreeView) {
+                //     commands.executeCommand("codetime.refreshKpmTree");
+                // }
+                // initializedTreeView = true;
+            }
+        })
+    );
+};

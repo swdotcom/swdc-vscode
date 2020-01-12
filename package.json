@@ -72,8 +72,16 @@
         "views": {
             "code-time": [
                 {
-                    "id": "kpm-metrics",
-                    "name": "KPM Metrics"
+                    "id": "kpm-metrics-tree",
+                    "name": "Keystroke Metrics"
+                },
+                {
+                    "id": "commit-tree",
+                    "name": "Git Status"
+                },
+                {
+                    "id": "file-change-tree",
+                    "name": "File Leaderboard"
                 }
             ]
         }
