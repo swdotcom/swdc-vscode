@@ -88,6 +88,7 @@ export function createCommands(
         () => {
             kpmTreeProvider.refresh();
             fileChangeTreeProvider.refresh();
+            commitTreeProvider.refresh();
         }
     );
     cmds.push(refreshKpmTreeCmd);
