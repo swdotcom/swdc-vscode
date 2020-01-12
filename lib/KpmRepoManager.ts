@@ -145,7 +145,7 @@ export async function getCurrentChanges(projectDir) {
 
     if (!resultList) {
         // something went wrong, but don't try to parse a null or undefined str
-        return null;
+        return currentChagesSummary;
     }
 
     // just look for the line with "insertions" and "deletions"
