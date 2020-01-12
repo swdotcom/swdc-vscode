@@ -8,6 +8,7 @@ import {
     getFileType
 } from "./Util";
 import { serverIsAvailable } from "./DataController";
+import { getCommandResult } from "./GitUtil";
 
 let myRepoInfo = [];
 
@@ -50,23 +51,6 @@ export async function getMyRepoInfo() {
         }
     }
     return myRepoInfo;
-}
-
-async function getCommandResult(cmd, projectDir) {
-    let result = await wrapExecPromise(cmd, projectDir);
-    if (!result) {
-        // something went wrong, but don't try to parse a null or undefined str
-        return null;
-    }
-    result = result.trim();
-    let resultList = result
-        .replace(/\r\n/g, "\r")
-        .replace(/\n/g, "\r")
-        .replace(/^\s+/g, " ")
-        .replace(/</g, "")
-        .replace(/>/g, "")
-        .split(/\r/);
-    return resultList;
 }
 
 export async function getFileContributorCount(fileName) {
@@ -122,59 +106,6 @@ export async function getRepoFileCount(fileName) {
     }
 
     return resultList.length;
-}
-
-export async function getCurrentChanges(projectDir) {
-    let currentChagesSummary = {
-        insertions: 0,
-        deletions: 0
-    };
-    if (!projectDir) {
-        return currentChagesSummary;
-    }
-    /**
-     * xaviers-mbp-2:swdc-vscode xavierluiz$ git diff --stat
-        lib/KpmProviderManager.ts | 22 ++++++++++++++++++++--
-        1 file changed, 20 insertions(+), 2 deletions(-)
-
-        for multiple files it will look like this...
-        7 files changed, 137 insertions(+), 55 deletions(-)
-     */
-    let cmd = `git diff --stat`;
-    const resultList = await getCommandResult(cmd, projectDir);
-
-    if (!resultList) {
-        // something went wrong, but don't try to parse a null or undefined str
-        return currentChagesSummary;
-    }
-
-    // just look for the line with "insertions" and "deletions"
-    let insertions = 0;
-    let deletions = 0;
-    for (let i = 0; i < resultList.length; i++) {
-        const line = resultList[i].trim();
-        if (line.includes("insertion") && line.includes("deletion")) {
-            // split by space, then the number before the keyword is our value
-            const parts = line.split(" ");
-            for (let x = 0; x < parts.length; x++) {
-                const part = parts[x];
-                if (part.includes("insertion")) {
-                    insertions = parseInt(parts[x - 1], 10);
-                    if (insertions) {
-                        currentChagesSummary.insertions = insertions;
-                    }
-                } else if (part.includes("deletion")) {
-                    deletions = parseInt(parts[x - 1], 10);
-                    if (deletions) {
-                        currentChagesSummary.deletions = deletions;
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    return currentChagesSummary;
 }
 
 export async function getRepoContributorInfo(fileName) {
@@ -306,6 +237,7 @@ async function getLastCommit() {
 
     return commit;
 }
+
 /**
  * get the historical git commits
  */

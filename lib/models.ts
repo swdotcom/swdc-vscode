@@ -9,6 +9,7 @@ export class KpmItem {
     contextValue: string = "";
     callback: any = null;
     icon: string = "";
+    children: KpmItem[] = [];
 }
 
 export class KeystrokeAggregate {
@@ -66,4 +67,11 @@ export class SessionSummary {
 
 export class LoggedInState {
     loggedIn: boolean = false;
+}
+
+export class CommitChangeStats {
+    insertions: number = 0;
+    deletions: number = 0;
+    fileCount: number = 0;
+    commitCount: number = 0;
 }

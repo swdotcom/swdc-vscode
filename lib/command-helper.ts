@@ -11,11 +11,13 @@ import {
     openFileInEditor
 } from "./Util";
 import { KpmController } from "./KpmController";
-import { KpmProvider } from "./KpmProvider";
-import { FileChangeProvider } from "./FileChangeProvider";
-import { CommitProvider } from "./CommitProvider";
+import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
+import {
+    FileChangeProvider,
+    connectFileChangeTreeView
+} from "./FileChangeProvider";
+import { CommitProvider, connectCommitTreeView } from "./CommitProvider";
 import { KpmItem } from "./models";
-import { connectTreeView } from "./KpmProviderManager";
 
 export function createCommands(
     kpmController: KpmController
@@ -36,7 +38,7 @@ export function createCommands(
         }
     );
     kpmTreeProvider.bindView(kpmTreeView);
-    cmds.push(connectTreeView(kpmTreeView));
+    cmds.push(connectKpmTreeView(kpmTreeView));
 
     // file change tree view
     const commitTreeProvider = new CommitProvider();
@@ -48,7 +50,7 @@ export function createCommands(
         }
     );
     commitTreeProvider.bindView(commitTreeView);
-    cmds.push(connectTreeView(commitTreeView));
+    cmds.push(connectCommitTreeView(commitTreeView));
 
     // commit tree view
     const fileChangeTreeProvider = new FileChangeProvider();
@@ -60,7 +62,7 @@ export function createCommands(
         }
     );
     fileChangeTreeProvider.bindView(fileChangeTreeView);
-    cmds.push(connectTreeView(fileChangeTreeView));
+    cmds.push(connectFileChangeTreeView(fileChangeTreeView));
 
     const kpmClickedCmd = commands.registerCommand(
         "codetime.softwareKpmDashboard",

@@ -3,12 +3,49 @@ import {
     TreeItemCollapsibleState,
     EventEmitter,
     Event,
-    TreeView
+    TreeView,
+    Disposable
 } from "vscode";
 import { KpmItem } from "./models";
-import { KpmProviderManager, KpmTreeItem } from "./KpmProviderManager";
+import {
+    KpmProviderManager,
+    KpmTreeItem,
+    handleKpmChangeSelection
+} from "./KpmProviderManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
+
+const commitCollapsedStateMap = {};
+
+export const connectCommitTreeView = (view: TreeView<KpmItem>) => {
+    return Disposable.from(
+        view.onDidCollapseElement(async e => {
+            const item: KpmItem = e.element;
+            commitCollapsedStateMap[item.label] =
+                TreeItemCollapsibleState.Collapsed;
+        }),
+
+        view.onDidExpandElement(async e => {
+            const item: KpmItem = e.element;
+            commitCollapsedStateMap[item.label] =
+                TreeItemCollapsibleState.Expanded;
+        }),
+
+        view.onDidChangeSelection(async e => {
+            if (!e.selection || e.selection.length === 0) {
+                return;
+            }
+
+            const item: KpmItem = e.selection[0];
+            handleKpmChangeSelection(item);
+        }),
+        view.onDidChangeVisibility(e => {
+            if (e.visible) {
+                //
+            }
+        })
+    );
+};
 
 export class CommitProvider implements TreeDataProvider<KpmItem> {
     private _onDidChangeTreeData: EventEmitter<
@@ -41,10 +78,20 @@ export class CommitProvider implements TreeDataProvider<KpmItem> {
     }
 
     getTreeItem(p: KpmItem): KpmTreeItem {
-        let treeItem: KpmTreeItem = createKpmTreeItem(
-            p,
-            TreeItemCollapsibleState.None
-        );
+        let treeItem: KpmTreeItem = null;
+        if (p.children.length) {
+            let collasibleState = commitCollapsedStateMap[p.label];
+            if (!collasibleState) {
+                treeItem = createKpmTreeItem(
+                    p,
+                    TreeItemCollapsibleState.Expanded
+                );
+            } else {
+                treeItem = createKpmTreeItem(p, collasibleState);
+            }
+        } else {
+            treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.None);
+        }
 
         return treeItem;
     }
@@ -53,6 +100,7 @@ export class CommitProvider implements TreeDataProvider<KpmItem> {
         let kpmItems: KpmItem[] = [];
         if (element) {
             // return the children of this element
+            kpmItems = element.children;
         } else {
             // return the parent elements
             kpmItems = await kpmProviderMgr.getCommitTreeParents();
