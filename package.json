@@ -89,8 +89,8 @@
     "devDependencies": {
         "@types/mocha": "5.2.6",
         "@types/node": "12.0.4",
-        "typescript": "^3.5.1",
-        "@types/vscode": "^1.35.0"
+        "@types/vscode": "^1.35.0",
+        "typescript": "^3.5.1"
     },
     "dependencies": {
         "@slack/web-api": "^5.0.1",
@@ -99,6 +99,7 @@
         "clipboardy": "^2.1.0",
         "cody-music": "2.6.70",
         "moment-timezone": "^0.5.25",
+        "node-cache": "^5.1.0",
         "open": "^6.4.0",
         "vsls": "0.3.1291"
     }

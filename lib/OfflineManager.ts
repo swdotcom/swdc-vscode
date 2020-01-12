@@ -11,9 +11,11 @@ import {
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { KeystrokeAggregate, SessionSummary, FileChangeInfo } from "./models";
 const fs = require("fs");
+import { CacheManager } from "./CacheManager";
 
 // initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
+const cacheMgr: CacheManager = CacheManager.getInstance();
 
 export function clearSessionSummaryData() {
     sessionSummaryData = new SessionSummary();
@@ -111,7 +113,14 @@ function coalesceMissingAttributes(data): SessionSummary {
 // returns a map of file change info
 // {fileName => FileChangeInfo, fileName => FileChangeInfo}
 export function getFileChangeInfoMap(): any {
-    return getFileChangeSummaryFileAsJson();
+    let fileChangeInfoMap = cacheMgr.get("fileChangeSummary");
+    if (!fileChangeInfoMap) {
+        fileChangeInfoMap = getFileChangeSummaryFileAsJson();
+        if (fileChangeInfoMap) {
+            cacheMgr.set("fileChangeSummary", fileChangeInfoMap);
+        }
+    }
+    return fileChangeInfoMap;
 }
 
 export function getSessionSummaryFile() {
@@ -150,17 +159,21 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
     }
 }
 
-export function saveFileChangeInfoToDisk(fileChangeInnfoData) {
+export function saveFileChangeInfoToDisk(fileChangeInfoData) {
     const file = getFileChangeSummaryFile();
-    if (fileChangeInnfoData) {
+    if (fileChangeInfoData) {
         try {
-            const content = JSON.stringify(fileChangeInnfoData, null, 4);
+            const content = JSON.stringify(fileChangeInfoData, null, 4);
             fs.writeFileSync(file, content, err => {
                 if (err)
                     logIt(
                         `Deployer: Error writing session summary data: ${err.message}`
                     );
             });
+            // update the cache
+            if (fileChangeInfoData) {
+                cacheMgr.set("fileChangeSummary", fileChangeInfoData);
+            }
         } catch (e) {
             //
         }

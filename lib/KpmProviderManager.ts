@@ -61,6 +61,14 @@ export class KpmProviderManager {
         // show the metrics per line
         treeItems.push(...currentKeystrokesItems);
 
+        const fileChangeInfoMap = getFileChangeInfoMap();
+        const filesChanged = fileChangeInfoMap
+            ? Object.keys(fileChangeInfoMap).length
+            : 0;
+        if (filesChanged > 0) {
+            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
+        }
+
         return treeItems;
     }
 
@@ -105,9 +113,6 @@ export class KpmProviderManager {
         const filesChanged = fileChangeInfoMap
             ? Object.keys(fileChangeInfoMap).length
             : 0;
-        if (filesChanged > 0) {
-            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
-        }
 
         // get the file change info
         if (filesChanged) {
