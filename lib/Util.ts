@@ -27,8 +27,9 @@ import {
     saveFileChangeInfoToDisk
 } from "./OfflineManager";
 import { KeystrokeAggregate, FileChangeInfo } from "./models";
-const moment = require("moment-timezone");
+import * as path from "path";
 
+const moment = require("moment-timezone");
 const open = require("open");
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -635,6 +636,16 @@ export function storePayload(payload) {
     const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
     Object.keys(payload.source).forEach(key => {
         const fileInfo: FileChangeInfo = payload.source[key];
+        /**
+         * update the project info
+         * project has {directory, name}
+         */
+        const baseName = path.basename(key);
+        fileInfo.name = baseName;
+        fileInfo.fsPath = key;
+        fileInfo.projectDir = payload.project.directory;
+
+        // update the aggregate info
         aggregate.add += fileInfo.add;
         aggregate.close += fileInfo.close;
         aggregate.delete += fileInfo.delete;

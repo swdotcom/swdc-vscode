@@ -515,7 +515,7 @@ export class KpmController {
     private addFile(filename, nowTimes, keystrokeCount) {
         const fileInfo = new FileChangeInfo();
         fileInfo.start = nowTimes.now_in_sec;
-        fileInfo.local_end = nowTimes.local_now_in_sec;
+        fileInfo.local_start = nowTimes.local_now_in_sec;
         keystrokeCount.source[filename] = fileInfo;
     }
 

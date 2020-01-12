@@ -12,7 +12,6 @@ import {
 import { KpmItem } from "./models";
 import { KpmProviderManager } from "./KpmProviderManager";
 import * as path from "path";
-import { logIt } from "./Util";
 
 // this current path is in the out/lib. We need to find the resource files
 // which are in out/resources
