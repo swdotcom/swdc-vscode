@@ -78,6 +78,7 @@ export class KpmProviderManager {
 
         // show the git insertions and deletions
         if (folders && folders.length > 0) {
+            treeItems.push(this.buildTitleItem("Open Changes", "none"));
             for (let i = 0; i < folders.length; i++) {
                 const workspaceFolder = folders[i];
                 const currentChagesSummary = await getCurrentChanges(
@@ -131,17 +132,23 @@ export class KpmProviderManager {
                 this.buildMetricItem("KPM", kpmSortedArray[0].kpm.toFixed(1))
             );
 
-            treeItems.push(this.buildTitleItem("Largest File", "medal.svg"));
+            treeItems.push(
+                this.buildTitleItem("Most Edited File", "medal.svg")
+            );
             const lengthSortedArray = fileChangeInfos.sort(
-                (a: FileChangeInfo, b: FileChangeInfo) => b.length - a.length
+                (a: FileChangeInfo, b: FileChangeInfo) =>
+                    b.keystrokes - a.keystrokes
             );
             treeItems.push(this.buildFileItem(lengthSortedArray[0].fsPath));
             treeItems.push(
-                this.buildMetricItem("Characters", lengthSortedArray[0].length)
+                this.buildMetricItem(
+                    "Keystrokes",
+                    lengthSortedArray[0].keystrokes
+                )
             );
 
             treeItems.push(
-                this.buildTitleItem("Longest Keystroke Time", "medal.svg")
+                this.buildTitleItem("Longest Code Time", "medal.svg")
             );
             const durationSortedArray = fileChangeInfos.sort(
                 (a: FileChangeInfo, b: FileChangeInfo) =>
@@ -161,7 +168,7 @@ export class KpmProviderManager {
         const item: KpmItem = new KpmItem();
         item.tooltip =
             "To see your coding data in Code Time, please connect to your account";
-        item.label = "Connect";
+        item.label = "See more metrics";
         item.id = "connect";
         item.command = "codetime.codeTimeLogin";
         item.icon = "sw-paw-circle.svg";
@@ -172,7 +179,7 @@ export class KpmProviderManager {
     getWebViewDashboardButton(): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip = "See rich data visualizations in the web app";
-        item.label = "Web Dashboard";
+        item.label = "See more metrics";
         item.id = "connect";
         item.command = "codetime.softwareKpmDashboard";
         item.icon = "sw-paw-circle.svg";
@@ -301,8 +308,10 @@ export class KpmTreeItem extends TreeItem {
 
 function getTreeItemIcon(treeItem: KpmItem): any {
     const iconName = treeItem.icon || "Blank_button.svg";
-    const lightPath = path.join(resourcePath, "light", iconName);
-    const darkPath = path.join(resourcePath, "dark", iconName);
+    const lightPath =
+        iconName !== "none" ? path.join(resourcePath, "light", iconName) : null;
+    const darkPath =
+        iconName !== "none" ? path.join(resourcePath, "dark", iconName) : null;
     const contextValue = treeItem.contextValue;
     return { lightPath, darkPath, contextValue };
 }

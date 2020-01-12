@@ -65,7 +65,7 @@
                 {
                     "id": "code-time",
                     "title": "Code Time",
-                    "icon": "resources/dark/cody.svg"
+                    "icon": "resources/dark/paw-outlined.svg"
                 }
             ]
         },
@@ -73,11 +73,11 @@
             "code-time": [
                 {
                     "id": "kpm-metrics-tree",
-                    "name": "Keystroke Metrics"
+                    "name": "Code Time Metrics"
                 },
                 {
                     "id": "commit-tree",
-                    "name": "Git Status"
+                    "name": "Project Metrics"
                 },
                 {
                     "id": "file-change-tree",
