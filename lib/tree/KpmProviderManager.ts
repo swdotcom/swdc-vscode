@@ -73,6 +73,7 @@ export class KpmProviderManager {
         // show the metrics per line
         treeItems.push(...currentKeystrokesItems);
 
+        // show the files changed metric
         const fileChangeInfoMap = getFileChangeInfoMap();
         const filesChanged = fileChangeInfoMap
             ? Object.keys(fileChangeInfoMap).length
@@ -83,7 +84,7 @@ export class KpmProviderManager {
                     "Files changed",
                     filesChanged,
                     "Files changed today",
-                    "files_changed.png"
+                    "number.svg"
                 )
             );
         }
@@ -334,31 +335,55 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(this.buildMetricItem("Session Time", codeHours));
+        items.push(
+            this.buildMetricItem("Session Time", codeHours, "", "number.svg")
+        );
 
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        items.push(this.buildMetricItem("Keystrokes", keystrokes));
+        items.push(
+            this.buildMetricItem("Keystrokes", keystrokes, "", "number.svg")
+        );
 
         const charsAdded = numeral(data.currentCharactersAdded).format("0 a");
-        items.push(this.buildMetricItem("Chars added", charsAdded));
+        items.push(
+            this.buildMetricItem("Chars added", charsAdded, "", "number.svg")
+        );
 
         const charsDeleted = numeral(data.currentCharactersDeleted).format(
             "0 a"
         );
-        items.push(this.buildMetricItem("Chars removed", charsDeleted));
+        items.push(
+            this.buildMetricItem(
+                "Chars removed",
+                charsDeleted,
+                "",
+                "number.svg"
+            )
+        );
 
         const linesAdded = numeral(data.currentLinesAdded).format("0 a");
-        items.push(this.buildMetricItem("Lines added", linesAdded));
+        items.push(
+            this.buildMetricItem("Lines added", linesAdded, "", "number.svg")
+        );
 
         const linesRemoved = numeral(data.currentLinesRemoved).format("0 a");
-        items.push(this.buildMetricItem("Lines removed", linesRemoved));
+        items.push(
+            this.buildMetricItem(
+                "Lines removed",
+                linesRemoved,
+                "",
+                "number.svg"
+            )
+        );
 
         const pastes = numeral(data.currentPastes).format("0 a");
-        items.push(this.buildMetricItem("Copy+paste", pastes));
+        items.push(
+            this.buildMetricItem("Copy+paste", pastes, "", "number.svg")
+        );
         return items;
     }
 
-    buildMetricItem(label, value, tooltip = "", icon = null) {
+    buildMetricItem(label, value, tooltip = "", icon = "blue-line-96.png") {
         const item: KpmItem = new KpmItem();
         item.label = `${label}: ${value}`;
         item.id = `${label}_metric`;
