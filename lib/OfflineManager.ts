@@ -92,6 +92,7 @@ export function updateStatusBarWithSummaryData() {
 }
 
 export function getSessionSummaryData(): SessionSummary {
+    // let fileChangeInfoMap = cacheMgr.get("sessionSummary");
     sessionSummaryData = getSessionSummaryFileAsJson();
     // make sure it's a valid structure
     if (!sessionSummaryData) {
@@ -158,6 +159,10 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
                     `Deployer: Error writing session summary data: ${err.message}`
                 );
         });
+        // update the cache
+        if (sessionSummaryData) {
+            cacheMgr.set("sessionSummary", sessionSummaryData);
+        }
     } catch (e) {
         //
     }

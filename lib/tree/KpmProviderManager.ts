@@ -7,7 +7,7 @@ import {
 } from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
 import { getSessionSummaryData, getFileChangeInfoMap } from "../OfflineManager";
-import { humanizeMinutes, getWorkspaceFolders } from "../Util";
+import { humanizeMinutes, getWorkspaceFolders, getItem } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
     WorkspaceFolder,
@@ -244,7 +244,7 @@ export class KpmProviderManager {
                 durationSortedArray[0].duration_seconds / 60;
             const codeHours = humanizeMinutes(duration_minutes);
             longestCodeTimeChildren.push(
-                this.buildMetricItem("Time", codeHours)
+                this.buildMetricItem("File Time", codeHours)
             );
             const longestCodeTimeParent = this.buildParentItem(
                 "Longest Code Time",
@@ -260,7 +260,7 @@ export class KpmProviderManager {
         const item: KpmItem = new KpmItem();
         item.tooltip =
             "To see your coding data in Code Time, please connect to your account";
-        item.label = "See more metrics";
+        item.label = "Connect to see more metrics";
         item.id = "connect";
         item.command = "codetime.codeTimeLogin";
         item.icon = "sw-paw-circle.svg";
@@ -270,7 +270,8 @@ export class KpmProviderManager {
 
     getWebViewDashboardButton(): KpmItem {
         const item: KpmItem = new KpmItem();
-        item.tooltip = "See rich data visualizations in the web app";
+        const name = getItem("name");
+        item.tooltip = `See rich data visualizations in the web app (${name})`;
         item.label = "See more metrics";
         item.id = "connect";
         item.command = "codetime.softwareKpmDashboard";
@@ -304,7 +305,7 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(this.buildMetricItem("Time", codeHours));
+        items.push(this.buildMetricItem("Session Time", codeHours));
 
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
         items.push(this.buildMetricItem("Keystrokes", keystrokes));
@@ -359,7 +360,7 @@ export class KpmProviderManager {
         const item: KpmItem = new KpmItem();
         item.command = "codetime.openFileInEditor";
         item.commandArgs = [fileChangeInfo.fsPath];
-        item.label = `File: ${fileChangeInfo.name}`;
+        item.label = fileChangeInfo.name;
         item.tooltip = `Click to open ${fileChangeInfo.fsPath}`;
         item.id = `${fileChangeInfo.name}_file`;
         item.contextValue = "file_item";

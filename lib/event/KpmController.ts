@@ -192,9 +192,11 @@ export class KpmController {
         let textChangeLen = 0;
         let rangeChangeLen = 0;
         let contentText = "";
+        let isCharDelete = false;
         if (event.contentChanges && event.contentChanges.length) {
             for (let i = 0; i < event.contentChanges.length; i++) {
                 const range = event.contentChanges[i].range;
+                rangeChangeLen += event.contentChanges[i].rangeLength || 0;
                 contentText = event.contentChanges[i].text;
                 if (contentText.match(/[\n\r]/g)) {
                     // it's a new line
@@ -204,10 +206,15 @@ export class KpmController {
                     // has text changes
                     hasNonNewLineData = true;
                     textChangeLen += contentText.length;
-                    rangeChangeLen += event.contentChanges[i].rangeLength || 0;
                 } else if (range && !range.isEmpty && !range.isSingleLine) {
                     // it's an empty line delete
                     isLineDelete = true;
+                } else if (
+                    rangeChangeLen &&
+                    rangeChangeLen > 0 &&
+                    contentText === ""
+                ) {
+                    isCharDelete = true;
                 }
             }
         }
@@ -220,7 +227,12 @@ export class KpmController {
         }
 
         this.lazilyRefreshCommitTreeInfo();
-        if (textChangeLen === 0 && !isNewLine && !isLineDelete) {
+        if (
+            !isCharDelete &&
+            textChangeLen === 0 &&
+            !isNewLine &&
+            !isLineDelete
+        ) {
             return;
         }
 
