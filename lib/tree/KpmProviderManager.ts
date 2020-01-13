@@ -78,7 +78,14 @@ export class KpmProviderManager {
             ? Object.keys(fileChangeInfoMap).length
             : 0;
         if (filesChanged > 0) {
-            treeItems.push(this.buildMetricItem("Files changed", filesChanged));
+            treeItems.push(
+                this.buildMetricItem(
+                    "Files changed",
+                    filesChanged,
+                    "Files changed today",
+                    "files_changed.png"
+                )
+            );
         }
 
         return treeItems;
@@ -105,13 +112,17 @@ export class KpmProviderManager {
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Insertion(s)",
-                        currentChagesSummary.insertions
+                        currentChagesSummary.insertions,
+                        "",
+                        "insertion.png"
                     )
                 );
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
-                        currentChagesSummary.deletions
+                        currentChagesSummary.deletions,
+                        "",
+                        "deletion.png"
                     )
                 );
 
@@ -130,20 +141,26 @@ export class KpmProviderManager {
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Insertion(s)",
-                        todaysChagesSummary.insertions
+                        todaysChagesSummary.insertions,
+                        "",
+                        "insertion.png"
                     )
                 );
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
-                        todaysChagesSummary.deletions
+                        todaysChagesSummary.deletions,
+                        "",
+                        "deletion.png"
                     )
                 );
 
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Commit(s)",
-                        todaysChagesSummary.commitCount
+                        todaysChagesSummary.commitCount,
+                        "",
+                        "commit.png"
                     )
                 );
 
@@ -296,7 +313,7 @@ export class KpmProviderManager {
         item.label = "Code Time Dashboard";
         item.id = "dashboard";
         item.command = "codetime.codeTimeMetrics";
-        item.icon = "activity.svg";
+        item.icon = "dashboard.png";
         item.contextValue = "action_button";
         return item;
     }
@@ -329,12 +346,13 @@ export class KpmProviderManager {
         return items;
     }
 
-    buildMetricItem(label, value, tooltip = "") {
+    buildMetricItem(label, value, tooltip = "", icon = null) {
         const item: KpmItem = new KpmItem();
         item.label = `${label}: ${value}`;
         item.id = `${label}_metric`;
         item.contextValue = "metric_item";
         item.tooltip = tooltip;
+        item.icon = icon;
         return item;
     }
 
@@ -356,7 +374,7 @@ export class KpmProviderManager {
         return item;
     }
 
-    buildFileItem(fileChangeInfo: FileChangeInfo, icon = null) {
+    buildFileItem(fileChangeInfo: FileChangeInfo) {
         const item: KpmItem = new KpmItem();
         item.command = "codetime.openFileInEditor";
         item.commandArgs = [fileChangeInfo.fsPath];
@@ -364,7 +382,7 @@ export class KpmProviderManager {
         item.tooltip = `Click to open ${fileChangeInfo.fsPath}`;
         item.id = `${fileChangeInfo.name}_file`;
         item.contextValue = "file_item";
-        item.icon = icon;
+        item.icon = "files_changed.png";
         return item;
     }
 }
