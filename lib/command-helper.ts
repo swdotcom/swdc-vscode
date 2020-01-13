@@ -10,13 +10,20 @@ import {
     launchLogin,
     openFileInEditor
 } from "./Util";
-import { KpmController } from "./KpmController";
-import { KpmProvider, connectKpmTreeView } from "./KpmProvider";
+import { KpmController } from "./EventControls/KpmController";
+import { KpmProvider, connectKpmTreeView } from "./TreeProviders/KpmProvider";
 import {
     FileChangeProvider,
     connectFileChangeTreeView
-} from "./FileChangeProvider";
-import { CommitProvider, connectCommitTreeView } from "./CommitProvider";
+} from "./TreeProviders/FileChangeProvider";
+import {
+    CommitProvider,
+    connectCommitTreeView
+} from "./TreeProviders/CommitProvider";
+import {
+    CodeTimeProvider,
+    connectCodeTimeTreeView
+} from "./TreeProviders/CodeTimeProvider";
 import { KpmItem } from "./models";
 
 export function createCommands(
@@ -27,6 +34,18 @@ export function createCommands(
     let cmds = [];
 
     cmds.push(kpmController);
+
+    // options tree view
+    const codetimeTreeProvider = new CodeTimeProvider();
+    const codetimeTreeView: TreeView<KpmItem> = window.createTreeView(
+        "kpm-options-tree",
+        {
+            treeDataProvider: codetimeTreeProvider,
+            showCollapseAll: false
+        }
+    );
+    codetimeTreeProvider.bindView(codetimeTreeView);
+    cmds.push(connectCodeTimeTreeView(codetimeTreeView));
 
     // kpm tree view
     const kpmTreeProvider = new KpmProvider();
@@ -88,6 +107,7 @@ export function createCommands(
     const refreshKpmTreeCmd = commands.registerCommand(
         "codetime.refreshKpmTree",
         () => {
+            codetimeTreeProvider.refresh();
             kpmTreeProvider.refresh();
             fileChangeTreeProvider.refresh();
             commitTreeProvider.refresh();

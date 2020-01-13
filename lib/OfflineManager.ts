@@ -11,7 +11,7 @@ import {
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { KeystrokeAggregate, SessionSummary, FileChangeInfo } from "./models";
 const fs = require("fs");
-import { CacheManager } from "./CacheManager";
+import { CacheManager } from "./CacheControls/CacheManager";
 
 // initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
