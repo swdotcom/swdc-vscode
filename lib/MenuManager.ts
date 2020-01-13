@@ -23,7 +23,7 @@ import {
 } from "./DataController";
 import { launch_url, LOGIN_LABEL } from "./Constants";
 import { clearSessionSummaryData } from "./OfflineManager";
-import { LoggedInState } from "./models";
+import { LoggedInState } from "./model/models";
 
 /**
  * Pass in the following array of objects

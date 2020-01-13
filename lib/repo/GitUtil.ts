@@ -1,4 +1,4 @@
-import { CommitChangeStats } from "../models";
+import { CommitChangeStats } from "../model/models";
 import { wrapExecPromise } from "../Util";
 const moment = require("moment-timezone");
 

@@ -6,7 +6,7 @@ import {
     TreeView,
     Disposable
 } from "vscode";
-import { KpmItem } from "../models";
+import { KpmItem } from "../model/models";
 import {
     KpmProviderManager,
     KpmTreeItem,

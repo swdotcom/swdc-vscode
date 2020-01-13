@@ -26,7 +26,7 @@ import {
     getFileChangeInfoMap,
     saveFileChangeInfoToDisk
 } from "./OfflineManager";
-import { KeystrokeAggregate, FileChangeInfo } from "./models";
+import { KeystrokeAggregate, FileChangeInfo } from "./model/models";
 import * as path from "path";
 
 const moment = require("moment-timezone");

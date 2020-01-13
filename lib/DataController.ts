@@ -5,7 +5,7 @@ import {
     softwarePut,
     isResponseOk,
     softwarePost
-} from "./HttpClient";
+} from "./http/HttpClient";
 import {
     getItem,
     setItem,
@@ -42,7 +42,7 @@ import {
     clearFileChangeInfoSummaryData
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { SessionSummary, LoggedInState } from "./models";
+import { SessionSummary, LoggedInState } from "./model/models";
 const fs = require("fs");
 const moment = require("moment-timezone");
 

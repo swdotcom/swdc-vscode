@@ -10,21 +10,18 @@ import {
     launchLogin,
     openFileInEditor
 } from "./Util";
-import { KpmController } from "./EventControls/KpmController";
-import { KpmProvider, connectKpmTreeView } from "./TreeProviders/KpmProvider";
+import { KpmController } from "./event/KpmController";
+import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import {
     FileChangeProvider,
     connectFileChangeTreeView
-} from "./TreeProviders/FileChangeProvider";
-import {
-    CommitProvider,
-    connectCommitTreeView
-} from "./TreeProviders/CommitProvider";
+} from "./tree/FileChangeProvider";
+import { CommitProvider, connectCommitTreeView } from "./tree/CommitProvider";
 import {
     CodeTimeProvider,
     connectCodeTimeTreeView
-} from "./TreeProviders/CodeTimeProvider";
-import { KpmItem } from "./models";
+} from "./tree/CodeTimeProvider";
+import { KpmItem } from "./model/models";
 
 export function createCommands(
     kpmController: KpmController

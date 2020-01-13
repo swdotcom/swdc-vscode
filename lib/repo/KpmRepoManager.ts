@@ -1,4 +1,4 @@
-import { isResponseOk, softwareGet, softwarePost } from "../HttpClient";
+import { isResponseOk, softwareGet, softwarePost } from "../http/HttpClient";
 import {
     wrapExecPromise,
     getItem,

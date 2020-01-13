@@ -4,14 +4,11 @@ import {
     LoggedInState,
     FileChangeInfo,
     CommitChangeStats
-} from "../models";
+} from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
 import { getSessionSummaryData, getFileChangeInfoMap } from "../OfflineManager";
 import { humanizeMinutes, getWorkspaceFolders } from "../Util";
-import {
-    getUncommitedChanges,
-    getTodaysCommits
-} from "../RepoControls/GitUtil";
+import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
     WorkspaceFolder,
     TreeItem,

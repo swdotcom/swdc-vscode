@@ -17,8 +17,8 @@ import {
     getRepoContributorInfo,
     getRepoFileCount,
     getFileContributorCount
-} from "../RepoControls/KpmRepoManager";
-import { FileChangeInfo } from "../models";
+} from "../repo/KpmRepoManager";
+import { FileChangeInfo } from "../model/models";
 const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";

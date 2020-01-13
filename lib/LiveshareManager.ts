@@ -1,4 +1,4 @@
-import { softwarePost, isResponseOk } from "./HttpClient";
+import { softwarePost, isResponseOk } from "./http/HttpClient";
 import { getItem, logIt } from "./Util";
 
 export async function manageLiveshareSession(session) {

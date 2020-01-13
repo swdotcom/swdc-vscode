@@ -7,7 +7,7 @@ import {
     getPluginId
 } from "./Util";
 import { sendBatchPayload } from "./DataController";
-import { FileChangeInfo } from "./models";
+import { FileChangeInfo } from "./model/models";
 
 // ? marks that the parameter is optional
 type Project = {

@@ -27,12 +27,12 @@ import {
     displayReadmeIfNotExists,
     setItem
 } from "./lib/Util";
-import { getHistoricalCommits } from "./lib/RepoControls/KpmRepoManager";
+import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
-import { KpmController } from "./lib/EventControls/KpmController";
+import { KpmController } from "./lib/event/KpmController";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;

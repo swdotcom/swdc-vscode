@@ -6,7 +6,7 @@ import {
     TreeView,
     Disposable
 } from "vscode";
-import { KpmItem } from "../models";
+import { KpmItem } from "../model/models";
 import {
     KpmProviderManager,
     KpmTreeItem,
@@ -15,19 +15,19 @@ import {
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
-const commitCollapsedStateMap = {};
+const codetimeCollapsedStateMap = {};
 
-export const connectCommitTreeView = (view: TreeView<KpmItem>) => {
+export const connectCodeTimeTreeView = (view: TreeView<KpmItem>) => {
     return Disposable.from(
         view.onDidCollapseElement(async e => {
             const item: KpmItem = e.element;
-            commitCollapsedStateMap[item.label] =
+            codetimeCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Collapsed;
         }),
 
         view.onDidExpandElement(async e => {
             const item: KpmItem = e.element;
-            commitCollapsedStateMap[item.label] =
+            codetimeCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Expanded;
         }),
 
@@ -47,7 +47,7 @@ export const connectCommitTreeView = (view: TreeView<KpmItem>) => {
     );
 };
 
-export class CommitProvider implements TreeDataProvider<KpmItem> {
+export class CodeTimeProvider implements TreeDataProvider<KpmItem> {
     private _onDidChangeTreeData: EventEmitter<
         KpmItem | undefined
     > = new EventEmitter<KpmItem | undefined>();
@@ -80,7 +80,7 @@ export class CommitProvider implements TreeDataProvider<KpmItem> {
     getTreeItem(p: KpmItem): KpmTreeItem {
         let treeItem: KpmTreeItem = null;
         if (p.children.length) {
-            let collasibleState = commitCollapsedStateMap[p.label];
+            let collasibleState = codetimeCollapsedStateMap[p.label];
             if (!collasibleState) {
                 treeItem = createKpmTreeItem(
                     p,
@@ -103,7 +103,7 @@ export class CommitProvider implements TreeDataProvider<KpmItem> {
             kpmItems = element.children;
         } else {
             // return the parent elements
-            kpmItems = await kpmProviderMgr.getCommitTreeParents();
+            kpmItems = await kpmProviderMgr.getOptionsTreeParents();
         }
         return kpmItems;
     }

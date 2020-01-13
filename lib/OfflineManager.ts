@@ -9,9 +9,13 @@ import {
     getItem
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { KeystrokeAggregate, SessionSummary, FileChangeInfo } from "./models";
+import {
+    KeystrokeAggregate,
+    SessionSummary,
+    FileChangeInfo
+} from "./model/models";
 const fs = require("fs");
-import { CacheManager } from "./CacheControls/CacheManager";
+import { CacheManager } from "./cache/CacheManager";
 
 // initialize the session summary structure
 let sessionSummaryData: SessionSummary = new SessionSummary();
