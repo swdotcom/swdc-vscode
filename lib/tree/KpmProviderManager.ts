@@ -142,7 +142,7 @@ export class KpmProviderManager {
                     this.buildMetricItem(
                         "Insertion(s)",
                         todaysChagesSummary.insertions,
-                        "",
+                        "Number of total insertions today",
                         "insertion.png"
                     )
                 );
@@ -150,7 +150,7 @@ export class KpmProviderManager {
                     this.buildMetricItem(
                         "Deletion(s)",
                         todaysChagesSummary.deletions,
-                        "",
+                        "Number of total deletions today",
                         "deletion.png"
                     )
                 );
@@ -159,7 +159,7 @@ export class KpmProviderManager {
                     this.buildMetricItem(
                         "Commit(s)",
                         todaysChagesSummary.commitCount,
-                        "",
+                        "Number of total commits today",
                         "commit.png"
                     )
                 );
@@ -167,7 +167,9 @@ export class KpmProviderManager {
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Files Changed",
-                        todaysChagesSummary.fileCount
+                        todaysChagesSummary.fileCount,
+                        "Number of total files changed today",
+                        "files_changed.png"
                     )
                 );
 
@@ -219,7 +221,12 @@ export class KpmProviderManager {
             const highKpmChildren: KpmItem[] = [];
             highKpmChildren.push(this.buildFileItem(kpmSortedArray[0]));
             highKpmChildren.push(
-                this.buildMetricItem("KPM", kpmSortedArray[0].kpm.toFixed(1))
+                this.buildMetricItem(
+                    "KPM",
+                    kpmSortedArray[0].kpm.toFixed(1),
+                    "",
+                    "kpm.png"
+                )
             );
             const highKpmParent = this.buildParentItem(
                 "Highest KPM",
@@ -240,7 +247,12 @@ export class KpmProviderManager {
                 keystrokesSortedArray[0].keystrokes
             ).format("0 a");
             mostEditedChildren.push(
-                this.buildMetricItem("Keystrokes", keystrokes)
+                this.buildMetricItem(
+                    "Keystrokes",
+                    keystrokes,
+                    "",
+                    "keystrokes.png"
+                )
             );
             const mostEditedParent = this.buildParentItem(
                 "Most Edited File",
@@ -261,7 +273,7 @@ export class KpmProviderManager {
                 durationSortedArray[0].duration_seconds / 60;
             const codeHours = humanizeMinutes(duration_minutes);
             longestCodeTimeChildren.push(
-                this.buildMetricItem("File Time", codeHours)
+                this.buildMetricItem("File Time", codeHours, "", "time.png")
             );
             const longestCodeTimeParent = this.buildParentItem(
                 "Longest Code Time",
@@ -382,7 +394,7 @@ export class KpmProviderManager {
         item.tooltip = `Click to open ${fileChangeInfo.fsPath}`;
         item.id = `${fileChangeInfo.name}_file`;
         item.contextValue = "file_item";
-        item.icon = "files_changed.png";
+        item.icon = "file.png";
         return item;
     }
 }
