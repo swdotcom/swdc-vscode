@@ -1,24 +1,27 @@
-<p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/code-time.png" alt="Code Time for VS Code" />
+<br />
+
+<p align="center" style="font-size:64px">
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-paw.png" />
+  Code Time
 </p>
 
 <p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time-tracking. 
 </p>
 
-</br>
+<br />
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="" src="https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg"></a>
+    <img alt="Marketplace" src="https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="" src="https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg"></a>
+    <img alt="Installs" src="https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="" src="https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg"></a>
+    <img alt="Rating" src="https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg"></a>
   <a href="https://aka.ms/vsls">
-    <img alt="" src="https://aka.ms/vsls-badge"></a>
+    <img alt="Live Share enabled" src="https://aka.ms/vsls-badge"></a>
 </p>
 
-</br>
+<br />
 
 ## Getting started
 
