@@ -1,9 +1,13 @@
 <br />
 
-<p align="center" style="font-size:64px">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-paw.png" />
+<h1 align="center">
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-paw.png" width="30px" />
   Code Time
-</p>
+  <br />
+  &nbsp
+</h1>
+
+<br />
 
 <p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time-tracking. 
 </p>
