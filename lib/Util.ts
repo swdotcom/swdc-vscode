@@ -477,9 +477,9 @@ export function getImagesDir() {
     return dir;
 }
 
-export function displayReadmeIfNotExists() {
+export function displayReadmeIfNotExists(override = false) {
     const displayedReadme = getItem("displayedCtReadme");
-    if (!displayedReadme) {
+    if (!displayedReadme || override) {
         const readmeUri = Uri.file(getLocalREADMEFile());
 
         commands.executeCommand(
@@ -765,7 +765,7 @@ export async function showLoginPrompt() {
     const infoMsg = `To see your coding data in Code Time, please log in to your account`;
     // set the last update time so we don't try to ask too frequently
     window
-        .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])
+        .showInformationMessage(infoMsg, ...[LOGIN_LABEL])
         .then(async selection => {
             if (selection === LOGIN_LABEL) {
                 let loginUrl = await buildLoginUrl();

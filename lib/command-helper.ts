@@ -8,14 +8,12 @@ import {
     launchWebUrl,
     handleCodeTimeStatusToggle,
     launchLogin,
-    openFileInEditor
+    openFileInEditor,
+    displayReadmeIfNotExists,
+    toggleStatusBar
 } from "./Util";
 import { KpmController } from "./event/KpmController";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
-import {
-    FileChangeProvider,
-    connectFileChangeTreeView
-} from "./tree/FileChangeProvider";
 import { CommitProvider, connectCommitTreeView } from "./tree/CommitProvider";
 import {
     CodeTimeProvider,
@@ -56,7 +54,7 @@ export function createCommands(
     kpmTreeProvider.bindView(kpmTreeView);
     cmds.push(connectKpmTreeView(kpmTreeView));
 
-    // file change tree view
+    // commit change tree view
     const commitTreeProvider = new CommitProvider();
     const commitTreeView: TreeView<KpmItem> = window.createTreeView(
         "commit-tree",
@@ -68,22 +66,11 @@ export function createCommands(
     commitTreeProvider.bindView(commitTreeView);
     cmds.push(connectCommitTreeView(commitTreeView));
 
-    // commit tree view
-    const fileChangeTreeProvider = new FileChangeProvider();
-    const fileChangeTreeView: TreeView<KpmItem> = window.createTreeView(
-        "file-change-tree",
-        {
-            treeDataProvider: fileChangeTreeProvider,
-            showCollapseAll: false
-        }
-    );
-    fileChangeTreeProvider.bindView(fileChangeTreeView);
-    cmds.push(connectFileChangeTreeView(fileChangeTreeView));
-
     const kpmClickedCmd = commands.registerCommand(
         "codetime.softwareKpmDashboard",
         () => {
             handleKpmClickedEvent();
+            codetimeTreeProvider.refresh();
         }
     );
     cmds.push(kpmClickedCmd);
@@ -92,9 +79,19 @@ export function createCommands(
         "codetime.openFileInEditor",
         file => {
             openFileInEditor(file);
+            codetimeTreeProvider.refresh();
         }
     );
     cmds.push(openFileInEditorCmd);
+
+    const toggleStatusBarCmd = commands.registerCommand(
+        "codetime.toggleStatusBar",
+        () => {
+            toggleStatusBar();
+            codetimeTreeProvider.refresh();
+        }
+    );
+    cmds.push(toggleStatusBarCmd);
 
     const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
         launchLogin();
@@ -106,7 +103,6 @@ export function createCommands(
         () => {
             codetimeTreeProvider.refresh();
             kpmTreeProvider.refresh();
-            fileChangeTreeProvider.refresh();
             commitTreeProvider.refresh();
         }
     );
@@ -120,10 +116,20 @@ export function createCommands(
     );
     cmds.push(refreshCommitTreeCmd);
 
+    const showReadmeCmd = commands.registerCommand(
+        "codetime.displayReadme",
+        () => {
+            displayReadmeIfNotExists(true /*override*/);
+            codetimeTreeProvider.refresh();
+        }
+    );
+    cmds.push(showReadmeCmd);
+
     const codeTimeMetricsCmd = commands.registerCommand(
         "codetime.codeTimeMetrics",
         () => {
             displayCodeTimeMetricsDashboard();
+            codetimeTreeProvider.refresh();
         }
     );
     cmds.push(codeTimeMetricsCmd);

@@ -84,7 +84,7 @@ export class CodeTimeProvider implements TreeDataProvider<KpmItem> {
             if (!collasibleState) {
                 treeItem = createKpmTreeItem(
                     p,
-                    TreeItemCollapsibleState.Expanded
+                    TreeItemCollapsibleState.Collapsed
                 );
             } else {
                 treeItem = createKpmTreeItem(p, collasibleState);

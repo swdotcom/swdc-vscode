@@ -7,7 +7,13 @@ import {
 } from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
 import { getSessionSummaryData, getFileChangeInfoMap } from "../OfflineManager";
-import { humanizeMinutes, getWorkspaceFolders, getItem, logIt } from "../Util";
+import {
+    humanizeMinutes,
+    getWorkspaceFolders,
+    getItem,
+    logIt,
+    isStatusBarTextVisible
+} from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
     WorkspaceFolder,
@@ -58,6 +64,27 @@ export class KpmProviderManager {
         // codetime metrics editor dashboard
         treeItems.push(this.getCodeTimeDashboardButton());
 
+        // toggle status bar button
+        let toggleStatusBarTextLabel = "Hide Status Bar Metrics";
+        if (!isStatusBarTextVisible()) {
+            toggleStatusBarTextLabel = "Show Status Bar Metrics";
+        }
+        const toggleStatusBarButton: KpmItem = this.getActionButton(
+            toggleStatusBarTextLabel,
+            "Toggle the Code Time status bar metrics text",
+            "codetime.toggleStatusBar"
+        );
+        treeItems.push(toggleStatusBarButton);
+
+        // readme button
+        const readmeButton: KpmItem = this.getActionButton(
+            "Learn More",
+            "View the Code Time Readme to learn more",
+            "codetime.displayReadme",
+            "document.svg"
+        );
+        treeItems.push(readmeButton);
+
         return treeItems;
     }
 
@@ -80,12 +107,46 @@ export class KpmProviderManager {
             : 0;
         if (filesChanged > 0) {
             treeItems.push(
-                this.buildMetricItem(
+                this.buildTreeMetricItem(
                     "Files changed",
                     filesChanged,
                     "Files changed today"
                 )
             );
+
+            // get the file change info
+            if (filesChanged) {
+                // turn this into an array
+                const fileChangeInfos = Object.keys(fileChangeInfoMap).map(
+                    key => {
+                        return fileChangeInfoMap[key];
+                    }
+                );
+
+                // Highest KPM
+                const highKpmParent = this.buildHighestKpmFileItem(
+                    fileChangeInfos
+                );
+                if (highKpmParent) {
+                    treeItems.push(highKpmParent);
+                }
+
+                // Most Edited File
+                const mostEditedFileItem: KpmItem = this.buildMostEditedFileItem(
+                    fileChangeInfos
+                );
+                if (mostEditedFileItem) {
+                    treeItems.push(mostEditedFileItem);
+                }
+
+                // Longest Code Time
+                const longestCodeTimeParent = this.buildLongestFileCodeTime(
+                    fileChangeInfos
+                );
+                if (longestCodeTimeParent) {
+                    treeItems.push(longestCodeTimeParent);
+                }
+            }
         }
 
         return treeItems;
@@ -112,17 +173,13 @@ export class KpmProviderManager {
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Insertion(s)",
-                        currentChagesSummary.insertions,
-                        "",
-                        "insertion.png"
+                        currentChagesSummary.insertions
                     )
                 );
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
-                        currentChagesSummary.deletions,
-                        "",
-                        "deletion.png"
+                        currentChagesSummary.deletions
                     )
                 );
 
@@ -142,16 +199,14 @@ export class KpmProviderManager {
                     this.buildMetricItem(
                         "Insertion(s)",
                         todaysChagesSummary.insertions,
-                        "Number of total insertions today",
-                        "insertion.png"
+                        "Number of total insertions today"
                     )
                 );
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
                         todaysChagesSummary.deletions,
-                        "Number of total deletions today",
-                        "deletion.png"
+                        "Number of total deletions today"
                     )
                 );
 
@@ -197,135 +252,44 @@ export class KpmProviderManager {
         return treeItems;
     }
 
-    async getFileChangeTreeParents(): Promise<KpmItem[]> {
-        const treeItems: KpmItem[] = [];
-
-        const fileChangeInfoMap = getFileChangeInfoMap();
-        const filesChanged = fileChangeInfoMap
-            ? Object.keys(fileChangeInfoMap).length
-            : 0;
-
-        // get the file change info
-        if (filesChanged) {
-            // turn this into an array
-            const fileChangeInfos = Object.keys(fileChangeInfoMap).map(key => {
-                return fileChangeInfoMap[key];
-            });
-
-            // show the file with the highest kpm (desc)
-            const kpmSortedArray = fileChangeInfos.sort(
-                (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
-            );
-
-            // Highest KPM
-            const highKpmChildren: KpmItem[] = [];
-            highKpmChildren.push(this.buildFileItem(kpmSortedArray[0]));
-            highKpmChildren.push(
-                this.buildMetricItem(
-                    "KPM",
-                    kpmSortedArray[0].kpm.toFixed(1),
-                    "",
-                    "kpm.png"
-                )
-            );
-            const highKpmParent = this.buildParentItem(
-                "Highest KPM",
-                highKpmChildren
-            );
-            treeItems.push(highKpmParent);
-
-            // Most Edited File
-            const keystrokesSortedArray = fileChangeInfos.sort(
-                (a: FileChangeInfo, b: FileChangeInfo) =>
-                    b.keystrokes - a.keystrokes
-            );
-            const mostEditedChildren: KpmItem[] = [];
-            mostEditedChildren.push(
-                this.buildFileItem(keystrokesSortedArray[0])
-            );
-            const keystrokes = numeral(
-                keystrokesSortedArray[0].keystrokes
-            ).format("0 a");
-            mostEditedChildren.push(
-                this.buildMetricItem(
-                    "Keystrokes",
-                    keystrokes,
-                    "",
-                    "keystrokes.png"
-                )
-            );
-            const mostEditedParent = this.buildParentItem(
-                "Most Edited File",
-                mostEditedChildren
-            );
-            treeItems.push(mostEditedParent);
-
-            // Longest Code Time
-            const durationSortedArray = fileChangeInfos.sort(
-                (a: FileChangeInfo, b: FileChangeInfo) =>
-                    b.duration_seconds - a.duration_seconds
-            );
-            const longestCodeTimeChildren: KpmItem[] = [];
-            longestCodeTimeChildren.push(
-                this.buildFileItem(durationSortedArray[0])
-            );
-            const duration_minutes =
-                durationSortedArray[0].duration_seconds / 60;
-            const codeHours = humanizeMinutes(duration_minutes);
-            longestCodeTimeChildren.push(
-                this.buildMetricItem("File Time", codeHours, "", "time.png")
-            );
-            const longestCodeTimeParent = this.buildParentItem(
-                "Longest Code Time",
-                longestCodeTimeChildren
-            );
-            treeItems.push(longestCodeTimeParent);
-        }
-
-        return treeItems;
-    }
-
     getCodyConnectButton(): KpmItem {
-        const item: KpmItem = new KpmItem();
-        item.tooltip =
-            "To see your coding data in Code Time, please log in to your account";
-        item.label = "Log in to see more metrics";
-        item.id = "connect";
-        item.command = "codetime.codeTimeLogin";
-        item.icon = "sw-paw-circle.svg";
-        item.contextValue = "action_button";
+        const item: KpmItem = this.getActionButton(
+            "See advanced metrics",
+            `To see your coding data in Code Time, please log in to your account`,
+            "codetime.codeTimeLogin",
+            "sw-paw-circle.svg"
+        );
         return item;
     }
 
     getWebViewDashboardButton(): KpmItem {
-        const item: KpmItem = new KpmItem();
         const name = getItem("name");
-        item.tooltip = `See rich data visualizations in the web app (${name})`;
-        item.label = "See more metrics";
-        item.id = "connect";
-        item.command = "codetime.softwareKpmDashboard";
-        item.icon = "sw-paw-circle.svg";
-        item.contextValue = "action_button";
-        return item;
-    }
-
-    getLineBreakItem(): KpmItem {
-        const item: KpmItem = new KpmItem();
-        item.id = "linebreak";
-        item.label = "---------------------";
-        item.contextValue = "linebreak";
-        // item.icon = "blue-line-96.png";
+        const item: KpmItem = this.getActionButton(
+            "See advanced metrics",
+            `See rich data visualizations in the web app (${name})`,
+            "codetime.softwareKpmDashboard",
+            "sw-paw-circle.svg"
+        );
         return item;
     }
 
     getCodeTimeDashboardButton(): KpmItem {
+        const item: KpmItem = this.getActionButton(
+            "Code Time Dashboard",
+            "View your latest coding metrics right here in your editor",
+            "codetime.codeTimeMetrics",
+            "dashboard.png"
+        );
+        return item;
+    }
+
+    getActionButton(label, tooltip, command, icon = null): KpmItem {
         const item: KpmItem = new KpmItem();
-        item.tooltip =
-            "View your latest coding metrics right here in your editor";
-        item.label = "Code Time Dashboard";
-        item.id = "dashboard";
-        item.command = "codetime.codeTimeMetrics";
-        item.icon = "dashboard.png";
+        item.tooltip = tooltip;
+        item.label = label;
+        item.id = label;
+        item.command = command;
+        item.icon = icon;
         item.contextValue = "action_button";
         return item;
     }
@@ -334,27 +298,27 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(this.buildMetricItem("Session Time", codeHours));
+        items.push(this.buildTreeMetricItem("Session Time", codeHours));
 
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        items.push(this.buildMetricItem("Keystrokes", keystrokes));
+        items.push(this.buildTreeMetricItem("Keystrokes", keystrokes));
 
         const charsAdded = numeral(data.currentCharactersAdded).format("0 a");
-        items.push(this.buildMetricItem("Chars added", charsAdded));
+        items.push(this.buildTreeMetricItem("Chars added", charsAdded));
 
         const charsDeleted = numeral(data.currentCharactersDeleted).format(
             "0 a"
         );
-        items.push(this.buildMetricItem("Chars removed", charsDeleted));
+        items.push(this.buildTreeMetricItem("Chars removed", charsDeleted));
 
         const linesAdded = numeral(data.currentLinesAdded).format("0 a");
-        items.push(this.buildMetricItem("Lines added", linesAdded));
+        items.push(this.buildTreeMetricItem("Lines added", linesAdded));
 
         const linesRemoved = numeral(data.currentLinesRemoved).format("0 a");
-        items.push(this.buildMetricItem("Lines removed", linesRemoved));
+        items.push(this.buildTreeMetricItem("Lines removed", linesRemoved));
 
         const pastes = numeral(data.currentPastes).format("0 a");
-        items.push(this.buildMetricItem("Copy+paste", pastes));
+        items.push(this.buildTreeMetricItem("Copy+paste", pastes));
         return items;
     }
 
@@ -365,6 +329,31 @@ export class KpmProviderManager {
         item.contextValue = "metric_item";
         item.tooltip = tooltip;
         item.icon = icon;
+        return item;
+    }
+
+    buildTreeMetricItem(label, value, tooltip = "", icon = null) {
+        const childItem = this.buildMessageItem(value);
+        const parentItem = this.buildMessageItem(label, tooltip, icon);
+        parentItem.children = [childItem];
+        return parentItem;
+    }
+
+    buildMessageItem(
+        label,
+        tooltip = "",
+        icon = null,
+        command = null,
+        commandArgs = null
+    ) {
+        const item: KpmItem = new KpmItem();
+        item.label = label;
+        item.tooltip = tooltip;
+        item.icon = icon;
+        item.command = command;
+        item.commandArgs = commandArgs;
+        item.id = `${label}_message`;
+        item.contextValue = "message_item";
         return item;
     }
 
@@ -396,6 +385,91 @@ export class KpmProviderManager {
         item.contextValue = "file_item";
         item.icon = "document.svg";
         return item;
+    }
+
+    buildMostEditedFileItem(fileChangeInfos: FileChangeInfo[]): KpmItem {
+        if (!fileChangeInfos || fileChangeInfos.length === 0) {
+            return null;
+        }
+        // Most Edited File
+        const sortedArray = fileChangeInfos.sort(
+            (a: FileChangeInfo, b: FileChangeInfo) =>
+                b.keystrokes - a.keystrokes
+        );
+        const mostEditedChildren: KpmItem[] = [];
+        const fileName = sortedArray[0].name;
+        const keystrokes = numeral(sortedArray[0].keystrokes).format("0 a");
+        const label = `${fileName} | ${keystrokes}`;
+        const messageItem = this.buildMessageItem(
+            label,
+            "",
+            null,
+            "codetime.openFileInEditor",
+            [sortedArray[0].fsPath]
+        );
+        mostEditedChildren.push(messageItem);
+        const mostEditedParent = this.buildParentItem(
+            "Most Edited File",
+            mostEditedChildren
+        );
+
+        return mostEditedParent;
+    }
+
+    buildHighestKpmFileItem(fileChangeInfos: FileChangeInfo[]): KpmItem {
+        if (!fileChangeInfos || fileChangeInfos.length === 0) {
+            return null;
+        }
+        // Highest KPM
+        const sortedArray = fileChangeInfos.sort(
+            (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
+        );
+        const highKpmChildren: KpmItem[] = [];
+        const fileName = sortedArray[0].name;
+        const kpm = sortedArray[0].kpm.toFixed(1);
+        const label = `${fileName} | ${kpm}`;
+        const messageItem = this.buildMessageItem(
+            label,
+            "",
+            null,
+            "codetime.openFileInEditor",
+            [sortedArray[0].fsPath]
+        );
+        highKpmChildren.push(messageItem);
+        const highKpmParent = this.buildParentItem(
+            "Highest KPM",
+            highKpmChildren
+        );
+        return highKpmParent;
+    }
+
+    buildLongestFileCodeTime(fileChangeInfos: FileChangeInfo[]): KpmItem {
+        if (!fileChangeInfos || fileChangeInfos.length === 0) {
+            return null;
+        }
+        // Longest Code Time
+        const sortedArray = fileChangeInfos.sort(
+            (a: FileChangeInfo, b: FileChangeInfo) =>
+                b.duration_seconds - a.duration_seconds
+        );
+        const longestCodeTimeChildren: KpmItem[] = [];
+        const fileName = sortedArray[0].name;
+        const duration_minutes = sortedArray[0].duration_seconds / 60;
+        const codeHours = humanizeMinutes(duration_minutes);
+        const label = `${fileName} | ${codeHours}`;
+        const messageItem = this.buildMessageItem(
+            label,
+            "",
+            null,
+            "codetime.openFileInEditor",
+            [sortedArray[0].fsPath]
+        );
+        longestCodeTimeChildren.push(messageItem);
+        const longestCodeTimeParent = this.buildParentItem(
+            "Longest Code Time",
+            longestCodeTimeChildren
+        );
+        return longestCodeTimeParent;
     }
 }
 

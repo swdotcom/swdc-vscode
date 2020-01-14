@@ -82,10 +82,6 @@
                 {
                     "id": "commit-tree",
                     "name": "Project Metrics"
-                },
-                {
-                    "id": "file-change-tree",
-                    "name": "File Leaderboard"
                 }
             ]
         }
