@@ -1,5 +1,5 @@
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/code-time.png" alt="Code Time for VS Code" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/code-time.png" alt="Code Time for VS Code" />
 </p>
 
 <p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time-tracking. 
@@ -25,7 +25,7 @@
 **1. Create your web account**
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/login-prompt.png" alt="Code Time for VS Code login prompt" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/login-prompt.png" alt="Code Time for VS Code login prompt" />
 </p>
 
 We strongly recommend that you create a web account at [app.software.com](https://app.software.com/) to fully unlock all of the features of Code Time. The web app has data visualizations and settings you can customize, such as your work hours and rates per project for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar. 
@@ -37,7 +37,7 @@ If you click Not Now after installing Code Time, you can always create an accoun
 **2. Track your progress during the day**
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/status-bar.png" alt="Code Time for VS Code status bar" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/status-bar.png" alt="Code Time for VS Code status bar" />
 </p>
 
 Your status bar shows you in real-time how many hours and minutes you code each day. After your first week, your status bar will show how you are trending vs. your average minutes for that day of the week over the last 90 days.
@@ -47,7 +47,7 @@ Your status bar shows you in real-time how many hours and minutes you code each 
 At the end of your first day, click on Code Time in your status bar to open your dashboard. Your dashboard summarizes your data—such as your code time by project, lines of code, and keystrokes per minute—for today, yesterday, and last week. We also provide a summary over your last 90 days.
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/editor-dashboard.png" alt="Code Time for VS Code dashboard" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/editor-dashboard.png" alt="Code Time for VS Code dashboard" />
 </p>
 
 ## Web app data visualizations
@@ -58,7 +58,7 @@ After you sign up for a web account via your editor, you can visit app.software.
 Code Time measures your keystrokes per hour and summarizes your data in a weekly and 90-day average heatmap. Protect your best times on your heatmap from meetings and interrupts to help boost your productivity.
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/weekly-heatmap.png" alt="Code Time for VS Code heatmap" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/weekly-heatmap.png" alt="Code Time for VS Code heatmap" />
 </p>
 
 **Project-based reports**
@@ -66,7 +66,7 @@ Code Time measures your keystrokes per hour and summarizes your data in a weekly
 See how much time you spend per project per week. Code Time also lets you set a rate per project and export your data to a CSV.
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/top-projects.png" alt="Code Time for VS Code top projects" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/top-projects.png" alt="Code Time for VS Code top projects" />
 </p>
 
 **Work-life balance**
@@ -74,7 +74,7 @@ See how much time you spend per project per week. Code Time also lets you set a 
 How much do you code after hours and weekends? Code Time helps you see your breakdown at work vs. outside work so you can find ways to improve your work-life balance.
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/work-life-balance.png" alt="Code Time for VS Code work life balance" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/work-life-balance.png" alt="Code Time for VS Code work life balance" />
 </p>
 
 **Commit velocity**
@@ -82,7 +82,7 @@ How much do you code after hours and weekends? Code Time helps you see your brea
 Code Time integrates with Git, so you can see your speed, frequency, and top files across your commits.
 
 <p align="center" style="margin: 0 10%">
-  <img src="../swdc-vscode/images/commit-velocity.png" alt="Code Time for VS Code commit velocity" />
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/commit-velocity.png" alt="Code Time for VS Code commit velocity" />
 </p>
 
 
