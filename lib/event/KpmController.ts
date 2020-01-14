@@ -1,5 +1,5 @@
 import { workspace, Disposable, window, commands } from "vscode";
-import { KpmDataManager } from "../KpmDataManager";
+import { KeystrokeStats } from "../model/KeystrokeStats";
 import { UNTITLED, UNTITLED_WORKSPACE } from "../Constants";
 import { DEFAULT_DURATION } from "../Constants";
 import {
@@ -60,13 +60,13 @@ export class KpmController {
             // use a normal for loop since we have an await within the loop
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
-                const keystrokeCount = _keystrokeMap[key];
+                const keystrokeStats = _keystrokeMap[key];
 
-                const hasData = keystrokeCount.hasData();
+                const hasData = keystrokeStats.hasData();
 
                 if (hasData) {
                     // post the payload offline until the batch interval sends it out
-                    setTimeout(() => keystrokeCount.postData(), 0);
+                    setTimeout(() => keystrokeStats.postData(), 0);
                 }
             }
         }
@@ -464,27 +464,27 @@ export class KpmController {
         let name = UNTITLED_WORKSPACE;
 
         // send the code time bootstrap payload
-        let keystrokeCount = new KpmDataManager({
+        let keystrokeStats = new KeystrokeStats({
             // project.directory is used as an object key, must be string
             directory: rootPath,
             name,
             identifier: "",
             resource: {}
         });
-        keystrokeCount["keystrokes"] = 1;
+        keystrokeStats["keystrokes"] = 1;
         let nowTimes = getNowTimes();
         const start = nowTimes.now_in_sec - 60;
         const local_start = nowTimes.local_now_in_sec - 60;
-        keystrokeCount["start"] = start;
-        keystrokeCount["local_start"] = local_start;
+        keystrokeStats["start"] = start;
+        keystrokeStats["local_start"] = local_start;
         const fileInfo = new FileChangeInfo();
         fileInfo.add = 1;
         fileInfo.keystrokes = 1;
         fileInfo.start = start;
         fileInfo.local_start = local_start;
-        keystrokeCount.source[fileName] = fileInfo;
+        keystrokeStats.source[fileName] = fileInfo;
 
-        setTimeout(() => keystrokeCount.postData(true /*sendNow*/), 0);
+        setTimeout(() => keystrokeStats.postData(true /*sendNow*/), 0);
     }
 
     private async initializeKeystrokesCount(filename, rootPath) {
@@ -498,12 +498,12 @@ export class KpmController {
 
         const nowTimes = getNowTimes();
 
-        let keystrokeCount = _keystrokeMap[rootPath];
+        let keystrokeStats = _keystrokeMap[rootPath];
 
         // create the keystroke count if it doesn't exist
-        if (!keystrokeCount) {
+        if (!keystrokeStats) {
             // add keystroke count wrapper
-            keystrokeCount = this.createKeystrokeCounter(
+            keystrokeStats = this.createKeystrokeStats(
                 filename,
                 rootPath,
                 nowTimes
@@ -511,23 +511,23 @@ export class KpmController {
         }
 
         // check if we have this file or not
-        const hasFile = keystrokeCount.source[filename];
+        const hasFile = keystrokeStats.source[filename];
 
         if (!hasFile) {
             // no file, start anew
-            this.addFile(filename, nowTimes, keystrokeCount);
-        } else if (parseInt(keystrokeCount.source[filename].end, 10) !== 0) {
+            this.addFile(filename, nowTimes, keystrokeStats);
+        } else if (parseInt(keystrokeStats.source[filename].end, 10) !== 0) {
             // re-initialize it since we ended it before the minute was up
-            keystrokeCount.source[filename].end = 0;
-            keystrokeCount.source[filename].local_end = 0;
+            keystrokeStats.source[filename].end = 0;
+            keystrokeStats.source[filename].local_end = 0;
         }
 
         // close any existing
-        const fileKeys = Object.keys(keystrokeCount.source);
+        const fileKeys = Object.keys(keystrokeStats.source);
         if (fileKeys.length > 1) {
             // set the end time to now for the other files that don't match this file
             fileKeys.forEach(key => {
-                let sourceObj: FileChangeInfo = keystrokeCount.source[key];
+                let sourceObj: FileChangeInfo = keystrokeStats.source[key];
                 if (key !== filename && sourceObj.end === 0) {
                     sourceObj.end = nowTimes.now_in_sec;
                     sourceObj.local_end = nowTimes.local_now_in_sec;
@@ -535,22 +535,22 @@ export class KpmController {
             });
         }
 
-        _keystrokeMap[rootPath] = keystrokeCount;
+        _keystrokeMap[rootPath] = keystrokeStats;
     }
 
-    private addFile(filename, nowTimes, keystrokeCount) {
+    private addFile(filename, nowTimes, keystrokeStats) {
         const fileInfo = new FileChangeInfo();
         fileInfo.start = nowTimes.now_in_sec;
         fileInfo.local_start = nowTimes.local_now_in_sec;
-        keystrokeCount.source[filename] = fileInfo;
+        keystrokeStats.source[filename] = fileInfo;
     }
 
-    private createKeystrokeCounter(filename, rootPath, nowTimes) {
+    private createKeystrokeStats(filename, rootPath, nowTimes) {
         const workspaceFolder = getProjectFolder(filename);
         const name = workspaceFolder
             ? workspaceFolder.name
             : UNTITLED_WORKSPACE;
-        let keystrokeCount = new KpmDataManager({
+        let keystrokeStats = new KeystrokeStats({
             // project.directory is used as an object key, must be string
             directory: rootPath,
             name,
@@ -558,16 +558,16 @@ export class KpmController {
             resource: {}
         });
 
-        keystrokeCount["start"] = nowTimes.now_in_sec;
-        keystrokeCount["local_start"] = nowTimes.local_now_in_sec;
-        keystrokeCount["keystrokes"] = 0;
+        keystrokeStats["start"] = nowTimes.now_in_sec;
+        keystrokeStats["local_start"] = nowTimes.local_now_in_sec;
+        keystrokeStats["keystrokes"] = 0;
 
         // start the minute timer to send the data
         setTimeout(() => {
             this.sendKeystrokeDataIntervalHandler();
         }, DEFAULT_DURATION * 1000);
 
-        return keystrokeCount;
+        return keystrokeStats;
     }
 
     public dispose() {

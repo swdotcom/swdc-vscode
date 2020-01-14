@@ -3,7 +3,7 @@ import { handleKpmClickedEvent, updatePreferences } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions
-} from "./MenuManager";
+} from "./menu/MenuManager";
 import {
     launchWebUrl,
     handleCodeTimeStatusToggle,

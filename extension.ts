@@ -7,12 +7,11 @@ import {
     sendOfflineData,
     getUserStatus,
     sendHeartbeat,
-    createAnonymousUser,
     serverIsAvailable,
     getSessionSummaryStatus,
     initializePreferences
 } from "./lib/DataController";
-import { onboardPlugin } from "./lib/OnboardManager";
+import { onboardPlugin, createAnonymousUser } from "./lib/user/OnboardManager";
 import {
     showStatus,
     nowInSecs,
@@ -144,7 +143,7 @@ export async function intializePlugin(
     // 35 min interval to check if the session file exists or not
     session_check_interval = setInterval(() => {
         periodicSessionCheck();
-    }, 1000 * 60 * 35);
+    }, 1000 * 60 * 60);
 
     // add the interval jobs
 

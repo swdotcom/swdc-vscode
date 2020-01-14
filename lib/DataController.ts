@@ -12,7 +12,6 @@ import {
     getSoftwareDataStoreFile,
     deleteFile,
     nowInSecs,
-    getOsUsername,
     getSessionFileCreateTime,
     getOs,
     getVersion,
@@ -23,7 +22,6 @@ import {
     logIt,
     getPluginId,
     logEvent,
-    clearDayHourVals,
     getCommitSummaryFile,
     getSummaryInfoFile,
     getSectionHeader,
@@ -33,7 +31,7 @@ import {
     isLinux,
     shouldClearSessionData
 } from "./Util";
-import { buildWebDashboardUrl } from "./MenuManager";
+import { buildWebDashboardUrl } from "./menu/MenuManager";
 import {
     getSessionSummaryData,
     updateStatusBarWithSummaryData,
@@ -43,6 +41,7 @@ import {
 } from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { SessionSummary, LoggedInState } from "./model/models";
+import { EventHandler } from "./event/EventHandler";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
@@ -53,6 +52,8 @@ let serverAvailableLastCheck = 0;
 let toggleFileEventLogging = null;
 
 let userFetchTimeout = null;
+
+const eventHandler: EventHandler = EventHandler.getInstance();
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
@@ -84,12 +85,6 @@ export async function serverIsAvailable() {
             });
     }
     return serverAvailable;
-}
-
-export async function sendBatchPayload(batch) {
-    await softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
-        logIt(`Unable to send plugin data batch, error: ${e.message}`);
-    });
 }
 
 /**
@@ -129,13 +124,13 @@ export async function sendOfflineData() {
                 let batch = [];
                 for (let i = 0; i < payloads.length; i++) {
                     if (batch.length >= batch_limit) {
-                        await sendBatchPayload(batch);
+                        await eventHandler.sendBatchPayload(batch);
                         batch = [];
                     }
                     batch.push(payloads[i]);
                 }
                 if (batch.length > 0) {
-                    await sendBatchPayload(batch);
+                    await eventHandler.sendBatchPayload(batch);
                 }
             }
         }
@@ -156,38 +151,6 @@ export async function getAppJwt(serverIsOnline) {
         );
         if (isResponseOk(resp)) {
             return resp.data.jwt;
-        }
-    }
-    return null;
-}
-
-/**
- * create an anonymous user based on github email or mac addr
- */
-export async function createAnonymousUser(serverIsOnline) {
-    let appJwt = await getAppJwt(serverIsOnline);
-    if (appJwt && serverIsOnline) {
-        const jwt = getItem("jwt");
-        // check one more time before creating the anon user
-        if (!jwt) {
-            const creation_annotation = "NO_SESSION_FILE";
-            const username = await getOsUsername();
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const hostname = await getHostname();
-            let resp = await softwarePost(
-                "/data/onboard",
-                {
-                    timezone,
-                    username,
-                    creation_annotation,
-                    hostname
-                },
-                appJwt
-            );
-            if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-                setItem("jwt", resp.data.jwt);
-                return resp.data.jwt;
-            }
         }
     }
     return null;
@@ -468,6 +431,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         }
     } else {
         clearCachedLoggedInState();
+
+        // explicitly fetch the latest info the app server
         getSessionSummaryStatus(true /*forceSummaryFetch*/);
 
         const message = "Successfully logged on to Code Time";
