@@ -397,17 +397,20 @@ export class KpmProviderManager {
                 b.keystrokes - a.keystrokes
         );
         const mostEditedChildren: KpmItem[] = [];
-        const fileName = sortedArray[0].name;
-        const keystrokes = numeral(sortedArray[0].keystrokes).format("0 a");
-        const label = `${fileName} | ${keystrokes}`;
-        const messageItem = this.buildMessageItem(
-            label,
-            "",
-            null,
-            "codetime.openFileInEditor",
-            [sortedArray[0].fsPath]
-        );
-        mostEditedChildren.push(messageItem);
+        const len = Math.min(3, sortedArray.length);
+        for (let i = 0; i < len; i++) {
+            const fileName = sortedArray[i].name;
+            const keystrokes = numeral(sortedArray[i].keystrokes).format("0 a");
+            const label = `${fileName} | ${keystrokes}`;
+            const messageItem = this.buildMessageItem(
+                label,
+                "",
+                null,
+                "codetime.openFileInEditor",
+                [sortedArray[i].fsPath]
+            );
+            mostEditedChildren.push(messageItem);
+        }
         const mostEditedParent = this.buildParentItem(
             "Most Edited File",
             mostEditedChildren
@@ -425,17 +428,20 @@ export class KpmProviderManager {
             (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
         );
         const highKpmChildren: KpmItem[] = [];
-        const fileName = sortedArray[0].name;
-        const kpm = sortedArray[0].kpm.toFixed(1);
-        const label = `${fileName} | ${kpm}`;
-        const messageItem = this.buildMessageItem(
-            label,
-            "",
-            null,
-            "codetime.openFileInEditor",
-            [sortedArray[0].fsPath]
-        );
-        highKpmChildren.push(messageItem);
+        const len = Math.min(3, sortedArray.length);
+        for (let i = 0; i < len; i++) {
+            const fileName = sortedArray[i].name;
+            const kpm = sortedArray[i].kpm.toFixed(1);
+            const label = `${fileName} | ${kpm}`;
+            const messageItem = this.buildMessageItem(
+                label,
+                "",
+                null,
+                "codetime.openFileInEditor",
+                [sortedArray[i].fsPath]
+            );
+            highKpmChildren.push(messageItem);
+        }
         const highKpmParent = this.buildParentItem(
             "Highest KPM",
             highKpmChildren
@@ -453,18 +459,21 @@ export class KpmProviderManager {
                 b.duration_seconds - a.duration_seconds
         );
         const longestCodeTimeChildren: KpmItem[] = [];
-        const fileName = sortedArray[0].name;
-        const duration_minutes = sortedArray[0].duration_seconds / 60;
-        const codeHours = humanizeMinutes(duration_minutes);
-        const label = `${fileName} | ${codeHours}`;
-        const messageItem = this.buildMessageItem(
-            label,
-            "",
-            null,
-            "codetime.openFileInEditor",
-            [sortedArray[0].fsPath]
-        );
-        longestCodeTimeChildren.push(messageItem);
+        const len = Math.min(3, sortedArray.length);
+        for (let i = 0; i < len; i++) {
+            const fileName = sortedArray[i].name;
+            const duration_minutes = sortedArray[i].duration_seconds / 60;
+            const codeHours = humanizeMinutes(duration_minutes);
+            const label = `${fileName} | ${codeHours}`;
+            const messageItem = this.buildMessageItem(
+                label,
+                "",
+                null,
+                "codetime.openFileInEditor",
+                [sortedArray[i].fsPath]
+            );
+            longestCodeTimeChildren.push(messageItem);
+        }
         const longestCodeTimeParent = this.buildParentItem(
             "Longest Code Time",
             longestCodeTimeChildren
