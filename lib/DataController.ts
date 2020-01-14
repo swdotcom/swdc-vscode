@@ -468,8 +468,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         }
     } else {
         clearCachedLoggedInState();
-        // clear the last moment date to be able to retrieve the user's dashboard metrics
-        clearDayHourVals();
+        getSessionSummaryStatus(true /*forceSummaryFetch*/);
+
         const message = "Successfully logged on to Code Time";
         commands.executeCommand("codetime.refreshKpmTree");
         window.showInformationMessage(message);
@@ -628,12 +628,12 @@ export async function writeCodeTimeMetricsDashboard() {
 /**
  * Fetch the status bar data, which is also used for the today summary in the dashboard.
  */
-export async function getSessionSummaryStatus() {
+export async function getSessionSummaryStatus(forceSummaryFetch = false) {
     const jwt = getItem("jwt");
     const serverIsOnline = await serverIsAvailable();
 
     let isNewDay = false;
-    if (shouldClearSessionData()) {
+    if (forceSummaryFetch || shouldClearSessionData()) {
         // new day, clear the session summary data
         clearSessionSummaryData();
         clearFileChangeInfoSummaryData();
@@ -642,7 +642,11 @@ export async function getSessionSummaryStatus() {
     let sessionSummaryData: SessionSummary = getSessionSummaryData();
     let status = "OK";
 
-    if (serverIsOnline && jwt && (!sessionSummaryData || isNewDay)) {
+    if (
+        serverIsOnline &&
+        jwt &&
+        (!sessionSummaryData || isNewDay || forceSummaryFetch)
+    ) {
         // Returns:
         // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
         // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
@@ -666,5 +670,9 @@ export async function getSessionSummaryStatus() {
     }
 
     updateStatusBarWithSummaryData();
+
+    // refresh the tree view
+    commands.executeCommand("codetime.refreshKpmTree");
+
     return { data: sessionSummaryData, status };
 }

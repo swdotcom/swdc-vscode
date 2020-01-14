@@ -247,7 +247,7 @@ export function showErrorStatus(errorTooltip) {
     let fullMsg = `$(${"alert"}) ${"Code Time"}`;
     if (!errorTooltip) {
         errorTooltip =
-            "To see your coding data in Code Time, please connect to your account";
+            "To see your coding data in Code Time, please log in to your account";
     }
     showStatus(fullMsg, errorTooltip);
 }
@@ -701,8 +701,6 @@ export function storePayload(payload) {
     // write the fileChangeInfoMap
     saveFileChangeInfoToDisk(fileChangeInfoMap);
 
-    commands.executeCommand("codetime.refreshKpmTree");
-
     setTimeout(() => {
         // update the statusbar
         getSessionSummaryStatus();
@@ -855,7 +853,7 @@ export async function launchLogin() {
  * check if the user needs to see the login prompt or not
  */
 export async function showLoginPrompt() {
-    const infoMsg = `To see your coding data in Code Time, please connect to your account`;
+    const infoMsg = `To see your coding data in Code Time, please log in to your account`;
     // set the last update time so we don't try to ask too frequently
     window
         .showInformationMessage(infoMsg, ...[NOT_NOW_LABEL, LOGIN_LABEL])

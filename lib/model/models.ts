@@ -8,7 +8,7 @@ export class KpmItem {
     type: string = "";
     contextValue: string = "";
     callback: any = null;
-    icon: string = "";
+    icon: string = null;
     children: KpmItem[] = [];
 }
 

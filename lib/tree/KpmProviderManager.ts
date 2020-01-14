@@ -7,7 +7,7 @@ import {
 } from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
 import { getSessionSummaryData, getFileChangeInfoMap } from "../OfflineManager";
-import { humanizeMinutes, getWorkspaceFolders, getItem } from "../Util";
+import { humanizeMinutes, getWorkspaceFolders, getItem, logIt } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
     WorkspaceFolder,
@@ -83,8 +83,7 @@ export class KpmProviderManager {
                 this.buildMetricItem(
                     "Files changed",
                     filesChanged,
-                    "Files changed today",
-                    "number.svg"
+                    "Files changed today"
                 )
             );
         }
@@ -289,8 +288,8 @@ export class KpmProviderManager {
     getCodyConnectButton(): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip =
-            "To see your coding data in Code Time, please connect to your account";
-        item.label = "Connect to see more metrics";
+            "To see your coding data in Code Time, please log in to your account";
+        item.label = "Log in to see more metrics";
         item.id = "connect";
         item.command = "codetime.codeTimeLogin";
         item.icon = "sw-paw-circle.svg";
@@ -335,55 +334,31 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(
-            this.buildMetricItem("Session Time", codeHours, "", "number.svg")
-        );
+        items.push(this.buildMetricItem("Session Time", codeHours));
 
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        items.push(
-            this.buildMetricItem("Keystrokes", keystrokes, "", "number.svg")
-        );
+        items.push(this.buildMetricItem("Keystrokes", keystrokes));
 
         const charsAdded = numeral(data.currentCharactersAdded).format("0 a");
-        items.push(
-            this.buildMetricItem("Chars added", charsAdded, "", "number.svg")
-        );
+        items.push(this.buildMetricItem("Chars added", charsAdded));
 
         const charsDeleted = numeral(data.currentCharactersDeleted).format(
             "0 a"
         );
-        items.push(
-            this.buildMetricItem(
-                "Chars removed",
-                charsDeleted,
-                "",
-                "number.svg"
-            )
-        );
+        items.push(this.buildMetricItem("Chars removed", charsDeleted));
 
         const linesAdded = numeral(data.currentLinesAdded).format("0 a");
-        items.push(
-            this.buildMetricItem("Lines added", linesAdded, "", "number.svg")
-        );
+        items.push(this.buildMetricItem("Lines added", linesAdded));
 
         const linesRemoved = numeral(data.currentLinesRemoved).format("0 a");
-        items.push(
-            this.buildMetricItem(
-                "Lines removed",
-                linesRemoved,
-                "",
-                "number.svg"
-            )
-        );
+        items.push(this.buildMetricItem("Lines removed", linesRemoved));
 
         const pastes = numeral(data.currentPastes).format("0 a");
-        items.push(
-            this.buildMetricItem("Copy+paste", pastes, "", "number.svg")
-        );
+        items.push(this.buildMetricItem("Copy+paste", pastes));
         return items;
     }
 
-    buildMetricItem(label, value, tooltip = "", icon = "blue-line-96.png") {
+    buildMetricItem(label, value, tooltip = "", icon = null) {
         const item: KpmItem = new KpmItem();
         item.label = `${label}: ${value}`;
         item.id = `${label}_metric`;
@@ -419,7 +394,7 @@ export class KpmProviderManager {
         item.tooltip = `Click to open ${fileChangeInfo.fsPath}`;
         item.id = `${fileChangeInfo.name}_file`;
         item.contextValue = "file_item";
-        item.icon = "file.png";
+        item.icon = "document.svg";
         return item;
     }
 }
@@ -468,15 +443,15 @@ export class KpmTreeItem extends TreeItem {
 }
 
 function getTreeItemIcon(treeItem: KpmItem): any {
-    const iconName = treeItem.icon || "Blank_button.svg";
+    const iconName = treeItem.icon;
     const lightPath =
-        iconName === "none" || treeItem.children.length
-            ? null
-            : path.join(resourcePath, "light", iconName);
+        iconName && treeItem.children.length === 0
+            ? path.join(resourcePath, "light", iconName)
+            : null;
     const darkPath =
-        iconName == "none" || treeItem.children.length
-            ? null
-            : path.join(resourcePath, "dark", iconName);
+        iconName && treeItem.children.length === 0
+            ? path.join(resourcePath, "dark", iconName)
+            : null;
     const contextValue = treeItem.contextValue;
     return { lightPath, darkPath, contextValue };
 }
