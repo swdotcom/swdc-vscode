@@ -1,12 +1,5 @@
-import {
-    clearSessionSummaryData,
-    clearFileChangeInfoSummaryData,
-    getSessionSummaryData,
-    saveSessionSummaryToDisk,
-    updateStatusBarWithSummaryData
-} from "../OfflineManager";
 import { getItem } from "../Util";
-import { SessionSummary } from "../model/models";
+import { SessionSummary, GlobalSessionSummary } from "../model/models";
 import { PayloadManager } from "./PayloadManager";
 import {
     softwareGet,
@@ -14,6 +7,17 @@ import {
     serverIsAvailable
 } from "../http/HttpClient";
 import { commands } from "vscode";
+import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
+import {
+    clearSessionSummaryData,
+    getSessionSummaryData,
+    saveSessionSummaryToDisk,
+    updateStatusBarWithSummaryData
+} from "../storage/SessionSummaryData";
+import {
+    getGlobalSessionSummaryData,
+    saveGlobalSessionSummaryToDisk
+} from "../storage/GlobalSessionSummaryData";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
 
@@ -62,17 +66,40 @@ export class SummaryManager {
 
             // fetch it the api data
             this.getSessionSummaryStatus(true);
+            this.getGlobalSessionSummaryStatus(true);
 
             // set the current day
             this._currentDay = day;
         }
     }
 
-    async getSessionSummaryStatus(forceSummaryFetch = false) {
+    async getGlobalSessionSummaryStatus(
+        forceSummaryFetch = false
+    ): Promise<GlobalSessionSummary> {
+        let globalSessionSummaryData: GlobalSessionSummary = getGlobalSessionSummaryData();
+        const jwt = getItem("jwt");
+        const serverOnline = await serverIsAvailable();
+        if (serverOnline && jwt && forceSummaryFetch) {
+            const result = await softwareGet(
+                `/sessions/summary/global`,
+                jwt
+            ).catch(err => {
+                return null;
+            });
+            if (isResponseOk(result) && result.data) {
+                globalSessionSummaryData = { ...result.data };
+                saveGlobalSessionSummaryToDisk(globalSessionSummaryData);
+            }
+        }
+        return globalSessionSummaryData;
+    }
+
+    async getSessionSummaryStatus(
+        forceSummaryFetch = false
+    ): Promise<SessionSummary> {
         const jwt = getItem("jwt");
         const serverOnline = await serverIsAvailable();
         let sessionSummaryData: SessionSummary = getSessionSummaryData();
-        let status = "OK";
 
         // if it's online, has a jwt and the requester wants it directly from the API
         if (serverOnline && jwt && forceSummaryFetch) {
@@ -98,11 +125,12 @@ export class SummaryManager {
             }
         }
 
+        // update the status bar
         updateStatusBarWithSummaryData();
 
         // refresh the tree view
         commands.executeCommand("codetime.refreshKpmTree");
 
-        return { data: sessionSummaryData, status };
+        return sessionSummaryData;
     }
 }

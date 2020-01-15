@@ -66,6 +66,19 @@ export class SessionSummary {
     currentPastes: number = 0;
 }
 
+export class GlobalSessionSummary {
+    avg_session_seconds: number = 0;
+    avg_keystrokes: number = 0;
+    avg_lines_added: number = 0;
+    avg_lines_removed: number = 0;
+    avg_chars_added: number = 0;
+    avg_chars_deleted: number = 0;
+    avg_paste: number = 0;
+    avg_non_work_seconds: number = 0;
+    avg_work_seconds: number = 0;
+    avg_start: number = 0;
+}
+
 export class LoggedInState {
     loggedIn: boolean = false;
 }

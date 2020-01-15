@@ -892,3 +892,21 @@ export function getFileType(fileName: string) {
     }
     return fileType;
 }
+
+export function getFileDataAsJson(file) {
+    let data = null;
+    if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file).toString();
+        if (content) {
+            try {
+                data = JSON.parse(content);
+            } catch (e) {
+                logIt(`unable to read session info: ${e.message}`);
+                // error trying to read the session file, delete it
+                deleteFile(file);
+                data = {};
+            }
+        }
+    }
+    return data ? data : {};
+}

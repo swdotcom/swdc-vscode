@@ -30,8 +30,7 @@ import {
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { LoggedInState } from "./model/models";
-import { EventHandler } from "./event/EventHandler";
+import { LoggedInState, SessionSummary } from "./model/models";
 import { SummaryManager } from "./controller/SummaryManager";
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -347,6 +346,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
         // explicitly fetch the latest info the app server
         summaryManager.getSessionSummaryStatus(true /*forceSummaryFetch*/);
+        summaryManager.getGlobalSessionSummaryStatus(
+            true /*forceSummaryFetch*/
+        );
 
         const message = "Successfully logged on to Code Time";
         commands.executeCommand("codetime.refreshKpmTree");
@@ -459,19 +461,13 @@ export async function writeCodeTimeMetricsDashboard() {
     dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
     // get the top section of the dashboard content (today's data)
-    const sessionSummary = await summaryManager.getSessionSummaryStatus();
-    if (sessionSummary && sessionSummary.data) {
-        let averageTime = humanizeMinutes(
-            sessionSummary.data.averageDailyMinutes
-        );
-        let hoursCodedToday = humanizeMinutes(
-            sessionSummary.data.currentDayMinutes
-        );
+    const sessionSummary: SessionSummary = await summaryManager.getSessionSummaryStatus();
+    if (sessionSummary) {
+        let averageTime = humanizeMinutes(sessionSummary.averageDailyMinutes);
+        let hoursCodedToday = humanizeMinutes(sessionSummary.currentDayMinutes);
         let liveshareTime = null;
-        if (sessionSummary.data.liveshareMinutes) {
-            liveshareTime = humanizeMinutes(
-                sessionSummary.data.liveshareMinutes
-            );
+        if (sessionSummary.liveshareMinutes) {
+            liveshareTime = humanizeMinutes(sessionSummary.liveshareMinutes);
         }
         dashboardContent += getDashboardRow(
             "Hours coded today",

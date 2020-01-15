@@ -22,8 +22,8 @@ import {
 } from "../DataController";
 import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { clearSessionSummaryData } from "../OfflineManager";
 import { LoggedInState } from "../model/models";
+import { clearSessionSummaryData } from "../storage/SessionSummaryData";
 
 /**
  * Pass in the following array of objects

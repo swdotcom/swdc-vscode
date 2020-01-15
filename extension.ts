@@ -28,10 +28,10 @@ import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
-import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 import { KpmController } from "./lib/event/KpmController";
 import { SummaryManager } from "./lib/controller/SummaryManager";
 import { PayloadManager } from "./lib/controller/PayloadManager";
+import { setSessionSummaryLiveshareMinutes } from "./lib/storage/SessionSummaryData";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -96,12 +96,6 @@ export async function intializePlugin(
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
-    const serverIsOnline = await serverIsAvailable();
-
-    // get the user preferences whether it's music time or code time
-    // this will also fetch the user and update loggedInCacheState if it's found
-    await initializePreferences(serverIsOnline);
-
     //
     // Add the keystroke controller to the ext ctx, which
     // will then listen for text document changes.
@@ -110,6 +104,12 @@ export async function intializePlugin(
 
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
+
+    const serverIsOnline = await serverIsAvailable();
+
+    // get the user preferences whether it's music time or code time
+    // this will also fetch the user and update loggedInCacheState if it's found
+    await initializePreferences(serverIsOnline);
 
     let one_min_ms = 1000 * 60;
 

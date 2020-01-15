@@ -3,15 +3,14 @@ import {
     SessionSummary,
     LoggedInState,
     FileChangeInfo,
-    CommitChangeStats
+    CommitChangeStats,
+    GlobalSessionSummary
 } from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
-import { getSessionSummaryData, getFileChangeInfoMap } from "../OfflineManager";
 import {
     humanizeMinutes,
     getWorkspaceFolders,
     getItem,
-    logIt,
     isStatusBarTextVisible
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
@@ -23,6 +22,9 @@ import {
     commands
 } from "vscode";
 import * as path from "path";
+import { getFileChangeInfoMap } from "../storage/FileChangeInfoSummaryData";
+import { getSessionSummaryData } from "../storage/SessionSummaryData";
+import { getGlobalSessionSummaryData } from "../storage/GlobalSessionSummaryData";
 const numeral = require("numeral");
 
 // this current path is in the out/lib. We need to find the resource files
@@ -94,10 +96,12 @@ export class KpmProviderManager {
     async getKpmTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
+        const globalSessionSummaryData: GlobalSessionSummary = getGlobalSessionSummaryData();
 
         // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
-            sessionSummaryData
+            sessionSummaryData,
+            globalSessionSummaryData
         );
 
         // show the metrics per line
@@ -297,14 +301,23 @@ export class KpmProviderManager {
         return item;
     }
 
-    getSessionSummaryItems(data: SessionSummary): KpmItem[] {
+    getSessionSummaryItems(
+        data: SessionSummary,
+        global: GlobalSessionSummary
+    ): KpmItem[] {
         const items: KpmItem[] = [];
 
         const editorHours = humanizeMinutes(data.currentDayEditorMinutes);
         items.push(this.buildTreeMetricItem("Editor Time", editorHours));
 
+        let values = [];
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        items.push(this.buildTreeMetricItem("Session Time", codeHours));
+        values.push(`Today: ${codeHours}`);
+        const globalCodeHours = humanizeMinutes(
+            global.avg_session_seconds / 60
+        );
+        values.push(`Global average: ${globalCodeHours}`);
+        items.push(this.buildActivityComparisonNodes("Session Time", values));
 
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
         items.push(this.buildTreeMetricItem("Keystrokes", keystrokes));
@@ -343,6 +356,15 @@ export class KpmProviderManager {
         const parentItem = this.buildMessageItem(label, tooltip, icon);
         parentItem.children = [childItem];
         return parentItem;
+    }
+
+    buildActivityComparisonNodes(label, values) {
+        const parent = this.buildMessageItem(label);
+        values.forEach(element => {
+            const child = this.buildMessageItem(element);
+            parent.children.push(child);
+        });
+        return parent;
     }
 
     buildMessageItem(

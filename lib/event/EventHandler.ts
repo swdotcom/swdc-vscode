@@ -1,13 +1,13 @@
 import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
-import {
-    incrementSessionSummaryData,
-    saveFileChangeInfoToDisk,
-    getFileChangeInfoMap
-} from "../OfflineManager";
 import { getSoftwareDataStoreFile, logIt, getItem } from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
 import { SummaryManager } from "../controller/SummaryManager";
+import {
+    getFileChangeInfoMap,
+    saveFileChangeInfoToDisk
+} from "../storage/FileChangeInfoSummaryData";
+import { incrementSessionSummaryData } from "../storage/SessionSummaryData";
 const fs = require("fs");
 const os = require("os");
 
