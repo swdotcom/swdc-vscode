@@ -319,25 +319,53 @@ export class KpmProviderManager {
         values.push(`Global average: ${globalCodeHours}`);
         items.push(this.buildActivityComparisonNodes("Session Time", values));
 
+        values = [];
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        items.push(this.buildTreeMetricItem("Keystrokes", keystrokes));
+        values.push(`Today: ${keystrokes}`);
+        const globalKeystrokes = numeral(global.avg_keystrokes).format("0 a");
+        values.push(`Global average: ${globalKeystrokes}`);
+        items.push(this.buildActivityComparisonNodes("Keystrokes", values));
 
+        values = [];
         const charsAdded = numeral(data.currentCharactersAdded).format("0 a");
-        items.push(this.buildTreeMetricItem("Chars added", charsAdded));
+        values.push(`Today: ${charsAdded}`);
+        const globalCharsAdded = numeral(global.avg_chars_added).format("0 a");
+        values.push(`Global average: ${globalCharsAdded}`);
+        items.push(this.buildActivityComparisonNodes("Chars added", values));
 
+        values = [];
         const charsDeleted = numeral(data.currentCharactersDeleted).format(
             "0 a"
         );
-        items.push(this.buildTreeMetricItem("Chars removed", charsDeleted));
+        values.push(`Today: ${charsDeleted}`);
+        const globalCharsDeleted = numeral(global.avg_chars_deleted).format(
+            "0 a"
+        );
+        values.push(`Global average: ${globalCharsDeleted}`);
+        items.push(this.buildActivityComparisonNodes("Chars removed", values));
 
+        values = [];
         const linesAdded = numeral(data.currentLinesAdded).format("0 a");
-        items.push(this.buildTreeMetricItem("Lines added", linesAdded));
+        values.push(`Today: ${linesAdded}`);
+        const globalLinesAdded = numeral(global.avg_lines_added).format("0 a");
+        values.push(`Global average: ${globalLinesAdded}`);
+        items.push(this.buildActivityComparisonNodes("Lines added", values));
 
+        values = [];
         const linesRemoved = numeral(data.currentLinesRemoved).format("0 a");
-        items.push(this.buildTreeMetricItem("Lines removed", linesRemoved));
+        values.push(`Today: ${linesRemoved}`);
+        const globalLinesRemoved = numeral(global.avg_lines_removed).format(
+            "0 a"
+        );
+        values.push(`Global average: ${globalLinesRemoved}`);
+        items.push(this.buildActivityComparisonNodes("Lines removed", values));
 
+        values = [];
         const pastes = numeral(data.currentPastes).format("0 a");
-        items.push(this.buildTreeMetricItem("Copy+paste", pastes));
+        values.push(`Today: ${pastes}`);
+        const globalPastes = numeral(global.avg_paste).format("0 a");
+        values.push(`Global average: ${globalPastes}`);
+        items.push(this.buildActivityComparisonNodes("Copy+paste", values));
         return items;
     }
 
