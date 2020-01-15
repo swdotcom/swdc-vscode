@@ -289,7 +289,6 @@ export class KpmController {
     }
 
     private lazilyRefreshCommitTreeInfo() {
-        // "codetime.refreshKpmTree"
         if (_treeRefreshTimer) {
             clearTimeout(_treeRefreshTimer);
             _treeRefreshTimer = null;

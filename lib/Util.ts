@@ -20,6 +20,7 @@ import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState
 } from "./DataController";
+import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 
 const moment = require("moment-timezone");
 const open = require("open");
@@ -257,11 +258,6 @@ export function showStatus(fullMsg, tooltip) {
     updateStatusBar(fullMsg, tooltip);
 }
 
-export function showTacoTimeStatus(fullMsg, tooltip) {
-    getStatusBarItem().command = "tacotime.orderGrubCommand";
-    updateStatusBar(fullMsg, tooltip);
-}
-
 export function handleCodeTimeStatusToggle() {
     toggleStatusBar();
 }
@@ -296,7 +292,11 @@ function updateStatusBar(msg, tooltip) {
 
 export function toggleStatusBar() {
     showStatusBarText = !showStatusBarText;
-    updateStatusBar(lastMsg, lastTooltip);
+    if (showStatusBarText) {
+        updateStatusBarWithSummaryData();
+    } else {
+        updateStatusBar(lastMsg, lastTooltip);
+    }
 }
 
 export function isStatusBarTextVisible() {

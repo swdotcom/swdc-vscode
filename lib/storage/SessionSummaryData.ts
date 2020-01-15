@@ -11,6 +11,7 @@ import {
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
+import { WallClockHandler } from "../event/WallClockHandler";
 const fs = require("fs");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
@@ -146,7 +147,9 @@ export function updateStatusBarWithSummaryData() {
     let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    let msg = `${inFlowIcon}${currentDayMinutesTime}`;
+    // let msg = `${inFlowIcon}${currentDayMinutesTime}`;
+    const wcTime = WallClockHandler.getInstance().getWcTime();
+    let msg = `${inFlowIcon}${wcTime}`;
     if (averageDailyMinutes > 0) {
         msg += ` | ${averageDailyMinutesTime}`;
     }

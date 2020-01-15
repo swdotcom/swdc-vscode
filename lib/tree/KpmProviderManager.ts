@@ -313,7 +313,7 @@ export class KpmProviderManager {
         items.push(
             this.buildTreeMetricItem(
                 "Editor Time",
-                wallClockHandler.getWcHours()
+                wallClockHandler.getWcTime()
             )
         );
 

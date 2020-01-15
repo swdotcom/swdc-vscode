@@ -44,6 +44,12 @@ let gather_music_interval = null;
 let offline_data_interval = null;
 let session_check_interval = null;
 
+//
+// Add the keystroke controller to the ext ctx, which
+// will then listen for text document changes.
+//
+const kpmController = KpmController.getInstance();
+
 export function isTelemetryOn() {
     return TELEMETRY_ON;
 }
@@ -86,6 +92,9 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+    // add the code time commands
+    ctx.subscriptions.push(createCommands(kpmController));
+
     // onboard the user as anonymous if it's being installed
     onboardPlugin(ctx, intializePlugin /*successFunction*/);
 }
@@ -95,15 +104,6 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
-
-    //
-    // Add the keystroke controller to the ext ctx, which
-    // will then listen for text document changes.
-    //
-    const kpmController = KpmController.getInstance();
-
-    // add the code time commands
-    ctx.subscriptions.push(createCommands(kpmController));
 
     const serverIsOnline = await serverIsAvailable();
 
@@ -211,11 +211,6 @@ export async function intializePlugin(
     if (createdAnonUser) {
         showLoginPrompt();
     }
-
-    // initiate kpm fetch by sending any offline data
-    setTimeout(() => {
-        PayloadManager.getInstance().sendOfflineData();
-    }, 1000);
 
     // show the readme if it doesn't exist
     displayReadmeIfNotExists();

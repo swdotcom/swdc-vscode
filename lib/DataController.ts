@@ -32,19 +32,19 @@ import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { LoggedInState, SessionSummary } from "./model/models";
 import { SummaryManager } from "./controller/SummaryManager";
+import { CacheManager } from "./cache/CacheManager";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
-let connectState: LoggedInState = null;
+const cacheMgr: CacheManager = CacheManager.getInstance();
+
 let lastLoggedInCheckTime = null;
 let toggleFileEventLogging = null;
 
 let userFetchTimeout = null;
 
-const summaryManager: SummaryManager = SummaryManager.getInstance();
-
 export function getConnectState() {
-    return connectState;
+    return cacheMgr.get("connectState") || new LoggedInState();
 }
 
 export function getToggleFileEventLoggingState() {
@@ -110,16 +110,17 @@ export async function isLoggedOn(serverIsOnline) {
 }
 
 export function clearCachedLoggedInState() {
-    connectState = null;
+    cacheMgr.set("connectState", null);
 }
 
 export async function getCachedLoggedInState(): Promise<LoggedInState> {
+    let connectState: LoggedInState = cacheMgr.get("connectState");
     if (!connectState) {
         const serverIsOnline = await serverIsAvailable();
         // doesn't exist yet, use the api
         await getUserStatus(serverIsOnline, true);
     }
-    return connectState;
+    return cacheMgr.get("connectState");
 }
 
 /**
@@ -127,23 +128,9 @@ export async function getCachedLoggedInState(): Promise<LoggedInState> {
  * return {loggedIn: true|false}
  */
 export async function getUserStatus(serverIsOnline, ignoreCache = false) {
+    let connectState: LoggedInState = cacheMgr.get("connectState");
     if (!ignoreCache && connectState) {
-        // ignore cache is true and we have a logged in cache state
-        if (lastLoggedInCheckTime) {
-            const threshold = 60 * 5;
-            // check to see if we should invalide the check time
-            if (moment().unix() - lastLoggedInCheckTime > threshold) {
-                // set logged in cache state to null as well as the check time
-                lastLoggedInCheckTime = null;
-                connectState = null;
-            }
-        } else {
-            // it's null, set it
-            lastLoggedInCheckTime = moment().unix();
-        }
-        if (connectState) {
-            return connectState;
-        }
+        return connectState;
     }
 
     let loggedIn = false;
@@ -168,18 +155,18 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
     }
 
     if (serverIsOnline && loggedIn) {
-        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:${loggedIn}`, serverIsOnline);
-
         if (loggedIn) {
             // they've logged in, update the preferences
             initializePreferences(serverIsOnline);
         }
     }
 
+    cacheMgr.set("connectState", connectState);
     return connectState;
 }
 
 export async function getUser(serverIsOnline, jwt) {
+    let connectState: LoggedInState = cacheMgr.get("connectState");
     if (jwt && serverIsOnline) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
@@ -194,6 +181,7 @@ export async function getUser(serverIsOnline, jwt) {
                         connectState = new LoggedInState();
                     }
                     connectState.loggedIn = true;
+                    cacheMgr.set("connectState", connectState);
                 }
                 return user;
             }
@@ -344,9 +332,13 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
     } else {
         clearCachedLoggedInState();
 
+        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
+
         // explicitly fetch the latest info the app server
-        summaryManager.getSessionSummaryStatus(true /*forceSummaryFetch*/);
-        summaryManager.getGlobalSessionSummaryStatus(
+        SummaryManager.getInstance().getSessionSummaryStatus(
+            true /*forceSummaryFetch*/
+        );
+        SummaryManager.getInstance().getGlobalSessionSummaryStatus(
             true /*forceSummaryFetch*/
         );
 
@@ -461,7 +453,7 @@ export async function writeCodeTimeMetricsDashboard() {
     dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
     // get the top section of the dashboard content (today's data)
-    const sessionSummary: SessionSummary = await summaryManager.getSessionSummaryStatus();
+    const sessionSummary: SessionSummary = await SummaryManager.getInstance().getSessionSummaryStatus();
     if (sessionSummary) {
         let averageTime = humanizeMinutes(sessionSummary.averageDailyMinutes);
         let hoursCodedToday = humanizeMinutes(sessionSummary.currentDayMinutes);

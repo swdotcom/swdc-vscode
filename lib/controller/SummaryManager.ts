@@ -18,13 +18,14 @@ import {
     getGlobalSessionSummaryData,
     saveGlobalSessionSummaryToDisk
 } from "../storage/GlobalSessionSummaryData";
+import { WallClockHandler } from "../event/WallClockHandler";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
 
 const moment = require("moment-timezone");
 
 // 5 minutes
-const DAY_CHECK_TIMER_INTERVAL = 1000 * 60 * 5;
+const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
 
 export class SummaryManager {
     private static instance: SummaryManager;
@@ -53,6 +54,10 @@ export class SummaryManager {
         this.newDayChecker();
     }
 
+    /**
+     * Check if its a new day, if so we'll clear the session sumary and
+     * file change info summary, then we'll force a fetch from the app
+     */
     async newDayChecker() {
         const day = moment().format("YYYY-MM-DD");
         if (day !== this._currentDay) {
@@ -65,8 +70,8 @@ export class SummaryManager {
             await payloadMgr.sendOfflineData();
 
             // fetch it the api data
-            this.getSessionSummaryStatus(true);
-            this.getGlobalSessionSummaryStatus(true);
+            await this.getSessionSummaryStatus(true);
+            await this.getGlobalSessionSummaryStatus(true);
 
             // set the current day
             this._currentDay = day;
@@ -91,6 +96,10 @@ export class SummaryManager {
                 saveGlobalSessionSummaryToDisk(globalSessionSummaryData);
             }
         }
+
+        // refresh the tree view
+        commands.executeCommand("codetime.refreshKpmTree");
+
         return globalSessionSummaryData;
     }
 
@@ -118,8 +127,12 @@ export class SummaryManager {
                 // get the lastStart
                 const lastStart = sessionSummaryData.lastStart;
                 // update it from the app
-                sessionSummaryData = result.data;
+                sessionSummaryData = { ...result.data };
+                const currentDaySeconds =
+                    sessionSummaryData.currentDayMinutes * 60;
+                WallClockHandler.getInstance().setWcTime(currentDaySeconds);
                 sessionSummaryData.lastStart = lastStart;
+
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
             }
