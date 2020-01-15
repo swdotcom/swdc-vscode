@@ -25,6 +25,7 @@ import * as path from "path";
 import { getFileChangeInfoMap } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { getGlobalSessionSummaryData } from "../storage/GlobalSessionSummaryData";
+import { WallClockHandler } from "../event/WallClockHandler";
 const numeral = require("numeral");
 
 // this current path is in the out/lib. We need to find the resource files
@@ -36,6 +37,8 @@ const resourcePath: string = path.join(
     "..",
     "resources"
 );
+
+const wallClockHandler: WallClockHandler = WallClockHandler.getInstance();
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -307,8 +310,12 @@ export class KpmProviderManager {
     ): KpmItem[] {
         const items: KpmItem[] = [];
 
-        const editorHours = humanizeMinutes(data.currentDayEditorMinutes);
-        items.push(this.buildTreeMetricItem("Editor Time", editorHours));
+        items.push(
+            this.buildTreeMetricItem(
+                "Editor Time",
+                wallClockHandler.getWcHours()
+            )
+        );
 
         let values = [];
         const codeHours = humanizeMinutes(data.currentDayMinutes);
