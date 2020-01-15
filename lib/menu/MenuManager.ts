@@ -16,11 +16,11 @@ import {
 } from "../Util";
 import {
     getUserStatus,
-    serverIsAvailable,
     writeCommitSummaryData,
     writeCodeTimeMetricsDashboard,
     getConnectState
 } from "../DataController";
+import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { clearSessionSummaryData } from "../OfflineManager";
 import { LoggedInState } from "../model/models";

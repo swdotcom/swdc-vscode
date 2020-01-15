@@ -7,7 +7,7 @@ import {
     normalizeGithubEmail,
     getFileType
 } from "../Util";
-import { serverIsAvailable } from "../DataController";
+import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
 
 let myRepoInfo = [];

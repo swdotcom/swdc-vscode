@@ -12,13 +12,13 @@ import {
     getFileAgeInDays,
     getFileType
 } from "../Util";
-import { sendOfflineData } from "../DataController";
 import {
     getRepoContributorInfo,
     getRepoFileCount,
     getFileContributorCount
 } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
+import { PayloadManager } from "../controller/PayloadManager";
 const moment = require("moment-timezone");
 
 const NO_PROJ_NAME = "Unnamed";
@@ -85,7 +85,7 @@ export class KpmController {
         if (dayOfMonth !== this._lastDayOfMonth) {
             this._lastDayOfMonth = dayOfMonth;
             setTimeout(() => {
-                sendOfflineData();
+                PayloadManager.getInstance().sendOfflineData();
             }, 1000 * 2);
         }
     }

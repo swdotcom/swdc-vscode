@@ -51,6 +51,7 @@ export class FileChangeInfo {
 }
 
 export class SessionSummary {
+    currentDayEditorMinutes: number = 0;
     currentDayMinutes: number = 0;
     averageDailyMinutes: number = 0;
     averageDailyKeystrokes: number = 0;

@@ -4,13 +4,12 @@ import {
     softwareGet,
     softwarePut,
     isResponseOk,
-    softwarePost
+    softwarePost,
+    serverIsAvailable
 } from "./http/HttpClient";
 import {
     getItem,
     setItem,
-    getSoftwareDataStoreFile,
-    deleteFile,
     nowInSecs,
     getSessionFileCreateTime,
     getOs,
@@ -21,42 +20,29 @@ import {
     launchWebUrl,
     logIt,
     getPluginId,
-    logEvent,
     getCommitSummaryFile,
     getSummaryInfoFile,
     getSectionHeader,
     humanizeMinutes,
     getDashboardRow,
     getDashboardFile,
-    isLinux,
-    shouldClearSessionData
+    isLinux
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
-import {
-    getSessionSummaryData,
-    updateStatusBarWithSummaryData,
-    saveSessionSummaryToDisk,
-    clearSessionSummaryData,
-    clearFileChangeInfoSummaryData
-} from "./OfflineManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { SessionSummary, LoggedInState } from "./model/models";
+import { LoggedInState } from "./model/models";
 import { EventHandler } from "./event/EventHandler";
+import { SummaryManager } from "./controller/SummaryManager";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
 let connectState: LoggedInState = null;
 let lastLoggedInCheckTime = null;
-let serverAvailable = true;
-let serverAvailableLastCheck = 0;
 let toggleFileEventLogging = null;
 
 let userFetchTimeout = null;
 
-const eventHandler: EventHandler = EventHandler.getInstance();
-
-// batch offline payloads in 50. backend has a 100k body limit
-const batch_limit = 50;
+const summaryManager: SummaryManager = SummaryManager.getInstance();
 
 export function getConnectState() {
     return connectState;
@@ -69,74 +55,6 @@ export function getToggleFileEventLoggingState() {
             .get("toggleFileEventLogging");
     }
     return toggleFileEventLogging;
-}
-
-export async function serverIsAvailable() {
-    let nowSec = nowInSecs();
-    let diff = nowSec - serverAvailableLastCheck;
-    if (serverAvailableLastCheck === 0 || diff > 60) {
-        serverAvailableLastCheck = nowInSecs();
-        serverAvailable = await softwareGet("/ping", null)
-            .then(result => {
-                return isResponseOk(result);
-            })
-            .catch(e => {
-                return false;
-            });
-    }
-    return serverAvailable;
-}
-
-/**
- * send the offline data
- */
-export async function sendOfflineData() {
-    let isonline = await serverIsAvailable();
-    if (!isonline) {
-        return;
-    }
-    const dataStoreFile = getSoftwareDataStoreFile();
-    try {
-        if (fs.existsSync(dataStoreFile)) {
-            const content = fs.readFileSync(dataStoreFile).toString();
-            // we're online so just delete the datastore file
-            deleteFile(getSoftwareDataStoreFile());
-            if (content) {
-                logEvent(`sending batch payloads: ${content}`);
-                const payloads = content
-                    .split(/\r?\n/)
-                    .map(item => {
-                        let obj = null;
-                        if (item) {
-                            try {
-                                obj = JSON.parse(item);
-                            } catch (e) {
-                                //
-                            }
-                        }
-                        if (obj) {
-                            return obj;
-                        }
-                    })
-                    .filter(item => item);
-
-                // send 50 at a time
-                let batch = [];
-                for (let i = 0; i < payloads.length; i++) {
-                    if (batch.length >= batch_limit) {
-                        await eventHandler.sendBatchPayload(batch);
-                        batch = [];
-                    }
-                    batch.push(payloads[i]);
-                }
-                if (batch.length > 0) {
-                    await eventHandler.sendBatchPayload(batch);
-                }
-            }
-        }
-    } catch (e) {
-        //
-    }
 }
 
 /**
@@ -257,11 +175,6 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
             // they've logged in, update the preferences
             initializePreferences(serverIsOnline);
         }
-
-        setTimeout(() => {
-            // update the statusbar
-            getSessionSummaryStatus();
-        }, 1000);
     }
 
     return connectState;
@@ -433,7 +346,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         clearCachedLoggedInState();
 
         // explicitly fetch the latest info the app server
-        getSessionSummaryStatus(true /*forceSummaryFetch*/);
+        summaryManager.getSessionSummaryStatus(true /*forceSummaryFetch*/);
 
         const message = "Successfully logged on to Code Time";
         commands.executeCommand("codetime.refreshKpmTree");
@@ -546,7 +459,7 @@ export async function writeCodeTimeMetricsDashboard() {
     dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
     // get the top section of the dashboard content (today's data)
-    const sessionSummary = await getSessionSummaryStatus();
+    const sessionSummary = await summaryManager.getSessionSummaryStatus();
     if (sessionSummary && sessionSummary.data) {
         let averageTime = humanizeMinutes(
             sessionSummary.data.averageDailyMinutes
@@ -588,56 +501,4 @@ export async function writeCodeTimeMetricsDashboard() {
             );
         }
     });
-}
-
-/**
- * Fetch the status bar data, which is also used for the today summary in the dashboard.
- */
-export async function getSessionSummaryStatus(forceSummaryFetch = false) {
-    const jwt = getItem("jwt");
-    const serverIsOnline = await serverIsAvailable();
-
-    let isNewDay = false;
-    if (forceSummaryFetch || shouldClearSessionData()) {
-        // new day, clear the session summary data
-        clearSessionSummaryData();
-        clearFileChangeInfoSummaryData();
-        isNewDay = true;
-    }
-    let sessionSummaryData: SessionSummary = getSessionSummaryData();
-    let status = "OK";
-
-    if (
-        serverIsOnline &&
-        jwt &&
-        (!sessionSummaryData || isNewDay || forceSummaryFetch)
-    ) {
-        // Returns:
-        // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
-        // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
-        // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
-        // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
-        // volumePercent:851 }
-        const result = await softwareGet(`/sessions/summary`, jwt).catch(
-            err => {
-                return null;
-            }
-        );
-        if (isResponseOk(result) && result.data) {
-            // get the lastStart
-            const lastStart = sessionSummaryData.lastStart;
-            // update it from the app
-            sessionSummaryData = result.data;
-            sessionSummaryData.lastStart = lastStart;
-            // update the file
-            saveSessionSummaryToDisk(sessionSummaryData);
-        }
-    }
-
-    updateStatusBarWithSummaryData();
-
-    // refresh the tree view
-    commands.executeCommand("codetime.refreshKpmTree");
-
-    return { data: sessionSummaryData, status };
 }

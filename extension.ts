@@ -4,11 +4,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
-    sendOfflineData,
     getUserStatus,
     sendHeartbeat,
-    serverIsAvailable,
-    getSessionSummaryStatus,
     initializePreferences
 } from "./lib/DataController";
 import { onboardPlugin, createAnonymousUser } from "./lib/user/OnboardManager";
@@ -26,12 +23,15 @@ import {
     displayReadmeIfNotExists,
     setItem
 } from "./lib/Util";
+import { serverIsAvailable } from "./lib/http/HttpClient";
 import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
 import { setSessionSummaryLiveshareMinutes } from "./lib/OfflineManager";
 import { KpmController } from "./lib/event/KpmController";
+import { SummaryManager } from "./lib/controller/SummaryManager";
+import { PayloadManager } from "./lib/controller/PayloadManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -134,7 +134,7 @@ export async function intializePlugin(
 
     // update the status bar
     setTimeout(() => {
-        getSessionSummaryStatus();
+        SummaryManager.getInstance().getSessionSummaryStatus();
     }, 1000);
 
     // every hour, look for repo members
@@ -163,7 +163,7 @@ export async function intializePlugin(
     // every half hour, send offline data
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(() => {
-        sendOfflineData();
+        PayloadManager.getInstance().sendOfflineData();
     }, half_hour_ms);
 
     // in 2 minutes fetch the historical commits if any
@@ -214,7 +214,7 @@ export async function intializePlugin(
 
     // initiate kpm fetch by sending any offline data
     setTimeout(() => {
-        sendOfflineData();
+        PayloadManager.getInstance().sendOfflineData();
     }, 1000);
 
     // show the readme if it doesn't exist
@@ -279,7 +279,7 @@ async function periodicSessionCheck() {
         if (createdJwt) {
             await getUserStatus(serverIsOnline);
             setTimeout(() => {
-                sendOfflineData();
+                PayloadManager.getInstance().sendOfflineData();
             }, 1000);
         }
     }

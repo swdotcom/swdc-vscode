@@ -4,10 +4,10 @@ import {
     saveFileChangeInfoToDisk,
     getFileChangeInfoMap
 } from "../OfflineManager";
-import { getSessionSummaryStatus } from "../DataController";
 import { getSoftwareDataStoreFile, logIt, getItem } from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
+import { SummaryManager } from "../controller/SummaryManager";
 const fs = require("fs");
 const os = require("os");
 
@@ -96,7 +96,7 @@ export class EventHandler {
 
         setTimeout(() => {
             // update the statusbar
-            getSessionSummaryStatus();
+            SummaryManager.getInstance().getSessionSummaryStatus();
         }, 1000);
 
         // store the payload into the data.json file

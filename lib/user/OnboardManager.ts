@@ -1,5 +1,5 @@
 import { window, ExtensionContext } from "vscode";
-import { serverIsAvailable, getAppJwt } from "../DataController";
+import { getAppJwt } from "../DataController";
 import {
     softwareSessionFileExists,
     jwtExists,
@@ -9,7 +9,11 @@ import {
     setItem,
     getItem
 } from "../Util";
-import { softwarePost, isResponseOk } from "../http/HttpClient";
+import {
+    softwarePost,
+    isResponseOk,
+    serverIsAvailable
+} from "../http/HttpClient";
 
 let secondary_window_activate_counter = 0;
 let retry_counter = 0;

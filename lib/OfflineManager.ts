@@ -23,7 +23,6 @@ const cacheMgr: CacheManager = CacheManager.getInstance();
 
 export function clearSessionSummaryData() {
     sessionSummaryData = new SessionSummary();
-
     saveSessionSummaryToDisk(sessionSummaryData);
 }
 

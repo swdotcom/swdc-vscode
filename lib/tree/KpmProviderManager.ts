@@ -66,13 +66,16 @@ export class KpmProviderManager {
 
         // toggle status bar button
         let toggleStatusBarTextLabel = "Hide Status Bar Metrics";
+        let toggleStatusBarIcon = "not_visible.svg";
         if (!isStatusBarTextVisible()) {
             toggleStatusBarTextLabel = "Show Status Bar Metrics";
+            toggleStatusBarIcon = "visible.svg";
         }
         const toggleStatusBarButton: KpmItem = this.getActionButton(
             toggleStatusBarTextLabel,
             "Toggle the Code Time status bar metrics text",
-            "codetime.toggleStatusBar"
+            "codetime.toggleStatusBar",
+            toggleStatusBarIcon
         );
         treeItems.push(toggleStatusBarButton);
 
@@ -296,6 +299,9 @@ export class KpmProviderManager {
 
     getSessionSummaryItems(data: SessionSummary): KpmItem[] {
         const items: KpmItem[] = [];
+
+        const editorHours = humanizeMinutes(data.currentDayEditorMinutes);
+        items.push(this.buildTreeMetricItem("Editor Time", editorHours));
 
         const codeHours = humanizeMinutes(data.currentDayMinutes);
         items.push(this.buildTreeMetricItem("Session Time", codeHours));
