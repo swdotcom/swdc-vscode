@@ -7,7 +7,11 @@ import {
     getFileChangeInfoMap,
     saveFileChangeInfoToDisk
 } from "../storage/FileChangeInfoSummaryData";
-import { incrementSessionSummaryData } from "../storage/SessionSummaryData";
+import {
+    incrementSessionSummaryData,
+    updateStatusBarWithSummaryData
+} from "../storage/SessionSummaryData";
+import { commands } from "vscode";
 const fs = require("fs");
 const os = require("os");
 
@@ -96,7 +100,11 @@ export class EventHandler {
 
         setTimeout(() => {
             // update the statusbar
-            SummaryManager.getInstance().getSessionSummaryStatus();
+            // update the status bar
+            updateStatusBarWithSummaryData();
+
+            // refresh the tree view
+            commands.executeCommand("codetime.refreshKpmTree");
         }, 1000);
 
         // store the payload into the data.json file

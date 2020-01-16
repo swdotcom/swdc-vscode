@@ -1,4 +1,4 @@
-import { getItem } from "../Util";
+import { getItem, setItem } from "../Util";
 import { SessionSummary, GlobalSessionSummary } from "../model/models";
 import { PayloadManager } from "./PayloadManager";
 import {
@@ -46,6 +46,9 @@ export class SummaryManager {
     }
 
     init() {
+        // fetch the current day from the sessions.json
+        this._currentDay = getItem("currentDay");
+
         // start timer to check if it's a new day or not
         this._dayCheckTimer = setInterval(async () => {
             SummaryManager.getInstance().newDayChecker();
@@ -70,11 +73,12 @@ export class SummaryManager {
             await payloadMgr.sendOfflineData();
 
             // fetch it the api data
-            await this.getSessionSummaryStatus(true);
             await this.getGlobalSessionSummaryStatus(true);
 
             // set the current day
             this._currentDay = day;
+            // set the sessions.json
+            setItem("currentDay", this._currentDay);
         }
     }
 

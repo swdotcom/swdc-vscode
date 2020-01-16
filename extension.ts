@@ -31,7 +31,11 @@ import { createCommands } from "./lib/command-helper";
 import { KpmController } from "./lib/event/KpmController";
 import { SummaryManager } from "./lib/controller/SummaryManager";
 import { PayloadManager } from "./lib/controller/PayloadManager";
-import { setSessionSummaryLiveshareMinutes } from "./lib/storage/SessionSummaryData";
+import {
+    setSessionSummaryLiveshareMinutes,
+    getSessionSummaryData
+} from "./lib/storage/SessionSummaryData";
+import { SessionSummary } from "./lib/model/models";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -134,7 +138,9 @@ export async function intializePlugin(
 
     // update the status bar
     setTimeout(() => {
-        SummaryManager.getInstance().getSessionSummaryStatus();
+        const summaryData: SessionSummary = getSessionSummaryData();
+        const forceFetch = summaryData.currentDayMinutes === 0 ? true : false;
+        SummaryManager.getInstance().getSessionSummaryStatus(forceFetch);
     }, 1000);
 
     // every hour, look for repo members
