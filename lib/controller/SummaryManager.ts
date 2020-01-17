@@ -21,6 +21,7 @@ import {
 import { WallClockHandler } from "../event/WallClockHandler";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
+const wallClockMgr: WallClockHandler = WallClockHandler.getInstance();
 
 const moment = require("moment-timezone");
 
@@ -66,6 +67,7 @@ export class SummaryManager {
         if (day !== this._currentDay) {
             // day does't match.
             // clear the session summary, and the file change info summary data
+            wallClockMgr.clearWcTime();
             clearSessionSummaryData();
             clearFileChangeInfoSummaryData();
 
@@ -134,7 +136,7 @@ export class SummaryManager {
                 sessionSummaryData = { ...result.data };
                 const currentDaySeconds =
                     sessionSummaryData.currentDayMinutes * 60;
-                WallClockHandler.getInstance().setWcTime(currentDaySeconds);
+                wallClockMgr.setWcTime(currentDaySeconds + 1);
                 sessionSummaryData.lastStart = lastStart;
 
                 // update the file

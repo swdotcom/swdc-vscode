@@ -1,8 +1,6 @@
-import { CacheManager } from "../cache/CacheManager";
 import { getItem, humanizeMinutes, setItem } from "../Util";
 import { commands, window } from "vscode";
-
-const cacheMgr: CacheManager = CacheManager.getInstance();
+import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 
 // 1 minute
 const CLOCK_INTERVAL = 1000 * 60;
@@ -14,7 +12,7 @@ export class WallClockHandler {
     private _wctime: number = 0;
 
     private constructor() {
-        this.util();
+        this.initTimer();
     }
 
     static getInstance(): WallClockHandler {
@@ -25,7 +23,7 @@ export class WallClockHandler {
         return WallClockHandler.instance;
     }
 
-    private util() {
+    private initTimer() {
         this._wctime = getItem("vscode_wctime") || 0;
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
@@ -38,8 +36,7 @@ export class WallClockHandler {
     }
 
     public clearWcTime() {
-        this._wctime = 0;
-        setItem("vscode_wctime", this._wctime);
+        this.setWcTime(1);
     }
 
     public getWcTime() {
@@ -50,5 +47,10 @@ export class WallClockHandler {
     public setWcTime(seconds) {
         this._wctime = seconds;
         setItem("vscode_wctime", seconds);
+        clearInterval(this._wcIntervalHandle);
+        this.initTimer();
+
+        // update the status bar
+        updateStatusBarWithSummaryData();
     }
 }

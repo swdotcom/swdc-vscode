@@ -99,10 +99,6 @@ export class EventHandler {
         saveFileChangeInfoToDisk(fileChangeInfoMap);
 
         setTimeout(() => {
-            // update the statusbar
-            // update the status bar
-            updateStatusBarWithSummaryData();
-
             // refresh the tree view
             commands.executeCommand("codetime.refreshKpmTree");
         }, 1000);
