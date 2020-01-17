@@ -9,7 +9,6 @@ import {
     launchWebUrl,
     getDashboardFile,
     getCommitSummaryFile,
-    toggleStatusBar,
     launchLogin,
     isStatusBarTextVisible,
     clearDayHourVals
@@ -114,7 +113,8 @@ export async function showMenuOptions() {
         label: toggleStatusBarTextLabel,
         detail: "Toggle the Code Time status bar metrics text",
         url: null,
-        cb: toggleStatusBar
+        cb: null,
+        command: "codetime.toggleStatusBar"
     });
 
     kpmMenuOptions.items.push({
@@ -126,9 +126,9 @@ export async function showMenuOptions() {
 
     kpmMenuOptions.items.push({
         label: "Submit Feedback",
-        detail: "Send us an email at cody@software.com.",
-        url: "mailto:cody@software.com",
-        cb: null
+        detail: "Send us an email at cody@software.com",
+        cb: null,
+        command: "codetime.sendFeedback"
     });
 
     if (loggedInState.loggedIn) {

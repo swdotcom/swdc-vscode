@@ -70,7 +70,9 @@ export function createCommands(
         "codetime.softwareKpmDashboard",
         () => {
             handleKpmClickedEvent();
-            codetimeTreeProvider.refresh();
+            setTimeout(() => {
+                codetimeTreeProvider.refresh();
+            }, 500);
         }
     );
     cmds.push(kpmClickedCmd);
@@ -79,7 +81,10 @@ export function createCommands(
         "codetime.openFileInEditor",
         file => {
             openFileInEditor(file);
-            codetimeTreeProvider.refresh();
+            setTimeout(() => {
+                codetimeTreeProvider.refresh();
+                kpmTreeProvider.refresh();
+            }, 500);
         }
     );
     cmds.push(openFileInEditorCmd);
@@ -88,7 +93,9 @@ export function createCommands(
         "codetime.toggleStatusBar",
         () => {
             toggleStatusBar();
-            codetimeTreeProvider.refresh();
+            setTimeout(() => {
+                codetimeTreeProvider.refresh();
+            }, 500);
         }
     );
     cmds.push(toggleStatusBarCmd);
@@ -120,7 +127,9 @@ export function createCommands(
         "codetime.displayReadme",
         () => {
             displayReadmeIfNotExists(true /*override*/);
-            codetimeTreeProvider.refresh();
+            setTimeout(() => {
+                codetimeTreeProvider.refresh();
+            }, 500);
         }
     );
     cmds.push(showReadmeCmd);
@@ -129,7 +138,9 @@ export function createCommands(
         "codetime.codeTimeMetrics",
         () => {
             displayCodeTimeMetricsDashboard();
-            codetimeTreeProvider.refresh();
+            setTimeout(() => {
+                codetimeTreeProvider.refresh();
+            }, 500);
         }
     );
     cmds.push(codeTimeMetricsCmd);
@@ -157,6 +168,14 @@ export function createCommands(
         }
     );
     cmds.push(toggleStatusInfoCmd);
+
+    const sendFeedbackCmd = commands.registerCommand(
+        "codetime.sendFeedback",
+        () => {
+            launchWebUrl("mailto:cody@software.com");
+        }
+    );
+    cmds.push(sendFeedbackCmd);
 
     const configChangesHandler = workspace.onDidChangeConfiguration(e =>
         updatePreferences()

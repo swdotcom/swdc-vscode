@@ -93,6 +93,14 @@ export class KpmProviderManager {
         );
         treeItems.push(readmeButton);
 
+        const feedbackButton: KpmItem = this.getActionButton(
+            "Submit Feedback",
+            "Send us an email at cody@software.com",
+            "codetime.sendFeedback",
+            "feedback.svg"
+        );
+        treeItems.push(feedbackButton);
+
         return treeItems;
     }
 
@@ -320,6 +328,8 @@ export class KpmProviderManager {
         let values = [];
         const codeHours = humanizeMinutes(data.currentDayMinutes);
         values.push(`Today: ${codeHours}`);
+        const avgMin = humanizeMinutes(data.averageDailyMinutes);
+        values.push(`Average: ${avgMin}`);
         const globalCodeHours = humanizeMinutes(
             global.avg_session_seconds / 60
         );
@@ -329,6 +339,10 @@ export class KpmProviderManager {
         values = [];
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
         values.push(`Today: ${keystrokes}`);
+        const avgKeystrokes = numeral(data.averageDailyKeystrokes).format(
+            "0 a"
+        );
+        values.push(`Average: ${avgKeystrokes}`);
         const globalKeystrokes = numeral(global.avg_keystrokes).format("0 a");
         values.push(`Global average: ${globalKeystrokes}`);
         items.push(this.buildActivityComparisonNodes("Keystrokes", values));
