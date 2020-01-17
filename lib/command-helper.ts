@@ -82,8 +82,7 @@ export function createCommands(
         file => {
             openFileInEditor(file);
             setTimeout(() => {
-                codetimeTreeProvider.refresh();
-                kpmTreeProvider.refresh();
+                commands.executeCommand("codetime.refreshKpmTree");
             }, 500);
         }
     );
