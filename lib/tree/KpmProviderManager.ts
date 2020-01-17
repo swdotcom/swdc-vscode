@@ -11,7 +11,8 @@ import {
     humanizeMinutes,
     getWorkspaceFolders,
     getItem,
-    isStatusBarTextVisible
+    isStatusBarTextVisible,
+    logIt
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
@@ -19,7 +20,8 @@ import {
     TreeItem,
     TreeItemCollapsibleState,
     Command,
-    commands
+    commands,
+    TreeView
 } from "vscode";
 import * as path from "path";
 import { getFileChangeInfoMap } from "../storage/FileChangeInfoSummaryData";
@@ -616,14 +618,28 @@ function getTreeItemIcon(treeItem: KpmItem): any {
     return { lightPath, darkPath, contextValue };
 }
 
-export const handleKpmChangeSelection = (item: KpmItem) => {
+export const handleKpmChangeSelection = (
+    view: TreeView<KpmItem>,
+    item: KpmItem
+) => {
     if (item.command) {
         const args = item.commandArgs || null;
         if (args) {
-            return commands.executeCommand(item.command, ...args);
+            commands.executeCommand(item.command, ...args);
         } else {
             // run the command
-            return commands.executeCommand(item.command);
+            commands.executeCommand(item.command);
         }
+    }
+
+    // deselect it
+    try {
+        // re-select the track without focus
+        view.reveal(item, {
+            focus: false,
+            select: false
+        });
+    } catch (err) {
+        logIt(`Unable to deselect track: ${err.message}`);
     }
 };

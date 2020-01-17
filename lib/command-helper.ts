@@ -71,7 +71,7 @@ export function createCommands(
         () => {
             handleKpmClickedEvent();
             setTimeout(() => {
-                codetimeTreeProvider.refresh();
+                commands.executeCommand("codetime.refreshCodetimeTree");
             }, 500);
         }
     );
@@ -94,7 +94,7 @@ export function createCommands(
         () => {
             toggleStatusBar();
             setTimeout(() => {
-                codetimeTreeProvider.refresh();
+                commands.executeCommand("codetime.refreshCodetimeTree");
             }, 500);
         }
     );
@@ -104,6 +104,14 @@ export function createCommands(
         launchLogin();
     });
     cmds.push(loginCmd);
+
+    const refreshCodetimeTreeCmd = commands.registerCommand(
+        "codetime.refreshCodetimeTree",
+        () => {
+            codetimeTreeProvider.refresh();
+        }
+    );
+    cmds.push(refreshCodetimeTreeCmd);
 
     const refreshKpmTreeCmd = commands.registerCommand(
         "codetime.refreshKpmTree",
@@ -128,7 +136,7 @@ export function createCommands(
         () => {
             displayReadmeIfNotExists(true /*override*/);
             setTimeout(() => {
-                codetimeTreeProvider.refresh();
+                commands.executeCommand("codetime.refreshCodetimeTree");
             }, 500);
         }
     );
@@ -139,7 +147,7 @@ export function createCommands(
         () => {
             displayCodeTimeMetricsDashboard();
             setTimeout(() => {
-                codetimeTreeProvider.refresh();
+                commands.executeCommand("codetime.refreshCodetimeTree");
             }, 500);
         }
     );

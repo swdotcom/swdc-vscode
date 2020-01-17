@@ -37,7 +37,8 @@ export const connectCodeTimeTreeView = (view: TreeView<KpmItem>) => {
             }
 
             const item: KpmItem = e.selection[0];
-            handleKpmChangeSelection(item);
+
+            handleKpmChangeSelection(view, item);
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
