@@ -142,7 +142,7 @@ export function updateStatusBarWithSummaryData() {
     sessionSummaryData = getSessionSummaryFileAsJson();
 
     let currentDayMinutes = sessionSummaryData.currentDayMinutes;
-    let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
+    // let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
     let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
     let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
 

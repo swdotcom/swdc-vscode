@@ -292,11 +292,7 @@ function updateStatusBar(msg, tooltip) {
 
 export function toggleStatusBar() {
     showStatusBarText = !showStatusBarText;
-    if (showStatusBarText) {
-        updateStatusBarWithSummaryData();
-    } else {
-        updateStatusBar(lastMsg, lastTooltip);
-    }
+    updateStatusBarWithSummaryData();
 }
 
 export function isStatusBarTextVisible() {
