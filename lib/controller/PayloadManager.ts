@@ -27,27 +27,26 @@ export class PayloadManager {
     }
 
     async sendOfflineEvents() {
-        let isonline = await serverIsAvailable();
-        if (!isonline) {
-            return;
-        }
-        const eventsFile = getPluginEventsFile();
+        this.batchSendData("/data/event", getPluginEventsFile());
     }
 
     /**
      * send the offline data
      */
     async sendOfflineData() {
+        this.batchSendData("/data/batch", getSoftwareDataStoreFile());
+    }
+
+    async batchSendData(api, file) {
         let isonline = await serverIsAvailable();
         if (!isonline) {
             return;
         }
-        const dataStoreFile = getSoftwareDataStoreFile();
         try {
-            if (fs.existsSync(dataStoreFile)) {
-                const content = fs.readFileSync(dataStoreFile).toString();
+            if (fs.existsSync(file)) {
+                const content = fs.readFileSync(file).toString();
                 // we're online so just delete the datastore file
-                deleteFile(getSoftwareDataStoreFile());
+                deleteFile(file);
                 if (content) {
                     logEvent(`sending batch payloads: ${content}`);
                     const payloads = content
@@ -71,13 +70,13 @@ export class PayloadManager {
                     let batch = [];
                     for (let i = 0; i < payloads.length; i++) {
                         if (batch.length >= batch_limit) {
-                            await eventHandler.sendBatchPayload(batch);
+                            await eventHandler.sendBatchPayload(api, batch);
                             batch = [];
                         }
                         batch.push(payloads[i]);
                     }
                     if (batch.length > 0) {
-                        await eventHandler.sendBatchPayload(batch);
+                        await eventHandler.sendBatchPayload(api, batch);
                     }
                 }
             }

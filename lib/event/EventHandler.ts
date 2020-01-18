@@ -33,8 +33,8 @@ export class EventHandler {
         return EventHandler.instance;
     }
 
-    sendBatchPayload(batch) {
-        softwarePost("/data/batch", batch, getItem("jwt")).catch(e => {
+    sendBatchPayload(api, batch) {
+        softwarePost(api, batch, getItem("jwt")).catch(e => {
             logIt(`Unable to send plugin data batch, error: ${e.message}`);
         });
     }

@@ -128,7 +128,7 @@ export class KeystrokeStats {
         }
 
         if (sendNow) {
-            eventHandler.sendBatchPayload([payload]);
+            eventHandler.sendBatchPayload("/data/batch", [payload]);
         } else {
             eventHandler.storePayload(payload);
             logIt(`storing kpm metrics`);
