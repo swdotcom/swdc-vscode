@@ -164,9 +164,6 @@ export async function intializePlugin(
     setInterval(async () => {
         const isonline = await serverIsAvailable();
         sendHeartbeat("HOURLY", isonline);
-
-        // in for testing, take out when done testing
-        await PayloadManager.getInstance().sendOfflineEvents();
     }, hourly_interval_ms * 2);
 
     // every half hour, send offline data
@@ -179,6 +176,8 @@ export async function intializePlugin(
     // in 2 minutes fetch the historical commits if any
     setTimeout(() => {
         getHistoricalCommits(serverIsOnline);
+        // in for testing, take out when done testing
+        PayloadManager.getInstance().sendOfflineEvents();
     }, one_min_ms * 2);
 
     // 10 minute interval tasks

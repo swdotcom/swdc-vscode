@@ -45,7 +45,7 @@ export class PayloadManager {
         try {
             if (fs.existsSync(file)) {
                 const content = fs.readFileSync(file).toString();
-                // we're online so just delete the datastore file
+                // we're online so just delete the file
                 deleteFile(file);
                 if (content) {
                     logEvent(`sending batch payloads: ${content}`);
