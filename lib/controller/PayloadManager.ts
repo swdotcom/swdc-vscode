@@ -1,5 +1,10 @@
 import { serverIsAvailable } from "../http/HttpClient";
-import { getSoftwareDataStoreFile, deleteFile, logEvent } from "../Util";
+import {
+    getSoftwareDataStoreFile,
+    deleteFile,
+    logEvent,
+    getPluginEventsFile
+} from "../Util";
 import { EventHandler } from "../event/EventHandler";
 
 const fs = require("fs");
@@ -19,6 +24,14 @@ export class PayloadManager {
         }
 
         return PayloadManager.instance;
+    }
+
+    async sendOfflineEvents() {
+        let isonline = await serverIsAvailable();
+        if (!isonline) {
+            return;
+        }
+        const eventsFile = getPluginEventsFile();
     }
 
     /**

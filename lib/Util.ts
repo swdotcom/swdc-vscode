@@ -453,6 +453,16 @@ export function getSoftwareDataStoreFile() {
     return file;
 }
 
+export function getPluginEventsFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\events.json";
+    } else {
+        file += "/events.json";
+    }
+    return file;
+}
+
 export function getLocalREADMEFile() {
     let file = __dirname;
     if (isWindows()) {

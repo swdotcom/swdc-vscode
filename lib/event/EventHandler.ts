@@ -1,5 +1,10 @@
 import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
-import { getSoftwareDataStoreFile, logIt, getItem } from "../Util";
+import {
+    getSoftwareDataStoreFile,
+    logIt,
+    getItem,
+    getPluginEventsFile
+} from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
 import { SummaryManager } from "../controller/SummaryManager";
@@ -113,6 +118,20 @@ export class EventHandler {
                     logIt(
                         `Error appending to the Software data store file: ${err.message}`
                     );
+            }
+        );
+    }
+
+    storeEvent(event) {
+        fs.appendFile(
+            getPluginEventsFile(),
+            JSON.stringify(event) + os.EOL,
+            err => {
+                if (err) {
+                    logIt(
+                        `Error appending to the events data file: ${err.message}`
+                    );
+                }
             }
         );
     }
