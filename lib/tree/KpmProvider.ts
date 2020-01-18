@@ -42,14 +42,7 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
-                const event: CodeTimeEvent = createCodeTimeEvent(
-                    "mouse",
-                    "click",
-                    "ShowTreeView"
-                );
-
-                // store the event
-                EventHandler.getInstance().storeEvent(event);
+                createCodeTimeEvent("mouse", "click", "ShowTreeView");
             }
         })
     );

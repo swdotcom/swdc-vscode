@@ -12,7 +12,8 @@ import {
     getWorkspaceFolders,
     getItem,
     isStatusBarTextVisible,
-    logIt
+    logIt,
+    createCodeTimeEvent
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
@@ -629,6 +630,11 @@ export const handleKpmChangeSelection = (
         } else {
             // run the command
             commands.executeCommand(item.command);
+        }
+
+        // send event types
+        if (item.command === "codetime.codeTimeLogin") {
+            createCodeTimeEvent("mouse", "click", "LoginTreeItem");
         }
     }
 

@@ -810,14 +810,7 @@ export async function showLoginPrompt() {
                 eventType = "window";
             }
 
-            const event: CodeTimeEvent = createCodeTimeEvent(
-                eventType,
-                eventName,
-                "OnboardPrompt"
-            );
-
-            // store the event
-            EventHandler.getInstance().storeEvent(event);
+            createCodeTimeEvent(eventType, eventName, "OnboardPrompt");
         });
 }
 
@@ -976,5 +969,5 @@ export function createCodeTimeEvent(
     event.type = type;
     event.name = name;
     event.description = description;
-    return event;
+    EventHandler.getInstance().storeEvent(event);
 }

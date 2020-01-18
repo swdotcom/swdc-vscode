@@ -53,6 +53,10 @@ export function showQuickPick(pickOptions): any {
             } else if (command) {
                 commands.executeCommand(command);
             }
+
+            if (item["label"] === LOGIN_LABEL) {
+                createCodeTimeEvent("mouse", "click", "LoginPaletteMenu");
+            }
         }
         return item;
     });
@@ -65,14 +69,7 @@ export async function buildWebDashboardUrl() {
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
 
-    const event: CodeTimeEvent = createCodeTimeEvent(
-        "mouse",
-        "click",
-        "ShowMenu"
-    );
-
-    // store the event
-    EventHandler.getInstance().storeEvent(event);
+    createCodeTimeEvent("mouse", "click", "ShowMenu");
 
     let loggedInState: LoggedInState = await getConnectState();
 

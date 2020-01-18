@@ -3,7 +3,8 @@ import {
     getSoftwareDataStoreFile,
     deleteFile,
     logEvent,
-    getPluginEventsFile
+    getPluginEventsFile,
+    logIt
 } from "../Util";
 import { EventHandler } from "../event/EventHandler";
 
@@ -81,7 +82,7 @@ export class PayloadManager {
                 }
             }
         } catch (e) {
-            //
+            logIt(`Error batch sending payloads: ${e.message}`);
         }
     }
 }
