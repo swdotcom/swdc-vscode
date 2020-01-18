@@ -89,3 +89,13 @@ export class CommitChangeStats {
     fileCount: number = 0;
     commitCount: number = 0;
 }
+
+// example: {type: "window", name: "close", timestamp: 1234,
+// timestamp_local: 1233, description: "OnboardPrompt"}
+export class CodeTimeEvent {
+    type: string = "";
+    name: string = "";
+    timestamp: number = 0;
+    timestamp_local: number = 0;
+    description: string = "";
+}

@@ -21,6 +21,8 @@ import {
     getToggleFileEventLoggingState
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
+import { CodeTimeEvent } from "./model/models";
+import { EventHandler } from "./event/EventHandler";
 
 const moment = require("moment-timezone");
 const open = require("open");
@@ -793,11 +795,29 @@ export async function showLoginPrompt() {
     window
         .showInformationMessage(infoMsg, ...[LOGIN_LABEL])
         .then(async selection => {
+            let eventName = "";
+            let eventType = "";
+
             if (selection === LOGIN_LABEL) {
                 let loginUrl = await buildLoginUrl();
                 launchWebUrl(loginUrl);
                 refetchUserStatusLazily();
+                eventName = "click";
+                eventType = "mouse";
+            } else {
+                // create an event showing login was not selected
+                eventName = "close";
+                eventType = "window";
             }
+
+            const event: CodeTimeEvent = createCodeTimeEvent(
+                eventType,
+                eventName,
+                "OnboardPrompt"
+            );
+
+            // store the event
+            EventHandler.getInstance().storeEvent(event);
         });
 }
 
@@ -935,4 +955,26 @@ export function getFileDataAsJson(file) {
         }
     }
     return data ? data : {};
+}
+
+/**
+ *
+ * @param type i.e. window | mouse | etc...
+ * @param name i.e. close | click | etc...
+ * @param description
+ */
+export function createCodeTimeEvent(
+    type: string,
+    name: string,
+    description: string
+) {
+    const nowTimes = getNowTimes();
+    const event: CodeTimeEvent = new CodeTimeEvent();
+    event.description = "OnboardPrompt";
+    event.timestamp = nowTimes.now_in_sec;
+    event.timestamp_local = nowTimes.local_now_in_sec;
+    event.type = type;
+    event.name = name;
+    event.description = description;
+    return event;
 }

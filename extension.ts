@@ -164,12 +164,16 @@ export async function intializePlugin(
     setInterval(async () => {
         const isonline = await serverIsAvailable();
         sendHeartbeat("HOURLY", isonline);
+
+        // in for testing, take out when done testing
+        await PayloadManager.getInstance().sendOfflineEvents();
     }, hourly_interval_ms * 2);
 
     // every half hour, send offline data
     const half_hour_ms = hourly_interval_ms / 2;
-    offline_data_interval = setInterval(() => {
-        PayloadManager.getInstance().sendOfflineData();
+    offline_data_interval = setInterval(async () => {
+        await PayloadManager.getInstance().sendOfflineData();
+        await PayloadManager.getInstance().sendOfflineEvents();
     }, half_hour_ms);
 
     // in 2 minutes fetch the historical commits if any
@@ -279,9 +283,6 @@ async function periodicSessionCheck() {
         let createdJwt = await createAnonymousUser(serverIsOnline);
         if (createdJwt) {
             await getUserStatus(serverIsOnline);
-            setTimeout(() => {
-                PayloadManager.getInstance().sendOfflineData();
-            }, 1000);
         }
     }
 }

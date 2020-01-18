@@ -76,18 +76,6 @@ export class KpmController {
 
         // clear out the static info map
         _staticInfoMap = {};
-
-        // check if we're in a new day, if so lets send the offline data
-
-        const dayOfMonth = moment()
-            .startOf("day")
-            .date();
-        if (dayOfMonth !== this._lastDayOfMonth) {
-            this._lastDayOfMonth = dayOfMonth;
-            setTimeout(() => {
-                PayloadManager.getInstance().sendOfflineData();
-            }, 1000 * 2);
-        }
     }
 
     /**

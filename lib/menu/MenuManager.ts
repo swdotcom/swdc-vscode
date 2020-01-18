@@ -11,7 +11,8 @@ import {
     getCommitSummaryFile,
     launchLogin,
     isStatusBarTextVisible,
-    clearDayHourVals
+    clearDayHourVals,
+    createCodeTimeEvent
 } from "../Util";
 import {
     getUserStatus,
@@ -21,8 +22,9 @@ import {
 } from "../DataController";
 import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { LoggedInState } from "../model/models";
+import { LoggedInState, CodeTimeEvent } from "../model/models";
 import { clearSessionSummaryData } from "../storage/SessionSummaryData";
+import { EventHandler } from "../event/EventHandler";
 
 /**
  * Pass in the following array of objects
@@ -62,6 +64,15 @@ export async function buildWebDashboardUrl() {
 
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
+
+    const event: CodeTimeEvent = createCodeTimeEvent(
+        "mouse",
+        "click",
+        "ShowMenu"
+    );
+
+    // store the event
+    EventHandler.getInstance().storeEvent(event);
 
     let loggedInState: LoggedInState = await getConnectState();
 
