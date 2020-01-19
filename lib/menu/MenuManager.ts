@@ -54,8 +54,8 @@ export function showQuickPick(pickOptions): any {
                 commands.executeCommand(command);
             }
 
-            if (item["label"] === LOGIN_LABEL) {
-                createCodeTimeEvent("mouse", "click", "LoginPaletteMenu");
+            if (item["eventDescription"]) {
+                createCodeTimeEvent("mouse", "click", item["eventDescription"]);
             }
         }
         return item;
@@ -69,7 +69,7 @@ export async function buildWebDashboardUrl() {
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
 
-    createCodeTimeEvent("mouse", "click", "ShowMenu");
+    createCodeTimeEvent("mouse", "click", "ShowPaletteMenu");
 
     let loggedInState: LoggedInState = await getConnectState();
 
@@ -95,7 +95,8 @@ export async function showMenuOptions() {
         label: "Code Time Dashboard",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
-        cb: displayCodeTimeMetricsDashboard
+        cb: displayCodeTimeMetricsDashboard,
+        eventDescription: "PaletteMenuLaunchDashboard"
     });
 
     let loginMsgDetail =
@@ -109,7 +110,8 @@ export async function showMenuOptions() {
             label: LOGIN_LABEL,
             detail: loginMsgDetail,
             url: null,
-            cb: launchLogin
+            cb: launchLogin,
+            eventDescription: "PaletteMenuLogin"
         });
     }
 
@@ -144,7 +146,8 @@ export async function showMenuOptions() {
             label: "Web Dashboard",
             detail: "See rich data visualizations in the web app",
             url: null,
-            cb: launchWebDashboardView
+            cb: launchWebDashboardView,
+            eventDescription: "PaletteMenuLaunchWebDashboard"
         });
     }
 

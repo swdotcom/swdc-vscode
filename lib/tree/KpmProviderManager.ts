@@ -278,7 +278,8 @@ export class KpmProviderManager {
             "See advanced metrics",
             `To see your coding data in Code Time, please log in to your account`,
             "codetime.codeTimeLogin",
-            "sw-paw-circle.svg"
+            "sw-paw-circle.svg",
+            "TreeViewLogin"
         );
         return item;
     }
@@ -289,7 +290,8 @@ export class KpmProviderManager {
             "See advanced metrics",
             `See rich data visualizations in the web app (${name})`,
             "codetime.softwareKpmDashboard",
-            "sw-paw-circle.svg"
+            "sw-paw-circle.svg",
+            "TreeViewLaunchWebDashboard"
         );
         return item;
     }
@@ -299,12 +301,19 @@ export class KpmProviderManager {
             "Code Time Dashboard",
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
-            "dashboard.png"
+            "dashboard.png",
+            "TreeViewLaunchDashboard"
         );
         return item;
     }
 
-    getActionButton(label, tooltip, command, icon = null): KpmItem {
+    getActionButton(
+        label,
+        tooltip,
+        command,
+        icon = null,
+        eventDescription: string = null
+    ): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip = tooltip;
         item.label = label;
@@ -312,6 +321,7 @@ export class KpmProviderManager {
         item.command = command;
         item.icon = icon;
         item.contextValue = "action_button";
+        item.eventDescription = eventDescription;
         return item;
     }
 
@@ -633,8 +643,8 @@ export const handleKpmChangeSelection = (
         }
 
         // send event types
-        if (item.command === "codetime.codeTimeLogin") {
-            createCodeTimeEvent("mouse", "click", "LoginTreeItem");
+        if (item.eventDescription) {
+            createCodeTimeEvent("mouse", "click", item.eventDescription);
         }
     }
 

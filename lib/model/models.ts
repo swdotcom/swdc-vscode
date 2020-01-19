@@ -10,6 +10,7 @@ export class KpmItem {
     callback: any = null;
     icon: string = null;
     children: KpmItem[] = [];
+    eventDescription: string = null;
 }
 
 export class KeystrokeAggregate {
