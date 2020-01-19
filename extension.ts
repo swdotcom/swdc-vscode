@@ -170,13 +170,18 @@ export async function intializePlugin(
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(async () => {
         await PayloadManager.getInstance().sendOfflineData();
-        await PayloadManager.getInstance().sendOfflineEvents();
     }, half_hour_ms);
 
-    // in 2 minutes fetch the historical commits if any
+    // periodically send offline events
+    const twenty_min = 1000 * 60 * 20;
     setTimeout(() => {
-        getHistoricalCommits(serverIsOnline);
-        // in for testing, take out when done testing
+        PayloadManager.getInstance().sendOfflineEvents();
+    }, twenty_min);
+
+    // in 2 minutes fetch the historical commits if any
+    setTimeout(async () => {
+        await getHistoricalCommits(serverIsOnline);
+        // send any offline events that have been saved
         PayloadManager.getInstance().sendOfflineEvents();
     }, one_min_ms * 2);
 
