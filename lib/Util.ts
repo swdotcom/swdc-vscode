@@ -956,18 +956,18 @@ export function getFileDataAsJson(file) {
  * @param name i.e. close | click | etc...
  * @param description
  */
-export function createCodeTimeEvent(
+export async function createCodeTimeEvent(
     type: string,
     name: string,
     description: string
 ) {
     const nowTimes = getNowTimes();
     const event: CodeTimeEvent = new CodeTimeEvent();
-    event.description = "OnboardPrompt";
     event.timestamp = nowTimes.now_in_sec;
     event.timestamp_local = nowTimes.local_now_in_sec;
     event.type = type;
     event.name = name;
     event.description = description;
+    event.hostname = await getHostname();
     EventHandler.getInstance().storeEvent(event);
 }

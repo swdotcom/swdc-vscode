@@ -1,3 +1,5 @@
+import { getVersion, getPluginId, getHostname, getOs } from "../Util";
+
 export class KpmItem {
     id: string = "";
     label: string = "";
@@ -99,4 +101,9 @@ export class CodeTimeEvent {
     timestamp: number = 0;
     timestamp_local: number = 0;
     description: string = "";
+    pluginId: number = getPluginId();
+    os: string = getOs();
+    version: string = getVersion();
+    hostname: string = ""; // this is gathered using an await
+    timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
