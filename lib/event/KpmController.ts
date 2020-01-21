@@ -10,7 +10,8 @@ import {
     getNowTimes,
     logEvent,
     getFileAgeInDays,
-    getFileType
+    getFileType,
+    showInformationMessage
 } from "../Util";
 import {
     getRepoContributorInfo,
@@ -401,6 +402,18 @@ export class KpmController {
         _staticInfoMap[filename] = staticInfo;
 
         return staticInfo;
+    }
+
+    async processSelectedTextForJira() {
+        const editor = window.activeTextEditor;
+        const text = editor.document.getText(editor.selection);
+        if (text) {
+            // start the process
+        } else {
+            showInformationMessage(
+                "Please select text to copy to your Jira project"
+            );
+        }
     }
 
     /**

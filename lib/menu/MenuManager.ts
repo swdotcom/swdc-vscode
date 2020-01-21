@@ -25,7 +25,6 @@ import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { LoggedInState, CodeTimeEvent } from "../model/models";
 import { clearSessionSummaryData } from "../storage/SessionSummaryData";
-import { EventHandler } from "../event/EventHandler";
 
 /**
  * Pass in the following array of objects
