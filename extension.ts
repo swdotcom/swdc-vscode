@@ -223,7 +223,7 @@ export async function intializePlugin(
     }
 
     if (createdAnonUser) {
-        showLoginPrompt();
+        showLoginPrompt(serverIsOnline);
     }
 
     // show the readme if it doesn't exist

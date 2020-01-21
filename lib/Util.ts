@@ -14,15 +14,19 @@ import {
     NOT_NOW_LABEL,
     LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
-    CODE_TIME_TYPE
+    CODE_TIME_TYPE,
+    api_endpoint
 } from "./Constants";
 import {
     refetchUserStatusLazily,
-    getToggleFileEventLoggingState
+    getToggleFileEventLoggingState,
+    getAppJwt
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { CodeTimeEvent } from "./model/models";
 import { EventHandler } from "./event/EventHandler";
+import { serverIsAvailable } from "./http/HttpClient";
+import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 
 const moment = require("moment-timezone");
 const open = require("open");
@@ -781,7 +785,12 @@ export function humanizeMinutes(min) {
 }
 
 export async function launchLogin() {
-    let loginUrl = await buildLoginUrl();
+    const serverOnline = await serverIsAvailable();
+    if (!serverOnline) {
+        showOfflinePrompt();
+        return;
+    }
+    let loginUrl = await buildLoginUrl(serverOnline);
     launchWebUrl(loginUrl);
     refetchUserStatusLazily();
 }
@@ -789,7 +798,7 @@ export async function launchLogin() {
 /**
  * check if the user needs to see the login prompt or not
  */
-export async function showLoginPrompt() {
+export async function showLoginPrompt(serverIsOnline) {
     const infoMsg = `To see your coding data in Code Time, please log in to your account`;
     // set the last update time so we don't try to ask too frequently
     window
@@ -799,7 +808,7 @@ export async function showLoginPrompt() {
             let eventType = "";
 
             if (selection === LOGIN_LABEL) {
-                let loginUrl = await buildLoginUrl();
+                let loginUrl = await buildLoginUrl(serverIsOnline);
                 launchWebUrl(loginUrl);
                 refetchUserStatusLazily();
                 eventName = "click";
@@ -814,8 +823,14 @@ export async function showLoginPrompt() {
         });
 }
 
-export async function buildLoginUrl() {
+export async function buildLoginUrl(serverOnline) {
     let jwt = getItem("jwt");
+    if (!jwt) {
+        // we should always have a jwt, but if  not create one
+        // this will serve as a temp token until they've onboarded
+        jwt = await getAppJwt(serverOnline);
+        setItem("jwt", jwt);
+    }
     if (jwt) {
         const encodedJwt = encodeURIComponent(jwt);
         const loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}`;
@@ -824,6 +839,26 @@ export async function buildLoginUrl() {
         // no need to build an onboarding url if we dn't have the token
         return launch_url;
     }
+}
+
+export async function connectAtlassian() {
+    const serverOnline = await serverIsAvailable();
+    if (!serverOnline) {
+        showOfflinePrompt();
+        return;
+    }
+    let jwt = getItem("jwt");
+    if (!jwt) {
+        // we should always have a jwt, but if  not create one
+        // this will serve as a temp token until they've onboarded
+        jwt = await getAppJwt(serverOnline);
+        setItem("jwt", jwt);
+    }
+
+    const encodedJwt = encodeURIComponent(jwt);
+    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?token=${encodedJwt}&plugin=${getPluginType()}`;
+    launchWebUrl(connectAtlassianAuth);
+    refetchAtlassianOauthLazily();
 }
 
 export function showInformationMessage(message: string) {

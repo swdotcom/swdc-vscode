@@ -10,7 +10,8 @@ import {
     launchLogin,
     openFileInEditor,
     displayReadmeIfNotExists,
-    toggleStatusBar
+    toggleStatusBar,
+    connectAtlassian
 } from "./Util";
 import { KpmController } from "./event/KpmController";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -183,6 +184,14 @@ export function createCommands(
         }
     );
     cmds.push(sendFeedbackCmd);
+
+    const connectAtlassianCmd = commands.registerCommand(
+        "codetime.connectAtlassian",
+        () => {
+            connectAtlassian();
+        }
+    );
+    cmds.push(connectAtlassianCmd);
 
     const configChangesHandler = workspace.onDidChangeConfiguration(e =>
         updatePreferences()

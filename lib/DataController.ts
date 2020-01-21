@@ -38,7 +38,6 @@ const moment = require("moment-timezone");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
-let lastLoggedInCheckTime = null;
 let toggleFileEventLogging = null;
 
 let userFetchTimeout = null;
@@ -378,7 +377,7 @@ export async function handleKpmClickedEvent() {
     let webUrl = await buildWebDashboardUrl();
 
     if (!userStatus.loggedIn) {
-        webUrl = await buildLoginUrl();
+        webUrl = await buildLoginUrl(serverIsOnline);
         refetchUserStatusLazily();
     }
     launchWebUrl(webUrl);
