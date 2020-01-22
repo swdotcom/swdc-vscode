@@ -98,6 +98,7 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 }
 
 export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
+    const wallClkHandler: WallClockHandler = WallClockHandler.getInstance();
     let sessionSummaryData = cacheMgr.get("sessionSummary");
     if (!sessionSummaryData) {
         sessionSummaryData = getSessionSummaryData();
@@ -122,6 +123,13 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
             incrementMinutes += diffInMin;
         }
     }
+    const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+    let editor_seconds = wallClkHandler.getWcTimeInSeconds();
+    if (editor_seconds < session_seconds) {
+        wallClkHandler.setWcTime(session_seconds);
+        editor_seconds = session_seconds;
+    }
+
     sessionSummaryData.currentDayMinutes += incrementMinutes;
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentCharactersAdded += aggregates.add;
@@ -135,9 +143,7 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
 
     // get the current time data and update
     const timeData: TimeData = getTodayTimeDataSummary();
-    const editor_seconds = WallClockHandler.getInstance().getWcTimeInSeconds();
     const file_seconds = (timeData.file_seconds += 60);
-    const session_seconds = sessionSummaryData.currentDayMinutes * 60;
 
     updateTimeData(editor_seconds, session_seconds, file_seconds);
 }

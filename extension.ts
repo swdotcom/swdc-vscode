@@ -12,7 +12,7 @@ import { onboardPlugin, createAnonymousUser } from "./lib/user/OnboardManager";
 import {
     showStatus,
     nowInSecs,
-    getOffsetSecends,
+    getOffsetSeconds,
     getVersion,
     softwareSessionFileExists,
     logIt,
@@ -66,7 +66,7 @@ export function deactivate(ctx: ExtensionContext) {
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
         let nowSec = nowInSecs();
-        let offsetSec = getOffsetSecends();
+        let offsetSec = getOffsetSeconds();
         let localNow = nowSec - offsetSec;
         // close the session on our end
         _ls["end"] = nowSec;
@@ -205,6 +205,10 @@ export async function intializePlugin(
         }
     }, one_min_ms * 1);
 
+    // setInterval(async () => {
+    //     await PayloadManager.getInstance().sendOfflineTimeData();
+    // }, one_min_ms * 3);
+
     initializeLiveshare();
 
     // {loggedIn: true|false}
@@ -255,7 +259,7 @@ async function initializeLiveshare() {
         logIt(`liveshare version - ${liveshare["apiVersion"]}`);
         liveshare.onDidChangeSession(async event => {
             let nowSec = nowInSecs();
-            let offsetSec = getOffsetSecends();
+            let offsetSec = getOffsetSeconds();
             let localNow = nowSec - offsetSec;
             if (!_ls) {
                 _ls = {

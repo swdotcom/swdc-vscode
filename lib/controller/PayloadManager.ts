@@ -61,7 +61,9 @@ export class PayloadManager {
                 // we're online so just delete the file
                 deleteFile(file);
                 if (payloads && payloads.length > 0) {
-                    logEvent(`sending batch payloads: ${payloads}`);
+                    logEvent(
+                        `sending batch payloads: ${JSON.stringify(payloads)}`
+                    );
 
                     // send 50 at a time
                     let batch = [];

@@ -36,6 +36,7 @@ export class WallClockHandler {
                 WallClockHandler.getInstance().setWcTime(this._wctime);
                 setItem("vscode_wctime", this._wctime);
                 commands.executeCommand("codetime.refreshKpmTree");
+                this.updateTimeData();
             }
         }, CLOCK_INTERVAL);
     }
@@ -61,7 +62,9 @@ export class WallClockHandler {
 
         // update the status bar
         updateStatusBarWithSummaryData();
+    }
 
+    private updateTimeData() {
         // get the current time data and update
         const timeData: TimeData = getTodayTimeDataSummary();
         const editor_seconds = this._wctime;

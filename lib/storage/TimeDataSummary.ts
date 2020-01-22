@@ -2,8 +2,8 @@ import {
     getSoftwareDir,
     isWindows,
     logIt,
-    getNowTimes,
-    getFileDataPayloadsAsJson
+    getFileDataPayloadsAsJson,
+    getOffsetSeconds
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { TimeData } from "../model/models";
@@ -32,13 +32,18 @@ export function updateTimeData(
     session_seconds: number,
     file_seconds: number
 ) {
+    const momemntDay = moment();
+    const utcEndOfDay = momemntDay.endOf("day").unix();
+    const day = momemntDay.format("YYYY-MM-DD");
+    const offsetSec = getOffsetSeconds();
+    const localEndOfDay = utcEndOfDay - offsetSec;
     const timeData: TimeData = getTodayTimeDataSummary();
     timeData.editor_seconds = editor_seconds;
     timeData.session_seconds = session_seconds;
     timeData.file_seconds = file_seconds;
-    const nowTimes = getNowTimes();
-    timeData.timestamp = nowTimes.now_in_sec;
-    timeData.timestamp_local = nowTimes.local_now_in_sec;
+    timeData.timestamp = utcEndOfDay;
+    timeData.timestamp_local = localEndOfDay;
+    timeData.day = day;
     // save the info to disk
     saveTimeDataSummaryToDisk(timeData);
 }
@@ -56,6 +61,7 @@ export function getTodayTimeDataSummary(): TimeData {
         if (!timeData) {
             timeData = new TimeData();
             timeData.day = day;
+            saveTimeDataSummaryToDisk(timeData);
         }
     }
     return timeData;
