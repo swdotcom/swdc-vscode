@@ -93,12 +93,6 @@ export async function isLoggedOn(serverIsOnline) {
                     setItem("jwt", pluginJwt);
                 }
 
-                let checkStatus = getItem("check_status");
-                if (checkStatus) {
-                    // update it to null, they've logged in
-                    setItem("check_status", null);
-                }
-
                 return { loggedOn: true, state };
             }
             // return the state that is returned
@@ -324,9 +318,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser);
-        } else {
-            // set the check_status to true
-            setItem("check_status", true);
         }
     } else {
         clearCachedLoggedInState();

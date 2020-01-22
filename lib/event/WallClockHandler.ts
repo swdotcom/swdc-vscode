@@ -44,6 +44,10 @@ export class WallClockHandler {
         return wcHours;
     }
 
+    public getWcTimeInSeconds() {
+        return this._wctime;
+    }
+
     public setWcTime(seconds) {
         this._wctime = seconds;
         setItem("vscode_wctime", seconds);

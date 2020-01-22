@@ -1,6 +1,7 @@
 import { getOs, getVersion, logIt, getNowTimes, getPluginId } from "../Util";
 import { FileChangeInfo } from "./models";
 import { EventHandler } from "../event/EventHandler";
+import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
 
 const eventHandler: EventHandler = EventHandler.getInstance();
 
@@ -117,14 +118,13 @@ export class KeystrokeStats {
 
         payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        const projectName =
-            payload.project && payload.project.directory
-                ? payload.project.directory
-                : "null";
-
-        // Null out the project if the project's name is 'null'
-        if (projectName === "null") {
-            payload.project = null;
+        if (!payload.project || !payload.project.directory) {
+            payload["project"] = {
+                directory: NO_PROJ_NAME,
+                name: UNTITLED_WORKSPACE,
+                identifier: "",
+                resource: {}
+            };
         }
 
         if (sendNow) {

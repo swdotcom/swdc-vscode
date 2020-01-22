@@ -1,4 +1,4 @@
-import { SessionSummary, KeystrokeAggregate } from "../model/models";
+import { SessionSummary, KeystrokeAggregate, TimeData } from "../model/models";
 import {
     isWindows,
     getSoftwareDir,
@@ -12,6 +12,7 @@ import {
 import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockHandler } from "../event/WallClockHandler";
+import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
 const fs = require("fs");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
@@ -131,6 +132,14 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     sessionSummaryData.lastStart = nowInSec;
 
     saveSessionSummaryToDisk(sessionSummaryData);
+
+    // get the current time data
+    const timeData: TimeData = getTodayTimeDataSummary();
+    const editor_seconds = WallClockHandler.getInstance().getWcTimeInSeconds();
+    const file_seconds = (timeData.file_seconds += 60);
+    const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+
+    updateTimeData(editor_seconds, session_seconds, file_seconds);
 }
 
 export function updateStatusBarWithSummaryData() {

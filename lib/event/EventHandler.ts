@@ -7,16 +7,13 @@ import {
 } from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
-import { SummaryManager } from "../controller/SummaryManager";
 import {
-    getFileChangeInfoMap,
+    getFileChangeSummaryAsJson,
     saveFileChangeInfoToDisk
 } from "../storage/FileChangeInfoSummaryData";
-import {
-    incrementSessionSummaryData,
-    updateStatusBarWithSummaryData
-} from "../storage/SessionSummaryData";
+import { incrementSessionSummaryData } from "../storage/SessionSummaryData";
 import { commands } from "vscode";
+import { NO_PROJ_NAME } from "../Constants";
 const fs = require("fs");
 const os = require("os");
 
@@ -45,9 +42,12 @@ export class EventHandler {
      */
     storePayload(payload) {
         // get a mapping of the current files
-        const fileChangeInfoMap = getFileChangeInfoMap();
+        const fileChangeInfoMap = getFileChangeSummaryAsJson();
 
         const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
+        aggregate.directory = payload.project
+            ? payload.project.directory || NO_PROJ_NAME
+            : NO_PROJ_NAME;
         Object.keys(payload.source).forEach(key => {
             const fileInfo: FileChangeInfo = payload.source[key];
             /**

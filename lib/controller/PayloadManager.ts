@@ -4,9 +4,11 @@ import {
     deleteFile,
     logEvent,
     getPluginEventsFile,
-    logIt
+    logIt,
+    getFileDataPayloadsAsJson
 } from "../Util";
 import { EventHandler } from "../event/EventHandler";
+import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
 
 const fs = require("fs");
 
@@ -27,6 +29,16 @@ export class PayloadManager {
         return PayloadManager.instance;
     }
 
+    /**
+     * send the offline TimeData payloads
+     */
+    async sendOfflineTimeData() {
+        this.batchSendData("/data/time", getTimeDataSummaryFile());
+    }
+
+    /**
+     * send the offline Event payloads
+     */
     async sendOfflineEvents() {
         this.batchSendData("/data/event", getPluginEventsFile());
     }
@@ -45,27 +57,11 @@ export class PayloadManager {
         }
         try {
             if (fs.existsSync(file)) {
-                const content = fs.readFileSync(file).toString();
+                const payloads = getFileDataPayloadsAsJson(file);
                 // we're online so just delete the file
                 deleteFile(file);
-                if (content) {
-                    logEvent(`sending batch payloads: ${content}`);
-                    const payloads = content
-                        .split(/\r?\n/)
-                        .map(item => {
-                            let obj = null;
-                            if (item) {
-                                try {
-                                    obj = JSON.parse(item);
-                                } catch (e) {
-                                    //
-                                }
-                            }
-                            if (obj) {
-                                return obj;
-                            }
-                        })
-                        .filter(item => item);
+                if (payloads && payloads.length > 0) {
+                    logEvent(`sending batch payloads: ${payloads}`);
 
                     // send 50 at a time
                     let batch = [];
@@ -76,6 +72,7 @@ export class PayloadManager {
                         }
                         batch.push(payloads[i]);
                     }
+                    // send the remaining
                     if (batch.length > 0) {
                         await eventHandler.sendBatchPayload(api, batch);
                     }

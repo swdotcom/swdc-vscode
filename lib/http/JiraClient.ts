@@ -1,17 +1,19 @@
 import axios, { AxiosInstance } from "axios";
-import { logIt } from "../Util";
+import { logIt, getItem } from "../Util";
 
-export const SPOTIFY_ROOT_API = "https://api.spotify.com";
+export const ROOT_API = "https://sftwco.atlassian.net";
 
 const jiraClient: AxiosInstance = axios.create({
-    baseURL: SPOTIFY_ROOT_API
+    baseURL: ROOT_API
 });
 
 export class JiraClient {
     private static instance: JiraClient;
+
     private constructor() {
         //
     }
+
     static getInstance() {
         if (!JiraClient.instance) {
             JiraClient.instance = new JiraClient();
@@ -23,9 +25,16 @@ export class JiraClient {
         jiraClient.defaults.headers.common[
             "Authorization"
         ] = `Bearer ${accessToken}`;
-        return await jiraClient.get(api).catch(err => {
+
+        const resp = await jiraClient.get(api).catch(err => {
             logIt(`error fetching data for ${api}, message: ${err.message}`);
             return err;
         });
+        return resp;
+    }
+
+    async fetchIssues() {
+        const accessToken = getItem("atlassian_access_token");
+        return this.apiGet("/rest/api/3/issuetype", accessToken);
     }
 }

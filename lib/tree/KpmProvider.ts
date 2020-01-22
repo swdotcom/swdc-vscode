@@ -30,6 +30,11 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             const item: KpmItem = e.element;
             kpmCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Expanded;
+            createCodeTimeEvent(
+                "mouse",
+                "click",
+                `TreeViewItemExpand_${item.label}`
+            );
         }),
 
         view.onDidChangeSelection(async e => {

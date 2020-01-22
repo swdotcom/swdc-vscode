@@ -210,9 +210,9 @@ export async function intializePlugin(
     // {loggedIn: true|false}
     await getUserStatus(serverIsOnline, true);
 
-    const initializedVscodePlugin = getItem("vscodeCtInit");
+    const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
-        setItem("vscodeCtInit", true);
+        setItem("vscode_CtInit", true);
         kpmController.buildBootstrapKpmPayload();
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)

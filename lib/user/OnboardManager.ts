@@ -118,7 +118,7 @@ export function refetchAtlassianOauthLazily(tryCountUntilFoundUser = 40) {
 
 async function refetchAtlassianOauthFetchHandler(tryCountUntilFoundUser) {
     const serverIsOnline = await serverIsAvailable();
-    const oauth = getAtlassianOauth(serverIsOnline);
+    const oauth = await getAtlassianOauth(serverIsOnline);
     if (!oauth) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {

@@ -490,7 +490,7 @@ export function getImagesDir() {
 }
 
 export function displayReadmeIfNotExists(override = false) {
-    const displayedReadme = getItem("displayedCtReadme");
+    const displayedReadme = getItem("vscode_CtReadme");
     if (!displayedReadme || override) {
         const readmeUri = Uri.file(getLocalREADMEFile());
 
@@ -499,7 +499,7 @@ export function displayReadmeIfNotExists(override = false) {
             readmeUri,
             ViewColumn.One
         );
-        setItem("displayedCtReadme", true);
+        setItem("vscode_CtReadme", true);
     }
 }
 
@@ -856,7 +856,7 @@ export async function connectAtlassian() {
     }
 
     const encodedJwt = encodeURIComponent(jwt);
-    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?token=${encodedJwt}&plugin=${getPluginType()}`;
+    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?token=${jwt}&plugin=${getPluginType()}`;
     launchWebUrl(connectAtlassianAuth);
     refetchAtlassianOauthLazily();
 }
@@ -983,6 +983,32 @@ export function getFileDataAsJson(file) {
         }
     }
     return data ? data : {};
+}
+
+export function getFileDataPayloadsAsJson(file) {
+    let payloads: any[] = [];
+    if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file).toString();
+        if (content) {
+            payloads = content
+                .split(/\r?\n/)
+                .map(item => {
+                    let obj = null;
+                    if (item) {
+                        try {
+                            obj = JSON.parse(item);
+                        } catch (e) {
+                            //
+                        }
+                    }
+                    if (obj) {
+                        return obj;
+                    }
+                })
+                .filter(item => item);
+        }
+    }
+    return payloads;
 }
 
 /**

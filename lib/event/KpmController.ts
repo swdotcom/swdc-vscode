@@ -1,6 +1,6 @@
 import { workspace, Disposable, window, commands } from "vscode";
 import { KeystrokeStats } from "../model/KeystrokeStats";
-import { UNTITLED, UNTITLED_WORKSPACE } from "../Constants";
+import { UNTITLED, UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
 import { DEFAULT_DURATION } from "../Constants";
 import {
     getRootPathForFile,
@@ -19,10 +19,7 @@ import {
     getFileContributorCount
 } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
-import { PayloadManager } from "../controller/PayloadManager";
-const moment = require("moment-timezone");
-
-const NO_PROJ_NAME = "Unnamed";
+import { JiraClient } from "../http/JiraClient";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -32,7 +29,6 @@ export class KpmController {
     private static instance: KpmController;
 
     private _disposable: Disposable;
-    private _lastDayOfMonth: number = -1;
 
     constructor() {
         let subscriptions: Disposable[] = [];
@@ -96,7 +92,7 @@ export class KpmController {
         let rootPath = getRootPathForFile(staticInfo.filename);
 
         if (!rootPath) {
-            rootPath = UNTITLED;
+            rootPath = NO_PROJ_NAME;
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
@@ -125,7 +121,7 @@ export class KpmController {
         let rootPath = getRootPathForFile(staticInfo.filename);
 
         if (!rootPath) {
-            rootPath = UNTITLED;
+            rootPath = NO_PROJ_NAME;
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
@@ -156,7 +152,7 @@ export class KpmController {
         let rootPath = getRootPathForFile(filename);
 
         if (!rootPath) {
-            rootPath = UNTITLED;
+            rootPath = NO_PROJ_NAME;
         }
 
         await this.initializeKeystrokesCount(filename, rootPath);
@@ -409,6 +405,9 @@ export class KpmController {
         const text = editor.document.getText(editor.selection);
         if (text) {
             // start the process
+            showInformationMessage(`Selected the following text: ${text}`);
+            const issues = await JiraClient.getInstance().fetchIssues();
+            console.log("issues:", issues);
         } else {
             showInformationMessage(
                 "Please select text to copy to your Jira project"
@@ -460,7 +459,7 @@ export class KpmController {
 
     public buildBootstrapKpmPayload() {
         let rootPath = NO_PROJ_NAME;
-        let fileName = "Untitled";
+        let fileName = UNTITLED;
         let name = UNTITLED_WORKSPACE;
 
         // send the code time bootstrap payload

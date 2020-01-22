@@ -25,7 +25,7 @@ import {
     TreeView
 } from "vscode";
 import * as path from "path";
-import { getFileChangeInfoMap } from "../storage/FileChangeInfoSummaryData";
+import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { getGlobalSessionSummaryData } from "../storage/GlobalSessionSummaryData";
 import { WallClockHandler } from "../event/WallClockHandler";
@@ -122,7 +122,7 @@ export class KpmProviderManager {
         treeItems.push(...currentKeystrokesItems);
 
         // show the files changed metric
-        const fileChangeInfoMap = getFileChangeInfoMap();
+        const fileChangeInfoMap = getFileChangeSummaryAsJson();
         const filesChanged = fileChangeInfoMap
             ? Object.keys(fileChangeInfoMap).length
             : 0;

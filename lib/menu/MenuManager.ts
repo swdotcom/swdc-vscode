@@ -151,23 +151,23 @@ export async function showMenuOptions() {
         });
     }
 
-    kpmMenuOptions.items.push({
-        label:
-            "___________________________________________________________________",
-        cb: null,
-        url: null,
-        command: null
-    });
+    // kpmMenuOptions.items.push({
+    //     label:
+    //         "___________________________________________________________________",
+    //     cb: null,
+    //     url: null,
+    //     command: null
+    // });
 
-    const atlassianAccessToken = getItem("atlassian_access_token");
-    if (!atlassianAccessToken) {
-        kpmMenuOptions.items.push({
-            label: "Connect Atlassian",
-            detail: "To integrate with your Jira projects",
-            cb: null,
-            command: "codetime.connectAtlassian"
-        });
-    }
+    // const atlassianAccessToken = getItem("atlassian_access_token");
+    // if (!atlassianAccessToken) {
+    //     kpmMenuOptions.items.push({
+    //         label: "Connect Atlassian",
+    //         detail: "To integrate with your Jira projects",
+    //         cb: null,
+    //         command: "codetime.connectAtlassian"
+    //     });
+    // }
 
     showQuickPick(kpmMenuOptions);
 }

@@ -185,29 +185,29 @@ export function createCommands(
     );
     cmds.push(sendFeedbackCmd);
 
-    const connectAtlassianCmd = commands.registerCommand(
-        "codetime.connectAtlassian",
-        () => {
-            connectAtlassian();
-        }
-    );
-    cmds.push(connectAtlassianCmd);
+    // const connectAtlassianCmd = commands.registerCommand(
+    //     "codetime.connectAtlassian",
+    //     () => {
+    //         connectAtlassian();
+    //     }
+    // );
+    // cmds.push(connectAtlassianCmd);
 
-    const copyToJiraCmd = commands.registerCommand(
-        "codetime.copyToJira",
-        doc => {
-            /**
-            authority:""
-            fragment:""
-            fsPath:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
-            path:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
-            query:""
-            scheme:"file"
-             */
-            KpmController.getInstance().processSelectedTextForJira();
-        }
-    );
-    cmds.push(copyToJiraCmd);
+    // const copyToJiraCmd = commands.registerCommand(
+    //     "codetime.copyToJira",
+    //     doc => {
+    //         /**
+    //         authority:""
+    //         fragment:""
+    //         fsPath:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
+    //         path:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
+    //         query:""
+    //         scheme:"file"
+    //          */
+    //         KpmController.getInstance().processSelectedTextForJira();
+    //     }
+    // );
+    // cmds.push(copyToJiraCmd);
 
     const configChangesHandler = workspace.onDidChangeConfiguration(e =>
         updatePreferences()

@@ -74,6 +74,9 @@ export class SummaryManager {
             // send the offline data
             await payloadMgr.sendOfflineData();
 
+            // send the offline TimeData payloads
+            await payloadMgr.sendOfflineTimeData();
+
             // fetch it the api data
             await this.getGlobalSessionSummaryStatus(true);
 

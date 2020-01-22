@@ -21,20 +21,18 @@ export function clearFileChangeInfoSummaryData() {
 
 // returns a map of file change info
 // {fileName => FileChangeInfo, fileName => FileChangeInfo}
-export function getFileChangeInfoMap(): any {
+export function getFileChangeSummaryAsJson(): any {
     let fileChangeInfoMap = cacheMgr.get("fileChangeSummary");
     if (!fileChangeInfoMap) {
-        fileChangeInfoMap = getFileChangeSummaryFileAsJson();
-        if (fileChangeInfoMap) {
+        const file = getFileChangeSummaryFile();
+        fileChangeInfoMap = getFileDataAsJson(file);
+        if (!fileChangeInfoMap) {
+            fileChangeInfoMap = {};
+        } else {
             cacheMgr.set("fileChangeSummary", fileChangeInfoMap);
         }
     }
     return fileChangeInfoMap;
-}
-
-export function getFileChangeSummaryFileAsJson(): FileChangeInfo[] {
-    const file = getFileChangeSummaryFile();
-    return getFileDataAsJson(file);
 }
 
 export function saveFileChangeInfoToDisk(fileChangeInfoData) {
