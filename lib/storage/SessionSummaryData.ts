@@ -133,7 +133,7 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
 
     saveSessionSummaryToDisk(sessionSummaryData);
 
-    // get the current time data
+    // get the current time data and update
     const timeData: TimeData = getTodayTimeDataSummary();
     const editor_seconds = WallClockHandler.getInstance().getWcTimeInSeconds();
     const file_seconds = (timeData.file_seconds += 60);

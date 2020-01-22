@@ -65,17 +65,17 @@ export class SummaryManager {
     async newDayChecker() {
         const day = moment().format("YYYY-MM-DD");
         if (day !== this._currentDay) {
-            // day does't match.
-            // clear the session summary, and the file change info summary data
-            wallClockMgr.clearWcTime();
-            clearSessionSummaryData();
-            clearFileChangeInfoSummaryData();
-
             // send the offline data
             await payloadMgr.sendOfflineData();
 
             // send the offline TimeData payloads
             await payloadMgr.sendOfflineTimeData();
+
+            // day does't match.
+            // clear the session summary, and the file change info summary data
+            wallClockMgr.clearWcTime();
+            clearSessionSummaryData();
+            clearFileChangeInfoSummaryData();
 
             // fetch it the api data
             await this.getGlobalSessionSummaryStatus(true);

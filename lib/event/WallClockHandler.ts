@@ -1,6 +1,11 @@
 import { getItem, humanizeMinutes, setItem } from "../Util";
 import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
+import { TimeData } from "../model/models";
+import {
+    getTodayTimeDataSummary,
+    updateTimeData
+} from "../storage/TimeDataSummary";
 
 // 1 minute
 const CLOCK_INTERVAL = 1000 * 60;
@@ -56,5 +61,15 @@ export class WallClockHandler {
 
         // update the status bar
         updateStatusBarWithSummaryData();
+
+        // get the current time data and update
+        const timeData: TimeData = getTodayTimeDataSummary();
+        const editor_seconds = this._wctime;
+
+        updateTimeData(
+            editor_seconds,
+            timeData.session_seconds,
+            timeData.file_seconds
+        );
     }
 }
