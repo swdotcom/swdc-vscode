@@ -985,6 +985,19 @@ export function getFileDataAsJson(file) {
     return data ? data : {};
 }
 
+export function getFileDataArray(file) {
+    let payloads: any[] = [];
+    if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file).toString();
+        try {
+            payloads = JSON.parse(content);
+        } catch (e) {
+            logIt(`Error reading file array data: ${e.message}`);
+        }
+    }
+    return payloads;
+}
+
 export function getFileDataPayloadsAsJson(file) {
     let payloads: any[] = [];
     if (fs.existsSync(file)) {

@@ -33,7 +33,7 @@ export class WallClockHandler {
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
                 this._wctime += 60;
-                WallClockHandler.getInstance().setWcTime(this._wctime);
+                this.setWcTime(this._wctime);
                 setItem("vscode_wctime", this._wctime);
                 commands.executeCommand("codetime.refreshKpmTree");
                 this.updateTimeData();

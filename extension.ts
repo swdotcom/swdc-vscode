@@ -205,10 +205,6 @@ export async function intializePlugin(
         }
     }, one_min_ms * 1);
 
-    // setInterval(async () => {
-    //     await PayloadManager.getInstance().sendOfflineTimeData();
-    // }, one_min_ms * 3);
-
     initializeLiveshare();
 
     // {loggedIn: true|false}

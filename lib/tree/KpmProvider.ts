@@ -6,14 +6,13 @@ import {
     Disposable,
     TreeView
 } from "vscode";
-import { KpmItem, CodeTimeEvent } from "../model/models";
+import { KpmItem } from "../model/models";
 import {
     KpmProviderManager,
     KpmTreeItem,
     handleKpmChangeSelection
 } from "./KpmProviderManager";
 import { createCodeTimeEvent } from "../Util";
-import { EventHandler } from "../event/EventHandler";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
@@ -30,11 +29,13 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             const item: KpmItem = e.element;
             kpmCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Expanded;
-            createCodeTimeEvent(
-                "mouse",
-                "click",
-                `TreeViewItemExpand_${item.label}`
-            );
+            if (item.eventDescription) {
+                createCodeTimeEvent(
+                    "mouse",
+                    "click",
+                    `TreeViewItemExpand_${item.eventDescription}`
+                );
+            }
         }),
 
         view.onDidChangeSelection(async e => {

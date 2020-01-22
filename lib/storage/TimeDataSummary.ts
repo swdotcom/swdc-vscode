@@ -3,7 +3,8 @@ import {
     isWindows,
     logIt,
     getFileDataPayloadsAsJson,
-    getOffsetSeconds
+    getOffsetSeconds,
+    getFileDataArray
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { TimeData } from "../model/models";
@@ -53,7 +54,7 @@ export function getTodayTimeDataSummary(): TimeData {
     let timeData: TimeData = cacheMgr.get(`timeDataSummary_${day}`);
     if (!timeData) {
         const file = getTimeDataSummaryFile();
-        const payloads: TimeData[] = getFileDataPayloadsAsJson(file);
+        const payloads: TimeData[] = getFileDataArray(file);
         if (payloads && payloads.length) {
             // find the one for this day
             timeData = payloads.find(n => n.day === day);
@@ -73,7 +74,7 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
     }
     const day = moment().format("YYYY-MM-DD");
     const file = getTimeDataSummaryFile();
-    const payloads: TimeData[] = getFileDataPayloadsAsJson(file);
+    const payloads: TimeData[] = getFileDataArray(file);
     let newPayloads: TimeData[] = [];
     if (payloads && payloads.length) {
         // find the one for this day

@@ -5,7 +5,8 @@ import {
     logEvent,
     getPluginEventsFile,
     logIt,
-    getFileDataPayloadsAsJson
+    getFileDataPayloadsAsJson,
+    getFileDataArray
 } from "../Util";
 import { EventHandler } from "../event/EventHandler";
 import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
@@ -33,7 +34,7 @@ export class PayloadManager {
      * send the offline TimeData payloads
      */
     async sendOfflineTimeData() {
-        this.batchSendData("/data/time", getTimeDataSummaryFile());
+        this.batchSendArrayData("/data/time", getTimeDataSummaryFile());
     }
 
     /**
@@ -44,10 +45,30 @@ export class PayloadManager {
     }
 
     /**
-     * send the offline data
+     * send the offline data.
      */
     async sendOfflineData() {
         this.batchSendData("/data/batch", getSoftwareDataStoreFile());
+    }
+
+    /**
+     * batch send array data
+     * @param api
+     * @param file
+     */
+    async batchSendArrayData(api, file) {
+        let isonline = await serverIsAvailable();
+        if (!isonline) {
+            return;
+        }
+        try {
+            if (fs.existsSync(file)) {
+                const payloads = getFileDataArray(file);
+                this.batchSendPayloadData(api, file, payloads);
+            }
+        } catch (e) {
+            logIt(`Error batch sending payloads: ${e.message}`);
+        }
     }
 
     async batchSendData(api, file) {
@@ -58,30 +79,32 @@ export class PayloadManager {
         try {
             if (fs.existsSync(file)) {
                 const payloads = getFileDataPayloadsAsJson(file);
-                // we're online so just delete the file
-                deleteFile(file);
-                if (payloads && payloads.length > 0) {
-                    logEvent(
-                        `sending batch payloads: ${JSON.stringify(payloads)}`
-                    );
-
-                    // send 50 at a time
-                    let batch = [];
-                    for (let i = 0; i < payloads.length; i++) {
-                        if (batch.length >= batch_limit) {
-                            await eventHandler.sendBatchPayload(api, batch);
-                            batch = [];
-                        }
-                        batch.push(payloads[i]);
-                    }
-                    // send the remaining
-                    if (batch.length > 0) {
-                        await eventHandler.sendBatchPayload(api, batch);
-                    }
-                }
+                this.batchSendPayloadData(api, file, payloads);
             }
         } catch (e) {
             logIt(`Error batch sending payloads: ${e.message}`);
+        }
+    }
+
+    async batchSendPayloadData(api, file, payloads) {
+        // we're online so just delete the file
+        deleteFile(file);
+        if (payloads && payloads.length > 0) {
+            logEvent(`sending batch payloads: ${JSON.stringify(payloads)}`);
+
+            // send 50 at a time
+            let batch = [];
+            for (let i = 0; i < payloads.length; i++) {
+                if (batch.length >= batch_limit) {
+                    await eventHandler.sendBatchPayload(api, batch);
+                    batch = [];
+                }
+                batch.push(payloads[i]);
+            }
+            // send the remaining
+            if (batch.length > 0) {
+                await eventHandler.sendBatchPayload(api, batch);
+            }
         }
     }
 }

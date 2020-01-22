@@ -123,11 +123,16 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
             incrementMinutes += diffInMin;
         }
     }
+
     const session_seconds = sessionSummaryData.currentDayMinutes * 60;
     let editor_seconds = wallClkHandler.getWcTimeInSeconds();
+
+    // check to see if the session seconds has gained before the editor seconds
+    // if so, then update the editor seconds
     if (editor_seconds < session_seconds) {
         wallClkHandler.setWcTime(session_seconds);
         editor_seconds = session_seconds;
+        wallClkHandler.setWcTime(editor_seconds);
     }
 
     sessionSummaryData.currentDayMinutes += incrementMinutes;
