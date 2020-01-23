@@ -14,6 +14,7 @@ import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockHandler } from "../event/WallClockHandler";
 import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
 const fs = require("fs");
+const moment = require("moment-timezone");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
@@ -62,9 +63,14 @@ function coalesceMissingAttributes(data): SessionSummary {
     return data;
 }
 
-export function getSessionSummaryFileAsJson() {
+export function getSessionSummaryFileAsJson(): SessionSummary {
     const file = getSessionSummaryFile();
-    return getFileDataAsJson(file);
+    let sessionSummary: SessionSummary = getFileDataAsJson(file);
+    if (!sessionSummary) {
+        sessionSummary = new SessionSummary();
+        saveSessionSummaryToDisk(sessionSummary);
+    }
+    return sessionSummary;
 }
 
 export function saveSessionSummaryToDisk(sessionSummaryData) {
@@ -162,16 +168,18 @@ export function updateStatusBarWithSummaryData() {
     sessionSummaryData = getSessionSummaryFileAsJson();
 
     let currentDayMinutes = sessionSummaryData.currentDayMinutes;
-    // let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
+    let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
     let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
     let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    // let msg = `${inFlowIcon}${currentDayMinutesTime}`;
     const wcTime = WallClockHandler.getInstance().getWcTime();
-    let msg = `${inFlowIcon}${wcTime}`;
-    if (averageDailyMinutes > 0) {
-        msg += ` | ${averageDailyMinutesTime}`;
-    }
+
+    const time = moment().format("h:mm a");
+    const msg = `${inFlowIcon}${wcTime} | Active: ${currentDayMinutesTime}`;
+
+    // if (averageDailyMinutes > 0) {
+    //     msg += ` | ${averageDailyMinutesTime}`;
+    // }
     showStatus(msg, null);
 }

@@ -33,7 +33,12 @@ export function getGlobalSessionSummaryData(): GlobalSessionSummary {
 
 export function getGlobalSessionSummaryFileAsJson(): GlobalSessionSummary {
     const file = getGlobalSessionSummaryFile();
-    return getFileDataAsJson(file);
+    let globalSessionSummary: GlobalSessionSummary = getFileDataAsJson(file);
+    if (!globalSessionSummary) {
+        globalSessionSummary = new GlobalSessionSummary();
+        saveGlobalSessionSummaryToDisk(globalSessionSummary);
+    }
+    return globalSessionSummary;
 }
 
 export function saveGlobalSessionSummaryToDisk(globalSessionSummaryData) {

@@ -12,8 +12,7 @@ import {
     launchLogin,
     isStatusBarTextVisible,
     clearDayHourVals,
-    createCodeTimeEvent,
-    getItem
+    createCodeTimeEvent
 } from "../Util";
 import {
     getUserStatus,
@@ -23,7 +22,7 @@ import {
 } from "../DataController";
 import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { LoggedInState, CodeTimeEvent } from "../model/models";
+import { LoggedInState } from "../model/models";
 import { clearSessionSummaryData } from "../storage/SessionSummaryData";
 
 /**
@@ -92,7 +91,7 @@ export async function showMenuOptions() {
     };
 
     kpmMenuOptions.items.push({
-        label: "Code Time Dashboard",
+        label: "Generate dashboard",
         detail: "View your latest coding metrics right here in your editor",
         url: null,
         cb: displayCodeTimeMetricsDashboard,
@@ -115,9 +114,9 @@ export async function showMenuOptions() {
         });
     }
 
-    let toggleStatusBarTextLabel = "Hide Status Bar Metrics";
+    let toggleStatusBarTextLabel = "Hide status bar metrics";
     if (!isStatusBarTextVisible()) {
-        toggleStatusBarTextLabel = "Show Status Bar Metrics";
+        toggleStatusBarTextLabel = "Show status bar metrics";
     }
     kpmMenuOptions.items.push({
         label: toggleStatusBarTextLabel,
@@ -135,7 +134,7 @@ export async function showMenuOptions() {
     });
 
     kpmMenuOptions.items.push({
-        label: "Submit Feedback",
+        label: "Submit feedback",
         detail: "Send us an email at cody@software.com",
         cb: null,
         command: "codetime.sendFeedback"
@@ -143,7 +142,7 @@ export async function showMenuOptions() {
 
     if (loggedInState.loggedIn) {
         kpmMenuOptions.items.push({
-            label: "Web Dashboard",
+            label: "Web dashboard",
             detail: "See rich data visualizations in the web app",
             url: null,
             cb: launchWebDashboardView,

@@ -1,7 +1,6 @@
-export const NOT_NOW_LABEL = "Not now";
 export const OK_LABEL = "Ok";
 export const YES_LABEL = "Yes";
-export const LOGIN_LABEL = "Connect";
+export const LOGIN_LABEL = "Complete Setup";
 export const LOGOUT_LABEL = "Log out";
 export const UNTITLED = "Untitled";
 export const NO_PROJ_NAME = "Unnamed";

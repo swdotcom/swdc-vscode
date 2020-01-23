@@ -73,10 +73,10 @@ export class KpmProviderManager {
         treeItems.push(this.getCodeTimeDashboardButton());
 
         // toggle status bar button
-        let toggleStatusBarTextLabel = "Hide Status Bar Metrics";
+        let toggleStatusBarTextLabel = "Hide status bar metrics";
         let toggleStatusBarIcon = "not_visible.svg";
         if (!isStatusBarTextVisible()) {
-            toggleStatusBarTextLabel = "Show Status Bar Metrics";
+            toggleStatusBarTextLabel = "Show status bar metrics";
             toggleStatusBarIcon = "visible.svg";
         }
         const toggleStatusBarButton: KpmItem = this.getActionButton(
@@ -89,7 +89,7 @@ export class KpmProviderManager {
 
         // readme button
         const readmeButton: KpmItem = this.getActionButton(
-            "Learn More",
+            "Learn more",
             "View the Code Time Readme to learn more",
             "codetime.displayReadme",
             "document.svg"
@@ -97,7 +97,7 @@ export class KpmProviderManager {
         treeItems.push(readmeButton);
 
         const feedbackButton: KpmItem = this.getActionButton(
-            "Submit Feedback",
+            "Submit feedback",
             "Send us an email at cody@software.com",
             "codetime.sendFeedback",
             "feedback.svg"
@@ -242,7 +242,7 @@ export class KpmProviderManager {
 
                 committedChangesMetrics.push(
                     this.buildMetricItem(
-                        "Files Changed",
+                        "Files changed",
                         todaysChagesSummary.fileCount,
                         "Number of total files changed today",
                         "files_changed.png"
@@ -258,13 +258,13 @@ export class KpmProviderManager {
             }
 
             const openChangesParent: KpmItem = this.buildParentItem(
-                "Open Changes",
+                "Open changes",
                 openChangesChildren
             );
             treeItems.push(openChangesParent);
 
             const committedChangesParent: KpmItem = this.buildParentItem(
-                "Committed Today",
+                "Committed today",
                 committedChangesChildren
             );
             treeItems.push(committedChangesParent);
@@ -298,7 +298,7 @@ export class KpmProviderManager {
 
     getCodeTimeDashboardButton(): KpmItem {
         const item: KpmItem = this.getActionButton(
-            "Code Time Dashboard",
+            "Generate dashboard",
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
             "dashboard.png",
@@ -332,10 +332,7 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         items.push(
-            this.buildTreeMetricItem(
-                "Editor Time",
-                wallClockHandler.getWcTime()
-            )
+            this.buildTreeMetricItem("Code time", wallClockHandler.getWcTime())
         );
 
         let values = [];
@@ -347,36 +344,9 @@ export class KpmProviderManager {
             global.avg_session_seconds / 60
         );
         values.push(`Global average: ${globalCodeHours}`);
-        items.push(this.buildActivityComparisonNodes("Session Time", values));
-
-        values = [];
-        const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        values.push(`Today: ${keystrokes}`);
-        const avgKeystrokes = numeral(data.averageDailyKeystrokes).format(
-            "0 a"
+        items.push(
+            this.buildActivityComparisonNodes("Active code time", values)
         );
-        values.push(`Average: ${avgKeystrokes}`);
-        const globalKeystrokes = numeral(global.avg_keystrokes).format("0 a");
-        values.push(`Global average: ${globalKeystrokes}`);
-        items.push(this.buildActivityComparisonNodes("Keystrokes", values));
-
-        values = [];
-        const charsAdded = numeral(data.currentCharactersAdded).format("0 a");
-        values.push(`Today: ${charsAdded}`);
-        const globalCharsAdded = numeral(global.avg_chars_added).format("0 a");
-        values.push(`Global average: ${globalCharsAdded}`);
-        items.push(this.buildActivityComparisonNodes("Chars added", values));
-
-        values = [];
-        const charsDeleted = numeral(data.currentCharactersDeleted).format(
-            "0 a"
-        );
-        values.push(`Today: ${charsDeleted}`);
-        const globalCharsDeleted = numeral(global.avg_chars_deleted).format(
-            "0 a"
-        );
-        values.push(`Global average: ${globalCharsDeleted}`);
-        items.push(this.buildActivityComparisonNodes("Chars removed", values));
 
         values = [];
         const linesAdded = numeral(data.currentLinesAdded).format("0 a");
@@ -395,11 +365,16 @@ export class KpmProviderManager {
         items.push(this.buildActivityComparisonNodes("Lines removed", values));
 
         values = [];
-        const pastes = numeral(data.currentPastes).format("0 a");
-        values.push(`Today: ${pastes}`);
-        const globalPastes = numeral(global.avg_paste).format("0 a");
-        values.push(`Global average: ${globalPastes}`);
-        items.push(this.buildActivityComparisonNodes("Copy+paste", values));
+        const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
+        values.push(`Today: ${keystrokes}`);
+        const avgKeystrokes = numeral(data.averageDailyKeystrokes).format(
+            "0 a"
+        );
+        values.push(`Average: ${avgKeystrokes}`);
+        const globalKeystrokes = numeral(global.avg_keystrokes).format("0 a");
+        values.push(`Global average: ${globalKeystrokes}`);
+        items.push(this.buildActivityComparisonNodes("Keystrokes", values));
+
         return items;
     }
 
@@ -504,7 +479,7 @@ export class KpmProviderManager {
             mostEditedChildren.push(messageItem);
         }
         const mostEditedParent = this.buildParentItem(
-            "Most Edited File",
+            "Top edited files",
             mostEditedChildren
         );
 
@@ -535,7 +510,7 @@ export class KpmProviderManager {
             highKpmChildren.push(messageItem);
         }
         const highKpmParent = this.buildParentItem(
-            "Highest KPM",
+            "Top KPM files",
             highKpmChildren
         );
         return highKpmParent;
@@ -567,7 +542,7 @@ export class KpmProviderManager {
             longestCodeTimeChildren.push(messageItem);
         }
         const longestCodeTimeParent = this.buildParentItem(
-            "Longest Code Time",
+            "Top Code Time files",
             longestCodeTimeChildren
         );
         return longestCodeTimeParent;

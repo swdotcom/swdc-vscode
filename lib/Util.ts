@@ -11,7 +11,6 @@ import {
 import {
     CODE_TIME_EXT_ID,
     launch_url,
-    NOT_NOW_LABEL,
     LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
     CODE_TIME_TYPE,
@@ -259,7 +258,7 @@ export function showLoading() {
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip =
-            "Code time today vs. your daily average. Click to see more from Code Time";
+            "Code time and active code time vs. your daily active code time average. Click to see more from Code Time";
     }
     updateStatusBar(fullMsg, tooltip);
 }
@@ -272,7 +271,7 @@ function updateStatusBar(msg, tooltip) {
     let loggedInName = getItem("name");
     let userInfo = "";
     if (loggedInName && loggedInName !== "") {
-        userInfo = ` (${loggedInName})`;
+        userInfo = ` Logged in as ${loggedInName}`;
     }
     if (!tooltip) {
         tooltip = `Click to see more from Code Time`;
@@ -280,7 +279,7 @@ function updateStatusBar(msg, tooltip) {
 
     if (!showStatusBarText) {
         // add the message to the tooltip
-        tooltip = msg + " | " + tooltip;
+        tooltip = msg + "\n" + tooltip;
     } else {
         lastTooltip = tooltip;
         lastMsg = msg;
@@ -799,7 +798,7 @@ export async function launchLogin() {
  * check if the user needs to see the login prompt or not
  */
 export async function showLoginPrompt(serverIsOnline) {
-    const infoMsg = `To see your coding data in Code Time, please log in to your account`;
+    const infoMsg = `Finish creating your account and see rich data visualizations.`;
     // set the last update time so we don't try to ask too frequently
     window
         .showInformationMessage(infoMsg, ...[LOGIN_LABEL])
@@ -978,11 +977,10 @@ export function getFileDataAsJson(file) {
                 logIt(`unable to read session info: ${e.message}`);
                 // error trying to read the session file, delete it
                 deleteFile(file);
-                data = {};
             }
         }
     }
-    return data ? data : {};
+    return data;
 }
 
 export function getFileDataArray(file) {
