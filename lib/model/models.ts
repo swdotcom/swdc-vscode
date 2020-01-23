@@ -56,32 +56,32 @@ export class FileChangeInfo {
 }
 
 export class SessionSummary {
-    currentDayEditorMinutes: number = 0;
     currentDayMinutes: number = 0;
+    currentDayKeystrokes: number = 0;
+    currentDayKpm: number = 0;
+    currentDayLinesAdded: number = 0;
+    currentDayLinesRemoved: number = 0;
     averageDailyMinutes: number = 0;
     averageDailyKeystrokes: number = 0;
-    currentDayKeystrokes: number = 0;
-    liveshareMinutes: any = null;
-    lastStart: any = null;
-    // the attributes below are based on local changes only
-    currentCharactersAdded: number = 0;
-    currentCharactersDeleted: number = 0;
-    currentLinesAdded: number = 0;
-    currentLinesRemoved: number = 0;
-    currentPastes: number = 0;
-}
-
-export class GlobalSessionSummary {
-    avg_session_seconds: number = 0;
-    avg_keystrokes: number = 0;
-    avg_lines_added: number = 0;
-    avg_lines_removed: number = 0;
-    avg_chars_added: number = 0;
-    avg_chars_deleted: number = 0;
-    avg_paste: number = 0;
-    avg_non_work_seconds: number = 0;
-    avg_work_seconds: number = 0;
-    avg_start: number = 0;
+    averageDailyKpm: number = 0;
+    averageLinesAdded: number = 0;
+    averageLinesRemoved: number = 0;
+    timePercent: number = 0;
+    volumePercent: number = 0;
+    velocityPercent: number = 0;
+    liveshareMinutes: number = 0;
+    latestPayloadTimestamp: number = 0;
+    lastUpdatedToday: boolean = false;
+    currentSessionGoalPercent: number = 0;
+    inFlow: boolean = false;
+    dailyMinutesGoal: number = 0;
+    globalAverageSeconds: number = 0;
+    globalAverageDailyMinutes: number = 0;
+    globalAverageDailyKeystrokes: number = 0;
+    globalAverageLinesAdded: number = 0;
+    globalAverageLinesRemoved: number = 0;
+    // the following attributes are local
+    lastStart: number = 0;
 }
 
 export class LoggedInState {

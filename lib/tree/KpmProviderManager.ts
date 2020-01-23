@@ -3,8 +3,7 @@ import {
     SessionSummary,
     LoggedInState,
     FileChangeInfo,
-    CommitChangeStats,
-    GlobalSessionSummary
+    CommitChangeStats
 } from "../model/models";
 import { getCachedLoggedInState } from "../DataController";
 import {
@@ -27,7 +26,6 @@ import {
 import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
-import { getGlobalSessionSummaryData } from "../storage/GlobalSessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
 const numeral = require("numeral");
 
@@ -110,12 +108,10 @@ export class KpmProviderManager {
     async getKpmTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
-        const globalSessionSummaryData: GlobalSessionSummary = getGlobalSessionSummaryData();
 
         // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
-            sessionSummaryData,
-            globalSessionSummaryData
+            sessionSummaryData
         );
 
         // show the metrics per line
@@ -325,10 +321,7 @@ export class KpmProviderManager {
         return item;
     }
 
-    getSessionSummaryItems(
-        data: SessionSummary,
-        global: GlobalSessionSummary
-    ): KpmItem[] {
+    getSessionSummaryItems(data: SessionSummary): KpmItem[] {
         const items: KpmItem[] = [];
 
         items.push(
@@ -339,39 +332,47 @@ export class KpmProviderManager {
         const codeHours = humanizeMinutes(data.currentDayMinutes);
         values.push(`Today: ${codeHours}`);
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
-        values.push(`Average: ${avgMin}`);
-        const globalCodeHours = humanizeMinutes(
-            global.avg_session_seconds / 60
-        );
+        values.push(`Your average: ${avgMin}`);
+        const globalCodeHours = humanizeMinutes(data.globalAverageSeconds / 60);
         values.push(`Global average: ${globalCodeHours}`);
         items.push(
             this.buildActivityComparisonNodes("Active code time", values)
         );
 
         values = [];
-        const linesAdded = numeral(data.currentLinesAdded).format("0 a");
+        const linesAdded = numeral(data.currentDayLinesAdded).format("0 a");
         values.push(`Today: ${linesAdded}`);
-        const globalLinesAdded = numeral(global.avg_lines_added).format("0 a");
+        const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
+        values.push(`Your average: ${userLinesAddedAvg}`);
+        const globalLinesAdded = numeral(data.globalAverageLinesAdded).format(
+            "0 a"
+        );
         values.push(`Global average: ${globalLinesAdded}`);
         items.push(this.buildActivityComparisonNodes("Lines added", values));
 
         values = [];
-        const linesRemoved = numeral(data.currentLinesRemoved).format("0 a");
+        const linesRemoved = numeral(data.currentDayLinesRemoved).format("0 a");
         values.push(`Today: ${linesRemoved}`);
-        const globalLinesRemoved = numeral(global.avg_lines_removed).format(
+        const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format(
             "0 a"
         );
+        values.push(`Your average: ${userLinesRemovedAvg}`);
+        const globalLinesRemoved = numeral(
+            data.globalAverageLinesRemoved
+        ).format("0 a");
         values.push(`Global average: ${globalLinesRemoved}`);
         items.push(this.buildActivityComparisonNodes("Lines removed", values));
 
         values = [];
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
         values.push(`Today: ${keystrokes}`);
-        const avgKeystrokes = numeral(data.averageDailyKeystrokes).format(
+        const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format(
             "0 a"
         );
-        values.push(`Average: ${avgKeystrokes}`);
-        const globalKeystrokes = numeral(global.avg_keystrokes).format("0 a");
+        values.push(`Your average: ${userKeystrokesAvg}`);
+        const globalKeystrokes = numeral(
+            data.globalAverageDailyKeystrokes
+        ).format("0 a");
         values.push(`Global average: ${globalKeystrokes}`);
         items.push(this.buildActivityComparisonNodes("Keystrokes", values));
 

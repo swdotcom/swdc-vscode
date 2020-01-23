@@ -1,5 +1,5 @@
 import { getItem, setItem } from "../Util";
-import { SessionSummary, GlobalSessionSummary } from "../model/models";
+import { SessionSummary } from "../model/models";
 import { PayloadManager } from "./PayloadManager";
 import {
     softwareGet,
@@ -14,10 +14,6 @@ import {
     saveSessionSummaryToDisk,
     updateStatusBarWithSummaryData
 } from "../storage/SessionSummaryData";
-import {
-    getGlobalSessionSummaryData,
-    saveGlobalSessionSummaryToDisk
-} from "../storage/GlobalSessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
@@ -77,39 +73,11 @@ export class SummaryManager {
             clearSessionSummaryData();
             clearFileChangeInfoSummaryData();
 
-            // fetch it the api data
-            await this.getGlobalSessionSummaryStatus(true);
-
             // set the current day
             this._currentDay = day;
             // set the sessions.json
             setItem("currentDay", this._currentDay);
         }
-    }
-
-    async getGlobalSessionSummaryStatus(
-        forceSummaryFetch = false
-    ): Promise<GlobalSessionSummary> {
-        let globalSessionSummaryData: GlobalSessionSummary = getGlobalSessionSummaryData();
-        const jwt = getItem("jwt");
-        const serverOnline = await serverIsAvailable();
-        if (serverOnline && jwt && forceSummaryFetch) {
-            const result = await softwareGet(
-                `/sessions/summary/global`,
-                jwt
-            ).catch(err => {
-                return null;
-            });
-            if (isResponseOk(result) && result.data) {
-                globalSessionSummaryData = { ...result.data };
-                saveGlobalSessionSummaryToDisk(globalSessionSummaryData);
-            }
-        }
-
-        // refresh the tree view
-        commands.executeCommand("codetime.refreshKpmTree");
-
-        return globalSessionSummaryData;
     }
 
     async getSessionSummaryStatus(

@@ -328,9 +328,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         SummaryManager.getInstance().getSessionSummaryStatus(
             true /*forceSummaryFetch*/
         );
-        SummaryManager.getInstance().getGlobalSessionSummaryStatus(
-            true /*forceSummaryFetch*/
-        );
 
         const message = "Successfully logged on to Code Time";
         commands.executeCommand("codetime.refreshKpmTree");
