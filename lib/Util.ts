@@ -23,7 +23,7 @@ import {
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { CodeTimeEvent } from "./model/models";
-import { EventHandler } from "./event/EventHandler";
+import { EventManager } from "./managers/EventManager";
 import { serverIsAvailable } from "./http/HttpClient";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 
@@ -43,8 +43,6 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
-let lastMsg = null;
-let lastTooltip = null;
 let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
@@ -279,10 +277,7 @@ function updateStatusBar(msg, tooltip) {
 
     if (!showStatusBarText) {
         // add the message to the tooltip
-        tooltip = msg + "\n" + tooltip;
-    } else {
-        lastTooltip = tooltip;
-        lastMsg = msg;
+        tooltip = msg + " | " + tooltip;
     }
     if (!getStatusBarItem()) {
         return;
@@ -1041,5 +1036,5 @@ export async function createCodeTimeEvent(
     event.name = name;
     event.description = description;
     event.hostname = await getHostname();
-    EventHandler.getInstance().storeEvent(event);
+    EventManager.getInstance().storeEvent(event);
 }

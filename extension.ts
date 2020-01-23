@@ -28,9 +28,9 @@ import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
-import { KpmController } from "./lib/event/KpmController";
-import { SummaryManager } from "./lib/controller/SummaryManager";
-import { PayloadManager } from "./lib/controller/PayloadManager";
+import { KpmManager } from "./lib/managers/KpmManager";
+import { SummaryManager } from "./lib/managers/SummaryManager";
+import { PayloadManager } from "./lib/managers/PayloadManager";
 import {
     setSessionSummaryLiveshareMinutes,
     getSessionSummaryData
@@ -52,7 +52,7 @@ let session_check_interval = null;
 // Add the keystroke controller to the ext ctx, which
 // will then listen for text document changes.
 //
-const kpmController = KpmController.getInstance();
+const kpmController: KpmManager = KpmManager.getInstance();
 
 export function isTelemetryOn() {
     return TELEMETRY_ON;

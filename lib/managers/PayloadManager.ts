@@ -8,12 +8,12 @@ import {
     getFileDataPayloadsAsJson,
     getFileDataArray
 } from "../Util";
-import { EventHandler } from "../event/EventHandler";
+import { EventManager } from "./EventManager";
 import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
 
 const fs = require("fs");
 
-const eventHandler: EventHandler = EventHandler.getInstance();
+const eventHandler: EventManager = EventManager.getInstance();
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 

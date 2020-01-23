@@ -1,9 +1,9 @@
 import { getOs, getVersion, logIt, getNowTimes, getPluginId } from "../Util";
 import { FileChangeInfo } from "./models";
-import { EventHandler } from "../event/EventHandler";
+import { EventManager } from "../managers/EventManager";
 import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
 
-const eventHandler: EventHandler = EventHandler.getInstance();
+const eventHandler: EventManager = EventManager.getInstance();
 
 // ? marks that the parameter is optional
 type Project = {

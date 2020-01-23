@@ -17,17 +17,17 @@ import { NO_PROJ_NAME } from "../Constants";
 const fs = require("fs");
 const os = require("os");
 
-export class EventHandler {
-    private static instance: EventHandler;
+export class EventManager {
+    private static instance: EventManager;
 
     private constructor() {}
 
-    static getInstance(): EventHandler {
-        if (!EventHandler.instance) {
-            EventHandler.instance = new EventHandler();
+    static getInstance(): EventManager {
+        if (!EventManager.instance) {
+            EventManager.instance = new EventManager();
         }
 
-        return EventHandler.instance;
+        return EventManager.instance;
     }
 
     sendBatchPayload(api, batch) {

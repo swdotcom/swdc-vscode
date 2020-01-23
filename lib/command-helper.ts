@@ -13,7 +13,7 @@ import {
     toggleStatusBar,
     connectAtlassian
 } from "./Util";
-import { KpmController } from "./event/KpmController";
+import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import { CommitProvider, connectCommitTreeView } from "./tree/CommitProvider";
 import {
@@ -23,7 +23,7 @@ import {
 import { KpmItem } from "./model/models";
 
 export function createCommands(
-    kpmController: KpmController
+    kpmController: KpmManager
 ): {
     dispose: () => void;
 } {

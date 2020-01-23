@@ -11,7 +11,7 @@ import {
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
-import { WallClockHandler } from "../event/WallClockHandler";
+import { WallClockManager } from "../managers/WallClockManager";
 import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -104,7 +104,7 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 }
 
 export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
-    const wallClkHandler: WallClockHandler = WallClockHandler.getInstance();
+    const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     let sessionSummaryData = cacheMgr.get("sessionSummary");
     if (!sessionSummaryData) {
         sessionSummaryData = getSessionSummaryData();
@@ -173,7 +173,7 @@ export function updateStatusBarWithSummaryData() {
     let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    const wcTime = WallClockHandler.getInstance().getWcTime();
+    const wcTime = WallClockManager.getInstance().getWcTime();
 
     const time = moment().format("h:mm a");
     const msg = `${inFlowIcon}${wcTime} | Active: ${currentDayMinutesTime}`;

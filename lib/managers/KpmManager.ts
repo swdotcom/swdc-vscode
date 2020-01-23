@@ -25,8 +25,8 @@ let _keystrokeMap = {};
 let _staticInfoMap = {};
 let _treeRefreshTimer = null;
 
-export class KpmController {
-    private static instance: KpmController;
+export class KpmManager {
+    private static instance: KpmManager;
 
     private _disposable: Disposable;
 
@@ -39,12 +39,12 @@ export class KpmController {
         this._disposable = Disposable.from(...subscriptions);
     }
 
-    static getInstance(): KpmController {
-        if (!KpmController.instance) {
-            KpmController.instance = new KpmController();
+    static getInstance(): KpmManager {
+        if (!KpmManager.instance) {
+            KpmManager.instance = new KpmManager();
         }
 
-        return KpmController.instance;
+        return KpmManager.instance;
     }
 
     public async sendKeystrokeDataIntervalHandler() {

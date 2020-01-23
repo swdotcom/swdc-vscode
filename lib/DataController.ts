@@ -31,7 +31,7 @@ import {
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { LoggedInState, SessionSummary } from "./model/models";
-import { SummaryManager } from "./controller/SummaryManager";
+import { SummaryManager } from "./managers/SummaryManager";
 import { CacheManager } from "./cache/CacheManager";
 const fs = require("fs");
 const moment = require("moment-timezone");

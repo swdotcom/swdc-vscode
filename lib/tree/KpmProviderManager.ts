@@ -28,7 +28,7 @@ import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { getGlobalSessionSummaryData } from "../storage/GlobalSessionSummaryData";
-import { WallClockHandler } from "../event/WallClockHandler";
+import { WallClockManager } from "../managers/WallClockManager";
 const numeral = require("numeral");
 
 // this current path is in the out/lib. We need to find the resource files
@@ -41,7 +41,7 @@ const resourcePath: string = path.join(
     "resources"
 );
 
-const wallClockHandler: WallClockHandler = WallClockHandler.getInstance();
+const wallClockHandler: WallClockManager = WallClockManager.getInstance();
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;

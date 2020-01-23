@@ -10,8 +10,8 @@ import {
 // 1 minute
 const CLOCK_INTERVAL = 1000 * 60;
 
-export class WallClockHandler {
-    private static instance: WallClockHandler;
+export class WallClockManager {
+    private static instance: WallClockManager;
 
     private _wcIntervalHandle = null;
     private _wctime: number = 0;
@@ -20,12 +20,12 @@ export class WallClockHandler {
         this.initTimer();
     }
 
-    static getInstance(): WallClockHandler {
-        if (!WallClockHandler.instance) {
-            WallClockHandler.instance = new WallClockHandler();
+    static getInstance(): WallClockManager {
+        if (!WallClockManager.instance) {
+            WallClockManager.instance = new WallClockManager();
         }
 
-        return WallClockHandler.instance;
+        return WallClockManager.instance;
     }
 
     private initTimer() {

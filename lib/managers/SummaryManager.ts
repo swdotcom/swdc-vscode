@@ -18,10 +18,10 @@ import {
     getGlobalSessionSummaryData,
     saveGlobalSessionSummaryToDisk
 } from "../storage/GlobalSessionSummaryData";
-import { WallClockHandler } from "../event/WallClockHandler";
+import { WallClockManager } from "./WallClockManager";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
-const wallClockMgr: WallClockHandler = WallClockHandler.getInstance();
+const wallClockMgr: WallClockManager = WallClockManager.getInstance();
 
 const moment = require("moment-timezone");
 
