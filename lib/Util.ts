@@ -6,7 +6,8 @@ import {
     Uri,
     commands,
     ViewColumn,
-    WorkspaceFolder
+    WorkspaceFolder,
+    MessageOptions
 } from "vscode";
 import {
     CODE_TIME_EXT_ID,
@@ -795,26 +796,28 @@ export async function launchLogin() {
 export async function showLoginPrompt(serverIsOnline) {
     const infoMsg = `Finish creating your account and see rich data visualizations.`;
     // set the last update time so we don't try to ask too frequently
-    window
-        .showInformationMessage(infoMsg, ...[LOGIN_LABEL])
-        .then(async selection => {
-            let eventName = "";
-            let eventType = "";
+    const selection = await window.showInformationMessage(
+        infoMsg,
+        { modal: true },
+        ...[LOGIN_LABEL]
+    );
 
-            if (selection === LOGIN_LABEL) {
-                let loginUrl = await buildLoginUrl(serverIsOnline);
-                launchWebUrl(loginUrl);
-                refetchUserStatusLazily();
-                eventName = "click";
-                eventType = "mouse";
-            } else {
-                // create an event showing login was not selected
-                eventName = "close";
-                eventType = "window";
-            }
+    let eventName = "";
+    let eventType = "";
 
-            createCodeTimeEvent(eventType, eventName, "OnboardPrompt");
-        });
+    if (selection === LOGIN_LABEL) {
+        let loginUrl = await buildLoginUrl(serverIsOnline);
+        launchWebUrl(loginUrl);
+        refetchUserStatusLazily();
+        eventName = "click";
+        eventType = "mouse";
+    } else {
+        // create an event showing login was not selected
+        eventName = "close";
+        eventType = "window";
+    }
+
+    createCodeTimeEvent(eventType, eventName, "OnboardPrompt");
 }
 
 export async function buildLoginUrl(serverOnline) {
