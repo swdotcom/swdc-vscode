@@ -339,7 +339,7 @@ export class KpmProviderManager {
         items.push(
             this.buildTreeMetricItem(
                 "Code time",
-                "Code time: total time you have been typing in your editor today.",
+                "Code time: total time you have spent in your editor today.",
                 `Today: ${wallClktime}`,
                 "rocket.svg",
                 TreeItemCollapsibleState.Expanded
@@ -358,7 +358,7 @@ export class KpmProviderManager {
         items.push(
             this.buildActivityComparisonNodes(
                 "Active code time",
-                "Active code time: total time you've spent in your editor today.",
+                "Active code time: total time you have been typing in your editor today.",
                 values,
                 TreeItemCollapsibleState.Expanded
             )
