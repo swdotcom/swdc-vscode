@@ -325,10 +325,12 @@ export class KpmProviderManager {
     getSessionSummaryItems(data: SessionSummary): KpmItem[] {
         const items: KpmItem[] = [];
 
+        const wallClktime = humanizeMinutes(wallClockHandler.getWcTime());
+
         items.push(
             this.buildTreeMetricItem(
                 "Code time",
-                wallClockHandler.getWcTime(),
+                wallClktime,
                 "",
                 null,
                 TreeItemCollapsibleState.Expanded
@@ -441,6 +443,7 @@ export class KpmProviderManager {
         command = null,
         commandArgs = null
     ) {
+        label = label.toString();
         const item: KpmItem = new KpmItem();
         item.label = label;
         item.tooltip = tooltip;

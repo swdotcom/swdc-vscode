@@ -1,5 +1,6 @@
 import { CommitChangeStats } from "../model/models";
 import { wrapExecPromise } from "../Util";
+import { getResourceInfo } from "./KpmRepoManager";
 const moment = require("moment-timezone");
 
 export async function getCommandResult(cmd, projectDir) {
@@ -102,6 +103,11 @@ export async function getTodaysCommits(projectDir) {
     const startOfDay = moment()
         .startOf("day")
         .unix();
-    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${startOfDay}`;
+    const resourceInfo = await getResourceInfo(projectDir);
+    const authorOption =
+        resourceInfo && resourceInfo.email
+            ? ` --author=${resourceInfo.email}`
+            : ``;
+    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${startOfDay}${authorOption}`;
     return getChangeStats(projectDir, cmd);
 }
