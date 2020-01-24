@@ -354,7 +354,7 @@ export class KpmProviderManager {
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
         values.push(`Your average (${dayStr}): ${avgMin}`);
         const globalCodeHours = humanizeMinutes(data.globalAverageSeconds / 60);
-        values.push(`Global average: ${globalCodeHours}`);
+        values.push(`Global average (${dayStr}): ${globalCodeHours}`);
         items.push(
             this.buildActivityComparisonNodes(
                 "Active code time",
@@ -372,7 +372,7 @@ export class KpmProviderManager {
         const globalLinesAdded = numeral(data.globalAverageLinesAdded).format(
             "0 a"
         );
-        values.push(`Global average: ${globalLinesAdded}`);
+        values.push(`Global average (${dayStr}): ${globalLinesAdded}`);
         items.push(
             this.buildActivityComparisonNodes("Lines added", "", values)
         );
@@ -387,7 +387,7 @@ export class KpmProviderManager {
         const globalLinesRemoved = numeral(
             data.globalAverageLinesRemoved
         ).format("0 a");
-        values.push(`Global average: ${globalLinesRemoved}`);
+        values.push(`Global average (${dayStr}): ${globalLinesRemoved}`);
         items.push(
             this.buildActivityComparisonNodes("Lines removed", "", values)
         );
@@ -402,7 +402,7 @@ export class KpmProviderManager {
         const globalKeystrokes = numeral(
             data.globalAverageDailyKeystrokes
         ).format("0 a");
-        values.push(`Global average: ${globalKeystrokes}`);
+        values.push(`Global average (${dayStr}): ${globalKeystrokes}`);
         items.push(this.buildActivityComparisonNodes("Keystrokes", "", values));
 
         return items;
@@ -528,7 +528,7 @@ export class KpmProviderManager {
             mostEditedChildren.push(messageItem);
         }
         const mostEditedParent = this.buildParentItem(
-            "Top edited files",
+            "Top files by keystrokes",
             "",
             mostEditedChildren
         );
@@ -560,7 +560,7 @@ export class KpmProviderManager {
             highKpmChildren.push(messageItem);
         }
         const highKpmParent = this.buildParentItem(
-            "Top KPM files",
+            "Top files by KPM",
             "",
             highKpmChildren
         );
@@ -593,7 +593,7 @@ export class KpmProviderManager {
             longestCodeTimeChildren.push(messageItem);
         }
         const longestCodeTimeParent = this.buildParentItem(
-            "Top Code Time files",
+            "Top files by active code time",
             "",
             longestCodeTimeChildren
         );
