@@ -35,11 +35,9 @@
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/login-prompt.png" alt="Code Time for VS Code login prompt" />
 </p>
 
-We strongly recommend that you create a web account at [app.software.com](https://app.software.com/) to fully unlock all of the features of Code Time. The web app has data visualizations and settings you can customize, such as your work hours and rates per project for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar. 
+The Code Time web app has data visualizations and settings you can customize, such as your work hours and rates per project for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar. 
 
-Linking your Code Time plugin to an email account helps ensure that you never lose access to your data (e.g. if you switch devices or need to reconnect). You can also connect multiple code editors on multiple devices using the same email account. 
-
-If you click Not Now after installing Code Time, you can always create an account later by clicking on the status bar, then "Log in…"
+You can connect multiple code editors on multiple devices using the same email account. 
 
 **2. Track your progress during the day**
 
@@ -47,22 +45,32 @@ If you click Not Now after installing Code Time, you can always create an accoun
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/status-bar.png" alt="Code Time for VS Code status bar" />
 </p>
 
-Your status bar shows you in real-time how many hours and minutes you code each day. After your first week, your status bar will show how you are trending vs. your average minutes for that day of the week over the last 90 days.
+Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your active code time exceeds your daily average on this day of the week.
 
-**3. Check out your Code Time dashboard**
+**3. Check out your coding activity**
 
-At the end of your first day, click on Code Time in your status bar to open your dashboard. Your dashboard summarizes your data—such as your code time by project, lines of code, and keystrokes per minute—for today, yesterday, and last week. We also provide a summary over your last 90 days.
+To see an overview of your coding activity and project metrics, open the **Code Time panel** by clicking on the Code Time icon in your side bar.
+
+In your **Activity Metrics**, your *code time* is the total time you have spent in your editor today. Your *active code time* is the total time you have been typing in your editor today. Each metric shows how you compare today to your average and the global average. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays). 
+
+You can also see your top files today by KPM (keystrokes per minute), keystrokes, and active code time.
+
+Your **Project Metrics** provides a breakdown for the current open project. The *Open changes* section shows how many lines you have added and deleted before you commit them and the *Committed today* section summarizes your commits today. 
+
+**4. Generate your Code Time dashboard**
+
+At the end of your first day, open Code Time in your side bar and click *Generate dashboard* to open your dashboard in a new editor tab. Your dashboard summarizes your coding data—such as your code time by project, lines of code, and keystrokes per minute—today, yesterday, last week, and over the last 90 days.
 
 <p align="center" style="margin: 0 10%">
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/editor-dashboard.png" alt="Code Time for VS Code dashboard" />
 </p>
 
 ## Web app data visualizations
-After you sign up for a web account via your editor, you can visit app.software.com to see more data visualizations. Here are a few examples of what you will see in your feed after your first week.
+Click "See advanced metrics" in the Code Time side bar or visit [app.software.com](https://app.software.com/) to see more data visualizations. Here are a few examples of what you will see in your feed after your first week.
 
 **Code Time heatmap**
 
-Code Time measures your keystrokes per hour and summarizes your data in a weekly and 90-day average heatmap. Protect your best times on your heatmap from meetings and interrupts to help boost your productivity.
+Code Time measures your coding activity per hour and summarizes your data in a weekly and 90-day average heatmap. Protect your best times on your heatmap from meetings and interrupts to help boost your productivity.
 
 <p align="center" style="margin: 0 10%">
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/weekly-heatmap.png" alt="Code Time for VS Code heatmap" />
@@ -95,17 +103,13 @@ Code Time integrates with Git, so you can see your speed, frequency, and top fil
 
 ## It’s safe, secure, and free
 
-**We never access your code**
+**We never access your code:** We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.
 
-We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.
+**Your data is private:** We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.
 
-**Your data is private**
+**Free for you, forever:** We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.
 
-We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.
-
-**Free for you, forever**
-
-We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.
+Code Time also collects basic usage metrics to help us make informed decisions about our roadmap.
 
 ## Get in touch
 
