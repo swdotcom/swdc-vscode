@@ -130,6 +130,8 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
         }
     }
 
+    sessionSummaryData.currentDayMinutes += incrementMinutes;
+
     const session_seconds = sessionSummaryData.currentDayMinutes * 60;
     let editor_seconds = wallClkHandler.getWcTimeInSeconds();
 
@@ -140,7 +142,6 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
         wallClkHandler.setWcTime(editor_seconds);
     }
 
-    sessionSummaryData.currentDayMinutes += incrementMinutes;
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentCharactersAdded += aggregates.add;
     sessionSummaryData.currentCharactersDeleted += aggregates.delete;
@@ -167,19 +168,12 @@ export function updateStatusBarWithSummaryData() {
     sessionSummaryData = getSessionSummaryFileAsJson();
 
     let currentDayMinutes = sessionSummaryData.currentDayMinutes;
-    let currentDayMinutesTime = humanizeMinutes(currentDayMinutes);
     let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
-    let averageDailyMinutesTime = humanizeMinutes(averageDailyMinutes);
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
     const wcTime = WallClockManager.getInstance().getWcTime();
 
     // const time = moment().format("h:mm a");
-    // const msg = `${inFlowIcon}${wcTime} | Active: ${currentDayMinutesTime}`;
     const msg = `${inFlowIcon}${wcTime}`;
-
-    // if (averageDailyMinutes > 0) {
-    //     msg += ` | ${averageDailyMinutesTime}`;
-    // }
     showStatus(msg, null);
 }
