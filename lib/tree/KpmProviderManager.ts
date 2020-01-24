@@ -340,8 +340,8 @@ export class KpmProviderManager {
 
         items.push(
             this.buildActivityComparisonNodes(
-                "Code time",
-                "Code time: total time you have spent in your editor today.",
+                "Editor time",
+                "Editor time: total time you have spent in your editor today.",
                 values,
                 TreeItemCollapsibleState.Expanded
             )
@@ -368,8 +368,8 @@ export class KpmProviderManager {
         });
         items.push(
             this.buildActivityComparisonNodes(
-                "Active code time",
-                "Active code time: total time you have been typing in your editor today.",
+                "Code time",
+                "Code time: total time you have been typing in your editor today.",
                 values,
                 TreeItemCollapsibleState.Expanded
             )
@@ -637,7 +637,7 @@ export class KpmProviderManager {
             longestCodeTimeChildren.push(messageItem);
         }
         const longestCodeTimeParent = this.buildParentItem(
-            "Top files by active code time",
+            "Top files by code time",
             "",
             longestCodeTimeChildren
         );
