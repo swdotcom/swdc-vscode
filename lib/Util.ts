@@ -256,7 +256,7 @@ export function showLoading() {
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
         tooltip =
-            "Code time and active code time vs. your daily active code time average. Click to see more from Code Time";
+            "Code time vs. Active code time. A rocket will appear if your active code time exceeds your daily average on this day of the week.";
     }
     updateStatusBar(fullMsg, tooltip);
 }

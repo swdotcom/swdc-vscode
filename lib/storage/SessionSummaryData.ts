@@ -175,8 +175,9 @@ export function updateStatusBarWithSummaryData() {
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
     const wcTime = WallClockManager.getInstance().getWcTime();
 
-    const time = moment().format("h:mm a");
-    const msg = `${inFlowIcon}${wcTime} | Active: ${currentDayMinutesTime}`;
+    // const time = moment().format("h:mm a");
+    // const msg = `${inFlowIcon}${wcTime} | Active: ${currentDayMinutesTime}`;
+    const msg = `${inFlowIcon}${wcTime}`;
 
     // if (averageDailyMinutes > 0) {
     //     msg += ` | ${averageDailyMinutesTime}`;
