@@ -73,10 +73,9 @@ export class KpmProviderManager {
 
         // toggle status bar button
         let toggleStatusBarTextLabel = "Hide status bar metrics";
-        let toggleStatusBarIcon = "not_visible.svg";
+        let toggleStatusBarIcon = "visible.svg";
         if (!isStatusBarTextVisible()) {
             toggleStatusBarTextLabel = "Show status bar metrics";
-            toggleStatusBarIcon = "visible.svg";
         }
         const toggleStatusBarButton: KpmItem = this.getActionButton(
             toggleStatusBarTextLabel,
@@ -91,7 +90,7 @@ export class KpmProviderManager {
             "Learn more",
             "View the Code Time Readme to learn more",
             "codetime.displayReadme",
-            "document.svg"
+            "readme.svg"
         );
         treeItems.push(readmeButton);
 
@@ -99,7 +98,7 @@ export class KpmProviderManager {
             "Submit feedback",
             "Send us an email at cody@software.com",
             "codetime.sendFeedback",
-            "feedback.svg"
+            "message.svg"
         );
         treeItems.push(feedbackButton);
 
@@ -191,13 +190,17 @@ export class KpmProviderManager {
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Insertion(s)",
-                        currentChagesSummary.insertions
+                        currentChagesSummary.insertions,
+                        "",
+                        "insertion.svg"
                     )
                 );
                 openChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
-                        currentChagesSummary.deletions
+                        currentChagesSummary.deletions,
+                        "",
+                        "deletion.svg"
                     )
                 );
 
@@ -218,14 +221,16 @@ export class KpmProviderManager {
                     this.buildMetricItem(
                         "Insertion(s)",
                         todaysChagesSummary.insertions,
-                        "Number of total insertions today"
+                        "Number of total insertions today",
+                        "insertion.svg"
                     )
                 );
                 committedChangesMetrics.push(
                     this.buildMetricItem(
                         "Deletion(s)",
                         todaysChagesSummary.deletions,
-                        "Number of total deletions today"
+                        "Number of total deletions today",
+                        "deletion.svg"
                     )
                 );
 
@@ -234,7 +239,7 @@ export class KpmProviderManager {
                         "Commit(s)",
                         todaysChagesSummary.commitCount,
                         "Number of total commits today",
-                        "commit.png"
+                        "commit.svg"
                     )
                 );
 
@@ -243,7 +248,7 @@ export class KpmProviderManager {
                         "Files changed",
                         todaysChagesSummary.fileCount,
                         "Number of total files changed today",
-                        "files_changed.png"
+                        "files.svg"
                     )
                 );
 
@@ -279,7 +284,7 @@ export class KpmProviderManager {
             "See advanced metrics",
             `To see your coding data in Code Time, please log in to your account`,
             "codetime.codeTimeLogin",
-            "sw-paw-circle.svg",
+            "paw.svg",
             "TreeViewLogin"
         );
         return item;
@@ -291,7 +296,7 @@ export class KpmProviderManager {
             "See advanced metrics",
             `See rich data visualizations in the web app (${name})`,
             "codetime.softwareKpmDashboard",
-            "sw-paw-circle.svg",
+            "paw.svg",
             "TreeViewLaunchWebDashboard"
         );
         return item;
@@ -302,7 +307,7 @@ export class KpmProviderManager {
             "Generate dashboard",
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
-            "dashboard.png",
+            "dashboard.svg",
             "TreeViewLaunchDashboard"
         );
         return item;
@@ -336,7 +341,7 @@ export class KpmProviderManager {
                 "Code time",
                 "Code time: total time you have been typing in your editor today.",
                 `Today: ${wallClktime}`,
-                null,
+                "rocket.svg",
                 TreeItemCollapsibleState.Expanded
             )
         );
@@ -440,7 +445,7 @@ export class KpmProviderManager {
             parent.initialCollapsibleState = collapsibleState;
         }
         values.forEach(element => {
-            const child = this.buildMessageItem(element);
+            const child = this.buildMessageItem(element, "");
             parent.children.push(child);
         });
         return parent;
@@ -494,7 +499,7 @@ export class KpmProviderManager {
         item.tooltip = `Click to open ${fileChangeInfo.fsPath}`;
         item.id = `${fileChangeInfo.name}_file`;
         item.contextValue = "file_item";
-        item.icon = "document.svg";
+        item.icon = "readme.svg";
         return item;
     }
 
