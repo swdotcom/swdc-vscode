@@ -107,7 +107,12 @@ export class SummaryManager {
                 sessionSummaryData = { ...result.data };
                 const currentDaySeconds =
                     sessionSummaryData.currentDayMinutes * 60;
-                wallClockMgr.setWcTime(currentDaySeconds + 1);
+                let editor_seconds = wallClockMgr.getWcTimeInSeconds();
+                if (editor_seconds < currentDaySeconds) {
+                    editor_seconds = currentDaySeconds + 1;
+                    wallClockMgr.setWcTime(editor_seconds);
+                }
+
                 sessionSummaryData.lastStart = lastStart;
 
                 // update the file

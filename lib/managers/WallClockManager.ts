@@ -8,7 +8,7 @@ import {
 } from "../storage/TimeDataSummary";
 
 // 1 minute
-const CLOCK_INTERVAL = 1000 * 60;
+const CLOCK_INTERVAL = 1000 * 30;
 
 export class WallClockManager {
     private static instance: WallClockManager;
@@ -32,8 +32,7 @@ export class WallClockManager {
         this._wctime = getItem("vscode_wctime") || 0;
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
-                this._wctime += 60;
-                this.setWcTime(this._wctime);
+                this._wctime += 30;
                 setItem("vscode_wctime", this._wctime);
                 commands.executeCommand("codetime.refreshKpmTree");
                 this.updateTimeData();
@@ -61,7 +60,7 @@ export class WallClockManager {
         this.initTimer();
 
         // update the status bar
-        updateStatusBarWithSummaryData();
+        this.updateTimeData();
     }
 
     private updateTimeData() {
@@ -74,5 +73,8 @@ export class WallClockManager {
             timeData.session_seconds,
             timeData.file_seconds
         );
+
+        // update the status bar
+        updateStatusBarWithSummaryData();
     }
 }

@@ -108,7 +108,7 @@ export function clearCachedLoggedInState() {
 
 export async function getCachedLoggedInState(): Promise<LoggedInState> {
     let connectState: LoggedInState = cacheMgr.get("connectState");
-    if (!connectState) {
+    if (!connectState || !connectState.loggedIn) {
         const serverIsOnline = await serverIsAvailable();
         // doesn't exist yet, use the api
         await getUserStatus(serverIsOnline, true);
@@ -154,7 +154,8 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         }
     }
 
-    cacheMgr.set("connectState", connectState);
+    const expireInSec = 60 * 30;
+    cacheMgr.set("connectState", connectState, expireInSec);
     return connectState;
 }
 

@@ -21,7 +21,8 @@ import {
     getPluginName,
     getItem,
     displayReadmeIfNotExists,
-    setItem
+    setItem,
+    createCodeTimeEvent
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
 import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
@@ -36,6 +37,7 @@ import {
     getSessionSummaryData
 } from "./lib/storage/SessionSummaryData";
 import { SessionSummary } from "./lib/model/models";
+import { WallClockManager } from "./lib/managers/WallClockManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -63,6 +65,7 @@ export function getStatusBarItem() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
+    createCodeTimeEvent("resource", "unload", "EditorDeactivate");
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
         let nowSec = nowInSecs();
@@ -108,6 +111,9 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
+    createCodeTimeEvent("resource", "load", "EditorActivate");
+    // initialize the wall clock timer
+    WallClockManager.getInstance();
 
     const serverIsOnline = await serverIsAvailable();
 
@@ -146,7 +152,7 @@ export async function intializePlugin(
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;
 
-    // 35 min interval to check if the session file exists or not
+    // 1 hr interval to check if the session file exists or not
     session_check_interval = setInterval(() => {
         periodicSessionCheck();
     }, 1000 * 60 * 60);
