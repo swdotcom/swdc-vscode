@@ -333,28 +333,39 @@ export class KpmProviderManager {
 
     getSessionSummaryItems(data: SessionSummary): KpmItem[] {
         const items: KpmItem[] = [];
+        let values = [];
 
         const wallClktime = humanizeMinutes(wallClockHandler.getWcTime());
+        values.push({ label: `Today: ${wallClktime}`, icon: "rocket.svg" });
 
         items.push(
-            this.buildTreeMetricItem(
+            this.buildActivityComparisonNodes(
                 "Code time",
                 "Code time: total time you have spent in your editor today.",
-                `Today: ${wallClktime}`,
-                "rocket.svg",
+                values,
                 TreeItemCollapsibleState.Expanded
             )
         );
 
         const dayStr = moment().format("ddd");
 
-        let values = [];
+        values = [];
         const codeHours = humanizeMinutes(data.currentDayMinutes);
-        values.push(`Today: ${codeHours}`);
+        values.push({ label: `Today: ${codeHours}`, icon: "rocket.svg" });
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
-        values.push(`Your average (${dayStr}): ${avgMin}`);
+        const activityLightningBolt =
+            data.currentDayMinutes > data.averageDailyMinutes
+                ? "bolt.svg"
+                : "bolt-grey.svg";
+        values.push({
+            label: `Your average (${dayStr}): ${avgMin}`,
+            icon: activityLightningBolt
+        });
         const globalCodeHours = humanizeMinutes(data.globalAverageSeconds / 60);
-        values.push(`Global average (${dayStr}): ${globalCodeHours}`);
+        values.push({
+            label: `Global average (${dayStr}): ${globalCodeHours}`,
+            icon: "global-grey.svg"
+        });
         items.push(
             this.buildActivityComparisonNodes(
                 "Active code time",
@@ -366,43 +377,73 @@ export class KpmProviderManager {
 
         values = [];
         const linesAdded = numeral(data.currentDayLinesAdded).format("0 a");
-        values.push(`Today: ${linesAdded}`);
+        values.push({ label: `Today: ${linesAdded}`, icon: "rocket.svg" });
         const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
-        values.push(`Your average (${dayStr}): ${userLinesAddedAvg}`);
+        const linesAddedLightningBolt =
+            data.currentDayLinesAdded > data.averageLinesAdded
+                ? "bolt.svg"
+                : "bolt-grey.svg";
+        values.push({
+            label: `Your average (${dayStr}): ${userLinesAddedAvg}`,
+            icon: linesAddedLightningBolt
+        });
         const globalLinesAdded = numeral(data.globalAverageLinesAdded).format(
             "0 a"
         );
-        values.push(`Global average (${dayStr}): ${globalLinesAdded}`);
+        values.push({
+            label: `Global average (${dayStr}): ${globalLinesAdded}`,
+            icon: "global-grey.svg"
+        });
         items.push(
             this.buildActivityComparisonNodes("Lines added", "", values)
         );
 
         values = [];
         const linesRemoved = numeral(data.currentDayLinesRemoved).format("0 a");
-        values.push(`Today: ${linesRemoved}`);
+        values.push({ label: `Today: ${linesRemoved}`, icon: "rocket.svg" });
         const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format(
             "0 a"
         );
-        values.push(`Your average (${dayStr}): ${userLinesRemovedAvg}`);
+        const linesRemovedLightningBolt =
+            data.currentDayLinesRemoved > data.averageLinesRemoved
+                ? "bolt.svg"
+                : "bolt-grey.svg";
+        values.push({
+            label: `Your average (${dayStr}): ${userLinesRemovedAvg}`,
+            icon: linesRemovedLightningBolt
+        });
         const globalLinesRemoved = numeral(
             data.globalAverageLinesRemoved
         ).format("0 a");
-        values.push(`Global average (${dayStr}): ${globalLinesRemoved}`);
+        values.push({
+            label: `Global average (${dayStr}): ${globalLinesRemoved}`,
+            icon: "global-grey.svg"
+        });
         items.push(
             this.buildActivityComparisonNodes("Lines removed", "", values)
         );
 
         values = [];
         const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
-        values.push(`Today: ${keystrokes}`);
+        values.push({ label: `Today: ${keystrokes}`, icon: "rocket.svg" });
         const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format(
             "0 a"
         );
-        values.push(`Your average (${dayStr}): ${userKeystrokesAvg}`);
+        const keystrokesLightningBolt =
+            data.currentDayKeystrokes > data.averageDailyKeystrokes
+                ? "bolt.svg"
+                : "bolt-grey.svg";
+        values.push({
+            label: `Your average (${dayStr}): ${userKeystrokesAvg}`,
+            icon: keystrokesLightningBolt
+        });
         const globalKeystrokes = numeral(
             data.globalAverageDailyKeystrokes
         ).format("0 a");
-        values.push(`Global average (${dayStr}): ${globalKeystrokes}`);
+        values.push({
+            label: `Global average (${dayStr}): ${globalKeystrokes}`,
+            icon: "global-grey.svg"
+        });
         items.push(this.buildActivityComparisonNodes("Keystrokes", "", values));
 
         return items;
@@ -445,7 +486,10 @@ export class KpmProviderManager {
             parent.initialCollapsibleState = collapsibleState;
         }
         values.forEach(element => {
-            const child = this.buildMessageItem(element, "");
+            const label = element.label || "";
+            const tooltip = element.tooltip || "";
+            const icon = element.icon || "";
+            const child = this.buildMessageItem(label, tooltip, icon);
             parent.children.push(child);
         });
         return parent;
