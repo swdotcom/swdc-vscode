@@ -561,7 +561,7 @@ export class KpmProviderManager {
         }
         const highKpmParent = this.buildParentItem(
             "Top files by KPM",
-            "",
+            "Top files by KPM (keystrokes per minute)",
             highKpmChildren
         );
         return highKpmParent;
