@@ -28,6 +28,7 @@ import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
 const numeral = require("numeral");
+const moment = require("moment-timezone");
 
 // this current path is in the out/lib. We need to find the resource files
 // which are in out/resources
@@ -325,25 +326,37 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
 
         items.push(
-            this.buildTreeMetricItem("Code time", wallClockHandler.getWcTime())
+            this.buildTreeMetricItem(
+                "Code time",
+                wallClockHandler.getWcTime(),
+                "",
+                null,
+                TreeItemCollapsibleState.Expanded
+            )
         );
+
+        const dayStr = moment().format("ddd");
 
         let values = [];
         const codeHours = humanizeMinutes(data.currentDayMinutes);
         values.push(`Today: ${codeHours}`);
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
-        values.push(`Your average: ${avgMin}`);
+        values.push(`Your average (${dayStr}): ${avgMin}`);
         const globalCodeHours = humanizeMinutes(data.globalAverageSeconds / 60);
         values.push(`Global average: ${globalCodeHours}`);
         items.push(
-            this.buildActivityComparisonNodes("Active code time", values)
+            this.buildActivityComparisonNodes(
+                "Active code time",
+                values,
+                TreeItemCollapsibleState.Expanded
+            )
         );
 
         values = [];
         const linesAdded = numeral(data.currentDayLinesAdded).format("0 a");
         values.push(`Today: ${linesAdded}`);
         const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
-        values.push(`Your average: ${userLinesAddedAvg}`);
+        values.push(`Your average (${dayStr}): ${userLinesAddedAvg}`);
         const globalLinesAdded = numeral(data.globalAverageLinesAdded).format(
             "0 a"
         );
@@ -356,7 +369,7 @@ export class KpmProviderManager {
         const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format(
             "0 a"
         );
-        values.push(`Your average: ${userLinesRemovedAvg}`);
+        values.push(`Your average (${dayStr}): ${userLinesRemovedAvg}`);
         const globalLinesRemoved = numeral(
             data.globalAverageLinesRemoved
         ).format("0 a");
@@ -369,7 +382,7 @@ export class KpmProviderManager {
         const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format(
             "0 a"
         );
-        values.push(`Your average: ${userKeystrokesAvg}`);
+        values.push(`Your average (${dayStr}): ${userKeystrokesAvg}`);
         const globalKeystrokes = numeral(
             data.globalAverageDailyKeystrokes
         ).format("0 a");
@@ -389,15 +402,31 @@ export class KpmProviderManager {
         return item;
     }
 
-    buildTreeMetricItem(label, value, tooltip = "", icon = null) {
+    buildTreeMetricItem(
+        label,
+        value,
+        tooltip = "",
+        icon = null,
+        collapsibleState: TreeItemCollapsibleState = null
+    ) {
         const childItem = this.buildMessageItem(value);
         const parentItem = this.buildMessageItem(label, tooltip, icon);
+        if (collapsibleState) {
+            parentItem.initialCollapsibleState = collapsibleState;
+        }
         parentItem.children = [childItem];
         return parentItem;
     }
 
-    buildActivityComparisonNodes(label, values) {
-        const parent = this.buildMessageItem(label);
+    buildActivityComparisonNodes(
+        label,
+        values,
+        collapsibleState: TreeItemCollapsibleState = null
+    ) {
+        const parent: KpmItem = this.buildMessageItem(label);
+        if (collapsibleState) {
+            parent.initialCollapsibleState = collapsibleState;
+        }
         values.forEach(element => {
             const child = this.buildMessageItem(element);
             parent.children.push(child);

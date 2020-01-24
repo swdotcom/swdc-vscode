@@ -1,5 +1,6 @@
 import { getVersion, getPluginId, getHostname, getOs } from "../Util";
 import { NO_PROJ_NAME } from "../Constants";
+import { TreeItemCollapsibleState } from "vscode";
 
 export class KpmItem {
     id: string = "";
@@ -14,6 +15,8 @@ export class KpmItem {
     icon: string = null;
     children: KpmItem[] = [];
     eventDescription: string = null;
+    initialCollapsibleState: TreeItemCollapsibleState =
+        TreeItemCollapsibleState.Collapsed;
 }
 
 export class KeystrokeAggregate {
