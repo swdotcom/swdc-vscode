@@ -171,7 +171,7 @@ export function updateStatusBarWithSummaryData() {
     let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    const wcTime = WallClockManager.getInstance().getWcTime();
+    const wcTime = WallClockManager.getInstance().getHumanizedWcTime();
 
     // const time = moment().format("h:mm a");
     const msg = `${inFlowIcon}${wcTime}`;

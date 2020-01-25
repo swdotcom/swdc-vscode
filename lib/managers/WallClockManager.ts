@@ -44,9 +44,8 @@ export class WallClockManager {
         this.setWcTime(1);
     }
 
-    public getWcTime() {
-        const wcHours = humanizeMinutes(this._wctime / 60);
-        return wcHours;
+    public getHumanizedWcTime() {
+        return humanizeMinutes(this._wctime / 60);
     }
 
     public getWcTimeInSeconds() {

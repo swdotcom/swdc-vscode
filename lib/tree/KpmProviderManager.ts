@@ -335,7 +335,9 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
         let values = [];
 
-        const wallClktime = humanizeMinutes(wallClockHandler.getWcTime());
+        const wallClktime = humanizeMinutes(
+            wallClockHandler.getWcTimeInSeconds() / 60
+        );
         values.push({ label: `Today: ${wallClktime}`, icon: "rocket.svg" });
 
         items.push(
