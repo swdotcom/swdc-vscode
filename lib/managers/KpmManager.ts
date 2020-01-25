@@ -260,8 +260,10 @@ export class KpmManager {
 
         if (linesDeleted > 0) {
             logEvent(`Removed ${linesDeleted} lines`);
+            sourceObj.linesRemoved += linesDeleted;
         } else if (linesAdded > 0) {
             logEvent(`Added ${linesAdded} lines`);
+            sourceObj.linesAdded += linesAdded;
         }
     }
 
