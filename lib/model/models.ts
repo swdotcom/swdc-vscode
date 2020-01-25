@@ -83,8 +83,6 @@ export class SessionSummary {
     globalAverageDailyKeystrokes: number = 0;
     globalAverageLinesAdded: number = 0;
     globalAverageLinesRemoved: number = 0;
-    // the following attributes are local
-    lastStart: number = 0;
 }
 
 export class LoggedInState {

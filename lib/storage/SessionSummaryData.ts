@@ -114,10 +114,12 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     const nowTimes = getNowTimes();
     const nowInSec = nowTimes.now_in_sec;
     let incrementMinutes = 1;
-    if (sessionSummaryData.lastStart) {
-        const lastStart = parseInt(sessionSummaryData.lastStart, 10);
-        // get the diff from the prev start
-        const diffInSec = nowInSec - lastStart - 60;
+
+    const lastPayloadEnd = getItem("lastPayloadEnd");
+    if (lastPayloadEnd) {
+        // get the diff from the prev end
+        const diffInSec = nowInSec - lastPayloadEnd - 60;
+
         // If it's less or equal to the session threshold seconds
         // then add to the minutes increment. But check if it's a positive
         // number in case the system clock has been moved to the future
@@ -143,7 +145,6 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;
     sessionSummaryData.currentDayLinesRemoved += aggregates.linesRemoved;
-    sessionSummaryData.lastStart = nowInSec;
 
     saveSessionSummaryToDisk(sessionSummaryData);
 

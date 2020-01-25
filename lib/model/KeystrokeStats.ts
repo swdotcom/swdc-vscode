@@ -1,4 +1,11 @@
-import { getOs, getVersion, logIt, getNowTimes, getPluginId } from "../Util";
+import {
+    getOs,
+    getVersion,
+    logIt,
+    getNowTimes,
+    getPluginId,
+    setItem
+} from "../Util";
 import { FileChangeInfo } from "./models";
 import { EventManager } from "../managers/EventManager";
 import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
@@ -94,10 +101,15 @@ export class KeystrokeStats {
      * send the payload
      */
     postData(sendNow: boolean = false) {
-        const payload = JSON.parse(JSON.stringify(this));
-
         // set the end time for the session
         let nowTimes = getNowTimes();
+
+        // update the lastPayloadEndTime
+        setItem("lastPayloadEnd", nowTimes.now_in_sec);
+
+        // get the payload
+        const payload = JSON.parse(JSON.stringify(this));
+
         payload["end"] = nowTimes.now_in_sec;
         payload["local_end"] = nowTimes.local_now_in_sec;
         const keys = Object.keys(payload.source);

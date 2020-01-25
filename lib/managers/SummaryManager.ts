@@ -101,14 +101,8 @@ export class SummaryManager {
                 }
             );
             if (isResponseOk(result) && result.data) {
-                // get the lastStart before we update the summary
-                const lastStart = sessionSummaryData.lastStart;
-
                 // update it from the app
                 sessionSummaryData = { ...result.data };
-
-                // set the lastStart again (used to help determine session time)
-                sessionSummaryData.lastStart = lastStart;
 
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
