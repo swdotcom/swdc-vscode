@@ -141,11 +141,8 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     }
 
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
-    sessionSummaryData.currentCharactersAdded += aggregates.add;
-    sessionSummaryData.currentCharactersDeleted += aggregates.delete;
-    sessionSummaryData.currentPastes += aggregates.paste;
-    sessionSummaryData.currentLinesAdded += aggregates.linesAdded;
-    sessionSummaryData.currentLinesRemoved += aggregates.linesRemoved;
+    sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;
+    sessionSummaryData.currentDayLinesRemoved += aggregates.linesRemoved;
     sessionSummaryData.lastStart = nowInSec;
 
     saveSessionSummaryToDisk(sessionSummaryData);
