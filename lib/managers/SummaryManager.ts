@@ -65,8 +65,8 @@ export class SummaryManager {
             // send the offline TimeData payloads
             await payloadMgr.sendOfflineTimeData();
 
-            // day does't match.
-            // clear the session summary, and the file change info summary data
+            // day does't match. clear the wall clock time,
+            // the session summary, and the file change info summary data
             wallClockMgr.clearWcTime();
             clearSessionSummaryData();
             clearFileChangeInfoSummaryData();
