@@ -45,6 +45,10 @@ export class KeystrokeStats {
         this.keystrokes = 0;
     }
 
+    getCurrentStatsData() {
+        return JSON.parse(JSON.stringify(this));
+    }
+
     /**
      * check if the payload should be sent or not
      */
@@ -104,7 +108,7 @@ export class KeystrokeStats {
         // set the end time for the session
         let nowTimes = getNowTimes();
 
-        // update the lastPayloadEndTime
+        // Update the lastPayloadEndTime. It's used to determine session time
         setItem("lastPayloadEnd", nowTimes.now_in_sec);
 
         // get the payload

@@ -21,6 +21,7 @@ import {
     connectCodeTimeTreeView
 } from "./tree/CodeTimeProvider";
 import { KpmItem } from "./model/models";
+import { KpmProviderManager } from "./tree/KpmProviderManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -115,7 +116,10 @@ export function createCommands(
 
     const refreshKpmTreeCmd = commands.registerCommand(
         "codetime.refreshKpmTree",
-        () => {
+        keystrokeStats => {
+            KpmProviderManager.getInstance().setCurrentKeystrokeStats(
+                keystrokeStats
+            );
             codetimeTreeProvider.refresh();
             kpmTreeProvider.refresh();
             commitTreeProvider.refresh();

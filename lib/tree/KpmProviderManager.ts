@@ -27,6 +27,7 @@ import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
+import { Session } from "inspector";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -45,6 +46,8 @@ const wallClockHandler: WallClockManager = WallClockManager.getInstance();
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
 
+    private _currentKeystrokeStats: SessionSummary = new SessionSummary();
+
     constructor() {
         //
     }
@@ -55,6 +58,23 @@ export class KpmProviderManager {
         }
 
         return KpmProviderManager.instance;
+    }
+
+    public setCurrentKeystrokeStats(keystrokeStats) {
+        if (!keystrokeStats) {
+            this._currentKeystrokeStats = new SessionSummary();
+        } else {
+            // update the current stats
+            Object.keys(keystrokeStats.source).forEach(key => {
+                const fileInfo: FileChangeInfo = keystrokeStats.source[key];
+                this._currentKeystrokeStats.currentDayKeystrokes =
+                    fileInfo.keystrokes;
+                this._currentKeystrokeStats.currentDayLinesAdded =
+                    fileInfo.linesAdded;
+                this._currentKeystrokeStats.currentDayLinesRemoved =
+                    fileInfo.linesRemoved;
+            });
+        }
     }
 
     async getOptionsTreeParents(): Promise<KpmItem[]> {
@@ -378,7 +398,10 @@ export class KpmProviderManager {
         );
 
         values = [];
-        const linesAdded = numeral(data.currentDayLinesAdded).format("0 a");
+        const currLinesAdded =
+            this._currentKeystrokeStats.currentDayLinesAdded +
+            data.currentDayLinesAdded;
+        const linesAdded = numeral(currLinesAdded).format("0 a");
         values.push({ label: `Today: ${linesAdded}`, icon: "rocket.svg" });
         const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
         const linesAddedLightningBolt =
@@ -401,7 +424,10 @@ export class KpmProviderManager {
         );
 
         values = [];
-        const linesRemoved = numeral(data.currentDayLinesRemoved).format("0 a");
+        const currLinesRemoved =
+            this._currentKeystrokeStats.currentDayLinesRemoved +
+            data.currentDayLinesRemoved;
+        const linesRemoved = numeral(currLinesRemoved).format("0 a");
         values.push({ label: `Today: ${linesRemoved}`, icon: "rocket.svg" });
         const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format(
             "0 a"
@@ -426,7 +452,10 @@ export class KpmProviderManager {
         );
 
         values = [];
-        const keystrokes = numeral(data.currentDayKeystrokes).format("0 a");
+        const currKeystrokes =
+            this._currentKeystrokeStats.currentDayKeystrokes +
+            data.currentDayKeystrokes;
+        const keystrokes = numeral(currKeystrokes).format("0 a");
         values.push({ label: `Today: ${keystrokes}`, icon: "rocket.svg" });
         const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format(
             "0 a"

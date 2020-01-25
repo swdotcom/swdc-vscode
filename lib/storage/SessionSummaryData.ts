@@ -62,11 +62,14 @@ function coalesceMissingAttributes(data): SessionSummary {
 }
 
 export function getSessionSummaryFileAsJson(): SessionSummary {
-    const file = getSessionSummaryFile();
-    let sessionSummary: SessionSummary = getFileDataAsJson(file);
+    let sessionSummary: SessionSummary = cacheMgr.get("sessionSummary");
     if (!sessionSummary) {
-        sessionSummary = new SessionSummary();
-        saveSessionSummaryToDisk(sessionSummary);
+        const file = getSessionSummaryFile();
+        sessionSummary = getFileDataAsJson(file);
+        if (!sessionSummary) {
+            sessionSummary = new SessionSummary();
+            saveSessionSummaryToDisk(sessionSummary);
+        }
     }
     return sessionSummary;
 }

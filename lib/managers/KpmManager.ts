@@ -225,7 +225,6 @@ export class KpmManager {
             textChangeLen = event.contentChanges[0].rangeLength / -1;
         }
 
-        this.lazilyRefreshCommitTreeInfo();
         if (
             !isCharDelete &&
             textChangeLen === 0 &&
@@ -265,6 +264,8 @@ export class KpmManager {
             logEvent(`Added ${linesAdded} lines`);
             sourceObj.linesAdded += linesAdded;
         }
+
+        this.lazilyRefreshCommitTreeInfo();
     }
 
     private lazilyRefreshCommitTreeInfo() {
@@ -272,8 +273,22 @@ export class KpmManager {
             clearTimeout(_treeRefreshTimer);
             _treeRefreshTimer = null;
         }
+
         _treeRefreshTimer = setTimeout(() => {
-            commands.executeCommand("codetime.refreshCommitTree");
+            let keystrokeStats = null;
+            if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
+                let keys = Object.keys(_keystrokeMap);
+                // use a normal for loop since we have an await within the loop
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i];
+                    keystrokeStats = _keystrokeMap[key];
+                    if (keystrokeStats.hasData()) {
+                        break;
+                    }
+                }
+            }
+            // commands.executeCommand("codetime.refreshCommitTree");
+            commands.executeCommand("codetime.refreshKpmTree", keystrokeStats);
             _treeRefreshTimer = null;
         }, 2000);
     }
