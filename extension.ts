@@ -65,7 +65,9 @@ export function getStatusBarItem() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
+    // store the deactivate event
     createCodeTimeEvent("resource", "unload", "EditorDeactivate");
+
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
         let nowSec = nowInSecs();
@@ -111,7 +113,10 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
+
+    // store the activate event
     createCodeTimeEvent("resource", "load", "EditorActivate");
+
     // initialize the wall clock timer
     WallClockManager.getInstance();
 

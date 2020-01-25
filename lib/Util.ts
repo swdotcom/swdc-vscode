@@ -240,15 +240,6 @@ export function getItem(key) {
     return val;
 }
 
-export function showErrorStatus(errorTooltip) {
-    let fullMsg = `$(${"alert"}) ${"Code Time"}`;
-    if (!errorTooltip) {
-        errorTooltip =
-            "To see your coding data in Code Time, please log in to your account";
-    }
-    showStatus(fullMsg, errorTooltip);
-}
-
 export function showLoading() {
     let loadingMsg = "⏳ code time metrics";
     updateStatusBar(loadingMsg, "");

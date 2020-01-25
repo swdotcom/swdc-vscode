@@ -5,7 +5,6 @@ import {
     logIt,
     getNowTimes,
     getItem,
-    humanizeMinutes,
     showStatus,
     getFileDataAsJson
 } from "../Util";
@@ -14,7 +13,6 @@ import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
 import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
 const fs = require("fs");
-const moment = require("moment-timezone");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 

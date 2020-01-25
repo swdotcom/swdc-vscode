@@ -171,8 +171,8 @@ export class KpmManager {
         this.updateStaticValues(rootObj, staticInfo);
 
         // Use the contentChanges to figure out most of the events
-        let isNewLine = false;
-        let isLineDelete = false;
+        let linesAdded = 0;
+        let linesDeleted = 0;
         let hasNonNewLineData = false;
         let textChangeLen = 0;
         let rangeChangeLen = 0;
@@ -183,17 +183,31 @@ export class KpmManager {
                 const range = event.contentChanges[i].range;
                 rangeChangeLen += event.contentChanges[i].rangeLength || 0;
                 contentText = event.contentChanges[i].text;
-                if (contentText.match(/[\n\r]/g)) {
+                const newLineMatches = contentText.match(/[\n\r]/g);
+                if (newLineMatches && newLineMatches.length) {
                     // it's a new line
-                    isNewLine = true;
+                    linesAdded = newLineMatches.length;
+                    if (contentText) {
+                        textChangeLen += contentText.length;
+                    }
                     contentText = "";
                 } else if (contentText.length > 0) {
                     // has text changes
                     hasNonNewLineData = true;
                     textChangeLen += contentText.length;
                 } else if (range && !range.isEmpty && !range.isSingleLine) {
-                    // it's an empty line delete
-                    isLineDelete = true;
+                    if (
+                        range.start &&
+                        range.start.line &&
+                        range.end &&
+                        range.end.line
+                    ) {
+                        linesDeleted = Math.abs(
+                            range.start.line - range.end.line
+                        );
+                    } else {
+                        linesDeleted = 1;
+                    }
                 } else if (
                     rangeChangeLen &&
                     rangeChangeLen > 0 &&
@@ -215,8 +229,8 @@ export class KpmManager {
         if (
             !isCharDelete &&
             textChangeLen === 0 &&
-            !isNewLine &&
-            !isLineDelete
+            linesAdded === 0 &&
+            linesDeleted === 0
         ) {
             return;
         }
@@ -242,34 +256,12 @@ export class KpmManager {
 
         // "netkeys" = add - delete
         sourceObj.netkeys = sourceObj.add - sourceObj.delete;
-
-        let diff = 0;
-
-        // check if the line count has changed since the initial
-        // time we've set the static info line count for this file
-        if (sourceObj.lines > 0 && currLineCount !== sourceObj.lines) {
-            // i.e. it's now 229 but was 230 before, it'll set
-            // diff to -1 which triggers our condition to
-            // increment the linesRemoved
-            diff = currLineCount - sourceObj.lines;
-        }
-
         sourceObj.lines = currLineCount;
 
-        if (isLineDelete) {
-            // make the diff absolute as we're just incrementing
-            // the linesRemoved value
-            diff = Math.abs(diff);
-            diff = Math.max(diff, 1);
-            sourceObj.linesRemoved += diff;
-            logEvent(`Removed ${diff} lines`);
-        } else if (isNewLine) {
-            // when hitting the enter key it doesn't change the currLineCount
-            // but the contentChanges has the "\n" to provide that a newline
-            // has happened
-            diff = Math.max(diff, 1);
-            sourceObj.linesAdded += diff;
-            logEvent(`Added ${diff} lines`);
+        if (linesDeleted > 0) {
+            logEvent(`Removed ${linesDeleted} lines`);
+        } else if (linesAdded > 0) {
+            logEvent(`Added ${linesAdded} lines`);
         }
     }
 

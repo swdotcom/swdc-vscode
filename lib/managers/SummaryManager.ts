@@ -75,6 +75,8 @@ export class SummaryManager {
             this._currentDay = day;
             // set the sessions.json
             setItem("currentDay", this._currentDay);
+
+            this.getSessionSummaryStatus(true /*forceSummaryFetch*/);
         }
     }
 
@@ -99,23 +101,27 @@ export class SummaryManager {
                 }
             );
             if (isResponseOk(result) && result.data) {
-                // get the lastStart
+                // get the lastStart before we update the summary
                 const lastStart = sessionSummaryData.lastStart;
+
                 // update it from the app
                 sessionSummaryData = { ...result.data };
-                const currentDaySeconds =
-                    sessionSummaryData.currentDayMinutes * 60;
-                let editor_seconds = wallClockMgr.getWcTimeInSeconds();
-                if (editor_seconds < currentDaySeconds) {
-                    editor_seconds = currentDaySeconds + 1;
-                    wallClockMgr.setWcTime(editor_seconds);
-                }
 
+                // set the lastStart again (used to help determine session time)
                 sessionSummaryData.lastStart = lastStart;
 
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
             }
+        }
+
+        // update the wallclock time if it's
+        // lagging behind the newly gathered current day seconds
+        const currentDaySeconds = sessionSummaryData.currentDayMinutes * 60;
+        let editor_seconds = wallClockMgr.getWcTimeInSeconds();
+        if (editor_seconds < currentDaySeconds) {
+            editor_seconds = currentDaySeconds + 1;
+            wallClockMgr.setWcTime(editor_seconds);
         }
 
         // update the status bar
