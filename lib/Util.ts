@@ -768,7 +768,7 @@ export function humanizeMinutes(min) {
         if (hrs % 1 === 0) {
             str = hrs.toFixed(0) + " hrs";
         } else {
-            str = (Math.round(hrs * 10) / 10).toFixed(1) + " hrs";
+            str = ((hrs * 10) / 10).toFixed(2) + " hrs";
         }
     } else if (min === 1) {
         str = "1 min";

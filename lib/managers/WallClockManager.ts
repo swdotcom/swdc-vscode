@@ -7,8 +7,9 @@ import {
     updateTimeData
 } from "../storage/TimeDataSummary";
 
-// 1 minute
 const CLOCK_INTERVAL = 1000 * 30;
+
+let counter = 0;
 
 export class WallClockManager {
     private static instance: WallClockManager;
@@ -41,7 +42,7 @@ export class WallClockManager {
     }
 
     public clearWcTime() {
-        this.setWcTime(1);
+        this.setWcTime(0);
     }
 
     public getHumanizedWcTime() {

@@ -1,0 +1,14 @@
+"commands": [
+    {
+        "command": "codetime.copyToJira",
+        "title": "Copy To Jira"
+    }
+],
+"menus": {
+    "editor/context": [
+        {
+            "command": "codetime.copyToJira",
+            "group": "CodeTime@1"
+        }
+    ]
+},

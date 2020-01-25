@@ -21,7 +21,7 @@ const wallClockMgr: WallClockManager = WallClockManager.getInstance();
 
 const moment = require("moment-timezone");
 
-// 5 minutes
+// every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
 
 export class SummaryManager {
@@ -50,8 +50,6 @@ export class SummaryManager {
         this._dayCheckTimer = setInterval(async () => {
             SummaryManager.getInstance().newDayChecker();
         }, DAY_CHECK_TIMER_INTERVAL);
-
-        this.newDayChecker();
     }
 
     /**

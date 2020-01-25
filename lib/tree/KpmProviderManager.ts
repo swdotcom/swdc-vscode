@@ -594,7 +594,7 @@ export class KpmProviderManager {
         const len = Math.min(3, sortedArray.length);
         for (let i = 0; i < len; i++) {
             const fileName = sortedArray[i].name;
-            const kpm = sortedArray[i].kpm.toFixed(1);
+            const kpm = sortedArray[i].kpm.toFixed(2);
             const label = `${fileName} | ${kpm}`;
             const messageItem = this.buildMessageItem(
                 label,
