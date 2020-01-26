@@ -149,9 +149,7 @@ export async function intializePlugin(
 
     // update the status bar
     setTimeout(() => {
-        const summaryData: SessionSummary = getSessionSummaryData();
-        const forceFetch = summaryData.currentDayMinutes === 0 ? true : false;
-        SummaryManager.getInstance().getSessionSummaryStatus(forceFetch);
+        PayloadManager.getInstance().sendOfflineData();
     }, 1000);
 
     // every hour, look for repo members

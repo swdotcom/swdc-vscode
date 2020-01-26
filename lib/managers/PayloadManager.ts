@@ -10,6 +10,7 @@ import {
 } from "../Util";
 import { EventManager } from "./EventManager";
 import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
+import { SummaryManager } from "./SummaryManager";
 
 const fs = require("fs");
 
@@ -49,6 +50,12 @@ export class PayloadManager {
      */
     async sendOfflineData() {
         this.batchSendData("/data/batch", getSoftwareDataStoreFile());
+
+        // fetch latest summary data in 30 seconds to ensure the plugin
+        // is up to date with what the backend has
+        setTimeout(() => {
+            SummaryManager.getInstance().getSessionSummaryStatus(true);
+        }, 1000 * 10);
     }
 
     /**
