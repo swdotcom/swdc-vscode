@@ -108,8 +108,8 @@ export class KeystrokeStats {
         // set the end time for the session
         let nowTimes = getNowTimes();
 
-        // Update the lastPayloadEndTime. It's used to determine session time
-        setItem("lastPayloadEnd", nowTimes.now_in_sec);
+        // Update the latestPayloadTimestampEndUtc. It's used to determine session time
+        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 
         // get the payload
         const payload = JSON.parse(JSON.stringify(this));

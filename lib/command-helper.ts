@@ -10,8 +10,7 @@ import {
     launchLogin,
     openFileInEditor,
     displayReadmeIfNotExists,
-    toggleStatusBar,
-    connectAtlassian
+    toggleStatusBar
 } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -22,6 +21,7 @@ import {
 } from "./tree/CodeTimeProvider";
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
+import { SummaryManager } from "./managers/SummaryManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -89,6 +89,16 @@ export function createCommands(
         }
     );
     cmds.push(openFileInEditorCmd);
+
+    const refreshSessionSummaryCmd = commands.registerCommand(
+        "codetime.refreshSessionSummary",
+        () => {
+            SummaryManager.getInstance().getSessionSummaryStatus(
+                true /*forceFetch*/
+            );
+        }
+    );
+    cmds.push(refreshSessionSummaryCmd);
 
     const toggleStatusBarCmd = commands.registerCommand(
         "codetime.toggleStatusBar",

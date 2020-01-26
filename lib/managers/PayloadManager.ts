@@ -11,6 +11,7 @@ import {
 import { EventManager } from "./EventManager";
 import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
 import { SummaryManager } from "./SummaryManager";
+import { commands } from "vscode";
 
 const fs = require("fs");
 
@@ -54,7 +55,7 @@ export class PayloadManager {
         // fetch latest summary data in 30 seconds to ensure the plugin
         // is up to date with what the backend has
         setTimeout(() => {
-            SummaryManager.getInstance().getSessionSummaryStatus(true);
+            commands.executeCommand("codetime.refreshSessionSummary");
         }, 1000 * 10);
     }
 

@@ -73,6 +73,7 @@ export class SessionSummary {
     volumePercent: number = 0;
     velocityPercent: number = 0;
     liveshareMinutes: number = 0;
+    latestPayloadTimestampEndUtc: number = 0;
     latestPayloadTimestamp: number = 0;
     lastUpdatedToday: boolean = false;
     currentSessionGoalPercent: number = 0;

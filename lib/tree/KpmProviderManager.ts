@@ -355,10 +355,10 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
         let values = [];
 
-        const wallClktime = humanizeMinutes(
+        const wallClktimeStr = humanizeMinutes(
             wallClockHandler.getWcTimeInSeconds() / 60
         );
-        values.push({ label: `Today: ${wallClktime}`, icon: "rocket.svg" });
+        values.push({ label: `Today: ${wallClktimeStr}`, icon: "rocket.svg" });
 
         items.push(
             this.buildActivityComparisonNodes(
@@ -372,8 +372,8 @@ export class KpmProviderManager {
         const dayStr = moment().format("ddd");
 
         values = [];
-        const codeHours = humanizeMinutes(data.currentDayMinutes);
-        values.push({ label: `Today: ${codeHours}`, icon: "rocket.svg" });
+        const dayMinutesStr = humanizeMinutes(data.currentDayMinutes);
+        values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
         const activityLightningBolt =
             data.currentDayMinutes > data.averageDailyMinutes
@@ -383,9 +383,11 @@ export class KpmProviderManager {
             label: `Your average (${dayStr}): ${avgMin}`,
             icon: activityLightningBolt
         });
-        const globalCodeHours = humanizeMinutes(data.globalAverageSeconds / 60);
+        const globalMinutesStr = humanizeMinutes(
+            data.globalAverageSeconds / 60
+        );
         values.push({
-            label: `Global average (${dayStr}): ${globalCodeHours}`,
+            label: `Global average (${dayStr}): ${globalMinutesStr}`,
             icon: "global-grey.svg"
         });
         items.push(

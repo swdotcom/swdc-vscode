@@ -326,9 +326,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
 
         // explicitly fetch the latest info the app server
-        SummaryManager.getInstance().getSessionSummaryStatus(
-            true /*forceSummaryFetch*/
-        );
+        commands.executeCommand("codetime.refreshSessionSummary");
 
         const message = "Successfully logged on to Code Time";
         commands.executeCommand("codetime.refreshKpmTree");
@@ -443,19 +441,23 @@ export async function writeCodeTimeMetricsDashboard() {
     // get the top section of the dashboard content (today's data)
     const sessionSummary: SessionSummary = await SummaryManager.getInstance().getSessionSummaryStatus();
     if (sessionSummary) {
-        let averageTime = humanizeMinutes(sessionSummary.averageDailyMinutes);
-        let hoursCodedToday = humanizeMinutes(sessionSummary.currentDayMinutes);
-        let liveshareTime = null;
+        let averageTimeStr = humanizeMinutes(
+            sessionSummary.averageDailyMinutes
+        );
+        let currentDayMinutesStr = humanizeMinutes(
+            sessionSummary.currentDayMinutes
+        );
+        let liveshareTimeStr = null;
         if (sessionSummary.liveshareMinutes) {
-            liveshareTime = humanizeMinutes(sessionSummary.liveshareMinutes);
+            liveshareTimeStr = humanizeMinutes(sessionSummary.liveshareMinutes);
         }
         dashboardContent += getDashboardRow(
             "Hours coded today",
-            hoursCodedToday
+            currentDayMinutesStr
         );
-        dashboardContent += getDashboardRow("90-day avg", averageTime);
-        if (liveshareTime) {
-            dashboardContent += getDashboardRow("Live Share", liveshareTime);
+        dashboardContent += getDashboardRow("90-day avg", averageTimeStr);
+        if (liveshareTimeStr) {
+            dashboardContent += getDashboardRow("Live Share", liveshareTimeStr);
         }
         dashboardContent += "\n";
     }

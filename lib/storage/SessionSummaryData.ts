@@ -12,6 +12,7 @@ import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
 import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
+import { commands } from "vscode";
 const fs = require("fs");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
@@ -104,6 +105,30 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
     saveSessionSummaryToDisk(sessionSummaryData);
 }
 
+export function getMinutesSinceLastPayload() {
+    let minutesSinceLastPayload = 1;
+    const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
+    if (lastPayloadEnd) {
+        const nowTimes = getNowTimes();
+        const nowInSec = nowTimes.now_in_sec;
+        // diff from the previous end time
+        const diffInSec = nowInSec - lastPayloadEnd;
+
+        // if it's less than the threshold then add the minutes to the session time
+        if (diffInSec > 0 && diffInSec <= getSessionThresholdSeconds()) {
+            // it's still the same session, add the gap time in minutes
+            minutesSinceLastPayload = diffInSec / 60;
+        }
+    } else {
+        // schedule fetching the sesssion summary data
+        // since we don't have the latest payload timestamp
+        setTimeout(() => {
+            commands.executeCommand("codetime.refreshSessionSummary");
+        }, 1000);
+    }
+    return minutesSinceLastPayload;
+}
+
 export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     let sessionSummaryData = cacheMgr.get("sessionSummary");
@@ -114,24 +139,7 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
 
     // what is the gap from the previous start
-    const nowTimes = getNowTimes();
-    const nowInSec = nowTimes.now_in_sec;
-    let incrementMinutes = 1;
-
-    const lastPayloadEnd = getItem("lastPayloadEnd");
-    if (lastPayloadEnd) {
-        // get the diff from the prev end
-        const diffInSec = nowInSec - lastPayloadEnd - 60;
-
-        // If it's less or equal to the session threshold seconds
-        // then add to the minutes increment. But check if it's a positive
-        // number in case the system clock has been moved to the future
-        if (diffInSec > 0 && diffInSec <= getSessionThresholdSeconds()) {
-            // it's still the same session, add the gap time in minutes
-            const diffInMin = diffInSec / 60;
-            incrementMinutes += diffInMin;
-        }
-    }
+    const incrementMinutes = getMinutesSinceLastPayload();
 
     sessionSummaryData.currentDayMinutes += incrementMinutes;
 

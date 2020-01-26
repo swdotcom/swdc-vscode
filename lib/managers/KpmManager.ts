@@ -1,6 +1,11 @@
 import { workspace, Disposable, window, commands } from "vscode";
 import { KeystrokeStats } from "../model/KeystrokeStats";
-import { UNTITLED, UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
+import {
+    UNTITLED,
+    UNTITLED_WORKSPACE,
+    NO_PROJ_NAME,
+    DEFAULT_DURATION_MILLIS
+} from "../Constants";
 import { DEFAULT_DURATION } from "../Constants";
 import {
     getRootPathForFile,
@@ -573,7 +578,7 @@ export class KpmManager {
         // start the minute timer to send the data
         setTimeout(() => {
             this.sendKeystrokeDataIntervalHandler();
-        }, DEFAULT_DURATION * 1000);
+        }, DEFAULT_DURATION_MILLIS);
 
         return keystrokeStats;
     }

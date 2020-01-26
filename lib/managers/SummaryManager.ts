@@ -76,7 +76,7 @@ export class SummaryManager {
             // set the sessions.json
             setItem("currentDay", this._currentDay);
 
-            this.getSessionSummaryStatus(true /*forceSummaryFetch*/);
+            commands.executeCommand("codetime.refreshSessionSummary");
         }
     }
 
@@ -106,6 +106,20 @@ export class SummaryManager {
 
                 // update the file
                 saveSessionSummaryToDisk(sessionSummaryData);
+
+                // latestPayloadTimestampEndUtc:1580043777
+                // check if we need to update the latestPayloadTimestampEndUtc
+                const currentTs = getItem("latestPayloadTimestampEndUtc");
+                if (
+                    !currentTs ||
+                    sessionSummaryData.latestPayloadTimestampEndUtc > currentTs
+                ) {
+                    // update the currentTs
+                    setItem(
+                        "latestPayloadTimestampEndUtc",
+                        sessionSummaryData.latestPayloadTimestampEndUtc
+                    );
+                }
             }
         }
 

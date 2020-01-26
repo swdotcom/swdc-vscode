@@ -747,6 +747,15 @@ export function launchMusicAnalytics() {
 }
 
 /**
+ * @param num The number to round
+ * @param precision The number of decimal places to preserve
+ */
+function roundUp(num, precision) {
+    precision = Math.pow(10, precision);
+    return Math.ceil(num * precision) / precision;
+}
+
+/**
  * humanize the minutes
  */
 export function humanizeMinutes(min) {
@@ -759,7 +768,8 @@ export function humanizeMinutes(min) {
         if (hrs % 1 === 0) {
             str = hrs.toFixed(0) + " hrs";
         } else {
-            str = ((hrs * 10) / 10).toFixed(2) + " hrs";
+            const roundedTime = roundUp(hrs, 1);
+            str = roundedTime.toFixed(1) + " hrs";
         }
     } else if (min === 1) {
         str = "1 min";
