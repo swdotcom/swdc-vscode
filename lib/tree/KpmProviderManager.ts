@@ -312,9 +312,10 @@ export class KpmProviderManager {
 
     getWebViewDashboardButton(): KpmItem {
         const name = getItem("name");
+        const loggedInMsg = name ? ` Logged in as ${name}` : "";
         const item: KpmItem = this.getActionButton(
             "See advanced metrics",
-            `See rich data visualizations in the web app (${name})`,
+            `See rich data visualizations in the web app.${loggedInMsg}`,
             "codetime.softwareKpmDashboard",
             "paw.svg",
             "TreeViewLaunchWebDashboard"
