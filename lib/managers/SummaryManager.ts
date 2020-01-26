@@ -73,9 +73,13 @@ export class SummaryManager {
 
             // set the current day
             this._currentDay = day;
-            // set the sessions.json
-            setItem("currentDay", this._currentDay);
 
+            // update the current day
+            setItem("currentDay", this._currentDay);
+            // update the last payload timestamp
+            setItem("latestPayloadTimestampEndUtc", 0);
+
+            // refresh everything
             commands.executeCommand("codetime.refreshSessionSummary");
         }
     }
