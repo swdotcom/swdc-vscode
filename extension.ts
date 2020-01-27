@@ -233,6 +233,9 @@ export async function intializePlugin(
 
     if (createdAnonUser) {
         showLoginPrompt(serverIsOnline);
+    } else {
+        // initialize the day check timer
+        SummaryManager.getInstance();
     }
 
     // show the readme if it doesn't exist

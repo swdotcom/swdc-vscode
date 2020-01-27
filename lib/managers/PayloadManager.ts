@@ -56,7 +56,7 @@ export class PayloadManager {
         // is up to date with what the backend has
         setTimeout(() => {
             commands.executeCommand("codetime.refreshSessionSummary");
-        }, 1000 * 10);
+        }, 1000 * 15);
     }
 
     /**

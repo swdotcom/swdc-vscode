@@ -50,13 +50,17 @@ export class SummaryManager {
         this._dayCheckTimer = setInterval(async () => {
             SummaryManager.getInstance().newDayChecker();
         }, DAY_CHECK_TIMER_INTERVAL);
+
+        setTimeout(() => {
+            this.newDayChecker(true /*isInit*/);
+        }, 1000);
     }
 
     /**
      * Check if its a new day, if so we'll clear the session sumary and
      * file change info summary, then we'll force a fetch from the app
      */
-    async newDayChecker() {
+    async newDayChecker(isInit = false) {
         const day = moment().format("YYYY-MM-DD");
         if (day !== this._currentDay) {
             // send the offline data
@@ -80,6 +84,10 @@ export class SummaryManager {
             setItem("latestPayloadTimestampEndUtc", 0);
 
             // refresh everything
+            commands.executeCommand("codetime.refreshKpmTree");
+            commands.executeCommand("codetime.refreshSessionSummary");
+        } else if (isInit) {
+            commands.executeCommand("codetime.refreshKpmTree");
             commands.executeCommand("codetime.refreshSessionSummary");
         }
     }
