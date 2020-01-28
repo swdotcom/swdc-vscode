@@ -1,4 +1,4 @@
-import { getItem, setItem } from "../Util";
+import { getItem, setItem, getNowTimes } from "../Util";
 import { SessionSummary } from "../model/models";
 import { PayloadManager } from "./PayloadManager";
 import {
@@ -61,7 +61,8 @@ export class SummaryManager {
      * file change info summary, then we'll force a fetch from the app
      */
     async newDayChecker(isInit = false) {
-        const day = moment().format("YYYY-MM-DD");
+        const nowTime = getNowTimes();
+        const day = moment.unix(nowTime.local_now_in_sec).format("YYYY-MM-DD");
         if (day !== this._currentDay) {
             // send the offline data
             await payloadMgr.sendOfflineData();

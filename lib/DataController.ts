@@ -33,6 +33,7 @@ import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { LoggedInState, SessionSummary } from "./model/models";
 import { SummaryManager } from "./managers/SummaryManager";
 import { CacheManager } from "./cache/CacheManager";
+import { WallClockManager } from "./managers/WallClockManager";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
@@ -441,18 +442,23 @@ export async function writeCodeTimeMetricsDashboard() {
     // get the top section of the dashboard content (today's data)
     const sessionSummary: SessionSummary = await SummaryManager.getInstance().getSessionSummaryStatus();
     if (sessionSummary) {
-        let averageTimeStr = humanizeMinutes(
+        const averageTimeStr = humanizeMinutes(
             sessionSummary.averageDailyMinutes
         );
-        let currentDayMinutesStr = humanizeMinutes(
+        const currentDayMinutesStr = humanizeMinutes(
             sessionSummary.currentDayMinutes
         );
         let liveshareTimeStr = null;
         if (sessionSummary.liveshareMinutes) {
             liveshareTimeStr = humanizeMinutes(sessionSummary.liveshareMinutes);
         }
+        const currentEditorMinutesStr = WallClockManager.getInstance().getHumanizedWcTime();
         dashboardContent += getDashboardRow(
-            "Hours coded today",
+            "Editor time today",
+            currentEditorMinutesStr
+        );
+        dashboardContent += getDashboardRow(
+            "Code time today",
             currentDayMinutesStr
         );
         dashboardContent += getDashboardRow("90-day avg", averageTimeStr);

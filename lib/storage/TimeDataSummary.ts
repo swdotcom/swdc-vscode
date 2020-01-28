@@ -2,9 +2,9 @@ import {
     getSoftwareDir,
     isWindows,
     logIt,
-    getFileDataPayloadsAsJson,
     getOffsetSeconds,
-    getFileDataArray
+    getFileDataArray,
+    getNowTimes
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { TimeData } from "../model/models";
@@ -33,11 +33,17 @@ export function updateTimeData(
     session_seconds: number,
     file_seconds: number
 ) {
-    const momemntDay = moment();
-    const utcEndOfDay = momemntDay.endOf("day").unix();
-    const day = momemntDay.format("YYYY-MM-DD");
-    const offsetSec = getOffsetSeconds();
-    const localEndOfDay = utcEndOfDay - offsetSec;
+    const nowTime = getNowTimes();
+    const day = moment.unix(nowTime.local_now_in_sec).format("YYYY-MM-DD");
+    const utcEndOfDay = moment
+        .unix(nowTime.now_in_sec)
+        .endOf("day")
+        .unix();
+    const localEndOfDay = moment
+        .unix(nowTime.local_now_in_sec)
+        .endOf("day")
+        .unix();
+
     const timeData: TimeData = getTodayTimeDataSummary();
     timeData.editor_seconds = editor_seconds;
     timeData.session_seconds = session_seconds;
@@ -50,7 +56,9 @@ export function updateTimeData(
 }
 
 export function getTodayTimeDataSummary(): TimeData {
-    const day = moment().format("YYYY-MM-DD");
+    const nowTime = getNowTimes();
+    const day = moment.unix(nowTime.local_now_in_sec).format("YYYY-MM-DD");
+
     let timeData: TimeData = cacheMgr.get(`timeDataSummary_${day}`);
     if (!timeData) {
         const file = getTimeDataSummaryFile();
@@ -72,7 +80,9 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
     if (!data) {
         return;
     }
-    const day = moment().format("YYYY-MM-DD");
+    const nowTime = getNowTimes();
+    const day = moment.unix(nowTime.local_now_in_sec).format("YYYY-MM-DD");
+
     const file = getTimeDataSummaryFile();
     const payloads: TimeData[] = getFileDataArray(file);
     let newPayloads: TimeData[] = [];
@@ -93,7 +103,6 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
             if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
         });
         // update the cache
-        const day = moment().format("YYYY-MM-DD");
         cacheMgr.set(`timeDataSummary_${day}`, data);
     } catch (e) {
         //
