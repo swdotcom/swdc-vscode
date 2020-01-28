@@ -27,7 +27,6 @@ import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
-import { Session } from "inspector";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -128,6 +127,11 @@ export class KpmProviderManager {
     async getKpmTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
+
+        // ensure wall clock time is the same or greater. other editors
+        // will bump the session seconds when this editor is not in view
+        const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+        wallClockHandler.updateBasedOnSessionSeconds(session_seconds);
 
         // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(

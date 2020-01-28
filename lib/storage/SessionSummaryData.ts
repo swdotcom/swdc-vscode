@@ -144,14 +144,8 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     sessionSummaryData.currentDayMinutes += incrementMinutes;
 
     const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+    wallClkHandler.updateBasedOnSessionSeconds(session_seconds);
     let editor_seconds = wallClkHandler.getWcTimeInSeconds();
-
-    // check to see if the session seconds has gained before the editor seconds
-    // if so, then update the editor seconds
-    if (editor_seconds < session_seconds) {
-        editor_seconds = session_seconds + 1;
-        wallClkHandler.setWcTime(editor_seconds);
-    }
 
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;

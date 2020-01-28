@@ -77,4 +77,15 @@ export class WallClockManager {
         // update the status bar
         updateStatusBarWithSummaryData();
     }
+
+    public updateBasedOnSessionSeconds(session_seconds: number) {
+        let editor_seconds = this.getWcTimeInSeconds();
+
+        // check to see if the session seconds has gained before the editor seconds
+        // if so, then update the editor seconds
+        if (editor_seconds < session_seconds) {
+            editor_seconds = session_seconds + 1;
+            this.setWcTime(editor_seconds);
+        }
+    }
 }
