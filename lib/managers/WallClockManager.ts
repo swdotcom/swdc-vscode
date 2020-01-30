@@ -9,8 +9,6 @@ import {
 
 const CLOCK_INTERVAL = 1000 * 30;
 
-let counter = 0;
-
 export class WallClockManager {
     private static instance: WallClockManager;
 
@@ -44,12 +42,23 @@ export class WallClockManager {
         }
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
+                // set the wctime
                 this._wctime += 30;
                 setItem("wctime", this._wctime);
-                commands.executeCommand("codetime.refreshKpmTree");
+
+                // dispatch to the various views (statusbar and treeview)
+                this.dispatchStatusViewUpdate();
+                // update the file info file
                 this.updateTimeData();
             }
         }, CLOCK_INTERVAL);
+    }
+
+    private dispatchStatusViewUpdate() {
+        updateStatusBarWithSummaryData();
+
+        // update the code time metrics tree view and status bar
+        commands.executeCommand("codetime.refreshKpmTree");
     }
 
     public clearWcTime() {
@@ -67,8 +76,8 @@ export class WallClockManager {
     public setWcTime(seconds) {
         this._wctime = seconds;
         setItem("wctime", seconds);
-        clearInterval(this._wcIntervalHandle);
-        this.initTimer();
+
+        this.dispatchStatusViewUpdate();
 
         // update the status bar
         this.updateTimeData();
@@ -98,5 +107,7 @@ export class WallClockManager {
             editor_seconds = session_seconds + 1;
             this.setWcTime(editor_seconds);
         }
+
+        updateStatusBarWithSummaryData();
     }
 }

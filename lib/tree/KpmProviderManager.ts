@@ -598,8 +598,9 @@ export class KpmProviderManager {
         const len = Math.min(3, sortedArray.length);
         for (let i = 0; i < len; i++) {
             const fileName = sortedArray[i].name;
-            const keystrokes = numeral(sortedArray[i].keystrokes).format("0 a");
-            const label = `${fileName} | ${keystrokes}`;
+            const keystrokes = sortedArray[i].keystrokes || 0;
+            const keystrokesStr = numeral(keystrokes).format("0 a");
+            const label = `${fileName} | ${keystrokesStr}`;
             const messageItem = this.buildMessageItem(
                 label,
                 "",
@@ -630,8 +631,9 @@ export class KpmProviderManager {
         const len = Math.min(3, sortedArray.length);
         for (let i = 0; i < len; i++) {
             const fileName = sortedArray[i].name;
-            const kpm = sortedArray[i].kpm.toFixed(2);
-            const label = `${fileName} | ${kpm}`;
+            const kpm = sortedArray[i].kpm || 0;
+            const kpmStr = kpm.toFixed(2);
+            const label = `${fileName} | ${kpmStr}`;
             const messageItem = this.buildMessageItem(
                 label,
                 "",
@@ -662,7 +664,8 @@ export class KpmProviderManager {
         const len = Math.min(3, sortedArray.length);
         for (let i = 0; i < len; i++) {
             const fileName = sortedArray[i].name;
-            const duration_minutes = sortedArray[i].duration_seconds / 60;
+            const minutes = sortedArray[i].duration_seconds || 0;
+            const duration_minutes = minutes > 0 ? minutes / 60 : 0;
             const codeHours = humanizeMinutes(duration_minutes);
             const label = `${fileName} | ${codeHours}`;
             const messageItem = this.buildMessageItem(
