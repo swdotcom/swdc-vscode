@@ -1,6 +1,5 @@
 import { getSoftwareDir, isWindows, logIt, getFileDataAsJson } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
-import { FileChangeInfo } from "../model/models";
 const fs = require("fs");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();

@@ -11,8 +11,7 @@ import {
     getCommitSummaryFile,
     launchLogin,
     isStatusBarTextVisible,
-    clearDayHourVals,
-    createCodeTimeEvent
+    clearDayHourVals
 } from "../Util";
 import {
     getUserStatus,
@@ -24,6 +23,7 @@ import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { LoggedInState } from "../model/models";
 import { clearSessionSummaryData } from "../storage/SessionSummaryData";
+import { EventManager } from "../managers/EventManager";
 
 /**
  * Pass in the following array of objects
@@ -54,7 +54,11 @@ export function showQuickPick(pickOptions): any {
             }
 
             if (item["eventDescription"]) {
-                createCodeTimeEvent("mouse", "click", item["eventDescription"]);
+                EventManager.getInstance().createCodeTimeEvent(
+                    "mouse",
+                    "click",
+                    item["eventDescription"]
+                );
             }
         }
         return item;
@@ -68,7 +72,11 @@ export async function buildWebDashboardUrl() {
 export async function showMenuOptions() {
     const serverIsOnline = await serverIsAvailable();
 
-    createCodeTimeEvent("mouse", "click", "ShowPaletteMenu");
+    EventManager.getInstance().createCodeTimeEvent(
+        "mouse",
+        "click",
+        "ShowPaletteMenu"
+    );
 
     let loggedInState: LoggedInState = await getConnectState();
 

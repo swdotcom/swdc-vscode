@@ -11,8 +11,7 @@ import {
     getWorkspaceFolders,
     getItem,
     isStatusBarTextVisible,
-    logIt,
-    createCodeTimeEvent
+    logIt
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
@@ -27,6 +26,7 @@ import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
+import { EventManager } from "../managers/EventManager";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -755,7 +755,11 @@ export const handleKpmChangeSelection = (
 
         // send event types
         if (item.eventDescription) {
-            createCodeTimeEvent("mouse", "click", item.eventDescription);
+            EventManager.getInstance().createCodeTimeEvent(
+                "mouse",
+                "click",
+                item.eventDescription
+            );
         }
     }
 

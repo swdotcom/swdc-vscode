@@ -818,7 +818,11 @@ export async function showLoginPrompt(serverIsOnline) {
         eventType = "window";
     }
 
-    createCodeTimeEvent(eventType, eventName, "OnboardPrompt");
+    EventManager.getInstance().createCodeTimeEvent(
+        eventType,
+        eventName,
+        "OnboardPrompt"
+    );
 }
 
 export async function buildLoginUrl(serverOnline) {
@@ -1019,26 +1023,4 @@ export function getFileDataPayloadsAsJson(file) {
         }
     }
     return payloads;
-}
-
-/**
- *
- * @param type i.e. window | mouse | etc...
- * @param name i.e. close | click | etc...
- * @param description
- */
-export async function createCodeTimeEvent(
-    type: string,
-    name: string,
-    description: string
-) {
-    const nowTimes = getNowTimes();
-    const event: CodeTimeEvent = new CodeTimeEvent();
-    event.timestamp = nowTimes.now_in_sec;
-    event.timestamp_local = nowTimes.local_now_in_sec;
-    event.type = type;
-    event.name = name;
-    event.description = description;
-    event.hostname = await getHostname();
-    EventManager.getInstance().storeEvent(event);
 }

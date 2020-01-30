@@ -6,7 +6,6 @@ import {
     NO_PROJ_NAME,
     DEFAULT_DURATION_MILLIS
 } from "../Constants";
-import { DEFAULT_DURATION } from "../Constants";
 import {
     getRootPathForFile,
     isEmptyObj,

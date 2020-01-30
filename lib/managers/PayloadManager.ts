@@ -9,8 +9,7 @@ import {
     getFileDataArray
 } from "../Util";
 import { EventManager } from "./EventManager";
-import { getTimeDataSummaryFile } from "../storage/TimeDataSummary";
-import { SummaryManager } from "./SummaryManager";
+import { getTimeDataSummaryFile } from "../storage/TimeSummaryData";
 import { commands } from "vscode";
 
 const fs = require("fs");

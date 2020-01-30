@@ -21,8 +21,7 @@ import {
     getPluginName,
     getItem,
     displayReadmeIfNotExists,
-    setItem,
-    createCodeTimeEvent
+    setItem
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
 import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
@@ -38,6 +37,7 @@ import {
 } from "./lib/storage/SessionSummaryData";
 import { SessionSummary } from "./lib/model/models";
 import { WallClockManager } from "./lib/managers/WallClockManager";
+import { EventManager } from "./lib/managers/EventManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -66,7 +66,11 @@ export function getStatusBarItem() {
 
 export function deactivate(ctx: ExtensionContext) {
     // store the deactivate event
-    createCodeTimeEvent("resource", "unload", "EditorDeactivate");
+    EventManager.getInstance().createCodeTimeEvent(
+        "resource",
+        "unload",
+        "EditorDeactivate"
+    );
 
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
@@ -115,7 +119,11 @@ export async function intializePlugin(
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
     // store the activate event
-    createCodeTimeEvent("resource", "load", "EditorActivate");
+    EventManager.getInstance().createCodeTimeEvent(
+        "resource",
+        "load",
+        "EditorActivate"
+    );
 
     // initialize the wall clock timer
     WallClockManager.getInstance();

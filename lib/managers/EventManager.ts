@@ -1,9 +1,15 @@
-import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
+import {
+    KeystrokeAggregate,
+    FileChangeInfo,
+    CodeTimeEvent
+} from "../model/models";
 import {
     getSoftwareDataStoreFile,
     logIt,
     getItem,
-    getPluginEventsFile
+    getPluginEventsFile,
+    getNowTimes,
+    getHostname
 } from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
@@ -134,5 +140,23 @@ export class EventManager {
                 }
             }
         );
+    }
+
+    /**
+     *
+     * @param type i.e. window | mouse | etc...
+     * @param name i.e. close | click | etc...
+     * @param description
+     */
+    async createCodeTimeEvent(type: string, name: string, description: string) {
+        const nowTimes = getNowTimes();
+        const event: CodeTimeEvent = new CodeTimeEvent();
+        event.timestamp = nowTimes.now_in_sec;
+        event.timestamp_local = nowTimes.local_now_in_sec;
+        event.type = type;
+        event.name = name;
+        event.description = description;
+        event.hostname = await getHostname();
+        EventManager.getInstance().storeEvent(event);
     }
 }

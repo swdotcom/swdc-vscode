@@ -11,7 +11,10 @@ import {
 import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
-import { updateTimeData, getTodayTimeDataSummary } from "./TimeDataSummary";
+import {
+    updateTimeSummaryData,
+    getTodayTimeDataSummary
+} from "./TimeSummaryData";
 import { commands } from "vscode";
 const fs = require("fs");
 
@@ -157,19 +160,21 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     const timeData: TimeData = getTodayTimeDataSummary();
     const file_seconds = (timeData.file_seconds += 60);
 
-    updateTimeData(editor_seconds, session_seconds, file_seconds);
+    updateTimeSummaryData(editor_seconds, session_seconds, file_seconds);
 }
 
 export function updateStatusBarWithSummaryData() {
-    let sessionSummaryData = cacheMgr.get("sessionSummary");
-    if (!sessionSummaryData) {
-        sessionSummaryData = getSessionSummaryData();
+    let data = cacheMgr.get("sessionSummary");
+    if (!data) {
+        data = getSessionSummaryData();
     }
-    // update the session summary data with what is found in the sessionSummary.json
-    sessionSummaryData = getSessionSummaryFileAsJson();
 
-    let currentDayMinutes = sessionSummaryData.currentDayMinutes;
-    let averageDailyMinutes = sessionSummaryData.averageDailyMinutes;
+    if (!data) {
+        data = new SessionSummary();
+    }
+
+    let currentDayMinutes = data.currentDayMinutes;
+    let averageDailyMinutes = data.averageDailyMinutes;
 
     let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
     const wcTime = WallClockManager.getInstance().getHumanizedWcTime();

@@ -98,7 +98,7 @@ export class SummaryManager {
     ): Promise<SessionSummary> {
         const jwt = getItem("jwt");
         const serverOnline = await serverIsAvailable();
-        let sessionSummaryData: SessionSummary = getSessionSummaryData();
+        let data: SessionSummary = getSessionSummaryData();
 
         // if it's online, has a jwt and the requester wants it directly from the API
         if (serverOnline && jwt && forceSummaryFetch) {
@@ -115,22 +115,22 @@ export class SummaryManager {
             );
             if (isResponseOk(result) && result.data) {
                 // update it from the app
-                sessionSummaryData = { ...result.data };
+                data = { ...result.data };
 
                 // update the file
-                saveSessionSummaryToDisk(sessionSummaryData);
+                saveSessionSummaryToDisk(data);
 
                 // latestPayloadTimestampEndUtc:1580043777
                 // check if we need to update the latestPayloadTimestampEndUtc
                 const currentTs = getItem("latestPayloadTimestampEndUtc");
                 if (
                     !currentTs ||
-                    sessionSummaryData.latestPayloadTimestampEndUtc > currentTs
+                    data.latestPayloadTimestampEndUtc > currentTs
                 ) {
                     // update the currentTs
                     setItem(
                         "latestPayloadTimestampEndUtc",
-                        sessionSummaryData.latestPayloadTimestampEndUtc
+                        data.latestPayloadTimestampEndUtc
                     );
                 }
             }
@@ -138,12 +138,8 @@ export class SummaryManager {
 
         // update the wallclock time if it's
         // lagging behind the newly gathered current day seconds
-        const currentDaySeconds = sessionSummaryData.currentDayMinutes * 60;
-        let editor_seconds = wallClockMgr.getWcTimeInSeconds();
-        if (editor_seconds < currentDaySeconds) {
-            editor_seconds = currentDaySeconds + 1;
-            wallClockMgr.setWcTime(editor_seconds);
-        }
+        const session_seconds = data.currentDayMinutes * 60;
+        wallClockMgr.updateBasedOnSessionSeconds(session_seconds);
 
         // update the status bar
         updateStatusBarWithSummaryData();
@@ -151,6 +147,6 @@ export class SummaryManager {
         // refresh the tree view
         commands.executeCommand("codetime.refreshKpmTree");
 
-        return sessionSummaryData;
+        return data;
     }
 }

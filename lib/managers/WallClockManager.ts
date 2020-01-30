@@ -4,8 +4,8 @@ import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { TimeData } from "../model/models";
 import {
     getTodayTimeDataSummary,
-    updateTimeData
-} from "../storage/TimeDataSummary";
+    updateTimeSummaryData
+} from "../storage/TimeSummaryData";
 
 const CLOCK_INTERVAL = 1000 * 30;
 
@@ -30,11 +30,22 @@ export class WallClockManager {
     }
 
     private initTimer() {
-        this._wctime = getItem("vscode_wctime") || 0;
+        // this was used the 1st few days of release, if found, it should be removed
+        let deprecatedWcTime = 0;
+        if (getItem("vscode_wctime")) {
+            deprecatedWcTime = getItem("vscode_wctime");
+            setItem("vscode_wctime", null);
+        }
+
+        this._wctime = getItem("wctime") || 0;
+        if (deprecatedWcTime > this._wctime) {
+            this._wctime = deprecatedWcTime;
+            setItem("wctime", deprecatedWcTime);
+        }
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
                 this._wctime += 30;
-                setItem("vscode_wctime", this._wctime);
+                setItem("wctime", this._wctime);
                 commands.executeCommand("codetime.refreshKpmTree");
                 this.updateTimeData();
             }
@@ -55,7 +66,7 @@ export class WallClockManager {
 
     public setWcTime(seconds) {
         this._wctime = seconds;
-        setItem("vscode_wctime", seconds);
+        setItem("wctime", seconds);
         clearInterval(this._wcIntervalHandle);
         this.initTimer();
 
@@ -68,7 +79,7 @@ export class WallClockManager {
         const timeData: TimeData = getTodayTimeDataSummary();
         const editor_seconds = this._wctime;
 
-        updateTimeData(
+        updateTimeSummaryData(
             editor_seconds,
             timeData.session_seconds,
             timeData.file_seconds
