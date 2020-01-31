@@ -43,6 +43,7 @@ export class WallClockManager {
         this._wcIntervalHandle = setInterval(() => {
             if (window.state.focused) {
                 // set the wctime
+                this._wctime = getItem("wctime") || 0;
                 this._wctime += 30;
                 setItem("wctime", this._wctime);
 
