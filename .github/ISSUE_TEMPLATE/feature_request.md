@@ -1,5 +1,5 @@
 ---
-name: Feature request
+name: 🐾 Feature request
 about: Suggest an idea/feature for this project
 ---
 <!--- Verify first that your feature request was not already discussed on GitHub -->
