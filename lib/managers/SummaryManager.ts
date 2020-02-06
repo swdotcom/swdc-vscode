@@ -15,6 +15,7 @@ import {
     updateStatusBarWithSummaryData
 } from "../storage/SessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
+import { clearTimeDataSummary } from "../storage/TimeSummaryData";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
 const wallClockMgr: WallClockManager = WallClockManager.getInstance();
@@ -71,8 +72,10 @@ export class SummaryManager {
             await payloadMgr.sendOfflineTimeData();
 
             // day does't match. clear the wall clock time,
-            // the session summary, and the file change info summary data
+            // the session summary, time data summary,
+            // and the file change info summary data
             wallClockMgr.clearWcTime();
+            clearTimeDataSummary();
             clearSessionSummaryData();
             clearFileChangeInfoSummaryData();
 
