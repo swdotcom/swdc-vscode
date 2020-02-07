@@ -79,6 +79,14 @@ export function createCommands(
     );
     cmds.push(kpmClickedCmd);
 
+    const displayTreeCmd = commands.registerCommand(
+        "codetime.displayTree",
+        () => {
+            codetimeTreeProvider.revealTree();
+        }
+    );
+    cmds.push(displayTreeCmd);
+
     const openFileInEditorCmd = commands.registerCommand(
         "codetime.openFileInEditor",
         file => {

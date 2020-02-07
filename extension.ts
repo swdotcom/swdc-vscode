@@ -31,11 +31,7 @@ import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
 import { PayloadManager } from "./lib/managers/PayloadManager";
-import {
-    setSessionSummaryLiveshareMinutes,
-    getSessionSummaryData
-} from "./lib/storage/SessionSummaryData";
-import { SessionSummary } from "./lib/model/models";
+import { setSessionSummaryLiveshareMinutes } from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
 
@@ -46,7 +42,6 @@ let _ls = null;
 let token_check_interval = null;
 let liveshare_update_interval = null;
 let historical_commits_interval = null;
-let gather_music_interval = null;
 let offline_data_interval = null;
 let session_check_interval = null;
 
@@ -88,7 +83,6 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(liveshare_update_interval);
     clearInterval(historical_commits_interval);
     clearInterval(offline_data_interval);
-    clearInterval(gather_music_interval);
     clearInterval(session_check_interval);
 
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
@@ -149,7 +143,8 @@ export async function intializePlugin(
             tooltip = `${tooltip} (${name})`;
         }
         statusBarItem.tooltip = tooltip;
-        statusBarItem.command = "codetime.softwarePaletteMenu";
+        // statusBarItem.command = "codetime.softwarePaletteMenu";
+        statusBarItem.command = "codetime.displayTree";
         statusBarItem.show();
 
         showStatus("Code Time", null);

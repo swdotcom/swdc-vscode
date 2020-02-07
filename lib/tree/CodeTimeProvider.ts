@@ -12,6 +12,7 @@ import {
     KpmTreeItem,
     handleKpmChangeSelection
 } from "./KpmProviderManager";
+import { logIt } from "../Util";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
@@ -57,9 +58,27 @@ export class CodeTimeProvider implements TreeDataProvider<KpmItem> {
         ._onDidChangeTreeData.event;
 
     private view: TreeView<KpmItem>;
+    private initializedTree: boolean = false;
 
     constructor() {
         //
+    }
+
+    async revealTree() {
+        if (!this.initializedTree) {
+            await this.refresh();
+        }
+
+        const item: KpmItem = KpmProviderManager.getInstance().getCodeTimeDashboardButton();
+        try {
+            // select the readme item
+            this.view.reveal(item, {
+                focus: true,
+                select: false
+            });
+        } catch (err) {
+            logIt(`Unable to select tree item: ${err.message}`);
+        }
     }
 
     bindView(kpmTreeView: TreeView<KpmItem>): void {
@@ -92,6 +111,7 @@ export class CodeTimeProvider implements TreeDataProvider<KpmItem> {
             }
         } else {
             treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.None);
+            this.initializedTree = true;
         }
 
         return treeItem;

@@ -6,7 +6,8 @@ import {
     getNowTimes,
     getItem,
     showStatus,
-    getFileDataAsJson
+    getFileDataAsJson,
+    humanizeMinutes
 } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
@@ -163,23 +164,21 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     updateTimeSummaryData(editor_seconds, session_seconds, file_seconds);
 }
 
+/**
+ * Updates the status bar text with the current day minutes (session minutes)
+ */
 export function updateStatusBarWithSummaryData() {
     let data = cacheMgr.get("sessionSummary");
     if (!data) {
         data = getSessionSummaryData();
     }
 
-    if (!data) {
-        data = new SessionSummary();
-    }
+    const currentDayMinutes = data.currentDayMinutes;
+    const averageDailyMinutes = data.averageDailyMinutes;
 
-    let currentDayMinutes = data.currentDayMinutes;
-    let averageDailyMinutes = data.averageDailyMinutes;
+    const inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
+    const minutesStr = humanizeMinutes(currentDayMinutes);
 
-    let inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
-    const wcTime = WallClockManager.getInstance().getHumanizedWcTime();
-
-    // const time = moment().format("h:mm a");
-    const msg = `${inFlowIcon}${wcTime}`;
+    const msg = `${inFlowIcon}${minutesStr}`;
     showStatus(msg, null);
 }

@@ -742,10 +742,6 @@ export function launchWebUrl(url) {
     open(url);
 }
 
-export function launchMusicAnalytics() {
-    open(`${launch_url}/music`);
-}
-
 /**
  * @param num The number to round
  * @param precision The number of decimal places to preserve
