@@ -109,6 +109,7 @@ export class WallClockManager {
             this.setWcTime(editor_seconds);
         }
 
-        updateStatusBarWithSummaryData();
+        // dispatch the status bar and tree updates
+        this.dispatchStatusViewUpdate();
     }
 }

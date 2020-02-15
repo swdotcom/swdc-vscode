@@ -88,23 +88,19 @@ export class SummaryManager {
             setItem("latestPayloadTimestampEndUtc", 0);
 
             // refresh everything
-            commands.executeCommand("codetime.refreshKpmTree");
             commands.executeCommand("codetime.refreshSessionSummary");
         } else if (isInit) {
-            commands.executeCommand("codetime.refreshKpmTree");
             commands.executeCommand("codetime.refreshSessionSummary");
         }
     }
 
-    async getSessionSummaryStatus(
-        forceSummaryFetch = false
-    ): Promise<SessionSummary> {
+    async getSessionSummaryStatus(): Promise<SessionSummary> {
         const jwt = getItem("jwt");
         const serverOnline = await serverIsAvailable();
         let data: SessionSummary = getSessionSummaryData();
 
         // if it's online, has a jwt and the requester wants it directly from the API
-        if (serverOnline && jwt && forceSummaryFetch) {
+        if (serverOnline && jwt) {
             // Returns:
             // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
             // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
@@ -117,6 +113,18 @@ export class SummaryManager {
                 }
             );
             if (isResponseOk(result) && result.data) {
+                const dataMinutes = result.data.currentDayMinutes;
+
+                if (dataMinutes === 0 || dataMinutes < data.currentDayMinutes) {
+                    console.log("syncing current day minutesSinceLastPayload");
+                    // incoming data current metrics is behind, use the local info
+                    delete result.data.currentDayMinutes;
+                    delete result.data.currentDayKeystrokes;
+                    delete result.data.currentDayKpm;
+                    delete result.data.currentDayLinesAdded;
+                    delete result.data.currentDayLinesRemoved;
+                }
+
                 // update it from the app
                 data = { ...result.data };
 
@@ -143,12 +151,6 @@ export class SummaryManager {
         // lagging behind the newly gathered current day seconds
         const session_seconds = data.currentDayMinutes * 60;
         wallClockMgr.updateBasedOnSessionSeconds(session_seconds);
-
-        // update the status bar
-        updateStatusBarWithSummaryData();
-
-        // refresh the tree view
-        commands.executeCommand("codetime.refreshKpmTree");
 
         return data;
     }
