@@ -6,8 +6,7 @@ import {
     Uri,
     commands,
     ViewColumn,
-    WorkspaceFolder,
-    MessageOptions
+    WorkspaceFolder
 } from "vscode";
 import {
     CODE_TIME_EXT_ID,
@@ -23,7 +22,6 @@ import {
     getAppJwt
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
-import { CodeTimeEvent } from "./model/models";
 import { EventManager } from "./managers/EventManager";
 import { serverIsAvailable } from "./http/HttpClient";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
@@ -633,17 +631,19 @@ export function getOffsetSeconds() {
 }
 
 export function getNowTimes() {
-    let d = new Date();
-    d = new Date(d.getTime());
+    const now_in_sec = moment.utc().unix();
+
+    const d = new Date();
     // offset is the minutes from GMT.
     // it's positive if it's before, and negative after
     const offset = d.getTimezoneOffset();
     const offset_sec = offset * 60;
-    let now_in_sec = Math.round(d.getTime() / 1000);
+    const local_now_in_sec = now_in_sec - offset_sec;
+
     // subtract the offset_sec (it'll be positive before utc and negative after utc)
     return {
         now_in_sec,
-        local_now_in_sec: now_in_sec - offset_sec
+        local_now_in_sec
     };
 }
 

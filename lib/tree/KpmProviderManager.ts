@@ -128,11 +128,6 @@ export class KpmProviderManager {
         const treeItems: KpmItem[] = [];
         const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
-        // ensure wall clock time is the same or greater. other editors
-        // will bump the session seconds when this editor is not in view
-        const session_seconds = sessionSummaryData.currentDayMinutes * 60;
-        wallClockHandler.updateBasedOnSessionSeconds(session_seconds);
-
         // get the session summary data
         const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(
             sessionSummaryData
