@@ -326,11 +326,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
 
-        // explicitly fetch the latest info the app server
+        // fetch session summary, this will update everything
         commands.executeCommand("codetime.refreshSessionSummary");
 
         const message = "Successfully logged on to Code Time";
-        commands.executeCommand("codetime.refreshKpmTree");
         window.showInformationMessage(message);
     }
 }

@@ -101,9 +101,7 @@ export function createCommands(
     const refreshSessionSummaryCmd = commands.registerCommand(
         "codetime.refreshSessionSummary",
         () => {
-            SummaryManager.getInstance().getSessionSummaryStatus(
-                true /*forceFetch*/
-            );
+            SummaryManager.getInstance().getSessionSummaryStatus();
         }
     );
     cmds.push(refreshSessionSummaryCmd);
