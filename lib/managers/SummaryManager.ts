@@ -114,19 +114,21 @@ export class SummaryManager {
             );
             if (isResponseOk(result) && result.data) {
                 const dataMinutes = result.data.currentDayMinutes;
+                const respData = result.data;
 
                 if (dataMinutes === 0 || dataMinutes < data.currentDayMinutes) {
                     console.log("syncing current day minutesSinceLastPayload");
                     // incoming data current metrics is behind, use the local info
-                    delete result.data.currentDayMinutes;
-                    delete result.data.currentDayKeystrokes;
-                    delete result.data.currentDayKpm;
-                    delete result.data.currentDayLinesAdded;
-                    delete result.data.currentDayLinesRemoved;
+                    respData.currentDayMinutes = data.currentDayMinutes;
+                    respData.currentDayKeystrokes = data.currentDayKeystrokes;
+                    respData.currentDayKpm = data.currentDayKpm;
+                    respData.currentDayLinesAdded = data.currentDayLinesAdded;
+                    respData.currentDayLinesRemoved =
+                        data.currentDayLinesRemoved;
                 }
 
                 // update it from the app
-                data = { ...result.data };
+                data = { ...respData };
 
                 // update the file
                 saveSessionSummaryToDisk(data);
