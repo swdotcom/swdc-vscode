@@ -245,8 +245,7 @@ export function showLoading() {
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
-        tooltip =
-            "Code time today vs. your daily average. Click to see more from Code Time.";
+        tooltip = "Code time today. Click to see more from Code Time.";
     }
     updateStatusBar(fullMsg, tooltip);
 }

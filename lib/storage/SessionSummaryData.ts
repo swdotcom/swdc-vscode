@@ -176,9 +176,11 @@ export function updateStatusBarWithSummaryData() {
     const currentDayMinutes = data.currentDayMinutes;
     const averageDailyMinutes = data.averageDailyMinutes;
 
-    const inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
+    // const inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
+    const inFlowIcon =
+        currentDayMinutes > averageDailyMinutes ? "$(rocket)" : "$(clock)";
     const minutesStr = humanizeMinutes(currentDayMinutes);
 
-    const msg = `${inFlowIcon}${minutesStr}`;
+    const msg = `${inFlowIcon} ${minutesStr}`;
     showStatus(msg, null);
 }
