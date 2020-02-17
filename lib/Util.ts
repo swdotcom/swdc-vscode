@@ -630,14 +630,10 @@ export function getOffsetSeconds() {
 }
 
 export function getNowTimes() {
-    const now_in_sec = moment.utc().unix();
-
-    const d = new Date();
-    // offset is the minutes from GMT.
-    // it's positive if it's before, and negative after
-    const offset = d.getTimezoneOffset();
-    const offset_sec = offset * 60;
-    const local_now_in_sec = now_in_sec - offset_sec;
+    const UTC = moment.utc();
+    const now_in_sec = UTC.unix();
+    const local = moment(UTC).local();
+    const local_now_in_sec = local.unix();
 
     // subtract the offset_sec (it'll be positive before utc and negative after utc)
     return {
