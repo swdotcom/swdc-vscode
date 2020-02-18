@@ -63,9 +63,7 @@ export class SummaryManager {
      */
     async newDayChecker(isInit = false) {
         const nowTime = getNowTimes();
-        const dayFormat = "YYYY-MM-DD";
-        const day = moment.unix(nowTime.local_now_in_sec).format(dayFormat);
-        if (day !== this._currentDay) {
+        if (nowTime.day !== this._currentDay) {
             // send the offline data
             await payloadMgr.sendOfflineData();
 
@@ -81,7 +79,7 @@ export class SummaryManager {
             clearFileChangeInfoSummaryData();
 
             // set the current day
-            this._currentDay = day;
+            this._currentDay = nowTime.day;
 
             // update the current day
             setItem("currentDay", this._currentDay);

@@ -39,6 +39,7 @@ export const DASHBOARD_VALUE_WIDTH = 25;
 export const MARKER_WIDTH = 4;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
+const dayFormat = "YYYY-MM-DD";
 
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
@@ -634,11 +635,13 @@ export function getNowTimes() {
     const now_in_sec = UTC.unix();
     const local = moment(UTC).local();
     const local_now_in_sec = local.unix();
+    const day = moment.unix(local_now_in_sec).format(dayFormat);
 
     // subtract the offset_sec (it'll be positive before utc and negative after utc)
     return {
         now_in_sec,
-        local_now_in_sec
+        local_now_in_sec,
+        day
     };
 }
 
