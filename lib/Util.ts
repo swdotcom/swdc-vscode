@@ -40,29 +40,13 @@ export const MARKER_WIDTH = 4;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
+const dayTimeFormat = "LLLL";
 
 let cachedSessionKeys = {};
 let editorSessiontoken = null;
 let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
-
-let statusBarLastDay = null;
-
-export function shouldClearSessionData() {
-    const day = moment().format("YYYY-MM-DD");
-
-    if (statusBarLastDay && day !== statusBarLastDay) {
-        statusBarLastDay = day;
-        return true;
-    }
-
-    return false;
-}
-
-export function clearDayHourVals() {
-    statusBarLastDay = null;
-}
 
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
@@ -630,18 +614,31 @@ export function getOffsetSeconds() {
     return d.getTimezoneOffset() * 60;
 }
 
+/**
+ * Return the local and utc unix and day values
+ */
 export function getNowTimes() {
     const UTC = moment.utc();
     const now_in_sec = UTC.unix();
     const local = moment(UTC).local();
-    const local_now_in_sec = local.unix();
-    const day = moment.unix(local_now_in_sec).format(dayFormat);
+    const offset_in_sec = moment.parseZone(local).utcOffset() * 60;
+    const local_now_in_sec = now_in_sec + offset_in_sec;
+    const day = moment()
+        .utcOffset(moment.parseZone(local).utcOffset())
+        .format(dayFormat);
+    const utcDay = moment()
+        .utcOffset(0)
+        .format(dayTimeFormat);
+    const localDayTime = moment()
+        .utcOffset(moment.parseZone(local).utcOffset())
+        .format(dayTimeFormat);
 
-    // subtract the offset_sec (it'll be positive before utc and negative after utc)
     return {
         now_in_sec,
         local_now_in_sec,
-        day
+        day,
+        utcDay,
+        localDayTime
     };
 }
 

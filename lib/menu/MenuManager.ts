@@ -10,8 +10,7 @@ import {
     getDashboardFile,
     getCommitSummaryFile,
     launchLogin,
-    isStatusBarTextVisible,
-    clearDayHourVals
+    isStatusBarTextVisible
 } from "../Util";
 import {
     getUserStatus,
@@ -87,9 +86,6 @@ export async function showMenuOptions() {
         if (loggedInState.loggedIn) {
             // clear it to fetch
             clearSessionSummaryData();
-            // clear the last moment date to be able to
-            // retrieve the user's dashboard metrics
-            clearDayHourVals();
         }
     }
 
