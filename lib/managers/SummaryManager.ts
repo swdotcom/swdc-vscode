@@ -1,4 +1,9 @@
-import { getItem, setItem, getNowTimes } from "../Util";
+import {
+    getItem,
+    setItem,
+    getNowTimes,
+    getLastPayloadTimestampDay
+} from "../Util";
 import { SessionSummary } from "../model/models";
 import { PayloadManager } from "./PayloadManager";
 import {
@@ -93,7 +98,9 @@ export class SummaryManager {
         }
     }
 
-    async getSessionSummaryStatus(): Promise<SessionSummary> {
+    async getSessionSummaryStatus(
+        forceUpdate = false
+    ): Promise<SessionSummary> {
         const jwt = getItem("jwt");
         const serverOnline = await serverIsAvailable();
         let data: SessionSummary = getSessionSummaryData();
@@ -115,22 +122,43 @@ export class SummaryManager {
                 const dataMinutes = result.data.currentDayMinutes;
                 const respData = result.data;
 
-                if (dataMinutes === 0 || dataMinutes < data.currentDayMinutes) {
-                    console.log("syncing current day minutesSinceLastPayload");
-                    // incoming data current metrics is behind, use the local info
-                    respData.currentDayMinutes = data.currentDayMinutes;
-                    respData.currentDayKeystrokes = data.currentDayKeystrokes;
-                    respData.currentDayKpm = data.currentDayKpm;
-                    respData.currentDayLinesAdded = data.currentDayLinesAdded;
-                    respData.currentDayLinesRemoved =
-                        data.currentDayLinesRemoved;
+                const nowTimes = getNowTimes();
+                const lastPayloadDay = getLastPayloadTimestampDay(
+                    respData.latestPayloadTimestamp
+                );
+
+                const daysMatch =
+                    !respData.latestPayloadTimestamp ||
+                    nowTimes.day === lastPayloadDay
+                        ? true
+                        : false;
+
+                // only update if the days match
+                if (daysMatch || forceUpdate) {
+                    if (
+                        dataMinutes === 0 ||
+                        dataMinutes < data.currentDayMinutes
+                    ) {
+                        console.log(
+                            "syncing current day minutesSinceLastPayload"
+                        );
+                        // incoming data current metrics is behind, use the local info
+                        respData.currentDayMinutes = data.currentDayMinutes;
+                        respData.currentDayKeystrokes =
+                            data.currentDayKeystrokes;
+                        respData.currentDayKpm = data.currentDayKpm;
+                        respData.currentDayLinesAdded =
+                            data.currentDayLinesAdded;
+                        respData.currentDayLinesRemoved =
+                            data.currentDayLinesRemoved;
+                    }
+
+                    // update it from the app
+                    data = { ...respData };
+
+                    // update the file
+                    saveSessionSummaryToDisk(data);
                 }
-
-                // update it from the app
-                data = { ...respData };
-
-                // update the file
-                saveSessionSummaryToDisk(data);
 
                 // latestPayloadTimestampEndUtc:1580043777
                 // check if we need to update the latestPayloadTimestampEndUtc

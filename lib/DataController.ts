@@ -327,7 +327,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
 
         // fetch session summary, this will update everything
-        commands.executeCommand("codetime.refreshSessionSummary");
+        SummaryManager.getInstance().getSessionSummaryStatus(true);
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);

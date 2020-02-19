@@ -614,6 +614,16 @@ export function getOffsetSeconds() {
     return d.getTimezoneOffset() * 60;
 }
 
+export function getLastPayloadTimestampDay(latestPayloadTimestamp) {
+    const UTC = moment.utc();
+    const local = moment(UTC).local();
+    const localDayTime = moment
+        .unix(latestPayloadTimestamp)
+        .utcOffset(moment.parseZone(local).utcOffset())
+        .format(dayFormat);
+    return localDayTime;
+}
+
 /**
  * Return the local and utc unix and day values
  */

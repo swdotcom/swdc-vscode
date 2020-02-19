@@ -9,7 +9,6 @@ import {
     getFileDataAsJson,
     humanizeMinutes
 } from "../Util";
-import { CacheManager } from "../cache/CacheManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
 import {
@@ -18,8 +17,6 @@ import {
 } from "./TimeSummaryData";
 import { commands } from "vscode";
 const fs = require("fs");
-
-const cacheMgr: CacheManager = CacheManager.getInstance();
 
 export function getSessionThresholdSeconds() {
     const thresholdSeconds =
@@ -43,7 +40,6 @@ export function getSessionSummaryFile() {
 }
 
 export function getSessionSummaryData(): SessionSummary {
-    // let fileChangeInfoMap = cacheMgr.get("sessionSummary");
     let sessionSummaryData = getSessionSummaryFileAsJson();
     // make sure it's a valid structure
     if (!sessionSummaryData) {
@@ -67,14 +63,11 @@ function coalesceMissingAttributes(data): SessionSummary {
 }
 
 export function getSessionSummaryFileAsJson(): SessionSummary {
-    let sessionSummary: SessionSummary = cacheMgr.get("sessionSummary");
+    const file = getSessionSummaryFile();
+    let sessionSummary = getFileDataAsJson(file);
     if (!sessionSummary) {
-        const file = getSessionSummaryFile();
-        sessionSummary = getFileDataAsJson(file);
-        if (!sessionSummary) {
-            sessionSummary = new SessionSummary();
-            saveSessionSummaryToDisk(sessionSummary);
-        }
+        sessionSummary = new SessionSummary();
+        saveSessionSummaryToDisk(sessionSummary);
     }
     return sessionSummary;
 }
@@ -90,20 +83,13 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
                     `Deployer: Error writing session summary data: ${err.message}`
                 );
         });
-        // update the cache
-        if (sessionSummaryData) {
-            cacheMgr.set("sessionSummary", sessionSummaryData);
-        }
     } catch (e) {
         //
     }
 }
 
 export function setSessionSummaryLiveshareMinutes(minutes) {
-    let sessionSummaryData = cacheMgr.get("sessionSummary");
-    if (!sessionSummaryData) {
-        sessionSummaryData = getSessionSummaryData();
-    }
+    let sessionSummaryData = getSessionSummaryData();
     sessionSummaryData.liveshareMinutes = minutes;
 
     saveSessionSummaryToDisk(sessionSummaryData);
@@ -135,10 +121,7 @@ export function getMinutesSinceLastPayload() {
 
 export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
     const wallClkHandler: WallClockManager = WallClockManager.getInstance();
-    let sessionSummaryData = cacheMgr.get("sessionSummary");
-    if (!sessionSummaryData) {
-        sessionSummaryData = getSessionSummaryData();
-    }
+    let sessionSummaryData = getSessionSummaryData();
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
 
@@ -168,10 +151,7 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
  * Updates the status bar text with the current day minutes (session minutes)
  */
 export function updateStatusBarWithSummaryData() {
-    let data = cacheMgr.get("sessionSummary");
-    if (!data) {
-        data = getSessionSummaryData();
-    }
+    let data = getSessionSummaryData();
 
     const currentDayMinutes = data.currentDayMinutes;
     const averageDailyMinutes = data.averageDailyMinutes;
