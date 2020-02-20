@@ -10,7 +10,6 @@ import {
 } from "../Util";
 import { EventManager } from "./EventManager";
 import { getTimeDataSummaryFile } from "../storage/TimeSummaryData";
-import { commands } from "vscode";
 
 const fs = require("fs");
 
@@ -50,12 +49,6 @@ export class PayloadManager {
      */
     async sendOfflineData() {
         this.batchSendData("/data/batch", getSoftwareDataStoreFile());
-
-        // fetch latest summary data in 30 seconds to ensure the plugin
-        // is up to date with what the backend has
-        setTimeout(() => {
-            commands.executeCommand("codetime.refreshSessionSummary");
-        }, 1000 * 15);
     }
 
     /**

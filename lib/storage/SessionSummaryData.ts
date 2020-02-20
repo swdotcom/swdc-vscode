@@ -109,12 +109,6 @@ export function getMinutesSinceLastPayload() {
             // it's still the same session, add the gap time in minutes
             minutesSinceLastPayload = diffInSec / 60;
         }
-    } else {
-        // schedule fetching the sesssion summary data
-        // since we don't have the latest payload timestamp
-        setTimeout(() => {
-            commands.executeCommand("codetime.refreshSessionSummary");
-        }, 1000);
     }
     return minutesSinceLastPayload;
 }

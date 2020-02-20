@@ -31,7 +31,10 @@ import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
 import { PayloadManager } from "./lib/managers/PayloadManager";
-import { setSessionSummaryLiveshareMinutes } from "./lib/storage/SessionSummaryData";
+import {
+    setSessionSummaryLiveshareMinutes,
+    updateStatusBarWithSummaryData
+} from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
 
@@ -147,7 +150,9 @@ export async function intializePlugin(
         statusBarItem.command = "codetime.displayTree";
         statusBarItem.show();
 
-        showStatus("Code Time", null);
+        // showStatus("Code Time", null);
+
+        updateStatusBarWithSummaryData();
     }, 0);
 
     // update the status bar

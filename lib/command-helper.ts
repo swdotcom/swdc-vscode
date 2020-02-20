@@ -21,7 +21,6 @@ import {
 } from "./tree/CodeTimeProvider";
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
-import { SummaryManager } from "./managers/SummaryManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -97,14 +96,6 @@ export function createCommands(
         }
     );
     cmds.push(openFileInEditorCmd);
-
-    const refreshSessionSummaryCmd = commands.registerCommand(
-        "codetime.refreshSessionSummary",
-        () => {
-            SummaryManager.getInstance().getSessionSummaryStatus();
-        }
-    );
-    cmds.push(refreshSessionSummaryCmd);
 
     const toggleStatusBarCmd = commands.registerCommand(
         "codetime.toggleStatusBar",

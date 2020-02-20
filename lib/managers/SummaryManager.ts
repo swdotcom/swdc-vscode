@@ -1,24 +1,7 @@
-import {
-    getItem,
-    setItem,
-    getNowTimes,
-    getLastPayloadTimestampDay
-} from "../Util";
-import { SessionSummary } from "../model/models";
+import { getItem, setItem, getNowTimes } from "../Util";
 import { PayloadManager } from "./PayloadManager";
-import {
-    softwareGet,
-    isResponseOk,
-    serverIsAvailable
-} from "../http/HttpClient";
-import { commands } from "vscode";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
-import {
-    clearSessionSummaryData,
-    getSessionSummaryData,
-    saveSessionSummaryToDisk,
-    updateStatusBarWithSummaryData
-} from "../storage/SessionSummaryData";
+import { clearSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
 import { clearTimeDataSummary } from "../storage/TimeSummaryData";
 
@@ -90,97 +73,6 @@ export class SummaryManager {
             setItem("currentDay", this._currentDay);
             // update the last payload timestamp
             setItem("latestPayloadTimestampEndUtc", 0);
-
-            // refresh everything
-            commands.executeCommand("codetime.refreshSessionSummary");
-        } else if (isInit) {
-            commands.executeCommand("codetime.refreshSessionSummary");
         }
-    }
-
-    async getSessionSummaryStatus(
-        forceUpdate = false
-    ): Promise<SessionSummary> {
-        const jwt = getItem("jwt");
-        const serverOnline = await serverIsAvailable();
-        let data: SessionSummary = getSessionSummaryData();
-
-        // if it's online, has a jwt and the requester wants it directly from the API
-        if (serverOnline && jwt) {
-            // Returns:
-            // data: { averageDailyKeystrokes:982.1339, averageDailyKpm:26, averageDailyMinutes:38,
-            // currentDayKeystrokes:8362, currentDayKpm:26, currentDayMinutes:332.99999999999983,
-            // currentSessionGoalPercent:0, dailyMinutesGoal:38, inFlow:true, lastUpdatedToday:true,
-            // latestPayloadTimestamp:1573050489, liveshareMinutes:null, timePercent:876, velocityPercent:100,
-            // volumePercent:851 }
-            const result = await softwareGet(`/sessions/summary`, jwt).catch(
-                err => {
-                    return null;
-                }
-            );
-            if (isResponseOk(result) && result.data) {
-                const dataMinutes = result.data.currentDayMinutes;
-                const respData = result.data;
-
-                const nowTimes = getNowTimes();
-                const lastPayloadDay = getLastPayloadTimestampDay(
-                    respData.latestPayloadTimestamp
-                );
-
-                const daysMatch =
-                    !respData.latestPayloadTimestamp ||
-                    nowTimes.day === lastPayloadDay
-                        ? true
-                        : false;
-
-                // only update if the days match
-                if (daysMatch || forceUpdate) {
-                    if (
-                        dataMinutes === 0 ||
-                        dataMinutes < data.currentDayMinutes
-                    ) {
-                        console.log(
-                            "syncing current day minutesSinceLastPayload"
-                        );
-                        // incoming data current metrics is behind, use the local info
-                        respData.currentDayMinutes = data.currentDayMinutes;
-                        respData.currentDayKeystrokes =
-                            data.currentDayKeystrokes;
-                        respData.currentDayKpm = data.currentDayKpm;
-                        respData.currentDayLinesAdded =
-                            data.currentDayLinesAdded;
-                        respData.currentDayLinesRemoved =
-                            data.currentDayLinesRemoved;
-                    }
-
-                    // update it from the app
-                    data = { ...respData };
-
-                    // update the file
-                    saveSessionSummaryToDisk(data);
-                }
-
-                // latestPayloadTimestampEndUtc:1580043777
-                // check if we need to update the latestPayloadTimestampEndUtc
-                const currentTs = getItem("latestPayloadTimestampEndUtc");
-                if (
-                    !currentTs ||
-                    data.latestPayloadTimestampEndUtc > currentTs
-                ) {
-                    // update the currentTs
-                    setItem(
-                        "latestPayloadTimestampEndUtc",
-                        data.latestPayloadTimestampEndUtc
-                    );
-                }
-            }
-        }
-
-        // update the wallclock time if it's
-        // lagging behind the newly gathered current day seconds
-        const session_seconds = data.currentDayMinutes * 60;
-        wallClockMgr.updateBasedOnSessionSeconds(session_seconds);
-
-        return data;
     }
 }

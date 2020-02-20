@@ -766,12 +766,8 @@ export function humanizeMinutes(min) {
         str = "1 hr";
     } else if (min > 60) {
         let hrs = parseFloat(min) / 60;
-        if (hrs % 1 === 0) {
-            str = hrs.toFixed(0) + " hrs";
-        } else {
-            const roundedTime = roundUp(hrs, 1);
-            str = roundedTime.toFixed(1) + " hrs";
-        }
+        const roundedTime = roundUp(hrs, 1);
+        str = roundedTime.toFixed(1) + " hrs";
     } else if (min === 1) {
         str = "1 min";
     } else {

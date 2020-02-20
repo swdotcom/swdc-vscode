@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, window, commands } from "vscode";
+import { workspace, ConfigurationTarget, window } from "vscode";
 
 import {
     softwareGet,
@@ -31,9 +31,10 @@ import {
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { LoggedInState, SessionSummary } from "./model/models";
-import { SummaryManager } from "./managers/SummaryManager";
 import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
+import { getSessionSummaryData } from "./storage/SessionSummaryData";
+
 const fs = require("fs");
 const moment = require("moment-timezone");
 
@@ -326,9 +327,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
 
-        // fetch session summary, this will update everything
-        SummaryManager.getInstance().getSessionSummaryStatus(true);
-
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
     }
@@ -439,7 +437,7 @@ export async function writeCodeTimeMetricsDashboard() {
     dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
     // get the top section of the dashboard content (today's data)
-    const sessionSummary: SessionSummary = await SummaryManager.getInstance().getSessionSummaryStatus();
+    const sessionSummary: SessionSummary = getSessionSummaryData();
     if (sessionSummary) {
         const averageTimeStr = humanizeMinutes(
             sessionSummary.averageDailyMinutes
