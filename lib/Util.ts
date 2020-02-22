@@ -292,7 +292,7 @@ export function isMac() {
 }
 
 export async function getHostname() {
-    let hostname = await getCommandResult("hostname", 1);
+    let hostname = await getCommandResultLine("hostname");
     return hostname;
 }
 
@@ -316,35 +316,38 @@ export function getOs() {
     return "";
 }
 
-export async function getCommandResult(cmd, maxLines: any = -1) {
-    let result = await wrapExecPromise(`${cmd}`, null);
-    if (!result) {
-        return "";
-    }
-    let contentList = result
-        .replace(/\r\n/g, "\r")
-        .replace(/\n/g, "\r")
-        .split(/\r/);
-    if (contentList && contentList.length > 0) {
-        let len =
-            maxLines !== -1
-                ? Math.min(contentList.length, maxLines)
-                : contentList.length;
-        for (let i = 0; i < len; i++) {
-            let line = contentList[i];
+export async function getCommandResultLine(cmd, projectDir = null) {
+    const resultList = await getCommandResultList(cmd, projectDir);
+
+    let resultLine = "";
+    if (resultList && resultList.length) {
+        for (let i = 0; i < resultList.length; i++) {
+            let line = resultList[i];
             if (line && line.trim().length > 0) {
-                result = line.trim();
+                resultLine = line.trim();
                 break;
             }
         }
     }
-    return result;
+    return resultLine;
+}
+
+export async function getCommandResultList(cmd, projectDir = null) {
+    let result = await wrapExecPromise(`${cmd}`, projectDir);
+    if (!result) {
+        return [];
+    }
+    const contentList = result
+        .replace(/\r\n/g, "\r")
+        .replace(/\n/g, "\r")
+        .split(/\r/);
+    return contentList;
 }
 
 export async function getOsUsername() {
     let username = os.userInfo().username;
     if (!username || username.trim() === "") {
-        username = await getCommandResult("whoami", 1);
+        username = await getCommandResultLine("whoami");
     }
     return username;
 }
