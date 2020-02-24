@@ -133,6 +133,8 @@ export async function intializePlugin(
 
     let one_min_ms = 1000 * 60;
 
+    await SummaryManager.getInstance().updateSessionSummaryFromServer();
+
     // show the status bar text info
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
@@ -149,8 +151,6 @@ export async function intializePlugin(
         // statusBarItem.command = "codetime.softwarePaletteMenu";
         statusBarItem.command = "codetime.displayTree";
         statusBarItem.show();
-
-        // showStatus("Code Time", null);
 
         updateStatusBarWithSummaryData();
     }, 0);

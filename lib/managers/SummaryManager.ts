@@ -1,14 +1,18 @@
 import { getItem, setItem, getNowTimes } from "../Util";
 import { PayloadManager } from "./PayloadManager";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
-import { clearSessionSummaryData } from "../storage/SessionSummaryData";
+import {
+    clearSessionSummaryData,
+    getSessionSummaryData,
+    saveSessionSummaryToDisk
+} from "../storage/SessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
 import { clearTimeDataSummary } from "../storage/TimeSummaryData";
+import { softwareGet, isResponseOk } from "../http/HttpClient";
+import { SessionSummary } from "../model/models";
 
 const payloadMgr: PayloadManager = PayloadManager.getInstance();
 const wallClockMgr: WallClockManager = WallClockManager.getInstance();
-
-const moment = require("moment-timezone");
 
 // every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
@@ -73,6 +77,38 @@ export class SummaryManager {
             setItem("currentDay", this._currentDay);
             // update the last payload timestamp
             setItem("latestPayloadTimestampEndUtc", 0);
+
+            // update the session summary global and averages for the new day
+            setTimeout(() => {
+                this.updateSessionSummaryFromServer();
+            }, 1000 * 60);
+        }
+    }
+
+    async updateSessionSummaryFromServer() {
+        const jwt = getItem("jwt");
+        const result = await softwareGet(`/sessions/summary`, jwt);
+        if (isResponseOk(result) && result.data) {
+            const data = result.data;
+
+            // update the session summary data
+            const summary: SessionSummary = getSessionSummaryData();
+            const updateCurrents =
+                summary.currentDayMinutes < data.currentDayMinutes
+                    ? true
+                    : false;
+            Object.keys(data).forEach(key => {
+                const val = data[key];
+                if (val !== null && val !== undefined) {
+                    if (updateCurrents && key.indexOf("current") === 0) {
+                        summary[key] = val;
+                    } else if (key.indexOf("current") === -1) {
+                        summary[key] = val;
+                    }
+                }
+            });
+
+            saveSessionSummaryToDisk(summary);
         }
     }
 }
