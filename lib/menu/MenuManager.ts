@@ -103,7 +103,7 @@ export async function showMenuOptions() {
     });
 
     let loginMsgDetail =
-        "To see your coding data in Code Time, please log in to your account";
+        "Finish creating your account and see rich data visualizations.";
     if (!serverIsOnline) {
         loginMsgDetail =
             "Our service is temporarily unavailable. Please try again later.";
