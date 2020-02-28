@@ -163,11 +163,6 @@ export async function intializePlugin(
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;
 
-    // 1 hr interval to check if the session file exists or not
-    session_check_interval = setInterval(() => {
-        periodicSessionCheck();
-    }, 1000 * 60 * 60);
-
     // add the interval jobs
 
     // check on new commits every 45 minutes
@@ -296,17 +291,5 @@ async function initializeLiveshare() {
                 _ls = null;
             }
         });
-    }
-}
-
-async function periodicSessionCheck() {
-    const serverIsOnline = await serverIsAvailable();
-    if (serverIsOnline && (!softwareSessionFileExists() || !jwtExists())) {
-        // session file doesn't exist
-        // create the anon user
-        let createdJwt = await createAnonymousUser(serverIsOnline);
-        if (createdJwt) {
-            await getUserStatus(serverIsOnline);
-        }
     }
 }
