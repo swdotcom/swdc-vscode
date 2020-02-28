@@ -208,7 +208,7 @@ export async function intializePlugin(
                 getUserStatus(serverIsOnline);
             }
         }
-    }, one_min_ms * 10);
+    }, one_min_ms * 15);
 
     // update liveshare in the offline kpm data if it has been initiated
     liveshare_update_interval = setInterval(async () => {

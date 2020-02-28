@@ -136,8 +136,6 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         loggedIn = loggedInResp.loggedOn;
     }
 
-    logIt(`Checking login status, logged in: ${loggedIn}`);
-
     connectState = new LoggedInState();
     connectState.loggedIn = loggedIn;
 

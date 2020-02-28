@@ -991,7 +991,12 @@ export function getFileDataArray(file) {
     if (fs.existsSync(file)) {
         const content = fs.readFileSync(file).toString();
         try {
-            payloads = JSON.parse(content);
+            const jsonData = JSON.parse(content);
+            if (!Array.isArray(jsonData)) {
+                payloads.push(jsonData);
+            } else {
+                payloads = jsonData;
+            }
         } catch (e) {
             logIt(`Error reading file array data: ${e.message}`);
         }
