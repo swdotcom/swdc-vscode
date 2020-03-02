@@ -8,15 +8,13 @@ import {
     sendHeartbeat,
     initializePreferences
 } from "./lib/DataController";
-import { onboardPlugin, createAnonymousUser } from "./lib/user/OnboardManager";
+import { onboardPlugin } from "./lib/user/OnboardManager";
 import {
     showStatus,
     nowInSecs,
     getOffsetSeconds,
     getVersion,
-    softwareSessionFileExists,
     logIt,
-    jwtExists,
     showLoginPrompt,
     getPluginName,
     getItem,
@@ -46,7 +44,6 @@ let token_check_interval = null;
 let liveshare_update_interval = null;
 let historical_commits_interval = null;
 let offline_data_interval = null;
-let session_check_interval = null;
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -86,7 +83,6 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(liveshare_update_interval);
     clearInterval(historical_commits_interval);
     clearInterval(offline_data_interval);
-    clearInterval(session_check_interval);
 
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
     //     if (isResponseOk(resp)) {
