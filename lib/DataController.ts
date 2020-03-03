@@ -34,6 +34,7 @@ import { LoggedInState, SessionSummary } from "./model/models";
 import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
+import { SummaryManager } from "./managers/SummaryManager";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -327,6 +328,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
+
+        // fetch to get the users averages
+        SummaryManager.getInstance().updateSessionSummaryFromServer();
     }
 }
 

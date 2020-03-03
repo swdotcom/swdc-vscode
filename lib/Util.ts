@@ -475,9 +475,6 @@ export function displayReadmeIfNotExists(override = false) {
 }
 
 export function openFileInEditor(file) {
-    // const uri = Uri.file(file);
-    // commands.executeCommand("vscode.open", uri, ViewColumn.One);
-
     workspace.openTextDocument(file).then(
         doc => {
             // Show open document and set focus
