@@ -86,7 +86,7 @@ export async function isLoggedOn(serverIsOnline) {
             if (state === "OK") {
                 let sessionEmail = getItem("name");
                 let email = resp.data.email;
-                if (sessionEmail !== email) {
+                if (email && sessionEmail !== email) {
                     setItem("name", email);
                 }
                 // check the jwt
