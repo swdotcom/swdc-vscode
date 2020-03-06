@@ -114,20 +114,27 @@ export async function getCachedLoggedInState(): Promise<LoggedInState> {
     if (!connectState || !connectState.loggedIn) {
         const serverIsOnline = await serverIsAvailable();
         // doesn't exist yet, use the api
-        await getUserStatus(serverIsOnline, true);
+        await getUserStatus();
     }
     return cacheMgr.get("connectState");
 }
 
 /**
- * check if the user is registered or not
- * return {loggedIn: true|false}
+ * return whether the user is logged on or not
+ * {loggedIn: true|false}
  */
-export async function getUserStatus(serverIsOnline, ignoreCache = false) {
-    let connectState: LoggedInState = cacheMgr.get("connectState");
-    if (!ignoreCache && connectState) {
+export async function getUserStatus() {
+    const expireInSec = 60 * 30;
+    let connectState: LoggedInState = new LoggedInState();
+    const name = getItem("name");
+    if (name) {
+        // name/email is set, they're connected
+        connectState.loggedIn = true;
+        cacheMgr.set("connectState", connectState, expireInSec);
         return connectState;
     }
+
+    const serverIsOnline = await serverIsAvailable();
 
     let loggedIn = false;
     if (serverIsOnline) {
@@ -140,14 +147,6 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
     connectState = new LoggedInState();
     connectState.loggedIn = loggedIn;
 
-    if (!loggedIn) {
-        let name = getItem("name");
-        // only update the name if it's not null
-        if (name) {
-            setItem("name", null);
-        }
-    }
-
     if (serverIsOnline && loggedIn) {
         if (loggedIn) {
             // they've logged in, update the preferences
@@ -155,7 +154,6 @@ export async function getUserStatus(serverIsOnline, ignoreCache = false) {
         }
     }
 
-    const expireInSec = 60 * 30;
     cacheMgr.set("connectState", connectState, expireInSec);
     return connectState;
 }
@@ -314,7 +312,7 @@ export function refetchUserStatusLazily(tryCountUntilFoundUser = 40) {
 
 async function userStatusFetchHandler(tryCountUntilFoundUser) {
     let serverIsOnline = await serverIsAvailable();
-    let userStatus = await getUserStatus(serverIsOnline, true);
+    let userStatus = await getUserStatus();
     if (!userStatus.loggedIn) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
@@ -360,7 +358,7 @@ export async function sendHeartbeat(reason, serverIsOnline) {
 export async function handleKpmClickedEvent() {
     let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus(serverIsOnline);
+    let userStatus = await getUserStatus();
     let webUrl = await buildWebDashboardUrl();
 
     if (!userStatus.loggedIn) {

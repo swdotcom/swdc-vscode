@@ -82,7 +82,7 @@ export async function showMenuOptions() {
     if (serverIsOnline && !loggedInState.loggedIn) {
         // check if they're logged in yet
 
-        loggedInState = await getUserStatus(serverIsOnline, true);
+        loggedInState = await getUserStatus();
         if (loggedInState.loggedIn) {
             // clear it to fetch
             clearSessionSummaryData();

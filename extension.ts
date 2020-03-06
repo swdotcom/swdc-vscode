@@ -201,7 +201,7 @@ export async function intializePlugin(
             const name = getItem("name");
             // but only if checkStatus is true
             if (!name) {
-                getUserStatus(serverIsOnline);
+                getUserStatus();
             }
         }
     }, one_min_ms * 15);
@@ -216,7 +216,7 @@ export async function intializePlugin(
     initializeLiveshare();
 
     // {loggedIn: true|false}
-    await getUserStatus(serverIsOnline, true);
+    await getUserStatus();
 
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
