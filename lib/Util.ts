@@ -42,7 +42,6 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
-let cachedSessionKeys = {};
 let editorSessiontoken = null;
 let showStatusBarText = true;
 let extensionName = null;
@@ -196,9 +195,6 @@ export function validateEmail(email) {
 }
 
 export function setItem(key, value) {
-    // update the cached session key map
-    cachedSessionKeys[key] = value;
-
     const jsonObj = getSoftwareSessionAsJson();
     jsonObj[key] = value;
 
@@ -212,14 +208,8 @@ export function setItem(key, value) {
 }
 
 export function getItem(key) {
-    let cachedVal = cachedSessionKeys[key];
-    if (cachedVal) {
-        return cachedVal;
-    }
     const jsonObj = getSoftwareSessionAsJson();
     let val = jsonObj[key] || null;
-    // update the cache map
-    cachedSessionKeys[key] = val;
     return val;
 }
 
@@ -402,7 +392,8 @@ export function softwareSessionFileExists() {
     // don't auto create the file
     const file = getSoftwareSessionFile();
     // check if it exists
-    return fs.existsSync(file);
+    const sessionFileExists = fs.existsSync(file);
+    return sessionFileExists;
 }
 
 export function jwtExists() {
@@ -517,7 +508,7 @@ export function getExtensionDisplayName() {
         const content = fs.readFileSync(extInfoFile).toString();
         if (content) {
             try {
-                const data = JSON.parse(content);
+                let data = JSON.parse(cleanJsonString(content));
                 if (data) {
                     extensionDisplayName = data.displayName;
                 }
@@ -546,7 +537,7 @@ export function getExtensionName() {
         const content = fs.readFileSync(extInfoFile).toString();
         if (content) {
             try {
-                const data = JSON.parse(content);
+                let data = JSON.parse(cleanJsonString(content));
                 if (data) {
                     extensionName = data.name;
                 }
@@ -580,7 +571,7 @@ export function getSoftwareSessionAsJson() {
         const content = fs.readFileSync(sessionFile).toString();
         if (content) {
             try {
-                data = JSON.parse(content);
+                data = JSON.parse(cleanJsonString(content));
             } catch (e) {
                 logIt(`unable to read session info: ${e.message}`);
                 // error trying to read the session file, delete it
@@ -939,23 +930,6 @@ export function createSpotifyIdFromUri(id: string) {
     return id;
 }
 
-export function isValidJson(val: any) {
-    if (val === null || val === undefined) {
-        return false;
-    }
-    if (typeof val === "string" || typeof val === "number") {
-        return false;
-    }
-    try {
-        const stringifiedVal = JSON.stringify(val);
-        JSON.parse(stringifiedVal);
-        return true;
-    } catch (e) {
-        //
-    }
-    return false;
-}
-
 export function getFileType(fileName: string) {
     let fileType = "";
     const lastDotIdx = fileName.lastIndexOf(".");
@@ -966,13 +940,21 @@ export function getFileType(fileName: string) {
     return fileType;
 }
 
+export function cleanJsonString(content) {
+    content = content
+        .replace(/\r\n/g, "")
+        .replace(/\n/g, "")
+        .trim();
+    return content;
+}
+
 export function getFileDataAsJson(file) {
     let data = null;
     if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file).toString();
+        let content = fs.readFileSync(file).toString();
         if (content) {
             try {
-                data = JSON.parse(content);
+                data = JSON.parse(cleanJsonString(content));
             } catch (e) {
                 logIt(`unable to read session info: ${e.message}`);
                 // error trying to read the session file, delete it
@@ -988,7 +970,7 @@ export function getFileDataArray(file) {
     if (fs.existsSync(file)) {
         const content = fs.readFileSync(file).toString();
         try {
-            const jsonData = JSON.parse(content);
+            let jsonData = JSON.parse(cleanJsonString(content));
             if (!Array.isArray(jsonData)) {
                 payloads.push(jsonData);
             } else {
