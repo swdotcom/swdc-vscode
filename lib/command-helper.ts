@@ -109,7 +109,7 @@ export function createCommands(
     cmds.push(toggleStatusBarCmd);
 
     const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
-        launchLogin();
+        launchLogin("software");
     });
     cmds.push(loginCmd);
 

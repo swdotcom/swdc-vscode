@@ -97,6 +97,14 @@ export class KpmProviderManager {
             );
             treeItems.push(githubSignupButton);
 
+            const softwareSignupButton: KpmItem = this.getActionButton(
+                "Sign up with Software",
+                "",
+                "codetime.codeTimeLogin",
+                "paw.svg"
+            );
+            treeItems.push(softwareSignupButton);
+
             const dividerButton: KpmItem = this.getActionButton(
                 "",
                 "",
