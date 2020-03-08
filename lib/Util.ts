@@ -827,9 +827,9 @@ export async function buildLoginUrl(serverOnline, loginType = "software") {
         if (loginType === "software") {
             loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}`;
         } else if (loginType === "github") {
-            loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}`;
+            loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (loginType === "google") {
-            loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}`;
+            loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         }
         return loginUrl;
     } else {

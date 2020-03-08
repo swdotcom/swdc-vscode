@@ -1,4 +1,4 @@
-import { workspace, ConfigurationTarget, window } from "vscode";
+import { workspace, ConfigurationTarget, window, commands } from "vscode";
 
 import {
     softwareGet,
@@ -326,6 +326,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser) {
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
+
+        commands.executeCommand("codetime.refreshCodetimeTree");
 
         // fetch to get the users averages
         SummaryManager.getInstance().updateSessionSummaryFromServer();
