@@ -768,13 +768,13 @@ export function humanizeMinutes(min) {
     return str;
 }
 
-export async function launchLogin() {
+export async function launchLogin(loginType = "software") {
     const serverOnline = await serverIsAvailable();
     if (!serverOnline) {
         showOfflinePrompt();
         return;
     }
-    let loginUrl = await buildLoginUrl(serverOnline);
+    let loginUrl = await buildLoginUrl(serverOnline, loginType);
     launchWebUrl(loginUrl);
     refetchUserStatusLazily();
 }
@@ -813,7 +813,7 @@ export async function showLoginPrompt(serverIsOnline) {
     );
 }
 
-export async function buildLoginUrl(serverOnline) {
+export async function buildLoginUrl(serverOnline, loginType = "software") {
     let jwt = getItem("jwt");
     if (!jwt) {
         // we should always have a jwt, but if  not create one
@@ -823,7 +823,14 @@ export async function buildLoginUrl(serverOnline) {
     }
     if (jwt) {
         const encodedJwt = encodeURIComponent(jwt);
-        const loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}`;
+        let loginUrl = "";
+        if (loginType === "software") {
+            loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}`;
+        } else if (loginType === "github") {
+            loginUrl = `${launch_url}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}`;
+        } else if (loginType === "google") {
+            loginUrl = `${launch_url}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}`;
+        }
         return loginUrl;
     } else {
         // no need to build an onboarding url if we dn't have the token

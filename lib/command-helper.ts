@@ -113,6 +113,22 @@ export function createCommands(
     });
     cmds.push(loginCmd);
 
+    const googleLoginCmd = commands.registerCommand(
+        "codetime.googleLogin",
+        () => {
+            launchLogin("google");
+        }
+    );
+    cmds.push(googleLoginCmd);
+
+    const githubLoginCmd = commands.registerCommand(
+        "codetime.githubLogin",
+        () => {
+            launchLogin("github");
+        }
+    );
+    cmds.push(githubLoginCmd);
+
     const refreshCodetimeTreeCmd = commands.registerCommand(
         "codetime.refreshCodetimeTree",
         () => {

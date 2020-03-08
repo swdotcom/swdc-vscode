@@ -81,7 +81,29 @@ export class KpmProviderManager {
         const loggedInCachState: LoggedInState = await getCachedLoggedInState();
 
         if (!loggedInCachState.loggedIn) {
-            treeItems.push(this.getCodyConnectButton());
+            const googleSignupButton: KpmItem = this.getActionButton(
+                "Sign up with Google",
+                "",
+                "codetime.googleLogin",
+                "icons8-google.svg"
+            );
+            treeItems.push(googleSignupButton);
+
+            const githubSignupButton: KpmItem = this.getActionButton(
+                "Sign up with GitHub",
+                "",
+                "codetime.githubLogin",
+                "icons8-github.svg"
+            );
+            treeItems.push(githubSignupButton);
+
+            const dividerButton: KpmItem = this.getActionButton(
+                "",
+                "",
+                "",
+                "blue-line-96.png"
+            );
+            treeItems.push(dividerButton);
         } else {
             // show the web dashboard button
             treeItems.push(this.getWebViewDashboardButton());
