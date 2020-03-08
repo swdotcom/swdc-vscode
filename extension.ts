@@ -35,6 +35,7 @@ import {
 } from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
+import { LoggedInState } from "./lib/model/models";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -216,7 +217,7 @@ export async function intializePlugin(
     initializeLiveshare();
 
     // {loggedIn: true|false}
-    await getUserStatus();
+    const connectState: LoggedInState = await getUserStatus();
 
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
@@ -239,6 +240,12 @@ export async function intializePlugin(
 
     // show the readme if it doesn't exist
     displayReadmeIfNotExists();
+
+    if (!connectState.loggedIn) {
+        setTimeout(() => {
+            commands.executeCommand("codetime.displayTree");
+        }, 2100);
+    }
 }
 
 function handlePauseMetricsEvent() {
