@@ -776,7 +776,14 @@ export async function launchLogin(loginType = "software") {
     }
     let loginUrl = await buildLoginUrl(serverOnline, loginType);
     launchWebUrl(loginUrl);
-    refetchUserStatusLazily();
+    if (loginType === "software") {
+        // lazily load for 20 minutes with 20 second intervals
+        const interval = 1000 * 20;
+        refetchUserStatusLazily(60, interval);
+    } else {
+        // use the defaults
+        refetchUserStatusLazily();
+    }
 }
 
 /**
@@ -825,7 +832,7 @@ export async function buildLoginUrl(serverOnline, loginType = "software") {
         const encodedJwt = encodeURIComponent(jwt);
         let loginUrl = "";
         if (loginType === "software") {
-            loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
+            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
         } else if (loginType === "github") {
             loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (loginType === "google") {

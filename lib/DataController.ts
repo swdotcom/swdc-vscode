@@ -96,7 +96,46 @@ export async function isLoggedOn(serverIsOnline) {
                     setItem("jwt", pluginJwt);
                 }
 
-                return { loggedOn: true, state };
+                // get the user
+                const user = resp.data.user;
+                // auths object
+                // ------------
+                // access_token:"5s2XDBIR639YIKDSWYKB-SQnR-MHKQD_n8s62PBMKZAnFsIUXQ"
+                // accountId:343
+                // authId:"343"
+                // createdAt:"2020-03-09T01:38:04.000Z"
+                // email:"xavierluiz@yahoo.com"
+                // id:8
+                // password:null
+                // refresh_token:"ZEZZ8UN6RT4GRXXU_U6D-N7CXHLRPUsgg4WPsI7D4KKWU"
+                // salt:null
+                // scopes:null
+                // type:"software"
+                // updatedAt:"2020-03-09T01:38:04.000Z"
+                // url:""
+                // userId:343
+
+                let authType = "software";
+                if (user && user.auths) {
+                    // which auth should we show?
+                    // "software", "github", "google"
+                    for (let i = 0; i < user.auths.length; i++) {
+                        const auth = user.auths[i];
+                        // use the accountId. it has to match the user Id
+                        if (
+                            auth.accountId &&
+                            parseInt(auth.accountId, 10) ===
+                                parseInt(user.id, 10)
+                        ) {
+                            authType = auth.type;
+                            break;
+                        }
+                    }
+                }
+
+                setItem("authType", authType);
+
+                return { loggedOn: true, state, authType };
             }
             // return the state that is returned
             return { loggedOn: false, state };
@@ -300,24 +339,27 @@ export async function updatePreferences() {
     }
 }
 
-export function refetchUserStatusLazily(tryCountUntilFoundUser = 40) {
+export function refetchUserStatusLazily(
+    tryCountUntilFoundUser = 43,
+    interval = 10000
+) {
     if (userFetchTimeout) {
         return;
     }
     userFetchTimeout = setTimeout(() => {
         userFetchTimeout = null;
-        userStatusFetchHandler(tryCountUntilFoundUser);
-    }, 10000);
+        userStatusFetchHandler(tryCountUntilFoundUser, interval);
+    }, interval);
 }
 
-async function userStatusFetchHandler(tryCountUntilFoundUser) {
+async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     let serverIsOnline = await serverIsAvailable();
     let userStatus = await getUserStatus();
     if (!userStatus.loggedIn) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
-            refetchUserStatusLazily(tryCountUntilFoundUser);
+            refetchUserStatusLazily(tryCountUntilFoundUser, interval);
         }
     } else {
         clearCachedLoggedInState();

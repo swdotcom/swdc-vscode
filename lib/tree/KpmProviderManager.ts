@@ -98,10 +98,10 @@ export class KpmProviderManager {
             treeItems.push(githubSignupButton);
 
             const softwareSignupButton: KpmItem = this.getActionButton(
-                "Sign up with Software",
+                "Sign up with email",
                 "",
                 "codetime.codeTimeLogin",
-                "paw.svg"
+                "envelope.svg"
             );
             treeItems.push(softwareSignupButton);
 
@@ -113,6 +113,17 @@ export class KpmProviderManager {
             );
             treeItems.push(dividerButton);
         } else {
+            const connectedToInfo = this.getAuthTypeIconAndLabel();
+            if (connectedToInfo) {
+                const connectedToButton: KpmItem = this.getActionButton(
+                    connectedToInfo.label,
+                    connectedToInfo.tooltip,
+                    null,
+                    connectedToInfo.icon
+                );
+                treeItems.push(connectedToButton);
+            }
+
             // show the web dashboard button
             treeItems.push(this.getWebViewDashboardButton());
         }
@@ -361,6 +372,32 @@ export class KpmProviderManager {
             "TreeViewLaunchDashboard"
         );
         return item;
+    }
+
+    getAuthTypeIconAndLabel() {
+        const authType = getItem("authType");
+        const name = getItem("name");
+        let tooltip = name ? `Connected as ${name}` : "";
+        if (authType === "software") {
+            return {
+                icon: "envelope.svg",
+                label: "Connected using email",
+                tooltip
+            };
+        } else if (authType === "google") {
+            return {
+                icon: "icons8-google.svg",
+                label: "Connected to Google",
+                tooltip
+            };
+        } else if (authType === "github") {
+            return {
+                icon: "icons8-github.svg",
+                label: "Connected to GitHub",
+                tooltip
+            };
+        }
+        return null;
     }
 
     getActionButton(

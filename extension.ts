@@ -15,7 +15,6 @@ import {
     getOffsetSeconds,
     getVersion,
     logIt,
-    showLoginPrompt,
     getPluginName,
     getItem,
     displayReadmeIfNotExists,
@@ -231,12 +230,8 @@ export async function intializePlugin(
         sendHeartbeat("INITIALIZED", serverIsOnline);
     }
 
-    if (createdAnonUser) {
-        showLoginPrompt(serverIsOnline);
-    } else {
-        // initialize the day check timer
-        SummaryManager.getInstance();
-    }
+    // initialize the day check timer
+    SummaryManager.getInstance();
 
     // show the readme if it doesn't exist
     displayReadmeIfNotExists();
@@ -244,7 +239,7 @@ export async function intializePlugin(
     if (!connectState.loggedIn) {
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");
-        }, 2100);
+        }, 1200);
     }
 }
 
