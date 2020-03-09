@@ -44,6 +44,7 @@ let token_check_interval = null;
 let liveshare_update_interval = null;
 let historical_commits_interval = null;
 let offline_data_interval = null;
+let user_status_check_interval = null;
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -240,6 +241,15 @@ export async function intializePlugin(
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");
         }, 1200);
+
+        // create a 35 min interval to check if a user is logged in
+        // or not, but only if they're still an anon user
+        user_status_check_interval = setInterval(() => {
+            const name = getItem("name");
+            if (!name) {
+                getUserStatus();
+            }
+        }, one_min_ms * 35);
     }
 }
 
