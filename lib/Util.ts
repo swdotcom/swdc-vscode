@@ -233,7 +233,7 @@ function updateStatusBar(msg, tooltip) {
     let loggedInName = getItem("name");
     let userInfo = "";
     if (loggedInName && loggedInName !== "") {
-        userInfo = ` Logged in as ${loggedInName}`;
+        userInfo = ` Connected as ${loggedInName}`;
     }
     if (!tooltip) {
         tooltip = `Click to see more from Code Time`;
@@ -775,6 +775,7 @@ export async function launchLogin(loginType = "software") {
         return;
     }
     let loginUrl = await buildLoginUrl(serverOnline, loginType);
+    setItem("authType", loginType);
     launchWebUrl(loginUrl);
     if (loginType === "software") {
         // lazily load for 20 minutes with 20 second intervals

@@ -115,27 +115,30 @@ export async function isLoggedOn(serverIsOnline) {
                 // url:""
                 // userId:343
 
-                let authType = "software";
-                if (user && user.auths) {
-                    // which auth should we show?
-                    // "software", "github", "google"
-                    for (let i = 0; i < user.auths.length; i++) {
-                        const auth = user.auths[i];
-                        // use the accountId. it has to match the user Id
-                        if (
-                            auth.accountId &&
-                            parseInt(auth.accountId, 10) ===
-                                parseInt(user.id, 10)
-                        ) {
-                            authType = auth.type;
-                            break;
-                        }
-                    }
-                }
+                // let latestSeconds = 0;
+                // let authType = "software";
+                // if (user && user.auths) {
+                //     // which auth should we show?
+                //     // "software", "github", "google"
+                //     for (let i = 0; i < user.auths.length; i++) {
+                //         const auth = user.auths[i];
+                //         // use the accountId and updatedAt. it has to match the user Id
+                //         const updatedAtSeconds = moment(auth.updatedAt).unix();
+                //         if (
+                //             auth.accountId &&
+                //             parseInt(auth.accountId, 10) ===
+                //                 parseInt(user.id, 10)
+                //         ) {
+                //             if (updatedAtSeconds > latestSeconds) {
+                //                 authType = auth.type;
+                //             }
+                //         }
+                //     }
+                // }
 
-                setItem("authType", authType);
+                // setItem("authType", authType);
 
-                return { loggedOn: true, state, authType };
+                return { loggedOn: true, state };
             }
             // return the state that is returned
             return { loggedOn: false, state };
