@@ -3,7 +3,6 @@
     "command": "yarn",
     "type": "shell",
     "reveal": "silent",
-    "args": ["run", "compile"],
     "isBackground": true,
     "problemMatcher": {
         "owner": "typescript",
