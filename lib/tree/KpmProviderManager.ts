@@ -611,7 +611,6 @@ export class KpmProviderManager {
         item.commandArgs = commandArgs;
         item.id = `${label}_message`;
         item.contextValue = "message_item";
-        item.eventDescription = label ? label.replace(/\s/g, "") : "";
         return item;
     }
 
