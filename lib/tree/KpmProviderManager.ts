@@ -611,6 +611,7 @@ export class KpmProviderManager {
         item.commandArgs = commandArgs;
         item.id = `${label}_message`;
         item.contextValue = "message_item";
+        item.eventDescription = null;
         return item;
     }
 
@@ -630,7 +631,7 @@ export class KpmProviderManager {
         item.id = `${label}_title`;
         item.contextValue = "title_item";
         item.children = children;
-        item.eventDescription = label ? label.replace(/\s/g, "") : "";
+        item.eventDescription = null;
         return item;
     }
 
