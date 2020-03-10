@@ -108,8 +108,5 @@ export class WallClockManager {
             editor_seconds = session_seconds + 1;
             this.setWcTime(editor_seconds);
         }
-
-        // dispatch the status bar and tree updates
-        this.dispatchStatusViewUpdate();
     }
 }
