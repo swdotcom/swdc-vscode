@@ -108,6 +108,13 @@ export class SummaryManager {
                 }
             });
 
+            // if the summary.currentDayMinutes is greater than the wall
+            // clock time then it means the plugin was installed on a
+            // different computer or the session was deleted
+            wallClockMgr.updateBasedOnSessionSeconds(
+                summary.currentDayMinutes * 60
+            );
+
             saveSessionSummaryToDisk(summary);
         }
     }
