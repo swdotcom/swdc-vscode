@@ -226,6 +226,10 @@ export async function intializePlugin(
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
         sendHeartbeat("INSTALLED", serverIsOnline);
+
+        setTimeout(() => {
+            commands.executeCommand("codetime.displayTree");
+        }, 1200);
     } else {
         // send a heartbeat
         sendHeartbeat("INITIALIZED", serverIsOnline);
@@ -238,10 +242,6 @@ export async function intializePlugin(
     displayReadmeIfNotExists();
 
     if (!connectState.loggedIn) {
-        setTimeout(() => {
-            commands.executeCommand("codetime.displayTree");
-        }, 1200);
-
         // create a 35 min interval to check if a user is logged in
         // or not, but only if they're still an anon user
         user_status_check_interval = setInterval(() => {
