@@ -27,7 +27,8 @@ import {
     getDashboardRow,
     getDashboardFile,
     getProjectCommitSummaryFile,
-    isLinux
+    isLinux,
+    formatNumber
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
@@ -39,7 +40,6 @@ import { SummaryManager } from "./managers/SummaryManager";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
-const numeral = require("numeral");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
@@ -460,6 +460,8 @@ export async function writeProjectCommitDashboard(
     const api = `/projects/codeCommitSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
     let dashboardContent = "";
+    // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
+    //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
     if (isResponseOk(result)) {
         const codeCommitData = result.data;
         // create the title
@@ -471,25 +473,91 @@ export async function writeProjectCommitDashboard(
         const startOfWeek = moment()
             .startOf("week")
             .subtract(1, "week")
-            .format("ddd, MMM Do");
+            .format("MMM Do, YYYY");
         const endOfWeek = moment()
             .startOf("week")
             .subtract(1, "week")
             .endOf("week")
-            .format("ddd, MMM Do");
-        dashboardContent += getSectionHeader(
-            `From ${startOfWeek} to ${endOfWeek}`
-        );
-        dashboardContent += "\n\n";
+            .format("MMM Do, YYYY");
 
         if (codeCommitData && codeCommitData.length) {
             codeCommitData.forEach(el => {
+                dashboardContent += getDashboardRow(
+                    el.name,
+                    `${startOfWeek} to ${endOfWeek}`,
+                    true
+                );
+
+                // hours
                 const hours = humanizeMinutes(el.hours * 60);
+                dashboardContent += getDashboardRow("Code time", hours);
+
+                // keystrokes
                 const keystrokes = el.keystrokes
-                    ? numeral(el.keystrokes).format("0 a")
+                    ? formatNumber(el.keystrokes)
                     : 0;
-                const codeTimeMetrics = `${hours} hr(s) | ${keystrokes} keystroke(s)`;
-                dashboardContent += getDashboardRow(el.name, codeTimeMetrics);
+                dashboardContent += getDashboardRow("Keystrokes", keystrokes);
+
+                // lines added
+                const linesAdded = el.lines_added
+                    ? formatNumber(el.lines_added)
+                    : 0;
+                dashboardContent += getDashboardRow(
+                    "Lines of code added",
+                    linesAdded
+                );
+
+                // lines removed
+                const linesRemoved = el.lines_removed
+                    ? formatNumber(el.lines_removed)
+                    : 0;
+                dashboardContent += getDashboardRow(
+                    "Lines of code removed",
+                    linesRemoved
+                );
+
+                // lines added
+                const charsAdded = el.characters_added
+                    ? formatNumber(el.characters_added)
+                    : 0;
+                dashboardContent += getDashboardRow(
+                    "Lines of characters added",
+                    charsAdded
+                );
+
+                // lines removed
+                const charsRemoved = el.characters_removed
+                    ? formatNumber(el.characters_removed)
+                    : 0;
+                dashboardContent += getDashboardRow(
+                    "Lines of characters removed",
+                    charsRemoved
+                );
+
+                // commits
+                const commits = el.commits ? formatNumber(el.commits) : 0;
+                dashboardContent += getDashboardRow("Commits", commits);
+
+                // files_changed
+                const files_changed = el.files_changed
+                    ? formatNumber(el.files_changed)
+                    : 0;
+                dashboardContent += getDashboardRow(
+                    "Files changed",
+                    files_changed
+                );
+
+                // insertions
+                const insertions = el.insertions
+                    ? formatNumber(el.insertions)
+                    : 0;
+                dashboardContent += getDashboardRow("Insertions", insertions);
+
+                // deletions
+                const deletions = el.deletions ? formatNumber(el.deletions) : 0;
+                dashboardContent += getDashboardRow("Deletions", deletions);
+
+                dashboardContent += "\n";
             });
         } else {
             dashboardContent += "No data available";

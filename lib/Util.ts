@@ -34,7 +34,7 @@ const os = require("os");
 const crypto = require("crypto");
 
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-export const DASHBOARD_LABEL_WIDTH = 25;
+export const DASHBOARD_LABEL_WIDTH = 30;
 export const DASHBOARD_VALUE_WIDTH = 25;
 export const MARKER_WIDTH = 4;
 
@@ -757,6 +757,19 @@ function roundUp(num, precision) {
     return Math.ceil(num * precision) / precision;
 }
 
+export function formatNumber(num) {
+    let str = "";
+    num = num ? parseFloat(num) : 0;
+    if (num >= 1000) {
+        str = num.toLocaleString();
+    } else if (num % 1 === 0) {
+        str = num.toFixed(0);
+    } else {
+        str = num.toFixed(2);
+    }
+    return str;
+}
+
 /**
  * humanize the minutes
  */
@@ -884,8 +897,16 @@ export function showWarningMessage(message: string) {
     return window.showWarningMessage(`${message}`);
 }
 
-export function getDashboardRow(label, value) {
+export function getDashboardRow(label, value, isSectionHeader = false) {
     let content = `${getDashboardLabel(label)} : ${getDashboardValue(value)}\n`;
+    if (isSectionHeader) {
+        // add 3 to account for the " : " between the columns
+        const dashLen = content.length;
+        for (let i = 0; i < dashLen; i++) {
+            content += "-";
+        }
+        content += "\n";
+    }
     return content;
 }
 
@@ -926,7 +947,7 @@ function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
     return getDashboardDataDisplay(width, label);
 }
 
-function getDashboardValue(value) {
+function getDashboardValue(value, width = DASHBOARD_VALUE_WIDTH) {
     let valueContent = getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
     let paddedContent = "";
     for (let i = 0; i < 11; i++) {
