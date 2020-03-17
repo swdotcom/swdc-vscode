@@ -22,6 +22,7 @@ import {
 } from "./tree/CodeTimeProvider";
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
+import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -184,8 +185,7 @@ export function createCommands(
     const generateProjectSummaryCmd = commands.registerCommand(
         "codetime.generateProjectSummary",
         () => {
-            // ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
-            displayProjectCommitsDashboard();
+            ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
         }
     );
     cmds.push(generateProjectSummaryCmd);

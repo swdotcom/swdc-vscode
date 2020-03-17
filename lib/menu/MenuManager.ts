@@ -195,9 +195,12 @@ export async function displayCodeTimeMetricsDashboard() {
     });
 }
 
-export async function displayProjectCommitsDashboard() {
+export async function displayProjectCommitsDashboard(
+    type = "lastWeek",
+    projectIds = []
+) {
     // 1st write the code time metrics dashboard file
-    await writeProjectCommitDashboard();
+    await writeProjectCommitDashboard(type, projectIds);
     const filePath = getProjectCommitSummaryFile();
 
     workspace.openTextDocument(filePath).then(doc => {

@@ -146,13 +146,13 @@ export class KpmProviderManager {
         treeItems.push(toggleStatusBarButton);
 
         // generate codetime commit project data
-        // const generateProjectSummaryButton: KpmItem = this.getActionButton(
-        //     "Generate project summary",
-        //     "",
-        //     "codetime.generateProjectSummary",
-        //     "dashboard.svg"
-        // );
-        // treeItems.push(generateProjectSummaryButton);
+        const generateProjectSummaryButton: KpmItem = this.getActionButton(
+            "Generate project summary",
+            "",
+            "codetime.generateProjectSummary",
+            "dashboard.svg"
+        );
+        treeItems.push(generateProjectSummaryButton);
 
         // readme button
         const readmeButton: KpmItem = this.getActionButton(

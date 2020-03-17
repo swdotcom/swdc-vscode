@@ -452,8 +452,12 @@ export async function writeCommitSummaryData() {
     }
 }
 
-export async function writeProjectCommitDashboard() {
-    const api = "/projects/codeCommitSummary";
+export async function writeProjectCommitDashboard(
+    type = "lastWeek",
+    projectIds = []
+) {
+    const qryStr = `?projectIds=${projectIds.join(",")}`;
+    const api = `/projects/codeCommitSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
     let dashboardContent = "";
     if (isResponseOk(result)) {
