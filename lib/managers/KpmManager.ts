@@ -20,7 +20,8 @@ import {
 import {
     getRepoContributorInfo,
     getRepoFileCount,
-    getFileContributorCount
+    getFileContributorCount,
+    getResourceInfo
 } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
@@ -87,11 +88,11 @@ export class KpmManager {
         if (!event || !window.state.focused) {
             return;
         }
-        const staticInfo = await this.getStaticEventInfo(event);
-
-        if (!this.isTrueEventFile(event, staticInfo.filename)) {
+        const filename = this.getFileName(event);
+        if (!this.isTrueEventFile(event, filename)) {
             return;
         }
+        const staticInfo = await this.getStaticEventInfo(event, filename);
 
         let rootPath = getRootPathForFile(staticInfo.filename);
 
@@ -116,11 +117,12 @@ export class KpmManager {
         if (!event || !window.state.focused) {
             return;
         }
-        const staticInfo = await this.getStaticEventInfo(event);
 
-        if (!this.isTrueEventFile(event, staticInfo.filename)) {
+        const filename = this.getFileName(event);
+        if (!this.isTrueEventFile(event, filename)) {
             return;
         }
+        const staticInfo = await this.getStaticEventInfo(event, filename);
 
         let rootPath = getRootPathForFile(staticInfo.filename);
 
@@ -145,9 +147,12 @@ export class KpmManager {
         if (!event || !window.state.focused) {
             return;
         }
-        const staticInfo = await this.getStaticEventInfo(event);
 
-        const filename = staticInfo.filename;
+        const filename = this.getFileName(event);
+        if (!this.isTrueEventFile(event, filename)) {
+            return;
+        }
+        const staticInfo = await this.getStaticEventInfo(event, filename);
 
         if (!this.isTrueEventFile(event, filename)) {
             return;
@@ -336,15 +341,23 @@ export class KpmManager {
         sourceObj.length = staticInfo.length;
     }
 
-    private async getStaticEventInfo(event) {
+    private getFileName(event) {
         let filename = "";
+        if (event.fileName) {
+            filename = event.fileName;
+        } else if (event.document && event.document.fileName) {
+            filename = event.document.fileName;
+        }
+        return filename;
+    }
+
+    private async getStaticEventInfo(event, filename) {
         let languageId = "";
         let length = 0;
         let lineCount = 0;
 
         // get the filename, length of the file, and the languageId
         if (event.fileName) {
-            filename = event.fileName;
             if (event.languageId) {
                 languageId = event.languageId;
             }
@@ -355,7 +368,6 @@ export class KpmManager {
                 lineCount = event.lineCount;
             }
         } else if (event.document && event.document.fileName) {
-            filename = event.document.fileName;
             if (event.document.languageId) {
                 languageId = event.document.languageId;
             }
@@ -515,7 +527,7 @@ export class KpmManager {
         // create the keystroke count if it doesn't exist
         if (!keystrokeStats) {
             // add keystroke count wrapper
-            keystrokeStats = this.createKeystrokeStats(
+            keystrokeStats = await this.createKeystrokeStats(
                 filename,
                 rootPath,
                 nowTimes
@@ -557,16 +569,24 @@ export class KpmManager {
         keystrokeStats.source[filename] = fileInfo;
     }
 
-    private createKeystrokeStats(filename, rootPath, nowTimes) {
+    private async createKeystrokeStats(filename, rootPath, nowTimes) {
         const workspaceFolder = getProjectFolder(filename);
         const name = workspaceFolder
             ? workspaceFolder.name
             : UNTITLED_WORKSPACE;
+
+        // branch, identifier, email, tag
+        let resourceInfo = null;
+        try {
+            resourceInfo = await getResourceInfo(rootPath);
+        } catch (e) {
+            //
+        }
         let keystrokeStats = new KeystrokeStats({
             // project.directory is used as an object key, must be string
             directory: rootPath,
             name,
-            identifier: "",
+            identifier: resourceInfo.identifier || "",
             resource: {}
         });
 

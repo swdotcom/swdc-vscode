@@ -77,11 +77,6 @@ export class SummaryManager {
             setItem("currentDay", this._currentDay);
             // update the last payload timestamp
             setItem("latestPayloadTimestampEndUtc", 0);
-
-            // update the session summary global and averages for the new day
-            setTimeout(() => {
-                this.updateSessionSummaryFromServer();
-            }, 1000 * 60);
         }
     }
 

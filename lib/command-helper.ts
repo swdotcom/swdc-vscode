@@ -2,6 +2,7 @@ import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { handleKpmClickedEvent, updatePreferences } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
+    displayProjectCommitsDashboard,
     showMenuOptions
 } from "./menu/MenuManager";
 import {
@@ -179,6 +180,15 @@ export function createCommands(
         }
     );
     cmds.push(codeTimeMetricsCmd);
+
+    const generateProjectSummaryCmd = commands.registerCommand(
+        "codetime.generateProjectSummary",
+        () => {
+            // ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
+            displayProjectCommitsDashboard();
+        }
+    );
+    cmds.push(generateProjectSummaryCmd);
 
     const paletteMenuCmd = commands.registerCommand(
         "codetime.softwarePaletteMenu",

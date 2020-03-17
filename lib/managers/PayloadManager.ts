@@ -10,6 +10,7 @@ import {
 } from "../Util";
 import { EventManager } from "./EventManager";
 import { getTimeDataSummaryFile } from "../storage/TimeSummaryData";
+import { SummaryManager } from "./SummaryManager";
 
 const fs = require("fs");
 
@@ -49,6 +50,11 @@ export class PayloadManager {
      */
     async sendOfflineData() {
         this.batchSendData("/data/batch", getSoftwareDataStoreFile());
+
+        // in about a minute, update the session summary information
+        setTimeout(() => {
+            SummaryManager.getInstance().updateSessionSummaryFromServer();
+        }, 1000 * 70);
     }
 
     /**

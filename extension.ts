@@ -179,7 +179,7 @@ export async function intializePlugin(
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(async () => {
         await PayloadManager.getInstance().sendOfflineData();
-    }, half_hour_ms);
+    }, half_hour_ms / 2);
 
     // periodically send offline events
     const twenty_min = 1000 * 60 * 20;

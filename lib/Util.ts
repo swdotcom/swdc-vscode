@@ -372,6 +372,16 @@ export function getSummaryInfoFile() {
     return file;
 }
 
+export function getProjectCommitSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\ProjectCommitSummary.txt";
+    } else {
+        file += "/ProjectCommitSummary.txt";
+    }
+    return file;
+}
+
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

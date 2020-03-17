@@ -26,6 +26,7 @@ import {
     humanizeMinutes,
     getDashboardRow,
     getDashboardFile,
+    getProjectCommitSummaryFile,
     isLinux
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
@@ -38,6 +39,7 @@ import { SummaryManager } from "./managers/SummaryManager";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
+const numeral = require("numeral");
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
@@ -448,6 +450,58 @@ export async function writeCommitSummaryData() {
             }
         });
     }
+}
+
+export async function writeProjectCommitDashboard() {
+    const api = "/projects/codeCommitSummary";
+    const result = await softwareGet(api, getItem("jwt"));
+    let dashboardContent = "";
+    if (isResponseOk(result)) {
+        const codeCommitData = result.data;
+        // create the title
+        const formattedDate = moment().format("ddd, MMM Do h:mma");
+        dashboardContent = `CODE TIME COMMIT SUMMARY     (Last updated on ${formattedDate})`;
+        dashboardContent += "\n\n";
+
+        // create the header
+        const startOfWeek = moment()
+            .startOf("week")
+            .subtract(1, "week")
+            .format("ddd, MMM Do");
+        const endOfWeek = moment()
+            .startOf("week")
+            .subtract(1, "week")
+            .endOf("week")
+            .format("ddd, MMM Do");
+        dashboardContent += getSectionHeader(
+            `From ${startOfWeek} to ${endOfWeek}`
+        );
+        dashboardContent += "\n\n";
+
+        if (codeCommitData && codeCommitData.length) {
+            codeCommitData.forEach(el => {
+                const hours = humanizeMinutes(el.hours * 60);
+                const keystrokes = el.keystrokes
+                    ? numeral(el.keystrokes).format("0 a")
+                    : 0;
+                const codeTimeMetrics = `${hours} hr(s) | ${keystrokes} keystroke(s)`;
+                dashboardContent += getDashboardRow(el.name, codeTimeMetrics);
+            });
+        } else {
+            dashboardContent += "No data available";
+        }
+
+        dashboardContent += "\n";
+    }
+
+    const file = getProjectCommitSummaryFile();
+    fs.writeFileSync(file, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the code time summary content file: ${err.message}`
+            );
+        }
+    });
 }
 
 export async function writeCodeTimeMetricsDashboard() {

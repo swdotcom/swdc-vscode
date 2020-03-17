@@ -10,13 +10,15 @@ import {
     getDashboardFile,
     getCommitSummaryFile,
     launchLogin,
-    isStatusBarTextVisible
+    isStatusBarTextVisible,
+    getProjectCommitSummaryFile
 } from "../Util";
 import {
     getUserStatus,
     writeCommitSummaryData,
     writeCodeTimeMetricsDashboard,
-    getConnectState
+    getConnectState,
+    writeProjectCommitDashboard
 } from "../DataController";
 import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
@@ -184,6 +186,19 @@ export async function displayCodeTimeMetricsDashboard() {
     // 1st write the code time metrics dashboard file
     await writeCodeTimeMetricsDashboard();
     const filePath = getDashboardFile();
+
+    workspace.openTextDocument(filePath).then(doc => {
+        // only focus if it's not already open
+        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+            // done
+        });
+    });
+}
+
+export async function displayProjectCommitsDashboard() {
+    // 1st write the code time metrics dashboard file
+    await writeProjectCommitDashboard();
+    const filePath = getProjectCommitSummaryFile();
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open
