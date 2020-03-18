@@ -1,4 +1,4 @@
-import { window, QuickPickItem, Position, TextEditor, TextLine } from "vscode";
+import { window, QuickPickItem } from "vscode";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { getItem } from "../Util";
 import Checkbox from "../models/checkbox";
@@ -22,12 +22,48 @@ export class ProjectCommitManager {
     }
 
     async launchProjectCommitMenuFlow() {
+        const items = [
+            {
+                label: "Yesterday",
+                value: "yesterday"
+            },
+            {
+                label: "Current week",
+                value: "currentWeek"
+            },
+            {
+                label: "Last week",
+                value: "lastWeek"
+            },
+            {
+                label: "Last month",
+                value: "lastMonth"
+            }
+        ];
+        const pickItems: QuickPickItem[] = items.map(item => {
+            return {
+                label: item.label,
+                value: item.value
+            } as QuickPickItem;
+        });
+
+        const pick = await window.showQuickPick(pickItems, {
+            placeHolder: "Select a date range"
+        });
+        if (pick && pick.label) {
+            return this.launchProjectSelectionMenu(pick["value"]);
+        }
+        return null;
+    }
+
+    async launchProjectSelectionMenu(dateRange) {
         const checkboxes: Checkbox[] = await this.getAllCheckboxes();
         const pickItems: QuickPickItem[] = checkboxes.map(checkbox => {
             return {
                 value: checkbox.value,
                 picked: checkbox.checked,
-                label: checkbox.label
+                label: checkbox.label,
+                description: checkbox.text
             } as QuickPickItem;
         });
         const picks = await window.showQuickPick(pickItems, {
@@ -43,17 +79,16 @@ export class ProjectCommitManager {
             // go through the array and get the project IDs
             const projectIds = picks.map((n: QuickPickItem) => n["value"]);
             // show it
-            displayProjectCommitsDashboard("lastWeek", projectIds);
+            displayProjectCommitsDashboard(dateRange, projectIds);
         }
         return null;
     }
 
-    async getAllCheckboxes(): Promise<Checkbox[]> {
+    async getAllCheckboxes(type = "lastWeek"): Promise<Checkbox[]> {
         // fetch the projects from the backend
-        const resp = await softwareGet(
-            "/projects/codeTimeProjects",
-            getItem("jwt")
-        );
+        const qryStr = `?type=${type}`;
+        const api = `/projects/codeTimeProjects${qryStr}`;
+        const resp = await softwareGet(api, getItem("jwt"));
         let checkboxes: Checkbox[] = [];
         if (isResponseOk(resp)) {
             const projects = resp.data;

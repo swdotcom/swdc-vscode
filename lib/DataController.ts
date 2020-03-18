@@ -456,7 +456,7 @@ export async function writeProjectCommitDashboard(
     type = "lastWeek",
     projectIds = []
 ) {
-    const qryStr = `?projectIds=${projectIds.join(",")}`;
+    const qryStr = `?type=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeCommitSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
     let dashboardContent = "";
@@ -470,21 +470,13 @@ export async function writeProjectCommitDashboard(
         dashboardContent += "\n\n";
 
         // create the header
-        const startOfWeek = moment()
-            .startOf("week")
-            .subtract(1, "week")
-            .format("MMM Do, YYYY");
-        const endOfWeek = moment()
-            .startOf("week")
-            .subtract(1, "week")
-            .endOf("week")
-            .format("MMM Do, YYYY");
+        const { rangeStart, rangeEnd } = createStartEndRangeByType(type);
 
         if (codeCommitData && codeCommitData.length) {
             codeCommitData.forEach(el => {
                 dashboardContent += getDashboardRow(
                     el.name,
-                    `${startOfWeek} to ${endOfWeek}`,
+                    `${rangeStart} to ${rangeEnd}`,
                     true
                 );
 
@@ -574,6 +566,41 @@ export async function writeProjectCommitDashboard(
             );
         }
     });
+}
+
+function createStartEndRangeByType(type = "lastWeek") {
+    // default to "lastWeek"
+    let startOf = moment()
+        .startOf("week")
+        .subtract(1, "week");
+    let endOf = moment()
+        .startOf("week")
+        .subtract(1, "week")
+        .endOf("week");
+
+    if (type === "yesterday") {
+        startOf = moment()
+            .subtract(1, "day")
+            .startOf("day");
+        endOf = moment()
+            .subtract(1, "day")
+            .endOf("day");
+    } else if (type === "currentWeek") {
+        startOf = moment().startOf("week");
+        endOf = moment();
+    } else if (type === "lastMonth") {
+        startOf = moment()
+            .subtract(1, "month")
+            .startOf("month");
+        endOf = moment()
+            .subtract(1, "month")
+            .endOf("month");
+    }
+
+    return {
+        rangeStart: startOf.format("MMM Do, YYYY"),
+        rangeEnd: endOf.format("MMM Do, YYYY")
+    };
 }
 
 export async function writeCodeTimeMetricsDashboard() {
