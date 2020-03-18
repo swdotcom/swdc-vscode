@@ -40,6 +40,8 @@ const resourcePath: string = path.join(
     "resources"
 );
 
+let counter = 0;
+
 const wallClockHandler: WallClockManager = WallClockManager.getInstance();
 
 export class KpmProviderManager {
@@ -77,28 +79,33 @@ export class KpmProviderManager {
     }
 
     async getOptionsTreeParents(): Promise<KpmItem[]> {
+        counter++;
+        const space = counter % 2 === 0 ? "" : " ";
         const treeItems: KpmItem[] = [];
         const loggedInCachState: LoggedInState = await getCachedLoggedInState();
 
         if (!loggedInCachState.loggedIn) {
+            const signupWithGoogle = `Sign up with Google${space}`;
             const googleSignupButton: KpmItem = this.getActionButton(
-                "Sign up with Google",
+                signupWithGoogle,
                 "",
                 "codetime.googleLogin",
                 "icons8-google.svg"
             );
             treeItems.push(googleSignupButton);
 
+            const signupWithGithub = `Sign up with GitHub${space}`;
             const githubSignupButton: KpmItem = this.getActionButton(
-                "Sign up with GitHub",
+                signupWithGithub,
                 "",
                 "codetime.githubLogin",
                 "icons8-github.svg"
             );
             treeItems.push(githubSignupButton);
 
+            const signupWithEmail = `Sign up with email${space}`;
             const softwareSignupButton: KpmItem = this.getActionButton(
-                "Sign up with email",
+                signupWithEmail,
                 "",
                 "codetime.codeTimeLogin",
                 "envelope.svg"
@@ -137,6 +144,7 @@ export class KpmProviderManager {
         if (!isStatusBarTextVisible()) {
             toggleStatusBarTextLabel = "Show status bar metrics";
         }
+
         const toggleStatusBarButton: KpmItem = this.getActionButton(
             toggleStatusBarTextLabel,
             "Toggle the Code Time status bar metrics text",
@@ -146,8 +154,9 @@ export class KpmProviderManager {
         treeItems.push(toggleStatusBarButton);
 
         // generate codetime commit project data
+        const commitSummitLabel = `Generate commit summary${space}`;
         const generateProjectSummaryButton: KpmItem = this.getActionButton(
-            "Generate commit summary",
+            commitSummitLabel,
             "",
             "codetime.generateProjectSummary",
             "folder.svg"
@@ -155,8 +164,9 @@ export class KpmProviderManager {
         treeItems.push(generateProjectSummaryButton);
 
         // readme button
+        const learnMoreLabel = `Learn more${space}`;
         const readmeButton: KpmItem = this.getActionButton(
-            "Learn more",
+            learnMoreLabel
             "View the Code Time Readme to learn more",
             "codetime.displayReadme",
             "readme.svg"

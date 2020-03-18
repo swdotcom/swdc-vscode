@@ -186,6 +186,9 @@ export function createCommands(
         "codetime.generateProjectSummary",
         () => {
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
+            setTimeout(() => {
+                commands.executeCommand("codetime.refreshCodetimeTree");
+            }, 500);
         }
     );
     cmds.push(generateProjectSummaryCmd);
