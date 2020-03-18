@@ -147,10 +147,10 @@ export class KpmProviderManager {
 
         // generate codetime commit project data
         const generateProjectSummaryButton: KpmItem = this.getActionButton(
-            "Generate project summary",
+            "Generate commit summary",
             "",
             "codetime.generateProjectSummary",
-            "dashboard.svg"
+            "folder.svg"
         );
         treeItems.push(generateProjectSummaryButton);
 
