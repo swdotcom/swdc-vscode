@@ -135,9 +135,6 @@ export class KpmProviderManager {
             treeItems.push(this.getWebViewDashboardButton());
         }
 
-        // codetime metrics editor dashboard
-        treeItems.push(this.getCodeTimeDashboardButton());
-
         // toggle status bar button
         let toggleStatusBarTextLabel = "Hide status bar metrics";
         let toggleStatusBarIcon = "visible.svg";
@@ -153,20 +150,10 @@ export class KpmProviderManager {
         );
         treeItems.push(toggleStatusBarButton);
 
-        // generate codetime commit project data
-        const commitSummitLabel = `Generate commit summary${space}`;
-        const generateProjectSummaryButton: KpmItem = this.getActionButton(
-            commitSummitLabel,
-            "",
-            "codetime.generateProjectSummary",
-            "folder.svg"
-        );
-        treeItems.push(generateProjectSummaryButton);
-
         // readme button
         const learnMoreLabel = `Learn more${space}`;
         const readmeButton: KpmItem = this.getActionButton(
-            learnMoreLabel
+            learnMoreLabel,
             "View the Code Time Readme to learn more",
             "codetime.displayReadme",
             "readme.svg"
@@ -180,6 +167,27 @@ export class KpmProviderManager {
             "message.svg"
         );
         treeItems.push(feedbackButton);
+
+        const reportDividerButton: KpmItem = this.getActionButton(
+            "",
+            "",
+            "",
+            "blue-line-96.png"
+        );
+        treeItems.push(reportDividerButton);
+
+        // codetime metrics editor dashboard
+        treeItems.push(this.getCodeTimeDashboardButton());
+
+        // generate codetime commit project data
+        const commitSummitLabel = `View project summary${space}`;
+        const generateProjectSummaryButton: KpmItem = this.getActionButton(
+            commitSummitLabel,
+            "",
+            "codetime.generateProjectSummary",
+            "folder.svg"
+        );
+        treeItems.push(generateProjectSummaryButton);
 
         return treeItems;
     }
@@ -384,7 +392,7 @@ export class KpmProviderManager {
 
     getCodeTimeDashboardButton(): KpmItem {
         const item: KpmItem = this.getActionButton(
-            "Generate dashboard",
+            "View summary",
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
             "dashboard.svg",
