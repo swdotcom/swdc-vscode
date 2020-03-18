@@ -57,7 +57,7 @@ export class ProjectCommitManager {
     }
 
     async launchProjectSelectionMenu(dateRange) {
-        const checkboxes: Checkbox[] = await this.getAllCheckboxes();
+        const checkboxes: Checkbox[] = await this.getAllCheckboxes(dateRange);
         const pickItems: QuickPickItem[] = checkboxes.map(checkbox => {
             return {
                 value: checkbox.value,
@@ -73,11 +73,14 @@ export class ProjectCommitManager {
             canPickMany: true
         });
 
-        // will return an array of ... (value is the projectId)
+        // will return an array of ... (value is the projectIds)
         // [{description, label, picked, value}]
         if (picks && picks.length) {
             // go through the array and get the project IDs
-            const projectIds = picks.map((n: QuickPickItem) => n["value"]);
+            const projectIds = [];
+            picks.forEach(item => {
+                projectIds.push(...item["value"]);
+            });
             // show it
             displayProjectCommitsDashboard(dateRange, projectIds);
         }
@@ -106,7 +109,7 @@ export class ProjectCommitManager {
                 cb.label = p.project_name;
                 cb.checked = true;
                 cb.lineNumber = i;
-                cb.value = p.projectId;
+                cb.value = p.projectIds;
                 checkboxes.push(cb);
             }
         }
