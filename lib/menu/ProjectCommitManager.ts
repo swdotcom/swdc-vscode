@@ -28,7 +28,7 @@ export class ProjectCommitManager {
                 value: "yesterday"
             },
             {
-                label: "Current week",
+                label: "This week",
                 value: "currentWeek"
             },
             {
@@ -89,8 +89,8 @@ export class ProjectCommitManager {
 
     async getAllCheckboxes(type = "lastWeek"): Promise<Checkbox[]> {
         // fetch the projects from the backend
-        const qryStr = `?type=${type}`;
-        const api = `/projects/codeTimeProjects${qryStr}`;
+        const qryStr = `?timeRange=${type}&coding=true`;
+        const api = `/projects${qryStr}`;
         const resp = await softwareGet(api, getItem("jwt"));
         let checkboxes: Checkbox[] = [];
         if (isResponseOk(resp)) {

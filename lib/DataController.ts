@@ -456,8 +456,8 @@ export async function writeProjectCommitDashboard(
     type = "lastWeek",
     projectIds = []
 ) {
-    const qryStr = `?type=${type}&projectIds=${projectIds.join(",")}`;
-    const api = `/projects/codeCommitSummary${qryStr}`;
+    const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
+    const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
     let dashboardContent = "";
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
@@ -466,7 +466,7 @@ export async function writeProjectCommitDashboard(
         const codeCommitData = result.data;
         // create the title
         const formattedDate = moment().format("ddd, MMM Do h:mma");
-        dashboardContent = `CODE TIME COMMIT SUMMARY     (Last updated on ${formattedDate})`;
+        dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
         dashboardContent += "\n\n";
 
         // create the header
