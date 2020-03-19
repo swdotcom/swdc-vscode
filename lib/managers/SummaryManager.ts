@@ -88,18 +88,10 @@ export class SummaryManager {
 
             // update the session summary data
             const summary: SessionSummary = getSessionSummaryData();
-            const updateCurrents =
-                summary.currentDayMinutes < data.currentDayMinutes
-                    ? true
-                    : false;
             Object.keys(data).forEach(key => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
-                    if (updateCurrents && key.indexOf("current") === 0) {
-                        summary[key] = val;
-                    } else if (key.indexOf("current") === -1) {
-                        summary[key] = val;
-                    }
+                    summary[key] = val;
                 }
             });
 

@@ -2,7 +2,6 @@ import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { handleKpmClickedEvent, updatePreferences } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
-    displayProjectCommitsDashboard,
     showMenuOptions
 } from "./menu/MenuManager";
 import {
