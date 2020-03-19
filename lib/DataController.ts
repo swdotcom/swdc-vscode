@@ -26,7 +26,7 @@ import {
     humanizeMinutes,
     getDashboardRow,
     getDashboardFile,
-    getProjectCommitSummaryFile,
+    getProjectCodeSummaryFile,
     isLinux,
     formatNumber
 } from "./Util";
@@ -481,7 +481,7 @@ export async function writeProjectCommitDashboard(
                 );
 
                 // hours
-                const hours = humanizeMinutes(el.hours * 60);
+                const hours = humanizeMinutes(el.session_seconds / 60);
                 dashboardContent += getDashboardRow("Code time", hours);
 
                 // keystrokes
@@ -489,42 +489,6 @@ export async function writeProjectCommitDashboard(
                     ? formatNumber(el.keystrokes)
                     : 0;
                 dashboardContent += getDashboardRow("Keystrokes", keystrokes);
-
-                // // lines added
-                // const linesAdded = el.lines_added
-                //     ? formatNumber(el.lines_added)
-                //     : 0;
-                // dashboardContent += getDashboardRow(
-                //     "Lines of code added",
-                //     linesAdded
-                // );
-
-                // // lines removed
-                // const linesRemoved = el.lines_removed
-                //     ? formatNumber(el.lines_removed)
-                //     : 0;
-                // dashboardContent += getDashboardRow(
-                //     "Lines of code removed",
-                //     linesRemoved
-                // );
-
-                // // lines added
-                // const charsAdded = el.characters_added
-                //     ? formatNumber(el.characters_added)
-                //     : 0;
-                // dashboardContent += getDashboardRow(
-                //     "Lines of characters added",
-                //     charsAdded
-                // );
-
-                // // lines removed
-                // const charsRemoved = el.characters_removed
-                //     ? formatNumber(el.characters_removed)
-                //     : 0;
-                // dashboardContent += getDashboardRow(
-                //     "Lines of characters removed",
-                //     charsRemoved
-                // );
 
                 // commits
                 const commits = el.commits ? formatNumber(el.commits) : 0;
@@ -558,7 +522,7 @@ export async function writeProjectCommitDashboard(
         dashboardContent += "\n";
     }
 
-    const file = getProjectCommitSummaryFile();
+    const file = getProjectCodeSummaryFile();
     fs.writeFileSync(file, dashboardContent, err => {
         if (err) {
             logIt(

@@ -4,8 +4,6 @@ import { getItem } from "../Util";
 import Checkbox from "../models/checkbox";
 import { displayProjectCommitsDashboard } from "./MenuManager";
 
-const numeral = require("numeral");
-
 export class ProjectCommitManager {
     private static instance: ProjectCommitManager;
 

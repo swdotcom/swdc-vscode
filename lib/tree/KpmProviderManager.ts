@@ -189,6 +189,15 @@ export class KpmProviderManager {
         );
         treeItems.push(generateProjectSummaryButton);
 
+        // const addProjectNoteLabel: string = `Add a note${space}`;
+        // const addProjectNoteButton: KpmItem = this.getActionButton(
+        //     addProjectNoteLabel,
+        //     "",
+        //     "codetime.addProjectNote",
+        //     "message.svg"
+        // );
+        // treeItems.push(addProjectNoteButton);
+
         return treeItems;
     }
 

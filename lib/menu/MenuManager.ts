@@ -11,7 +11,7 @@ import {
     getCommitSummaryFile,
     launchLogin,
     isStatusBarTextVisible,
-    getProjectCommitSummaryFile
+    getProjectCodeSummaryFile
 } from "../Util";
 import {
     getUserStatus,
@@ -201,7 +201,7 @@ export async function displayProjectCommitsDashboard(
 ) {
     // 1st write the code time metrics dashboard file
     await writeProjectCommitDashboard(type, projectIds);
-    const filePath = getProjectCommitSummaryFile();
+    const filePath = getProjectCodeSummaryFile();
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open

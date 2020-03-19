@@ -372,12 +372,12 @@ export function getSummaryInfoFile() {
     return file;
 }
 
-export function getProjectCommitSummaryFile() {
+export function getProjectCodeSummaryFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
-        file += "\\ProjectCommitSummary.txt";
+        file += "\\ProjectCodeSummary.txt";
     } else {
-        file += "/ProjectCommitSummary.txt";
+        file += "/ProjectCodeSummary.txt";
     }
     return file;
 }

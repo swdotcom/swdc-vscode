@@ -23,6 +23,7 @@ import {
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
+import { ProjectNoteManager } from "./menu/ProjectNoteManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -224,6 +225,14 @@ export function createCommands(
         }
     );
     cmds.push(sendFeedbackCmd);
+
+    // const addProjectNoteCmd = commands.registerCommand(
+    //     "codetime.addProjectNote",
+    //     () => {
+    //         ProjectNoteManager.getInstance().addNote();
+    //     }
+    // );
+    // cmds.push(addProjectNoteCmd);
 
     // const connectAtlassianCmd = commands.registerCommand(
     //     "codetime.connectAtlassian",
