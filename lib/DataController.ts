@@ -374,10 +374,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
 
-        commands.executeCommand("codetime.refreshCodetimeTree");
+        commands.executeCommand("codetime.sendOfflineData");
 
-        // fetch to get the users averages
-        SummaryManager.getInstance().updateSessionSummaryFromServer();
+        commands.executeCommand("codetime.refreshCodetimeTree");
     }
 }
 

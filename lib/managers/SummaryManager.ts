@@ -1,17 +1,18 @@
-import { getItem, setItem, getNowTimes } from "../Util";
-import { PayloadManager } from "./PayloadManager";
+import { getItem, setItem, getNowTimes, nowInSecs } from "../Util";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
 import {
     clearSessionSummaryData,
     getSessionSummaryData,
-    saveSessionSummaryToDisk
+    saveSessionSummaryToDisk,
+    sessionSummaryExists
 } from "../storage/SessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
 import { clearTimeDataSummary } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
+import { sendOfflineData, sendOfflineTimeData } from "./PayloadManager";
+const moment = require("moment-timezone");
 
-const payloadMgr: PayloadManager = PayloadManager.getInstance();
 const wallClockMgr: WallClockManager = WallClockManager.getInstance();
 
 // every 1 min
@@ -57,10 +58,10 @@ export class SummaryManager {
         const nowTime = getNowTimes();
         if (nowTime.day !== this._currentDay) {
             // send the offline data
-            await payloadMgr.sendOfflineData();
+            await sendOfflineData();
 
             // send the offline TimeData payloads
-            await payloadMgr.sendOfflineTimeData();
+            await sendOfflineTimeData();
 
             // day does't match. clear the wall clock time,
             // the session summary, time data summary,
@@ -82,12 +83,13 @@ export class SummaryManager {
 
     async updateSessionSummaryFromServer() {
         const jwt = getItem("jwt");
-        const result = await softwareGet(`/sessions/summary`, jwt);
+        const result = await softwareGet(`/sessions/summary?refresh=true`, jwt);
         if (isResponseOk(result) && result.data) {
             const data = result.data;
 
             // update the session summary data
             const summary: SessionSummary = getSessionSummaryData();
+
             Object.keys(data).forEach(key => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {

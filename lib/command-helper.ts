@@ -22,7 +22,7 @@ import {
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { ProjectNoteManager } from "./menu/ProjectNoteManager";
+import { sendOfflineData } from "./managers/PayloadManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -69,16 +69,22 @@ export function createCommands(
     commitTreeProvider.bindView(commitTreeView);
     cmds.push(connectCommitTreeView(commitTreeView));
 
-    const kpmClickedCmd = commands.registerCommand(
-        "codetime.softwareKpmDashboard",
-        () => {
+    // SEND OFFLINE DATA
+    cmds.push(
+        commands.registerCommand("codetime.sendOfflineData", () => {
+            sendOfflineData();
+        })
+    );
+
+    // SHOW ASCII DASHBOARD
+    cmds.push(
+        commands.registerCommand("codetime.softwareKpmDashboard", () => {
             handleKpmClickedEvent();
             setTimeout(() => {
                 commands.executeCommand("codetime.refreshCodetimeTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(kpmClickedCmd);
 
     const displayTreeCmd = commands.registerCommand(
         "codetime.displayTree",

@@ -11,17 +11,15 @@ import { getResourceInfo } from "../repo/KpmRepoManager";
 import { WorkspaceFolder } from "vscode";
 import { Project } from "../model/Project";
 import { NO_PROJ_NAME, UNTITLED } from "../Constants";
-import { updateStatusBarWithSummaryData } from "./SessionSummaryData";
-import { WallClockManager } from "../managers/WallClockManager";
 const fs = require("fs");
 const moment = require("moment-timezone");
 
 export function getTimeDataSummaryFile() {
     let file = getSoftwareDir();
     if (isWindows()) {
-        file += "\\timeDataSummary.json";
+        file += "\\projectTimeData.json";
     } else {
-        file += "/timeDataSummary.json";
+        file += "/projectTimeData.json";
     }
     return file;
 }
@@ -140,8 +138,27 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
 
     const file = getTimeDataSummaryFile();
 
+    let payloads: TimeData[] = getFileDataArray(file);
+
+    if (payloads && payloads.length) {
+        // find the one for this day
+        const idx = payloads.findIndex(
+            n =>
+                n.day === data.day &&
+                n.project.directory === data.project.directory
+        );
+        if (idx !== -1) {
+            payloads[idx] = data;
+        } else {
+            // add it
+            payloads.push(data);
+        }
+    } else {
+        payloads = [data];
+    }
+
     try {
-        const content = JSON.stringify(data, null, 4);
+        const content = JSON.stringify(payloads, null, 4);
         fs.writeFileSync(file, content, err => {
             if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
         });

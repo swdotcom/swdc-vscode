@@ -34,7 +34,7 @@ import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
-import { PayloadManager } from "./lib/managers/PayloadManager";
+import { sendOfflineEvents } from "./lib/managers/PayloadManager";
 import {
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData
@@ -137,8 +137,6 @@ export async function intializePlugin(
 
     let one_min_ms = 1000 * 60;
 
-    await SummaryManager.getInstance().updateSessionSummaryFromServer();
-
     // show the status bar text info
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
@@ -159,11 +157,6 @@ export async function intializePlugin(
         updateStatusBarWithSummaryData();
     }, 0);
 
-    // update the status bar
-    setTimeout(() => {
-        PayloadManager.getInstance().sendOfflineData();
-    }, 2000);
-
     setInterval(() => {
         const firstWorkspaceFolder: WorkspaceFolder = getFirstWorkspaceFolder();
         if (firstWorkspaceFolder) {
@@ -176,39 +169,38 @@ export async function intializePlugin(
 
     // add the interval jobs
 
-    // check on new commits every 45 minutes
+    // every 45 minute tasks
     historical_commits_interval = setInterval(async () => {
         const isonline = await serverIsAvailable();
         getHistoricalCommits(isonline);
         commands.executeCommand("codetime.refreshCommitTree");
-    }, 1000 * 60 * 30);
+    }, 1000 * 60 * 45);
 
-    // send heartbeats every 2 hours
+    // every 40 minute tasks
+    historical_commits_interval = setInterval(async () => {
+        sendOfflineEvents();
+    }, 1000 * 60 * 40);
+
+    // every hour tasks
     setInterval(async () => {
         const isonline = await serverIsAvailable();
         sendHeartbeat("HOURLY", isonline);
-    }, hourly_interval_ms * 2);
+    }, hourly_interval_ms);
 
-    // every half hour, send offline data
+    // every 30 minute tasks
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(async () => {
-        await PayloadManager.getInstance().sendOfflineData();
+        commands.executeCommand("codetime.sendOfflineData");
     }, half_hour_ms / 2);
-
-    // periodically send offline events
-    const twenty_min = 1000 * 60 * 20;
-    setTimeout(() => {
-        PayloadManager.getInstance().sendOfflineEvents();
-    }, twenty_min);
 
     // in 2 minutes fetch the historical commits if any
     setTimeout(async () => {
         await getHistoricalCommits(serverIsOnline);
-        // send any offline events that have been saved
-        PayloadManager.getInstance().sendOfflineEvents();
+        commands.executeCommand("codetime.sendOfflineData");
+        sendOfflineEvents();
     }, one_min_ms * 2);
 
-    // 10 minute interval tasks
+    // 15 minute interval tasks
     // check if the use has become a registered user
     // if they're already logged on, it will not send a request
     token_check_interval = setInterval(async () => {
@@ -236,7 +228,13 @@ export async function intializePlugin(
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
         setItem("vscode_CtInit", true);
+
+        // send a bootstrap kpm payload
         kpmController.buildBootstrapKpmPayload();
+
+        // fetch the session summary data in case this is a new machine for the user
+        await SummaryManager.getInstance().updateSessionSummaryFromServer();
+
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
         sendHeartbeat("INSTALLED", serverIsOnline);

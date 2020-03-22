@@ -1,4 +1,4 @@
-import { SessionSummary, KeystrokeAggregate, TimeData } from "../model/models";
+import { SessionSummary, KeystrokeAggregate } from "../model/models";
 import {
     isWindows,
     getSoftwareDir,
@@ -11,10 +11,7 @@ import {
 } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
-import {
-    getTodayTimeDataSummary,
-    incrementSessionAndFileSeconds
-} from "./TimeSummaryData";
+import { incrementSessionAndFileSeconds } from "./TimeSummaryData";
 const fs = require("fs");
 
 export function getSessionThresholdSeconds() {
@@ -59,6 +56,11 @@ function coalesceMissingAttributes(data): SessionSummary {
         }
     });
     return data;
+}
+
+export function sessionSummaryExists(): boolean {
+    const file = getSessionSummaryFile();
+    return fs.existsSync(file);
 }
 
 export function getSessionSummaryFileAsJson(): SessionSummary {
