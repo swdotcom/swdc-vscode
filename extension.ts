@@ -2,13 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {
-    window,
-    ExtensionContext,
-    StatusBarAlignment,
-    commands,
-    WorkspaceFolder
-} from "vscode";
+import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     getUserStatus,
     sendHeartbeat,
@@ -24,11 +18,14 @@ import {
     getPluginName,
     getItem,
     displayReadmeIfNotExists,
-    setItem,
-    getFirstWorkspaceFolder
+    setItem
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
-import { getHistoricalCommits, getRepoUsers } from "./lib/repo/KpmRepoManager";
+import {
+    getHistoricalCommits,
+    getRepoUsers,
+    getRepoUserForWorkspace
+} from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
@@ -157,17 +154,15 @@ export async function intializePlugin(
         updateStatusBarWithSummaryData();
     }, 0);
 
-    setInterval(() => {
-        const firstWorkspaceFolder: WorkspaceFolder = getFirstWorkspaceFolder();
-        if (firstWorkspaceFolder) {
-            getRepoUsers(firstWorkspaceFolder.uri.fsPath);
-        }
-    }, 1000 * 60);
-
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;
 
     // add the interval jobs
+
+    // every 50 minutes check repo members
+    setInterval(() => {
+        getRepoUserForWorkspace();
+    }, 1000 * 60 * 50);
 
     // every 45 minute tasks
     historical_commits_interval = setInterval(async () => {
@@ -193,12 +188,26 @@ export async function intializePlugin(
         commands.executeCommand("codetime.sendOfflineData");
     }, half_hour_ms / 2);
 
-    // in 2 minutes fetch the historical commits if any
-    setTimeout(async () => {
-        await getHistoricalCommits(serverIsOnline);
+    // in 1 minute task
+    setTimeout(() => {
         commands.executeCommand("codetime.sendOfflineData");
-        sendOfflineEvents();
+    }, one_min_ms);
+
+    // in 2 minutes task
+    setTimeout(() => {
+        getHistoricalCommits(serverIsOnline);
     }, one_min_ms * 2);
+
+    // in 3 minutes task
+    setTimeout(() => {
+        // check for repo users
+        getRepoUserForWorkspace();
+    }, one_min_ms * 3);
+
+    // in 4 minutes task
+    setTimeout(() => {
+        sendOfflineEvents();
+    }, one_min_ms * 4);
 
     // 15 minute interval tasks
     // check if the use has become a registered user

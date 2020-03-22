@@ -5,10 +5,12 @@ import {
     isWindows,
     getWorkspaceFolders,
     normalizeGithubEmail,
-    getFileType
+    getFileType,
+    getFirstWorkspaceFolder
 } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
+import { WorkspaceFolder } from "vscode";
 
 let myRepoInfo = [];
 
@@ -186,6 +188,13 @@ export async function getResourceInfo(projectDir) {
     }
     // we don't have git info, return an empty object
     return {};
+}
+
+export async function getRepoUserForWorkspace() {
+    const firstWorkspaceFolder: WorkspaceFolder = getFirstWorkspaceFolder();
+    if (firstWorkspaceFolder) {
+        getRepoUsers(firstWorkspaceFolder.uri.fsPath);
+    }
 }
 
 /**
