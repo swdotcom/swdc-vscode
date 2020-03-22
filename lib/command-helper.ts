@@ -142,9 +142,11 @@ export function createCommands(
     const refreshKpmTreeCmd = commands.registerCommand(
         "codetime.refreshKpmTree",
         keystrokeStats => {
-            KpmProviderManager.getInstance().setCurrentKeystrokeStats(
-                keystrokeStats
-            );
+            if (keystrokeStats) {
+                KpmProviderManager.getInstance().setCurrentKeystrokeStats(
+                    keystrokeStats
+                );
+            }
             codetimeTreeProvider.refresh();
             kpmTreeProvider.refresh();
             commitTreeProvider.refresh();

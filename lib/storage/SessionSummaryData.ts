@@ -115,7 +115,6 @@ export function getMinutesSinceLastPayload() {
 export async function incrementSessionSummaryData(
     aggregates: KeystrokeAggregate
 ) {
-    const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     let sessionSummaryData = getSessionSummaryData();
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
@@ -125,9 +124,9 @@ export async function incrementSessionSummaryData(
 
     sessionSummaryData.currentDayMinutes += incrementMinutes;
 
-    // const session_seconds = sessionSummaryData.currentDayMinutes * 60;
-    // wallClkHandler.updateBasedOnSessionSeconds(session_seconds);
-    // let editor_seconds = wallClkHandler.getWcTimeInSeconds();
+    const wallClkHandler: WallClockManager = WallClockManager.getInstance();
+    const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+    wallClkHandler.updateBasedOnSessionSeconds(session_seconds);
 
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;

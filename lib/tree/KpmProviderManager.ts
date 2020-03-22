@@ -62,9 +62,7 @@ export class KpmProviderManager {
     }
 
     public setCurrentKeystrokeStats(keystrokeStats) {
-        if (!keystrokeStats) {
-            this._currentKeystrokeStats = new SessionSummary();
-        } else {
+        if (keystrokeStats) {
             // update the current stats
             Object.keys(keystrokeStats.source).forEach(key => {
                 const fileInfo: FileChangeInfo = keystrokeStats.source[key];

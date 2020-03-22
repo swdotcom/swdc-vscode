@@ -287,7 +287,7 @@ export class KpmManager {
             let keystrokeStats = null;
             if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
                 let keys = Object.keys(_keystrokeMap);
-                // use a normal for loop since we have an await within the loop
+                // check to see if we have data
                 for (let i = 0; i < keys.length; i++) {
                     const key = keys[i];
                     keystrokeStats = _keystrokeMap[key];
@@ -296,7 +296,6 @@ export class KpmManager {
                     }
                 }
             }
-            // commands.executeCommand("codetime.refreshCommitTree");
             commands.executeCommand("codetime.refreshKpmTree", keystrokeStats);
             _treeRefreshTimer = null;
         }, 2000);

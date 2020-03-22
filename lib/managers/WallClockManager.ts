@@ -1,11 +1,7 @@
 import { getItem, humanizeMinutes, setItem } from "../Util";
 import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
-import { TimeData } from "../model/models";
-import {
-    getTodayTimeDataSummary,
-    updateEditorSeconds
-} from "../storage/TimeSummaryData";
+import { updateEditorSeconds } from "../storage/TimeSummaryData";
 
 const CLOCK_INTERVAL = 1000 * 30;
 
@@ -57,9 +53,10 @@ export class WallClockManager {
     }
 
     private dispatchStatusViewUpdate() {
+        // update the status bar
         updateStatusBarWithSummaryData();
 
-        // update the code time metrics tree view and status bar
+        // update the code time metrics tree views
         commands.executeCommand("codetime.refreshKpmTree");
     }
 
