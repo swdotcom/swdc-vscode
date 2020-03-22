@@ -413,6 +413,11 @@ export async function handleKpmClickedEvent() {
     if (!userStatus.loggedIn) {
         webUrl = await buildLoginUrl(serverIsOnline);
         refetchUserStatusLazily();
+    } else {
+        // add the token=jwt
+        const jwt = getItem("jwt");
+        const encodedJwt = encodeURIComponent(jwt);
+        webUrl = `${webUrl}?token=${encodedJwt}`;
     }
     launchWebUrl(webUrl);
 }

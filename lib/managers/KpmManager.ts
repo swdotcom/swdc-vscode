@@ -586,8 +586,8 @@ export class KpmManager {
             // project.directory is used as an object key, must be string
             directory: rootPath,
             name,
-            identifier: resourceInfo.identifier || "",
-            resource: {}
+            identifier: resourceInfo ? resourceInfo.identifier || "" : "",
+            resource: resourceInfo || {}
         });
 
         keystrokeStats["start"] = nowTimes.now_in_sec;

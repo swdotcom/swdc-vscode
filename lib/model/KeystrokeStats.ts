@@ -9,16 +9,9 @@ import {
 import { FileChangeInfo } from "./models";
 import { EventManager } from "../managers/EventManager";
 import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
+import { Project } from "./Project";
 
 const eventHandler: EventManager = EventManager.getInstance();
-
-// ? marks that the parameter is optional
-type Project = {
-    directory: String;
-    name?: String;
-    identifier: String;
-    resource: {};
-};
 
 export class KeystrokeStats {
     public source: {};

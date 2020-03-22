@@ -1,6 +1,7 @@
 import { getVersion, getPluginId, getHostname, getOs } from "../Util";
 import { NO_PROJ_NAME } from "../Constants";
 import { TreeItemCollapsibleState } from "vscode";
+import { Project } from "./Project";
 
 export class KpmItem {
     id: string = "";
@@ -119,4 +120,5 @@ export class TimeData {
     session_seconds: number = 0;
     file_seconds: number = 0;
     day: string = "";
+    project: Project = new Project();
 }

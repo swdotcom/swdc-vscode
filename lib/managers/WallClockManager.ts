@@ -4,7 +4,7 @@ import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { TimeData } from "../model/models";
 import {
     getTodayTimeDataSummary,
-    updateTimeSummaryData
+    updateEditorSeconds
 } from "../storage/TimeSummaryData";
 
 const CLOCK_INTERVAL = 1000 * 30;
@@ -47,11 +47,12 @@ export class WallClockManager {
                 this._wctime += 30;
                 setItem("wctime", this._wctime);
 
-                // dispatch to the various views (statusbar and treeview)
-                this.dispatchStatusViewUpdate();
                 // update the file info file
-                this.updateTimeData();
+                this.updateTimeData(30);
             }
+
+            // dispatch to the various views (statusbar and treeview)
+            this.dispatchStatusViewUpdate();
         }, CLOCK_INTERVAL);
     }
 
@@ -79,24 +80,12 @@ export class WallClockManager {
         setItem("wctime", seconds);
 
         this.dispatchStatusViewUpdate();
-
-        // update the status bar
-        this.updateTimeData();
     }
 
-    private updateTimeData() {
-        // get the current time data and update
-        const timeData: TimeData = getTodayTimeDataSummary();
-        const editor_seconds = this._wctime;
+    private async updateTimeData(editor_seconds_for_project) {
+        await updateEditorSeconds(editor_seconds_for_project);
 
-        updateTimeSummaryData(
-            editor_seconds,
-            timeData.session_seconds,
-            timeData.file_seconds
-        );
-
-        // update the status bar
-        updateStatusBarWithSummaryData();
+        this.dispatchStatusViewUpdate();
     }
 
     public updateBasedOnSessionSeconds(session_seconds: number) {

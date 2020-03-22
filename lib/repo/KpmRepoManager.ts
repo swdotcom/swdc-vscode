@@ -192,7 +192,7 @@ export async function getResourceInfo(projectDir) {
  * get the git repo users
  */
 export async function getRepoUsers(fileName) {
-    const repoContributorInfo = getRepoContributorInfo(fileName);
+    const repoContributorInfo = await getRepoContributorInfo(fileName);
 
     if (repoContributorInfo) {
         // send this to the backend

@@ -134,6 +134,14 @@ export function getWorkspaceFolders(): WorkspaceFolder[] {
     return folders;
 }
 
+export function getFirstWorkspaceFolder(): WorkspaceFolder {
+    const workspaceFolders: WorkspaceFolder[] = getWorkspaceFolders();
+    if (workspaceFolders && workspaceFolders.length) {
+        return workspaceFolders[0];
+    }
+    return null;
+}
+
 export function getNumberOfTextDocumentsOpen() {
     return workspace.textDocuments ? workspace.textDocuments.length : 0;
 }

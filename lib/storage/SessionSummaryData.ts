@@ -12,10 +12,9 @@ import {
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
 import {
-    updateTimeSummaryData,
-    getTodayTimeDataSummary
+    getTodayTimeDataSummary,
+    incrementSessionAndFileSeconds
 } from "./TimeSummaryData";
-import { commands } from "vscode";
 const fs = require("fs");
 
 export function getSessionThresholdSeconds() {
@@ -113,7 +112,9 @@ export function getMinutesSinceLastPayload() {
     return minutesSinceLastPayload;
 }
 
-export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
+export async function incrementSessionSummaryData(
+    aggregates: KeystrokeAggregate
+) {
     const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     let sessionSummaryData = getSessionSummaryData();
     // fill in missing attributes
@@ -124,9 +125,9 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
 
     sessionSummaryData.currentDayMinutes += incrementMinutes;
 
-    const session_seconds = sessionSummaryData.currentDayMinutes * 60;
-    wallClkHandler.updateBasedOnSessionSeconds(session_seconds);
-    let editor_seconds = wallClkHandler.getWcTimeInSeconds();
+    // const session_seconds = sessionSummaryData.currentDayMinutes * 60;
+    // wallClkHandler.updateBasedOnSessionSeconds(session_seconds);
+    // let editor_seconds = wallClkHandler.getWcTimeInSeconds();
 
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;
@@ -134,11 +135,8 @@ export function incrementSessionSummaryData(aggregates: KeystrokeAggregate) {
 
     saveSessionSummaryToDisk(sessionSummaryData);
 
-    // get the current time data and update
-    const timeData: TimeData = getTodayTimeDataSummary();
-    const file_seconds = (timeData.file_seconds += 60);
-
-    updateTimeSummaryData(editor_seconds, session_seconds, file_seconds);
+    // increment the projects session and file seconds
+    incrementSessionAndFileSeconds(incrementMinutes);
 }
 
 /**

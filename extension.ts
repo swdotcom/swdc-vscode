@@ -2,7 +2,13 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
+import {
+    window,
+    ExtensionContext,
+    StatusBarAlignment,
+    commands,
+    WorkspaceFolder
+} from "vscode";
 import {
     getUserStatus,
     sendHeartbeat,
@@ -18,10 +24,11 @@ import {
     getPluginName,
     getItem,
     displayReadmeIfNotExists,
-    setItem
+    setItem,
+    getFirstWorkspaceFolder
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
-import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
+import { getHistoricalCommits, getRepoUsers } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
@@ -155,7 +162,14 @@ export async function intializePlugin(
     // update the status bar
     setTimeout(() => {
         PayloadManager.getInstance().sendOfflineData();
-    }, 1000);
+    }, 2000);
+
+    setInterval(() => {
+        const firstWorkspaceFolder: WorkspaceFolder = getFirstWorkspaceFolder();
+        if (firstWorkspaceFolder) {
+            getRepoUsers(firstWorkspaceFolder.uri.fsPath);
+        }
+    }, 1000 * 60);
 
     // every hour, look for repo members
     let hourly_interval_ms = 1000 * 60 * 60;
