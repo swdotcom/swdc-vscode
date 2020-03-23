@@ -6,10 +6,11 @@ import {
     getPluginId,
     setItem
 } from "../Util";
-import { FileChangeInfo } from "./models";
+import { FileChangeInfo, TimeData } from "./models";
 import { EventManager } from "../managers/EventManager";
 import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
 import { Project } from "./Project";
+import { getTodayTimeDataSummary } from "../storage/TimeSummaryData";
 
 const eventHandler: EventManager = EventManager.getInstance();
 
@@ -97,7 +98,7 @@ export class KeystrokeStats {
     /**
      * send the payload
      */
-    postData(sendNow: boolean = false) {
+    async postData(sendNow: boolean = false) {
         // set the end time for the session
         let nowTimes = getNowTimes();
 
@@ -110,6 +111,9 @@ export class KeystrokeStats {
         payload["end"] = nowTimes.now_in_sec;
         payload["local_end"] = nowTimes.local_now_in_sec;
         const keys = Object.keys(payload.source);
+
+        // go through each file and make sure the end time is set
+        // and the cumulative_editor_seconds is set
         if (keys && keys.length > 0) {
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
@@ -122,6 +126,15 @@ export class KeystrokeStats {
                     payload.source[key]["local_end"] =
                         nowTimes.local_now_in_sec;
                 }
+
+                // set the cumulative_editor_seconds for this file
+                const timeDataSummary: TimeData = await getTodayTimeDataSummary(
+                    payload.project
+                );
+
+                payload["cumulative_editor_seconds"] = timeDataSummary
+                    ? timeDataSummary.editor_seconds
+                    : 0;
             }
         }
 

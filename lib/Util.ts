@@ -114,6 +114,32 @@ export function getFileAgeInDays(file) {
     return daysDiff > 1 ? parseInt(daysDiff, 10) : 1;
 }
 
+export function getActiveProjectWorkspace(): WorkspaceFolder {
+    const activeDocPath = getActiveDocument();
+    if (activeDocPath) {
+        if (
+            workspace.workspaceFolders &&
+            workspace.workspaceFolders.length > 0
+        ) {
+            for (let i = 0; i < workspace.workspaceFolders.length; i++) {
+                const workspaceFolder = workspace.workspaceFolders[i];
+                const folderPath = workspaceFolder.uri.fsPath;
+                if (activeDocPath.indexOf(folderPath) !== -1) {
+                    return workspaceFolder;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+export function getActiveDocument(): string {
+    if (window.activeTextEditor && window.activeTextEditor.document) {
+        return window.activeTextEditor.document.uri.fsPath;
+    }
+    return null;
+}
+
 /**
  * These will return the workspace folders.
  * use the uri.fsPath to get the full path

@@ -6,6 +6,7 @@ import {
     getWorkspaceFolders,
     normalizeGithubEmail,
     getFileType,
+    getActiveProjectWorkspace,
     getFirstWorkspaceFolder
 } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
@@ -190,10 +191,15 @@ export async function getResourceInfo(projectDir) {
     return {};
 }
 
-export async function getRepoUserForWorkspace() {
-    const firstWorkspaceFolder: WorkspaceFolder = getFirstWorkspaceFolder();
-    if (firstWorkspaceFolder) {
-        getRepoUsers(firstWorkspaceFolder.uri.fsPath);
+export async function processRepoUsersForWorkspace() {
+    let activeWorkspaceFolder: WorkspaceFolder = getActiveProjectWorkspace();
+    if (activeWorkspaceFolder) {
+        getRepoUsers(activeWorkspaceFolder.uri.fsPath);
+    } else {
+        activeWorkspaceFolder = getFirstWorkspaceFolder();
+        if (activeWorkspaceFolder) {
+            getRepoUsers(activeWorkspaceFolder.uri.fsPath);
+        }
     }
 }
 

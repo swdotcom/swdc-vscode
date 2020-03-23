@@ -4,7 +4,7 @@ import {
     logIt,
     getFileDataArray,
     getNowTimes,
-    getWorkspaceFolders
+    getActiveProjectWorkspace
 } from "../Util";
 import { TimeData } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
@@ -26,7 +26,12 @@ export function getTimeDataSummaryFile() {
 
 async function getNewTimeDataSummary(): Promise<TimeData> {
     const { utcEndOfDay, localEndOfDay, day } = getEndOfDayTimes();
-    const project: Project = await getCurrentTimeSummaryProject();
+
+    const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
+
+    const project: Project = await getCurrentTimeSummaryProject(
+        activeWorkspace
+    );
 
     const timeData = new TimeData();
     timeData.day = day;
@@ -41,61 +46,77 @@ export async function clearTimeDataSummary() {
     saveTimeDataSummaryToDisk(timeData);
 }
 
-export async function getCurrentTimeSummaryProject(): Promise<Project> {
+export async function getCurrentTimeSummaryProject(
+    workspaceFolder: WorkspaceFolder
+): Promise<Project> {
     const project: Project = new Project();
-
-    const workspaceFolders: WorkspaceFolder[] = getWorkspaceFolders();
-    let rootPath: string = "";
-    let name: string = "";
-    if (workspaceFolders && workspaceFolders.length) {
-        rootPath = workspaceFolders[0].uri.fsPath;
-        name = workspaceFolders[0].name;
-    }
-    if (rootPath) {
-        // create the project
-        project.directory = rootPath;
-        project.name = name;
-
-        try {
-            const resource = await getResourceInfo(rootPath);
-            if (resource) {
-                project.resource = resource;
-                project.identifier = resource.identifier;
-            }
-        } catch (e) {
-            //
-        }
-    } else {
+    if (!workspaceFolder || !workspaceFolder.name) {
+        // no workspace folder
         project.directory = NO_PROJ_NAME;
         project.name = UNTITLED;
+    } else {
+        let rootPath: string = workspaceFolder.uri.fsPath;
+        let name: string = workspaceFolder.name;
+        if (rootPath) {
+            // create the project
+            project.directory = rootPath;
+            project.name = name;
+
+            try {
+                const resource = await getResourceInfo(rootPath);
+                if (resource) {
+                    project.resource = resource;
+                    project.identifier = resource.identifier;
+                }
+            } catch (e) {
+                //
+            }
+        }
     }
 
     return project;
 }
 
 export async function updateEditorSeconds(editor_seconds: number) {
-    const timeData: TimeData = await getTodayTimeDataSummary();
-    timeData.editor_seconds += editor_seconds;
+    const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
 
-    // save the info to disk
-    saveTimeDataSummaryToDisk(timeData);
+    // only increment if we have an active workspace
+    if (activeWorkspace && activeWorkspace.name) {
+        const project: Project = await getCurrentTimeSummaryProject(
+            activeWorkspace
+        );
+        const timeData: TimeData = await getTodayTimeDataSummary(project);
+        timeData.editor_seconds += editor_seconds;
+
+        // save the info to disk
+        saveTimeDataSummaryToDisk(timeData);
+    }
 }
 
 export async function incrementSessionAndFileSeconds(minutes_since_payload) {
-    // what is the gap from the previous start
-    const timeData: TimeData = await getTodayTimeDataSummary();
-    const session_seconds = minutes_since_payload * 60;
-    timeData.session_seconds += session_seconds;
-    timeData.file_seconds += 60;
+    const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
 
-    // save the info to disk
-    saveTimeDataSummaryToDisk(timeData);
+    // only increment if we have an active workspace
+    if (activeWorkspace && activeWorkspace.name) {
+        const project: Project = await getCurrentTimeSummaryProject(
+            activeWorkspace
+        );
+
+        // what is the gap from the previous start
+        const timeData: TimeData = await getTodayTimeDataSummary(project);
+        const session_seconds = minutes_since_payload * 60;
+        timeData.session_seconds += session_seconds;
+        timeData.file_seconds += 60;
+
+        // save the info to disk
+        saveTimeDataSummaryToDisk(timeData);
+    }
 }
 
-export async function getTodayTimeDataSummary(): Promise<TimeData> {
+export async function getTodayTimeDataSummary(
+    project: Project
+): Promise<TimeData> {
     const { day } = getEndOfDayTimes();
-
-    const project: Project = await getCurrentTimeSummaryProject();
 
     let timeData: TimeData = null;
 

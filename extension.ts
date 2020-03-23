@@ -23,8 +23,7 @@ import {
 import { serverIsAvailable } from "./lib/http/HttpClient";
 import {
     getHistoricalCommits,
-    getRepoUsers,
-    getRepoUserForWorkspace
+    processRepoUsersForWorkspace
 } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
@@ -161,7 +160,7 @@ export async function intializePlugin(
 
     // every 50 minutes check repo members
     setInterval(() => {
-        getRepoUserForWorkspace();
+        processRepoUsersForWorkspace();
     }, 1000 * 60 * 50);
 
     // every 45 minute tasks
@@ -201,7 +200,7 @@ export async function intializePlugin(
     // in 3 minutes task
     setTimeout(() => {
         // check for repo users
-        getRepoUserForWorkspace();
+        processRepoUsersForWorkspace();
     }, one_min_ms * 3);
 
     // in 4 minutes task
