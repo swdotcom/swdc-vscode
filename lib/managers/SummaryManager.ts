@@ -1,17 +1,15 @@
-import { getItem, setItem, getNowTimes, nowInSecs } from "../Util";
+import { getItem, setItem, getNowTimes } from "../Util";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
 import {
     clearSessionSummaryData,
     getSessionSummaryData,
-    saveSessionSummaryToDisk,
-    sessionSummaryExists
+    saveSessionSummaryToDisk
 } from "../storage/SessionSummaryData";
 import { WallClockManager } from "./WallClockManager";
 import { clearTimeDataSummary } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { sendOfflineData, sendOfflineTimeData } from "./PayloadManager";
-const moment = require("moment-timezone");
 
 const wallClockMgr: WallClockManager = WallClockManager.getInstance();
 

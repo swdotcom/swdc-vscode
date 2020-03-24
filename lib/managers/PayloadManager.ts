@@ -21,21 +21,21 @@ const batch_limit = 50;
  * send the offline TimeData payloads
  */
 export async function sendOfflineTimeData() {
-    this.batchSendArrayData("/data/time", getTimeDataSummaryFile());
+    batchSendArrayData("/data/time", getTimeDataSummaryFile());
 }
 
 /**
  * send the offline Event payloads
  */
 export async function sendOfflineEvents() {
-    this.batchSendData("/data/event", getPluginEventsFile());
+    batchSendData("/data/event", getPluginEventsFile());
 }
 
 /**
  * send the offline data.
  */
 export async function sendOfflineData() {
-    this.batchSendData("/data/batch", getSoftwareDataStoreFile());
+    batchSendData("/data/batch", getSoftwareDataStoreFile());
 
     // fetch to get the users averages
     setTimeout(() => {
@@ -56,7 +56,7 @@ export async function batchSendArrayData(api, file) {
     try {
         if (fs.existsSync(file)) {
             const payloads = getFileDataArray(file);
-            this.batchSendPayloadData(api, file, payloads);
+            batchSendPayloadData(api, file, payloads);
         }
     } catch (e) {
         logIt(`Error batch sending payloads: ${e.message}`);
@@ -71,7 +71,7 @@ export async function batchSendData(api, file) {
     try {
         if (fs.existsSync(file)) {
             const payloads = getFileDataPayloadsAsJson(file);
-            this.batchSendPayloadData(api, file, payloads);
+            batchSendPayloadData(api, file, payloads);
         }
     } catch (e) {
         logIt(`Error batch sending payloads: ${e.message}`);

@@ -132,9 +132,21 @@ export class KeystrokeStats {
                     payload.project
                 );
 
-                payload["cumulative_editor_seconds"] = timeDataSummary
-                    ? timeDataSummary.editor_seconds
-                    : 0;
+                const file_time =
+                    payload.source[key].end - payload.source[key].start;
+
+                if (timeDataSummary) {
+                    let editorSeconds = timeDataSummary.editor_seconds;
+                    const diffSeconds =
+                        payload.source[key].end - timeDataSummary.now_local;
+                    if (diffSeconds > 0) {
+                        editorSeconds += diffSeconds;
+                    }
+                    payload["cumulative_editor_seconds"] = editorSeconds;
+                } else {
+                    // use the file seconds as this may be the 1st payload of the day
+                    payload["cumulative_editor_seconds"] = file_time;
+                }
             }
         }
 

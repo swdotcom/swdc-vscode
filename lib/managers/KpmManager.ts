@@ -106,7 +106,7 @@ export class KpmManager {
         this.updateStaticValues(rootObj, staticInfo);
 
         rootObj.source[staticInfo.filename].close += 1;
-        logEvent(`File closed: ${staticInfo.filename}`);
+        logEvent(`File closed`);
     }
 
     /**
@@ -136,7 +136,7 @@ export class KpmManager {
         this.updateStaticValues(rootObj, staticInfo);
 
         rootObj.source[staticInfo.filename].open += 1;
-        logEvent(`File opened: ${staticInfo.filename}`);
+        logEvent(`File opened`);
     }
 
     /**

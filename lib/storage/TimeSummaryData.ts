@@ -25,7 +25,7 @@ export function getTimeDataSummaryFile() {
 }
 
 async function getNewTimeDataSummary(): Promise<TimeData> {
-    const { utcEndOfDay, localEndOfDay, day } = getEndOfDayTimes();
+    const { utcEndOfDay, localEndOfDay, day, nowLocal } = getEndOfDayTimes();
 
     const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
 
@@ -38,6 +38,7 @@ async function getNewTimeDataSummary(): Promise<TimeData> {
     timeData.project = project;
     timeData.timestamp = utcEndOfDay;
     timeData.timestamp_local = localEndOfDay;
+    timeData.now_local = nowLocal;
     return timeData;
 }
 
@@ -82,11 +83,14 @@ export async function updateEditorSeconds(editor_seconds: number) {
 
     // only increment if we have an active workspace
     if (activeWorkspace && activeWorkspace.name) {
+        const { nowLocal } = getEndOfDayTimes();
         const project: Project = await getCurrentTimeSummaryProject(
             activeWorkspace
         );
         const timeData: TimeData = await getTodayTimeDataSummary(project);
         timeData.editor_seconds += editor_seconds;
+        // update the now local timestamp
+        timeData.now_local = nowLocal;
 
         // save the info to disk
         saveTimeDataSummaryToDisk(timeData);
@@ -149,7 +153,12 @@ function getEndOfDayTimes() {
         .unix(nowTime.local_now_in_sec)
         .endOf("day")
         .unix();
-    return { utcEndOfDay, localEndOfDay, day };
+    return {
+        utcEndOfDay,
+        localEndOfDay,
+        day,
+        nowLocal: nowTime.local_now_in_sec
+    };
 }
 
 function saveTimeDataSummaryToDisk(data: TimeData) {
