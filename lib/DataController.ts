@@ -83,7 +83,7 @@ export async function sendTeamInvite(identifier, emails) {
     const api = `/team/invite`;
     const resp = await softwarePost(api, payload, getItem("jwt"));
     if (isResponseOk(resp)) {
-        window.showInformationMessage("Sent team invitation.");
+        window.showInformationMessage("Sent team invitation");
     } else {
         window.showErrorMessage(resp.data.message);
     }

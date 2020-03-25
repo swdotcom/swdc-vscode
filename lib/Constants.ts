@@ -1,5 +1,3 @@
-export const OK_LABEL = "Ok";
-export const YES_LABEL = "Yes";
 export const LOGIN_LABEL = "Complete setup";
 export const LOGOUT_LABEL = "Log out";
 export const UNTITLED = "Untitled";

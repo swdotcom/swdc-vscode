@@ -105,12 +105,21 @@ export function createCommands(
     cmds.push(
         commands.registerCommand(
             "codetime.inviteTeamMember",
-            (item: KpmItem) => {
+            async (item: KpmItem) => {
                 // the identifier will be in the value
                 const identifier = item.value;
                 // email will be the description
                 const email = item.description;
-                sendTeamInvite(identifier, [email]);
+                const name = item.label;
+                const msg = `Send an invitation to ${name} (${email}) to join the ${identifier} team?`;
+                const selection = await window.showInformationMessage(
+                    msg,
+                    { modal: true },
+                    ...["YES"]
+                );
+                if (selection && selection === "YES") {
+                    sendTeamInvite(identifier, [email]);
+                }
             }
         )
     );
