@@ -83,46 +83,46 @@ export function createCommands(
     cmds.push(connectKpmTreeView(kpmTreeView));
 
     // TEAM TREE: INIT
-    const codetimeTeamTreeProvider = new CodeTimeTeamProvider();
-    const codetimeTeamTreeView: TreeView<KpmItem> = window.createTreeView(
-        "ct-team-tree",
-        {
-            treeDataProvider: codetimeTeamTreeProvider,
-            showCollapseAll: false
-        }
-    );
-    codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
-    cmds.push(connectCodeTimeTeamTreeView(codetimeTeamTreeView));
+    // const codetimeTeamTreeProvider = new CodeTimeTeamProvider();
+    // const codetimeTeamTreeView: TreeView<KpmItem> = window.createTreeView(
+    //     "ct-team-tree",
+    //     {
+    //         treeDataProvider: codetimeTeamTreeProvider,
+    //         showCollapseAll: false
+    //     }
+    // );
+    // codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
+    // cmds.push(connectCodeTimeTeamTreeView(codetimeTeamTreeView));
 
-    // TEAM TREE: REFRESH
-    cmds.push(
-        commands.registerCommand("codetime.refreshCodetimeTeamTree", () => {
-            codetimeTeamTreeProvider.refresh();
-        })
-    );
+    // // TEAM TREE: REFRESH
+    // cmds.push(
+    //     commands.registerCommand("codetime.refreshCodetimeTeamTree", () => {
+    //         codetimeTeamTreeProvider.refresh();
+    //     })
+    // );
 
-    // TEAM TREE: INVITE MEMBER
-    cmds.push(
-        commands.registerCommand(
-            "codetime.inviteTeamMember",
-            async (item: KpmItem) => {
-                // the identifier will be in the value
-                const identifier = item.value;
-                // email will be the description
-                const email = item.description;
-                const name = item.label;
-                const msg = `Send an invitation to ${name} (${email}) to join the ${identifier} team?`;
-                const selection = await window.showInformationMessage(
-                    msg,
-                    { modal: true },
-                    ...["YES"]
-                );
-                if (selection && selection === "YES") {
-                    sendTeamInvite(identifier, [email]);
-                }
-            }
-        )
-    );
+    // // TEAM TREE: INVITE MEMBER
+    // cmds.push(
+    //     commands.registerCommand(
+    //         "codetime.inviteTeamMember",
+    //         async (item: KpmItem) => {
+    //             // the identifier will be in the value
+    //             const identifier = item.value;
+    //             // email will be the description
+    //             const email = item.description;
+    //             const name = item.label;
+    //             const msg = `Send an invitation to ${name} (${email}) to join the ${identifier} team?`;
+    //             const selection = await window.showInformationMessage(
+    //                 msg,
+    //                 { modal: true },
+    //                 ...["YES"]
+    //             );
+    //             if (selection && selection === "YES") {
+    //                 sendTeamInvite(identifier, [email]);
+    //             }
+    //         }
+    //     )
+    // );
 
     // SEND OFFLINE DATA
     cmds.push(
