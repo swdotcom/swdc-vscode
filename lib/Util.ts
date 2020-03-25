@@ -436,6 +436,16 @@ export function getProjectCodeSummaryFile() {
     return file;
 }
 
+export function getProjectContributorCodeSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\ProjectContributorCodeSummary.txt";
+    } else {
+        file += "/ProjectContributorCodeSummary.txt";
+    }
+    return file;
+}
+
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

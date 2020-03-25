@@ -195,22 +195,6 @@ export async function displayCodeTimeMetricsDashboard() {
     });
 }
 
-export async function displayProjectCommitsDashboard(
-    type = "lastWeek",
-    projectIds = []
-) {
-    // 1st write the code time metrics dashboard file
-    await writeProjectCommitDashboard(type, projectIds);
-    const filePath = getProjectCodeSummaryFile();
-
-    workspace.openTextDocument(filePath).then(doc => {
-        // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
-            // done
-        });
-    });
-}
-
 export async function displayWeeklyCommitSummary() {
     // 1st write the commit summary data, then show it
     await writeCommitSummaryData();

@@ -2,7 +2,7 @@ import { window, QuickPickItem } from "vscode";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { getItem } from "../Util";
 import Checkbox from "../models/checkbox";
-import { displayProjectCommitsDashboard } from "./MenuManager";
+import { displayProjectCommitsDashboard } from "./ReportManager";
 
 export class ProjectCommitManager {
     private static instance: ProjectCommitManager;

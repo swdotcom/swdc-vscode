@@ -104,6 +104,10 @@
                 {
                     "id": "ct-metrics-tree",
                     "name": "DAILY METRICS"
+                },
+                {
+                    "id": "ct-team-tree",
+                    "name": "CONTRIBUTORS"
                 }
             ]
         },

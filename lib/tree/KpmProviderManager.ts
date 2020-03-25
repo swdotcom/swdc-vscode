@@ -417,6 +417,14 @@ export class KpmProviderManager {
         await refreshTeamMembersP;
 
         if (teamMembers && teamMembers.length) {
+            // get the 1st one to get the identifier
+            const titleItem: KpmItem = new KpmItem();
+            titleItem.label = teamMembers[0].identifier;
+            titleItem.icon = "icons8-github.svg";
+            titleItem.command = "codetime.generateContributorSummary";
+            titleItem.commandArgs = [teamMembers[0].identifier];
+            treeItems.push(titleItem);
+
             teamMembers.forEach((member: TeamMember) => {
                 const item: KpmItem = new KpmItem();
                 item.label = member.name;

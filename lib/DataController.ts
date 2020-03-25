@@ -27,6 +27,7 @@ import {
     getDashboardRow,
     getDashboardFile,
     getProjectCodeSummaryFile,
+    getProjectContributorCodeSummaryFile,
     isLinux,
     formatNumber
 } from "./Util";
@@ -516,6 +517,40 @@ export async function writeProjectCommitDashboard(
     }
 
     const file = getProjectCodeSummaryFile();
+    fs.writeFileSync(file, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the code time summary content file: ${err.message}`
+            );
+        }
+    });
+}
+
+export async function writeProjectContributorCommitDashboard(identifier) {
+    const qryStr = `?identifier=${encodeURIComponent(identifier)}`;
+    const api = `/projects/contributorSummary${qryStr}`;
+    const result = await softwareGet(api, getItem("jwt"));
+    let dashboardContent = "";
+    // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
+    //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
+    if (isResponseOk(result)) {
+        const codeCommitData = result.data;
+        // create the title
+        const formattedDate = moment().format("ddd, MMM Do h:mma");
+        dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
+        dashboardContent += "\n\n";
+
+        // create the header
+
+        if (codeCommitData && codeCommitData.length) {
+        } else {
+            dashboardContent += "No data available";
+        }
+
+        dashboardContent += "\n";
+    }
+
+    const file = getProjectContributorCodeSummaryFile();
     fs.writeFileSync(file, dashboardContent, err => {
         if (err) {
             logIt(
