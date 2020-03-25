@@ -15,7 +15,8 @@ import {
     logEvent,
     getFileAgeInDays,
     getFileType,
-    showInformationMessage
+    showInformationMessage,
+    findFirstActiveDirectoryOrWorkspaceDirectory
 } from "../Util";
 import {
     getRepoContributorInfo,
@@ -25,6 +26,7 @@ import {
 } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
+import RepoContributorInfo from "../model/RepoContributorInfo";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -35,6 +37,8 @@ export class KpmManager {
 
     private _disposable: Disposable;
 
+    public currentRootPath: string;
+
     constructor() {
         let subscriptions: Disposable[] = [];
 
@@ -42,6 +46,8 @@ export class KpmManager {
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
         this._disposable = Disposable.from(...subscriptions);
+
+        this.currentRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
     }
 
     static getInstance(): KpmManager {
@@ -98,6 +104,14 @@ export class KpmManager {
 
         if (!rootPath) {
             rootPath = NO_PROJ_NAME;
+        } else {
+            const rootPathChanged =
+                rootPath !== this.currentRootPath ? true : false;
+            this.currentRootPath = rootPath;
+            if (rootPathChanged) {
+                // trigger the team tree refresh
+                commands.executeCommand("codetime.refreshCodetimeTeamTree");
+            }
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
@@ -128,6 +142,14 @@ export class KpmManager {
 
         if (!rootPath) {
             rootPath = NO_PROJ_NAME;
+        } else {
+            const rootPathChanged =
+                rootPath !== this.currentRootPath ? true : false;
+            this.currentRootPath = rootPath;
+            if (rootPathChanged) {
+                // trigger the team tree refresh
+                commands.executeCommand("codetime.refreshCodetimeTeamTree");
+            }
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
@@ -386,7 +408,9 @@ export class KpmManager {
         }
 
         // get the repo count and repo file count
-        const contributorInfo = await getRepoContributorInfo(filename);
+        const contributorInfo: RepoContributorInfo = await getRepoContributorInfo(
+            filename
+        );
         const repoContributorCount = contributorInfo
             ? contributorInfo.count
             : 0;

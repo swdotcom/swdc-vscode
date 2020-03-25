@@ -19,11 +19,11 @@ export class KeystrokeStats {
     public keystrokes: Number;
     public start: Number;
     public local_start: Number;
-    public timezone: String;
+    public timezone: string;
     public project: Project;
     public pluginId: Number;
-    public version: String;
-    public os: String;
+    public version: string;
+    public os: string;
     public repoContributorCount: Number;
     public repoFileCount: Number;
 

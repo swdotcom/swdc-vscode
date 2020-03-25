@@ -14,15 +14,18 @@ import {
 } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
-import { CommitProvider, connectCommitTreeView } from "./tree/CommitProvider";
 import {
-    CodeTimeProvider,
-    connectCodeTimeTreeView
-} from "./tree/CodeTimeProvider";
+    CodeTimeMenuProvider,
+    connectCodeTimeMenuTreeView
+} from "./tree/CodeTimeMenuProvider";
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { sendOfflineData } from "./managers/PayloadManager";
+import {
+    CodeTimeTeamProvider,
+    connectCodeTimeTeamTreeView
+} from "./tree/CodeTimeTeamProvider";
 
 export function createCommands(
     kpmController: KpmManager
@@ -33,22 +36,40 @@ export function createCommands(
 
     cmds.push(kpmController);
 
-    // options tree view
-    const codetimeTreeProvider = new CodeTimeProvider();
-    const codetimeTreeView: TreeView<KpmItem> = window.createTreeView(
-        "kpm-options-tree",
+    // MENU TREE: INIT
+    const codetimeMenuTreeProvider = new CodeTimeMenuProvider();
+    const codetimeMenuTreeView: TreeView<KpmItem> = window.createTreeView(
+        "ct-menu-tree",
         {
-            treeDataProvider: codetimeTreeProvider,
+            treeDataProvider: codetimeMenuTreeProvider,
             showCollapseAll: false
         }
     );
-    codetimeTreeProvider.bindView(codetimeTreeView);
-    cmds.push(connectCodeTimeTreeView(codetimeTreeView));
+    codetimeMenuTreeProvider.bindView(codetimeMenuTreeView);
+    cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
-    // kpm tree view
+    // MENU TREE: REVEAL
+    const displayTreeCmd = commands.registerCommand(
+        "codetime.displayTree",
+        () => {
+            codetimeMenuTreeProvider.revealTree();
+        }
+    );
+    cmds.push(displayTreeCmd);
+
+    // MENU TREE: REFRESH
+    const refreshCodetimeTreeCmd = commands.registerCommand(
+        "codetime.refreshCodetimeMenuTree",
+        () => {
+            codetimeMenuTreeProvider.refresh();
+        }
+    );
+    cmds.push(refreshCodetimeTreeCmd);
+
+    // DAILY METRICS TREE: INIT
     const kpmTreeProvider = new KpmProvider();
     const kpmTreeView: TreeView<KpmItem> = window.createTreeView(
-        "kpm-metrics-tree",
+        "ct-metrics-tree",
         {
             treeDataProvider: kpmTreeProvider,
             showCollapseAll: false
@@ -57,17 +78,31 @@ export function createCommands(
     kpmTreeProvider.bindView(kpmTreeView);
     cmds.push(connectKpmTreeView(kpmTreeView));
 
-    // commit change tree view
-    const commitTreeProvider = new CommitProvider();
-    const commitTreeView: TreeView<KpmItem> = window.createTreeView(
-        "commit-tree",
+    // TEAM TREE: INIT
+    const codetimeTeamTreeProvider = new CodeTimeTeamProvider();
+    const codetimeTeamTreeView: TreeView<KpmItem> = window.createTreeView(
+        "ct-team-tree",
         {
-            treeDataProvider: commitTreeProvider,
+            treeDataProvider: codetimeTeamTreeProvider,
             showCollapseAll: false
         }
     );
-    commitTreeProvider.bindView(commitTreeView);
-    cmds.push(connectCommitTreeView(commitTreeView));
+    codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
+    cmds.push(connectCodeTimeTeamTreeView(codetimeTeamTreeView));
+
+    // TEAM TREE: REFRESH
+    cmds.push(
+        commands.registerCommand("codetime.refreshCodetimeTeamTree", () => {
+            codetimeTeamTreeProvider.refresh();
+        })
+    );
+
+    // TEAM TREE: INVITE MEMBER
+    cmds.push(
+        commands.registerCommand("codetime.inviteTeamMember", () => {
+            //
+        })
+    );
 
     // SEND OFFLINE DATA
     cmds.push(
@@ -81,157 +116,110 @@ export function createCommands(
         commands.registerCommand("codetime.softwareKpmDashboard", () => {
             handleKpmClickedEvent();
             setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeTree");
+                commands.executeCommand("codetime.refreshCodetimeMenuTree");
             }, 500);
         })
     );
 
-    const displayTreeCmd = commands.registerCommand(
-        "codetime.displayTree",
-        () => {
-            codetimeTreeProvider.revealTree();
-        }
-    );
-    cmds.push(displayTreeCmd);
-
-    const openFileInEditorCmd = commands.registerCommand(
-        "codetime.openFileInEditor",
-        file => {
+    cmds.push(
+        commands.registerCommand("codetime.openFileInEditor", file => {
             openFileInEditor(file);
             setTimeout(() => {
                 commands.executeCommand("codetime.refreshKpmTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(openFileInEditorCmd);
 
-    const toggleStatusBarCmd = commands.registerCommand(
-        "codetime.toggleStatusBar",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.toggleStatusBar", () => {
             toggleStatusBar();
             setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeTree");
+                commands.executeCommand("codetime.refreshCodetimeMenuTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(toggleStatusBarCmd);
 
-    const loginCmd = commands.registerCommand("codetime.codeTimeLogin", () => {
-        launchLogin("software");
-    });
-    cmds.push(loginCmd);
+    cmds.push(
+        commands.registerCommand("codetime.codeTimeLogin", () => {
+            launchLogin("software");
+        })
+    );
 
-    const googleLoginCmd = commands.registerCommand(
-        "codetime.googleLogin",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.googleLogin", () => {
             launchLogin("google");
-        }
+        })
     );
-    cmds.push(googleLoginCmd);
 
-    const githubLoginCmd = commands.registerCommand(
-        "codetime.githubLogin",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.githubLogin", () => {
             launchLogin("github");
-        }
+        })
     );
-    cmds.push(githubLoginCmd);
 
-    const refreshCodetimeTreeCmd = commands.registerCommand(
-        "codetime.refreshCodetimeTree",
-        () => {
-            codetimeTreeProvider.refresh();
-        }
-    );
-    cmds.push(refreshCodetimeTreeCmd);
-
-    const refreshKpmTreeCmd = commands.registerCommand(
-        "codetime.refreshKpmTree",
-        keystrokeStats => {
+    // REFRESH DAILY METRICS
+    cmds.push(
+        commands.registerCommand("codetime.refreshKpmTree", keystrokeStats => {
             if (keystrokeStats) {
                 KpmProviderManager.getInstance().setCurrentKeystrokeStats(
                     keystrokeStats
                 );
             }
-            codetimeTreeProvider.refresh();
+            codetimeMenuTreeProvider.refresh();
             kpmTreeProvider.refresh();
-            commitTreeProvider.refresh();
-        }
+        })
     );
-    cmds.push(refreshKpmTreeCmd);
 
-    const refreshCommitTreeCmd = commands.registerCommand(
-        "codetime.refreshCommitTree",
-        () => {
-            commitTreeProvider.refresh();
-        }
-    );
-    cmds.push(refreshCommitTreeCmd);
-
-    const showReadmeCmd = commands.registerCommand(
-        "codetime.displayReadme",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.displayReadme", () => {
             displayReadmeIfNotExists(true /*override*/);
             setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeTree");
+                commands.executeCommand("codetime.refreshCodetimeMenuTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(showReadmeCmd);
 
-    const codeTimeMetricsCmd = commands.registerCommand(
-        "codetime.codeTimeMetrics",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.codeTimeMetrics", () => {
             displayCodeTimeMetricsDashboard();
             setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeTree");
+                commands.executeCommand("codetime.refreshCodetimeMenuTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(codeTimeMetricsCmd);
 
-    const generateProjectSummaryCmd = commands.registerCommand(
-        "codetime.generateProjectSummary",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.generateProjectSummary", () => {
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
             setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeTree");
+                commands.executeCommand("codetime.refreshCodetimeMenuTree");
             }, 500);
-        }
+        })
     );
-    cmds.push(generateProjectSummaryCmd);
 
-    const paletteMenuCmd = commands.registerCommand(
-        "codetime.softwarePaletteMenu",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.softwarePaletteMenu", () => {
             showMenuOptions();
-        }
+        })
     );
-    cmds.push(paletteMenuCmd);
 
-    const top40Cmd = commands.registerCommand(
-        "codetime.viewSoftwareTop40",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.viewSoftwareTop40", () => {
             launchWebUrl("https://api.software.com/music/top40");
-        }
+        })
     );
-    cmds.push(top40Cmd);
 
-    const toggleStatusInfoCmd = commands.registerCommand(
-        "codetime.codeTimeStatusToggle",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.codeTimeStatusToggle", () => {
             handleCodeTimeStatusToggle();
-        }
+        })
     );
-    cmds.push(toggleStatusInfoCmd);
 
-    const sendFeedbackCmd = commands.registerCommand(
-        "codetime.sendFeedback",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.sendFeedback", () => {
             launchWebUrl("mailto:cody@software.com");
-        }
+        })
     );
-    cmds.push(sendFeedbackCmd);
 
     // const addProjectNoteCmd = commands.registerCommand(
     //     "codetime.addProjectNote",
@@ -265,10 +253,7 @@ export function createCommands(
     // );
     // cmds.push(copyToJiraCmd);
 
-    const configChangesHandler = workspace.onDidChangeConfiguration(e =>
-        updatePreferences()
-    );
-    cmds.push(configChangesHandler);
+    cmds.push(workspace.onDidChangeConfiguration(e => updatePreferences()));
 
     return Disposable.from(...cmds);
 }

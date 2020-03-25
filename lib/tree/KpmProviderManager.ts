@@ -5,7 +5,10 @@ import {
     FileChangeInfo,
     CommitChangeStats
 } from "../model/models";
-import { getCachedLoggedInState } from "../DataController";
+import {
+    getCachedLoggedInState,
+    getRegisteredTeamMembers
+} from "../DataController";
 import {
     humanizeMinutes,
     getWorkspaceFolders,
@@ -27,6 +30,9 @@ import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
 import { EventManager } from "../managers/EventManager";
+import TeamMember from "../model/TeamMember";
+import { getTeamMembers, getResourceInfo } from "../repo/KpmRepoManager";
+import { KpmManager } from "../managers/KpmManager";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -48,6 +54,7 @@ export class KpmProviderManager {
     private static instance: KpmProviderManager;
 
     private _currentKeystrokeStats: SessionSummary = new SessionSummary();
+    private _registeredTeamMembers: TeamMember[] = [];
 
     constructor() {
         //
@@ -59,6 +66,15 @@ export class KpmProviderManager {
         }
 
         return KpmProviderManager.instance;
+    }
+
+    public async refreshRegisteredTeamMembers(filePath) {
+        const resourceInfo = await getResourceInfo(filePath);
+        if (resourceInfo && resourceInfo.identifier) {
+            this._registeredTeamMembers = await getRegisteredTeamMembers(
+                resourceInfo.identifier
+            );
+        }
     }
 
     public setCurrentKeystrokeStats(keystrokeStats) {
@@ -195,6 +211,16 @@ export class KpmProviderManager {
         //     "message.svg"
         // );
         // treeItems.push(addProjectNoteButton);
+
+        return treeItems;
+    }
+    async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
+        const treeItems: KpmItem[] = [];
+
+        const kpmTreeParents: KpmItem[] = await this.getKpmTreeParents();
+        treeItems.push(...kpmTreeParents);
+        const commitTreeParents: KpmItem[] = await this.getCommitTreeParents();
+        treeItems.push(...commitTreeParents);
 
         return treeItems;
     }
@@ -368,6 +394,47 @@ export class KpmProviderManager {
                 committedChangesChildren
             );
             treeItems.push(committedChangesParent);
+        }
+
+        return treeItems;
+    }
+
+    async getTeamTreeParents(): Promise<KpmItem[]> {
+        const treeItems: KpmItem[] = [];
+
+        const currentRootPath: string = KpmManager.getInstance()
+            .currentRootPath;
+
+        // async to allo the get team members to run in parallel
+        const refreshTeamMembersP = this.refreshRegisteredTeamMembers(
+            currentRootPath
+        );
+
+        // get team members
+        const teamMembers: TeamMember[] = await getTeamMembers(currentRootPath);
+
+        // await for the registered team members
+        await refreshTeamMembersP;
+
+        if (teamMembers && teamMembers.length) {
+            teamMembers.forEach((member: TeamMember) => {
+                const item: KpmItem = new KpmItem();
+                item.label = member.name;
+                item.description = member.email;
+
+                // check to see if this email is in the registered list
+                const foundUser = this._registeredTeamMembers.find(
+                    (n: TeamMember) => n.email === member.email
+                );
+                if (foundUser) {
+                    item.contextValue = "registered-member";
+                    item.icon = "registered-user.svg";
+                } else {
+                    item.contextValue = "unregistered-member";
+                    item.icon = "unregistered-user.svg";
+                }
+                treeItems.push(item);
+            });
         }
 
         return treeItems;
@@ -796,6 +863,11 @@ export class KpmTreeItem extends TreeItem {
         super(treeItem.label, collapsibleState);
 
         const { lightPath, darkPath, contextValue } = getTreeItemIcon(treeItem);
+
+        if (treeItem.description) {
+            this.description = treeItem.description;
+        }
+
         if (lightPath && darkPath) {
             this.iconPath.light = lightPath;
             this.iconPath.dark = darkPath;
@@ -803,7 +875,8 @@ export class KpmTreeItem extends TreeItem {
             // no matching tag, remove the tree item icon path
             delete this.iconPath;
         }
-        this.contextValue = contextValue;
+
+        this.contextValue = getTreeItemContextValue(treeItem);
     }
 
     get tooltip(): string {
@@ -835,8 +908,17 @@ function getTreeItemIcon(treeItem: KpmItem): any {
         iconName && treeItem.children.length === 0
             ? path.join(resourcePath, "dark", iconName)
             : null;
-    const contextValue = treeItem.contextValue;
-    return { lightPath, darkPath, contextValue };
+    return { lightPath, darkPath };
+}
+
+function getTreeItemContextValue(treeItem: KpmItem): string {
+    if (treeItem.contextValue) {
+        return treeItem.contextValue;
+    }
+    if (treeItem.children.length) {
+        return "parent";
+    }
+    return "child";
 }
 
 export const handleKpmChangeSelection = (

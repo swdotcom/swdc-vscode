@@ -167,7 +167,7 @@ export async function intializePlugin(
     historical_commits_interval = setInterval(async () => {
         const isonline = await serverIsAvailable();
         getHistoricalCommits(isonline);
-        commands.executeCommand("codetime.refreshCommitTree");
+        commands.executeCommand("codetime.refreshKpmTree");
     }, 1000 * 60 * 45);
 
     // every 40 minute tasks

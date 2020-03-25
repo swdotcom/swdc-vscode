@@ -5,6 +5,7 @@ import {
     isWindows,
     getWorkspaceFolders,
     normalizeGithubEmail,
+    getActiveDocument,
     getFileType,
     getActiveProjectWorkspace,
     getFirstWorkspaceFolder
@@ -12,6 +13,9 @@ import {
 import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
 import { WorkspaceFolder } from "vscode";
+import RepoContributorInfo from "../model/RepoContributorInfo";
+import TeamMember from "../model/TeamMember";
+import { KpmManager } from "../managers/KpmManager";
 
 let myRepoInfo = [];
 
@@ -111,19 +115,33 @@ export async function getRepoFileCount(fileName) {
     return resultList.length;
 }
 
-export async function getRepoContributorInfo(fileName) {
+export async function getTeamMembers(
+    fileName: string = ""
+): Promise<TeamMember[]> {
+    if (!fileName) {
+        fileName = getActiveDocument();
+    }
+
+    const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
+        fileName
+    );
+
+    if (repoContributorInfo && repoContributorInfo.members) {
+        return repoContributorInfo.members;
+    }
+
+    return [];
+}
+
+export async function getRepoContributorInfo(
+    fileName
+): Promise<RepoContributorInfo> {
     const projectDir = getProjectDir(fileName);
     if (!projectDir) {
         return null;
     }
 
-    let repoContributorInfo = {
-        identifier: "",
-        tag: "",
-        branch: "",
-        count: 0,
-        members: []
-    };
+    let repoContributorInfo: RepoContributorInfo = new RepoContributorInfo();
 
     // get the repo url, branch, and tag
     let resourceInfo = await getResourceInfo(projectDir);
@@ -154,10 +172,11 @@ export async function getRepoContributorInfo(fileName) {
                 const name = devInfo[0];
                 const email = normalizeGithubEmail(devInfo[1]);
                 if (!map[email]) {
-                    repoContributorInfo.members.push({
-                        name,
-                        email
-                    });
+                    const teamMember: TeamMember = new TeamMember();
+                    teamMember.name = name;
+                    teamMember.email = email;
+                    teamMember.identifier = resourceInfo.identifier;
+                    repoContributorInfo.members.push(teamMember);
                     map[email] = email;
                 }
             });
@@ -207,7 +226,9 @@ export async function processRepoUsersForWorkspace() {
  * get the git repo users
  */
 export async function getRepoUsers(fileName) {
-    const repoContributorInfo = await getRepoContributorInfo(fileName);
+    const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
+        fileName
+    );
 
     if (repoContributorInfo) {
         // send this to the backend

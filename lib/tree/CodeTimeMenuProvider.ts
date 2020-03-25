@@ -18,7 +18,7 @@ const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
 const codetimeCollapsedStateMap = {};
 
-export const connectCodeTimeTreeView = (view: TreeView<KpmItem>) => {
+export const connectCodeTimeMenuTreeView = (view: TreeView<KpmItem>) => {
     return Disposable.from(
         view.onDidCollapseElement(async e => {
             const item: KpmItem = e.element;
@@ -49,7 +49,7 @@ export const connectCodeTimeTreeView = (view: TreeView<KpmItem>) => {
     );
 };
 
-export class CodeTimeProvider implements TreeDataProvider<KpmItem> {
+export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
     private _onDidChangeTreeData: EventEmitter<
         KpmItem | undefined
     > = new EventEmitter<KpmItem | undefined>();

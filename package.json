@@ -51,7 +51,7 @@
             },
             {
                 "command": "codetime.codeTimeMetrics",
-                "title": "Code Time: Generate dashboard"
+                "title": "Code Time: View summary"
             },
             {
                 "command": "codetime.softwareKpmDashboard",
@@ -60,6 +60,14 @@
             {
                 "command": "codetime.displayReadme",
                 "title": "Code Time: Learn more"
+            },
+            {
+                "command": "codetime.inviteTeamMember",
+                "title": "Code Time: Invite to Code Time",
+                "icon": {
+                    "light": "resources/light/envelope.svg",
+                    "dark": "resources/dark/envelope.svg"
+                }
             }
         ],
         "configuration": {
@@ -90,16 +98,25 @@
         "views": {
             "code-time": [
                 {
-                    "id": "kpm-options-tree",
-                    "name": "Menu"
+                    "id": "ct-menu-tree",
+                    "name": "MENU"
                 },
                 {
-                    "id": "kpm-metrics-tree",
-                    "name": "Activity Metrics"
+                    "id": "ct-metrics-tree",
+                    "name": "DAILY METRICS"
                 },
                 {
-                    "id": "commit-tree",
-                    "name": "Project Metrics"
+                    "id": "ct-team-tree",
+                    "name": "TEAM"
+                }
+            ]
+        },
+        "menus": {
+            "view/item/context": [
+                {
+                    "command": "codetime.inviteTeamMember",
+                    "when": "viewItem =~ /unregistered-member/",
+                    "group": "inline@2"
                 }
             ]
         }

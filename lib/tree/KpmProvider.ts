@@ -111,7 +111,7 @@ export class KpmProvider implements TreeDataProvider<KpmItem> {
             kpmItems = element.children;
         } else {
             // return the parent elements
-            kpmItems = await kpmProviderMgr.getKpmTreeParents();
+            kpmItems = await kpmProviderMgr.getDailyMetricsTreeParents();
         }
         return kpmItems;
     }

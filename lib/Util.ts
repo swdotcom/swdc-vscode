@@ -137,7 +137,27 @@ export function getActiveDocument(): string {
     if (window.activeTextEditor && window.activeTextEditor.document) {
         return window.activeTextEditor.document.uri.fsPath;
     }
-    return null;
+    return findFirstActiveDirectoryOrWorkspaceDirectory();
+}
+
+export function findFirstActiveDirectoryOrWorkspaceDirectory(): string {
+    if (getNumberOfTextDocumentsOpen() > 0) {
+        // check if the .software/CodeTime has already been opened
+        for (let i = 0; i < workspace.textDocuments.length; i++) {
+            let docObj = workspace.textDocuments[i];
+            if (docObj.fileName) {
+                const dir = getRootPathForFile(docObj.fileName);
+                if (dir) {
+                    return dir;
+                }
+            }
+        }
+    }
+    const folder: WorkspaceFolder = getFirstWorkspaceFolder();
+    if (folder) {
+        return folder.uri.fsPath;
+    }
+    return "";
 }
 
 /**
@@ -993,7 +1013,7 @@ function getDashboardValue(value, width = DASHBOARD_VALUE_WIDTH) {
 
 function getDashboardDataDisplay(widthLen, data) {
     let len =
-        data.constructor === String
+        data.constructor === String || data.constructor === "string"
             ? widthLen - data.length
             : widthLen - String(data).length;
     let content = "";

@@ -36,7 +36,7 @@ import { LoggedInState, SessionSummary } from "./model/models";
 import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
-import { SummaryManager } from "./managers/SummaryManager";
+import TeamMember from "./model/TeamMember";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -58,6 +58,21 @@ export function getToggleFileEventLoggingState() {
             .get("toggleFileEventLogging");
     }
     return toggleFileEventLogging;
+}
+
+export async function getRegisteredTeamMembers(
+    identifier
+): Promise<TeamMember[]> {
+    const encodedIdentifier = encodeURIComponent(identifier);
+    const api = `/team/members?identifier=${encodedIdentifier}`;
+
+    let teamMembers: TeamMember[] = [];
+    // returns: [{email, name, identifier},..]
+    const resp = await softwareGet(api, getItem("jwt"));
+    if (isResponseOk(resp)) {
+        teamMembers = resp.data;
+    }
+    return teamMembers;
 }
 
 /**
@@ -98,47 +113,7 @@ export async function isLoggedOn(serverIsOnline) {
                     setItem("jwt", pluginJwt);
                 }
 
-                // get the user
-                const user = resp.data.user;
-                // auths object
-                // ------------
-                // access_token:"5s2XDBIR639YIKDSWYKB-SQnR-MHKQD_n8s62PBMKZAnFsIUXQ"
-                // accountId:343
-                // authId:"343"
-                // createdAt:"2020-03-09T01:38:04.000Z"
-                // email:"xavierluiz@yahoo.com"
-                // id:8
-                // password:null
-                // refresh_token:"ZEZZ8UN6RT4GRXXU_U6D-N7CXHLRPUsgg4WPsI7D4KKWU"
-                // salt:null
-                // scopes:null
-                // type:"software"
-                // updatedAt:"2020-03-09T01:38:04.000Z"
-                // url:""
-                // userId:343
-
-                // let latestSeconds = 0;
-                // let authType = "software";
-                // if (user && user.auths) {
-                //     // which auth should we show?
-                //     // "software", "github", "google"
-                //     for (let i = 0; i < user.auths.length; i++) {
-                //         const auth = user.auths[i];
-                //         // use the accountId and updatedAt. it has to match the user Id
-                //         const updatedAtSeconds = moment(auth.updatedAt).unix();
-                //         if (
-                //             auth.accountId &&
-                //             parseInt(auth.accountId, 10) ===
-                //                 parseInt(user.id, 10)
-                //         ) {
-                //             if (updatedAtSeconds > latestSeconds) {
-                //                 authType = auth.type;
-                //             }
-                //         }
-                //     }
-                // }
-
-                // setItem("authType", authType);
+                // if we need the user it's "resp.data.user"
 
                 return { loggedOn: true, state };
             }
@@ -376,7 +351,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
         commands.executeCommand("codetime.sendOfflineData");
 
-        commands.executeCommand("codetime.refreshCodetimeTree");
+        commands.executeCommand("codetime.refreshCodetimeMenuTree");
     }
 }
 
