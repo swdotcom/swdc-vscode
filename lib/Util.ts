@@ -115,7 +115,7 @@ export function getFileAgeInDays(file) {
 }
 
 export function getActiveProjectWorkspace(): WorkspaceFolder {
-    const activeDocPath = getActiveDocument();
+    const activeDocPath = getActiveRootPath();
     if (activeDocPath) {
         if (
             workspace.workspaceFolders &&
@@ -133,7 +133,7 @@ export function getActiveProjectWorkspace(): WorkspaceFolder {
     return null;
 }
 
-export function getActiveDocument(): string {
+export function getActiveRootPath(): string {
     if (window.activeTextEditor && window.activeTextEditor.document) {
         return window.activeTextEditor.document.uri.fsPath;
     }

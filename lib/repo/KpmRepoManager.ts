@@ -5,7 +5,7 @@ import {
     isWindows,
     getWorkspaceFolders,
     normalizeGithubEmail,
-    getActiveDocument,
+    getActiveRootPath,
     getFileType,
     getActiveProjectWorkspace,
     getFirstWorkspaceFolder
@@ -119,7 +119,7 @@ export async function getTeamMembers(
     fileName: string = ""
 ): Promise<TeamMember[]> {
     if (!fileName) {
-        fileName = getActiveDocument();
+        fileName = getActiveRootPath();
     }
 
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
