@@ -1,5 +1,9 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import { handleKpmClickedEvent, updatePreferences } from "./DataController";
+import {
+    handleKpmClickedEvent,
+    updatePreferences,
+    sendTeamInvite
+} from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
     showMenuOptions
@@ -99,9 +103,16 @@ export function createCommands(
 
     // TEAM TREE: INVITE MEMBER
     cmds.push(
-        commands.registerCommand("codetime.inviteTeamMember", () => {
-            //
-        })
+        commands.registerCommand(
+            "codetime.inviteTeamMember",
+            (item: KpmItem) => {
+                // the identifier will be in the value
+                const identifier = item.value;
+                // email will be the description
+                const email = item.description;
+                sendTeamInvite(identifier, [email]);
+            }
+        )
     );
 
     // SEND OFFLINE DATA

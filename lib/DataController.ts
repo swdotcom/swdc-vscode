@@ -75,6 +75,20 @@ export async function getRegisteredTeamMembers(
     return teamMembers;
 }
 
+export async function sendTeamInvite(identifier, emails) {
+    const payload = {
+        identifier,
+        emails
+    };
+    const api = `/team/invite`;
+    const resp = await softwarePost(api, payload, getItem("jwt"));
+    if (isResponseOk(resp)) {
+        window.showInformationMessage("Sent team invitation.");
+    } else {
+        window.showErrorMessage(resp.data.message);
+    }
+}
+
 /**
  * get the app jwt
  */

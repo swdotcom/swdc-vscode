@@ -171,7 +171,7 @@ export async function getRepoContributorInfo(
                 const devInfo = listInfo.split(",");
                 const name = devInfo[0];
                 const email = normalizeGithubEmail(devInfo[1]);
-                if (!map[email]) {
+                if (email && !map[email]) {
                     const teamMember: TeamMember = new TeamMember();
                     teamMember.name = name;
                     teamMember.email = email;

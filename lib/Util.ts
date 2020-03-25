@@ -737,13 +737,13 @@ function execPromise(command, opts) {
 }
 
 export function normalizeGithubEmail(email) {
-    if (email) {
-        email = email.replace("users.noreply.", "");
-        if (NUMBER_IN_EMAIL_REGEX.test(email)) {
-            // take out the 1st part
-            email = email.substring(email.indexOf("+") + 1);
-        }
+    if (
+        (email && email.endsWith("github.com")) ||
+        email.includes("users.noreply")
+    ) {
+        return null;
     }
+
     return email;
 }
 

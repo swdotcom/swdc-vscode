@@ -421,6 +421,7 @@ export class KpmProviderManager {
                 const item: KpmItem = new KpmItem();
                 item.label = member.name;
                 item.description = member.email;
+                item.value = member.identifier;
 
                 // check to see if this email is in the registered list
                 const foundUser = this._registeredTeamMembers.find(

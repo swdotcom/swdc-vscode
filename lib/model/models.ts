@@ -7,6 +7,7 @@ export class KpmItem {
     id: string = "";
     label: string = "";
     description: string = "";
+    value: string = "";
     tooltip: string = "";
     command: string = "";
     commandArgs: any[] = [];
