@@ -737,11 +737,10 @@ function execPromise(command, opts) {
 }
 
 export function normalizeGithubEmail(email) {
-    if (
-        (email && email.endsWith("github.com")) ||
-        email.includes("users.noreply")
-    ) {
-        return null;
+    if (email) {
+        if (email.endsWith("github.com") || email.includes("users.noreply")) {
+            return null;
+        }
     }
 
     return email;
