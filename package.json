@@ -115,7 +115,7 @@
             "view/item/context": [
                 {
                     "command": "codetime.inviteTeamMember",
-                    "when": "viewItem =~ /unregistered-member/",
+                    "when": "viewItem =~ /.*registered-member/",
                     "group": "inline@2"
                 }
             ]

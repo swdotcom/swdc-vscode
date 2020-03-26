@@ -118,7 +118,7 @@ export function getFileAgeInDays(file) {
 }
 
 export function getActiveProjectWorkspace(): WorkspaceFolder {
-    const activeDocPath = getActiveRootPath();
+    const activeDocPath = findFirstActiveDirectoryOrWorkspaceDirectory();
     if (activeDocPath) {
         if (
             workspace.workspaceFolders &&
@@ -134,13 +134,6 @@ export function getActiveProjectWorkspace(): WorkspaceFolder {
         }
     }
     return null;
-}
-
-export function getActiveRootPath(): string {
-    if (window.activeTextEditor && window.activeTextEditor.document) {
-        return window.activeTextEditor.document.uri.fsPath;
-    }
-    return findFirstActiveDirectoryOrWorkspaceDirectory();
 }
 
 export function findFirstActiveDirectoryOrWorkspaceDirectory(): string {

@@ -5,17 +5,13 @@ import {
     isWindows,
     getWorkspaceFolders,
     normalizeGithubEmail,
-    getActiveRootPath,
     getFileType,
-    getActiveProjectWorkspace,
-    getFirstWorkspaceFolder
+    findFirstActiveDirectoryOrWorkspaceDirectory
 } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
-import { WorkspaceFolder } from "vscode";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
-import { KpmManager } from "../managers/KpmManager";
 
 let myRepoInfo = [];
 
@@ -119,7 +115,7 @@ export async function getTeamMembers(
     fileName: string = ""
 ): Promise<TeamMember[]> {
     if (!fileName) {
-        fileName = getActiveRootPath();
+        fileName = findFirstActiveDirectoryOrWorkspaceDirectory();
     }
 
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
@@ -211,14 +207,9 @@ export async function getResourceInfo(projectDir) {
 }
 
 export async function processRepoUsersForWorkspace() {
-    let activeWorkspaceFolder: WorkspaceFolder = getActiveProjectWorkspace();
-    if (activeWorkspaceFolder) {
-        getRepoUsers(activeWorkspaceFolder.uri.fsPath);
-    } else {
-        activeWorkspaceFolder = getFirstWorkspaceFolder();
-        if (activeWorkspaceFolder) {
-            getRepoUsers(activeWorkspaceFolder.uri.fsPath);
-        }
+    let activeWorkspaceDir: string = findFirstActiveDirectoryOrWorkspaceDirectory();
+    if (activeWorkspaceDir) {
+        getRepoUsers(activeWorkspaceDir);
     }
 }
 

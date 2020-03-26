@@ -20,6 +20,20 @@ export async function getCommandResult(cmd, projectDir) {
     return resultList;
 }
 
+export async function getCommandResultString(cmd, projectDir) {
+    let result = await wrapExecPromise(cmd, projectDir);
+    if (!result) {
+        // something went wrong, but don't try to parse a null or undefined str
+        return null;
+    }
+    result = result.trim();
+    result = result
+        .replace(/\r\n/g, "\r")
+        .replace(/\n/g, "\r")
+        .replace(/^\s+/g, " ");
+    return result;
+}
+
 /**
  * Looks through all of the lines for
  * files changed, insertions, and deletions and aggregates
@@ -110,4 +124,9 @@ export async function getTodaysCommits(projectDir) {
             : ``;
     const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${startOfDay}${authorOption}`;
     return getChangeStats(projectDir, cmd);
+}
+
+export async function getRepoConfigUserEmail(projectDir) {
+    const cmd = `git config --get --global user.email`;
+    return await getCommandResultString(cmd, projectDir);
 }

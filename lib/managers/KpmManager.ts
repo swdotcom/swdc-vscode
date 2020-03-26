@@ -16,7 +16,7 @@ import {
     getFileAgeInDays,
     getFileType,
     showInformationMessage,
-    getActiveRootPath
+    findFirstActiveDirectoryOrWorkspaceDirectory
 } from "../Util";
 import {
     getRepoContributorInfo,
@@ -47,7 +47,7 @@ export class KpmManager {
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
         this._disposable = Disposable.from(...subscriptions);
 
-        this.currentRootPath = getActiveRootPath();
+        this.currentRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
     }
 
     static getInstance(): KpmManager {
