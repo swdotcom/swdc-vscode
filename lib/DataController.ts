@@ -25,6 +25,7 @@ import {
     getSectionHeader,
     humanizeMinutes,
     getDashboardRow,
+    getDashboardBottomBorder,
     getDashboardFile,
     getProjectCodeSummaryFile,
     getProjectContributorCodeSummaryFile,
@@ -470,7 +471,7 @@ export async function writeProjectCommitDashboard(
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
     if (isResponseOk(result)) {
-        const codeCommitData = result.data;
+        let codeCommitData = result.data;
         // create the title
         const formattedDate = moment().format("ddd, MMM Do h:mma");
         dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
@@ -480,6 +481,8 @@ export async function writeProjectCommitDashboard(
         const { rangeStart, rangeEnd } = createStartEndRangeByType(type);
 
         if (codeCommitData && codeCommitData.length) {
+            // filter out null project names
+            codeCommitData = codeCommitData.filter(n => n.name);
             codeCommitData.forEach(el => {
                 dashboardContent += getDashboardRow(
                     el.name,
@@ -494,17 +497,19 @@ export async function writeProjectCommitDashboard(
                 // keystrokes
                 const keystrokes = el.keystrokes
                     ? formatNumber(el.keystrokes)
-                    : 0;
+                    : formatNumber(0);
                 dashboardContent += getDashboardRow("Keystrokes", keystrokes);
 
                 // commits
-                const commits = el.commits ? formatNumber(el.commits) : 0;
+                const commits = el.commits
+                    ? formatNumber(el.commits)
+                    : formatNumber(0);
                 dashboardContent += getDashboardRow("Commits", commits);
 
                 // files_changed
                 const files_changed = el.files_changed
                     ? formatNumber(el.files_changed)
-                    : 0;
+                    : formatNumber(0);
                 dashboardContent += getDashboardRow(
                     "Files changed",
                     files_changed
@@ -513,14 +518,16 @@ export async function writeProjectCommitDashboard(
                 // insertions
                 const insertions = el.insertions
                     ? formatNumber(el.insertions)
-                    : 0;
+                    : formatNumber(0);
                 dashboardContent += getDashboardRow("Insertions", insertions);
 
                 // deletions
-                const deletions = el.deletions ? formatNumber(el.deletions) : 0;
+                const deletions = el.deletions
+                    ? formatNumber(el.deletions)
+                    : formatNumber(0);
                 dashboardContent += getDashboardRow("Deletions", deletions);
 
-                dashboardContent += "\n";
+                dashboardContent += getDashboardBottomBorder();
             });
         } else {
             dashboardContent += "No data available";

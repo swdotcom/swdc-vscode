@@ -34,8 +34,8 @@ const os = require("os");
 const crypto = require("crypto");
 
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-export const DASHBOARD_LABEL_WIDTH = 30;
-export const DASHBOARD_VALUE_WIDTH = 25;
+export const DASHBOARD_LABEL_WIDTH = 28;
+export const DASHBOARD_VALUE_WIDTH = 36;
 export const DASHBOARD_COL_WIDTH = 21;
 export const DASHBOARD_LRG_COL_WIDTH = 38;
 export const TABLE_WIDTH = 80;
@@ -957,7 +957,10 @@ export function showWarningMessage(message: string) {
 }
 
 export function getDashboardRow(label, value, isSectionHeader = false) {
-    let content = `${getDashboardLabel(label)} : ${getDashboardValue(value)}\n`;
+    const spacesRequired = DASHBOARD_LABEL_WIDTH - label.length;
+    const spaces = getSpaces(spacesRequired);
+    const dashboardVal = getDashboardValue(value, isSectionHeader);
+    let content = `${label}${spaces}${dashboardVal}\n`;
     if (isSectionHeader) {
         // add 3 to account for the " : " between the columns
         const dashLen = content.length;
@@ -969,10 +972,20 @@ export function getDashboardRow(label, value, isSectionHeader = false) {
     return content;
 }
 
+export function getDashboardBottomBorder() {
+    let content = "";
+    const len = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH;
+    for (let i = 0; i < len; i++) {
+        content += "-";
+    }
+    content += "\n\n";
+    return content;
+}
+
 export function getSectionHeader(label) {
     let content = `${label}\n`;
     // add 3 to account for the " : " between the columns
-    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 15;
+    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH;
     for (let i = 0; i < dashLen; i++) {
         content += "-";
     }
@@ -991,9 +1004,12 @@ function formatRightAlignedTableLabel(label, col_width) {
     return `${spaces}${label}`;
 }
 
-export function getTableHeader(leftLabel, rightLabel) {
+export function getTableHeader(leftLabel, rightLabel, isFullTable = true) {
     // get the space between the two labels
-    const spacesRequired = TABLE_WIDTH - leftLabel.length - rightLabel.length;
+    const fullLen = !isFullTable
+        ? TABLE_WIDTH - DASHBOARD_COL_WIDTH
+        : TABLE_WIDTH;
+    const spacesRequired = fullLen - leftLabel.length - rightLabel.length;
     let spaces = "";
     if (spacesRequired > 0) {
         let str = "";
@@ -1118,23 +1134,20 @@ function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
     return getDashboardDataDisplay(width, label);
 }
 
-function getDashboardValue(value, width = DASHBOARD_VALUE_WIDTH) {
-    let valueContent = getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
-    let paddedContent = "";
-    for (let i = 0; i < 11; i++) {
-        paddedContent += " ";
+function getDashboardValue(value, isSectionHeader = false) {
+    const spacesRequired = DASHBOARD_VALUE_WIDTH - value.length - 2;
+    let spaces = getSpaces(spacesRequired);
+    if (!isSectionHeader) {
+        return `: ${spaces}${value}`;
+    } else {
+        // we won't show the column divider in the header
+        return `  ${spaces}${value}`;
     }
-    paddedContent += valueContent;
-    return paddedContent;
 }
 
 function getDashboardDataDisplay(widthLen, data) {
-    let len =
-        data.constructor === String || data.constructor === "string"
-            ? widthLen - data.length
-            : widthLen - String(data).length;
     let content = "";
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < widthLen; i++) {
         content += " ";
     }
     return `${content}${data}`;
