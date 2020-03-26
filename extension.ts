@@ -161,19 +161,19 @@ export async function intializePlugin(
     // every 50 minutes check repo members
     setInterval(() => {
         processRepoUsersForWorkspace();
-    }, 1000 * 60 * 50);
+    }, 1000 * 60 * 15);
 
     // every 45 minute tasks
     historical_commits_interval = setInterval(async () => {
         const isonline = await serverIsAvailable();
         getHistoricalCommits(isonline);
         commands.executeCommand("codetime.refreshKpmTree");
-    }, 1000 * 60 * 45);
+    }, 1000 * 60 * 15);
 
     // every 40 minute tasks
     historical_commits_interval = setInterval(async () => {
         sendOfflineEvents();
-    }, 1000 * 60 * 40);
+    }, 1000 * 60 * 30);
 
     // every hour tasks
     setInterval(async () => {
