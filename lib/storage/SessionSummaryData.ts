@@ -123,8 +123,9 @@ export async function incrementSessionSummaryData(
 
     // what is the gap from the previous start
     const incrementMinutes = getMinutesSinceLastPayload();
-
-    sessionSummaryData.currentDayMinutes += incrementMinutes;
+    if (incrementMinutes > 0) {
+        sessionSummaryData.currentDayMinutes += incrementMinutes;
+    }
 
     const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     const session_seconds = sessionSummaryData.currentDayMinutes * 60;

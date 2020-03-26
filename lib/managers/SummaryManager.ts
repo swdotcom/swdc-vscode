@@ -55,8 +55,9 @@ export class SummaryManager {
     async newDayChecker(isInit = false) {
         const nowTime = getNowTimes();
         if (nowTime.day !== this._currentDay) {
+            clearSessionSummaryData();
             // send the offline data
-            await sendOfflineData();
+            await sendOfflineData(true);
 
             // send the offline TimeData payloads
             await sendOfflineTimeData();
@@ -66,7 +67,7 @@ export class SummaryManager {
             // and the file change info summary data
             wallClockMgr.clearWcTime();
             clearTimeDataSummary();
-            clearSessionSummaryData();
+
             clearFileChangeInfoSummaryData();
 
             // set the current day
@@ -79,7 +80,7 @@ export class SummaryManager {
         }
     }
 
-    async updateSessionSummaryFromServer() {
+    async updateSessionSummaryFromServer(isNewDay = false) {
         const jwt = getItem("jwt");
         const result = await softwareGet(`/sessions/summary?refresh=true`, jwt);
         if (isResponseOk(result) && result.data) {
@@ -91,7 +92,13 @@ export class SummaryManager {
             Object.keys(data).forEach(key => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
-                    summary[key] = val;
+                    if (key === "currentDayMinutes" && !isNewDay) {
+                        if (summary.currentDayMinutes < val) {
+                            summary.currentDayMinutes = val;
+                        }
+                    } else {
+                        summary[key] = val;
+                    }
                 }
             });
 

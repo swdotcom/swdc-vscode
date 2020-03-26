@@ -34,12 +34,12 @@ export async function sendOfflineEvents() {
 /**
  * send the offline data.
  */
-export async function sendOfflineData() {
+export async function sendOfflineData(isNewDay = false) {
     batchSendData("/data/batch", getSoftwareDataStoreFile());
 
     // fetch to get the users averages
     setTimeout(() => {
-        SummaryManager.getInstance().updateSessionSummaryFromServer();
+        SummaryManager.getInstance().updateSessionSummaryFromServer(isNewDay);
     }, 1000 * 60);
 }
 

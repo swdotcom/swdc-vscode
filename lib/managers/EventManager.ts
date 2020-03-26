@@ -9,7 +9,8 @@ import {
     getItem,
     getPluginEventsFile,
     getNowTimes,
-    getHostname
+    getHostname,
+    setItem
 } from "../Util";
 import * as path from "path";
 import { softwarePost } from "../http/HttpClient";
@@ -109,11 +110,6 @@ export class EventManager {
         // write the fileChangeInfoMap
         saveFileChangeInfoToDisk(fileChangeInfoMap);
 
-        setTimeout(() => {
-            // refresh the tree view
-            commands.executeCommand("codetime.refreshKpmTree");
-        }, 1000);
-
         // store the payload into the data.json file
 
         fs.appendFile(
@@ -126,6 +122,10 @@ export class EventManager {
                     );
             }
         );
+        // set the end time for the session
+        let nowTimes = getNowTimes();
+        // Update the latestPayloadTimestampEndUtc. It's used to determine session time
+        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }
 
     storeEvent(event) {

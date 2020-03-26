@@ -17,7 +17,12 @@ import {
     logIt,
     findFirstActiveDirectoryOrWorkspaceDirectory
 } from "../Util";
-import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
+import {
+    getUncommitedChanges,
+    getTodaysCommits,
+    getLastCommitId,
+    getRepoUrlLink
+} from "../repo/GitUtil";
 import {
     WorkspaceFolder,
     TreeItem,
@@ -415,6 +420,8 @@ export class KpmProviderManager {
         // await for the registered team members
         await refreshTeamMembersP;
 
+        const remoteUrl: string = await getRepoUrlLink(activeRootPath);
+
         if (teamMembers && teamMembers.length) {
             // get the 1st one to get the identifier
             const titleItem: KpmItem = new KpmItem();
@@ -424,11 +431,28 @@ export class KpmProviderManager {
             titleItem.commandArgs = [teamMembers[0].identifier];
             treeItems.push(titleItem);
 
-            teamMembers.forEach((member: TeamMember) => {
+            for (let i = 0; i < teamMembers.length; i++) {
+                const member: TeamMember = teamMembers[i];
                 const item: KpmItem = new KpmItem();
                 item.label = member.name;
                 item.description = member.email;
                 item.value = member.identifier;
+
+                // get their last commit
+                const lastCommitInfo: any = await getLastCommitId(
+                    activeRootPath,
+                    member.email
+                );
+                if (lastCommitInfo && Object.keys(lastCommitInfo).length) {
+                    // add this as child
+                    const commitItem: KpmItem = new KpmItem();
+                    commitItem.label = lastCommitInfo.comment;
+                    commitItem.command = "codetime.launchCommitUrl";
+                    commitItem.commandArgs = [
+                        `${remoteUrl}/commit/${lastCommitInfo.commitId}`
+                    ];
+                    item.children = [commitItem];
+                }
 
                 // check to see if this email is in the registered list
                 const foundUser = this._registeredTeamMembers.find(
@@ -442,7 +466,7 @@ export class KpmProviderManager {
                     item.icon = "unregistered-user.svg";
                 }
                 treeItems.push(item);
-            });
+            }
         }
 
         return treeItems;

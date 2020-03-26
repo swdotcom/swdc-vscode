@@ -50,7 +50,7 @@ const moment = require("moment-timezone");
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
 let toggleFileEventLogging = null;
-
+let slackFetchTimeout = null;
 let userFetchTimeout = null;
 
 export function getConnectState() {
@@ -195,6 +195,22 @@ export async function getUserStatus() {
 
     cacheMgr.set("connectState", connectState, expireInSec);
     return connectState;
+}
+
+export async function getSlackOauth(serverIsOnline) {
+    let jwt = getItem("jwt");
+    if (serverIsOnline && jwt) {
+        let user = await getUser(serverIsOnline, jwt);
+        if (user && user.auths) {
+            // get the one that is "slack"
+            for (let i = 0; i < user.auths.length; i++) {
+                if (user.auths[i].type === "slack") {
+                    setItem("slack_access_token", user.auths[i].access_token);
+                    return user.auths[i];
+                }
+            }
+        }
+    }
 }
 
 export async function getUser(serverIsOnline, jwt) {
@@ -372,6 +388,30 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         commands.executeCommand("codetime.sendOfflineData");
 
         commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    }
+}
+
+export function refetchSlackConnectStatusLazily(tryCountUntilFound = 40) {
+    if (slackFetchTimeout) {
+        return;
+    }
+    slackFetchTimeout = setTimeout(() => {
+        slackFetchTimeout = null;
+        slackConnectStatusHandler(tryCountUntilFound);
+    }, 10000);
+}
+
+async function slackConnectStatusHandler(tryCountUntilFound) {
+    let serverIsOnline = await serverIsAvailable();
+    let oauth = await getSlackOauth(serverIsOnline);
+    if (!oauth) {
+        // try again if the count is not zero
+        if (tryCountUntilFound > 0) {
+            tryCountUntilFound -= 1;
+            refetchSlackConnectStatusLazily(tryCountUntilFound);
+        }
+    } else {
+        window.showInformationMessage(`Successfully connected to Slack`);
     }
 }
 

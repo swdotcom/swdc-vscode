@@ -31,6 +31,7 @@ import {
     connectCodeTimeTeamTreeView
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
+import { disconnectSlack, connectSlack } from "./menu/SlackManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -136,18 +137,12 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.softwareKpmDashboard", () => {
             handleKpmClickedEvent();
-            setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeMenuTree");
-            }, 500);
         })
     );
 
     cmds.push(
         commands.registerCommand("codetime.openFileInEditor", file => {
             openFileInEditor(file);
-            setTimeout(() => {
-                commands.executeCommand("codetime.refreshKpmTree");
-            }, 500);
         })
     );
 
@@ -194,27 +189,18 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.displayReadme", () => {
             displayReadmeIfNotExists(true /*override*/);
-            setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeMenuTree");
-            }, 500);
         })
     );
 
     cmds.push(
         commands.registerCommand("codetime.codeTimeMetrics", () => {
             displayCodeTimeMetricsDashboard();
-            setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeMenuTree");
-            }, 500);
         })
     );
 
     cmds.push(
         commands.registerCommand("codetime.generateProjectSummary", () => {
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
-            setTimeout(() => {
-                commands.executeCommand("codetime.refreshCodetimeMenuTree");
-            }, 500);
         })
     );
 
@@ -225,6 +211,12 @@ export function createCommands(
                 displayProjectContributorCommitsDashboard(identifier);
             }
         )
+    );
+
+    cmds.push(
+        commands.registerCommand("codetime.launchCommitUrl", commitLink => {
+            launchWebUrl(commitLink);
+        })
     );
 
     cmds.push(
@@ -248,6 +240,20 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.sendFeedback", () => {
             launchWebUrl("mailto:cody@software.com");
+        })
+    );
+
+    // CONNECT SLACK
+    cmds.push(
+        commands.registerCommand("codetime.connectSlack", () => {
+            connectSlack();
+        })
+    );
+
+    // DISCONNECT SLACK
+    cmds.push(
+        commands.registerCommand("codetime.disconnectSlack", () => {
+            disconnectSlack();
         })
     );
 

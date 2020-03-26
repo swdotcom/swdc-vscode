@@ -68,6 +68,14 @@
                     "light": "resources/light/envelope.svg",
                     "dark": "resources/dark/envelope.svg"
                 }
+            },
+            {
+                "command": "codetime.connectSlack",
+                "title": "Code Time: Connect Slack",
+                "icon": {
+                    "light": "resources/light/slack.svg",
+                    "dark": "resources/dark/slack.svg"
+                }
             }
         ],
         "configuration": {
@@ -112,11 +120,11 @@
             ]
         },
         "menus": {
-            "view/item/context": [
+            "view/title": [
                 {
-                    "command": "codetime.inviteTeamMember",
-                    "when": "viewItem =~ /.*registered-member/",
-                    "group": "inline@2"
+                    "command": "codetime.connectSlack",
+                    "group": "navigation@1",
+                    "when": "view =~ /ct-team-tree/"
                 }
             ]
         }
@@ -131,7 +139,7 @@
         "webpack-cli": "^3.3.10"
     },
     "dependencies": {
-        "@slack/web-api": "^5.0.1",
+        "@slack/web-api": "^5.8.0",
         "aws-sdk": "^2.470.0",
         "axios": "^0.19.0",
         "clipboardy": "^2.1.0",

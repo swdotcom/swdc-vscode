@@ -126,7 +126,33 @@ export async function getTodaysCommits(projectDir) {
     return getChangeStats(projectDir, cmd);
 }
 
+export async function getLastCommitId(projectDir, email) {
+    const authorOption = email ? ` --author=${email}` : "";
+    const cmd = `git log --pretty="%H,%s"${authorOption} | tail -n 1`;
+    const list = await getCommandResult(cmd, projectDir);
+    if (list && list.length) {
+        const parts = list[0].split(",");
+        if (parts && parts.length === 2) {
+            return {
+                commitId: parts[0],
+                comment: parts[1]
+            };
+        }
+    }
+    return {};
+}
+
 export async function getRepoConfigUserEmail(projectDir) {
     const cmd = `git config --get --global user.email`;
     return await getCommandResultString(cmd, projectDir);
+}
+
+export async function getRepoUrlLink(projectDir) {
+    const cmd = `git config --get remote.origin.url`;
+    let str = await getCommandResultString(cmd, projectDir);
+
+    if (str && str.endsWith(".git")) {
+        str = str.substring(0, str.lastIndexOf(".git"));
+    }
+    return str;
 }

@@ -14,17 +14,17 @@
   resolved "https://registry.yarnpkg.com/@slack/types/-/types-1.2.1.tgz#132d50d02efb452c9a58573964b22f5f18ab9b1a"
   integrity sha512-NyGh7MibW+a0OHkwwOPlv63hC639dzQdkFy4dj0tl4sAdZR4OBaE/OhXixKhCzcT3kJsPXaQmvkUN7sqSf52iA==
 
-"@slack/web-api@^5.0.1":
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/@slack/web-api/-/web-api-5.5.0.tgz#b542f4a3500e79da93fae1a751dc5f8ffab2df14"
-  integrity sha512-XBlUXIeWJLnfJakWiWzfpkRaEy7amGXOCWbblHT3ndJ/BIAIcLf1JOvnQOupBT85RC3/8IWKRCrcMDzNNAbxyA==
+"@slack/web-api@^5.8.0":
+  version "5.8.0"
+  resolved "https://registry.yarnpkg.com/@slack/web-api/-/web-api-5.8.0.tgz#32858ed22e6af7b825e8952ad8e60088bb04cc0b"
+  integrity sha512-lUMFM9jtdn+9Q0kHLegf5RjIgQlmb1PGWwWdTsc9mQ8PJu2BogI5ZttG8/tA6r2bX/C4bgXhd0JJ4syUR0AAhQ==
   dependencies:
     "@slack/logger" ">=1.0.0 <3.0.0"
     "@slack/types" "^1.2.1"
     "@types/is-stream" "^1.1.0"
     "@types/node" ">=8.9.0"
     "@types/p-queue" "^2.3.2"
-    axios "^0.18.0"
+    axios "^0.19.0"
     eventemitter3 "^3.1.0"
     form-data "^2.5.0"
     is-stream "^1.1.0"
@@ -350,14 +350,6 @@ aws-sdk@^2.470.0:
     url "^0.10.3"
     uuid "^3.3.2"
     xml2js "^0.4.19"
-
-axios@^0.18.0:
-  version "0.18.1"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.18.1.tgz#ff3f0de2e7b5d180e757ad98000f1081b87bcea3"
-  integrity sha512-0BfJq4NSfQXd+SkFdrvFbG7addhYSBA2mQwISr46pD6E5iqkWg02RAs8vyTT/j0RTnoYmeXauBuSv1qKwR179g==
-  dependencies:
-    follow-redirects "1.5.10"
-    is-buffer "^2.0.2"
 
 axios@^0.19.0:
   version "0.19.0"

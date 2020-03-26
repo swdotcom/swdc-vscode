@@ -102,9 +102,6 @@ export class KeystrokeStats {
         // set the end time for the session
         let nowTimes = getNowTimes();
 
-        // Update the latestPayloadTimestampEndUtc. It's used to determine session time
-        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
-
         // get the payload
         const payload = JSON.parse(JSON.stringify(this));
 
@@ -164,7 +161,7 @@ export class KeystrokeStats {
         if (sendNow) {
             eventHandler.sendBatchPayload("/data/batch", [payload]);
         } else {
-            eventHandler.storePayload(payload);
+            await eventHandler.storePayload(payload);
             logIt(`storing kpm metrics`);
         }
     }

@@ -318,7 +318,6 @@ export class KpmManager {
                     }
                 }
             }
-            commands.executeCommand("codetime.refreshKpmTree", keystrokeStats);
             _treeRefreshTimer = null;
         }, 2000);
     }
