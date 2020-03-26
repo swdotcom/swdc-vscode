@@ -605,19 +605,19 @@ export async function writeProjectContributorCommitDashboard(identifier) {
             ]);
 
             // show the metrics now
-            const userHours = summary.activity.session_seconds
-                ? humanizeMinutes(summary.activity.session_seconds / 60)
-                : humanizeMinutes(0);
-            const contribHours = summary.contributorActivity.session_seconds
-                ? humanizeMinutes(
-                      summary.contributorActivity.session_seconds / 60
-                  )
-                : humanizeMinutes(0);
-            dashboardContent += getRowLabels([
-                "Code time",
-                userHours,
-                contribHours
-            ]);
+            // const userHours = summary.activity.session_seconds
+            //     ? humanizeMinutes(summary.activity.session_seconds / 60)
+            //     : humanizeMinutes(0);
+            // const contribHours = summary.contributorActivity.session_seconds
+            //     ? humanizeMinutes(
+            //           summary.contributorActivity.session_seconds / 60
+            //       )
+            //     : humanizeMinutes(0);
+            // dashboardContent += getRowLabels([
+            //     "Code time",
+            //     userHours,
+            //     contribHours
+            // ]);
 
             // commits
             dashboardContent += getRowNumberData(summary, "Commits", "commits");
