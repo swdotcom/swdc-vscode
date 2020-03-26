@@ -68,14 +68,6 @@
                     "light": "resources/light/envelope.svg",
                     "dark": "resources/dark/envelope.svg"
                 }
-            },
-            {
-                "command": "codetime.connectSlack",
-                "title": "Code Time: Connect Slack",
-                "icon": {
-                    "light": "resources/light/slack.svg",
-                    "dark": "resources/dark/slack.svg"
-                }
             }
         ],
         "configuration": {
@@ -116,15 +108,6 @@
                 {
                     "id": "ct-team-tree",
                     "name": "CONTRIBUTORS"
-                }
-            ]
-        },
-        "menus": {
-            "view/title": [
-                {
-                    "command": "codetime.connectSlack",
-                    "group": "navigation@1",
-                    "when": "view =~ /ct-team-tree/"
                 }
             ]
         }

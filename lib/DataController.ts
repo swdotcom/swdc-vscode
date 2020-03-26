@@ -387,7 +387,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
         commands.executeCommand("codetime.sendOfflineData");
 
-        commands.executeCommand("codetime.refreshCodetimeMenuTree");
+        commands.executeCommand("codetime.refreshTreeViews");
     }
 }
 

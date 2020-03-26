@@ -10,6 +10,11 @@ import { window } from "vscode";
  * This won't be available until they've connected to spotify
  */
 export async function connectSlack() {
+    const slackAccessToken = getItem("slack_access_token");
+    if (slackAccessToken) {
+        window.showInformationMessage("Slack is already connected");
+        return;
+    }
     const jwt = getItem("jwt");
     const encodedJwt = encodeURIComponent(jwt);
     const qryStr = `integrate=slack&plugin=musictime&token=${encodedJwt}`;
@@ -42,6 +47,54 @@ export async function disconnectSlack() {
     }
 }
 
+async function showSlackMessageInputPrompt() {
+    return await window.showInputBox({
+        value: "",
+        placeHolder: "Enter a message to appear in the selected channel",
+        validateInput: text => {
+            return !text ? "Please enter a valid message to continue." : null;
+        }
+    });
+}
+
+export async function slackContributor() {
+    const selectedChannel = await showSlackChannelMenu();
+    if (!selectedChannel) {
+        return;
+    }
+    // !!! important, need to use the get instance as this
+    // method may be called within a callback and "this" will be undefined !!!
+    const message = await showSlackMessageInputPrompt();
+    if (!message) {
+        return;
+    }
+    const slackAccessToken = getItem("slack_access_token");
+    const msg = `${message}`;
+    const web = new WebClient(slackAccessToken);
+    await web.chat
+        .postMessage({
+            text: msg,
+            channel: selectedChannel,
+            as_user: true
+        })
+        .catch(err => {
+            // try without sending "as_user"
+            web.chat
+                .postMessage({
+                    text: msg,
+                    channel: selectedChannel
+                })
+                .catch(err => {
+                    if (err.message) {
+                        console.log(
+                            "error posting slack message: ",
+                            err.message
+                        );
+                    }
+                });
+        });
+}
+
 export async function showSlackChannelMenu() {
     let menuOptions = {
         items: [],
@@ -69,7 +122,7 @@ async function getChannels() {
     const slackAccessToken = getItem("slack_access_token");
     const web = new WebClient(slackAccessToken);
     const result = await web.channels
-        .list({ exclude_archived: true, exclude_members: true })
+        .list({ exclude_archived: true, exclude_members: false })
         .catch(err => {
             console.log("Unable to retrieve slack channels: ", err.message);
             return [];

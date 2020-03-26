@@ -31,7 +31,6 @@ import {
     connectCodeTimeTeamTreeView
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
-import { disconnectSlack, connectSlack } from "./menu/SlackManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -99,6 +98,14 @@ export function createCommands(
     // TEAM TREE: REFRESH
     cmds.push(
         commands.registerCommand("codetime.refreshCodetimeTeamTree", () => {
+            codetimeTeamTreeProvider.refresh();
+        })
+    );
+
+    cmds.push(
+        commands.registerCommand("codetime.refreshTreeViews", () => {
+            codetimeMenuTreeProvider.refresh();
+            kpmTreeProvider.refresh();
             codetimeTeamTreeProvider.refresh();
         })
     );
@@ -181,7 +188,6 @@ export function createCommands(
                     keystrokeStats
                 );
             }
-            codetimeMenuTreeProvider.refresh();
             kpmTreeProvider.refresh();
         })
     );
@@ -243,19 +249,26 @@ export function createCommands(
         })
     );
 
-    // CONNECT SLACK
-    cmds.push(
-        commands.registerCommand("codetime.connectSlack", () => {
-            connectSlack();
-        })
-    );
+    // // CONNECT SLACK
+    // cmds.push(
+    //     commands.registerCommand("codetime.connectSlack", () => {
+    //         connectSlack();
+    //     })
+    // );
 
-    // DISCONNECT SLACK
-    cmds.push(
-        commands.registerCommand("codetime.disconnectSlack", () => {
-            disconnectSlack();
-        })
-    );
+    // // DISCONNECT SLACK
+    // cmds.push(
+    //     commands.registerCommand("codetime.disconnectSlack", () => {
+    //         disconnectSlack();
+    //     })
+    // );
+
+    // // SLACK CONTRIBUTOR
+    // cmds.push(
+    //     commands.registerCommand("musictime.slackContributor", () => {
+    //         slackContributor();
+    //     })
+    // );
 
     // const addProjectNoteCmd = commands.registerCommand(
     //     "codetime.addProjectNote",
