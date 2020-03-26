@@ -36,6 +36,9 @@ const crypto = require("crypto");
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const DASHBOARD_LABEL_WIDTH = 30;
 export const DASHBOARD_VALUE_WIDTH = 25;
+export const DASHBOARD_COL_WIDTH = 21;
+export const DASHBOARD_LRG_COL_WIDTH = 38;
+export const TABLE_WIDTH = 80;
 export const MARKER_WIDTH = 4;
 
 const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
@@ -978,6 +981,118 @@ export function getSectionHeader(label) {
     // add 3 to account for the " : " between the columns
     let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 15;
     for (let i = 0; i < dashLen; i++) {
+        content += "-";
+    }
+    content += "\n";
+    return content;
+}
+
+function formatRightAlignedTableLabel(label, col_width) {
+    const spacesRequired = col_width - label.length;
+    let spaces = "";
+    if (spacesRequired > 0) {
+        for (let i = 0; i < spacesRequired; i++) {
+            spaces += " ";
+        }
+    }
+    return `${spaces}${label}`;
+}
+
+export function getTableHeader(leftLabel, rightLabel) {
+    // get the space between the two labels
+    const spacesRequired = TABLE_WIDTH - leftLabel.length - rightLabel.length;
+    let spaces = "";
+    if (spacesRequired > 0) {
+        let str = "";
+        for (let i = 0; i < spacesRequired; i++) {
+            spaces += " ";
+        }
+    }
+    return `${leftLabel}${spaces}${rightLabel}`;
+}
+
+export function getRightAlignedTableHeader(label) {
+    let content = `${formatRightAlignedTableLabel(label, TABLE_WIDTH)}\n`;
+    for (let i = 0; i < TABLE_WIDTH; i++) {
+        content += "-";
+    }
+    content += "\n";
+    return content;
+}
+
+function getSpaces(spacesRequired) {
+    let spaces = "";
+    if (spacesRequired > 0) {
+        let str = "";
+        for (let i = 0; i < spacesRequired; i++) {
+            spaces += " ";
+        }
+    }
+    return spaces;
+}
+
+export function getRowLabels(labels) {
+    // for now 3 columns
+    let content = "";
+    let spacesRequired = 0;
+    for (let i = 0; i < labels.length; i++) {
+        const label = labels[i];
+        if (i === 0) {
+            content += label;
+            // show a colon at the end of this column
+            spacesRequired = DASHBOARD_COL_WIDTH - content.length - 1;
+            content += getSpaces(spacesRequired);
+            content += ":";
+        } else if (i === 1) {
+            // middle column
+            spacesRequired =
+                DASHBOARD_LRG_COL_WIDTH +
+                DASHBOARD_COL_WIDTH -
+                content.length -
+                label.length -
+                1;
+            content += getSpaces(spacesRequired);
+            content += `${label} `;
+        } else {
+            // last column, get spaces until the end
+            spacesRequired = DASHBOARD_COL_WIDTH - label.length - 2;
+            content += `| `;
+            content += getSpaces(spacesRequired);
+            content += label;
+        }
+    }
+    content += "\n";
+    return content;
+}
+
+export function getColumnHeaders(labels) {
+    // for now 3 columns
+    let content = "";
+    let spacesRequired = 0;
+    for (let i = 0; i < labels.length; i++) {
+        const label = labels[i];
+        if (i === 0) {
+            content += label;
+        } else if (i === 1) {
+            // middle column
+            spacesRequired =
+                DASHBOARD_LRG_COL_WIDTH +
+                DASHBOARD_COL_WIDTH -
+                content.length -
+                label.length -
+                1;
+            content += getSpaces(spacesRequired);
+            content += `${label} `;
+        } else {
+            // last column, get spaces until the end
+            spacesRequired = DASHBOARD_COL_WIDTH - label.length - 2;
+            content += `| `;
+            content += getSpaces(spacesRequired);
+            content += label;
+        }
+    }
+    content += "\n";
+    for (let i = 0; i < TABLE_WIDTH; i++) {
         content += "-";
     }
     content += "\n";

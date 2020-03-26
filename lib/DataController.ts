@@ -29,7 +29,11 @@ import {
     getProjectCodeSummaryFile,
     getProjectContributorCodeSummaryFile,
     isLinux,
-    formatNumber
+    formatNumber,
+    getRightAlignedTableHeader,
+    getRowLabels,
+    getTableHeader,
+    getColumnHeaders
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
@@ -446,13 +450,22 @@ export async function writeCommitSummaryData() {
     }
 }
 
+let buildingProjectCommitReport = false;
+
 export async function writeProjectCommitDashboard(
     type = "lastWeek",
     projectIds = []
 ) {
+    if (buildingProjectCommitReport) {
+        return;
+    }
+    buildingProjectCommitReport = true;
+    window.showInformationMessage("Generating project summary, please wait...");
+
     const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
+    buildingProjectCommitReport = false;
     let dashboardContent = "";
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
@@ -526,25 +539,103 @@ export async function writeProjectCommitDashboard(
     });
 }
 
+let buildingContributorReport = false;
+
 export async function writeProjectContributorCommitDashboard(identifier) {
+    if (buildingContributorReport) {
+        return;
+    }
+    buildingContributorReport = true;
+    window.showInformationMessage(
+        "Generating contributor summary, please wait..."
+    );
     const qryStr = `?identifier=${encodeURIComponent(identifier)}`;
     const api = `/projects/contributorSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
+    buildingContributorReport = false;
     let dashboardContent = "";
+
+    // [{timestamp, activity, contributorActivity},...]
+    // the activity and contributorActivity will have the following structure
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
     if (isResponseOk(result)) {
-        const codeCommitData = result.data;
+        const data = result.data;
         // create the title
-        const formattedDate = moment().format("ddd, MMM Do h:mma");
-        dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
+        const now = moment().unix();
+        const formattedDate = moment.unix(now).format("ddd, MMM Do h:mma");
+        dashboardContent = getTableHeader(
+            "PROJECT SUMMARY",
+            ` (Last updated on ${formattedDate})`
+        );
+        dashboardContent += "\n\n";
+        dashboardContent += `Project: ${identifier}`;
         dashboardContent += "\n\n";
 
-        // create the header
+        for (let i = 0; i < data.length; i++) {
+            const summary = data[i];
+            let projectDate = moment.unix(now).format("MMM Do, YYYY");
+            if (i === 0) {
+                projectDate = `Today (${projectDate})`;
+            } else if (i === 1) {
+                let startDate = moment
+                    .unix(now)
+                    .startOf("week")
+                    .format("MMM Do, YYYY");
+                projectDate = `This week (${startDate} to ${projectDate})`;
+            } else {
+                let startDate = moment
+                    .unix(now)
+                    .startOf("month")
+                    .format("MMM Do, YYYY");
+                projectDate = `This month (${startDate} to ${projectDate})`;
+            }
+            dashboardContent += getRightAlignedTableHeader(projectDate);
+            dashboardContent += getColumnHeaders([
+                "Metric",
+                "You",
+                "All Contributors"
+            ]);
 
-        if (codeCommitData && codeCommitData.length) {
-        } else {
-            dashboardContent += "No data available";
+            // show the metrics now
+            const userHours = summary.activity.session_seconds
+                ? humanizeMinutes(summary.activity.session_seconds / 60)
+                : humanizeMinutes(0);
+            const contribHours = summary.contributorActivity.session_seconds
+                ? humanizeMinutes(
+                      summary.contributorActivity.session_seconds / 60
+                  )
+                : humanizeMinutes(0);
+            dashboardContent += getRowLabels([
+                "Code time",
+                userHours,
+                contribHours
+            ]);
+
+            // commits
+            dashboardContent += getRowNumberData(summary, "Commits", "commits");
+
+            // files changed
+            dashboardContent += getRowNumberData(
+                summary,
+                "Files changed",
+                "files_changed"
+            );
+
+            // insertions
+            dashboardContent += getRowNumberData(
+                summary,
+                "Insertions",
+                "insertions"
+            );
+
+            // deletions
+            dashboardContent += getRowNumberData(
+                summary,
+                "Deletions",
+                "deletions"
+            );
+            dashboardContent += "\n";
         }
 
         dashboardContent += "\n";
@@ -558,6 +649,17 @@ export async function writeProjectContributorCommitDashboard(identifier) {
             );
         }
     });
+}
+
+function getRowNumberData(summary, title, attribute) {
+    // files changed
+    const userFilesChanged = summary.activity[attribute]
+        ? formatNumber(summary.activity[attribute])
+        : formatNumber(0);
+    const contribFilesChanged = summary.contributorActivity[attribute]
+        ? formatNumber(summary.contributorActivity[attribute])
+        : formatNumber(0);
+    return getRowLabels([title, userFilesChanged, contribFilesChanged]);
 }
 
 function createStartEndRangeByType(type = "lastWeek") {

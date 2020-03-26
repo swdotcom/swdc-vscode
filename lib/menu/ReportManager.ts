@@ -2,7 +2,10 @@ import {
     writeProjectCommitDashboard,
     writeProjectContributorCommitDashboard
 } from "../DataController";
-import { getProjectCodeSummaryFile } from "../Util";
+import {
+    getProjectCodeSummaryFile,
+    getProjectContributorCodeSummaryFile
+} from "../Util";
 import { workspace, window, ViewColumn } from "vscode";
 
 export async function displayProjectCommitsDashboard(
@@ -24,7 +27,7 @@ export async function displayProjectCommitsDashboard(
 export async function displayProjectContributorCommitsDashboard(identifier) {
     // 1st write the code time metrics dashboard file
     await writeProjectContributorCommitDashboard(identifier);
-    const filePath = getProjectCodeSummaryFile();
+    const filePath = getProjectContributorCodeSummaryFile();
 
     workspace.openTextDocument(filePath).then(doc => {
         // only focus if it's not already open

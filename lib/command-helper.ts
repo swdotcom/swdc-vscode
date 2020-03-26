@@ -112,7 +112,7 @@ export function createCommands(
                 // email will be the description
                 const email = item.description;
                 const name = item.label;
-                const msg = `Send an invitation to ${name} (${email}) to join the ${identifier} team?`;
+                const msg = `Send invitation to ${email}?`;
                 const selection = await window.showInformationMessage(
                     msg,
                     { modal: true },

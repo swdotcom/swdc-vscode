@@ -14,7 +14,8 @@ import {
     getWorkspaceFolders,
     getItem,
     isStatusBarTextVisible,
-    logIt
+    logIt,
+    getActiveRootPath
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits } from "../repo/GitUtil";
 import {
@@ -402,16 +403,14 @@ export class KpmProviderManager {
     async getTeamTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
 
-        const currentRootPath: string = KpmManager.getInstance()
-            .currentRootPath;
-
+        const activeRootPath = getActiveRootPath();
         // async to allo the get team members to run in parallel
         const refreshTeamMembersP = this.refreshRegisteredTeamMembers(
-            currentRootPath
+            activeRootPath
         );
 
         // get team members
-        const teamMembers: TeamMember[] = await getTeamMembers(currentRootPath);
+        const teamMembers: TeamMember[] = await getTeamMembers(activeRootPath);
 
         // await for the registered team members
         await refreshTeamMembersP;
