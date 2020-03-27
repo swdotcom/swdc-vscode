@@ -34,15 +34,22 @@ import {
     getRightAlignedTableHeader,
     getRowLabels,
     getTableHeader,
-    getColumnHeaders
+    getColumnHeaders,
+    findFirstActiveDirectoryOrWorkspaceDirectory
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { LoggedInState, SessionSummary } from "./model/models";
+import {
+    LoggedInState,
+    SessionSummary,
+    CommitChangeStats
+} from "./model/models";
 import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
+import { getTodayTimeDataSummary } from "./storage/TimeSummaryData";
+import { getTodaysCommits, getThisWeeksCommits } from "./repo/GitUtil";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -491,22 +498,13 @@ export async function writeCommitSummaryData() {
     }
 }
 
-let buildingProjectCommitReport = false;
-
 export async function writeProjectCommitDashboard(
     type = "lastWeek",
     projectIds = []
 ) {
-    if (buildingProjectCommitReport) {
-        return;
-    }
-    buildingProjectCommitReport = true;
-    window.showInformationMessage("Generating project summary, please wait...");
-
     const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
-    buildingProjectCommitReport = false;
     let dashboardContent = "";
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
@@ -588,6 +586,104 @@ export async function writeProjectCommitDashboard(
 
 let buildingContributorReport = false;
 
+export async function writeProjectContributorCommitDashboardFromGitLogs(
+    identifier
+) {
+    if (buildingContributorReport) {
+        return;
+    }
+    buildingContributorReport = true;
+    window.showInformationMessage(
+        "Generating contributor summary, please wait..."
+    );
+    const activeRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
+    const userTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
+        activeRootPath
+    );
+    const userWeeksChangeStatsP: Promise<CommitChangeStats> = getThisWeeksCommits(
+        activeRootPath
+    );
+    const contributorsTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
+        activeRootPath,
+        false
+    );
+    const contributorsWeeksChangeStatsP: Promise<CommitChangeStats> = getThisWeeksCommits(
+        activeRootPath,
+        false
+    );
+
+    let dashboardContent = "";
+
+    const now = moment().unix();
+    const formattedDate = moment.unix(now).format("ddd, MMM Do h:mma");
+    dashboardContent = getTableHeader(
+        "PROJECT SUMMARY",
+        ` (Last updated on ${formattedDate})`
+    );
+    dashboardContent += "\n\n";
+    dashboardContent += `Project: ${identifier}`;
+    dashboardContent += "\n\n";
+
+    let projectDate = moment.unix(now).format("MMM Do, YYYY");
+    dashboardContent += getRightAlignedTableHeader(`Today (${projectDate})`);
+    dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
+
+    let summary = {
+        activity: await userTodaysChangeStatsP,
+        contributorActivity: await contributorsTodaysChangeStatsP
+    };
+    dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
+
+    // files changed
+    dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
+
+    // insertions
+    dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
+
+    // deletions
+    dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
+
+    dashboardContent += "\n";
+
+    projectDate = moment.unix(now).format("MMM Do, YYYY");
+    let startDate = moment
+        .unix(now)
+        .startOf("week")
+        .format("MMM Do, YYYY");
+    dashboardContent += getRightAlignedTableHeader(
+        `This week (${startDate} to ${projectDate})`
+    );
+    dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
+
+    summary = {
+        activity: await userWeeksChangeStatsP,
+        contributorActivity: await contributorsWeeksChangeStatsP
+    };
+    dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
+
+    // files changed
+    dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
+
+    // insertions
+    dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
+
+    // deletions
+    dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
+
+    dashboardContent += "\n";
+
+    const file = getProjectContributorCodeSummaryFile();
+    fs.writeFileSync(file, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the code time summary content file: ${err.message}`
+            );
+        }
+    });
+
+    buildingContributorReport = false;
+}
+
 export async function writeProjectContributorCommitDashboard(identifier) {
     if (buildingContributorReport) {
         return;
@@ -596,6 +692,7 @@ export async function writeProjectContributorCommitDashboard(identifier) {
     window.showInformationMessage(
         "Generating contributor summary, please wait..."
     );
+
     const qryStr = `?identifier=${encodeURIComponent(identifier)}`;
     const api = `/projects/contributorSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));

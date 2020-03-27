@@ -429,6 +429,7 @@ export class KpmProviderManager {
             titleItem.icon = "icons8-github.svg";
             titleItem.command = "codetime.generateContributorSummary";
             titleItem.commandArgs = [teamMembers[0].identifier];
+            titleItem.tooltip = "Generate contributor commit summary";
             treeItems.push(titleItem);
 
             for (let i = 0; i < teamMembers.length; i++) {
@@ -894,7 +895,7 @@ export class KpmTreeItem extends TreeItem {
     ) {
         super(treeItem.label, collapsibleState);
 
-        const { lightPath, darkPath, contextValue } = getTreeItemIcon(treeItem);
+        const { lightPath, darkPath } = getTreeItemIcon(treeItem);
 
         if (treeItem.description) {
             this.description = treeItem.description;

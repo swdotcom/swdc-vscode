@@ -66,6 +66,7 @@ export class SummaryManager {
             // the session summary, time data summary,
             // and the file change info summary data
             wallClockMgr.clearWcTime();
+
             clearTimeDataSummary();
 
             clearFileChangeInfoSummaryData();

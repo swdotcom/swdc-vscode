@@ -3,7 +3,8 @@ import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { updateEditorSeconds } from "../storage/TimeSummaryData";
 
-const CLOCK_INTERVAL = 1000 * 30;
+const SECONDS_INTERVAL = 30;
+const CLOCK_INTERVAL = 1000 * SECONDS_INTERVAL;
 
 export class WallClockManager {
     private static instance: WallClockManager;
@@ -40,11 +41,11 @@ export class WallClockManager {
             if (window.state.focused) {
                 // set the wctime
                 this._wctime = getItem("wctime") || 0;
-                this._wctime += 30;
+                this._wctime += SECONDS_INTERVAL;
                 setItem("wctime", this._wctime);
 
                 // update the file info file
-                this.updateTimeData(30);
+                updateEditorSeconds(SECONDS_INTERVAL);
             }
 
             // dispatch to the various views (statusbar and treeview)
@@ -75,12 +76,6 @@ export class WallClockManager {
     public setWcTime(seconds) {
         this._wctime = seconds;
         setItem("wctime", seconds);
-
-        this.dispatchStatusViewUpdate();
-    }
-
-    private async updateTimeData(editor_seconds_for_project) {
-        await updateEditorSeconds(editor_seconds_for_project);
 
         this.dispatchStatusViewUpdate();
     }

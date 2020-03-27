@@ -113,16 +113,37 @@ export async function getUncommitedChanges(
     return getChangeStats(projectDir, cmd);
 }
 
-export async function getTodaysCommits(projectDir) {
+export async function getTodaysCommits(
+    projectDir,
+    useAuthor = true
+): Promise<CommitChangeStats> {
     const startOfDay = moment()
         .startOf("day")
         .unix();
+    return getCommitsBySinceTimestamp(projectDir, startOfDay, useAuthor);
+}
+
+export async function getThisWeeksCommits(
+    projectDir,
+    useAuthor = true
+): Promise<CommitChangeStats> {
+    const startOfWeek = moment()
+        .startOf("week")
+        .unix();
+    return getCommitsBySinceTimestamp(projectDir, startOfWeek, useAuthor);
+}
+
+async function getCommitsBySinceTimestamp(
+    projectDir,
+    timestamp,
+    useAuthor = true
+) {
     const resourceInfo = await getResourceInfo(projectDir);
     const authorOption =
-        resourceInfo && resourceInfo.email
+        useAuthor && resourceInfo && resourceInfo.email
             ? ` --author=${resourceInfo.email}`
             : ``;
-    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${startOfDay}${authorOption}`;
+    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${timestamp}${authorOption}`;
     return getChangeStats(projectDir, cmd);
 }
 

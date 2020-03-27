@@ -109,6 +109,12 @@ export class KeystrokeStats {
         payload["local_end"] = nowTimes.local_now_in_sec;
         const keys = Object.keys(payload.source);
 
+        // set the cumulative_editor_seconds for this file
+        const timeDataSummary: TimeData = await getTodayTimeDataSummary(
+            payload.project
+        );
+        let editorSeconds = timeDataSummary.editor_seconds;
+
         // go through each file and make sure the end time is set
         // and the cumulative_editor_seconds is set
         if (keys && keys.length > 0) {
@@ -124,26 +130,7 @@ export class KeystrokeStats {
                         nowTimes.local_now_in_sec;
                 }
 
-                // set the cumulative_editor_seconds for this file
-                const timeDataSummary: TimeData = await getTodayTimeDataSummary(
-                    payload.project
-                );
-
-                const file_time =
-                    payload.source[key].end - payload.source[key].start;
-
-                if (timeDataSummary) {
-                    let editorSeconds = timeDataSummary.editor_seconds;
-                    const diffSeconds =
-                        payload.source[key].end - timeDataSummary.now_local;
-                    if (diffSeconds > 0) {
-                        editorSeconds += diffSeconds;
-                    }
-                    payload["cumulative_editor_seconds"] = editorSeconds;
-                } else {
-                    // use the file seconds as this may be the 1st payload of the day
-                    payload["cumulative_editor_seconds"] = file_time;
-                }
+                payload["cumulative_editor_seconds"] = editorSeconds;
             }
         }
 

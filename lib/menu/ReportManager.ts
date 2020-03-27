@@ -1,6 +1,7 @@
 import {
     writeProjectCommitDashboard,
-    writeProjectContributorCommitDashboard
+    writeProjectContributorCommitDashboard,
+    writeProjectContributorCommitDashboardFromGitLogs
 } from "../DataController";
 import {
     getProjectCodeSummaryFile,
@@ -26,7 +27,7 @@ export async function displayProjectCommitsDashboard(
 
 export async function displayProjectContributorCommitsDashboard(identifier) {
     // 1st write the code time metrics dashboard file
-    await writeProjectContributorCommitDashboard(identifier);
+    await writeProjectContributorCommitDashboardFromGitLogs(identifier);
     const filePath = getProjectContributorCodeSummaryFile();
 
     workspace.openTextDocument(filePath).then(doc => {
