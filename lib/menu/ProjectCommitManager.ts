@@ -2,10 +2,32 @@ import { window, QuickPickItem } from "vscode";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { getItem } from "../Util";
 import Checkbox from "../models/checkbox";
-import { displayProjectCommitsDashboard } from "./ReportManager";
+import {
+    displayProjectCommitsDashboard,
+    generateDailyReport
+} from "./ReportManager";
 
 export class ProjectCommitManager {
     private static instance: ProjectCommitManager;
+
+    private items: any[] = [
+        {
+            label: "Yesterday",
+            value: "yesterday"
+        },
+        {
+            label: "This week",
+            value: "currentWeek"
+        },
+        {
+            label: "Last week",
+            value: "lastWeek"
+        },
+        {
+            label: "Last month",
+            value: "lastMonth"
+        }
+    ];
 
     private constructor() {
         //
@@ -19,26 +41,26 @@ export class ProjectCommitManager {
         return ProjectCommitManager.instance;
     }
 
+    async launchDailyReportMenuFlow() {
+        const pickItems: QuickPickItem[] = this.items.map(item => {
+            return {
+                label: item.label,
+                value: item.value
+            } as QuickPickItem;
+        });
+
+        const pick = await window.showQuickPick(pickItems, {
+            placeHolder: "Select a date range"
+        });
+
+        if (pick && pick.label) {
+            return this.launchProjectSelectionMenu(pick["value"], true);
+        }
+        return null;
+    }
+
     async launchProjectCommitMenuFlow() {
-        const items = [
-            {
-                label: "Yesterday",
-                value: "yesterday"
-            },
-            {
-                label: "This week",
-                value: "currentWeek"
-            },
-            {
-                label: "Last week",
-                value: "lastWeek"
-            },
-            {
-                label: "Last month",
-                value: "lastMonth"
-            }
-        ];
-        const pickItems: QuickPickItem[] = items.map(item => {
+        const pickItems: QuickPickItem[] = this.items.map(item => {
             return {
                 label: item.label,
                 value: item.value
@@ -49,12 +71,12 @@ export class ProjectCommitManager {
             placeHolder: "Select a date range"
         });
         if (pick && pick.label) {
-            return this.launchProjectSelectionMenu(pick["value"]);
+            return this.launchProjectSelectionMenu(pick["value"], false);
         }
         return null;
     }
 
-    async launchProjectSelectionMenu(dateRange) {
+    async launchProjectSelectionMenu(dateRange, isDailyReport = false) {
         const checkboxes: Checkbox[] = await this.getAllCheckboxes(dateRange);
         const pickItems: QuickPickItem[] = checkboxes.map(checkbox => {
             return {
@@ -79,8 +101,12 @@ export class ProjectCommitManager {
             picks.forEach(item => {
                 projectIds.push(...item["value"]);
             });
-            // show it
-            displayProjectCommitsDashboard(dateRange, projectIds);
+            if (!isDailyReport) {
+                // show it
+                displayProjectCommitsDashboard(dateRange, projectIds);
+            } else {
+                generateDailyReport(dateRange, projectIds);
+            }
         }
         return null;
     }

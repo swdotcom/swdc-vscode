@@ -35,7 +35,8 @@ import {
     getRowLabels,
     getTableHeader,
     getColumnHeaders,
-    findFirstActiveDirectoryOrWorkspaceDirectory
+    findFirstActiveDirectoryOrWorkspaceDirectory,
+    getDailyReportSummaryFile
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
@@ -398,27 +399,33 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     }
 }
 
-export function refetchSlackConnectStatusLazily(tryCountUntilFound = 40) {
+export function refetchSlackConnectStatusLazily(
+    callback,
+    tryCountUntilFound = 40
+) {
     if (slackFetchTimeout) {
         return;
     }
     slackFetchTimeout = setTimeout(() => {
         slackFetchTimeout = null;
-        slackConnectStatusHandler(tryCountUntilFound);
+        slackConnectStatusHandler(callback, tryCountUntilFound);
     }, 10000);
 }
 
-async function slackConnectStatusHandler(tryCountUntilFound) {
+async function slackConnectStatusHandler(callback, tryCountUntilFound) {
     let serverIsOnline = await serverIsAvailable();
     let oauth = await getSlackOauth(serverIsOnline);
     if (!oauth) {
         // try again if the count is not zero
         if (tryCountUntilFound > 0) {
             tryCountUntilFound -= 1;
-            refetchSlackConnectStatusLazily(tryCountUntilFound);
+            refetchSlackConnectStatusLazily(callback, tryCountUntilFound);
         }
     } else {
         window.showInformationMessage(`Successfully connected to Slack`);
+        if (callback) {
+            callback();
+        }
     }
 }
 
@@ -496,6 +503,22 @@ export async function writeCommitSummaryData() {
             }
         });
     }
+}
+
+export async function writeDailyReportDashboard(
+    type = "yesterday",
+    projectIds = []
+) {
+    let dashboardContent = "";
+
+    const file = getDailyReportSummaryFile();
+    fs.writeFileSync(file, dashboardContent, err => {
+        if (err) {
+            logIt(
+                `Error writing to the daily report content file: ${err.message}`
+            );
+        }
+    });
 }
 
 export async function writeProjectCommitDashboard(

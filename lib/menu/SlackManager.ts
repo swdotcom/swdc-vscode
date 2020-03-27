@@ -1,15 +1,42 @@
 import { api_endpoint } from "../Constants";
-import { getItem, launchWebUrl, setItem } from "../Util";
+import {
+    getItem,
+    launchWebUrl,
+    setItem,
+    getDailyReportSummaryFile
+} from "../Util";
 import { refetchSlackConnectStatusLazily } from "../DataController";
 const { WebClient } = require("@slack/web-api");
 import { showQuickPick } from "./MenuManager";
 import { softwarePut } from "../http/HttpClient";
 import { window } from "vscode";
+const fs = require("fs");
+
+export async function sendGeneratedReportReport() {
+    const slackAccessToken = getItem("slack_access_token");
+    if (!slackAccessToken) {
+        const connectConfirm = await window.showInformationMessage(
+            "Connect Slack to continue",
+            ...["Yes"]
+        );
+        if (connectConfirm && connectConfirm === "Yes") {
+            connectSlack(sendGeneratedReportReport);
+        }
+    } else {
+        const filePath = getDailyReportSummaryFile();
+        const content = fs.readFileSync(filePath).toString();
+        const selectedChannel = await showSlackChannelMenu();
+        if (!selectedChannel) {
+            return;
+        }
+        sendSlackMessage(content, selectedChannel);
+    }
+}
 
 /**
  * This won't be available until they've connected to spotify
  */
-export async function connectSlack() {
+export async function connectSlack(callback = null) {
     const slackAccessToken = getItem("slack_access_token");
     if (slackAccessToken) {
         window.showInformationMessage("Slack is already connected");
@@ -22,7 +49,7 @@ export async function connectSlack() {
     // authorize the user for slack
     const endpoint = `${api_endpoint}/auth/slack?${qryStr}`;
     launchWebUrl(endpoint);
-    refetchSlackConnectStatusLazily();
+    refetchSlackConnectStatusLazily(callback);
 }
 
 export async function disconnectSlack() {
@@ -68,6 +95,10 @@ export async function slackContributor() {
     if (!message) {
         return;
     }
+    sendSlackMessage(message, selectedChannel);
+}
+
+export async function sendSlackMessage(message: string, selectedChannel) {
     const slackAccessToken = getItem("slack_access_token");
     const msg = `${message}`;
     const web = new WebClient(slackAccessToken);

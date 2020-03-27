@@ -14,7 +14,8 @@ import {
     launchLogin,
     openFileInEditor,
     displayReadmeIfNotExists,
-    toggleStatusBar
+    toggleStatusBar,
+    getItem
 } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -31,6 +32,11 @@ import {
     connectCodeTimeTeamTreeView
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
+import {
+    connectSlack,
+    disconnectSlack,
+    slackContributor
+} from "./menu/SlackManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -267,6 +273,13 @@ export function createCommands(
     // cmds.push(
     //     commands.registerCommand("musictime.slackContributor", () => {
     //         slackContributor();
+    //     })
+    // );
+
+    // // GENERATE SLACK REPORT
+    // cmds.push(
+    //     commands.registerCommand("codetime.generateDailyReport", () => {
+    //         ProjectCommitManager.getInstance().launchDailyReportMenuFlow();
     //     })
     // );
 

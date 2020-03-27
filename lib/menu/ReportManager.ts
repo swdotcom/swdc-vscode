@@ -1,13 +1,15 @@
 import {
     writeProjectCommitDashboard,
-    writeProjectContributorCommitDashboard,
-    writeProjectContributorCommitDashboardFromGitLogs
+    writeProjectContributorCommitDashboardFromGitLogs,
+    writeDailyReportDashboard
 } from "../DataController";
 import {
     getProjectCodeSummaryFile,
-    getProjectContributorCodeSummaryFile
+    getProjectContributorCodeSummaryFile,
+    getDailyReportSummaryFile
 } from "../Util";
 import { workspace, window, ViewColumn } from "vscode";
+import { sendGeneratedReportReport } from "./SlackManager";
 
 export async function displayProjectCommitsDashboard(
     type = "lastWeek",
@@ -34,6 +36,25 @@ export async function displayProjectContributorCommitsDashboard(identifier) {
         // only focus if it's not already open
         window.showTextDocument(doc, ViewColumn.One, false).then(e => {
             // done
+        });
+    });
+}
+
+export async function generateDailyReport(type = "yesterday", projectIds = []) {
+    await writeDailyReportDashboard(type, projectIds);
+    const filePath = getDailyReportSummaryFile();
+
+    workspace.openTextDocument(filePath).then(doc => {
+        // only focus if it's not already open
+        window.showTextDocument(doc, ViewColumn.One, false).then(async e => {
+            const submitToSlack = await window.showInformationMessage(
+                "Submit report to slack?",
+                ...["Yes"]
+            );
+            if (submitToSlack && submitToSlack === "Yes") {
+                // take the content and send it to a selected channel
+                sendGeneratedReportReport();
+            }
         });
     });
 }

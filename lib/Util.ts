@@ -442,6 +442,16 @@ export function getProjectContributorCodeSummaryFile() {
     return file;
 }
 
+export function getDailyReportSummaryFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\DailyReportSummary.txt";
+    } else {
+        file += "/DailyReportSummary.txt";
+    }
+    return file;
+}
+
 export function getSoftwareDir(autoCreate = true) {
     const homedir = os.homedir();
     let softwareDataDir = homedir;

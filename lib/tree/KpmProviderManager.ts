@@ -188,6 +188,14 @@ export class KpmProviderManager {
         );
         treeItems.push(feedbackButton);
 
+        // const submitReportButton: KpmItem = this.getActionButton(
+        //     "Generate daily report",
+        //     "",
+        //     "codetime.generateDailyReport",
+        //     "sticky-note.svg"
+        // );
+        // treeItems.push(submitReportButton);
+
         const reportDividerButton: KpmItem = this.getActionButton(
             "",
             "",
