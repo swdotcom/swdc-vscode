@@ -699,9 +699,8 @@ export function getLastPayloadTimestampDay(latestPayloadTimestamp) {
  * Return the local and utc unix and day values
  */
 export function getNowTimes() {
-    const UTC = moment.utc();
-    const now_in_sec = UTC.unix();
-    const local = moment(UTC).local();
+    const now_in_sec = moment().unix();
+    const local = moment().local();
     const offset_in_sec = moment.parseZone(local).utcOffset() * 60;
     const local_now_in_sec = now_in_sec + offset_in_sec;
     const day = moment()

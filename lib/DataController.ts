@@ -50,7 +50,11 @@ import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
 import { getTodayTimeDataSummary } from "./storage/TimeSummaryData";
-import { getTodaysCommits, getThisWeeksCommits } from "./repo/GitUtil";
+import {
+    getTodaysCommits,
+    getThisWeeksCommits,
+    getYesterdaysCommits
+} from "./repo/GitUtil";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -623,10 +627,17 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     const userTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
         activeRootPath
     );
+    const userYesterdaysChangeStatsP: Promise<CommitChangeStats> = getYesterdaysCommits(
+        activeRootPath
+    );
     const userWeeksChangeStatsP: Promise<CommitChangeStats> = getThisWeeksCommits(
         activeRootPath
     );
     const contributorsTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
+        activeRootPath,
+        false
+    );
+    const contributorsYesterdaysChangeStatsP: Promise<CommitChangeStats> = getYesterdaysCommits(
         activeRootPath,
         false
     );
@@ -668,8 +679,34 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
 
     dashboardContent += "\n";
 
+    // YESTERDAY
     projectDate = moment.unix(now).format("MMM Do, YYYY");
     let startDate = moment
+        .unix(now)
+        .subtract(1, "day")
+        .startOf("day")
+        .format("MMM Do, YYYY");
+    dashboardContent += getRightAlignedTableHeader(`Yesterday (${startDate})`);
+    dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
+    summary = {
+        activity: await userYesterdaysChangeStatsP,
+        contributorActivity: await contributorsYesterdaysChangeStatsP
+    };
+    dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
+
+    // files changed
+    dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
+
+    // insertions
+    dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
+
+    // deletions
+    dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
+
+    dashboardContent += "\n";
+
+    projectDate = moment.unix(now).format("MMM Do, YYYY");
+    startDate = moment
         .unix(now)
         .startOf("week")
         .format("MMM Do, YYYY");
@@ -678,6 +715,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     );
     dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
 
+    // THIS WEEK
     summary = {
         activity: await userWeeksChangeStatsP,
         contributorActivity: await contributorsWeeksChangeStatsP

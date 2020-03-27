@@ -1,5 +1,5 @@
 import { CommitChangeStats } from "../model/models";
-import { wrapExecPromise } from "../Util";
+import { wrapExecPromise, getNowTimes } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 const moment = require("moment-timezone");
 
@@ -117,7 +117,22 @@ export async function getTodaysCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
-    const startOfDay = moment()
+    const { local_now_in_sec } = getNowTimes();
+    const startOfDay = moment
+        .unix(local_now_in_sec)
+        .startOf("day")
+        .unix();
+    return getCommitsBySinceTimestamp(projectDir, startOfDay, useAuthor);
+}
+
+export async function getYesterdaysCommits(
+    projectDir,
+    useAuthor = true
+): Promise<CommitChangeStats> {
+    const { local_now_in_sec } = getNowTimes();
+    const startOfDay = moment
+        .unix(local_now_in_sec)
+        .subtract(1, "day")
         .startOf("day")
         .unix();
     return getCommitsBySinceTimestamp(projectDir, startOfDay, useAuthor);
@@ -127,7 +142,9 @@ export async function getThisWeeksCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
-    const startOfWeek = moment()
+    const { local_now_in_sec } = getNowTimes();
+    const startOfWeek = moment
+        .unix(local_now_in_sec)
         .startOf("week")
         .unix();
     return getCommitsBySinceTimestamp(projectDir, startOfWeek, useAuthor);
