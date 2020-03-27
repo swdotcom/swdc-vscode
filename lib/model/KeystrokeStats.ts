@@ -113,7 +113,10 @@ export class KeystrokeStats {
         const timeDataSummary: TimeData = await getTodayTimeDataSummary(
             payload.project
         );
-        let editorSeconds = timeDataSummary.editor_seconds;
+
+        const editorSeconds = timeDataSummary
+            ? timeDataSummary.editor_seconds || 60
+            : 60;
 
         // go through each file and make sure the end time is set
         // and the cumulative_editor_seconds is set
