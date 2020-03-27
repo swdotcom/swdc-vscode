@@ -112,14 +112,16 @@ export async function getRepoFileCount(fileName) {
 }
 
 export async function getTeamMembers(
-    fileName: string = ""
+    fileName: string = "",
+    filterOutNonEmails: boolean = true
 ): Promise<TeamMember[]> {
     if (!fileName) {
         fileName = findFirstActiveDirectoryOrWorkspaceDirectory();
     }
 
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
-        fileName
+        fileName,
+        filterOutNonEmails
     );
 
     if (repoContributorInfo && repoContributorInfo.members) {
@@ -130,7 +132,8 @@ export async function getTeamMembers(
 }
 
 export async function getRepoContributorInfo(
-    fileName
+    fileName: string,
+    filterOutNonEmails: boolean = true
 ): Promise<RepoContributorInfo> {
     const projectDir = getProjectDir(fileName);
     if (!projectDir) {
@@ -166,7 +169,10 @@ export async function getRepoContributorInfo(
             resultList.forEach(listInfo => {
                 const devInfo = listInfo.split(",");
                 const name = devInfo[0];
-                const email = normalizeGithubEmail(devInfo[1]);
+                const email = normalizeGithubEmail(
+                    devInfo[1],
+                    filterOutNonEmails
+                );
                 if (email && !map[email]) {
                     const teamMember: TeamMember = new TeamMember();
                     teamMember.name = name;

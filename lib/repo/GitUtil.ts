@@ -149,7 +149,7 @@ async function getCommitsBySinceTimestamp(
 
 export async function getLastCommitId(projectDir, email) {
     const authorOption = email ? ` --author=${email}` : "";
-    const cmd = `git log --pretty="%H,%s"${authorOption} | tail -n 1`;
+    const cmd = `git log --pretty="%H,%s"${authorOption} | head -n 1`;
     const list = await getCommandResult(cmd, projectDir);
     if (list && list.length) {
         const parts = list[0].split(",");

@@ -742,10 +742,20 @@ function execPromise(command, opts) {
     });
 }
 
-export function normalizeGithubEmail(email) {
+export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
     if (email) {
-        if (email.endsWith("github.com") || email.includes("users.noreply")) {
+        if (
+            filterOutNonEmails &&
+            (email.endsWith("github.com") || email.includes("users.noreply"))
+        ) {
             return null;
+        } else {
+            const found = email.match(NUMBER_IN_EMAIL_REGEX);
+            if (found && email.includes("users.noreply")) {
+                // filter out the ones that look like
+                // 2342353345+username@users.noreply.github.com"
+                return null;
+            }
         }
     }
 

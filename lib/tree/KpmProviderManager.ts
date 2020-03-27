@@ -415,7 +415,10 @@ export class KpmProviderManager {
         );
 
         // get team members
-        const teamMembers: TeamMember[] = await getTeamMembers(activeRootPath);
+        const teamMembers: TeamMember[] = await getTeamMembers(
+            activeRootPath,
+            false
+        );
 
         // await for the registered team members
         await refreshTeamMembersP;
