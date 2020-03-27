@@ -1,7 +1,11 @@
 import { CommitChangeStats } from "../model/models";
-import { wrapExecPromise, getNowTimes } from "../Util";
+import { wrapExecPromise } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 const moment = require("moment-timezone");
+
+const ONE_HOUR_IN_SEC = 60 * 60;
+const ONE_DAY_SEC = ONE_HOUR_IN_SEC * 24;
+const ONE_WEEK_SEC = ONE_DAY_SEC * 7;
 
 export async function getCommandResult(cmd, projectDir) {
     let result = await wrapExecPromise(cmd, projectDir);
@@ -117,50 +121,33 @@ export async function getTodaysCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
-    const { local_now_in_sec } = getNowTimes();
-    const startOfDay = moment
-        .unix(local_now_in_sec)
-        .startOf("day")
-        .unix();
-    return getCommitsBySinceTimestamp(projectDir, startOfDay, useAuthor);
+    const { start, end } = getToday();
+    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
 }
 
 export async function getYesterdaysCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
-    const { local_now_in_sec } = getNowTimes();
-    const startOfDay = moment
-        .unix(local_now_in_sec)
-        .subtract(1, "day")
-        .startOf("day")
-        .unix();
-    return getCommitsBySinceTimestamp(projectDir, startOfDay, useAuthor);
+    const { start, end } = getYesterday();
+    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
 }
 
 export async function getThisWeeksCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
-    const { local_now_in_sec } = getNowTimes();
-    const startOfWeek = moment
-        .unix(local_now_in_sec)
-        .startOf("week")
-        .unix();
-    return getCommitsBySinceTimestamp(projectDir, startOfWeek, useAuthor);
+    const { start, end } = getThisWeek();
+    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
 }
 
-async function getCommitsBySinceTimestamp(
-    projectDir,
-    timestamp,
-    useAuthor = true
-) {
+async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
     const resourceInfo = await getResourceInfo(projectDir);
     const authorOption =
         useAuthor && resourceInfo && resourceInfo.email
             ? ` --author=${resourceInfo.email}`
             : ``;
-    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${timestamp}${authorOption}`;
+    const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${start} --until=${end}${authorOption}`;
     return getChangeStats(projectDir, cmd);
 }
 
@@ -193,4 +180,46 @@ export async function getRepoUrlLink(projectDir) {
         str = str.substring(0, str.lastIndexOf(".git"));
     }
     return str;
+}
+
+/**
+ * Returns the user's today's start and end in UTC time
+ * @param {Object} user
+ */
+export function getToday() {
+    const start =
+        moment()
+            .startOf("day")
+            .unix() -
+        moment().utcOffset() * 60;
+    const end = start + ONE_DAY_SEC;
+    return { start, end };
+}
+
+/**
+ * Returns the user's yesterday start and end in UTC time
+ */
+export function getYesterday() {
+    const start =
+        moment()
+            .subtract(1, "day")
+            .startOf("day")
+            .unix() -
+        moment().utcOffset() * 60;
+    const end = start + ONE_DAY_SEC;
+    return { start, end };
+}
+
+/**
+ * Returns the user's this week's start and end in UTC time
+ */
+export function getThisWeek() {
+    const start =
+        moment()
+            .subtract(1, "day")
+            .startOf("day")
+            .unix() -
+        moment().utcOffset() * 60;
+    const end = start + ONE_WEEK_SEC;
+    return { start, end };
 }
