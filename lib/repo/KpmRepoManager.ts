@@ -111,7 +111,7 @@ export async function getRepoFileCount(fileName) {
     return resultList.length;
 }
 
-export async function getTeamMembers(
+export async function getRepoContributors(
     fileName: string = "",
     filterOutNonEmails: boolean = true
 ): Promise<TeamMember[]> {

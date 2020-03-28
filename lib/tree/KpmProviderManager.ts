@@ -37,8 +37,7 @@ import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import { WallClockManager } from "../managers/WallClockManager";
 import { EventManager } from "../managers/EventManager";
 import TeamMember from "../model/TeamMember";
-import { getTeamMembers, getResourceInfo } from "../repo/KpmRepoManager";
-import { KpmManager } from "../managers/KpmManager";
+import { getRepoContributors, getResourceInfo } from "../repo/KpmRepoManager";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -423,7 +422,7 @@ export class KpmProviderManager {
         );
 
         // get team members
-        const teamMembers: TeamMember[] = await getTeamMembers(
+        const teamMembers: TeamMember[] = await getRepoContributors(
             activeRootPath,
             false
         );

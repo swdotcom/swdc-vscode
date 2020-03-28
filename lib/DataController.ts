@@ -623,7 +623,9 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     window.showInformationMessage(
         "Generating contributor summary, please wait..."
     );
+
     const activeRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
+
     const userTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
         activeRootPath
     );

@@ -219,8 +219,7 @@ export function getYesterday() {
 export function getThisWeek() {
     const start =
         moment()
-            .subtract(1, "day")
-            .startOf("day")
+            .startOf("week")
             .unix() -
         moment().utcOffset() * 60;
     const end = start + ONE_WEEK_SEC;
