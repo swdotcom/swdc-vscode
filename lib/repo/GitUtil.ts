@@ -50,7 +50,10 @@ export function accumulateStatChanges(results): CommitChangeStats {
             const line = results[i].trim();
 
             // look for the line with "insertion" and "deletion"
-            if (line.includes("insertion") && line.includes("deletion")) {
+            if (
+                line.includes("changed") &&
+                (line.includes("insertion") || line.includes("deletion"))
+            ) {
                 // split by space, then the number before the keyword is our value
                 const parts = line.split(" ");
                 // the very first element is the number of files changed
