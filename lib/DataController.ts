@@ -82,7 +82,7 @@ export async function getRegisteredTeamMembers(
     identifier
 ): Promise<TeamMember[]> {
     const encodedIdentifier = encodeURIComponent(identifier);
-    const api = `/team/members?identifier=${encodedIdentifier}`;
+    const api = `/repo/contributors?identifier=${encodedIdentifier}`;
 
     let teamMembers: TeamMember[] = [];
     // returns: [{email, name, identifier},..]
@@ -98,7 +98,7 @@ export async function sendTeamInvite(identifier, emails) {
         identifier,
         emails
     };
-    const api = `/team/invite`;
+    const api = `/users/invite`;
     const resp = await softwarePost(api, payload, getItem("jwt"));
     if (isResponseOk(resp)) {
         window.showInformationMessage("Sent team invitation");

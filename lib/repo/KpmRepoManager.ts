@@ -215,21 +215,21 @@ export async function getResourceInfo(projectDir) {
 export async function processRepoUsersForWorkspace() {
     let activeWorkspaceDir: string = findFirstActiveDirectoryOrWorkspaceDirectory();
     if (activeWorkspaceDir) {
-        getRepoUsers(activeWorkspaceDir);
+        postRepoContributors(activeWorkspaceDir);
     }
 }
 
 /**
  * get the git repo users
  */
-export async function getRepoUsers(fileName) {
+export async function postRepoContributors(fileName) {
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
         fileName
     );
 
     if (repoContributorInfo) {
         // send this to the backend
-        softwarePost("/repo/members", repoContributorInfo, getItem("jwt"));
+        softwarePost("/repo/contributors", repoContributorInfo, getItem("jwt"));
     }
 }
 
