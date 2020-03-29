@@ -171,7 +171,7 @@ export async function getLastCommitId(projectDir, email) {
 }
 
 export async function getRepoConfigUserEmail(projectDir) {
-    const cmd = `git config --get --global user.email`;
+    const cmd = `git config user.email`;
     return await getCommandResultString(cmd, projectDir);
 }
 

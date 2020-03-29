@@ -660,6 +660,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     dashboardContent += `Project: ${identifier}`;
     dashboardContent += "\n\n";
 
+    // TODAY
     let projectDate = moment.unix(now).format("MMM Do, YYYY");
     dashboardContent += getRightAlignedTableHeader(`Today (${projectDate})`);
     dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
@@ -707,6 +708,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
 
     dashboardContent += "\n";
 
+    // THIS WEEK
     projectDate = moment.unix(now).format("MMM Do, YYYY");
     startDate = moment
         .unix(now)
@@ -717,7 +719,6 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     );
     dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
 
-    // THIS WEEK
     summary = {
         activity: await userWeeksChangeStatsP,
         contributorActivity: await contributorsWeeksChangeStatsP

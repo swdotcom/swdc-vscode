@@ -531,13 +531,13 @@ export class KpmProviderManager {
         } else if (authType === "google") {
             return {
                 icon: "icons8-google.svg",
-                label: "Connected to Google",
+                label: "Connected using Google",
                 tooltip
             };
         } else if (authType === "github") {
             return {
                 icon: "icons8-github.svg",
-                label: "Connected to GitHub",
+                label: "Connected using GitHub",
                 tooltip
             };
         }

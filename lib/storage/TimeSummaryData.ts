@@ -43,8 +43,16 @@ async function getNewTimeDataSummary(): Promise<TimeData> {
 }
 
 export async function clearTimeDataSummary() {
-    const timeData = await getNewTimeDataSummary();
-    saveTimeDataSummaryToDisk(timeData);
+    const file = getTimeDataSummaryFile();
+    let payloads: TimeData[] = [];
+    try {
+        const content = JSON.stringify(payloads, null, 4);
+        fs.writeFileSync(file, content, err => {
+            if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
+        });
+    } catch (e) {
+        //
+    }
 }
 
 export async function getCurrentTimeSummaryProject(
