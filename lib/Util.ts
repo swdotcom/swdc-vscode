@@ -209,6 +209,20 @@ export function getRootPathForFile(fileName) {
     return null;
 }
 
+export function getWorkspaceFolderByPath(path): WorkspaceFolder {
+    let liveshareFolder = null;
+    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+        for (let i = 0; i < workspace.workspaceFolders.length; i++) {
+            let workspaceFolder: WorkspaceFolder =
+                workspace.workspaceFolders[i];
+            if (path.includes(workspaceFolder.uri.fsPath)) {
+                return workspaceFolder;
+            }
+        }
+    }
+    return null;
+}
+
 export function getProjectFolder(fileName) {
     let liveshareFolder = null;
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {

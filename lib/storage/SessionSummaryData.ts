@@ -121,7 +121,6 @@ export async function incrementSessionSummaryData(
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
 
-    // what is the gap from the previous start
     const incrementMinutes = getMinutesSinceLastPayload();
     if (incrementMinutes > 0) {
         sessionSummaryData.currentDayMinutes += incrementMinutes;
@@ -136,9 +135,6 @@ export async function incrementSessionSummaryData(
     sessionSummaryData.currentDayLinesRemoved += aggregates.linesRemoved;
 
     saveSessionSummaryToDisk(sessionSummaryData);
-
-    // increment the projects session and file seconds
-    incrementSessionAndFileSeconds(incrementMinutes);
 }
 
 /**

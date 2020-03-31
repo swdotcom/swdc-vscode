@@ -10,7 +10,11 @@ import { FileChangeInfo, TimeData } from "./models";
 import { EventManager } from "../managers/EventManager";
 import { UNTITLED_WORKSPACE, NO_PROJ_NAME } from "../Constants";
 import { Project } from "./Project";
-import { getTodayTimeDataSummary } from "../storage/TimeSummaryData";
+import {
+    getTodayTimeDataSummary,
+    incrementSessionAndFileSeconds
+} from "../storage/TimeSummaryData";
+import { getMinutesSinceLastPayload } from "../storage/SessionSummaryData";
 
 const eventHandler: EventManager = EventManager.getInstance();
 
@@ -109,7 +113,12 @@ export class KeystrokeStats {
         payload["local_end"] = nowTimes.local_now_in_sec;
         const keys = Object.keys(payload.source);
 
-        // set the cumulative_editor_seconds for this file
+        // what is the gap from the previous start
+        const incrementMinutes = getMinutesSinceLastPayload();
+        // increment the projects session and file seconds
+        incrementSessionAndFileSeconds(payload.project, incrementMinutes);
+
+        // get the time data summary
         const timeDataSummary: TimeData = await getTodayTimeDataSummary(
             payload.project
         );

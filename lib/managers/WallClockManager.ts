@@ -2,6 +2,7 @@ import { getItem, humanizeMinutes, setItem } from "../Util";
 import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { updateEditorSeconds } from "../storage/TimeSummaryData";
+import { KpmManager } from "./KpmManager";
 
 const SECONDS_INTERVAL = 30;
 const CLOCK_INTERVAL = 1000 * SECONDS_INTERVAL;
@@ -25,6 +26,8 @@ export class WallClockManager {
     }
 
     private initTimer() {
+        const kpmMgr: KpmManager = KpmManager.getInstance();
+
         // this was used the 1st few days of release, if found, it should be removed
         let deprecatedWcTime = 0;
         if (getItem("vscode_wctime")) {
@@ -38,7 +41,8 @@ export class WallClockManager {
             setItem("wctime", deprecatedWcTime);
         }
         this._wcIntervalHandle = setInterval(() => {
-            if (window.state.focused) {
+            // If the window is focused
+            if (window.state.focused || kpmMgr.hasKeystrokeData()) {
                 // set the wctime
                 this._wctime = getItem("wctime") || 0;
                 this._wctime += SECONDS_INTERVAL;

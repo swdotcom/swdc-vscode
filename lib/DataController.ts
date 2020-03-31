@@ -49,7 +49,6 @@ import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
-import { getTodayTimeDataSummary } from "./storage/TimeSummaryData";
 import {
     getTodaysCommits,
     getThisWeeksCommits,

@@ -16,7 +16,9 @@ import {
     getFileAgeInDays,
     getFileType,
     showInformationMessage,
-    findFirstActiveDirectoryOrWorkspaceDirectory
+    findFirstActiveDirectoryOrWorkspaceDirectory,
+    getProjectCodeSummaryFile,
+    getSoftwareSessionFile
 } from "../Util";
 import {
     getRepoContributorInfo,
@@ -58,12 +60,20 @@ export class KpmManager {
         return KpmManager.instance;
     }
 
+    public hasKeystrokeData() {
+        return _keystrokeMap &&
+            !isEmptyObj(_keystrokeMap) &&
+            Object.keys(_keystrokeMap).length
+            ? true
+            : false;
+    }
+
     public async sendKeystrokeDataIntervalHandler() {
         //
         // Go through all keystroke count objects found in the map and send
         // the ones that have data (data is greater than 1), then clear the map
         //
-        if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
+        if (this.hasKeystrokeData()) {
             let keys = Object.keys(_keystrokeMap);
             // use a normal for loop since we have an await within the loop
             for (let i = 0; i < keys.length; i++) {
@@ -171,14 +181,11 @@ export class KpmManager {
         }
 
         const filename = this.getFileName(event);
-        if (!this.isTrueEventFile(event, filename)) {
-            return;
-        }
-        const staticInfo = await this.getStaticEventInfo(event, filename);
 
         if (!this.isTrueEventFile(event, filename)) {
             return;
         }
+        const staticInfo = await this.getStaticEventInfo(event, filename);
 
         let rootPath = getRootPathForFile(filename);
 
@@ -492,6 +499,8 @@ export class KpmManager {
 
         if (
             filename === getDashboardFile() ||
+            filename === getProjectCodeSummaryFile() ||
+            filename === getSoftwareSessionFile() ||
             (filename &&
                 filename.includes(".code-workspace") &&
                 filename.includes("vsliveshare") &&

@@ -24,14 +24,18 @@ export function getTimeDataSummaryFile() {
     return file;
 }
 
-async function getNewTimeDataSummary(): Promise<TimeData> {
+async function getNewTimeDataSummary(
+    keystrokeProject: Project
+): Promise<TimeData> {
     const { utcEndOfDay, localEndOfDay, day, nowLocal } = getEndOfDayTimes();
 
-    const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
-
-    const project: Project = await getCurrentTimeSummaryProject(
-        activeWorkspace
-    );
+    let project: Project;
+    if (!keystrokeProject) {
+        const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
+        project = await getCurrentTimeSummaryProject(activeWorkspace);
+    } else {
+        project = { ...keystrokeProject };
+    }
 
     const timeData = new TimeData();
     timeData.day = day;
@@ -95,30 +99,41 @@ export async function updateEditorSeconds(editor_seconds: number) {
         const project: Project = await getCurrentTimeSummaryProject(
             activeWorkspace
         );
-        const timeData: TimeData = await getTodayTimeDataSummary(project);
-        timeData.editor_seconds += editor_seconds;
-        // update the now local timestamp
-        timeData.now_local = nowLocal;
+        if (project && project.directory) {
+            const timeData: TimeData = await getTodayTimeDataSummary(project);
+            timeData.editor_seconds += editor_seconds;
+            timeData.editor_seconds = Math.max(
+                timeData.editor_seconds,
+                timeData.session_seconds
+            );
+            // update the now local timestamp
+            timeData.now_local = nowLocal;
 
-        // save the info to disk
-        saveTimeDataSummaryToDisk(timeData);
+            // save the info to disk
+            saveTimeDataSummaryToDisk(timeData);
+        }
     }
 }
 
-export async function incrementSessionAndFileSeconds(minutes_since_payload) {
-    const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
-
-    // only increment if we have an active workspace
-    if (activeWorkspace && activeWorkspace.name) {
-        const project: Project = await getCurrentTimeSummaryProject(
-            activeWorkspace
-        );
-
-        // what is the gap from the previous start
-        const timeData: TimeData = await getTodayTimeDataSummary(project);
+export async function incrementSessionAndFileSeconds(
+    project: Project,
+    minutes_since_payload
+) {
+    // what is the gap from the previous start
+    const timeData: TimeData = await getTodayTimeDataSummary(project);
+    if (timeData) {
         const session_seconds = minutes_since_payload * 60;
         timeData.session_seconds += session_seconds;
+        // update the editor seconds in case its lagging
+        timeData.editor_seconds = Math.max(
+            timeData.editor_seconds,
+            timeData.session_seconds
+        );
         timeData.file_seconds += 60;
+        timeData.file_seconds = Math.min(
+            timeData.file_seconds,
+            timeData.session_seconds
+        );
 
         // save the info to disk
         saveTimeDataSummaryToDisk(timeData);
@@ -128,12 +143,16 @@ export async function incrementSessionAndFileSeconds(minutes_since_payload) {
 export async function getTodayTimeDataSummary(
     project: Project
 ): Promise<TimeData> {
+    if (!project || !project.directory) {
+        return null;
+    }
     const { day } = getEndOfDayTimes();
 
     let timeData: TimeData = null;
 
     const file = getTimeDataSummaryFile();
     const payloads: TimeData[] = getFileDataArray(file);
+
     if (payloads && payloads.length) {
         // find the one for this day
         timeData = payloads.find(
@@ -143,7 +162,7 @@ export async function getTodayTimeDataSummary(
 
     // not found, create one
     if (!timeData) {
-        timeData = await getNewTimeDataSummary();
+        timeData = await getNewTimeDataSummary(project);
         saveTimeDataSummaryToDisk(timeData);
     }
 
