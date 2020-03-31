@@ -98,9 +98,9 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 }
 
 export function getMinutesSinceLastPayload() {
-    let minutesSinceLastPayload = 1;
+    let minutesSinceLastPayload = 0;
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
-    if (lastPayloadEnd) {
+    if (lastPayloadEnd && lastPayloadEnd > 0) {
         const nowTimes = getNowTimes();
         const nowInSec = nowTimes.now_in_sec;
         // diff from the previous end time
@@ -129,6 +129,7 @@ export async function incrementSessionSummaryData(
 
     // now update the payload timestamp end utc
     let nowTimes = getNowTimes();
+
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time
     setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 

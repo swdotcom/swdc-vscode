@@ -56,6 +56,7 @@ export class SummaryManager {
         const nowTime = getNowTimes();
         if (nowTime.day !== this._currentDay) {
             clearSessionSummaryData();
+
             // send the offline data
             await sendOfflineData(true);
 
@@ -76,6 +77,7 @@ export class SummaryManager {
 
             // update the current day
             setItem("currentDay", this._currentDay);
+
             // update the last payload timestamp
             setItem("latestPayloadTimestampEndUtc", 0);
         }
@@ -93,9 +95,10 @@ export class SummaryManager {
             Object.keys(data).forEach(key => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
-                    if (key === "currentDayMinutes" && !isNewDay) {
-                        if (summary.currentDayMinutes < val) {
-                            summary.currentDayMinutes = val;
+                    if (key === "currentDayMinutes") {
+                        const currDayMin = parseInt(val, 10);
+                        if (currDayMin > summary.currentDayMinutes) {
+                            summary.currentDayMinutes = currDayMin;
                         }
                     } else {
                         summary[key] = val;
