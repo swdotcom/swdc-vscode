@@ -7,7 +7,8 @@ import {
     getItem,
     showStatus,
     getFileDataAsJson,
-    humanizeMinutes
+    humanizeMinutes,
+    setItem
 } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
@@ -125,6 +126,11 @@ export async function incrementSessionSummaryData(
     if (incrementMinutes > 0) {
         sessionSummaryData.currentDayMinutes += incrementMinutes;
     }
+
+    // now update the payload timestamp end utc
+    let nowTimes = getNowTimes();
+    // Update the latestPayloadTimestampEndUtc. It's used to determine session time
+    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 
     const wallClkHandler: WallClockManager = WallClockManager.getInstance();
     const session_seconds = sessionSummaryData.currentDayMinutes * 60;

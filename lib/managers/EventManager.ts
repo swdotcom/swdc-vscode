@@ -111,7 +111,6 @@ export class EventManager {
         saveFileChangeInfoToDisk(fileChangeInfoMap);
 
         // store the payload into the data.json file
-
         fs.appendFile(
             getSoftwareDataStoreFile(),
             JSON.stringify(payload) + os.EOL,
@@ -122,10 +121,6 @@ export class EventManager {
                     );
             }
         );
-        // set the end time for the session
-        let nowTimes = getNowTimes();
-        // Update the latestPayloadTimestampEndUtc. It's used to determine session time
-        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }
 
     storeEvent(event) {

@@ -115,17 +115,18 @@ export class KeystrokeStats {
 
         // what is the gap from the previous start
         const incrementMinutes = getMinutesSinceLastPayload();
+
         // increment the projects session and file seconds
-        incrementSessionAndFileSeconds(payload.project, incrementMinutes);
+        await incrementSessionAndFileSeconds(payload.project, incrementMinutes);
 
-        // get the time data summary
-        const timeDataSummary: TimeData = await getTodayTimeDataSummary(
-            payload.project
-        );
+        // get the time data summary (get the latest editor seconds)
+        const td: TimeData = await getTodayTimeDataSummary(payload.project);
 
-        const editorSeconds = timeDataSummary
-            ? timeDataSummary.editor_seconds || 60
-            : 60;
+        // get the editor seconds
+        let editor_seconds = 60;
+        if (td) {
+            editor_seconds = Math.max(td.editor_seconds, td.session_seconds);
+        }
 
         // go through each file and make sure the end time is set
         // and the cumulative_editor_seconds is set
@@ -142,7 +143,7 @@ export class KeystrokeStats {
                         nowTimes.local_now_in_sec;
                 }
 
-                payload["cumulative_editor_seconds"] = editorSeconds;
+                payload["cumulative_editor_seconds"] = editor_seconds;
             }
         }
 
