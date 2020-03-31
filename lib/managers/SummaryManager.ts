@@ -96,9 +96,12 @@ export class SummaryManager {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
                     if (key === "currentDayMinutes") {
-                        const currDayMin = parseInt(val, 10);
-                        if (currDayMin > summary.currentDayMinutes) {
-                            summary.currentDayMinutes = currDayMin;
+                        if (!isNewDay) {
+                            // it's not a new day, possibly update
+                            const currDayMin = parseInt(val, 10);
+                            if (currDayMin > summary.currentDayMinutes) {
+                                summary.currentDayMinutes = currDayMin;
+                            }
                         }
                     } else {
                         summary[key] = val;

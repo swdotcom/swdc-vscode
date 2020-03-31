@@ -610,19 +610,9 @@ export async function writeProjectCommitDashboard(
     });
 }
 
-let buildingContributorReport = false;
-
 export async function writeProjectContributorCommitDashboardFromGitLogs(
     identifier
 ) {
-    if (buildingContributorReport) {
-        return;
-    }
-    buildingContributorReport = true;
-    window.showInformationMessage(
-        "Generating contributor summary, please wait..."
-    );
-
     const activeRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
 
     const userTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(
@@ -743,23 +733,13 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
             );
         }
     });
-
-    buildingContributorReport = false;
 }
 
 export async function writeProjectContributorCommitDashboard(identifier) {
-    if (buildingContributorReport) {
-        return;
-    }
-    buildingContributorReport = true;
-    window.showInformationMessage(
-        "Generating contributor summary, please wait..."
-    );
-
     const qryStr = `?identifier=${encodeURIComponent(identifier)}`;
     const api = `/projects/contributorSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
-    buildingContributorReport = false;
+
     let dashboardContent = "";
 
     // [{timestamp, activity, contributorActivity},...]

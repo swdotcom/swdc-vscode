@@ -12,7 +12,6 @@ import {
 } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { WallClockManager } from "../managers/WallClockManager";
-import { incrementSessionAndFileSeconds } from "./TimeSummaryData";
 const fs = require("fs");
 
 export function getSessionThresholdSeconds() {
