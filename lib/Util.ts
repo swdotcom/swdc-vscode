@@ -6,7 +6,7 @@ import {
     Uri,
     commands,
     ViewColumn,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from "vscode";
 import {
     CODE_TIME_EXT_ID,
@@ -14,12 +14,12 @@ import {
     LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
     CODE_TIME_TYPE,
-    api_endpoint
+    api_endpoint,
 } from "./Constants";
 import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
-    getAppJwt
+    getAppJwt,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
@@ -265,7 +265,7 @@ export function setItem(key, value) {
     const content = JSON.stringify(jsonObj);
 
     const sessionFile = getSoftwareSessionFile();
-    fs.writeFileSync(sessionFile, content, err => {
+    fs.writeFileSync(sessionFile, content, (err) => {
         if (err)
             logIt(`Error writing to the Software session file: ${err.message}`);
     });
@@ -561,7 +561,7 @@ export function displayReadmeIfNotExists(override = false) {
 
 export function openFileInEditor(file) {
     workspace.openTextDocument(file).then(
-        doc => {
+        (doc) => {
             // Show open document and set focus
             window
                 .showTextDocument(doc, 1, false)
@@ -710,9 +710,7 @@ export function getNowTimes() {
     const day = moment()
         .utcOffset(moment.parseZone(local).utcOffset())
         .format(dayFormat);
-    const utcDay = moment()
-        .utcOffset(0)
-        .format(dayTimeFormat);
+    const utcDay = moment().utcOffset(0).format(dayTimeFormat);
     const localDayTime = moment()
         .utcOffset(moment.parseZone(local).utcOffset())
         .format(dayTimeFormat);
@@ -722,14 +720,14 @@ export function getNowTimes() {
         local_now_in_sec,
         day,
         utcDay,
-        localDayTime
+        localDayTime,
     };
 }
 
 export function randomCode() {
     return crypto
         .randomBytes(16)
-        .map(value =>
+        .map((value) =>
             alpha.charCodeAt(Math.floor((value * alpha.length) / 256))
         )
         .toString();
@@ -743,7 +741,7 @@ export function deleteFile(file) {
 }
 
 function execPromise(command, opts) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         exec(command, opts, (error, stdout, stderr) => {
             if (error) {
                 reject(error);
@@ -811,7 +809,7 @@ export async function wrapExecPromise(cmd, projectDir) {
             projectDir !== undefined && projectDir !== null
                 ? { cwd: projectDir }
                 : {};
-        result = await execPromise(cmd, opts).catch(e => {
+        result = await execPromise(cmd, opts).catch((e) => {
             if (e.message) {
                 console.log("task error: ", e.message);
             }
@@ -882,14 +880,8 @@ export async function launchLogin(loginType = "software") {
     let loginUrl = await buildLoginUrl(serverOnline, loginType);
     setItem("authType", loginType);
     launchWebUrl(loginUrl);
-    if (loginType === "software") {
-        // lazily load for 20 minutes with 20 second intervals
-        const interval = 1000 * 20;
-        refetchUserStatusLazily(60, interval);
-    } else {
-        // use the defaults
-        refetchUserStatusLazily();
-    }
+    // use the defaults
+    refetchUserStatusLazily();
 }
 
 /**
@@ -1194,10 +1186,7 @@ export function getFileType(fileName: string) {
 }
 
 export function cleanJsonString(content) {
-    content = content
-        .replace(/\r\n/g, "")
-        .replace(/\n/g, "")
-        .trim();
+    content = content.replace(/\r\n/g, "").replace(/\n/g, "").trim();
     return content;
 }
 
@@ -1243,7 +1232,7 @@ export function getFileDataPayloadsAsJson(file) {
         if (content) {
             payloads = content
                 .split(/\r?\n/)
-                .map(item => {
+                .map((item) => {
                     let obj = null;
                     if (item) {
                         try {
@@ -1256,7 +1245,7 @@ export function getFileDataPayloadsAsJson(file) {
                         return obj;
                     }
                 })
-                .filter(item => item);
+                .filter((item) => item);
         }
     }
     return payloads;

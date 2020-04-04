@@ -5,7 +5,7 @@ import {
     softwarePut,
     isResponseOk,
     softwarePost,
-    serverIsAvailable
+    serverIsAvailable,
 } from "./http/HttpClient";
 import {
     getItem,
@@ -36,14 +36,14 @@ import {
     getTableHeader,
     getColumnHeaders,
     findFirstActiveDirectoryOrWorkspaceDirectory,
-    getDailyReportSummaryFile
+    getDailyReportSummaryFile,
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import {
     LoggedInState,
     SessionSummary,
-    CommitChangeStats
+    CommitChangeStats,
 } from "./model/models";
 import { CacheManager } from "./cache/CacheManager";
 import { WallClockManager } from "./managers/WallClockManager";
@@ -52,7 +52,7 @@ import TeamMember from "./model/TeamMember";
 import {
     getTodaysCommits,
     getThisWeeksCommits,
-    getYesterdaysCommits
+    getYesterdaysCommits,
 } from "./repo/GitUtil";
 
 const fs = require("fs");
@@ -95,7 +95,7 @@ export async function getRegisteredTeamMembers(
 export async function sendTeamInvite(identifier, emails) {
     const payload = {
         identifier,
-        emails
+        emails,
     };
     const api = `/users/invite`;
     const resp = await softwarePost(api, payload, getItem("jwt"));
@@ -367,7 +367,7 @@ export async function updatePreferences() {
 }
 
 export function refetchUserStatusLazily(
-    tryCountUntilFoundUser = 43,
+    tryCountUntilFoundUser = 50,
     interval = 10000
 ) {
     if (userFetchTimeout) {
@@ -444,10 +444,10 @@ export async function sendHeartbeat(reason, serverIsOnline) {
             session_ctime: getSessionFileCreateTime(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             trigger_annotation: reason,
-            editor_token: getEditorSessionToken()
+            editor_token: getEditorSessionToken(),
         };
         let api = `/data/heartbeat`;
-        softwarePost(api, heartbeat, jwt).then(async resp => {
+        softwarePost(api, heartbeat, jwt).then(async (resp) => {
             if (!isResponseOk(resp)) {
                 logIt("unable to send heartbeat ping");
             }
@@ -480,13 +480,13 @@ export async function writeCommitSummaryData() {
         const result = await softwareGet(
             `/dashboard/commits`,
             getItem("jwt")
-        ).catch(err => {
+        ).catch((err) => {
             return null;
         });
         if (isResponseOk(result) && result.data) {
             // get the string content out
             const content = result.data;
-            fs.writeFileSync(filePath, content, err => {
+            fs.writeFileSync(filePath, content, (err) => {
                 if (err) {
                     logIt(
                         `Error writing to the weekly commit summary content file: ${err.message}`
@@ -498,7 +498,7 @@ export async function writeCommitSummaryData() {
 
     if (!fs.existsSync(filePath)) {
         // just create an empty file
-        fs.writeFileSync(filePath, "WEEKLY COMMIT SUMMARY", err => {
+        fs.writeFileSync(filePath, "WEEKLY COMMIT SUMMARY", (err) => {
             if (err) {
                 logIt(
                     `Error writing to the weekly commit summary content file: ${err.message}`
@@ -515,7 +515,7 @@ export async function writeDailyReportDashboard(
     let dashboardContent = "";
 
     const file = getDailyReportSummaryFile();
-    fs.writeFileSync(file, dashboardContent, err => {
+    fs.writeFileSync(file, dashboardContent, (err) => {
         if (err) {
             logIt(
                 `Error writing to the daily report content file: ${err.message}`
@@ -546,8 +546,8 @@ export async function writeProjectCommitDashboard(
 
         if (codeCommitData && codeCommitData.length) {
             // filter out null project names
-            codeCommitData = codeCommitData.filter(n => n.name);
-            codeCommitData.forEach(el => {
+            codeCommitData = codeCommitData.filter((n) => n.name);
+            codeCommitData.forEach((el) => {
                 dashboardContent += getDashboardRow(
                     el.name,
                     `${rangeStart} to ${rangeEnd}`,
@@ -601,7 +601,7 @@ export async function writeProjectCommitDashboard(
     }
 
     const file = getProjectCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, err => {
+    fs.writeFileSync(file, dashboardContent, (err) => {
         if (err) {
             logIt(
                 `Error writing to the code time summary content file: ${err.message}`
@@ -656,7 +656,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
 
     let summary = {
         activity: await userTodaysChangeStatsP,
-        contributorActivity: await contributorsTodaysChangeStatsP
+        contributorActivity: await contributorsTodaysChangeStatsP,
     };
     dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
 
@@ -682,7 +682,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
     summary = {
         activity: await userYesterdaysChangeStatsP,
-        contributorActivity: await contributorsYesterdaysChangeStatsP
+        contributorActivity: await contributorsYesterdaysChangeStatsP,
     };
     dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
 
@@ -699,10 +699,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
 
     // THIS WEEK
     projectDate = moment.unix(now).format("MMM Do, YYYY");
-    startDate = moment
-        .unix(now)
-        .startOf("week")
-        .format("MMM Do, YYYY");
+    startDate = moment.unix(now).startOf("week").format("MMM Do, YYYY");
     dashboardContent += getRightAlignedTableHeader(
         `This week (${startDate} to ${projectDate})`
     );
@@ -710,7 +707,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
 
     summary = {
         activity: await userWeeksChangeStatsP,
-        contributorActivity: await contributorsWeeksChangeStatsP
+        contributorActivity: await contributorsWeeksChangeStatsP,
     };
     dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
 
@@ -726,7 +723,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     dashboardContent += "\n";
 
     const file = getProjectContributorCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, err => {
+    fs.writeFileSync(file, dashboardContent, (err) => {
         if (err) {
             logIt(
                 `Error writing to the code time summary content file: ${err.message}`
@@ -781,7 +778,7 @@ export async function writeProjectContributorCommitDashboard(identifier) {
             dashboardContent += getColumnHeaders([
                 "Metric",
                 "You",
-                "All Contributors"
+                "All Contributors",
             ]);
 
             // show the metrics now
@@ -829,7 +826,7 @@ export async function writeProjectContributorCommitDashboard(identifier) {
     }
 
     const file = getProjectContributorCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, err => {
+    fs.writeFileSync(file, dashboardContent, (err) => {
         if (err) {
             logIt(
                 `Error writing to the code time summary content file: ${err.message}`
@@ -851,36 +848,23 @@ function getRowNumberData(summary, title, attribute) {
 
 function createStartEndRangeByType(type = "lastWeek") {
     // default to "lastWeek"
-    let startOf = moment()
-        .startOf("week")
-        .subtract(1, "week");
-    let endOf = moment()
-        .startOf("week")
-        .subtract(1, "week")
-        .endOf("week");
+    let startOf = moment().startOf("week").subtract(1, "week");
+    let endOf = moment().startOf("week").subtract(1, "week").endOf("week");
 
     if (type === "yesterday") {
-        startOf = moment()
-            .subtract(1, "day")
-            .startOf("day");
-        endOf = moment()
-            .subtract(1, "day")
-            .endOf("day");
+        startOf = moment().subtract(1, "day").startOf("day");
+        endOf = moment().subtract(1, "day").endOf("day");
     } else if (type === "currentWeek") {
         startOf = moment().startOf("week");
         endOf = moment();
     } else if (type === "lastMonth") {
-        startOf = moment()
-            .subtract(1, "month")
-            .startOf("month");
-        endOf = moment()
-            .subtract(1, "month")
-            .endOf("month");
+        startOf = moment().subtract(1, "month").startOf("month");
+        endOf = moment().subtract(1, "month").endOf("month");
     }
 
     return {
         rangeStart: startOf.format("MMM Do, YYYY"),
-        rangeEnd: endOf.format("MMM Do, YYYY")
+        rangeEnd: endOf.format("MMM Do, YYYY"),
     };
 }
 
@@ -898,7 +882,7 @@ export async function writeCodeTimeMetricsDashboard() {
         if (isResponseOk(result)) {
             // get the string content out
             const content = result.data;
-            fs.writeFileSync(summaryInfoFile, content, err => {
+            fs.writeFileSync(summaryInfoFile, content, (err) => {
                 if (err) {
                     logIt(
                         `Error writing to the code time summary content file: ${err.message}`
@@ -956,7 +940,7 @@ export async function writeCodeTimeMetricsDashboard() {
 
     // now write it all out to the dashboard file
     const dashboardFile = getDashboardFile();
-    fs.writeFileSync(dashboardFile, dashboardContent, err => {
+    fs.writeFileSync(dashboardFile, dashboardContent, (err) => {
         if (err) {
             logIt(
                 `Error writing to the code time dashboard content file: ${err.message}`

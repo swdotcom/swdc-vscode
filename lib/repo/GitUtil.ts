@@ -163,7 +163,7 @@ export async function getLastCommitId(projectDir, email) {
         if (parts && parts.length === 2) {
             return {
                 commitId: parts[0],
-                comment: parts[1]
+                comment: parts[1],
             };
         }
     }
@@ -190,11 +190,7 @@ export async function getRepoUrlLink(projectDir) {
  * @param {Object} user
  */
 export function getToday() {
-    const start =
-        moment()
-            .startOf("day")
-            .unix() -
-        moment().utcOffset() * 60;
+    const start = moment().startOf("day").unix();
     const end = start + ONE_DAY_SEC;
     return { start, end };
 }
@@ -203,12 +199,7 @@ export function getToday() {
  * Returns the user's yesterday start and end in UTC time
  */
 export function getYesterday() {
-    const start =
-        moment()
-            .subtract(1, "day")
-            .startOf("day")
-            .unix() -
-        moment().utcOffset() * 60;
+    const start = moment().subtract(1, "day").startOf("day").unix();
     const end = start + ONE_DAY_SEC;
     return { start, end };
 }
@@ -217,11 +208,7 @@ export function getYesterday() {
  * Returns the user's this week's start and end in UTC time
  */
 export function getThisWeek() {
-    const start =
-        moment()
-            .startOf("week")
-            .unix() -
-        moment().utcOffset() * 60;
+    const start = moment().startOf("week").unix();
     const end = start + ONE_WEEK_SEC;
     return { start, end };
 }
