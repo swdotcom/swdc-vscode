@@ -93,9 +93,10 @@ export class ProjectCommitManager {
                     .startOf("day")
                     .subtract(1, "day")
                     .format(dateFormat);
-                const startDateText = await this.showInputBox(
+                const startDateText = await this.showDateInputBox(
                     initialStartVal,
-                    dateFormat
+                    dateFormat,
+                    "starting"
                 );
                 if (startDateText) {
                     // START DATE (begin of day)
@@ -107,15 +108,17 @@ export class ProjectCommitManager {
                         .unix(selectedStartTime)
                         .add(1, "day")
                         .format(dateFormat);
-                    const endDateText = await this.showInputBox(
+                    const endDateText = await this.showDateInputBox(
                         endVal,
-                        dateFormat
+                        dateFormat,
+                        "ending"
                     );
                     if (endDateText) {
-                        // END DATE (begin of the end date)
+                        // END DATE (the end of the day)
                         selectedEndTime = moment(endDateText, dateFormat)
-                            .startOf("day")
+                            .endOf("day")
                             .unix();
+
                         // fetch the project checkboxes by start/end values
                         const checkboxes: Checkbox[] = await this.getProjectCheckboxesByStartEnd(
                             selectedStartTime,
@@ -244,11 +247,15 @@ export class ProjectCommitManager {
         return checkboxes;
     }
 
-    async showInputBox(value: string, placeHolder: string) {
+    async showDateInputBox(
+        value: string,
+        placeHolder: string,
+        datePrompt: string
+    ) {
         return await window.showInputBox({
             value,
             placeHolder,
-            prompt: `Enter month, day, year (${dateFormat}) to continue.`,
+            prompt: `Please enter the ${datePrompt} date of the custom time range (YYYY-MM-DD) to continue..`,
             validateInput: (text) => {
                 const isValid = moment(text, dateFormat, true).isValid();
                 if (!isValid) {
