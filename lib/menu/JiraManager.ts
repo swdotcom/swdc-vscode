@@ -21,7 +21,7 @@ export class JiraManager {
         this._snippet = snippet;
         let menuOptions = {
             items: [],
-            placeholder: "Select a ticket"
+            placeholder: "Select a ticket",
         };
 
         // get the user's tickets
@@ -45,11 +45,11 @@ export class JiraManager {
         return await window.showInputBox({
             value,
             placeHolder,
-            validateInput: text => {
+            validateInput: (text) => {
                 return !text
                     ? "Please enter a valid message to continue."
                     : null;
-            }
+            },
         });
     }
 }

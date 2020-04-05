@@ -40,12 +40,7 @@ import {
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import {
-    LoggedInState,
-    SessionSummary,
-    CommitChangeStats,
-} from "./model/models";
-import { CacheManager } from "./cache/CacheManager";
+import { SessionSummary, CommitChangeStats } from "./model/models";
 import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
@@ -58,15 +53,9 @@ import {
 const fs = require("fs");
 const moment = require("moment-timezone");
 
-const cacheMgr: CacheManager = CacheManager.getInstance();
-
 let toggleFileEventLogging = null;
 let slackFetchTimeout = null;
 let userFetchTimeout = null;
-
-export function getConnectState() {
-    return cacheMgr.get("connectState") || new LoggedInState();
-}
 
 export function getToggleFileEventLoggingState() {
     if (toggleFileEventLogging === null) {
@@ -123,20 +112,24 @@ export async function getAppJwt(serverIsOnline) {
     return null;
 }
 
-export async function isLoggedOn(serverIsOnline) {
+export async function getUserRegistrationState(serverIsOnline) {
     let jwt = getItem("jwt");
     if (serverIsOnline && jwt) {
         let api = "/users/plugin/state";
         let resp = await softwareGet(api, jwt);
+
         if (isResponseOk(resp) && resp.data) {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
             let state = resp.data.state ? resp.data.state : "UNKNOWN";
             if (state === "OK") {
                 let sessionEmail = getItem("name");
                 let email = resp.data.email;
+
+                // set the name using the email
                 if (email && sessionEmail !== email) {
                     setItem("name", email);
                 }
+
                 // check the jwt
                 let pluginJwt = resp.data.jwt;
                 if (pluginJwt && pluginJwt !== jwt) {
@@ -145,67 +138,31 @@ export async function isLoggedOn(serverIsOnline) {
                 }
 
                 // if we need the user it's "resp.data.user"
-
                 return { loggedOn: true, state };
             }
             // return the state that is returned
             return { loggedOn: false, state };
         }
     }
+    // all else fails, set false and UNKNOWN
     return { loggedOn: false, state: "UNKNOWN" };
-}
-
-export function clearCachedLoggedInState() {
-    cacheMgr.set("connectState", null);
-}
-
-export async function getCachedLoggedInState(): Promise<LoggedInState> {
-    let connectState: LoggedInState = cacheMgr.get("connectState");
-    if (!connectState || !connectState.loggedIn) {
-        const serverIsOnline = await serverIsAvailable();
-        // doesn't exist yet, use the api
-        await getUserStatus();
-    }
-    return cacheMgr.get("connectState");
 }
 
 /**
  * return whether the user is logged on or not
  * {loggedIn: true|false}
  */
-export async function getUserStatus() {
-    const expireInSec = 60 * 30;
-    let connectState: LoggedInState = new LoggedInState();
+export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
     if (name) {
-        // name/email is set, they're connected
-        connectState.loggedIn = true;
-        cacheMgr.set("connectState", connectState, expireInSec);
-        return connectState;
+        return true;
     }
-
     const serverIsOnline = await serverIsAvailable();
-
-    let loggedIn = false;
-    if (serverIsOnline) {
-        // refetch the jwt then check if they're logged on
-        const loggedInResp = await isLoggedOn(serverIsOnline);
-        // set the loggedIn bool value
-        loggedIn = loggedInResp.loggedOn;
+    const state = await getUserRegistrationState(serverIsOnline);
+    if (state.loggedOn) {
+        initializePreferences(serverIsOnline);
     }
-
-    connectState = new LoggedInState();
-    connectState.loggedIn = loggedIn;
-
-    if (serverIsOnline && loggedIn) {
-        if (loggedIn) {
-            // they've logged in, update the preferences
-            initializePreferences(serverIsOnline);
-        }
-    }
-
-    cacheMgr.set("connectState", connectState, expireInSec);
-    return connectState;
+    return state.loggedOn;
 }
 
 export async function getSlackOauth(serverIsOnline) {
@@ -225,7 +182,6 @@ export async function getSlackOauth(serverIsOnline) {
 }
 
 export async function getUser(serverIsOnline, jwt) {
-    let connectState: LoggedInState = cacheMgr.get("connectState");
     if (jwt && serverIsOnline) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
@@ -235,12 +191,6 @@ export async function getUser(serverIsOnline, jwt) {
                 if (user.registered === 1) {
                     // update jwt to what the jwt is for this spotify user
                     setItem("name", user.email);
-
-                    if (!connectState) {
-                        connectState = new LoggedInState();
-                    }
-                    connectState.loggedIn = true;
-                    cacheMgr.set("connectState", connectState);
                 }
                 return user;
             }
@@ -381,16 +331,14 @@ export function refetchUserStatusLazily(
 
 async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     let serverIsOnline = await serverIsAvailable();
-    let userStatus = await getUserStatus();
-    if (!userStatus.loggedIn) {
+    let loggedIn: boolean = await isLoggedIn();
+    if (!loggedIn) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
         }
     } else {
-        clearCachedLoggedInState();
-
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
 
         const message = "Successfully logged on to Code Time";
@@ -458,10 +406,10 @@ export async function sendHeartbeat(reason, serverIsOnline) {
 export async function handleKpmClickedEvent() {
     let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}
-    let userStatus = await getUserStatus();
+    let loggedIn: boolean = await isLoggedIn();
     let webUrl = await buildWebDashboardUrl();
 
-    if (!userStatus.loggedIn) {
+    if (!loggedIn) {
         webUrl = await buildLoginUrl(serverIsOnline);
         refetchUserStatusLazily();
     } else {
@@ -524,25 +472,49 @@ export async function writeDailyReportDashboard(
     });
 }
 
-export async function writeProjectCommitDashboard(
+export async function writeProjectCommitDashboardByStartEnd(
+    start,
+    end,
+    projectIds
+) {
+    const qryStr = `?start=${start}&end=${end}&projectIds=${projectIds.join(
+        ","
+    )}`;
+    const api = `/projects/codeSummary${qryStr}`;
+    const result = await softwareGet(api, getItem("jwt"));
+    const { rangeStart, rangeEnd } = createStartEndRangeByTimestamps(
+        start,
+        end
+    );
+    await writeProjectCommitDashboard(result, rangeStart, rangeEnd);
+}
+
+export async function writeProjectCommitDashboardByRangeType(
     type = "lastWeek",
-    projectIds = []
+    projectIds
 ) {
     const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
+    // create the header
+    const { rangeStart, rangeEnd } = createStartEndRangeByType(type);
+    await writeProjectCommitDashboard(result, rangeStart, rangeEnd);
+}
+
+export async function writeProjectCommitDashboard(
+    apiResult,
+    rangeStart,
+    rangeEnd
+) {
     let dashboardContent = "";
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
-    if (isResponseOk(result)) {
-        let codeCommitData = result.data;
+    if (isResponseOk(apiResult)) {
+        let codeCommitData = apiResult.data;
         // create the title
         const formattedDate = moment().format("ddd, MMM Do h:mma");
         dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
         dashboardContent += "\n\n";
-
-        // create the header
-        const { rangeStart, rangeEnd } = createStartEndRangeByType(type);
 
         if (codeCommitData && codeCommitData.length) {
             // filter out null project names
@@ -844,6 +816,13 @@ function getRowNumberData(summary, title, attribute) {
         ? formatNumber(summary.contributorActivity[attribute])
         : formatNumber(0);
     return getRowLabels([title, userFilesChanged, contribFilesChanged]);
+}
+
+function createStartEndRangeByTimestamps(start, end) {
+    return {
+        rangeStart: moment.unix(start).format("MMM Do, YYYY"),
+        rangeEnd: moment.unix(end).format("MMM Do, YYYY"),
+    };
 }
 
 function createStartEndRangeByType(type = "lastWeek") {

@@ -1,27 +1,23 @@
 import {
     KpmItem,
     SessionSummary,
-    LoggedInState,
     FileChangeInfo,
-    CommitChangeStats
+    CommitChangeStats,
 } from "../model/models";
-import {
-    getCachedLoggedInState,
-    getRegisteredTeamMembers
-} from "../DataController";
+import { getRegisteredTeamMembers, isLoggedIn } from "../DataController";
 import {
     humanizeMinutes,
     getWorkspaceFolders,
     getItem,
     isStatusBarTextVisible,
     logIt,
-    findFirstActiveDirectoryOrWorkspaceDirectory
+    findFirstActiveDirectoryOrWorkspaceDirectory,
 } from "../Util";
 import {
     getUncommitedChanges,
     getTodaysCommits,
     getLastCommitId,
-    getRepoUrlLink
+    getRepoUrlLink,
 } from "../repo/GitUtil";
 import {
     WorkspaceFolder,
@@ -29,15 +25,16 @@ import {
     TreeItemCollapsibleState,
     Command,
     commands,
-    TreeView
+    TreeView,
 } from "vscode";
-import * as path from "path";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
-import { WallClockManager } from "../managers/WallClockManager";
 import { EventManager } from "../managers/EventManager";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors, getResourceInfo } from "../repo/KpmRepoManager";
+import CodeTimeSummary from "../model/CodeTimeSummary";
+import { getCodeTimeSummary } from "../storage/TimeSummaryData";
+import * as path from "path";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 
@@ -52,8 +49,6 @@ const resourcePath: string = path.join(
 );
 
 let counter = 0;
-
-const wallClockHandler: WallClockManager = WallClockManager.getInstance();
 
 export class KpmProviderManager {
     private static instance: KpmProviderManager;
@@ -85,7 +80,7 @@ export class KpmProviderManager {
     public setCurrentKeystrokeStats(keystrokeStats) {
         if (keystrokeStats) {
             // update the current stats
-            Object.keys(keystrokeStats.source).forEach(key => {
+            Object.keys(keystrokeStats.source).forEach((key) => {
                 const fileInfo: FileChangeInfo = keystrokeStats.source[key];
                 this._currentKeystrokeStats.currentDayKeystrokes =
                     fileInfo.keystrokes;
@@ -101,9 +96,9 @@ export class KpmProviderManager {
         counter++;
         const space = counter % 2 === 0 ? "" : " ";
         const treeItems: KpmItem[] = [];
-        const loggedInCachState: LoggedInState = await getCachedLoggedInState();
+        const loggedIn: boolean = await isLoggedIn();
 
-        if (!loggedInCachState.loggedIn) {
+        if (!loggedIn) {
             const signupWithGoogle = `Sign up with Google${space}`;
             const googleSignupButton: KpmItem = this.getActionButton(
                 signupWithGoogle,
@@ -188,10 +183,10 @@ export class KpmProviderManager {
         treeItems.push(feedbackButton);
 
         // const submitReportButton: KpmItem = this.getActionButton(
-        //     "Generate daily report",
+        //     "Generate slack report",
         //     "",
-        //     "codetime.generateDailyReport",
-        //     "sticky-note.svg"
+        //     "codetime.generateSlackReport",
+        //     "slack.svg"
         // );
         // treeItems.push(submitReportButton);
 
@@ -227,6 +222,7 @@ export class KpmProviderManager {
 
         return treeItems;
     }
+
     async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
         const treeItems: KpmItem[] = [];
 
@@ -268,7 +264,7 @@ export class KpmProviderManager {
             if (filesChanged) {
                 // turn this into an array
                 const fileChangeInfos = Object.keys(fileChangeInfoMap).map(
-                    key => {
+                    (key) => {
                         return fileChangeInfoMap[key];
                     }
                 );
@@ -460,7 +456,7 @@ export class KpmProviderManager {
                     commitItem.label = lastCommitInfo.comment;
                     commitItem.command = "codetime.launchCommitUrl";
                     commitItem.commandArgs = [
-                        `${remoteUrl}/commit/${lastCommitInfo.commitId}`
+                        `${remoteUrl}/commit/${lastCommitInfo.commitId}`,
                     ];
                     item.children = [commitItem];
                 }
@@ -526,19 +522,19 @@ export class KpmProviderManager {
             return {
                 icon: "envelope.svg",
                 label: "Connected using email",
-                tooltip
+                tooltip,
             };
         } else if (authType === "google") {
             return {
                 icon: "icons8-google.svg",
                 label: "Connected using Google",
-                tooltip
+                tooltip,
             };
         } else if (authType === "github") {
             return {
                 icon: "icons8-github.svg",
                 label: "Connected using GitHub",
-                tooltip
+                tooltip,
             };
         }
         return null;
@@ -566,15 +562,16 @@ export class KpmProviderManager {
         const items: KpmItem[] = [];
         let values = [];
 
-        const wallClktimeStr = humanizeMinutes(
-            wallClockHandler.getWcTimeInSeconds() / 60
-        );
+        // get the editor and session time
+        const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
+
+        const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
         values.push({ label: `Today: ${wallClktimeStr}`, icon: "rocket.svg" });
 
         items.push(
             this.buildActivityComparisonNodes(
-                "Editor time",
-                "Editor time: total time you have spent in your editor today.",
+                "Code time",
+                "Code time: total time you have spent in your editor today.",
                 values,
                 TreeItemCollapsibleState.Expanded
             )
@@ -583,28 +580,30 @@ export class KpmProviderManager {
         const dayStr = moment().format("ddd");
 
         values = [];
-        const dayMinutesStr = humanizeMinutes(data.currentDayMinutes);
+        const dayMinutesStr = humanizeMinutes(
+            codeTimeSummary.activeCodeTimeMinutes
+        );
         values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
         const avgMin = humanizeMinutes(data.averageDailyMinutes);
         const activityLightningBolt =
-            data.currentDayMinutes > data.averageDailyMinutes
+            codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes
                 ? "bolt.svg"
                 : "bolt-grey.svg";
         values.push({
             label: `Your average (${dayStr}): ${avgMin}`,
-            icon: activityLightningBolt
+            icon: activityLightningBolt,
         });
         const globalMinutesStr = humanizeMinutes(
             data.globalAverageSeconds / 60
         );
         values.push({
             label: `Global average (${dayStr}): ${globalMinutesStr}`,
-            icon: "global-grey.svg"
+            icon: "global-grey.svg",
         });
         items.push(
             this.buildActivityComparisonNodes(
-                "Code time",
-                "Code time: total time you have been typing in your editor today.",
+                "Active code time",
+                "Active code time: total time you have been typing in your editor today.",
                 values,
                 TreeItemCollapsibleState.Expanded
             )
@@ -623,14 +622,14 @@ export class KpmProviderManager {
                 : "bolt-grey.svg";
         values.push({
             label: `Your average (${dayStr}): ${userLinesAddedAvg}`,
-            icon: linesAddedLightningBolt
+            icon: linesAddedLightningBolt,
         });
         const globalLinesAdded = numeral(data.globalAverageLinesAdded).format(
             "0 a"
         );
         values.push({
             label: `Global average (${dayStr}): ${globalLinesAdded}`,
-            icon: "global-grey.svg"
+            icon: "global-grey.svg",
         });
         items.push(
             this.buildActivityComparisonNodes("Lines added", "", values)
@@ -651,14 +650,14 @@ export class KpmProviderManager {
                 : "bolt-grey.svg";
         values.push({
             label: `Your average (${dayStr}): ${userLinesRemovedAvg}`,
-            icon: linesRemovedLightningBolt
+            icon: linesRemovedLightningBolt,
         });
         const globalLinesRemoved = numeral(
             data.globalAverageLinesRemoved
         ).format("0 a");
         values.push({
             label: `Global average (${dayStr}): ${globalLinesRemoved}`,
-            icon: "global-grey.svg"
+            icon: "global-grey.svg",
         });
         items.push(
             this.buildActivityComparisonNodes("Lines removed", "", values)
@@ -679,14 +678,14 @@ export class KpmProviderManager {
                 : "bolt-grey.svg";
         values.push({
             label: `Your average (${dayStr}): ${userKeystrokesAvg}`,
-            icon: keystrokesLightningBolt
+            icon: keystrokesLightningBolt,
         });
         const globalKeystrokes = numeral(
             data.globalAverageDailyKeystrokes
         ).format("0 a");
         values.push({
             label: `Global average (${dayStr}): ${globalKeystrokes}`,
-            icon: "global-grey.svg"
+            icon: "global-grey.svg",
         });
         items.push(this.buildActivityComparisonNodes("Keystrokes", "", values));
 
@@ -729,7 +728,7 @@ export class KpmProviderManager {
         if (collapsibleState) {
             parent.initialCollapsibleState = collapsibleState;
         }
-        values.forEach(element => {
+        values.forEach((element) => {
             const label = element.label || "";
             const tooltip = element.tooltip || "";
             const icon = element.icon || "";
@@ -935,7 +934,7 @@ export class KpmTreeItem extends TreeItem {
 
     iconPath = {
         light: "",
-        dark: ""
+        dark: "",
     };
 
     contextValue = "treeItem";
@@ -992,7 +991,7 @@ export const handleKpmChangeSelection = (
         // re-select the track without focus
         view.reveal(item, {
             focus: false,
-            select: false
+            select: false,
         });
     } catch (err) {
         logIt(`Unable to deselect track: ${err.message}`);

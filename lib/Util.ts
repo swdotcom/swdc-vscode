@@ -49,6 +49,7 @@ let editorSessiontoken = null;
 let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
+let sessionSummaryData = {};
 
 export function getEditorSessionToken() {
     if (!editorSessiontoken) {
@@ -259,6 +260,10 @@ export function validateEmail(email) {
 }
 
 export function setItem(key, value) {
+    // save it in memory
+    sessionSummaryData[key] = value;
+
+    // now save it on file
     const jsonObj = getSoftwareSessionAsJson();
     jsonObj[key] = value;
 
@@ -272,8 +277,19 @@ export function setItem(key, value) {
 }
 
 export function getItem(key) {
+    // check in memory first
+    let val = sessionSummaryData[key];
+    if (val) {
+        return val;
+    }
+
+    // doesn't exist, get it from the file
     const jsonObj = getSoftwareSessionAsJson();
-    let val = jsonObj[key] || null;
+    val = jsonObj[key] || null;
+    if (val !== null) {
+        // save it in memory
+        sessionSummaryData[key] = val;
+    }
     return val;
 }
 

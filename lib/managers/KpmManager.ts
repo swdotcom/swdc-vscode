@@ -1,10 +1,10 @@
 import { workspace, Disposable, window, commands } from "vscode";
-import { KeystrokeStats } from "../model/KeystrokeStats";
+import KeystrokeStats from "../model/KeystrokeStats";
 import {
     UNTITLED,
     UNTITLED_WORKSPACE,
     NO_PROJ_NAME,
-    DEFAULT_DURATION_MILLIS
+    DEFAULT_DURATION_MILLIS,
 } from "../Constants";
 import {
     getRootPathForFile,
@@ -18,13 +18,13 @@ import {
     showInformationMessage,
     findFirstActiveDirectoryOrWorkspaceDirectory,
     getProjectCodeSummaryFile,
-    getSoftwareSessionFile
+    getSoftwareSessionFile,
 } from "../Util";
 import {
     getRepoContributorInfo,
     getRepoFileCount,
     getFileContributorCount,
-    getResourceInfo
+    getResourceInfo,
 } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
@@ -32,7 +32,6 @@ import RepoContributorInfo from "../model/RepoContributorInfo";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
-let _treeRefreshTimer = null;
 
 export class KpmManager {
     private static instance: KpmManager;
@@ -302,31 +301,6 @@ export class KpmManager {
             logEvent(`Added ${linesAdded} lines`);
             sourceObj.linesAdded += linesAdded;
         }
-
-        this.lazilyRefreshCommitTreeInfo();
-    }
-
-    private lazilyRefreshCommitTreeInfo() {
-        if (_treeRefreshTimer) {
-            clearTimeout(_treeRefreshTimer);
-            _treeRefreshTimer = null;
-        }
-
-        _treeRefreshTimer = setTimeout(() => {
-            let keystrokeStats = null;
-            if (_keystrokeMap && !isEmptyObj(_keystrokeMap)) {
-                let keys = Object.keys(_keystrokeMap);
-                // check to see if we have data
-                for (let i = 0; i < keys.length; i++) {
-                    const key = keys[i];
-                    keystrokeStats = _keystrokeMap[key];
-                    if (keystrokeStats.hasData()) {
-                        break;
-                    }
-                }
-            }
-            _treeRefreshTimer = null;
-        }, 2000);
     }
 
     /**
@@ -446,7 +420,7 @@ export class KpmManager {
             repoContributorCount,
             repoFileCount,
             lineCount,
-            repoFileContributorCount
+            repoFileContributorCount,
         };
 
         _staticInfoMap[filename] = staticInfo;
@@ -524,7 +498,7 @@ export class KpmManager {
             directory: rootPath,
             name,
             identifier: "",
-            resource: {}
+            resource: {},
         });
         keystrokeStats["keystrokes"] = 1;
         let nowTimes = getNowTimes();
@@ -581,7 +555,7 @@ export class KpmManager {
         const fileKeys = Object.keys(keystrokeStats.source);
         if (fileKeys.length > 1) {
             // set the end time to now for the other files that don't match this file
-            fileKeys.forEach(key => {
+            fileKeys.forEach((key) => {
                 let sourceObj: FileChangeInfo = keystrokeStats.source[key];
                 if (key !== filename && sourceObj.end === 0) {
                     sourceObj.end = nowTimes.now_in_sec;
@@ -618,7 +592,7 @@ export class KpmManager {
             directory: rootPath,
             name,
             identifier: resourceInfo ? resourceInfo.identifier || "" : "",
-            resource: resourceInfo || {}
+            resource: resourceInfo || {},
         });
 
         keystrokeStats["start"] = nowTimes.now_in_sec;

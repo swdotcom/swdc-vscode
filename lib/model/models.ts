@@ -1,7 +1,7 @@
 import { getVersion, getPluginId, getHostname, getOs } from "../Util";
 import { NO_PROJ_NAME } from "../Constants";
 import { TreeItemCollapsibleState } from "vscode";
-import { Project } from "./Project";
+import Project from "./Project";
 
 export class KpmItem {
     id: string = "";
@@ -112,15 +112,4 @@ export class CodeTimeEvent {
     version: string = getVersion();
     hostname: string = ""; // this is gathered using an await
     timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
-export class TimeData {
-    timestamp: number = 0;
-    timestamp_local: number = 0;
-    now_local: number = 0;
-    editor_seconds: number = 0;
-    session_seconds: number = 0;
-    file_seconds: number = 0;
-    day: string = "";
-    project: Project = new Project();
 }

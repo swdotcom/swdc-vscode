@@ -3,15 +3,13 @@ import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummary
 import {
     clearSessionSummaryData,
     getSessionSummaryData,
-    saveSessionSummaryToDisk
+    saveSessionSummaryToDisk,
+    updateStatusBarWithSummaryData,
 } from "../storage/SessionSummaryData";
-import { WallClockManager } from "./WallClockManager";
-import { clearTimeDataSummary } from "../storage/TimeSummaryData";
+import { updateSessionFromSummaryApi } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { sendOfflineData, sendOfflineTimeData } from "./PayloadManager";
-
-const wallClockMgr: WallClockManager = WallClockManager.getInstance();
 
 // every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
@@ -63,12 +61,8 @@ export class SummaryManager {
             // send the offline TimeData payloads
             await sendOfflineTimeData();
 
-            // day does't match. clear the wall clock time,
-            // the session summary, time data summary,
-            // and the file change info summary data
-            wallClockMgr.clearWcTime();
-
-            clearTimeDataSummary();
+            // clear the wctime for other plugins that still rely on it
+            setItem("wctime", 0);
 
             clearFileChangeInfoSummaryData();
 
@@ -80,6 +74,10 @@ export class SummaryManager {
 
             // update the last payload timestamp
             setItem("latestPayloadTimestampEndUtc", 0);
+
+            setTimeout(() => {
+                this.updateSessionSummaryFromServer(true);
+            }, 1000);
         }
     }
 
@@ -92,7 +90,7 @@ export class SummaryManager {
             // update the session summary data
             const summary: SessionSummary = getSessionSummaryData();
 
-            Object.keys(data).forEach(key => {
+            Object.keys(data).forEach((key) => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
                     if (key === "currentDayMinutes") {
@@ -112,11 +110,11 @@ export class SummaryManager {
             // if the summary.currentDayMinutes is greater than the wall
             // clock time then it means the plugin was installed on a
             // different computer or the session was deleted
-            wallClockMgr.updateBasedOnSessionSeconds(
-                summary.currentDayMinutes * 60
-            );
+            updateSessionFromSummaryApi(summary.currentDayMinutes);
 
             saveSessionSummaryToDisk(summary);
         }
+
+        updateStatusBarWithSummaryData();
     }
 }

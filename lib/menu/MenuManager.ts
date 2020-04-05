@@ -3,25 +3,22 @@ import {
     workspace,
     QuickPickOptions,
     ViewColumn,
-    commands
+    commands,
 } from "vscode";
 import {
     launchWebUrl,
     getDashboardFile,
     getCommitSummaryFile,
     launchLogin,
-    isStatusBarTextVisible
+    isStatusBarTextVisible,
 } from "../Util";
 import {
-    getUserStatus,
     writeCommitSummaryData,
     writeCodeTimeMetricsDashboard,
-    getConnectState
+    isLoggedIn,
 } from "../DataController";
 import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { LoggedInState } from "../model/models";
-import { clearSessionSummaryData } from "../storage/SessionSummaryData";
 import { EventManager } from "../managers/EventManager";
 
 /**
@@ -36,32 +33,34 @@ export function showQuickPick(pickOptions): any {
     let options: QuickPickOptions = {
         matchOnDescription: false,
         matchOnDetail: false,
-        placeHolder: pickOptions.placeholder || ""
+        placeHolder: pickOptions.placeholder || "",
     };
 
-    return window.showQuickPick(pickOptions.items, options).then(async item => {
-        if (item) {
-            let url = item["url"];
-            let cb = item["cb"];
-            let command = item["command"];
-            if (url) {
-                launchWebUrl(url);
-            } else if (cb) {
-                cb();
-            } else if (command) {
-                commands.executeCommand(command);
-            }
+    return window
+        .showQuickPick(pickOptions.items, options)
+        .then(async (item) => {
+            if (item) {
+                let url = item["url"];
+                let cb = item["cb"];
+                let command = item["command"];
+                if (url) {
+                    launchWebUrl(url);
+                } else if (cb) {
+                    cb();
+                } else if (command) {
+                    commands.executeCommand(command);
+                }
 
-            if (item["eventDescription"]) {
-                EventManager.getInstance().createCodeTimeEvent(
-                    "mouse",
-                    "click",
-                    item["eventDescription"]
-                );
+                if (item["eventDescription"]) {
+                    EventManager.getInstance().createCodeTimeEvent(
+                        "mouse",
+                        "click",
+                        item["eventDescription"]
+                    );
+                }
             }
-        }
-        return item;
-    });
+            return item;
+        });
 }
 
 export async function buildWebDashboardUrl() {
@@ -77,20 +76,11 @@ export async function showMenuOptions() {
         "ShowPaletteMenu"
     );
 
-    let loggedInState: LoggedInState = await getConnectState();
-
-    if (serverIsOnline && !loggedInState.loggedIn) {
-        // check if they're logged in yet
-        loggedInState = await getUserStatus();
-        if (loggedInState.loggedIn) {
-            // clear it to fetch
-            clearSessionSummaryData();
-        }
-    }
+    const loggedIn: boolean = await isLoggedIn();
 
     // {placeholder, items: [{label, description, url, details, tooltip},...]}
     let kpmMenuOptions = {
-        items: []
+        items: [],
     };
 
     kpmMenuOptions.items.push({
@@ -98,7 +88,7 @@ export async function showMenuOptions() {
         detail: "View your latest coding metrics right here in your editor",
         url: null,
         cb: displayCodeTimeMetricsDashboard,
-        eventDescription: "PaletteMenuLaunchDashboard"
+        eventDescription: "PaletteMenuLaunchDashboard",
     });
 
     let loginMsgDetail =
@@ -107,13 +97,13 @@ export async function showMenuOptions() {
         loginMsgDetail =
             "Our service is temporarily unavailable. Please try again later.";
     }
-    if (!loggedInState.loggedIn) {
+    if (!loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,
             detail: loginMsgDetail,
             url: null,
             cb: launchLogin,
-            eventDescription: "PaletteMenuLogin"
+            eventDescription: "PaletteMenuLogin",
         });
     }
 
@@ -126,30 +116,30 @@ export async function showMenuOptions() {
         detail: "Toggle the Code Time status bar metrics text",
         url: null,
         cb: null,
-        command: "codetime.toggleStatusBar"
+        command: "codetime.toggleStatusBar",
     });
 
     kpmMenuOptions.items.push({
         label: "Submit an issue on GitHub",
         detail: "Encounter a bug? Submit an issue on our GitHub page",
         url: "https://github.com/swdotcom/swdc-vscode/issues",
-        cb: null
+        cb: null,
     });
 
     kpmMenuOptions.items.push({
         label: "Submit feedback",
         detail: "Send us an email at cody@software.com",
         cb: null,
-        command: "codetime.sendFeedback"
+        command: "codetime.sendFeedback",
     });
 
-    if (loggedInState.loggedIn) {
+    if (loggedIn) {
         kpmMenuOptions.items.push({
             label: "Web dashboard",
             detail: "See rich data visualizations in the web app",
             url: null,
             cb: launchWebDashboardView,
-            eventDescription: "PaletteMenuLaunchWebDashboard"
+            eventDescription: "PaletteMenuLaunchWebDashboard",
         });
     }
 
@@ -184,9 +174,9 @@ export async function displayCodeTimeMetricsDashboard() {
     await writeCodeTimeMetricsDashboard();
     const filePath = getDashboardFile();
 
-    workspace.openTextDocument(filePath).then(doc => {
+    workspace.openTextDocument(filePath).then((doc) => {
         // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
             // done
         });
     });
@@ -197,9 +187,9 @@ export async function displayWeeklyCommitSummary() {
     await writeCommitSummaryData();
     const filePath = getCommitSummaryFile();
 
-    workspace.openTextDocument(filePath).then(doc => {
+    workspace.openTextDocument(filePath).then((doc) => {
         // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
             // done
         });
     });

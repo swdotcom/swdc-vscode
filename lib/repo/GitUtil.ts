@@ -154,6 +154,21 @@ async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
     return getChangeStats(projectDir, cmd);
 }
 
+export async function getSlackReportCommits(projectDir) {
+    if (!projectDir) {
+        return [];
+    }
+    const startEnd = getThisWeek();
+    const resourceInfo = await getResourceInfo(projectDir);
+    if (!resourceInfo || !resourceInfo.email) {
+        return [];
+    }
+    const authorOption = ` --author=${resourceInfo.email}`;
+    const cmd = `git log --pretty="%s" --since=${startEnd.start} --until=${startEnd.end}${authorOption}`;
+    const resultList = await getCommandResult(cmd, projectDir);
+    return resultList;
+}
+
 export async function getLastCommitId(projectDir, email) {
     const authorOption = email ? ` --author=${email}` : "";
     const cmd = `git log --pretty="%H,%s"${authorOption} --max-count=1`;

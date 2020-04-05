@@ -3,14 +3,38 @@ import {
     getItem,
     launchWebUrl,
     setItem,
-    getDailyReportSummaryFile
+    getDailyReportSummaryFile,
+    getActiveProjectWorkspace,
+    findFirstActiveDirectoryOrWorkspaceDirectory,
 } from "../Util";
 import { refetchSlackConnectStatusLazily } from "../DataController";
 const { WebClient } = require("@slack/web-api");
 import { showQuickPick } from "./MenuManager";
 import { softwarePut } from "../http/HttpClient";
 import { window } from "vscode";
+import { getSlackReportCommits } from "../repo/GitUtil";
 const fs = require("fs");
+
+//// NEW LOGIC /////
+
+export async function generateSlackReport() {
+    const slackAccessToken = getItem("slack_access_token");
+    if (!slackAccessToken) {
+        const connectConfirm = await window.showInformationMessage(
+            "Connect Slack to continue",
+            ...["Yes"]
+        );
+        if (connectConfirm && connectConfirm === "Yes") {
+            connectSlack(sendGeneratedReportReport);
+        }
+    } else {
+        // start the flow
+        const projectDir = findFirstActiveDirectoryOrWorkspaceDirectory();
+        const slackReportCommits = await getSlackReportCommits(projectDir);
+    }
+}
+
+//// OLD LOGIC /////
 
 export async function sendGeneratedReportReport() {
     const slackAccessToken = getItem("slack_access_token");
@@ -78,9 +102,9 @@ async function showSlackMessageInputPrompt() {
     return await window.showInputBox({
         value: "",
         placeHolder: "Enter a message to appear in the selected channel",
-        validateInput: text => {
+        validateInput: (text) => {
             return !text ? "Please enter a valid message to continue." : null;
-        }
+        },
     });
 }
 
@@ -106,16 +130,16 @@ export async function sendSlackMessage(message: string, selectedChannel) {
         .postMessage({
             text: msg,
             channel: selectedChannel,
-            as_user: true
+            as_user: true,
         })
-        .catch(err => {
+        .catch((err) => {
             // try without sending "as_user"
             web.chat
                 .postMessage({
                     text: msg,
-                    channel: selectedChannel
+                    channel: selectedChannel,
                 })
-                .catch(err => {
+                .catch((err) => {
                     if (err.message) {
                         console.log(
                             "error posting slack message: ",
@@ -129,16 +153,16 @@ export async function sendSlackMessage(message: string, selectedChannel) {
 export async function showSlackChannelMenu() {
     let menuOptions = {
         items: [],
-        placeholder: "Select a channel"
+        placeholder: "Select a channel",
     };
 
     // get the available channels
     const channelNames = await getChannelNames();
     channelNames.sort();
 
-    channelNames.forEach(channelName => {
+    channelNames.forEach((channelName) => {
         menuOptions.items.push({
-            label: channelName
+            label: channelName,
         });
     });
 
@@ -154,7 +178,7 @@ async function getChannels() {
     const web = new WebClient(slackAccessToken);
     const result = await web.channels
         .list({ exclude_archived: true, exclude_members: false })
-        .catch(err => {
+        .catch((err) => {
             console.log("Unable to retrieve slack channels: ", err.message);
             return [];
         });
@@ -167,7 +191,7 @@ async function getChannels() {
 async function getChannelNames() {
     const channels = await getChannels();
     if (channels && channels.length > 0) {
-        return channels.map(channel => {
+        return channels.map((channel) => {
             return channel.name;
         });
     }

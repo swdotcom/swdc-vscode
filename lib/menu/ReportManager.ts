@@ -1,27 +1,42 @@
 import {
     writeProjectCommitDashboard,
     writeProjectContributorCommitDashboardFromGitLogs,
-    writeDailyReportDashboard
+    writeDailyReportDashboard,
+    writeProjectCommitDashboardByRangeType,
+    writeProjectCommitDashboardByStartEnd,
 } from "../DataController";
 import {
     getProjectCodeSummaryFile,
     getProjectContributorCodeSummaryFile,
-    getDailyReportSummaryFile
+    getDailyReportSummaryFile,
 } from "../Util";
 import { workspace, window, ViewColumn } from "vscode";
 import { sendGeneratedReportReport } from "./SlackManager";
 
-export async function displayProjectCommitsDashboard(
+export async function displayProjectCommitsDashboardByStartEnd(
+    start,
+    end,
+    projectIds = []
+) {
+    // 1st write the code time metrics dashboard file
+    await writeProjectCommitDashboardByStartEnd(start, end, projectIds);
+    openProjectCommitDocument();
+}
+
+export async function displayProjectCommitsDashboardByRangeType(
     type = "lastWeek",
     projectIds = []
 ) {
     // 1st write the code time metrics dashboard file
-    await writeProjectCommitDashboard(type, projectIds);
-    const filePath = getProjectCodeSummaryFile();
+    await writeProjectCommitDashboardByRangeType(type, projectIds);
+    openProjectCommitDocument();
+}
 
-    workspace.openTextDocument(filePath).then(doc => {
+function openProjectCommitDocument() {
+    const filePath = getProjectCodeSummaryFile();
+    workspace.openTextDocument(filePath).then((doc) => {
         // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
             // done
         });
     });
@@ -32,9 +47,9 @@ export async function displayProjectContributorCommitsDashboard(identifier) {
     await writeProjectContributorCommitDashboardFromGitLogs(identifier);
     const filePath = getProjectContributorCodeSummaryFile();
 
-    workspace.openTextDocument(filePath).then(doc => {
+    workspace.openTextDocument(filePath).then((doc) => {
         // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(e => {
+        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
             // done
         });
     });
@@ -44,9 +59,9 @@ export async function generateDailyReport(type = "yesterday", projectIds = []) {
     await writeDailyReportDashboard(type, projectIds);
     const filePath = getDailyReportSummaryFile();
 
-    workspace.openTextDocument(filePath).then(doc => {
+    workspace.openTextDocument(filePath).then((doc) => {
         // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then(async e => {
+        window.showTextDocument(doc, ViewColumn.One, false).then(async (e) => {
             const submitToSlack = await window.showInformationMessage(
                 "Submit report to slack?",
                 ...["Yes"]

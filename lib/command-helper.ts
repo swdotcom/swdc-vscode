@@ -2,11 +2,11 @@ import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
     handleKpmClickedEvent,
     updatePreferences,
-    sendTeamInvite
+    sendTeamInvite,
 } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
-    showMenuOptions
+    showMenuOptions,
 } from "./menu/MenuManager";
 import {
     launchWebUrl,
@@ -15,13 +15,12 @@ import {
     openFileInEditor,
     displayReadmeIfNotExists,
     toggleStatusBar,
-    getItem
 } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import {
     CodeTimeMenuProvider,
-    connectCodeTimeMenuTreeView
+    connectCodeTimeMenuTreeView,
 } from "./tree/CodeTimeMenuProvider";
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
@@ -29,14 +28,9 @@ import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { sendOfflineData } from "./managers/PayloadManager";
 import {
     CodeTimeTeamProvider,
-    connectCodeTimeTeamTreeView
+    connectCodeTimeTeamTreeView,
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
-import {
-    connectSlack,
-    disconnectSlack,
-    slackContributor
-} from "./menu/SlackManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -53,7 +47,7 @@ export function createCommands(
         "ct-menu-tree",
         {
             treeDataProvider: codetimeMenuTreeProvider,
-            showCollapseAll: false
+            showCollapseAll: false,
         }
     );
     codetimeMenuTreeProvider.bindView(codetimeMenuTreeView);
@@ -83,7 +77,7 @@ export function createCommands(
         "ct-metrics-tree",
         {
             treeDataProvider: kpmTreeProvider,
-            showCollapseAll: false
+            showCollapseAll: false,
         }
     );
     kpmTreeProvider.bindView(kpmTreeView);
@@ -95,7 +89,7 @@ export function createCommands(
         "ct-team-tree",
         {
             treeDataProvider: codetimeTeamTreeProvider,
-            showCollapseAll: false
+            showCollapseAll: false,
         }
     );
     codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
@@ -153,12 +147,14 @@ export function createCommands(
         })
     );
 
+    // OPEN SPECIFIED FILE IN EDITOR
     cmds.push(
-        commands.registerCommand("codetime.openFileInEditor", file => {
+        commands.registerCommand("codetime.openFileInEditor", (file) => {
             openFileInEditor(file);
         })
     );
 
+    // REFRESH MENU
     cmds.push(
         commands.registerCommand("codetime.toggleStatusBar", () => {
             toggleStatusBar();
@@ -168,18 +164,21 @@ export function createCommands(
         })
     );
 
+    // LAUNCH EMAIL LOGIN
     cmds.push(
         commands.registerCommand("codetime.codeTimeLogin", () => {
             launchLogin("software");
         })
     );
 
+    // LAUNCH GOOGLE LOGIN
     cmds.push(
         commands.registerCommand("codetime.googleLogin", () => {
             launchLogin("google");
         })
     );
 
+    // LAUNCH GITHUB LOGIN
     cmds.push(
         commands.registerCommand("codetime.githubLogin", () => {
             launchLogin("github");
@@ -188,49 +187,58 @@ export function createCommands(
 
     // REFRESH DAILY METRICS
     cmds.push(
-        commands.registerCommand("codetime.refreshKpmTree", keystrokeStats => {
-            if (keystrokeStats) {
-                KpmProviderManager.getInstance().setCurrentKeystrokeStats(
-                    keystrokeStats
-                );
+        commands.registerCommand(
+            "codetime.refreshKpmTree",
+            (keystrokeStats) => {
+                if (keystrokeStats) {
+                    KpmProviderManager.getInstance().setCurrentKeystrokeStats(
+                        keystrokeStats
+                    );
+                }
+                kpmTreeProvider.refresh();
             }
-            kpmTreeProvider.refresh();
-        })
+        )
     );
 
+    // DISPLAY README MD
     cmds.push(
         commands.registerCommand("codetime.displayReadme", () => {
             displayReadmeIfNotExists(true /*override*/);
         })
     );
 
+    // DISPLAY CODE TIME METRICS REPORT
     cmds.push(
         commands.registerCommand("codetime.codeTimeMetrics", () => {
             displayCodeTimeMetricsDashboard();
         })
     );
 
+    // DISPLAY PROJECT METRICS REPORT
     cmds.push(
         commands.registerCommand("codetime.generateProjectSummary", () => {
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
         })
     );
 
+    // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
     cmds.push(
         commands.registerCommand(
             "codetime.generateContributorSummary",
-            identifier => {
+            (identifier) => {
                 displayProjectContributorCommitsDashboard(identifier);
             }
         )
     );
 
+    // LAUNCH COMMIT URL
     cmds.push(
-        commands.registerCommand("codetime.launchCommitUrl", commitLink => {
+        commands.registerCommand("codetime.launchCommitUrl", (commitLink) => {
             launchWebUrl(commitLink);
         })
     );
 
+    // DISPLAY PALETTE MENU
     cmds.push(
         commands.registerCommand("codetime.softwarePaletteMenu", () => {
             showMenuOptions();
@@ -278,8 +286,8 @@ export function createCommands(
 
     // // GENERATE SLACK REPORT
     // cmds.push(
-    //     commands.registerCommand("codetime.generateDailyReport", () => {
-    //         ProjectCommitManager.getInstance().launchDailyReportMenuFlow();
+    //     commands.registerCommand("codetime.generateSlackReport", () => {
+    //         generateSlackReport();
     //     })
     // );
 
@@ -315,7 +323,7 @@ export function createCommands(
     // );
     // cmds.push(copyToJiraCmd);
 
-    cmds.push(workspace.onDidChangeConfiguration(e => updatePreferences()));
+    cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 
     return Disposable.from(...cmds);
 }
