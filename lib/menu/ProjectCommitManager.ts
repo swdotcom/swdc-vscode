@@ -24,6 +24,10 @@ export class ProjectCommitManager {
             value: "custom",
         },
         {
+            label: "Today",
+            value: "today",
+        },
+        {
             label: "Yesterday",
             value: "yesterday",
         },
@@ -34,6 +38,10 @@ export class ProjectCommitManager {
         {
             label: "Last week",
             value: "lastWeek",
+        },
+        {
+            label: "This month",
+            value: "thisMonth",
         },
         {
             label: "Last month",
@@ -119,18 +127,26 @@ export class ProjectCommitManager {
                             .endOf("day")
                             .unix();
 
+                        // create the local start and end
+                        const local = moment().local();
+                        const offset_in_sec =
+                            moment.parseZone(local).utcOffset() * 60;
+                        const local_start = selectedStartTime + offset_in_sec;
+                        const local_end = selectedEndTime + offset_in_sec;
+
                         // fetch the project checkboxes by start/end values
                         const checkboxes: Checkbox[] = await this.getProjectCheckboxesByStartEnd(
-                            selectedStartTime,
-                            selectedEndTime
+                            local_start,
+                            local_end
                         );
                         return this.launchProjectSelectionMenu(checkboxes);
                     }
                 }
             } else {
+                selectedRangeType = val;
                 // fetch the project checkboxes by range type (i.e. "yesterday")
                 const checkboxes: Checkbox[] = await this.getProjectCheckboxesByRangeType(
-                    val
+                    selectedRangeType
                 );
                 return this.launchProjectSelectionMenu(checkboxes);
             }
