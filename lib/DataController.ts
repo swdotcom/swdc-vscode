@@ -41,7 +41,6 @@ import {
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { SessionSummary, CommitChangeStats } from "./model/models";
-import { WallClockManager } from "./managers/WallClockManager";
 import { getSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
 import {
@@ -49,6 +48,8 @@ import {
     getThisWeeksCommits,
     getYesterdaysCommits,
 } from "./repo/GitUtil";
+import CodeTimeSummary from "./model/CodeTimeSummary";
+import { getCodeTimeSummary } from "./storage/TimeSummaryData";
 
 const fs = require("fs");
 const moment = require("moment-timezone");
@@ -880,27 +881,30 @@ export async function writeCodeTimeMetricsDashboard() {
     const todayStr = moment().format("ddd, MMM Do");
     dashboardContent += getSectionHeader(`Today (${todayStr})`);
 
+    const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
+
     // get the top section of the dashboard content (today's data)
     const sessionSummary: SessionSummary = getSessionSummaryData();
     if (sessionSummary) {
         const averageTimeStr = humanizeMinutes(
             sessionSummary.averageDailyMinutes
         );
-        const currentDayMinutesStr = humanizeMinutes(
-            sessionSummary.currentDayMinutes
+
+        // code time today
+        const codeTimeToday = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
+        const activeCodeTimeToday = humanizeMinutes(
+            codeTimeSummary.activeCodeTimeMinutes
         );
+
         let liveshareTimeStr = null;
         if (sessionSummary.liveshareMinutes) {
             liveshareTimeStr = humanizeMinutes(sessionSummary.liveshareMinutes);
         }
-        const currentEditorMinutesStr = WallClockManager.getInstance().getHumanizedWcTime();
+
+        dashboardContent += getDashboardRow("Code time today", codeTimeToday);
         dashboardContent += getDashboardRow(
-            "Editor time today",
-            currentEditorMinutesStr
-        );
-        dashboardContent += getDashboardRow(
-            "Code time today",
-            currentDayMinutesStr
+            "Active code time today",
+            activeCodeTimeToday
         );
         dashboardContent += getDashboardRow("90-day avg", averageTimeStr);
         if (liveshareTimeStr) {

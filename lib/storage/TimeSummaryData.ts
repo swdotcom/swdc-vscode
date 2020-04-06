@@ -193,10 +193,6 @@ export async function incrementSessionAndFileSeconds(project: Project) {
         saveTimeDataSummaryToDisk(timeData);
     }
 
-    let nowTimes = getNowTimes();
-    // Update the latestPayloadTimestampEndUtc. It's used to determine session time
-    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
-
     WallClockManager.getInstance().dispatchStatusViewUpdate();
 }
 

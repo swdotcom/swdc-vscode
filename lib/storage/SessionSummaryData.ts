@@ -121,6 +121,9 @@ export async function incrementSessionSummaryData(
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
 
+    const incrementMinutes = Math.max(1, getMinutesSinceLastPayload());
+    sessionSummaryData.currentDayMinutes += incrementMinutes;
+
     // increment the current day attributes except for the current day minutes
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
     sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;

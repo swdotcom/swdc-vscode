@@ -9,6 +9,7 @@ import {
     getFileDataArray,
     getItem,
     getNowTimes,
+    setItem,
 } from "../Util";
 import {
     getTimeDataSummaryFile,
@@ -185,7 +186,7 @@ export async function processPayload(payload, sendNow = false) {
  * this should only be called if there's file data in the source
  * @param payload
  */
-export function storePayload(payload) {
+export async function storePayload(payload) {
     // get a mapping of the current files
     const fileChangeInfoMap = getFileChangeSummaryAsJson();
 
@@ -243,7 +244,7 @@ export function storePayload(payload) {
     });
 
     // this will increment and store it offline
-    incrementSessionSummaryData(aggregate);
+    await incrementSessionSummaryData(aggregate);
 
     // write the fileChangeInfoMap
     saveFileChangeInfoToDisk(fileChangeInfoMap);
@@ -259,4 +260,8 @@ export function storePayload(payload) {
                 );
         }
     );
+
+    let nowTimes = getNowTimes();
+    // Update the latestPayloadTimestampEndUtc. It's used to determine session time
+    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 }
