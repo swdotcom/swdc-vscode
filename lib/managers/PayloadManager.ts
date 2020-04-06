@@ -26,6 +26,12 @@ import { NO_PROJ_NAME, UNTITLED_WORKSPACE } from "../Constants";
 import * as path from "path";
 import { incrementSessionSummaryData } from "../storage/SessionSummaryData";
 import TimeData from "../model/TimeData";
+import RepoContributorInfo from "../model/RepoContributorInfo";
+import {
+    getRepoContributorInfo,
+    getRepoFileCount,
+    getFileContributorCount,
+} from "../repo/KpmRepoManager";
 const os = require("os");
 const fs = require("fs");
 
@@ -136,6 +142,19 @@ export async function processPayload(payload, sendNow = false) {
     // get the time data summary (get the latest editor seconds)
     const td: TimeData = await getTodayTimeDataSummary(payload.project);
 
+    // REPO contributor count
+    const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
+        payload.project.directory,
+        true
+    );
+    payload.repoContributorCount = repoContributorInfo
+        ? repoContributorInfo.count || 0
+        : 0;
+
+    // REPO file count
+    const repoFileCount = await getRepoFileCount(payload.project.directory);
+    payload.repoFileCount = repoFileCount || 0;
+
     // get the editor seconds
     let editor_seconds = 60;
     if (td) {
@@ -155,6 +174,10 @@ export async function processPayload(payload, sendNow = false) {
                 payload.source[key]["end"] = nowTimes.now_in_sec;
                 payload.source[key]["local_end"] = nowTimes.local_now_in_sec;
             }
+
+            const repoFileContributorCount = await getFileContributorCount(key);
+            payload.source[key]["repoFileContributorCount"] =
+                repoFileContributorCount || 0;
 
             // update the set of files to the editor seconds
             payload["cumulative_editor_seconds"] = editor_seconds;

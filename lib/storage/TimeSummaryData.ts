@@ -5,7 +5,6 @@ import {
     getFileDataArray,
     getNowTimes,
     getActiveProjectWorkspace,
-    setItem,
 } from "../Util";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { WorkspaceFolder } from "vscode";

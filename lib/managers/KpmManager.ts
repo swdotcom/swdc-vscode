@@ -20,15 +20,9 @@ import {
     getProjectCodeSummaryFile,
     getSoftwareSessionFile,
 } from "../Util";
-import {
-    getRepoContributorInfo,
-    getRepoFileCount,
-    getFileContributorCount,
-    getResourceInfo,
-} from "../repo/KpmRepoManager";
+import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
-import RepoContributorInfo from "../model/RepoContributorInfo";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -310,24 +304,6 @@ export class KpmManager {
      */
     private updateStaticValues(payload, staticInfo) {
         const sourceObj: FileChangeInfo = payload.source[staticInfo.filename];
-        // set the repoContributorCount
-        if (
-            staticInfo.repoContributorCount &&
-            payload.repoContributorCount === 0
-        ) {
-            payload.repoContributorCount = staticInfo.repoContributorCount;
-        }
-
-        // set the repoFileCount
-        if (staticInfo.repoFileCount && payload.repoFileCount === 0) {
-            payload.repoFileCount = staticInfo.repoFileCount;
-        }
-
-        // update the repoFileContributorCount
-        if (!sourceObj.repoFileContributorCount) {
-            sourceObj.repoFileContributorCount =
-                staticInfo.repoFileContributorCount;
-        }
 
         // syntax
         if (!sourceObj.syntax) {
@@ -387,20 +363,6 @@ export class KpmManager {
             return staticInfo;
         }
 
-        // get the repo count and repo file count
-        const contributorInfo: RepoContributorInfo = await getRepoContributorInfo(
-            filename
-        );
-        const repoContributorCount = contributorInfo
-            ? contributorInfo.count
-            : 0;
-        const repoFileCount = await getRepoFileCount(filename);
-
-        // get the file contributor count
-        const repoFileContributorCount = await getFileContributorCount(
-            filename
-        );
-
         // get the age of this file
         const fileAgeDays = getFileAgeInDays(filename);
 
@@ -417,10 +379,7 @@ export class KpmManager {
             languageId,
             length,
             fileAgeDays,
-            repoContributorCount,
-            repoFileCount,
             lineCount,
-            repoFileContributorCount,
         };
 
         _staticInfoMap[filename] = staticInfo;
@@ -466,24 +425,20 @@ export class KpmManager {
             scheme = event.document.uri.scheme;
         }
 
+        const isLiveshareTmpFile = filename.match(
+            /.*\.code-workspace.*vsliveshare.*tmp-.*/
+        );
+        const isInternalFile = filename.match(
+            /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt)/
+        );
+
         // other scheme types I know of "vscode-userdata", "git"
         if (scheme !== "file" && scheme !== "untitled") {
             return false;
-        }
-
-        if (
-            filename === getDashboardFile() ||
-            filename === getProjectCodeSummaryFile() ||
-            filename === getSoftwareSessionFile() ||
-            (filename &&
-                filename.includes(".code-workspace") &&
-                filename.includes("vsliveshare") &&
-                filename.includes("tmp-"))
-        ) {
-            // ../vsliveshare/tmp-.../.../Visual Studio Live Share.code-workspace
-            // don't handle this event (it's a tmp file that may not bring back a real project name)
+        } else if (isLiveshareTmpFile || isInternalFile) {
             return false;
         }
+
         return true;
     }
 
