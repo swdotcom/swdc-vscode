@@ -88,7 +88,6 @@ export default class KeystrokeStats {
      * send the payload
      */
     async postData(sendNow: boolean = false) {
-        const payload = JSON.parse(JSON.stringify(this));
-        processPayload(payload, sendNow);
+        processPayload(this, sendNow);
     }
 }

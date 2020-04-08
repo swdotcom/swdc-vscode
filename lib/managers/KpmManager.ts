@@ -1,4 +1,10 @@
-import { workspace, Disposable, window, commands } from "vscode";
+import {
+    workspace,
+    Disposable,
+    window,
+    commands,
+    ExtensionContext,
+} from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import {
     UNTITLED,
@@ -10,19 +16,17 @@ import {
     getRootPathForFile,
     isEmptyObj,
     getProjectFolder,
-    getDashboardFile,
     getNowTimes,
     logEvent,
     getFileAgeInDays,
     getFileType,
     showInformationMessage,
     findFirstActiveDirectoryOrWorkspaceDirectory,
-    getProjectCodeSummaryFile,
-    getSoftwareSessionFile,
 } from "../Util";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
+import { storeCurrentPayload } from "./PayloadManager";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -31,6 +35,8 @@ export class KpmManager {
     private static instance: KpmManager;
 
     private _disposable: Disposable;
+
+    private _currentPayloadTimeout;
 
     public currentRootPath: string;
 
@@ -295,6 +301,23 @@ export class KpmManager {
             logEvent(`Added ${linesAdded} lines`);
             sourceObj.linesAdded += linesAdded;
         }
+
+        this.updateLatestPayloadLazily(rootObj);
+    }
+
+    private updateLatestPayloadLazily(payload) {
+        if (this._currentPayloadTimeout) {
+            // cancel the current one
+            clearTimeout(this._currentPayloadTimeout);
+            this._currentPayloadTimeout = null;
+        }
+        this._currentPayloadTimeout = setTimeout(() => {
+            this.updateLatestPayload(payload);
+        }, 2000);
+    }
+
+    private updateLatestPayload(payload) {
+        storeCurrentPayload(payload);
     }
 
     /**

@@ -10,6 +10,8 @@ import {
     getItem,
     getNowTimes,
     setItem,
+    getSoftwareDir,
+    isWindows,
 } from "../Util";
 import {
     getTimeDataSummaryFile,
@@ -287,4 +289,25 @@ export async function storePayload(payload) {
     let nowTimes = getNowTimes();
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time
     setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
+}
+
+export function getCurrentPayloadFile() {
+    let file = getSoftwareDir();
+    if (isWindows()) {
+        file += "\\latestKeystrokes.json";
+    } else {
+        file += "/latestKeystrokes.json";
+    }
+    return file;
+}
+
+export async function storeCurrentPayload(payload) {
+    try {
+        const content = JSON.stringify(payload, null, 4);
+        fs.writeFileSync(this.getCurrentPayloadFile(), content, (err) => {
+            if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
+        });
+    } catch (e) {
+        //
+    }
 }
