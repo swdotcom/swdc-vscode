@@ -300,7 +300,7 @@ export function showLoading() {
 
 export function showStatus(fullMsg, tooltip) {
     if (!tooltip) {
-        tooltip = "Code time today. Click to see more from Code Time.";
+        tooltip = "Active code time today. Click to see more from Code Time.";
     }
     updateStatusBar(fullMsg, tooltip);
 }
