@@ -30,6 +30,10 @@
     "activationEvents": [
         "*"
     ],
+    "extensionKind": [
+        "ui",
+        "workspace"
+    ],
     "engines": {
         "vscode": "^1.35.0"
     },
