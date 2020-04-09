@@ -17,7 +17,7 @@
         "type": "git",
         "url": "https://github.com/swdotcom/swdc-vscode"
     },
-    "remote.extensionKind": {
+    "extensionKind": {
         "softwaredotcom.swdc-vscode": "ui"
     },
     "categories": [
