@@ -5,16 +5,18 @@ import Project from "./Project";
 
 export default class KeystrokeStats {
     public source: {};
-    public keystrokes: Number;
-    public start: Number;
-    public local_start: Number;
+    public keystrokes: number;
+    public start: number;
+    public local_start: number;
     public timezone: string;
     public project: Project;
-    public pluginId: Number;
+    public pluginId: number;
     public version: string;
     public os: string;
-    public repoContributorCount: Number;
-    public repoFileCount: Number;
+    public repoContributorCount: number;
+    public repoFileCount: number;
+    public cumulative_editor_seconds: number;
+    public elapsed_seconds: number;
 
     constructor(project: Project) {
         this.source = {};
@@ -26,6 +28,8 @@ export default class KeystrokeStats {
         this.repoContributorCount = 0;
         this.repoFileCount = 0;
         this.keystrokes = 0;
+        this.cumulative_editor_seconds = 0;
+        this.elapsed_seconds = 0;
     }
 
     getCurrentStatsData() {

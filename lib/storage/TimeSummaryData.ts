@@ -9,7 +9,7 @@ import {
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { WorkspaceFolder } from "vscode";
 import { NO_PROJ_NAME, UNTITLED } from "../Constants";
-import { getMinutesSinceLastPayload } from "./SessionSummaryData";
+import { getTimeBetweenLastPayload } from "./SessionSummaryData";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import Project from "../model/Project";
 import TimeData from "../model/TimeData";
@@ -173,9 +173,10 @@ export async function incrementSessionAndFileSeconds(project: Project) {
     // get the matching time data object or create one
     const timeData: TimeData = await getTodayTimeDataSummary(project);
     // what is the gap from the previous start (1 minute or the gap)
-    const incrementMinutes = Math.max(1, getMinutesSinceLastPayload());
+    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+
     if (timeData) {
-        const session_seconds = incrementMinutes * 60;
+        const session_seconds = sessionMinutes * 60;
         timeData.session_seconds += session_seconds;
         // update the editor seconds in case its lagging
         timeData.editor_seconds = Math.max(

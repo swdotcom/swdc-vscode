@@ -96,22 +96,32 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
     saveSessionSummaryToDisk(sessionSummaryData);
 }
 
-export function getMinutesSinceLastPayload() {
-    let minutesSinceLastPayload = 0;
+/**
+ * Return {elapsedSeconds, sessionMinutes}
+ * The session minutes is based on a threshold of 15 minutes
+ */
+export function getTimeBetweenLastPayload() {
+    let sessionMinutes = 0;
+    let elapsedSeconds = 0;
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
     if (lastPayloadEnd && lastPayloadEnd > 0) {
         const nowTimes = getNowTimes();
         const nowInSec = nowTimes.now_in_sec;
         // diff from the previous end time
-        const diffInSec = nowInSec - lastPayloadEnd;
+        elapsedSeconds = Math.max(0, nowInSec - lastPayloadEnd);
 
         // if it's less than the threshold then add the minutes to the session time
-        if (diffInSec > 0 && diffInSec <= getSessionThresholdSeconds()) {
+        if (
+            elapsedSeconds > 0 &&
+            elapsedSeconds <= getSessionThresholdSeconds()
+        ) {
             // it's still the same session, add the gap time in minutes
-            minutesSinceLastPayload = diffInSec / 60;
+            sessionMinutes = elapsedSeconds / 60;
         }
+        sessionMinutes = Math.max(1, sessionMinutes);
     }
-    return Math.floor(minutesSinceLastPayload);
+    // return Math.floor(sessionMinutes);
+    return { sessionMinutes, elapsedSeconds };
 }
 
 export async function incrementSessionSummaryData(
@@ -121,8 +131,8 @@ export async function incrementSessionSummaryData(
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
 
-    const incrementMinutes = Math.max(1, getMinutesSinceLastPayload());
-    sessionSummaryData.currentDayMinutes += incrementMinutes;
+    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+    sessionSummaryData.currentDayMinutes += sessionMinutes;
 
     // increment the current day attributes except for the current day minutes
     sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;

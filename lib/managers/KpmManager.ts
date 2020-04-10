@@ -27,6 +27,7 @@ import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./PayloadManager";
+import { getTimeBetweenLastPayload } from "../storage/SessionSummaryData";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -565,7 +566,7 @@ export class KpmManager {
         } catch (e) {
             //
         }
-        let keystrokeStats = new KeystrokeStats({
+        let keystrokeStats: KeystrokeStats = new KeystrokeStats({
             // project.directory is used as an object key, must be string
             directory: rootPath,
             name,
@@ -573,9 +574,13 @@ export class KpmManager {
             resource: resourceInfo || {},
         });
 
-        keystrokeStats["start"] = nowTimes.now_in_sec;
-        keystrokeStats["local_start"] = nowTimes.local_now_in_sec;
-        keystrokeStats["keystrokes"] = 0;
+        const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+
+        keystrokeStats.start = nowTimes.now_in_sec;
+        keystrokeStats.local_start = nowTimes.local_now_in_sec;
+        keystrokeStats.keystrokes = 0;
+        // set the
+        keystrokeStats.elapsed_seconds = elapsedSeconds;
 
         // start the minute timer to send the data
         setTimeout(() => {

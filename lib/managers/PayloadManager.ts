@@ -26,7 +26,10 @@ import {
 import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
 import { NO_PROJ_NAME, UNTITLED_WORKSPACE } from "../Constants";
 import * as path from "path";
-import { incrementSessionSummaryData } from "../storage/SessionSummaryData";
+import {
+    incrementSessionSummaryData,
+    getTimeBetweenLastPayload,
+} from "../storage/SessionSummaryData";
 import TimeData from "../model/TimeData";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import {
@@ -34,6 +37,7 @@ import {
     getRepoFileCount,
     getFileContributorCount,
 } from "../repo/KpmRepoManager";
+import KeystrokeStats from "../model/KeystrokeStats";
 const os = require("os");
 const fs = require("fs");
 
@@ -130,13 +134,15 @@ export function sendBatchPayload(api, batch) {
     });
 }
 
-export async function processPayload(payload, sendNow = false) {
+export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     // set the end time for the session
     let nowTimes = getNowTimes();
 
     payload["end"] = nowTimes.now_in_sec;
     payload["local_end"] = nowTimes.local_now_in_sec;
     const keys = Object.keys(payload.source);
+
+    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
     // increment the projects session and file seconds
     await incrementSessionAndFileSeconds(payload.project);
@@ -163,26 +169,25 @@ export async function processPayload(payload, sendNow = false) {
         editor_seconds = Math.max(td.editor_seconds, td.session_seconds);
     }
 
+    // update the cumulative editor seconds
+    payload.cumulative_editor_seconds = editor_seconds;
+
     // go through each file and make sure the end time is set
-    // and the cumulative_editor_seconds is set
     if (keys && keys.length > 0) {
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
+            const fileInfo: FileChangeInfo = payload.source[key];
             // ensure there is an end time
-            const end = parseInt(payload.source[key]["end"], 10) || 0;
-            if (end === 0) {
+            if (!fileInfo.end) {
                 // set the end time for this file event
                 let nowTimes = getNowTimes();
-                payload.source[key]["end"] = nowTimes.now_in_sec;
-                payload.source[key]["local_end"] = nowTimes.local_now_in_sec;
+                fileInfo.end = nowTimes.now_in_sec;
+                fileInfo.local_end = nowTimes.local_now_in_sec;
             }
 
             const repoFileContributorCount = await getFileContributorCount(key);
-            payload.source[key]["repoFileContributorCount"] =
-                repoFileContributorCount || 0;
-
-            // update the set of files to the editor seconds
-            payload["cumulative_editor_seconds"] = editor_seconds;
+            fileInfo.repoFileContributorCount = repoFileContributorCount || 0;
+            payload.source[key] = fileInfo;
         }
     }
 
