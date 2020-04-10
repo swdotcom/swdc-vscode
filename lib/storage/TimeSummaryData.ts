@@ -9,7 +9,6 @@ import {
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { WorkspaceFolder } from "vscode";
 import { NO_PROJ_NAME, UNTITLED } from "../Constants";
-import { getTimeBetweenLastPayload } from "./SessionSummaryData";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import Project from "../model/Project";
 import TimeData from "../model/TimeData";
@@ -169,11 +168,12 @@ export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
     saveTimeDataSummaryToDisk(timeData);
 }
 
-export async function incrementSessionAndFileSeconds(project: Project) {
+export async function incrementSessionAndFileSeconds(
+    project: Project,
+    sessionMinutes: number
+) {
     // get the matching time data object or create one
     const timeData: TimeData = await getTodayTimeDataSummary(project);
-    // what is the gap from the previous start (1 minute or the gap)
-    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
     if (timeData) {
         const session_seconds = sessionMinutes * 60;

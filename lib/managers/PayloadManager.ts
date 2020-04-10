@@ -145,7 +145,7 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
     // increment the projects session and file seconds
-    await incrementSessionAndFileSeconds(payload.project);
+    await incrementSessionAndFileSeconds(payload.project, sessionMinutes);
 
     // get the time data summary (get the latest editor seconds)
     const td: TimeData = await getTodayTimeDataSummary(payload.project);
@@ -171,6 +171,8 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
 
     // update the cumulative editor seconds
     payload.cumulative_editor_seconds = editor_seconds;
+    // set the elapsed seconds (last end time to this end time)
+    payload.elapsed_seconds = elapsedSeconds;
 
     // go through each file and make sure the end time is set
     if (keys && keys.length > 0) {
@@ -207,8 +209,12 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         sendBatchPayload("/data/batch", [payload]);
         logIt(`sending kpm metrics`);
     } else {
-        storePayload(payload);
+        storePayload(payload, sessionMinutes);
         logIt(`storing kpm metrics`);
+
+        let nowTimes = getNowTimes();
+        // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
+        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }
 }
 
@@ -216,7 +222,10 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
  * this should only be called if there's file data in the source
  * @param payload
  */
-export async function storePayload(payload) {
+export async function storePayload(
+    payload: KeystrokeStats,
+    sessionMinutes: number
+) {
     // get a mapping of the current files
     const fileChangeInfoMap = getFileChangeSummaryAsJson();
 
@@ -274,7 +283,7 @@ export async function storePayload(payload) {
     });
 
     // this will increment and store it offline
-    await incrementSessionSummaryData(aggregate);
+    await incrementSessionSummaryData(aggregate, sessionMinutes);
 
     // write the fileChangeInfoMap
     saveFileChangeInfoToDisk(fileChangeInfoMap);
@@ -290,10 +299,6 @@ export async function storePayload(payload) {
                 );
         }
     );
-
-    let nowTimes = getNowTimes();
-    // Update the latestPayloadTimestampEndUtc. It's used to determine session time
-    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 }
 
 export function getCurrentPayloadFile() {

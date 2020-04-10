@@ -103,7 +103,9 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 export function getTimeBetweenLastPayload() {
     let sessionMinutes = 0;
     let elapsedSeconds = 0;
+
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
+
     if (lastPayloadEnd && lastPayloadEnd > 0) {
         const nowTimes = getNowTimes();
         const nowInSec = nowTimes.now_in_sec;
@@ -125,13 +127,12 @@ export function getTimeBetweenLastPayload() {
 }
 
 export async function incrementSessionSummaryData(
-    aggregates: KeystrokeAggregate
+    aggregates: KeystrokeAggregate,
+    sessionMinutes: number
 ) {
     let sessionSummaryData = getSessionSummaryData();
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
-
-    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
     sessionSummaryData.currentDayMinutes += sessionMinutes;
 
     // increment the current day attributes except for the current day minutes

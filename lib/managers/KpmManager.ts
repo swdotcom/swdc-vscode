@@ -1,10 +1,4 @@
-import {
-    workspace,
-    Disposable,
-    window,
-    commands,
-    ExtensionContext,
-} from "vscode";
+import { workspace, Disposable, window, commands } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import {
     UNTITLED,
@@ -27,7 +21,6 @@ import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./PayloadManager";
-import { getTimeBetweenLastPayload } from "../storage/SessionSummaryData";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -453,7 +446,7 @@ export class KpmManager {
             /.*\.code-workspace.*vsliveshare.*tmp-.*/
         );
         const isInternalFile = filename.match(
-            /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt)/
+            /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
         );
 
         // other scheme types I know of "vscode-userdata", "git"
@@ -574,13 +567,9 @@ export class KpmManager {
             resource: resourceInfo || {},
         });
 
-        const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
-
         keystrokeStats.start = nowTimes.now_in_sec;
         keystrokeStats.local_start = nowTimes.local_now_in_sec;
         keystrokeStats.keystrokes = 0;
-        // set the
-        keystrokeStats.elapsed_seconds = elapsedSeconds;
 
         // start the minute timer to send the data
         setTimeout(() => {
