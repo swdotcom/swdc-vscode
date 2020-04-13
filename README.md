@@ -55,7 +55,7 @@ To see an overview of your coding activity and project metrics, open the **Code 
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/side-bar.png" alt="Code Time for VS Code side bar" />
 </p>
 
-In your **Daily Metrics**, your _editor time_ is the total time you have spent in your editor today. Your _code time_ is the total time you have been typing in your editor today. Each metric shows how you compare today to your average and the global average. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
+In your **Daily Metrics**, your _code time_ is the total time you have spent in your editor today. Your _active code time_ is the total time you have been typing in your editor today. Each metric shows how you compare today to your average and the global average. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
 
 You can also see your top files today by KPM (keystrokes per minute), keystrokes, and code time.
 
