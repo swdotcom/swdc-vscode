@@ -45,7 +45,7 @@ You can connect multiple code editors on multiple devices using the same email a
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/status-bar.png" alt="Code Time for VS Code status bar" />
 </p>
 
-Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your code time exceeds your daily average on this day of the week.
+Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your active code time exceeds your daily average on this day of the week.
 
 **3. Check out your coding activity**
 
