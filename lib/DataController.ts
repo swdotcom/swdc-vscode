@@ -819,10 +819,11 @@ function getRowNumberData(summary, title, attribute) {
     return getRowLabels([title, userFilesChanged, contribFilesChanged]);
 }
 
+// start and end should be local_start and local_end
 function createStartEndRangeByTimestamps(start, end) {
     return {
-        rangeStart: moment.unix(start).format("MMM Do, YYYY"),
-        rangeEnd: moment.unix(end).format("MMM Do, YYYY"),
+        rangeStart: moment.unix(start).utc().format("MMM Do, YYYY"),
+        rangeEnd: moment.unix(end).utc().format("MMM Do, YYYY"),
     };
 }
 

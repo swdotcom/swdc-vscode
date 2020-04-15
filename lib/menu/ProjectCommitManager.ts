@@ -14,6 +14,8 @@ const dateFormat = "YYYY-MM-DD";
 let selectedStartTime = 0;
 let selectedEndTime = 0;
 let selectedRangeType = "";
+let local_start = 0;
+let local_end = 0;
 
 export class ProjectCommitManager {
     private static instance: ProjectCommitManager;
@@ -131,8 +133,8 @@ export class ProjectCommitManager {
                         const local = moment().local();
                         const offset_in_sec =
                             moment.parseZone(local).utcOffset() * 60;
-                        const local_start = selectedStartTime + offset_in_sec;
-                        const local_end = selectedEndTime + offset_in_sec;
+                        local_start = selectedStartTime + offset_in_sec;
+                        local_end = selectedEndTime + offset_in_sec;
 
                         // fetch the project checkboxes by start/end values
                         const checkboxes: Checkbox[] = await this.getProjectCheckboxesByStartEnd(
@@ -184,10 +186,10 @@ export class ProjectCommitManager {
                     selectedRangeType,
                     projectIds
                 );
-            } else if (selectedStartTime && selectedEndTime) {
+            } else if (local_start && local_end) {
                 displayProjectCommitsDashboardByStartEnd(
-                    selectedStartTime,
-                    selectedEndTime,
+                    local_start,
+                    local_end,
                     projectIds
                 );
             }
