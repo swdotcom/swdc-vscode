@@ -6,7 +6,8 @@ import {
     getWorkspaceFolders,
     normalizeGithubEmail,
     getFileType,
-    findFirstActiveDirectoryOrWorkspaceDirectory
+    findFirstActiveDirectoryOrWorkspaceDirectory,
+    isGitProject,
 } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
@@ -64,7 +65,7 @@ export async function getFileContributorCount(fileName) {
     }
 
     const projectDir = getProjectDir(fileName);
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return 0;
     }
 
@@ -95,7 +96,7 @@ export async function getFileContributorCount(fileName) {
 
 export async function getRepoFileCount(fileName) {
     const projectDir = getProjectDir(fileName);
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return 0;
     }
 
@@ -136,7 +137,7 @@ export async function getRepoContributorInfo(
     filterOutNonEmails: boolean = true
 ): Promise<RepoContributorInfo> {
     const projectDir = getProjectDir(fileName);
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return null;
     }
 
@@ -166,7 +167,7 @@ export async function getRepoContributorInfo(
         let map = {};
         if (resultList && resultList.length > 0) {
             // count name email
-            resultList.forEach(listInfo => {
+            resultList.forEach((listInfo) => {
                 const devInfo = listInfo.split(",");
                 const name = devInfo[0];
                 const email = normalizeGithubEmail(
@@ -193,6 +194,9 @@ export async function getRepoContributorInfo(
 // use "git symbolic-ref --short HEAD" to get the git branch
 // use "git config --get remote.origin.url" to get the remote url
 export async function getResourceInfo(projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
+        return {};
+    }
     const branch = await wrapExecPromise(
         "git symbolic-ref --short HEAD",
         projectDir
@@ -238,7 +242,7 @@ export async function postRepoContributors(fileName) {
  */
 async function getLastCommit() {
     const projectDir = getProjectDir();
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return null;
     }
 
@@ -257,7 +261,7 @@ async function getLastCommit() {
         commit = await softwareGet(
             `/commits/latest?identifier=${encodedIdentifier}&tag=${encodedTag}&branch=${encodedBranch}`,
             getItem("jwt")
-        ).then(resp => {
+        ).then((resp) => {
             if (isResponseOk(resp)) {
                 // will get a single commit object back with the following attributes
                 // commitId, message, changes, email, timestamp
@@ -279,7 +283,7 @@ export async function getHistoricalCommits(isonline) {
         return;
     }
     const projectDir = getProjectDir();
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return null;
     }
 
@@ -342,7 +346,7 @@ export async function getHistoricalCommits(isonline) {
                             timestamp,
                             date,
                             message,
-                            changes: {}
+                            changes: {},
                         };
                     }
                 } else if (commit && line.indexOf("|") !== -1) {
@@ -372,7 +376,7 @@ export async function getHistoricalCommits(isonline) {
                             }
                             commit.changes[file] = {
                                 insertions,
-                                deletions
+                                deletions,
                             };
                         }
                     }
@@ -394,7 +398,7 @@ export async function getHistoricalCommits(isonline) {
                         commits: batchCommits,
                         identifier,
                         tag,
-                        branch
+                        branch,
                     };
                     await sendCommits(commitData);
                     batchCommits = [];
@@ -406,7 +410,7 @@ export async function getHistoricalCommits(isonline) {
                     commits: batchCommits,
                     identifier,
                     tag,
-                    branch
+                    branch,
                 };
                 await sendCommits(commitData);
                 batchCommits = [];

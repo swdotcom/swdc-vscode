@@ -411,7 +411,6 @@ export class KpmManager {
             // start the process
             showInformationMessage(`Selected the following text: ${text}`);
             const issues = await JiraClient.getInstance().fetchIssues();
-            console.log("issues:", issues);
         } else {
             showInformationMessage(
                 "Please select text to copy to your Jira project"

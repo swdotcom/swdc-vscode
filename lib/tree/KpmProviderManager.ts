@@ -34,9 +34,10 @@ import TeamMember from "../model/TeamMember";
 import { getRepoContributors, getResourceInfo } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
-import * as path from "path";
+
 const numeral = require("numeral");
 const moment = require("moment-timezone");
+const path = require("path");
 
 // this current path is in the out/lib. We need to find the resource files
 // which are in out/resources

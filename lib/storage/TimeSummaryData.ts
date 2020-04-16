@@ -26,20 +26,26 @@ export function getTimeDataSummaryFile() {
     return file;
 }
 
-async function getNewTimeDataSummary(
-    keystrokeProject: Project
-): Promise<TimeData> {
+/**
+ * Build a new TimeData summary
+ * @param project
+ */
+async function getNewTimeDataSummary(project: Project): Promise<TimeData> {
     const { utcEndOfDay, localEndOfDay, day, nowLocal } = getEndOfDayTimes();
 
-    let project: Project;
-    if (!keystrokeProject) {
+    let timeData: TimeData = null;
+    if (!project) {
         const activeWorkspace: WorkspaceFolder = getActiveProjectWorkspace();
         project = await getCurrentTimeSummaryProject(activeWorkspace);
-    } else {
-        project = { ...keystrokeProject };
+        // but make sure we're not creating a new one on top of one that already exists
+        timeData = findTimeDataSummary(project);
+        if (timeData) {
+            return timeData;
+        }
     }
 
-    const timeData = new TimeData();
+    // still unable to find an existing td, create a new one
+    timeData = new TimeData();
     timeData.day = day;
     timeData.project = project;
     timeData.timestamp = utcEndOfDay;
@@ -178,12 +184,13 @@ export async function incrementSessionAndFileSeconds(
     if (timeData) {
         const session_seconds = sessionMinutes * 60;
         timeData.session_seconds += session_seconds;
-        // update the editor seconds in case its lagging
+        // max editor seconds should be equal or greater than session seconds
         timeData.editor_seconds = Math.max(
             timeData.editor_seconds,
             timeData.session_seconds
         );
         timeData.file_seconds += 60;
+        // max file seconds should not be greater than session seconds
         timeData.file_seconds = Math.min(
             timeData.file_seconds,
             timeData.session_seconds
@@ -223,13 +230,25 @@ export function getCodeTimeSummary(): CodeTimeSummary {
 export async function getTodayTimeDataSummary(
     project: Project
 ): Promise<TimeData> {
+    let timeData: TimeData = findTimeDataSummary(project);
+
+    // not found, create one since we passed the non-null project and dir
+    if (!timeData) {
+        timeData = await getNewTimeDataSummary(project);
+        saveTimeDataSummaryToDisk(timeData);
+    }
+
+    return timeData;
+}
+
+function findTimeDataSummary(project: Project): TimeData {
     if (!project || !project.directory) {
+        // no project or directory, it shouldn't exist in the file
         return null;
     }
     const { day } = getEndOfDayTimes();
 
     let timeData: TimeData = null;
-
     const file = getTimeDataSummaryFile();
     const payloads: TimeData[] = getFileDataArray(file);
 
@@ -238,12 +257,6 @@ export async function getTodayTimeDataSummary(
         timeData = payloads.find(
             (n) => n.day === day && n.project.directory === project.directory
         );
-    }
-
-    // not found, create one
-    if (!timeData) {
-        timeData = await getNewTimeDataSummary(project);
-        saveTimeDataSummaryToDisk(timeData);
     }
 
     return timeData;

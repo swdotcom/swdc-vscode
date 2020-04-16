@@ -1,5 +1,5 @@
 import { CommitChangeStats } from "../model/models";
-import { wrapExecPromise } from "../Util";
+import { wrapExecPromise, isGitProject } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 const moment = require("moment-timezone");
 
@@ -87,7 +87,7 @@ async function getChangeStats(
 ): Promise<CommitChangeStats> {
     let changeStats: CommitChangeStats = new CommitChangeStats();
 
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return changeStats;
     }
 
@@ -145,6 +145,9 @@ export async function getThisWeeksCommits(
 }
 
 async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
+    if (!projectDir || !isGitProject(projectDir)) {
+        new CommitChangeStats();
+    }
     const resourceInfo = await getResourceInfo(projectDir);
     const authorOption =
         useAuthor && resourceInfo && resourceInfo.email
@@ -155,7 +158,7 @@ async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
 }
 
 export async function getSlackReportCommits(projectDir) {
-    if (!projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
         return [];
     }
     const startEnd = getThisWeek();
@@ -170,6 +173,9 @@ export async function getSlackReportCommits(projectDir) {
 }
 
 export async function getLastCommitId(projectDir, email) {
+    if (!projectDir || !isGitProject(projectDir)) {
+        return {};
+    }
     const authorOption = email ? ` --author=${email}` : "";
     const cmd = `git log --pretty="%H,%s"${authorOption} --max-count=1`;
     const list = await getCommandResult(cmd, projectDir);
@@ -186,11 +192,17 @@ export async function getLastCommitId(projectDir, email) {
 }
 
 export async function getRepoConfigUserEmail(projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
+        return "";
+    }
     const cmd = `git config user.email`;
     return await getCommandResultString(cmd, projectDir);
 }
 
 export async function getRepoUrlLink(projectDir) {
+    if (!projectDir || !isGitProject(projectDir)) {
+        return "";
+    }
     const cmd = `git config --get remote.origin.url`;
     let str = await getCommandResultString(cmd, projectDir);
 

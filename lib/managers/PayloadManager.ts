@@ -25,7 +25,6 @@ import {
 } from "../storage/FileChangeInfoSummaryData";
 import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
 import { NO_PROJ_NAME, UNTITLED_WORKSPACE } from "../Constants";
-import * as path from "path";
 import {
     incrementSessionSummaryData,
     getTimeBetweenLastPayload,
@@ -40,6 +39,7 @@ import {
 import KeystrokeStats from "../model/KeystrokeStats";
 const os = require("os");
 const fs = require("fs");
+const path = require("path");
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
@@ -173,6 +173,10 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     payload.cumulative_editor_seconds = editor_seconds;
     // set the elapsed seconds (last end time to this end time)
     payload.elapsed_seconds = elapsedSeconds;
+
+    console.log(
+        `Setting cumulative editor seconds to ${editor_seconds} for project ${payload.project.directory}`
+    );
 
     // go through each file and make sure the end time is set
     if (keys && keys.length > 0) {

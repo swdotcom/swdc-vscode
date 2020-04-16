@@ -101,11 +101,13 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
  * The session minutes is based on a threshold of 15 minutes
  */
 export function getTimeBetweenLastPayload() {
-    let sessionMinutes = 0;
+    // default to 1 minute
+    let sessionMinutes = 1;
     let elapsedSeconds = 0;
 
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
 
+    // the last payload end time is reset within the new day checker
     if (lastPayloadEnd && lastPayloadEnd > 0) {
         const nowTimes = getNowTimes();
         const nowInSec = nowTimes.now_in_sec;

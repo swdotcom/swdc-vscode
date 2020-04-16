@@ -32,6 +32,7 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
+const path = require("path");
 
 export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const DASHBOARD_LABEL_WIDTH = 28;
@@ -95,6 +96,17 @@ export function getSessionFileCreateTime() {
         return stat.birthtime;
     }
     return stat.ctime;
+}
+
+export function isGitProject(projectDir) {
+    if (!projectDir) {
+        return false;
+    }
+
+    if (!fs.existsSync(path.join(projectDir, ".git"))) {
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -836,13 +848,13 @@ export async function wrapExecPromise(cmd, projectDir) {
                 : {};
         result = await execPromise(cmd, opts).catch((e) => {
             if (e.message) {
-                console.log("task error: ", e.message);
+                console.log(e.message);
             }
             return null;
         });
     } catch (e) {
         if (e.message) {
-            console.log("task error: ", e.message);
+            console.log(e.message);
         }
         result = null;
     }
