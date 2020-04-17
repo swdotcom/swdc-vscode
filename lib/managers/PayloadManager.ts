@@ -144,6 +144,16 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
 
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
+    // make sure we have a project in case for some reason it made it here without one
+    if (!payload.project || !payload.project.directory) {
+        payload["project"] = {
+            directory: UNTITLED_WORKSPACE,
+            name: NO_PROJ_NAME,
+            identifier: "",
+            resource: {},
+        };
+    }
+
     // increment the projects session and file seconds
     await incrementSessionAndFileSeconds(payload.project, sessionMinutes);
 
@@ -171,12 +181,9 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
 
     // update the cumulative editor seconds
     payload.cumulative_editor_seconds = editor_seconds;
+
     // set the elapsed seconds (last end time to this end time)
     payload.elapsed_seconds = elapsedSeconds;
-
-    console.log(
-        `Setting cumulative editor seconds to ${editor_seconds} for project ${payload.project.directory}`
-    );
 
     // go through each file and make sure the end time is set
     if (keys && keys.length > 0) {
@@ -197,16 +204,8 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         }
     }
 
+    // set the timezone
     payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    if (!payload.project || !payload.project.directory) {
-        payload["project"] = {
-            directory: UNTITLED_WORKSPACE,
-            name: NO_PROJ_NAME,
-            identifier: "",
-            resource: {},
-        };
-    }
 
     // async for either
     if (sendNow) {
@@ -217,6 +216,7 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         logIt(`storing kpm metrics`);
 
         let nowTimes = getNowTimes();
+
         // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
         setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }

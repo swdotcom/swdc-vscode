@@ -15,7 +15,6 @@ import {
     getFileAgeInDays,
     getFileType,
     showInformationMessage,
-    findFirstActiveDirectoryOrWorkspaceDirectory,
 } from "../Util";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
@@ -32,17 +31,14 @@ export class KpmManager {
 
     private _currentPayloadTimeout;
 
-    public currentRootPath: string;
-
     constructor() {
         let subscriptions: Disposable[] = [];
 
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
-        this._disposable = Disposable.from(...subscriptions);
 
-        this.currentRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
+        this._disposable = Disposable.from(...subscriptions);
     }
 
     static getInstance(): KpmManager {
@@ -107,14 +103,6 @@ export class KpmManager {
 
         if (!rootPath) {
             rootPath = NO_PROJ_NAME;
-        } else {
-            const rootPathChanged =
-                rootPath !== this.currentRootPath ? true : false;
-            this.currentRootPath = rootPath;
-            if (rootPathChanged) {
-                // trigger the team tree refresh
-                commands.executeCommand("codetime.refreshCodetimeTeamTree");
-            }
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
@@ -145,17 +133,12 @@ export class KpmManager {
 
         if (!rootPath) {
             rootPath = NO_PROJ_NAME;
-        } else {
-            const rootPathChanged =
-                rootPath !== this.currentRootPath ? true : false;
-            this.currentRootPath = rootPath;
-            if (rootPathChanged) {
-                // trigger the team tree refresh
-                commands.executeCommand("codetime.refreshCodetimeTeamTree");
-            }
         }
 
         await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
+
+        // make sure other files end's are set
+        this.endPreviousModifiedFiles(staticInfo.filename, rootPath);
 
         const rootObj = _keystrokeMap[rootPath];
         this.updateStaticValues(rootObj, staticInfo);
@@ -487,6 +470,25 @@ export class KpmManager {
         setTimeout(() => keystrokeStats.postData(true /*sendNow*/), 0);
     }
 
+    private endPreviousModifiedFiles(filename, rootPath) {
+        let keystrokeStats = _keystrokeMap[rootPath];
+        if (keystrokeStats) {
+            // close any existing
+            const fileKeys = Object.keys(keystrokeStats.source);
+            const nowTimes = getNowTimes();
+            if (fileKeys.length) {
+                // set the end time to now for the other files that don't match this file
+                fileKeys.forEach((key) => {
+                    let sourceObj: FileChangeInfo = keystrokeStats.source[key];
+                    if (key !== filename && sourceObj.end === 0) {
+                        sourceObj.end = nowTimes.now_in_sec;
+                        sourceObj.local_end = nowTimes.local_now_in_sec;
+                    }
+                });
+            }
+        }
+    }
+
     private async initializeKeystrokesCount(filename, rootPath) {
         // the rootPath (directory) is used as the map key, must be a string
         rootPath = rootPath || NO_PROJ_NAME;
@@ -520,19 +522,6 @@ export class KpmManager {
             // re-initialize it since we ended it before the minute was up
             keystrokeStats.source[filename].end = 0;
             keystrokeStats.source[filename].local_end = 0;
-        }
-
-        // close any existing
-        const fileKeys = Object.keys(keystrokeStats.source);
-        if (fileKeys.length > 1) {
-            // set the end time to now for the other files that don't match this file
-            fileKeys.forEach((key) => {
-                let sourceObj: FileChangeInfo = keystrokeStats.source[key];
-                if (key !== filename && sourceObj.end === 0) {
-                    sourceObj.end = nowTimes.now_in_sec;
-                    sourceObj.local_end = nowTimes.local_now_in_sec;
-                }
-            });
         }
 
         _keystrokeMap[rootPath] = keystrokeStats;
