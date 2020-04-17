@@ -15,7 +15,7 @@ import {
 } from "../Util";
 import {
     getTimeDataSummaryFile,
-    incrementSessionAndFileSeconds,
+    incrementSessionAndFileSecondsAndFetch,
     getTodayTimeDataSummary,
     clearTimeDataSummary,
 } from "../storage/TimeSummaryData";
@@ -43,6 +43,15 @@ const path = require("path");
 
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
+let lastSavedKeystrokeStats: KeystrokeStats = null;
+
+export async function getLastSavedKeystrokeStats() {
+    if (!lastSavedKeystrokeStats) {
+        // build it then return it
+        await updateLastSavedKeystrokesStats();
+    }
+    return lastSavedKeystrokeStats;
+}
 
 /**
  * send the offline TimeData payloads
@@ -104,6 +113,24 @@ export async function batchSendData(api, file) {
     }
 }
 
+export async function updateLastSavedKeystrokesStats() {
+    const dataFile = getSoftwareDataStoreFile();
+    try {
+        if (fs.existsSync(dataFile)) {
+            const currentPayloads = getFileDataPayloadsAsJson(dataFile);
+            if (currentPayloads && currentPayloads.length) {
+                // sort in descending order
+                currentPayloads.sort(
+                    (a: KeystrokeStats, b: KeystrokeStats) => b.start - a.start
+                );
+                lastSavedKeystrokeStats = currentPayloads[0];
+            }
+        }
+    } catch (e) {
+        logIt(`Error batch sending payloads: ${e.message}`);
+    }
+}
+
 export async function batchSendPayloadData(api, file, payloads) {
     // we're online so just delete the file
     deleteFile(file);
@@ -134,31 +161,120 @@ export function sendBatchPayload(api, batch) {
     });
 }
 
+/**
+ * This will update the cumulative editor and session seconds.
+ * It will also provide any error details if any are encountered.
+ * @param payload
+ * @param sessionMinutes
+ */
+async function validateAndUpdateCumulativeData(
+    payload: KeystrokeStats,
+    sessionMinutes: number
+) {
+    // increment the projects session and file seconds
+    const td: TimeData = await incrementSessionAndFileSecondsAndFetch(
+        payload.project,
+        sessionMinutes
+    );
+
+    const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
+    const isNewDay = lastPayloadEnd === 0 ? 1 : 0;
+
+    // get the current payloads so we can compare our last cumulative seconds
+    let lastKpm: KeystrokeStats = await getLastSavedKeystrokeStats();
+    if (
+        lastKpm &&
+        (!lastKpm.cumulative_editor_seconds ||
+            !lastKpm.cumulative_session_seconds)
+    ) {
+        // null out the lastKpm as we need both editor and sesson seconds to compare
+        lastKpm = null;
+    }
+
+    // default error to empty
+    payload.project_null_error = "";
+    payload.editor_seconds_error = "";
+    payload.session_seconds_error = "";
+
+    // isNewDay = 1 if the last payload timestamp is zero
+    // based on getting reset for a new day
+    payload.new_day = isNewDay;
+
+    // get the editor seconds
+    let cumulative_editor_seconds = 60;
+    let cumulative_session_seconds = 60;
+    if (td) {
+        // We found a TimeData object, use that info
+        cumulative_editor_seconds = td.editor_seconds;
+        cumulative_session_seconds = td.session_seconds;
+
+        // check against the lastKpm (if we have it) to see if there are
+        // discrepancies in regards to the editor and session seconds
+        if (lastKpm) {
+            if (lastKpm.cumulative_editor_seconds > cumulative_editor_seconds) {
+                const diff =
+                    lastKpm.cumulative_editor_seconds -
+                    cumulative_editor_seconds;
+                // add the error and update the value
+                cumulative_editor_seconds =
+                    lastKpm.cumulative_editor_seconds + 60;
+                payload.editor_seconds_error = `TimeData has lower editor seconds than last saved keystroke data by ${diff} seconds`;
+            }
+            if (
+                lastKpm.cumulative_session_seconds > cumulative_session_seconds
+            ) {
+                const diff =
+                    lastKpm.cumulative_session_seconds -
+                    cumulative_session_seconds;
+                // add the error and update the value
+                cumulative_session_seconds =
+                    lastKpm.cumulative_session_seconds + 60;
+                payload.session_seconds_error = `TimeData has lower session seconds than last saved keystroke data by ${diff} seconds`;
+            }
+        }
+    } else if (lastKpm) {
+        // We don't have a TimeData value, use the last recorded kpm data
+        payload.project_null_error = `TimeData not found using ${payload.project.directory} for editor and session seconds`;
+        // use the last saved keystrokestats
+        cumulative_editor_seconds = lastKpm.cumulative_editor_seconds + 60;
+        cumulative_session_seconds = lastKpm.cumulative_session_seconds + 60;
+    }
+
+    // Check if the final cumulative editor seconds is less than the cumulative session seconds
+    if (cumulative_editor_seconds < cumulative_session_seconds) {
+        const diff = cumulative_session_seconds - cumulative_editor_seconds;
+        // Only log an error if it's greater than 45 seconds
+        if (diff > 45) {
+            payload.editor_seconds_error = `Cumulative editor seconds is behind session seconds by ${diff} seconds`;
+        }
+        // make sure to set it to at least the session seconds
+        cumulative_editor_seconds = cumulative_session_seconds;
+    }
+
+    // update the cumulative editor seconds
+    payload.cumulative_editor_seconds = cumulative_editor_seconds;
+    payload.cumulative_session_seconds = cumulative_session_seconds;
+}
+
 export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     // set the end time for the session
     let nowTimes = getNowTimes();
 
-    payload["end"] = nowTimes.now_in_sec;
-    payload["local_end"] = nowTimes.local_now_in_sec;
+    payload.end = nowTimes.now_in_sec;
+    payload.local_end = nowTimes.local_now_in_sec;
     const keys = Object.keys(payload.source);
 
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
     // make sure we have a project in case for some reason it made it here without one
     if (!payload.project || !payload.project.directory) {
-        payload["project"] = {
+        payload.project = {
             directory: UNTITLED_WORKSPACE,
             name: NO_PROJ_NAME,
             identifier: "",
             resource: {},
         };
     }
-
-    // increment the projects session and file seconds
-    await incrementSessionAndFileSeconds(payload.project, sessionMinutes);
-
-    // get the time data summary (get the latest editor seconds)
-    const td: TimeData = await getTodayTimeDataSummary(payload.project);
 
     // REPO contributor count
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
@@ -173,14 +289,8 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     const repoFileCount = await getRepoFileCount(payload.project.directory);
     payload.repoFileCount = repoFileCount || 0;
 
-    // get the editor seconds
-    let editor_seconds = 60;
-    if (td) {
-        editor_seconds = Math.max(td.editor_seconds, td.session_seconds);
-    }
-
-    // update the cumulative editor seconds
-    payload.cumulative_editor_seconds = editor_seconds;
+    // validate the cumulative data
+    await validateAndUpdateCumulativeData(payload, sessionMinutes);
 
     // set the elapsed seconds (last end time to this end time)
     payload.elapsed_seconds = elapsedSeconds;
@@ -293,7 +403,7 @@ export async function storePayload(
     saveFileChangeInfoToDisk(fileChangeInfoMap);
 
     // store the payload into the data.json file
-    fs.appendFile(
+    fs.appendFileSync(
         getSoftwareDataStoreFile(),
         JSON.stringify(payload) + os.EOL,
         (err) => {
@@ -303,6 +413,9 @@ export async function storePayload(
                 );
         }
     );
+
+    // update the payloads in memory
+    updateLastSavedKeystrokesStats();
 }
 
 export function getCurrentPayloadFile() {

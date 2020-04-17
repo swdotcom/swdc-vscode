@@ -11,8 +11,8 @@ import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { sendOfflineData, sendOfflineTimeData } from "./PayloadManager";
 
-// every 1 min
-const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
+// every 10 min
+const DAY_CHECK_TIMER_INTERVAL = 1000 * 60 * 10;
 
 export class SummaryManager {
     private static instance: SummaryManager;
@@ -42,7 +42,7 @@ export class SummaryManager {
         }, DAY_CHECK_TIMER_INTERVAL);
 
         setTimeout(() => {
-            this.newDayChecker(true /*isInit*/);
+            this.newDayChecker();
         }, 1000);
     }
 
@@ -50,7 +50,7 @@ export class SummaryManager {
      * Check if its a new day, if so we'll clear the session sumary and
      * file change info summary, then we'll force a fetch from the app
      */
-    async newDayChecker(isInit = false) {
+    async newDayChecker() {
         const nowTime = getNowTimes();
         if (nowTime.day !== this._currentDay) {
             clearSessionSummaryData();

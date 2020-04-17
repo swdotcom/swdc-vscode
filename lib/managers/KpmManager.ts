@@ -34,6 +34,7 @@ export class KpmManager {
     constructor() {
         let subscriptions: Disposable[] = [];
 
+        // document listener handlers
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);

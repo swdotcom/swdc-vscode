@@ -103,7 +103,7 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 export function getTimeBetweenLastPayload() {
     // default to 1 minute
     let sessionMinutes = 1;
-    let elapsedSeconds = 0;
+    let elapsedSeconds = 60;
 
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
 
@@ -112,7 +112,7 @@ export function getTimeBetweenLastPayload() {
         const nowTimes = getNowTimes();
         const nowInSec = nowTimes.now_in_sec;
         // diff from the previous end time
-        elapsedSeconds = Math.max(0, nowInSec - lastPayloadEnd);
+        elapsedSeconds = Math.max(60, nowInSec - lastPayloadEnd);
 
         // if it's less than the threshold then add the minutes to the session time
         if (

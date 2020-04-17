@@ -5,9 +5,11 @@ import Project from "./Project";
 
 export default class KeystrokeStats {
     public source: {};
-    public keystrokes: number;
-    public start: number;
-    public local_start: number;
+    public keystrokes: number = 0;
+    public start: number = 0;
+    public local_start: number = 0;
+    public end: number = 0;
+    public local_end: number = 0;
     public timezone: string;
     public project: Project;
     public pluginId: number;
@@ -15,8 +17,13 @@ export default class KeystrokeStats {
     public os: string;
     public repoContributorCount: number;
     public repoFileCount: number;
-    public cumulative_editor_seconds: number;
-    public elapsed_seconds: number;
+    public cumulative_editor_seconds: number = 0;
+    public cumulative_session_seconds: number = 0;
+    public elapsed_seconds: number = 0;
+    public new_day: number; // 1 or zero to denote new day or not
+    public project_null_error: string = "";
+    public editor_seconds_error: string = "";
+    public session_seconds_error: string = "";
 
     constructor(project: Project) {
         this.source = {};
@@ -29,7 +36,12 @@ export default class KeystrokeStats {
         this.repoFileCount = 0;
         this.keystrokes = 0;
         this.cumulative_editor_seconds = 0;
+        this.cumulative_session_seconds = 0;
         this.elapsed_seconds = 0;
+        this.new_day = 0;
+        this.project_null_error = "";
+        this.editor_seconds_error = "";
+        this.session_seconds_error = "";
     }
 
     getCurrentStatsData() {

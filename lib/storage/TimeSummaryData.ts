@@ -174,10 +174,10 @@ export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
     saveTimeDataSummaryToDisk(timeData);
 }
 
-export async function incrementSessionAndFileSeconds(
+export async function incrementSessionAndFileSecondsAndFetch(
     project: Project,
     sessionMinutes: number
-) {
+): Promise<TimeData> {
     // get the matching time data object or create one
     const timeData: TimeData = await getTodayTimeDataSummary(project);
 
@@ -198,9 +198,10 @@ export async function incrementSessionAndFileSeconds(
 
         // save the info to disk
         saveTimeDataSummaryToDisk(timeData);
-    }
 
-    WallClockManager.getInstance().dispatchStatusViewUpdate();
+        return timeData;
+    }
+    return null;
 }
 
 export function getCodeTimeSummary(): CodeTimeSummary {
