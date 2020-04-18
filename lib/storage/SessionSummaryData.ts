@@ -124,7 +124,7 @@ export function getTimeBetweenLastPayload() {
         }
         sessionMinutes = Math.max(1, sessionMinutes);
     }
-    // return Math.floor(sessionMinutes);
+
     return { sessionMinutes, elapsedSeconds };
 }
 

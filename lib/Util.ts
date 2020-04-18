@@ -727,6 +727,10 @@ export function getOffsetSeconds() {
     return d.getTimezoneOffset() * 60;
 }
 
+export function getFormattedDay(unixSeconds) {
+    return moment.unix(unixSeconds).format(dayFormat);
+}
+
 /**
  * now - current time in UTC (Moment object)
  * now_in_sec - current time in UTC, unix seconds

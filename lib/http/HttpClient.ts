@@ -7,7 +7,7 @@ import { CacheManager } from "../cache/CacheManager";
 
 // build the axios api base url
 const beApi = axios.create({
-    baseURL: `${api_endpoint}`
+    baseURL: `${api_endpoint}`,
 });
 
 const spotifyApi = axios.create({});
@@ -19,10 +19,10 @@ export async function serverIsAvailable() {
 
     if (isAvail === undefined || isAvail === null) {
         isAvail = await softwareGet("/ping", null)
-            .then(result => {
+            .then((result) => {
                 return isResponseOk(result);
             })
-            .catch(e => {
+            .catch((e) => {
                 return false;
             });
         cacheMgr.set("serverAvailable", isAvail, 60);
@@ -37,7 +37,7 @@ export async function spotifyApiPut(api, payload, accessToken) {
     spotifyApi.defaults.headers.common[
         "Authorization"
     ] = `Bearer ${accessToken}`;
-    return await spotifyApi.put(api, payload).catch(err => {
+    return await spotifyApi.put(api, payload).catch((err) => {
         logIt(`error posting data for ${api}, message: ${err.message}`);
         return err;
     });
@@ -54,7 +54,7 @@ export async function softwareGet(api, jwt) {
         beApi.defaults.headers.common["Authorization"] = jwt;
     }
 
-    return await beApi.get(api).catch(err => {
+    return await beApi.get(api).catch((err) => {
         logIt(`error fetching data for ${api}, message: ${err.message}`);
         return err;
     });
@@ -69,10 +69,10 @@ export async function softwarePut(api, payload, jwt) {
 
     return await beApi
         .put(api, payload)
-        .then(resp => {
+        .then((resp) => {
             return resp;
         })
-        .catch(err => {
+        .catch((err) => {
             logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
@@ -86,10 +86,10 @@ export async function softwarePost(api, payload, jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
     return beApi
         .post(api, payload)
-        .then(resp => {
+        .then((resp) => {
             return resp;
         })
-        .catch(err => {
+        .catch((err) => {
             logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
@@ -102,10 +102,10 @@ export async function softwareDelete(api, jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
     return beApi
         .delete(api)
-        .then(resp => {
+        .then((resp) => {
             return resp;
         })
-        .catch(err => {
+        .catch((err) => {
             logIt(
                 `error with delete request for ${api}, message: ${err.message}`
             );

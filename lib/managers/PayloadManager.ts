@@ -1,4 +1,8 @@
-import { serverIsAvailable, softwarePost } from "../http/HttpClient";
+import {
+    serverIsAvailable,
+    softwarePost,
+    isResponseOk,
+} from "../http/HttpClient";
 import {
     getSoftwareDataStoreFile,
     deleteFile,
@@ -12,6 +16,7 @@ import {
     setItem,
     getSoftwareDir,
     isWindows,
+    getFormattedDay,
 } from "../Util";
 import {
     getTimeDataSummaryFile,
@@ -132,9 +137,6 @@ export async function updateLastSavedKeystrokesStats() {
 }
 
 export async function batchSendPayloadData(api, file, payloads) {
-    // we're online so just delete the file
-    deleteFile(file);
-
     // send the batch
     if (payloads && payloads.length > 0) {
         logEvent(`sending batch payloads: ${JSON.stringify(payloads)}`);
@@ -143,20 +145,33 @@ export async function batchSendPayloadData(api, file, payloads) {
         let batch = [];
         for (let i = 0; i < payloads.length; i++) {
             if (batch.length >= batch_limit) {
-                await sendBatchPayload(api, batch);
+                let resp = await sendBatchPayload(api, batch);
+                if (!isResponseOk(resp)) {
+                    // there was a problem with the transmission.
+                    // bail out so we don't delete the offline data
+                    return;
+                }
                 batch = [];
             }
             batch.push(payloads[i]);
         }
         // send the remaining
         if (batch.length > 0) {
-            await sendBatchPayload(api, batch);
+            let resp = await sendBatchPayload(api, batch);
+            if (!isResponseOk(resp)) {
+                // there was a problem with the transmission.
+                // bail out so we don't delete the offline data
+                return;
+            }
         }
     }
+
+    // we're online so just delete the file
+    deleteFile(file);
 }
 
 export function sendBatchPayload(api, batch) {
-    softwarePost(api, batch, getItem("jwt")).catch((e) => {
+    return softwarePost(api, batch, getItem("jwt")).catch((e) => {
         logIt(`Unable to send plugin data batch, error: ${e.message}`);
     });
 }
@@ -180,15 +195,24 @@ async function validateAndUpdateCumulativeData(
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
     const isNewDay = lastPayloadEnd === 0 ? 1 : 0;
 
-    // get the current payloads so we can compare our last cumulative seconds
+    // get the current payloads so we can compare our last cumulative seconds.
     let lastKpm: KeystrokeStats = await getLastSavedKeystrokeStats();
-    if (
-        lastKpm &&
-        (!lastKpm.cumulative_editor_seconds ||
-            !lastKpm.cumulative_session_seconds)
-    ) {
-        // null out the lastKpm as we need both editor and sesson seconds to compare
-        lastKpm = null;
+    if (lastKpm) {
+        if (
+            !lastKpm.cumulative_editor_seconds ||
+            !lastKpm.cumulative_session_seconds
+        ) {
+            // null out the lastKpm as we need both editor and sesson seconds to compare
+            lastKpm = null;
+        }
+        // Also check if it's a new day. if so, don't use the last kpm
+        if (
+            lastKpm &&
+            getFormattedDay(lastKpm.start) !== getFormattedDay(payload.start)
+        ) {
+            // it's a new day
+            lastKpm = null;
+        }
     }
 
     // default error to empty
