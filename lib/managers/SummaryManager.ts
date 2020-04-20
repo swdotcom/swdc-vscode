@@ -76,12 +76,15 @@ export class SummaryManager {
             setItem("latestPayloadTimestampEndUtc", 0);
 
             setTimeout(() => {
-                this.updateSessionSummaryFromServer(true);
-            }, 1000);
+                this.updateSessionSummaryFromServer();
+            }, 5000);
         }
     }
 
-    async updateSessionSummaryFromServer(isNewDay = false) {
+    /**
+     * This is only called from the new day checker
+     */
+    async updateSessionSummaryFromServer() {
         const jwt = getItem("jwt");
         const result = await softwareGet(`/sessions/summary?refresh=true`, jwt);
         if (isResponseOk(result) && result.data) {
@@ -93,17 +96,7 @@ export class SummaryManager {
             Object.keys(data).forEach((key) => {
                 const val = data[key];
                 if (val !== null && val !== undefined) {
-                    if (key === "currentDayMinutes") {
-                        if (!isNewDay) {
-                            // it's not a new day, possibly update
-                            const currDayMin = parseInt(val, 10);
-                            if (currDayMin > summary.currentDayMinutes) {
-                                summary.currentDayMinutes = currDayMin;
-                            }
-                        }
-                    } else {
-                        summary[key] = val;
-                    }
+                    summary[key] = val;
                 }
             });
 

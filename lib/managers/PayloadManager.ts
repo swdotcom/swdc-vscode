@@ -196,22 +196,15 @@ async function validateAndUpdateCumulativeData(
     const isNewDay = lastPayloadEnd === 0 ? 1 : 0;
 
     // get the current payloads so we can compare our last cumulative seconds.
-    let lastKpm: KeystrokeStats = await getLastSavedKeystrokeStats();
-    if (lastKpm) {
+    let lastPayload: KeystrokeStats = await getLastSavedKeystrokeStats();
+    if (lastPayload) {
+        // Also check if it's a new day. if so, don't use the last payload
         if (
-            !lastKpm.cumulative_editor_seconds ||
-            !lastKpm.cumulative_session_seconds
-        ) {
-            // null out the lastKpm as we need both editor and sesson seconds to compare
-            lastKpm = null;
-        }
-        // Also check if it's a new day. if so, don't use the last kpm
-        if (
-            lastKpm &&
-            getFormattedDay(lastKpm.start) !== getFormattedDay(payload.start)
+            getFormattedDay(lastPayload.local_start) !==
+            getFormattedDay(payload.local_start)
         ) {
             // it's a new day
-            lastKpm = null;
+            lastPayload = null;
         }
     }
 
@@ -219,6 +212,12 @@ async function validateAndUpdateCumulativeData(
     payload.project_null_error = "";
     payload.editor_seconds_error = "";
     payload.session_seconds_error = "";
+
+    // set the project null error if we're unable to find the time project metrics for this payload
+    if (!td) {
+        // We don't have a TimeData value, use the last recorded kpm data
+        payload.project_null_error = `TimeData not found using ${payload.project.directory} for editor and session seconds`;
+    }
 
     // isNewDay = 1 if the last payload timestamp is zero
     // based on getting reset for a new day
@@ -231,44 +230,27 @@ async function validateAndUpdateCumulativeData(
         // We found a TimeData object, use that info
         cumulative_editor_seconds = td.editor_seconds;
         cumulative_session_seconds = td.session_seconds;
-
-        // check against the lastKpm (if we have it) to see if there are
-        // discrepancies in regards to the editor and session seconds
-        if (lastKpm) {
-            if (lastKpm.cumulative_editor_seconds > cumulative_editor_seconds) {
-                const diff =
-                    lastKpm.cumulative_editor_seconds -
-                    cumulative_editor_seconds;
-                // add the error and update the value
-                cumulative_editor_seconds =
-                    lastKpm.cumulative_editor_seconds + 60;
-                payload.editor_seconds_error = `TimeData has lower editor seconds than last saved keystroke data by ${diff} seconds`;
-            }
-            if (
-                lastKpm.cumulative_session_seconds > cumulative_session_seconds
-            ) {
-                const diff =
-                    lastKpm.cumulative_session_seconds -
-                    cumulative_session_seconds;
-                // add the error and update the value
-                cumulative_session_seconds =
-                    lastKpm.cumulative_session_seconds + 60;
-                payload.session_seconds_error = `TimeData has lower session seconds than last saved keystroke data by ${diff} seconds`;
-            }
-        }
-    } else if (lastKpm) {
-        // We don't have a TimeData value, use the last recorded kpm data
-        payload.project_null_error = `TimeData not found using ${payload.project.directory} for editor and session seconds`;
+    } else if (lastPayload) {
         // use the last saved keystrokestats
-        cumulative_editor_seconds = lastKpm.cumulative_editor_seconds + 60;
-        cumulative_session_seconds = lastKpm.cumulative_session_seconds + 60;
+        if (lastPayload.cumulative_editor_seconds) {
+            cumulative_editor_seconds =
+                lastPayload.cumulative_editor_seconds + 60;
+        } else {
+            payload.editor_seconds_error = `No editor seconds in last payload`;
+        }
+        if (lastPayload.cumulative_session_seconds) {
+            cumulative_session_seconds =
+                lastPayload.cumulative_session_seconds + 60;
+        } else {
+            payload.editor_seconds_error = `No session seconds in last payload`;
+        }
     }
 
     // Check if the final cumulative editor seconds is less than the cumulative session seconds
     if (cumulative_editor_seconds < cumulative_session_seconds) {
         const diff = cumulative_session_seconds - cumulative_editor_seconds;
-        // Only log an error if it's greater than 45 seconds
-        if (diff > 45) {
+        // Only log an error if it's greater than 30 seconds
+        if (diff > 30) {
             payload.editor_seconds_error = `Cumulative editor seconds is behind session seconds by ${diff} seconds`;
         }
         // make sure to set it to at least the session seconds
@@ -288,6 +270,7 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     payload.local_end = nowTimes.local_now_in_sec;
     const keys = Object.keys(payload.source);
 
+    // Get time between payloads
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
     // make sure we have a project in case for some reason it made it here without one

@@ -196,7 +196,7 @@ export async function incrementSessionAndFileSecondsAndFetch(
             timeData.session_seconds
         );
 
-        // save the info to disk
+        // save the info to disk (synchronous)
         saveTimeDataSummaryToDisk(timeData);
 
         return timeData;

@@ -455,12 +455,12 @@ export class KpmManager {
             identifier: "",
             resource: {},
         });
-        keystrokeStats["keystrokes"] = 1;
+        keystrokeStats.keystrokes = 1;
         let nowTimes = getNowTimes();
         const start = nowTimes.now_in_sec - 60;
         const local_start = nowTimes.local_now_in_sec - 60;
-        keystrokeStats["start"] = start;
-        keystrokeStats["local_start"] = local_start;
+        keystrokeStats.start = start;
+        keystrokeStats.local_start = local_start;
         const fileInfo = new FileChangeInfo();
         fileInfo.add = 1;
         fileInfo.keystrokes = 1;

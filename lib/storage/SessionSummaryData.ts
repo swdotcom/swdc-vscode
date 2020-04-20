@@ -105,6 +105,7 @@ export function getTimeBetweenLastPayload() {
     let sessionMinutes = 1;
     let elapsedSeconds = 60;
 
+    // will be zero if its a new day
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
 
     // the last payload end time is reset within the new day checker
