@@ -21,7 +21,6 @@ import {
 import {
     getTimeDataSummaryFile,
     incrementSessionAndFileSecondsAndFetch,
-    getTodayTimeDataSummary,
     clearTimeDataSummary,
 } from "../storage/TimeSummaryData";
 import {
@@ -42,6 +41,7 @@ import {
     getFileContributorCount,
 } from "../repo/KpmRepoManager";
 import KeystrokeStats from "../model/KeystrokeStats";
+import { SummaryManager } from "./SummaryManager";
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -56,6 +56,10 @@ export async function getLastSavedKeystrokeStats() {
         await updateLastSavedKeystrokesStats();
     }
     return lastSavedKeystrokeStats;
+}
+
+export async function clearLastSavedKeystrokeStats() {
+    lastSavedKeystrokeStats = null;
 }
 
 /**
@@ -187,7 +191,7 @@ async function validateAndUpdateCumulativeData(
     sessionMinutes: number
 ) {
     // increment the projects session and file seconds
-    const td: TimeData = await incrementSessionAndFileSecondsAndFetch(
+    let td: TimeData = await incrementSessionAndFileSecondsAndFetch(
         payload.project,
         sessionMinutes
     );
@@ -197,6 +201,7 @@ async function validateAndUpdateCumulativeData(
 
     // get the current payloads so we can compare our last cumulative seconds.
     let lastPayload: KeystrokeStats = await getLastSavedKeystrokeStats();
+    let initiateNewDayCheck = false;
     if (lastPayload) {
         // Also check if it's a new day. if so, don't use the last payload
         if (
@@ -205,7 +210,15 @@ async function validateAndUpdateCumulativeData(
         ) {
             // it's a new day
             lastPayload = null;
+            initiateNewDayCheck = true;
+            // this should be null as well
+            td = null;
         }
+    }
+
+    // if true, run the newDayChecker
+    if (initiateNewDayCheck) {
+        await SummaryManager.getInstance().newDayChecker();
     }
 
     // default error to empty
