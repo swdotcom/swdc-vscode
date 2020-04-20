@@ -9,7 +9,7 @@
 
 <br />
 
-<p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time-tracking. 
+<p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time tracking. 
 </p>
 
 <br />
@@ -26,6 +26,10 @@
 </p>
 
 <br />
+
+<p align="center" style="margin: 0 0">
+  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/code-time-features.png" alt="Code Time features" />
+</p>
 
 ## Getting started
 
