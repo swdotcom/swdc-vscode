@@ -235,7 +235,7 @@ export async function intializePlugin(
     }
 
     // initialize the day check timer
-    SummaryManager.getInstance();
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
 
     // show the readme if it doesn't exist
     displayReadmeIfNotExists();
