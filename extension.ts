@@ -30,7 +30,10 @@ import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
-import { sendOfflineEvents } from "./lib/managers/PayloadManager";
+import {
+    sendOfflineEvents,
+    updateLastSavedKeystrokesStats,
+} from "./lib/managers/PayloadManager";
 import {
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData,
@@ -160,11 +163,14 @@ export async function intializePlugin(
         sendHeartbeat("HOURLY", isonline);
     }, hourly_interval_ms);
 
-    // every 30 minute tasks
+    // every 15 minute tasks
     const half_hour_ms = hourly_interval_ms / 2;
     offline_data_interval = setInterval(async () => {
         commands.executeCommand("codetime.sendOfflineData");
     }, half_hour_ms / 2);
+
+    // update the last saved keystrokes in memory
+    updateLastSavedKeystrokesStats();
 
     // in 1 minute task
     setTimeout(() => {
