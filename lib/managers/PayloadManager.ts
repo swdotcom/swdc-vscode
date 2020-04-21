@@ -5,6 +5,7 @@ import {
     getNowTimes,
     setItem,
     getFormattedDay,
+    isNewDay,
 } from "../Util";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import {
@@ -61,37 +62,25 @@ async function validateAndUpdateCumulativeData(
 
     let lastPayload: KeystrokeStats = await getLastSavedKeystrokeStats();
 
-    const { day } = getNowTimes();
-    const _currentDay = getItem("currentDay");
-    let initiateNewDayCheck = false;
     // check to see if we're in a new day
-    if (day !== _currentDay) {
+    if (isNewDay()) {
         lastPayload = null;
-        initiateNewDayCheck = true;
         if (td) {
             // don't rely on the previous TimeData
             td = null;
-            payload.project_null_error = `TimeData should be null as its a new day. previous day ${_currentDay}, new day: ${day}`;
+            payload.project_null_error = `TimeData should be null as its a new day`;
         }
-    }
-
-    // if true, run the newDayChecker
-    if (initiateNewDayCheck) {
         await SummaryManager.getInstance().newDayChecker();
     }
 
     const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
-    let isNewDay = lastPayloadEnd === 0 ? 1 : 0;
+    payload.new_day = lastPayloadEnd === 0 ? 1 : 0;
 
     // set the project null error if we're unable to find the time project metrics for this payload
     if (!td) {
         // We don't have a TimeData value, use the last recorded kpm data
         payload.project_null_error = `TimeData not found using ${payload.project.directory} for editor and session seconds`;
     }
-
-    // isNewDay = 1 if the last payload timestamp is zero
-    // based on getting reset for a new day
-    payload.new_day = isNewDay;
 
     // get the editor seconds
     let cumulative_editor_seconds = 60;

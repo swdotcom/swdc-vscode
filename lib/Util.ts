@@ -731,6 +731,12 @@ export function getFormattedDay(unixSeconds) {
     return moment.unix(unixSeconds).format(dayFormat);
 }
 
+export function isNewDay() {
+    const { day } = getNowTimes();
+    const currentDay = getItem("currentDay");
+    return currentDay !== day ? true : false;
+}
+
 /**
  * now - current time in UTC (Moment object)
  * now_in_sec - current time in UTC, unix seconds

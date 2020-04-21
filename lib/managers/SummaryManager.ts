@@ -1,4 +1,4 @@
-import { getItem, setItem, getNowTimes } from "../Util";
+import { getItem, setItem, getNowTimes, isNewDay } from "../Util";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
 import {
     clearSessionSummaryData,
@@ -61,8 +61,7 @@ export class SummaryManager {
      * file change info summary, then we'll force a fetch from the app
      */
     async newDayChecker() {
-        const nowTime = getNowTimes();
-        if (nowTime.day !== this._currentDay) {
+        if (isNewDay()) {
             clearSessionSummaryData();
 
             // send the offline data
@@ -80,6 +79,7 @@ export class SummaryManager {
             clearFileChangeInfoSummaryData();
 
             // set the current day
+            const nowTime = getNowTimes();
             this._currentDay = nowTime.day;
 
             // update the current day
