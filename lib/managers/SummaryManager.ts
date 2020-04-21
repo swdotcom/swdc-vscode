@@ -15,7 +15,7 @@ import {
     sendOfflineTimeData,
 } from "./FileManager";
 
-// every 10 min
+// every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
 
 export class SummaryManager {
@@ -48,6 +48,12 @@ export class SummaryManager {
         setTimeout(() => {
             this.newDayChecker();
         }, 1000);
+    }
+
+    dispose() {
+        if (this._dayCheckTimer) {
+            clearInterval(this._dayCheckTimer);
+        }
     }
 
     /**

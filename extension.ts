@@ -45,7 +45,6 @@ let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
 
-let ten_minute_interval = null;
 let fifteen_minute_interval = null;
 let twenty_minute_interval = null;
 let thirty_minute_interval = null;
@@ -90,7 +89,9 @@ export function deactivate(ctx: ExtensionContext) {
         _ls = null;
     }
 
-    clearInterval(ten_minute_interval);
+    // dispose the new day timer
+    SummaryManager.getInstance().dispose();
+
     clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
     clearInterval(thirty_minute_interval);

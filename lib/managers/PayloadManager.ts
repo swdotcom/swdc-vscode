@@ -48,28 +48,30 @@ async function validateAndUpdateCumulativeData(
     sessionMinutes: number
 ) {
     // increment the projects session and file seconds
+    // This will find a time data object based on the current day
     let td: TimeData = await incrementSessionAndFileSecondsAndFetch(
         payload.project,
         sessionMinutes
     );
 
-    const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
-    const isNewDay = lastPayloadEnd === 0 ? 1 : 0;
+    // default error to empty
+    payload.project_null_error = "";
+    payload.editor_seconds_error = "";
+    payload.session_seconds_error = "";
 
-    // get the current payloads so we can compare our last cumulative seconds.
     let lastPayload: KeystrokeStats = await getLastSavedKeystrokeStats();
+
+    const { day } = getNowTimes();
+    const _currentDay = getItem("currentDay");
     let initiateNewDayCheck = false;
-    if (lastPayload) {
-        // Also check if it's a new day. if so, don't use the last payload
-        if (
-            getFormattedDay(lastPayload.local_start) !==
-            getFormattedDay(payload.local_start)
-        ) {
-            // it's a new day
-            lastPayload = null;
-            initiateNewDayCheck = true;
-            // this should be null as well
+    // check to see if we're in a new day
+    if (day !== _currentDay) {
+        lastPayload = null;
+        initiateNewDayCheck = true;
+        if (td) {
+            // don't rely on the previous TimeData
             td = null;
+            payload.project_null_error = `TimeData should be null as its a new day. previous day ${_currentDay}, new day: ${day}`;
         }
     }
 
@@ -78,10 +80,8 @@ async function validateAndUpdateCumulativeData(
         await SummaryManager.getInstance().newDayChecker();
     }
 
-    // default error to empty
-    payload.project_null_error = "";
-    payload.editor_seconds_error = "";
-    payload.session_seconds_error = "";
+    const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
+    let isNewDay = lastPayloadEnd === 0 ? 1 : 0;
 
     // set the project null error if we're unable to find the time project metrics for this payload
     if (!td) {
