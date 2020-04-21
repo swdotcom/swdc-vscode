@@ -1,5 +1,4 @@
 import {
-    writeProjectCommitDashboard,
     writeProjectContributorCommitDashboardFromGitLogs,
     writeDailyReportDashboard,
     writeProjectCommitDashboardByRangeType,

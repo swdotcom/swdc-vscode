@@ -12,7 +12,7 @@ import { NO_PROJ_NAME, UNTITLED } from "../Constants";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import Project from "../model/Project";
 import TimeData from "../model/TimeData";
-import { WallClockManager } from "../managers/WallClockManager";
+
 const fs = require("fs");
 const moment = require("moment-timezone");
 

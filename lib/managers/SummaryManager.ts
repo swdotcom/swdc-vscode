@@ -11,9 +11,9 @@ import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import {
     sendOfflineData,
-    sendOfflineTimeData,
     clearLastSavedKeystrokeStats,
-} from "./PayloadManager";
+    sendOfflineTimeData,
+} from "./FileManager";
 
 // every 10 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;

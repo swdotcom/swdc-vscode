@@ -1,4 +1,4 @@
-import { window, ExtensionContext, commands } from "vscode";
+import { window, ExtensionContext } from "vscode";
 import { getAppJwt, getUser } from "../DataController";
 import {
     softwareSessionFileExists,
@@ -7,12 +7,12 @@ import {
     getOsUsername,
     getHostname,
     setItem,
-    getItem
+    getItem,
 } from "../Util";
 import {
     softwarePost,
     isResponseOk,
-    serverIsAvailable
+    serverIsAvailable,
 } from "../http/HttpClient";
 
 let secondary_window_activate_counter = 0;
@@ -93,7 +93,7 @@ export async function createAnonymousUser(serverIsOnline) {
                     timezone,
                     username,
                     creation_annotation,
-                    hostname
+                    hostname,
                 },
                 appJwt
             );

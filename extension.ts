@@ -31,15 +31,15 @@ import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
 import {
-    sendOfflineEvents,
-    updateLastSavedKeystrokesStats,
-} from "./lib/managers/PayloadManager";
-import {
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData,
 } from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
+import {
+    sendOfflineEvents,
+    updateLastSavedKeystrokesStats,
+} from "./lib/managers/FileManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;

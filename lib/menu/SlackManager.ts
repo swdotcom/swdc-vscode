@@ -4,7 +4,6 @@ import {
     launchWebUrl,
     setItem,
     getDailyReportSummaryFile,
-    getActiveProjectWorkspace,
     findFirstActiveDirectoryOrWorkspaceDirectory,
 } from "../Util";
 import { refetchSlackConnectStatusLazily } from "../DataController";

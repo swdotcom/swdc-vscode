@@ -1,4 +1,4 @@
-import { workspace, Disposable, window, commands } from "vscode";
+import { workspace, Disposable, window } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import {
     UNTITLED,
@@ -19,7 +19,7 @@ import {
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
-import { storeCurrentPayload } from "./PayloadManager";
+import { storeCurrentPayload } from "./FileManager";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};

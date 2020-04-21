@@ -25,12 +25,12 @@ import {
 import { KpmItem } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { sendOfflineData } from "./managers/PayloadManager";
 import {
     CodeTimeTeamProvider,
     connectCodeTimeTeamTreeView,
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
+import { sendOfflineData } from "./managers/FileManager";
 
 export function createCommands(
     kpmController: KpmManager
