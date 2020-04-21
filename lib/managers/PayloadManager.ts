@@ -31,6 +31,7 @@ import {
     updateLastSavedKeystrokesStats,
     getLastSavedKeystrokeStats,
 } from "./FileManager";
+import { WallClockManager } from "./WallClockManager";
 
 const os = require("os");
 const fs = require("fs");
@@ -201,8 +202,6 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         storePayload(payload, sessionMinutes);
         logIt(`storing kpm metrics`);
 
-        let nowTimes = getNowTimes();
-
         // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
         setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }
@@ -237,6 +236,9 @@ export async function storePayload(
 
     // update the payloads in memory
     updateLastSavedKeystrokesStats();
+
+    // update the status and tree
+    WallClockManager.getInstance().dispatchStatusViewUpdate();
 }
 
 export async function updateAggregateInfo(

@@ -45,11 +45,16 @@ let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
 
-let token_check_interval = null;
+let ten_minute_interval = null;
+let fifteen_minute_interval = null;
+let twenty_minute_interval = null;
+let thirty_minute_interval = null;
+let hourly_interval = null;
 let liveshare_update_interval = null;
-let historical_commits_interval = null;
-let offline_data_interval = null;
-let user_status_check_interval = null;
+
+const one_min_millis = 1000 * 60;
+const thirty_min_millis = one_min_millis * 30;
+const one_hour_millis = one_min_millis * 60;
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -85,10 +90,12 @@ export function deactivate(ctx: ExtensionContext) {
         _ls = null;
     }
 
-    clearInterval(token_check_interval);
+    clearInterval(ten_minute_interval);
+    clearInterval(fifteen_minute_interval);
+    clearInterval(twenty_minute_interval);
+    clearInterval(thirty_minute_interval);
+    clearInterval(hourly_interval);
     clearInterval(liveshare_update_interval);
-    clearInterval(historical_commits_interval);
-    clearInterval(offline_data_interval);
 
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
     //     if (isResponseOk(resp)) {
@@ -133,90 +140,38 @@ export async function intializePlugin(
     // this will also fetch the user and update loggedInCacheState if it's found
     await initializePreferences(serverIsOnline);
 
-    let one_min_ms = 1000 * 60;
-
-    // every hour, look for repo members
-    let hourly_interval_ms = 1000 * 60 * 60;
-
     // add the interval jobs
-
-    // every 50 minutes check repo members
-    setInterval(() => {
-        processRepoUsersForWorkspace();
-    }, 1000 * 60 * 15);
-
-    // every 45 minute tasks
-    historical_commits_interval = setInterval(async () => {
-        const isonline = await serverIsAvailable();
-        getHistoricalCommits(isonline);
-        commands.executeCommand("codetime.refreshKpmTree");
-    }, 1000 * 60 * 15);
-
-    // every 40 minute tasks
-    historical_commits_interval = setInterval(async () => {
-        sendOfflineEvents();
-    }, 1000 * 60 * 30);
-
-    // every hour tasks
-    setInterval(async () => {
-        const isonline = await serverIsAvailable();
-        sendHeartbeat("HOURLY", isonline);
-    }, hourly_interval_ms);
-
-    // every 15 minute tasks
-    const half_hour_ms = hourly_interval_ms / 2;
-    offline_data_interval = setInterval(async () => {
-        commands.executeCommand("codetime.sendOfflineData");
-    }, half_hour_ms / 2);
+    initializeIntervalJobs();
 
     // update the last saved keystrokes in memory
     updateLastSavedKeystrokesStats();
 
-    // in 1 minute task
+    // in 30 seconds
     setTimeout(() => {
         commands.executeCommand("codetime.sendOfflineData");
-    }, one_min_ms);
+    }, 1000 * 30);
 
     // in 2 minutes task
     setTimeout(() => {
         getHistoricalCommits(serverIsOnline);
-    }, one_min_ms * 2);
+    }, one_min_millis * 2);
 
     // in 3 minutes task
     setTimeout(() => {
         // check for repo users
         processRepoUsersForWorkspace();
-    }, one_min_ms * 3);
+    }, one_min_millis * 3);
 
     // in 4 minutes task
     setTimeout(() => {
         sendOfflineEvents();
-    }, one_min_ms * 4);
-
-    // 15 minute interval tasks
-    // check if the use has become a registered user
-    // if they're already logged on, it will not send a request
-    token_check_interval = setInterval(async () => {
-        if (window.state.focused) {
-            const name = getItem("name");
-            // but only if checkStatus is true
-            if (!name) {
-                isLoggedIn();
-            }
-        }
-    }, one_min_ms * 15);
-
-    // update liveshare in the offline kpm data if it has been initiated
-    liveshare_update_interval = setInterval(async () => {
-        if (window.state.focused) {
-            updateLiveshareTime();
-        }
-    }, one_min_ms * 1);
+    }, one_min_millis * 4);
 
     initializeLiveshare();
 
+    // get the login status
     // {loggedIn: true|false}
-    const loggedIn: boolean = await isLoggedIn();
+    await isLoggedIn();
 
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
@@ -240,17 +195,6 @@ export async function intializePlugin(
     // show the readme if it doesn't exist
     displayReadmeIfNotExists();
 
-    if (!loggedIn) {
-        // create a 35 min interval to check if a user is logged in
-        // or not, but only if they're still an anon user
-        user_status_check_interval = setInterval(() => {
-            const name = getItem("name");
-            if (!name) {
-                isLoggedIn();
-            }
-        }, one_min_ms * 35);
-    }
-
     // show the status bar text info
     setTimeout(() => {
         statusBarItem = window.createStatusBarItem(
@@ -271,6 +215,45 @@ export async function intializePlugin(
         // update the status bar
         updateStatusBarWithSummaryData();
     }, 0);
+}
+
+// add the interval jobs
+function initializeIntervalJobs() {
+    hourly_interval = setInterval(async () => {
+        const isonline = await serverIsAvailable();
+        sendHeartbeat("HOURLY", isonline);
+    }, one_hour_millis);
+
+    thirty_minute_interval = setInterval(async () => {
+        const isonline = await serverIsAvailable();
+        await getHistoricalCommits(isonline);
+        await processRepoUsersForWorkspace();
+    }, thirty_min_millis);
+
+    twenty_minute_interval = setInterval(async () => {
+        await sendOfflineEvents();
+        // this will get the login status if the window is focused
+        // and they're currently not a logged in
+        if (window.state.focused) {
+            const name = getItem("name");
+            // but only if checkStatus is true
+            if (!name) {
+                isLoggedIn();
+            }
+        }
+    }, one_min_millis * 20);
+
+    // every 15 minute tasks
+    fifteen_minute_interval = setInterval(async () => {
+        commands.executeCommand("codetime.sendOfflineData");
+    }, one_min_millis * 15);
+
+    // update liveshare in the offline kpm data if it has been initiated
+    liveshare_update_interval = setInterval(async () => {
+        if (window.state.focused) {
+            updateLiveshareTime();
+        }
+    }, one_min_millis);
 }
 
 function handlePauseMetricsEvent() {
