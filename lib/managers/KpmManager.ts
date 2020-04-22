@@ -1,11 +1,6 @@
 import { workspace, Disposable, window } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
-import {
-    UNTITLED,
-    UNTITLED_WORKSPACE,
-    NO_PROJ_NAME,
-    DEFAULT_DURATION_MILLIS,
-} from "../Constants";
+import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import {
     getRootPathForFile,
     isEmptyObj,
@@ -443,9 +438,9 @@ export class KpmManager {
     }
 
     public buildBootstrapKpmPayload() {
-        let rootPath = NO_PROJ_NAME;
+        let rootPath = UNTITLED;
         let fileName = UNTITLED;
-        let name = UNTITLED_WORKSPACE;
+        let name = NO_PROJ_NAME;
 
         // send the code time bootstrap payload
         let keystrokeStats = new KeystrokeStats({
@@ -537,9 +532,7 @@ export class KpmManager {
 
     private async createKeystrokeStats(filename, rootPath, nowTimes) {
         const workspaceFolder = getProjectFolder(filename);
-        const name = workspaceFolder
-            ? workspaceFolder.name
-            : UNTITLED_WORKSPACE;
+        const name = workspaceFolder ? workspaceFolder.name : NO_PROJ_NAME;
 
         // branch, identifier, email, tag
         let resourceInfo = null;

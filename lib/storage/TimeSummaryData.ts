@@ -70,8 +70,8 @@ export async function getCurrentTimeSummaryProject(
     const project: Project = new Project();
     if (!workspaceFolder || !workspaceFolder.name) {
         // no workspace folder
-        project.directory = NO_PROJ_NAME;
-        project.name = UNTITLED;
+        project.directory = UNTITLED;
+        project.name = NO_PROJ_NAME;
     } else {
         let rootPath: string = workspaceFolder.uri.fsPath;
         let name: string = workspaceFolder.name;
@@ -149,8 +149,8 @@ export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
     if (!timeData) {
         // create a untitled one
         project = new Project();
-        project.directory = NO_PROJ_NAME;
-        project.name = UNTITLED;
+        project.directory = UNTITLED;
+        project.name = NO_PROJ_NAME;
 
         timeData = new TimeData();
         timeData.day = day;

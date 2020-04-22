@@ -13,7 +13,7 @@ import {
     saveFileChangeInfoToDisk,
 } from "../storage/FileChangeInfoSummaryData";
 import { KeystrokeAggregate, FileChangeInfo } from "../model/models";
-import { NO_PROJ_NAME, UNTITLED_WORKSPACE } from "../Constants";
+import { NO_PROJ_NAME, UNTITLED } from "../Constants";
 import {
     incrementSessionSummaryData,
     getTimeBetweenLastPayload,
@@ -135,7 +135,7 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     // make sure we have a project in case for some reason it made it here without one
     if (!payload.project || !payload.project.directory) {
         payload.project = {
-            directory: UNTITLED_WORKSPACE,
+            directory: UNTITLED,
             name: NO_PROJ_NAME,
             identifier: "",
             resource: {},
