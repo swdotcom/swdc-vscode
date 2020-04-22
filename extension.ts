@@ -2,7 +2,14 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
+import {
+    window,
+    ExtensionContext,
+    StatusBarAlignment,
+    commands,
+    extensions,
+    workspace,
+} from "vscode";
 import {
     isLoggedIn,
     sendHeartbeat,
@@ -36,10 +43,7 @@ import {
 } from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
-import {
-    sendOfflineEvents,
-    updateLastSavedKeystrokesStats,
-} from "./lib/managers/FileManager";
+import { sendOfflineEvents } from "./lib/managers/FileManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -143,9 +147,6 @@ export async function intializePlugin(
 
     // add the interval jobs
     initializeIntervalJobs();
-
-    // update the last saved keystrokes in memory
-    updateLastSavedKeystrokesStats();
 
     // in 30 seconds
     setTimeout(() => {

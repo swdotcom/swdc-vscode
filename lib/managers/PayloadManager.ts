@@ -4,7 +4,6 @@ import {
     getItem,
     getNowTimes,
     setItem,
-    getFormattedDay,
     isNewDay,
 } from "../Util";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
@@ -27,12 +26,9 @@ import {
 } from "../repo/KpmRepoManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { SummaryManager } from "./SummaryManager";
-import {
-    sendBatchPayload,
-    updateLastSavedKeystrokesStats,
-    getLastSavedKeystrokeStats,
-} from "./FileManager";
+import { sendBatchPayload, getLastSavedKeystrokesStats } from "./FileManager";
 import { WallClockManager } from "./WallClockManager";
+import { workspace } from "vscode";
 
 const os = require("os");
 const fs = require("fs");
@@ -57,10 +53,8 @@ async function validateAndUpdateCumulativeData(
 
     // default error to empty
     payload.project_null_error = "";
-    payload.editor_seconds_error = "";
-    payload.session_seconds_error = "";
 
-    let lastPayload: KeystrokeStats = await getLastSavedKeystrokeStats();
+    let lastPayload: KeystrokeStats = await getLastSavedKeystrokesStats();
 
     // check to see if we're in a new day
     if (isNewDay()) {
@@ -73,13 +67,17 @@ async function validateAndUpdateCumulativeData(
         await SummaryManager.getInstance().newDayChecker();
     }
 
-    const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
-    payload.new_day = lastPayloadEnd === 0 ? 1 : 0;
+    // set the workspace name
+    if (workspace.name) {
+        payload.workspace_name = workspace.name;
+    } else {
+        payload.workspace_name = payload.project.name;
+    }
 
     // set the project null error if we're unable to find the time project metrics for this payload
     if (!td) {
         // We don't have a TimeData value, use the last recorded kpm data
-        payload.project_null_error = `TimeData not found using ${payload.project.directory} for editor and session seconds`;
+        payload.project_null_error = `No TimeData for: ${payload.project.directory}`;
     }
 
     // get the editor seconds
@@ -94,24 +92,15 @@ async function validateAndUpdateCumulativeData(
         if (lastPayload.cumulative_editor_seconds) {
             cumulative_editor_seconds =
                 lastPayload.cumulative_editor_seconds + 60;
-        } else {
-            payload.editor_seconds_error = `No editor seconds in last payload`;
         }
         if (lastPayload.cumulative_session_seconds) {
             cumulative_session_seconds =
                 lastPayload.cumulative_session_seconds + 60;
-        } else {
-            payload.editor_seconds_error = `No session seconds in last payload`;
         }
     }
 
     // Check if the final cumulative editor seconds is less than the cumulative session seconds
     if (cumulative_editor_seconds < cumulative_session_seconds) {
-        const diff = cumulative_session_seconds - cumulative_editor_seconds;
-        // Only log an error if it's greater than 30 seconds
-        if (diff > 30) {
-            payload.editor_seconds_error = `Cumulative editor seconds is behind session seconds by ${diff} seconds`;
-        }
         // make sure to set it to at least the session seconds
         cumulative_editor_seconds = cumulative_session_seconds;
     }
@@ -222,9 +211,6 @@ export async function storePayload(
                 );
         }
     );
-
-    // update the payloads in memory
-    updateLastSavedKeystrokesStats();
 
     // update the status and tree
     WallClockManager.getInstance().dispatchStatusViewUpdate();

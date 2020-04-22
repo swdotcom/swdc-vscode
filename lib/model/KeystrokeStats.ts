@@ -20,10 +20,8 @@ export default class KeystrokeStats {
     public cumulative_editor_seconds: number = 0;
     public cumulative_session_seconds: number = 0;
     public elapsed_seconds: number = 0;
-    public new_day: number; // 1 or zero to denote new day or not
+    public workspace_name: string = "";
     public project_null_error: string = "";
-    public editor_seconds_error: string = "";
-    public session_seconds_error: string = "";
 
     constructor(project: Project) {
         this.source = {};
@@ -38,10 +36,7 @@ export default class KeystrokeStats {
         this.cumulative_editor_seconds = 0;
         this.cumulative_session_seconds = 0;
         this.elapsed_seconds = 0;
-        this.new_day = 0;
         this.project_null_error = "";
-        this.editor_seconds_error = "";
-        this.session_seconds_error = "";
     }
 
     getCurrentStatsData() {

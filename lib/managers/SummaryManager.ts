@@ -9,11 +9,7 @@ import {
 import { updateSessionFromSummaryApi } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
-import {
-    sendOfflineData,
-    clearLastSavedKeystrokeStats,
-    sendOfflineTimeData,
-} from "./FileManager";
+import { sendOfflineData, sendOfflineTimeData } from "./FileManager";
 
 // every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
@@ -66,9 +62,6 @@ export class SummaryManager {
 
             // send the offline data
             await sendOfflineData(true);
-
-            // clear the last saved keystrokes
-            await clearLastSavedKeystrokeStats();
 
             // send the offline TimeData payloads
             await sendOfflineTimeData();
