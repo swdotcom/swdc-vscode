@@ -15,7 +15,7 @@ import {
     getOs,
     getVersion,
     getHostname,
-    getEditorSessionToken,
+    getWorkspaceName,
     buildLoginUrl,
     launchWebUrl,
     logIt,
@@ -393,7 +393,7 @@ export async function sendHeartbeat(reason, serverIsOnline) {
             session_ctime: getSessionFileCreateTime(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             trigger_annotation: reason,
-            editor_token: getEditorSessionToken(),
+            editor_token: getWorkspaceName(),
         };
         let api = `/data/heartbeat`;
         softwarePost(api, heartbeat, jwt).then(async (resp) => {

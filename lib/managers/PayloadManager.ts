@@ -1,11 +1,11 @@
 import {
     getSoftwareDataStoreFile,
     logIt,
-    getItem,
     getNowTimes,
     setItem,
     isNewDay,
     getProjectFolder,
+    getWorkspaceName,
 } from "../Util";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import {
@@ -72,11 +72,7 @@ async function validateAndUpdateCumulativeData(
     }
 
     // set the workspace name
-    if (workspace.name) {
-        payload.workspace_name = workspace.name;
-    } else {
-        payload.workspace_name = payload.project.name;
-    }
+    payload.workspace_name = getWorkspaceName();
 
     // set the project null error if we're unable to find the time project metrics for this payload
     if (!td) {

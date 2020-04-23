@@ -28,6 +28,10 @@ const batch_limit = 50;
 
 let latestPayload: KeystrokeStats = null;
 
+export function clearLastSavedKeystrokeStats() {
+    latestPayload = null;
+}
+
 /**
  * send the offline TimeData payloads
  */

@@ -46,17 +46,17 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
-let editorSessiontoken = null;
 let showStatusBarText = true;
 let extensionName = null;
 let extensionDisplayName = null; // Code Time or Music Time
 let sessionSummaryData = {};
+let workspace_name = null;
 
-export function getEditorSessionToken() {
-    if (!editorSessiontoken) {
-        editorSessiontoken = randomCode();
+export function getWorkspaceName() {
+    if (!workspace_name) {
+        workspace_name = randomCode();
     }
-    return editorSessiontoken;
+    return workspace_name;
 }
 
 export function getPluginId() {
