@@ -15,6 +15,7 @@ import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./FileManager";
+import Project from "../model/Project";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -531,23 +532,9 @@ export class KpmManager {
     }
 
     private async createKeystrokeStats(filename, rootPath, nowTimes) {
-        const workspaceFolder = getProjectFolder(filename);
-        const name = workspaceFolder ? workspaceFolder.name : NO_PROJ_NAME;
-
-        // branch, identifier, email, tag
-        let resourceInfo = null;
-        try {
-            resourceInfo = await getResourceInfo(rootPath);
-        } catch (e) {
-            //
-        }
-        let keystrokeStats: KeystrokeStats = new KeystrokeStats({
-            // project.directory is used as an object key, must be string
-            directory: rootPath,
-            name,
-            identifier: resourceInfo ? resourceInfo.identifier || "" : "",
-            resource: resourceInfo || {},
-        });
+        // start off with an empty project
+        const p: Project = new Project();
+        const keystrokeStats: KeystrokeStats = new KeystrokeStats(p);
 
         keystrokeStats.start = nowTimes.now_in_sec;
         keystrokeStats.local_start = nowTimes.local_now_in_sec;

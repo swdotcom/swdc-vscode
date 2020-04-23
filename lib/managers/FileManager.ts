@@ -26,6 +26,8 @@ const fs = require("fs");
 // batch offline payloads in 50. backend has a 100k body limit
 const batch_limit = 50;
 
+let latestPayload: KeystrokeStats = null;
+
 /**
  * send the offline TimeData payloads
  */
@@ -96,13 +98,14 @@ export async function getLastSavedKeystrokesStats() {
                 currentPayloads.sort(
                     (a: KeystrokeStats, b: KeystrokeStats) => b.start - a.start
                 );
-                return currentPayloads[0];
+                latestPayload = currentPayloads[0];
             }
         }
     } catch (e) {
         logIt(`Error fetching last payload: ${e.message}`);
     }
-    return null;
+    // returns one in memory if not found in file
+    return latestPayload;
 }
 
 export async function batchSendPayloadData(api, file, payloads) {

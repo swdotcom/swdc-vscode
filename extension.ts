@@ -43,7 +43,10 @@ import {
 } from "./lib/storage/SessionSummaryData";
 import { WallClockManager } from "./lib/managers/WallClockManager";
 import { EventManager } from "./lib/managers/EventManager";
-import { sendOfflineEvents } from "./lib/managers/FileManager";
+import {
+    sendOfflineEvents,
+    getLastSavedKeystrokesStats,
+} from "./lib/managers/FileManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -138,6 +141,9 @@ export async function intializePlugin(
 
     // initialize the wall clock timer
     WallClockManager.getInstance();
+
+    // this is to just set the last saved keystrokes in memory
+    getLastSavedKeystrokesStats();
 
     const serverIsOnline = await serverIsAvailable();
 

@@ -236,7 +236,7 @@ export function getWorkspaceFolderByPath(path): WorkspaceFolder {
     return null;
 }
 
-export function getProjectFolder(fileName) {
+export function getProjectFolder(fileName): WorkspaceFolder {
     let liveshareFolder = null;
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {

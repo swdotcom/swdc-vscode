@@ -5,6 +5,7 @@ import {
     getNowTimes,
     setItem,
     isNewDay,
+    getProjectFolder,
 } from "../Util";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import {
@@ -23,12 +24,14 @@ import {
     getRepoContributorInfo,
     getRepoFileCount,
     getFileContributorCount,
+    getResourceInfo,
 } from "../repo/KpmRepoManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { SummaryManager } from "./SummaryManager";
 import { sendBatchPayload, getLastSavedKeystrokesStats } from "./FileManager";
 import { WallClockManager } from "./WallClockManager";
-import { workspace } from "vscode";
+import { workspace, WorkspaceFolder } from "vscode";
+import Project from "../model/Project";
 
 const os = require("os");
 const fs = require("fs");
@@ -54,6 +57,7 @@ async function validateAndUpdateCumulativeData(
     // default error to empty
     payload.project_null_error = "";
 
+    // get the latest payload (in-memory or on file)
     let lastPayload: KeystrokeStats = await getLastSavedKeystrokesStats();
 
     // check to see if we're in a new day
@@ -116,33 +120,53 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
 
     payload.end = nowTimes.now_in_sec;
     payload.local_end = nowTimes.local_now_in_sec;
-    const keys = Object.keys(payload.source);
 
     // Get time between payloads
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
-    // make sure we have a project in case for some reason it made it here without one
-    if (!payload.project || !payload.project.directory) {
-        payload.project = {
-            directory: UNTITLED,
-            name: NO_PROJ_NAME,
-            identifier: "",
-            resource: {},
-        };
+    // get the project
+    // find the best workspace root directory from the files within the payload
+    const keys = Object.keys(payload.source);
+    let directory = UNTITLED;
+    let projName = NO_PROJ_NAME;
+    let resourceInfo = null;
+    for (let i = 0; i < keys.length; i++) {
+        const fileName = keys[i];
+        const workspaceFolder: WorkspaceFolder = getProjectFolder(fileName);
+        if (workspaceFolder) {
+            directory = workspaceFolder.uri.fsPath;
+            projName = workspaceFolder.name;
+            // since we have this, look for the repo identifier
+            resourceInfo = await getResourceInfo(directory);
+            break;
+        }
     }
 
-    // REPO contributor count
-    const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
-        payload.project.directory,
-        true
-    );
-    payload.repoContributorCount = repoContributorInfo
-        ? repoContributorInfo.count || 0
-        : 0;
+    const p: Project = new Project();
+    p.directory = directory;
+    p.name = projName;
+    p.resource = resourceInfo;
+    p.identifier =
+        resourceInfo && resourceInfo.identifier ? resourceInfo.identifier : "";
+    payload.project = p;
 
-    // REPO file count
-    const repoFileCount = await getRepoFileCount(payload.project.directory);
-    payload.repoFileCount = repoFileCount || 0;
+    if (p.identifier) {
+        // REPO contributor count
+        const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
+            directory,
+            true
+        );
+        payload.repoContributorCount = repoContributorInfo
+            ? repoContributorInfo.count || 0
+            : 0;
+
+        // REPO file count
+        const repoFileCount = await getRepoFileCount(directory);
+        payload.repoFileCount = repoFileCount || 0;
+    } else {
+        payload.repoContributorCount = 0;
+        payload.repoFileCount = 0;
+    }
 
     // validate the cumulative data
     await validateAndUpdateCumulativeData(payload, sessionMinutes);
@@ -157,14 +181,19 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
             const fileInfo: FileChangeInfo = payload.source[key];
             // ensure there is an end time
             if (!fileInfo.end) {
-                // set the end time for this file event
-                let nowTimes = getNowTimes();
                 fileInfo.end = nowTimes.now_in_sec;
                 fileInfo.local_end = nowTimes.local_now_in_sec;
             }
 
-            const repoFileContributorCount = await getFileContributorCount(key);
-            fileInfo.repoFileContributorCount = repoFileContributorCount || 0;
+            // only get the contributor info if we have a repo identifier
+            if (p.identifier) {
+                // set the contributor count per file
+                const repoFileContributorCount = await getFileContributorCount(
+                    key
+                );
+                fileInfo.repoFileContributorCount =
+                    repoFileContributorCount || 0;
+            }
             payload.source[key] = fileInfo;
         }
     }
@@ -174,15 +203,17 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
 
     // async for either
     if (sendNow) {
+        // send the payload now (only called when getting installed)
         sendBatchPayload("/data/batch", [payload]);
         logIt(`sending kpm metrics`);
     } else {
+        // store to send the batch later
         storePayload(payload, sessionMinutes);
         logIt(`storing kpm metrics`);
-
-        // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
-        setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
     }
+
+    // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
+    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
 }
 
 /**
