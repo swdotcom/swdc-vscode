@@ -2,7 +2,6 @@ import { isResponseOk, softwareGet, softwarePost } from "../http/HttpClient";
 import {
     wrapExecPromise,
     getItem,
-    isWindows,
     getWorkspaceFolders,
     normalizeGithubEmail,
     getFileType,
@@ -13,8 +12,12 @@ import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
+import { CacheManager } from "../cache/CacheManager";
 
 let myRepoInfo = [];
+
+const cacheMgr: CacheManager = CacheManager.getInstance();
+const cacheTimeoutSeconds = 60 * 10;
 
 function getProjectDir(fileName = null) {
     let workspaceFolders = getWorkspaceFolders();
@@ -120,16 +123,28 @@ export async function getRepoContributors(
         fileName = findFirstActiveDirectoryOrWorkspaceDirectory();
     }
 
+    const noSpacesFileName = fileName.replace(/^\s+/g, "");
+    const cacheId = `file-repo-contributors-info-${noSpacesFileName}`;
+
+    let teamMembers: TeamMember[] = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (teamMembers) {
+        return teamMembers;
+    }
+
+    teamMembers = [];
+
     const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
         fileName,
         filterOutNonEmails
     );
 
     if (repoContributorInfo && repoContributorInfo.members) {
-        return repoContributorInfo.members;
+        teamMembers = repoContributorInfo.members;
+        cacheMgr.set(cacheId, teamMembers, cacheTimeoutSeconds);
     }
 
-    return [];
+    return teamMembers;
 }
 
 export async function getRepoContributorInfo(
@@ -141,7 +156,16 @@ export async function getRepoContributorInfo(
         return null;
     }
 
-    let repoContributorInfo: RepoContributorInfo = new RepoContributorInfo();
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `project-repo-contributor-info-${noSpacesProjDir}`;
+
+    let repoContributorInfo: RepoContributorInfo = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (repoContributorInfo) {
+        return repoContributorInfo;
+    }
+
+    repoContributorInfo = new RepoContributorInfo();
 
     // get the repo url, branch, and tag
     let resourceInfo = await getResourceInfo(projectDir);
@@ -150,13 +174,8 @@ export async function getRepoContributorInfo(
         repoContributorInfo.tag = resourceInfo.tag;
         repoContributorInfo.branch = resourceInfo.branch;
 
-        // windows doesn't support the "uniq" command, so
-        // we'll just go through all of them if it's windows....
         // username, email
-        let cmd = `git log --pretty="%an,%ae" | sort`;
-        if (!isWindows()) {
-            cmd += " | uniq";
-        }
+        let cmd = `git log --format='%an,%ae' | sort -u`;
         // get the author name and email
         let resultList = await getCommandResult(cmd, projectDir);
         if (!resultList) {
@@ -187,6 +206,10 @@ export async function getRepoContributorInfo(
         repoContributorInfo.count = repoContributorInfo.members.length;
     }
 
+    if (repoContributorInfo && repoContributorInfo.count > 0) {
+        cacheMgr.set(cacheId, repoContributorInfo, cacheTimeoutSeconds);
+    }
+
     return repoContributorInfo;
 }
 
@@ -197,6 +220,18 @@ export async function getResourceInfo(projectDir) {
     if (!projectDir || !isGitProject(projectDir)) {
         return {};
     }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `resource-info-${noSpacesProjDir}`;
+
+    let resourceInfo = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (resourceInfo) {
+        return resourceInfo;
+    }
+
+    resourceInfo = {};
+
     const branch = await wrapExecPromise(
         "git symbolic-ref --short HEAD",
         projectDir
@@ -210,10 +245,11 @@ export async function getResourceInfo(projectDir) {
 
     // both should be valid to return the resource info
     if (branch && identifier) {
-        return { branch, identifier, email, tag };
+        resourceInfo = { branch, identifier, email, tag };
+        cacheMgr.set(cacheId, resourceInfo, cacheTimeoutSeconds);
     }
     // we don't have git info, return an empty object
-    return {};
+    return resourceInfo;
 }
 
 export async function processRepoUsersForWorkspace() {

@@ -1,11 +1,16 @@
 import { CommitChangeStats } from "../model/models";
 import { wrapExecPromise, isGitProject } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
+import { CacheManager } from "../cache/CacheManager";
+
 const moment = require("moment-timezone");
 
 const ONE_HOUR_IN_SEC = 60 * 60;
 const ONE_DAY_SEC = ONE_HOUR_IN_SEC * 24;
 const ONE_WEEK_SEC = ONE_DAY_SEC * 7;
+
+const cacheMgr: CacheManager = CacheManager.getInstance();
+const cacheTimeoutSeconds = 60 * 10;
 
 export async function getCommandResult(cmd, projectDir) {
     let result = await wrapExecPromise(cmd, projectDir);
@@ -116,45 +121,147 @@ async function getChangeStats(
 export async function getUncommitedChanges(
     projectDir
 ): Promise<CommitChangeStats> {
+    if (!projectDir || !isGitProject(projectDir)) {
+        new CommitChangeStats();
+    }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `uncommitted-changes-${noSpacesProjDir}`;
+
+    let commitChanges: CommitChangeStats = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (commitChanges) {
+        return commitChanges;
+    }
+
     const cmd = `git diff --stat`;
-    return getChangeStats(projectDir, cmd);
+    commitChanges = await getChangeStats(projectDir, cmd);
+
+    if (commitChanges) {
+        cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
+    }
+    return commitChanges;
 }
 
 export async function getTodaysCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
+    if (!projectDir || !isGitProject(projectDir)) {
+        new CommitChangeStats();
+    }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `todays-commits-${noSpacesProjDir}`;
+
+    let commitChanges: CommitChangeStats = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (commitChanges) {
+        return commitChanges;
+    }
+
     const { start, end } = getToday();
-    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
+
+    commitChanges = await getCommitsInUtcRange(
+        projectDir,
+        start,
+        end,
+        useAuthor
+    );
+
+    if (commitChanges) {
+        cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
+    }
+    return commitChanges;
 }
 
 export async function getYesterdaysCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
+    if (!projectDir || !isGitProject(projectDir)) {
+        new CommitChangeStats();
+    }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `yesterdays-commits-${noSpacesProjDir}`;
+
+    let commitChanges: CommitChangeStats = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (commitChanges) {
+        return commitChanges;
+    }
+
     const { start, end } = getYesterday();
-    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
+    commitChanges = await getCommitsInUtcRange(
+        projectDir,
+        start,
+        end,
+        useAuthor
+    );
+
+    if (commitChanges) {
+        cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
+    }
+    return commitChanges;
 }
 
 export async function getThisWeeksCommits(
     projectDir,
     useAuthor = true
 ): Promise<CommitChangeStats> {
+    if (!projectDir || !isGitProject(projectDir)) {
+        new CommitChangeStats();
+    }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `this-weeks-commits-${noSpacesProjDir}`;
+
+    let commitChanges: CommitChangeStats = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (commitChanges) {
+        return commitChanges;
+    }
+
     const { start, end } = getThisWeek();
-    return getCommitsInUtcRange(projectDir, start, end, useAuthor);
+    commitChanges = await getCommitsInUtcRange(
+        projectDir,
+        start,
+        end,
+        useAuthor
+    );
+
+    if (commitChanges) {
+        cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
+    }
+    return commitChanges;
 }
 
 async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
     if (!projectDir || !isGitProject(projectDir)) {
         new CommitChangeStats();
     }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `commits-in-range-${noSpacesProjDir}`;
+
+    let commitChanges: CommitChangeStats = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (commitChanges) {
+        return commitChanges;
+    }
+
     const resourceInfo = await getResourceInfo(projectDir);
     const authorOption =
         useAuthor && resourceInfo && resourceInfo.email
             ? ` --author=${resourceInfo.email}`
             : ``;
     const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --since=${start} --until=${end}${authorOption}`;
-    return getChangeStats(projectDir, cmd);
+    commitChanges = await getChangeStats(projectDir, cmd);
+    if (commitChanges) {
+        cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
+    }
+    return commitChanges;
 }
 
 export async function getSlackReportCommits(projectDir) {
@@ -176,19 +283,34 @@ export async function getLastCommitId(projectDir, email) {
     if (!projectDir || !isGitProject(projectDir)) {
         return {};
     }
+
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `last-commit-id-${noSpacesProjDir}`;
+
+    let lastCommitIdInfo = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (lastCommitIdInfo) {
+        return lastCommitIdInfo;
+    }
+
+    lastCommitIdInfo = {};
+
     const authorOption = email ? ` --author=${email}` : "";
     const cmd = `git log --pretty="%H,%s"${authorOption} --max-count=1`;
     const list = await getCommandResult(cmd, projectDir);
     if (list && list.length) {
         const parts = list[0].split(",");
         if (parts && parts.length === 2) {
-            return {
+            lastCommitIdInfo = {
                 commitId: parts[0],
                 comment: parts[1],
             };
+
+            // cache it
+            cacheMgr.set(cacheId, lastCommitIdInfo, cacheTimeoutSeconds);
         }
     }
-    return {};
+    return lastCommitIdInfo;
 }
 
 export async function getRepoConfigUserEmail(projectDir) {
@@ -203,13 +325,27 @@ export async function getRepoUrlLink(projectDir) {
     if (!projectDir || !isGitProject(projectDir)) {
         return "";
     }
-    const cmd = `git config --get remote.origin.url`;
-    let str = await getCommandResultString(cmd, projectDir);
 
-    if (str && str.endsWith(".git")) {
-        str = str.substring(0, str.lastIndexOf(".git"));
+    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const cacheId = `repo-link-url-${noSpacesProjDir}`;
+
+    let repoUrlLink = cacheMgr.get(cacheId);
+    // return from cache if we have it
+    if (repoUrlLink) {
+        return repoUrlLink;
     }
-    return str;
+
+    const cmd = `git config --get remote.origin.url`;
+    repoUrlLink = await getCommandResultString(cmd, projectDir);
+
+    if (repoUrlLink && repoUrlLink.endsWith(".git")) {
+        repoUrlLink = repoUrlLink.substring(0, repoUrlLink.lastIndexOf(".git"));
+    }
+    if (repoUrlLink) {
+        // cache it
+        cacheMgr.set(cacheId, repoUrlLink, cacheTimeoutSeconds);
+    }
+    return repoUrlLink;
 }
 
 /**
