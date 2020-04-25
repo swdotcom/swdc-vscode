@@ -54,22 +54,18 @@ export function createCommands(
     cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
     // MENU TREE: REVEAL
-    const displayTreeCmd = commands.registerCommand(
-        "codetime.displayTree",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.displayTree", () => {
             codetimeMenuTreeProvider.revealTree();
-        }
+        })
     );
-    cmds.push(displayTreeCmd);
 
     // MENU TREE: REFRESH
-    const refreshCodetimeTreeCmd = commands.registerCommand(
-        "codetime.refreshCodetimeMenuTree",
-        () => {
+    cmds.push(
+        commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
             codetimeMenuTreeProvider.refresh();
-        }
+        })
     );
-    cmds.push(refreshCodetimeTreeCmd);
 
     // DAILY METRICS TREE: INIT
     const kpmTreeProvider = new KpmProvider();

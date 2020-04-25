@@ -2,20 +2,13 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {
-    window,
-    ExtensionContext,
-    StatusBarAlignment,
-    commands,
-    extensions,
-    workspace,
-} from "vscode";
+import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     isLoggedIn,
     sendHeartbeat,
     initializePreferences,
 } from "./lib/DataController";
-import { onboardPlugin } from "./lib/user/OnboardManager";
+import { onboardInit } from "./lib/user/OnboardManager";
 import {
     showStatus,
     nowInSecs,
@@ -26,6 +19,7 @@ import {
     getItem,
     displayReadmeIfNotExists,
     setItem,
+    getWorkspaceName,
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
 import {
@@ -122,8 +116,37 @@ export async function activate(ctx: ExtensionContext) {
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
 
+    const workspace_name = getWorkspaceName();
+
+    const eventName = `onboard-${workspace_name}`;
+
     // onboard the user as anonymous if it's being installed
-    onboardPlugin(ctx, intializePlugin /*successFunction*/);
+    if (window.state.focused) {
+        EventManager.getInstance().createCodeTimeEvent(
+            "focused_onboard",
+            eventName,
+            "onboarding"
+        );
+        onboardInit(ctx, intializePlugin /*successFunction*/);
+    } else {
+        // 10 to 15 second delay
+        const secondDelay = getRandomArbitrary(10, 15);
+        const nonFocusedEventType = `nonfocused_onboard-${secondDelay}`;
+        // initialize in 5 seconds if this is the secondary window
+        setTimeout(() => {
+            EventManager.getInstance().createCodeTimeEvent(
+                nonFocusedEventType,
+                eventName,
+                "onboarding"
+            );
+            onboardInit(ctx, intializePlugin /*successFunction*/);
+        }, 1000 * secondDelay);
+    }
+}
+
+function getRandomArbitrary(min, max) {
+    max = max + 0.1;
+    return parseInt(Math.random() * (max - min) + min, 10);
 }
 
 export async function intializePlugin(

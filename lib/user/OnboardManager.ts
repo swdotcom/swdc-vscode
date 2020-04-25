@@ -1,77 +1,90 @@
 import { window, ExtensionContext } from "vscode";
 import { getAppJwt, getUser } from "../DataController";
 import {
-    softwareSessionFileExists,
-    jwtExists,
     showOfflinePrompt,
     getOsUsername,
     getHostname,
     setItem,
     getItem,
+    getWorkspaceName,
 } from "../Util";
 import {
     softwarePost,
     isResponseOk,
     serverIsAvailable,
 } from "../http/HttpClient";
+import { EventManager } from "../managers/EventManager";
 
-let secondary_window_activate_counter = 0;
 let retry_counter = 0;
-// 10 minutes
-const check_online_interval_ms = 1000 * 60 * 10;
+// 2 minute
+const one_min_millis = 1000 * 60;
 let atlassianOauthFetchTimeout = null;
 
-export async function onboardPlugin(
-    ctx: ExtensionContext,
-    successFunction: any
-) {
-    let windowState = window.state;
-    // check if window state is focused or not and the
-    // secondary_window_activate_counter is equal to zero
-    if (!windowState.focused && secondary_window_activate_counter === 0) {
-        // This window is not focused, call activate in 1 minute in case
-        // there's another vscode editor that is focused. Allow that one
-        // to activate right away.
-        setTimeout(() => {
-            secondary_window_activate_counter++;
-            onboardPlugin(ctx, successFunction);
-        }, 1000 * 5);
-    } else {
-        // check session.json existence
-        const serverIsOnline = await serverIsAvailable();
-        if (!softwareSessionFileExists() || !jwtExists()) {
-            // session file doesn't exist
-            // check if the server is online before creating the anon user
-            if (!serverIsOnline) {
-                if (retry_counter === 0) {
-                    showOfflinePrompt(true);
-                }
-                // call activate again later
-                setTimeout(() => {
-                    retry_counter++;
-                    onboardPlugin(ctx, successFunction);
-                }, check_online_interval_ms);
-            } else {
-                // create the anon user
-                const result = await createAnonymousUser(serverIsOnline);
-                if (!result) {
-                    if (retry_counter === 0) {
-                        showOfflinePrompt(true);
-                    }
-                    // call activate again later
-                    setTimeout(() => {
-                        retry_counter++;
-                        onboardPlugin(ctx, successFunction);
-                    }, check_online_interval_ms);
-                } else {
-                    successFunction(ctx, true);
-                }
-            }
-        } else {
-            // has a session file, continue with initialization of the plugin
-            successFunction(ctx, false);
-        }
+export function onboardInit(ctx: ExtensionContext, callback: any) {
+    const jwt = getItem("jwt");
+    if (jwt) {
+        // we have the jwt, call the callback that anon was not created
+        return callback(ctx, false /*anonCreated*/);
     }
+
+    const windowState = window.state;
+    if (windowState.focused) {
+        // perform primary window related work
+        primaryWindowOnboarding(ctx, callback);
+    } else {
+        // call the secondary onboarding logic
+        secondaryWindowOnboarding(ctx, callback);
+    }
+}
+
+async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
+    const serverIsOnline = await serverIsAvailable();
+    if (serverIsOnline) {
+        // great, it's online, create the anon user
+        await createAnonymousUser(serverIsOnline);
+        // great, it worked. call the callback
+        return callback(ctx, true /*anonCreated*/);
+    } else {
+        // not online, try again in a minute
+        if (retry_counter === 0) {
+            // show the prompt that we're unable connect to our app 1 time only
+            showOfflinePrompt(true);
+        }
+        // call activate again later
+        setTimeout(() => {
+            retry_counter++;
+            onboardInit(ctx, callback);
+        }, one_min_millis);
+    }
+}
+
+/**
+ * This is called if there's no JWT. If it reaches a
+ * 6th call it will create an anon user.
+ * @param ctx
+ * @param callback
+ */
+async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
+    const serverIsOnline = await serverIsAvailable();
+    if (!serverIsOnline) {
+        // not online, try again later
+        setTimeout(() => {
+            onboardInit(ctx, callback);
+        }, one_min_millis);
+    } else if (retry_counter < 5) {
+        if (serverIsOnline) {
+            retry_counter++;
+        }
+        // call activate again in about 6 seconds
+        setTimeout(() => {
+            onboardInit(ctx, callback);
+        }, 1000 * 5);
+    }
+
+    // tried enough times, create an anon user
+    await createAnonymousUser(serverIsOnline);
+    // call the callback
+    return callback(ctx, true /*anonCreated*/);
 }
 
 /**
@@ -87,7 +100,14 @@ export async function createAnonymousUser(serverIsOnline) {
             const username = await getOsUsername();
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const hostname = await getHostname();
-            let resp = await softwarePost(
+            const workspace_name = getWorkspaceName();
+            const eventType = `createanon-${workspace_name}`;
+            EventManager.getInstance().createCodeTimeEvent(
+                eventType,
+                "anon_creation",
+                "anon creation"
+            );
+            const resp = await softwarePost(
                 "/data/onboard",
                 {
                     timezone,
