@@ -116,13 +116,10 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     // set the end time for the session
     let nowTimes = getNowTimes();
 
-    payload.end = nowTimes.now_in_sec;
-    payload.local_end = nowTimes.local_now_in_sec;
-
     // Get time between payloads
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
 
-    // get the project
+    // GET the project
     // find the best workspace root directory from the files within the payload
     const keys = Object.keys(payload.source);
     let directory = UNTITLED;
@@ -140,6 +137,7 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         }
     }
 
+    // CREATE the project into the payload
     const p: Project = new Project();
     p.directory = directory;
     p.name = projName;
@@ -147,6 +145,12 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
     p.identifier =
         resourceInfo && resourceInfo.identifier ? resourceInfo.identifier : "";
     payload.project = p;
+
+    // validate the cumulative data
+    await validateAndUpdateCumulativeData(payload, sessionMinutes);
+
+    payload.end = nowTimes.now_in_sec;
+    payload.local_end = nowTimes.local_now_in_sec;
 
     if (p.identifier) {
         // REPO contributor count
@@ -165,9 +169,6 @@ export async function processPayload(payload: KeystrokeStats, sendNow = false) {
         payload.repoContributorCount = 0;
         payload.repoFileCount = 0;
     }
-
-    // validate the cumulative data
-    await validateAndUpdateCumulativeData(payload, sessionMinutes);
 
     // set the elapsed seconds (last end time to this end time)
     payload.elapsed_seconds = elapsedSeconds;

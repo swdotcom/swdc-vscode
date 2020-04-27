@@ -95,6 +95,7 @@ export async function batchSendData(api, file) {
 export async function getLastSavedKeystrokesStats() {
     const dataFile = getSoftwareDataStoreFile();
     try {
+        // try to get the last paylaod from the file first (data.json)
         if (fs.existsSync(dataFile)) {
             const currentPayloads = getFileDataPayloadsAsJson(dataFile);
             if (currentPayloads && currentPayloads.length) {
@@ -102,6 +103,7 @@ export async function getLastSavedKeystrokesStats() {
                 currentPayloads.sort(
                     (a: KeystrokeStats, b: KeystrokeStats) => b.start - a.start
                 );
+                // get the 1st element
                 latestPayload = currentPayloads[0];
             }
         }

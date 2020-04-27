@@ -165,7 +165,7 @@ export async function intializePlugin(
     // initialize the wall clock timer
     WallClockManager.getInstance();
 
-    // this is to just set the last saved keystrokes in memory
+    // load the last payload into memory
     getLastSavedKeystrokesStats();
 
     const serverIsOnline = await serverIsAvailable();
