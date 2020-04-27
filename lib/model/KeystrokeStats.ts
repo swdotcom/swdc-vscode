@@ -21,6 +21,7 @@ export default class KeystrokeStats {
     public cumulative_session_seconds: number = 0;
     public elapsed_seconds: number = 0;
     public workspace_name: string = "";
+    public hostname: string = "";
     public project_null_error: string = "";
 
     constructor(project: Project) {
@@ -37,6 +38,8 @@ export default class KeystrokeStats {
         this.cumulative_session_seconds = 0;
         this.elapsed_seconds = 0;
         this.project_null_error = "";
+        this.hostname = "";
+        this.workspace_name = "";
     }
 
     getCurrentStatsData() {

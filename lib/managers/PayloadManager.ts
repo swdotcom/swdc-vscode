@@ -6,6 +6,7 @@ import {
     isNewDay,
     getProjectFolder,
     getWorkspaceName,
+    getHostname,
 } from "../Util";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import {
@@ -30,7 +31,7 @@ import KeystrokeStats from "../model/KeystrokeStats";
 import { SummaryManager } from "./SummaryManager";
 import { sendBatchPayload, getLastSavedKeystrokesStats } from "./FileManager";
 import { WallClockManager } from "./WallClockManager";
-import { workspace, WorkspaceFolder } from "vscode";
+import { WorkspaceFolder } from "vscode";
 import Project from "../model/Project";
 
 const os = require("os");
@@ -73,6 +74,7 @@ async function validateAndUpdateCumulativeData(
 
     // set the workspace name
     payload.workspace_name = getWorkspaceName();
+    payload.hostname = await getHostname();
 
     // set the project null error if we're unable to find the time project metrics for this payload
     if (!td) {
