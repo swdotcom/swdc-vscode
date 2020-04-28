@@ -23,8 +23,8 @@ import KeystrokeStats from "../model/KeystrokeStats";
 
 const fs = require("fs");
 
-// batch offline payloads in 50. backend has a 100k body limit
-const batch_limit = 50;
+// batch offline payloads in 8. sqs has a 256k body limit
+const batch_limit = 8;
 
 let latestPayload: KeystrokeStats = null;
 
@@ -119,7 +119,7 @@ export async function batchSendPayloadData(api, file, payloads) {
     if (payloads && payloads.length > 0) {
         logEvent(`sending batch payloads: ${JSON.stringify(payloads)}`);
 
-        // send 50 at a time
+        // send batch_limit at a time
         let batch = [];
         for (let i = 0; i < payloads.length; i++) {
             if (batch.length >= batch_limit) {

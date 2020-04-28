@@ -424,12 +424,14 @@ export async function getHistoricalCommits(isonline) {
             commits.push(commit);
         }
 
-        // send in batches of 25 (backend has a 2mb body limit)
+        let commit_batch_size = 15;
+
+        // send in batches of 15
         if (commits && commits.length > 0) {
             let batchCommits = [];
             for (let i = 0; i < commits.length; i++) {
                 batchCommits.push(commits[i]);
-                if (i > 0 && i % 25 === 0) {
+                if (i > 0 && i % commit_batch_size === 0) {
                     let commitData = {
                         commits: batchCommits,
                         identifier,
