@@ -4,7 +4,7 @@ import {
     FileChangeInfo,
     CommitChangeStats,
 } from "../model/models";
-import { getRegisteredTeamMembers, isLoggedIn } from "../DataController";
+import { isLoggedIn } from "../DataController";
 import {
     humanizeMinutes,
     getWorkspaceFolders,
@@ -55,7 +55,6 @@ export class KpmProviderManager {
     private static instance: KpmProviderManager;
 
     private _currentKeystrokeStats: SessionSummary = new SessionSummary();
-    private _registeredTeamMembers: TeamMember[] = [];
 
     constructor() {
         //
@@ -67,15 +66,6 @@ export class KpmProviderManager {
         }
 
         return KpmProviderManager.instance;
-    }
-
-    public async refreshRegisteredTeamMembers(filePath) {
-        const resourceInfo = await getResourceInfo(filePath);
-        if (resourceInfo && resourceInfo.identifier) {
-            this._registeredTeamMembers = await getRegisteredTeamMembers(
-                resourceInfo.identifier
-            );
-        }
     }
 
     public setCurrentKeystrokeStats(keystrokeStats) {
@@ -413,19 +403,12 @@ export class KpmProviderManager {
         const treeItems: KpmItem[] = [];
 
         const activeRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
-        // async to allo the get team members to run in parallel
-        const refreshTeamMembersP = this.refreshRegisteredTeamMembers(
-            activeRootPath
-        );
 
         // get team members
         const teamMembers: TeamMember[] = await getRepoContributors(
             activeRootPath,
             false
         );
-
-        // await for the registered team members
-        await refreshTeamMembersP;
 
         const remoteUrl: string = await getRepoUrlLink(activeRootPath);
 
@@ -463,16 +446,8 @@ export class KpmProviderManager {
                 }
 
                 // check to see if this email is in the registered list
-                const foundUser = this._registeredTeamMembers.find(
-                    (n: TeamMember) => n.email === member.email
-                );
-                if (foundUser) {
-                    item.contextValue = "registered-member";
-                    item.icon = "registered-user.svg";
-                } else {
-                    item.contextValue = "unregistered-member";
-                    item.icon = "unregistered-user.svg";
-                }
+                item.contextValue = "unregistered-member";
+                item.icon = "unregistered-user.svg";
                 treeItems.push(item);
             }
         }

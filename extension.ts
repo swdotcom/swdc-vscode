@@ -22,10 +22,7 @@ import {
     getWorkspaceName,
 } from "./lib/Util";
 import { serverIsAvailable } from "./lib/http/HttpClient";
-import {
-    getHistoricalCommits,
-    processRepoUsersForWorkspace,
-} from "./lib/repo/KpmRepoManager";
+import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
 import { createCommands } from "./lib/command-helper";
@@ -49,7 +46,6 @@ let _ls = null;
 let fifteen_minute_interval = null;
 let twenty_minute_interval = null;
 let thirty_minute_interval = null;
-let fortyfive_minute_interval = null;
 let hourly_interval = null;
 let liveshare_update_interval = null;
 
@@ -97,7 +93,6 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
     clearInterval(thirty_minute_interval);
-    clearInterval(fortyfive_minute_interval);
     clearInterval(hourly_interval);
     clearInterval(liveshare_update_interval);
 
@@ -189,16 +184,10 @@ export async function intializePlugin(
         getHistoricalCommits(serverIsOnline);
     }, one_min_millis * 2);
 
-    // in 3 minutes task
-    setTimeout(() => {
-        // check for repo users
-        processRepoUsersForWorkspace();
-    }, one_min_millis * 3);
-
     // in 4 minutes task
     setTimeout(() => {
         sendOfflineEvents();
-    }, one_min_millis * 4);
+    }, one_min_millis * 3);
 
     initializeLiveshare();
 
@@ -261,10 +250,6 @@ function initializeIntervalJobs() {
         const isonline = await serverIsAvailable();
         await getHistoricalCommits(isonline);
     }, thirty_min_millis);
-
-    fortyfive_minute_interval = setInterval(() => {
-        processRepoUsersForWorkspace();
-    }, one_min_millis * 45);
 
     twenty_minute_interval = setInterval(async () => {
         await sendOfflineEvents();
