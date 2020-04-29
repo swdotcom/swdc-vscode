@@ -49,6 +49,7 @@ let _ls = null;
 let fifteen_minute_interval = null;
 let twenty_minute_interval = null;
 let thirty_minute_interval = null;
+let fortyfive_minute_interval = null;
 let hourly_interval = null;
 let liveshare_update_interval = null;
 
@@ -96,6 +97,7 @@ export function deactivate(ctx: ExtensionContext) {
     clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
     clearInterval(thirty_minute_interval);
+    clearInterval(fortyfive_minute_interval);
     clearInterval(hourly_interval);
     clearInterval(liveshare_update_interval);
 
@@ -258,8 +260,11 @@ function initializeIntervalJobs() {
     thirty_minute_interval = setInterval(async () => {
         const isonline = await serverIsAvailable();
         await getHistoricalCommits(isonline);
-        await processRepoUsersForWorkspace();
     }, thirty_min_millis);
+
+    fortyfive_minute_interval = setInterval(() => {
+        processRepoUsersForWorkspace();
+    }, one_min_millis * 45);
 
     twenty_minute_interval = setInterval(async () => {
         await sendOfflineEvents();
