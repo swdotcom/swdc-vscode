@@ -494,6 +494,7 @@ export async function writeProjectCommitDashboardByRangeType(
     type = "lastWeek",
     projectIds
 ) {
+    projectIds = projectIds.filter((n) => n);
     const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));

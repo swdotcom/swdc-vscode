@@ -10,6 +10,7 @@ import {
     getFileAgeInDays,
     getFileType,
     showInformationMessage,
+    isFileActive,
 } from "../Util";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
@@ -32,7 +33,7 @@ export class KpmManager {
 
         // document listener handlers
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
-        workspace.onDidCloseTextDocument(this._onCloseHandler, this);
+        // workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
 
         this._disposable = Disposable.from(...subscriptions);
@@ -301,6 +302,9 @@ export class KpmManager {
      */
     private updateStaticValues(payload, staticInfo) {
         const sourceObj: FileChangeInfo = payload.source[staticInfo.filename];
+        if (!sourceObj) {
+            return;
+        }
 
         // syntax
         if (!sourceObj.syntax) {
@@ -428,10 +432,14 @@ export class KpmManager {
             /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
         );
 
-        // other scheme types I know of "vscode-userdata", "git"
-        if (scheme !== "file" && scheme !== "untitled") {
-            return false;
-        } else if (isLiveshareTmpFile || isInternalFile) {
+        // if it's not active or a liveshare tmp file or internal file or not the right scheme
+        // then it's not something to track
+        if (
+            (scheme !== "file" && scheme !== "untitled") ||
+            isLiveshareTmpFile ||
+            isInternalFile ||
+            !isFileActive(filename)
+        ) {
             return false;
         }
 

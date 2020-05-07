@@ -7,6 +7,7 @@ import {
     commands,
     ViewColumn,
     WorkspaceFolder,
+    TextDocument,
 } from "vscode";
 import {
     CODE_TIME_EXT_ID,
@@ -146,6 +147,18 @@ export function getActiveProjectWorkspace(): WorkspaceFolder {
         }
     }
     return null;
+}
+
+export function isFileActive(file: string): boolean {
+    if (workspace.textDocuments) {
+        for (let i = 0; i < workspace.textDocuments.length; i++) {
+            const doc: TextDocument = workspace.textDocuments[i];
+            if (doc && doc.fileName === file) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 export function findFirstActiveDirectoryOrWorkspaceDirectory(): string {
