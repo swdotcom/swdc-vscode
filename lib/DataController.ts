@@ -917,7 +917,9 @@ export async function writeCodeTimeMetricsDashboard() {
 
     // get the summary info we just made a call for and add it to the dashboard content
     if (fs.existsSync(summaryInfoFile)) {
-        const summaryContent = fs.readFileSync(summaryInfoFile).toString();
+        const summaryContent = fs
+            .readFileSync(summaryInfoFile, { encoding: "utf8" })
+            .toString();
 
         // create the dashboard file
         dashboardContent += summaryContent;

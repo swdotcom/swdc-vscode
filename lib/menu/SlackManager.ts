@@ -47,7 +47,9 @@ export async function sendGeneratedReportReport() {
         }
     } else {
         const filePath = getDailyReportSummaryFile();
-        const content = fs.readFileSync(filePath).toString();
+        const content = fs
+            .readFileSync(filePath, { encoding: "utf8" })
+            .toString();
         const selectedChannel = await showSlackChannelMenu();
         if (!selectedChannel) {
             return;

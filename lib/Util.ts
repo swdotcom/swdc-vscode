@@ -626,7 +626,9 @@ export function getExtensionDisplayName() {
         extInfoFile += "/extensioninfo.json";
     }
     if (fs.existsSync(extInfoFile)) {
-        const content = fs.readFileSync(extInfoFile).toString();
+        const content = fs
+            .readFileSync(extInfoFile, { encoding: "utf8" })
+            .toString();
         if (content) {
             try {
                 let data = JSON.parse(cleanJsonString(content));
@@ -655,7 +657,9 @@ export function getExtensionName() {
         extInfoFile += "/extensioninfo.json";
     }
     if (fs.existsSync(extInfoFile)) {
-        const content = fs.readFileSync(extInfoFile).toString();
+        const content = fs
+            .readFileSync(extInfoFile, { encoding: "utf8" })
+            .toString();
         if (content) {
             try {
                 let data = JSON.parse(cleanJsonString(content));
@@ -689,7 +693,9 @@ export function getSoftwareSessionAsJson() {
 
     const sessionFile = getSoftwareSessionFile();
     if (fs.existsSync(sessionFile)) {
-        const content = fs.readFileSync(sessionFile).toString();
+        const content = fs
+            .readFileSync(sessionFile, { encoding: "utf8" })
+            .toString();
         if (content) {
             try {
                 data = JSON.parse(cleanJsonString(content));
@@ -1239,7 +1245,7 @@ export function cleanJsonString(content) {
 export function getFileDataAsJson(file) {
     let data = null;
     if (fs.existsSync(file)) {
-        let content = fs.readFileSync(file).toString();
+        let content = fs.readFileSync(file, { encoding: "utf8" }).toString();
         if (content) {
             try {
                 data = JSON.parse(cleanJsonString(content));
@@ -1256,7 +1262,7 @@ export function getFileDataAsJson(file) {
 export function getFileDataArray(file) {
     let payloads: any[] = [];
     if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file).toString();
+        const content = fs.readFileSync(file, { encoding: "utf8" }).toString();
         try {
             let jsonData = JSON.parse(cleanJsonString(content));
             if (!Array.isArray(jsonData)) {
@@ -1274,7 +1280,7 @@ export function getFileDataArray(file) {
 export function getFileDataPayloadsAsJson(file) {
     let payloads: any[] = [];
     if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file).toString();
+        const content = fs.readFileSync(file, { encoding: "utf8" }).toString();
         if (content) {
             payloads = content
                 .split(/\r?\n/)
