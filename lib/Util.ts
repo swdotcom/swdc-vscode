@@ -24,7 +24,6 @@ import {
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
-import { serverIsAvailable } from "./http/HttpClient";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 
 const moment = require("moment-timezone");
@@ -924,12 +923,7 @@ export function humanizeMinutes(min) {
 }
 
 export async function launchLogin(loginType = "software") {
-    const serverOnline = await serverIsAvailable();
-    if (!serverOnline) {
-        showOfflinePrompt();
-        return;
-    }
-    let loginUrl = await buildLoginUrl(serverOnline, loginType);
+    let loginUrl = await buildLoginUrl(loginType);
     setItem("authType", loginType);
     launchWebUrl(loginUrl);
     // use the defaults
@@ -970,12 +964,12 @@ export async function showLoginPrompt(serverIsOnline) {
     );
 }
 
-export async function buildLoginUrl(serverOnline, loginType = "software") {
+export async function buildLoginUrl(loginType = "software") {
     let jwt = getItem("jwt");
     if (!jwt) {
         // we should always have a jwt, but if  not create one
         // this will serve as a temp token until they've onboarded
-        jwt = await getAppJwt(serverOnline);
+        jwt = await getAppJwt();
         setItem("jwt", jwt);
     }
     if (jwt) {
@@ -996,16 +990,11 @@ export async function buildLoginUrl(serverOnline, loginType = "software") {
 }
 
 export async function connectAtlassian() {
-    const serverOnline = await serverIsAvailable();
-    if (!serverOnline) {
-        showOfflinePrompt();
-        return;
-    }
     let jwt = getItem("jwt");
     if (!jwt) {
         // we should always have a jwt, but if  not create one
         // this will serve as a temp token until they've onboarded
-        jwt = await getAppJwt(serverOnline);
+        jwt = await getAppJwt();
         setItem("jwt", jwt);
     }
 

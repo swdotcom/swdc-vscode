@@ -17,7 +17,6 @@ import {
     writeCodeTimeMetricsDashboard,
     isLoggedIn,
 } from "../DataController";
-import { serverIsAvailable } from "../http/HttpClient";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { EventManager } from "../managers/EventManager";
 
@@ -68,8 +67,6 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
-    const serverIsOnline = await serverIsAvailable();
-
     EventManager.getInstance().createCodeTimeEvent(
         "mouse",
         "click",
@@ -93,10 +90,6 @@ export async function showMenuOptions() {
 
     let loginMsgDetail =
         "Finish creating your account and see rich data visualizations.";
-    if (!serverIsOnline) {
-        loginMsgDetail =
-            "Our service is temporarily unavailable. Please try again later.";
-    }
     if (!loggedIn) {
         kpmMenuOptions.items.push({
             label: LOGIN_LABEL,

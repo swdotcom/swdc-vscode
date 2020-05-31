@@ -5,7 +5,6 @@ import {
     softwarePut,
     isResponseOk,
     softwarePost,
-    serverIsAvailable,
 } from "./http/HttpClient";
 import {
     getItem,
@@ -99,23 +98,18 @@ export async function sendTeamInvite(identifier, emails) {
 /**
  * get the app jwt
  */
-export async function getAppJwt(serverIsOnline) {
-    if (serverIsOnline) {
-        // get the app jwt
-        let resp = await softwareGet(
-            `/data/apptoken?token=${nowInSecs()}`,
-            null
-        );
-        if (isResponseOk(resp)) {
-            return resp.data.jwt;
-        }
+export async function getAppJwt() {
+    // get the app jwt
+    let resp = await softwareGet(`/data/apptoken?token=${nowInSecs()}`, null);
+    if (isResponseOk(resp)) {
+        return resp.data.jwt;
     }
     return null;
 }
 
-export async function getUserRegistrationState(serverIsOnline) {
+export async function getUserRegistrationState() {
     let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
+    if (jwt) {
         let api = "/users/plugin/state";
         let resp = await softwareGet(api, jwt);
 
@@ -158,18 +152,18 @@ export async function isLoggedIn(): Promise<boolean> {
     if (name) {
         return true;
     }
-    const serverIsOnline = await serverIsAvailable();
-    const state = await getUserRegistrationState(serverIsOnline);
+
+    const state = await getUserRegistrationState();
     if (state.loggedOn) {
-        initializePreferences(serverIsOnline);
+        initializePreferences();
     }
     return state.loggedOn;
 }
 
-export async function getSlackOauth(serverIsOnline) {
+export async function getSlackOauth() {
     let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
-        let user = await getUser(serverIsOnline, jwt);
+    if (jwt) {
+        let user = await getUser(jwt);
         if (user && user.auths) {
             // get the one that is "slack"
             for (let i = 0; i < user.auths.length; i++) {
@@ -182,8 +176,8 @@ export async function getSlackOauth(serverIsOnline) {
     }
 }
 
-export async function getUser(serverIsOnline, jwt) {
-    if (jwt && serverIsOnline) {
+export async function getUser(jwt) {
+    if (jwt) {
         let api = `/users/me`;
         let resp = await softwareGet(api, jwt);
         if (isResponseOk(resp)) {
@@ -200,13 +194,13 @@ export async function getUser(serverIsOnline, jwt) {
     return null;
 }
 
-export async function initializePreferences(serverIsOnline) {
+export async function initializePreferences() {
     let jwt = getItem("jwt");
     // use a default if we're unable to get the user or preferences
     let sessionThresholdInSec = DEFAULT_SESSION_THRESHOLD_SECONDS;
 
-    if (jwt && serverIsOnline) {
-        let user = await getUser(serverIsOnline, jwt);
+    if (jwt) {
+        let user = await getUser(jwt);
         if (user && user.preferences) {
             // obtain the session threshold in seconds "sessionThresholdInSec"
             sessionThresholdInSec =
@@ -284,9 +278,8 @@ export async function updatePreferences() {
 
     // get the user's preferences and update them if they don't match what we have
     let jwt = getItem("jwt");
-    let serverIsOnline = await serverIsAvailable();
-    if (jwt && serverIsOnline) {
-        let user = await getUser(serverIsOnline, jwt);
+    if (jwt) {
+        let user = await getUser(jwt);
         if (!user) {
             return;
         }
@@ -331,7 +324,6 @@ export function refetchUserStatusLazily(
 }
 
 async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
-    let serverIsOnline = await serverIsAvailable();
     let loggedIn: boolean = await isLoggedIn();
     if (!loggedIn) {
         // try again if the count is not zero
@@ -340,7 +332,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
         }
     } else {
-        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`, serverIsOnline);
+        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`);
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
@@ -365,8 +357,7 @@ export function refetchSlackConnectStatusLazily(
 }
 
 async function slackConnectStatusHandler(callback, tryCountUntilFound) {
-    let serverIsOnline = await serverIsAvailable();
-    let oauth = await getSlackOauth(serverIsOnline);
+    let oauth = await getSlackOauth();
     if (!oauth) {
         // try again if the count is not zero
         if (tryCountUntilFound > 0) {
@@ -381,9 +372,9 @@ async function slackConnectStatusHandler(callback, tryCountUntilFound) {
     }
 }
 
-export async function sendHeartbeat(reason, serverIsOnline) {
+export async function sendHeartbeat(reason) {
     let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
+    if (jwt) {
         let heartbeat = {
             pluginId: getPluginId(),
             os: getOs(),
@@ -405,13 +396,12 @@ export async function sendHeartbeat(reason, serverIsOnline) {
 }
 
 export async function handleKpmClickedEvent() {
-    let serverIsOnline = await serverIsAvailable();
     // {loggedIn: true|false}
     let loggedIn: boolean = await isLoggedIn();
     let webUrl = await buildWebDashboardUrl();
 
     if (!loggedIn) {
-        webUrl = await buildLoginUrl(serverIsOnline);
+        webUrl = await buildLoginUrl();
         refetchUserStatusLazily();
     } else {
         // add the token=jwt
@@ -424,25 +414,23 @@ export async function handleKpmClickedEvent() {
 
 export async function writeCommitSummaryData() {
     const filePath = getCommitSummaryFile();
-    const serverIsOnline = await serverIsAvailable();
-    if (serverIsOnline) {
-        const result = await softwareGet(
-            `/dashboard/commits`,
-            getItem("jwt")
-        ).catch((err) => {
-            return null;
+
+    const result = await softwareGet(
+        `/dashboard/commits`,
+        getItem("jwt")
+    ).catch((err) => {
+        return null;
+    });
+    if (isResponseOk(result) && result.data) {
+        // get the string content out
+        const content = result.data;
+        fs.writeFileSync(filePath, content, (err) => {
+            if (err) {
+                logIt(
+                    `Error writing to the weekly commit summary content file: ${err.message}`
+                );
+            }
         });
-        if (isResponseOk(result) && result.data) {
-            // get the string content out
-            const content = result.data;
-            fs.writeFileSync(filePath, content, (err) => {
-                if (err) {
-                    logIt(
-                        `Error writing to the weekly commit summary content file: ${err.message}`
-                    );
-                }
-            });
-        }
     }
 
     if (!fs.existsSync(filePath)) {
@@ -852,26 +840,24 @@ function createStartEndRangeByType(type = "lastWeek") {
 
 export async function writeCodeTimeMetricsDashboard() {
     const summaryInfoFile = getSummaryInfoFile();
-    const serverIsOnline = await serverIsAvailable();
 
     // write the code time metrics summary to the summaryInfo file
-    if (serverIsOnline) {
-        let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
 
-        let api = `/dashboard?showMusic=false&showGit=${showGitMetrics}&showRank=false&linux=${isLinux()}&showToday=false`;
-        const result = await softwareGet(api, getItem("jwt"));
+    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
 
-        if (isResponseOk(result)) {
-            // get the string content out
-            const content = result.data;
-            fs.writeFileSync(summaryInfoFile, content, (err) => {
-                if (err) {
-                    logIt(
-                        `Error writing to the code time summary content file: ${err.message}`
-                    );
-                }
-            });
-        }
+    let api = `/dashboard?showMusic=false&showGit=${showGitMetrics}&showRank=false&linux=${isLinux()}&showToday=false`;
+    const result = await softwareGet(api, getItem("jwt"));
+
+    if (isResponseOk(result)) {
+        // get the string content out
+        const content = result.data;
+        fs.writeFileSync(summaryInfoFile, content, (err) => {
+            if (err) {
+                logIt(
+                    `Error writing to the code time summary content file: ${err.message}`
+                );
+            }
+        });
     }
 
     // create the header

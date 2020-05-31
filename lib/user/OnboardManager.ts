@@ -41,7 +41,7 @@ async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
     const serverIsOnline = await serverIsAvailable();
     if (serverIsOnline) {
         // great, it's online, create the anon user
-        await createAnonymousUser(serverIsOnline);
+        await createAnonymousUser();
         // great, it worked. call the callback
         return callback(ctx, true /*anonCreated*/);
     } else {
@@ -82,7 +82,7 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
     }
 
     // tried enough times, create an anon user
-    await createAnonymousUser(serverIsOnline);
+    await createAnonymousUser();
     // call the callback
     return callback(ctx, true /*anonCreated*/);
 }
@@ -90,9 +90,9 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(serverIsOnline) {
-    let appJwt = await getAppJwt(serverIsOnline);
-    if (appJwt && serverIsOnline) {
+export async function createAnonymousUser() {
+    let appJwt = await getAppJwt();
+    if (appJwt) {
         const jwt = getItem("jwt");
         // check one more time before creating the anon user
         if (!jwt) {
@@ -137,8 +137,7 @@ export function refetchAtlassianOauthLazily(tryCountUntilFoundUser = 40) {
 }
 
 async function refetchAtlassianOauthFetchHandler(tryCountUntilFoundUser) {
-    const serverIsOnline = await serverIsAvailable();
-    const oauth = await getAtlassianOauth(serverIsOnline);
+    const oauth = await getAtlassianOauth();
     if (!oauth) {
         // try again if the count is not zero
         if (tryCountUntilFoundUser > 0) {
@@ -151,10 +150,10 @@ async function refetchAtlassianOauthFetchHandler(tryCountUntilFoundUser) {
     }
 }
 
-export async function getAtlassianOauth(serverIsOnline) {
+export async function getAtlassianOauth() {
     let jwt = getItem("jwt");
-    if (serverIsOnline && jwt) {
-        let user = await getUser(serverIsOnline, jwt);
+    if (jwt) {
+        let user = await getUser(jwt);
         if (user && user.auths) {
             // get the one that is "slack"
             for (let i = 0; i < user.auths.length; i++) {

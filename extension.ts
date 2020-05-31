@@ -21,7 +21,6 @@ import {
     setItem,
     getWorkspaceName,
 } from "./lib/Util";
-import { serverIsAvailable } from "./lib/http/HttpClient";
 import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
 import * as vsls from "vsls/vscode";
@@ -165,11 +164,9 @@ export async function intializePlugin(
     // load the last payload into memory
     getLastSavedKeystrokesStats();
 
-    const serverIsOnline = await serverIsAvailable();
-
     // get the user preferences whether it's music time or code time
     // this will also fetch the user and update loggedInCacheState if it's found
-    await initializePreferences(serverIsOnline);
+    await initializePreferences();
 
     // add the interval jobs
     initializeIntervalJobs();
@@ -181,7 +178,7 @@ export async function intializePlugin(
 
     // in 2 minutes task
     setTimeout(() => {
-        getHistoricalCommits(serverIsOnline);
+        getHistoricalCommits();
     }, one_min_millis * 2);
 
     // in 4 minutes task
@@ -204,7 +201,7 @@ export async function intializePlugin(
 
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
-        sendHeartbeat("INSTALLED", serverIsOnline);
+        sendHeartbeat("INSTALLED");
 
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");
@@ -242,13 +239,11 @@ export async function intializePlugin(
 // add the interval jobs
 function initializeIntervalJobs() {
     hourly_interval = setInterval(async () => {
-        const isonline = await serverIsAvailable();
-        sendHeartbeat("HOURLY", isonline);
+        sendHeartbeat("HOURLY");
     }, one_hour_millis);
 
     thirty_minute_interval = setInterval(async () => {
-        const isonline = await serverIsAvailable();
-        await getHistoricalCommits(isonline);
+        await getHistoricalCommits();
     }, thirty_min_millis);
 
     twenty_minute_interval = setInterval(async () => {

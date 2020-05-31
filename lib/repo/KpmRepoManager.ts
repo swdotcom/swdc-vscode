@@ -8,7 +8,6 @@ import {
     findFirstActiveDirectoryOrWorkspaceDirectory,
     isGitProject,
 } from "../Util";
-import { serverIsAvailable } from "../http/HttpClient";
 import { getCommandResult } from "./GitUtil";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
@@ -48,9 +47,8 @@ export async function getMyRepoInfo() {
     if (myRepoInfo.length > 0) {
         return myRepoInfo;
     }
-    const serverAvailable = await serverIsAvailable();
     const jwt = getItem("jwt");
-    if (serverAvailable && jwt) {
+    if (jwt) {
         // list of [{identifier, tag, branch}]
         const resp = await softwareGet("/repo/info", jwt);
         if (isResponseOk(resp)) {
@@ -314,10 +312,7 @@ async function getLastCommit() {
 /**
  * get the historical git commits
  */
-export async function getHistoricalCommits(isonline) {
-    if (!isonline) {
-        return;
-    }
+export async function getHistoricalCommits() {
     const projectDir = getProjectDir();
     if (!projectDir || !isGitProject(projectDir)) {
         return null;
