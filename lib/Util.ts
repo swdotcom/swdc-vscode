@@ -552,7 +552,7 @@ export function getPluginEventsFile() {
 }
 
 export function getLocalREADMEFile() {
-    let file = __dirname;
+    let file = path.resolve();
     if (isWindows()) {
         file += "\\README.md";
     } else {
@@ -562,7 +562,7 @@ export function getLocalREADMEFile() {
 }
 
 export function getImagesDir() {
-    let dir = __dirname;
+    let dir = path.resolve();
     if (isWindows()) {
         dir += "\\images";
     } else {
@@ -612,37 +612,6 @@ export function openFileInEditor(file) {
             }
         }
     );
-}
-
-export function getExtensionDisplayName() {
-    if (extensionDisplayName) {
-        return extensionDisplayName;
-    }
-    let extInfoFile = __dirname;
-    if (isWindows()) {
-        extInfoFile += "\\extensioninfo.json";
-    } else {
-        extInfoFile += "/extensioninfo.json";
-    }
-    if (fs.existsSync(extInfoFile)) {
-        const content = fs
-            .readFileSync(extInfoFile, { encoding: "utf8" })
-            .toString();
-        if (content) {
-            try {
-                let data = JSON.parse(cleanJsonString(content));
-                if (data) {
-                    extensionDisplayName = data.displayName;
-                }
-            } catch (e) {
-                logIt(`unable to read ext info name: ${e.message}`);
-            }
-        }
-    }
-    if (!extensionDisplayName) {
-        extensionDisplayName = "Code Time";
-    }
-    return extensionDisplayName;
 }
 
 export function getExtensionName() {
@@ -822,35 +791,6 @@ export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
     }
 
     return email;
-}
-
-export function getSongDisplayName(name) {
-    if (!name) {
-        return "";
-    }
-    name = name.trim();
-    if (name.length > 11) {
-        return `${name.substring(0, 10)}...`;
-    }
-    return name;
-}
-
-export async function getGitEmail() {
-    let workspaceFolders = getWorkspaceFolders();
-
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-        return null;
-    }
-
-    for (let i = 0; i < workspaceFolders.length; i++) {
-        let projectDir = workspaceFolders[i].uri.fsPath;
-
-        let email = await wrapExecPromise("git config user.email", projectDir);
-        if (email) {
-            return email;
-        }
-    }
-    return null;
 }
 
 export async function wrapExecPromise(cmd, projectDir) {
