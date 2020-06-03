@@ -23,7 +23,7 @@ import {
 } from "./lib/Util";
 import { getHistoricalCommits } from "./lib/repo/KpmRepoManager";
 import { manageLiveshareSession } from "./lib/LiveshareManager";
-import * as vsls from "vsls/vscode";
+import { getApi } from "vsls";
 import { createCommands } from "./lib/command-helper";
 import { KpmManager } from "./lib/managers/KpmManager";
 import { SummaryManager } from "./lib/managers/SummaryManager";
@@ -291,7 +291,7 @@ function updateLiveshareTime() {
 }
 
 async function initializeLiveshare() {
-    const liveshare = await vsls.getApi();
+    const liveshare = await getApi();
     if (liveshare) {
         // {access: number, id: string, peerNumber: number, role: number, user: json}
         logIt(`liveshare version - ${liveshare["apiVersion"]}`);

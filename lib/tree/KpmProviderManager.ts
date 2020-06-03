@@ -38,16 +38,7 @@ import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 const path = require("path");
-
-// this current path is in the out/lib. We need to find the resource files
-// which are in out/resources
-const resourcePath: string = path.join(
-    __filename,
-    "..",
-    "..",
-    "..",
-    "resources"
-);
+const resourcePath: string = path.resolve("resources");
 
 let counter = 0;
 
