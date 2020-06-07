@@ -3,8 +3,7 @@
 "use strict";
 
 const path = require("path");
-const CopyPlugin = require('copy-webpack-plugin');
-
+const CopyPlugin = require("copy-webpack-plugin");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -14,29 +13,29 @@ const config = {
         path: path.resolve(__dirname, "dist"),
         filename: "extension.js",
         libraryTarget: "commonjs2",
-        devtoolModuleFilenameTemplate: "../[resource-path]"
+        devtoolModuleFilenameTemplate: "../[resource-path]",
     },
     entry: "./src/extension.ts", // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
     node: {
         __dirname: false,
-        __filename: false
+        __filename: false,
     },
     devtool: "source-map",
     externals: {
-        vscode: "commonjs vscode" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
+        vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
     },
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-        extensions: [".ts", ".js"]
+        extensions: [".ts", ".js"],
     },
     plugins: [
         new CopyPlugin({
             patterns: [
                 { from: "./resources", to: "resources" },
                 { from: "./images", to: "images" },
-                { from: "./README.md", to: "" },
-                { from: "./src/extensioninfo.json", to: "" }
-            ]
+                { from: "./README.md", to: "resources" },
+                { from: "./src/extensioninfo.json", to: "resources" },
+            ],
         }),
     ],
     module: {
@@ -46,17 +45,15 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: "ts-loader"
-                    }
-                ]
+                        loader: "ts-loader",
+                    },
+                ],
             },
             {
                 test: /\.(png|svg|jpg|gif)$/,
-                use: [
-                    'file-loader',
-                ],
+                use: ["file-loader"],
             },
-        ]
-    }
+        ],
+    },
 };
 module.exports = config;

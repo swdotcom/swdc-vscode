@@ -552,23 +552,9 @@ export function getPluginEventsFile() {
 }
 
 export function getLocalREADMEFile() {
-    let file = path.resolve();
-    if (isWindows()) {
-        file += "\\README.md";
-    } else {
-        file += "/README.md";
-    }
+    const resourcePath: string = path.join(__dirname, "resources");
+    const file = path.join(resourcePath, "README.md");
     return file;
-}
-
-export function getImagesDir() {
-    let dir = path.resolve();
-    if (isWindows()) {
-        dir += "\\images";
-    } else {
-        dir += "/images";
-    }
-    return dir;
 }
 
 export function displayReadmeIfNotExists(override = false) {
@@ -618,12 +604,10 @@ export function getExtensionName() {
     if (extensionName) {
         return extensionName;
     }
-    let extInfoFile = __dirname;
-    if (isWindows()) {
-        extInfoFile += "\\extensioninfo.json";
-    } else {
-        extInfoFile += "/extensioninfo.json";
-    }
+
+    const resourcePath: string = path.join(__dirname, "resources");
+    const extInfoFile = path.join(resourcePath, "extensioninfo.json");
+
     if (fs.existsSync(extInfoFile)) {
         const content = fs
             .readFileSync(extInfoFile, { encoding: "utf8" })

@@ -40,11 +40,6 @@ const moment = require("moment-timezone");
 const path = require("path");
 const resourcePath: string = path.join(__dirname, "resources");
 
-console.log("DIRNAME", __dirname);
-console.log("FILENAME", __filename);
-console.log("RESOLVE", path.resolve("./resources"));
-console.log("RESOURCE PATH", resourcePath);
-
 let counter = 0;
 
 export class KpmProviderManager {
