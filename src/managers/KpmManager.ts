@@ -4,7 +4,6 @@ import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import {
     getRootPathForFile,
     isEmptyObj,
-    getProjectFolder,
     getNowTimes,
     logEvent,
     getFileAgeInDays,
@@ -12,7 +11,6 @@ import {
     showInformationMessage,
     isFileActive,
 } from "../Util";
-import { getResourceInfo } from "../repo/KpmRepoManager";
 import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./FileManager";

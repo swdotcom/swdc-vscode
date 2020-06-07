@@ -3,6 +3,7 @@ import { wrapExecPromise, isGitProject } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 import { CacheManager } from "../cache/CacheManager";
 
+const path = require("path");
 const moment = require("moment-timezone");
 
 const ONE_HOUR_IN_SEC = 60 * 60;
@@ -284,8 +285,9 @@ export async function getLastCommitId(projectDir, email) {
         return {};
     }
 
-    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
-    const cacheId = `last-commit-id-${noSpacesProjDir}`;
+    const fileName = path.basename(projectDir);
+    const noSpacesProjDir = fileName.replace(/^\s+/g, "");
+    const cacheId = `last-commit-id_${email}_${noSpacesProjDir}`;
 
     let lastCommitIdInfo = cacheMgr.get(cacheId);
     // return from cache if we have it
