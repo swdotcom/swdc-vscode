@@ -37,6 +37,7 @@ import {
     sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
+import { codeEvent, editorAction } from "./snowplow/events";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -109,6 +110,9 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+    // test snowplow event
+    codeEvent("codetime activated")
+    editorAction("editor", "unfocus", -420)
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
 
