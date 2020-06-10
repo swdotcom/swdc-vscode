@@ -129,6 +129,7 @@
         "numeral": "^2.0.6",
         "open": "^6.4.0",
         "snowplow-tracker": "^0.3.0",
+        "swdc-tracker": "file:./../swdc-tracker",
         "vsls": "0.3.1291"
     }
 }

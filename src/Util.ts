@@ -25,6 +25,7 @@ import {
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
+import swdcTracker from "swdc-tracker";
 
 const moment = require("moment-timezone");
 const open = require("open");
@@ -558,6 +559,8 @@ export function getLocalREADMEFile() {
 }
 
 export function displayReadmeIfNotExists(override = false) {
+    swdcTracker.trackEditorAction("file", "open", 420)
+
     const displayedReadme = getItem("vscode_CtReadme");
     if (!displayedReadme || override) {
         const readmeUri = Uri.file(getLocalREADMEFile());

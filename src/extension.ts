@@ -37,7 +37,8 @@ import {
     sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
-import { codeEvent, editorAction } from "./snowplow/events";
+import { api_endpoint } from './Constants';
+import swdcTracker from 'swdc-tracker'
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -110,9 +111,9 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-    // test snowplow event
-    codeEvent("codetime activated")
-    editorAction("editor", "unfocus", -420)
+    // initialize event tracker
+    swdcTracker.initialize(api_endpoint, "codetime-events", "codetime-vscode")
+
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
 
