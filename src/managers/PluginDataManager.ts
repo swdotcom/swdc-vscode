@@ -103,6 +103,9 @@ export class PluginDataManager {
         this.dayCheckTimer = setInterval(() => {
             this.midnightCheckHandler();
         }, FIVE_MIN_INTERVAL);
+
+        // check right away
+        this.midnightCheckHandler();
     }
 
     /**
@@ -169,13 +172,25 @@ export class PluginDataManager {
     }
 
     /**
-     * Step 1) Clear "cumulative_code_time_seconds"
-     * Step 2) Clear "cumulative_active_code_time_seconds"
+     * If it's a new day...
+     * Step 1)
+     *   Send offline data
+     * Step 2)
+     *   Clear "cumulative_code_time_seconds"
+     *   Clear "cumulative_active_code_time_seconds"
+     * Step 3)
+     *   Send other types of offline data like the time data
+     * Step 4)
+     *   Clear file metrics and set current day to today
      */
     async midnightCheckHandler() {
         const nowTimes = getNowTimes();
 
         if (isNewDay()) {
+            // send the offline data
+            await sendOfflineData();
+
+            // reset stats
             this.stats.cumulative_code_time_seconds = 0;
             this.stats.cumulative_active_code_time_seconds = 0;
             // set the current day
@@ -186,9 +201,6 @@ export class PluginDataManager {
 
             // Clear the session summary data (report and status bar info)
             clearSessionSummaryData();
-
-            // send the offline data
-            await sendOfflineData();
 
             // clear the last save payload
             clearLastSavedKeystrokeStats();
@@ -237,7 +249,7 @@ export class PluginDataManager {
         // make sure all files have an end time
         this.completeFileEndTimes(payload, nowTimes);
 
-        // set the end times
+        // set the payload's end times
         payload.end = nowTimes.now_in_sec;
         payload.local_end = nowTimes.local_now_in_sec;
 
@@ -283,8 +295,6 @@ export class PluginDataManager {
         this.stats.last_payload_end_utc = nowTimes.now_in_sec;
 
         // set the following into the payload
-        // elapsed_code_time_seconds, elapsed_active_code_time_seconds,
-        // cumulative_code_time_seconds, cumulative_active_code_time_seconds
         payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
         payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
         payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;

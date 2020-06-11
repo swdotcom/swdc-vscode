@@ -20,8 +20,6 @@ import { PluginDataManager } from "./PluginDataManager";
 let _keystrokeMap = {};
 let _staticInfoMap = {};
 
-const timeCounterMgr: PluginDataManager = PluginDataManager.getInstance();
-
 export class KpmManager {
     private static instance: KpmManager;
 
@@ -88,9 +86,9 @@ export class KpmManager {
 
     private async _windowStateChagned(event) {
         if (event.focused) {
-            timeCounterMgr.editorFocusHandler();
+            PluginDataManager.getInstance().editorFocusHandler();
         } else {
-            timeCounterMgr.editorUnFocusHandler();
+            PluginDataManager.getInstance().editorUnFocusHandler();
         }
     }
 

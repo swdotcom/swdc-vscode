@@ -68,6 +68,9 @@ export function getStatusBarItem() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
+    // update the unfocused info
+    PluginDataManager.getInstance().editorUnFocusHandler();
+
     // store the deactivate event
     EventManager.getInstance().createCodeTimeEvent(
         "resource",
@@ -162,6 +165,9 @@ export async function intializePlugin(
     // initialize the wall clock timer
     WallClockManager.getInstance();
 
+    // INIT the plugin data manager
+    PluginDataManager.getInstance();
+
     // load the last payload into memory
     getLastSavedKeystrokesStats();
 
@@ -235,9 +241,6 @@ export async function intializePlugin(
         // update the status bar
         updateStatusBarWithSummaryData();
     }, 0);
-
-    // INIT the time counter manager
-    PluginDataManager.getInstance();
 }
 
 // add the interval jobs
