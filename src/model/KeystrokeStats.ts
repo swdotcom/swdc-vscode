@@ -1,7 +1,7 @@
 import { getOs, getVersion, getPluginId } from "../Util";
 import { FileChangeInfo } from "./models";
-import { processPayload } from "../managers/PayloadManager";
 import Project from "./Project";
+import { PluginDataManager } from "../managers/PluginDataManager";
 
 export default class KeystrokeStats {
     public source: {};
@@ -23,6 +23,11 @@ export default class KeystrokeStats {
     public workspace_name: string = "";
     public hostname: string = "";
     public project_null_error: string = "";
+    // new as of 6/10/2020
+    public elapsed_code_time_seconds: number = 0;
+    public elapsed_active_code_time_seconds: number = 0;
+    public cumulative_code_time_seconds: number = 0;
+    public cumulative_active_code_time_seconds: number = 0;
 
     constructor(project: Project) {
         this.source = {};
@@ -102,6 +107,6 @@ export default class KeystrokeStats {
      * send the payload
      */
     async postData(sendNow: boolean = false) {
-        processPayload(this, sendNow);
+        PluginDataManager.getInstance().processPayloadHandler(this, sendNow);
     }
 }

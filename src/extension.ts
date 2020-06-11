@@ -27,6 +27,7 @@ import { getApi } from "vsls";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { SummaryManager } from "./managers/SummaryManager";
+import { PluginDataManager } from "./managers/PluginDataManager";
 import {
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData,
@@ -87,7 +88,7 @@ export function deactivate(ctx: ExtensionContext) {
     }
 
     // dispose the new day timer
-    SummaryManager.getInstance().dispose();
+    PluginDataManager.getInstance().dispose();
 
     clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
@@ -197,7 +198,7 @@ export async function intializePlugin(
         setItem("vscode_CtInit", true);
 
         // send a bootstrap kpm payload
-        kpmController.buildBootstrapKpmPayload();
+        // kpmController.buildBootstrapKpmPayload();
 
         // send a heartbeat that the plugin as been installed
         // (or the user has deleted the session.json and restarted the IDE)
@@ -234,6 +235,9 @@ export async function intializePlugin(
         // update the status bar
         updateStatusBarWithSummaryData();
     }, 0);
+
+    // INIT the time counter manager
+    PluginDataManager.getInstance();
 }
 
 // add the interval jobs

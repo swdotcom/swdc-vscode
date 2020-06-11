@@ -15,9 +15,12 @@ import { FileChangeInfo } from "../model/models";
 import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
+import { PluginDataManager } from "./PluginDataManager";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
+
+const timeCounterMgr: PluginDataManager = PluginDataManager.getInstance();
 
 export class KpmManager {
     private static instance: KpmManager;
@@ -33,6 +36,8 @@ export class KpmManager {
         workspace.onDidOpenTextDocument(this._onOpenHandler, this);
         // workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
+        // window state changed handler
+        window.onDidChangeWindowState(this._windowStateChagned, this);
 
         this._disposable = Disposable.from(...subscriptions);
     }
@@ -79,6 +84,14 @@ export class KpmManager {
 
         // clear out the static info map
         _staticInfoMap = {};
+    }
+
+    private async _windowStateChagned(event) {
+        if (event.focused) {
+            timeCounterMgr.editorFocusHandler();
+        } else {
+            timeCounterMgr.editorUnFocusHandler();
+        }
     }
 
     /**

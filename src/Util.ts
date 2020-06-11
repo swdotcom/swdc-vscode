@@ -48,7 +48,6 @@ const dayTimeFormat = "LLLL";
 
 let showStatusBarText = true;
 let extensionName = null;
-let extensionDisplayName = null; // Code Time or Music Time
 let workspace_name = null;
 
 export function getWorkspaceName() {
@@ -432,64 +431,52 @@ export async function getOsUsername() {
     return username;
 }
 
-export function getDashboardFile() {
+function getFile(name) {
     let file = getSoftwareDir();
     if (isWindows()) {
-        file += "\\CodeTime.txt";
-    } else {
-        file += "/CodeTime.txt";
+        return `${file}\\${name}`;
     }
-    return file;
+    return `${file}/${name}`;
+}
+
+export function getSoftwareSessionFile() {
+    return getFile("session.json");
+}
+
+export function getSoftwareDataStoreFile() {
+    return getFile("data.json");
+}
+
+export function getPluginEventsFile() {
+    return getFile("events.json");
+}
+
+export function getTimeCounterFile() {
+    return getFile("timeCounter.json");
+}
+
+export function getDashboardFile() {
+    return getFile("CodeTime.txt");
 }
 
 export function getCommitSummaryFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\CommitSummary.txt";
-    } else {
-        file += "/CommitSummary.txt";
-    }
-    return file;
+    return getFile("CommitSummary.txt");
 }
 
 export function getSummaryInfoFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\SummaryInfo.txt";
-    } else {
-        file += "/SummaryInfo.txt";
-    }
-    return file;
+    return getFile("SummaryInfo.txt");
 }
 
 export function getProjectCodeSummaryFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\ProjectCodeSummary.txt";
-    } else {
-        file += "/ProjectCodeSummary.txt";
-    }
-    return file;
+    return getFile("ProjectCodeSummary.txt");
 }
 
 export function getProjectContributorCodeSummaryFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\ProjectContributorCodeSummary.txt";
-    } else {
-        file += "/ProjectContributorCodeSummary.txt";
-    }
-    return file;
+    return getFile("ProjectContributorCodeSummary.txt");
 }
 
 export function getDailyReportSummaryFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\DailyReportSummary.txt";
-    } else {
-        file += "/DailyReportSummary.txt";
-    }
-    return file;
+    return getFile("DailyReportSummary.txt");
 }
 
 export function getSoftwareDir(autoCreate = true) {
@@ -519,36 +506,6 @@ export function softwareSessionFileExists() {
 export function jwtExists() {
     let jwt = getItem("jwt");
     return !jwt ? false : true;
-}
-
-export function getSoftwareSessionFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\session.json";
-    } else {
-        file += "/session.json";
-    }
-    return file;
-}
-
-export function getSoftwareDataStoreFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\data.json";
-    } else {
-        file += "/data.json";
-    }
-    return file;
-}
-
-export function getPluginEventsFile() {
-    let file = getSoftwareDir();
-    if (isWindows()) {
-        file += "\\events.json";
-    } else {
-        file += "/events.json";
-    }
-    return file;
 }
 
 export function getLocalREADMEFile() {

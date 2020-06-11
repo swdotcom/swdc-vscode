@@ -55,7 +55,7 @@ export async function sendOfflineEvents() {
 /**
  * send the offline data.
  */
-export async function sendOfflineData(isNewDay = false) {
+export async function sendOfflineData() {
     batchSendData("/data/batch", getSoftwareDataStoreFile());
 }
 
@@ -284,6 +284,17 @@ export async function storeCurrentPayload(payload) {
         const content = JSON.stringify(payload, null, 4);
         fs.writeFileSync(this.getCurrentPayloadFile(), content, (err) => {
             if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
+        });
+    } catch (e) {
+        //
+    }
+}
+
+export async function storeJsonData(fileName, data) {
+    try {
+        const content = JSON.stringify(data, null, 4);
+        fs.writeFileSync(fileName, content, (err) => {
+            if (err) logIt(`Error writing time data: ${err.message}`);
         });
     } catch (e) {
         //
