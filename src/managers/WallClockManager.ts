@@ -32,7 +32,10 @@ export class WallClockManager {
             // If the window is focused
             if (window.state.focused || kpmMgr.hasKeystrokeData()) {
                 // set the wctime (deprecated, remove one day when all plugins use time data info)
-                this._wctime = getItem("wctime") || 0;
+                this._wctime = getItem("wctime");
+                if (!this._wctime || isNaN(this._wctime)) {
+                    this._wctime = 0;
+                }
                 this._wctime += SECONDS_INTERVAL;
                 setItem("wctime", this._wctime);
 

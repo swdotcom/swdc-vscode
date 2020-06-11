@@ -35,7 +35,7 @@ export class KpmManager {
         // workspace.onDidCloseTextDocument(this._onCloseHandler, this);
         workspace.onDidChangeTextDocument(this._onEventHandler, this);
         // window state changed handler
-        window.onDidChangeWindowState(this._windowStateChagned, this);
+        window.onDidChangeWindowState(this._windowStateChanged, this);
 
         this._disposable = Disposable.from(...subscriptions);
     }
@@ -84,7 +84,7 @@ export class KpmManager {
         _staticInfoMap = {};
     }
 
-    private async _windowStateChagned(event) {
+    private async _windowStateChanged(event) {
         if (event.focused) {
             PluginDataManager.getInstance().editorFocusHandler();
         } else {

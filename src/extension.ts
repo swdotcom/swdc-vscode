@@ -116,29 +116,14 @@ export async function activate(ctx: ExtensionContext) {
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
 
-    const workspace_name = getWorkspaceName();
-
-    const eventName = `onboard-${workspace_name}`;
-
     // onboard the user as anonymous if it's being installed
     if (window.state.focused) {
-        EventManager.getInstance().createCodeTimeEvent(
-            "focused_onboard",
-            eventName,
-            "onboarding"
-        );
         onboardInit(ctx, intializePlugin /*successFunction*/);
     } else {
-        // 10 to 15 second delay
-        const secondDelay = getRandomArbitrary(10, 15);
-        const nonFocusedEventType = `nonfocused_onboard-${secondDelay}`;
+        // 8 to 15 second delay
+        const secondDelay = getRandomArbitrary(8, 15);
         // initialize in 5 seconds if this is the secondary window
         setTimeout(() => {
-            EventManager.getInstance().createCodeTimeEvent(
-                nonFocusedEventType,
-                eventName,
-                "onboarding"
-            );
             onboardInit(ctx, intializePlugin /*successFunction*/);
         }, 1000 * secondDelay);
     }
@@ -162,11 +147,11 @@ export async function intializePlugin(
         "EditorActivate"
     );
 
-    // initialize the wall clock timer
-    WallClockManager.getInstance();
-
     // INIT the plugin data manager
     PluginDataManager.getInstance();
+
+    // initialize the wall clock timer
+    WallClockManager.getInstance();
 
     // load the last payload into memory
     getLastSavedKeystrokesStats();
@@ -177,11 +162,6 @@ export async function intializePlugin(
 
     // add the interval jobs
     initializeIntervalJobs();
-
-    // in 30 seconds
-    setTimeout(() => {
-        commands.executeCommand("codetime.sendOfflineData");
-    }, 1000 * 30);
 
     // in 2 minutes task
     setTimeout(() => {
@@ -241,6 +221,11 @@ export async function intializePlugin(
         // update the status bar
         updateStatusBarWithSummaryData();
     }, 0);
+
+    // in 30 seconds
+    setTimeout(() => {
+        commands.executeCommand("codetime.sendOfflineData");
+    }, 1000 * 15);
 }
 
 // add the interval jobs

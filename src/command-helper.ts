@@ -31,6 +31,7 @@ import {
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { sendOfflineData } from "./managers/FileManager";
+import { PluginDataManager } from "./managers/PluginDataManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -133,6 +134,8 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.sendOfflineData", () => {
             sendOfflineData();
+            // clear the time counter stats
+            PluginDataManager.getInstance().clearStatsForPayloadProcess();
         })
     );
 
