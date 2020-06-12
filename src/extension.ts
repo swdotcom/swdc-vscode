@@ -165,7 +165,12 @@ export async function intializePlugin(
 
     // in 2 minutes task
     setTimeout(() => {
-        getHistoricalCommits();
+        // 2 to 15 second delay to account for mulitple windows as this is
+        // a larger operation
+        const secondDelay = getRandomArbitrary(2, 15);
+        setTimeout(() => {
+            getHistoricalCommits();
+        }, 1000 * secondDelay);
     }, one_min_millis * 2);
 
     // in 4 minutes task
@@ -235,7 +240,12 @@ function initializeIntervalJobs() {
     }, one_hour_millis);
 
     thirty_minute_interval = setInterval(async () => {
-        await getHistoricalCommits();
+        // 2 to 15 second delay to account for mulitple windows as this is
+        // a larger operation
+        const secondDelay = getRandomArbitrary(2, 15);
+        setTimeout(() => {
+            getHistoricalCommits();
+        }, 1000 * secondDelay);
     }, thirty_min_millis);
 
     twenty_minute_interval = setInterval(async () => {

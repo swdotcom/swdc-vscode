@@ -7,6 +7,7 @@ import {
     getFileType,
     findFirstActiveDirectoryOrWorkspaceDirectory,
     isGitProject,
+    isBatchSizeUnderThreshold,
 } from "../Util";
 import { getCommandResult } from "./GitUtil";
 import RepoContributorInfo from "../model/RepoContributorInfo";
@@ -333,7 +334,7 @@ export async function getHistoricalCommits() {
             const newTimestamp = parseInt(latestCommit.timestamp, 10) + 1;
             sinceOption = ` --since=${newTimestamp}`;
         } else {
-            sinceOption = " --max-count=100";
+            sinceOption = " --max-count=50";
         }
 
         const cmd = `git log --stat --pretty="COMMIT:%H,%ct,%cI,%s" --author=${resourceInfo.email}${sinceOption}`;
@@ -424,9 +425,13 @@ export async function getHistoricalCommits() {
         // send in batches of 15
         if (commits && commits.length > 0) {
             let batchCommits = [];
-            for (let i = 0; i < commits.length; i++) {
-                batchCommits.push(commits[i]);
-                if (i > 0 && i % commit_batch_size === 0) {
+            for (let commit of commits) {
+                batchCommits.push(commit);
+
+                // if the batch size is greather than the theshold
+                // send it off
+                if (!isBatchSizeUnderThreshold(batchCommits)) {
+                    // send off this set of commits
                     let commitData = {
                         commits: batchCommits,
                         identifier,
@@ -438,6 +443,7 @@ export async function getHistoricalCommits() {
                 }
             }
 
+            // send the remaining
             if (batchCommits.length > 0) {
                 let commitData = {
                     commits: batchCommits,
@@ -465,7 +471,6 @@ export async function getHistoricalCommits() {
         backend/app/lib/sessions.js     | 25 +++++++++++++++----------
         4 files changed, 25 insertions(+), 38 deletions(-)
     */
-
     function sendCommits(commitData) {
         // send this to the backend
         softwarePost("/commits", commitData, getItem("jwt"));

@@ -107,6 +107,14 @@ export function isGitProject(projectDir) {
     return true;
 }
 
+export function isBatchSizeUnderThreshold(payloads) {
+    const payloadDataLen = Buffer.byteLength(JSON.stringify(payloads));
+    if (payloadDataLen <= 100000) {
+        return true;
+    }
+    return false;
+}
+
 /**
  * This method is sync, no need to await on it.
  * @param file

@@ -14,6 +14,7 @@ import {
     getItem,
     getSoftwareDir,
     isWindows,
+    isBatchSizeUnderThreshold,
 } from "../Util";
 import {
     getTimeDataSummaryFile,
@@ -222,11 +223,7 @@ async function processBatch(api, batch) {
             } else {
                 // process non-plugin data payloads another way
                 if (newBatch.length) {
-                    const payloadData = JSON.stringify(newBatch);
-                    const payloadDataLen = Buffer.byteLength(
-                        JSON.stringify(payloadData)
-                    );
-                    if (payloadDataLen >= 100000) {
+                    if (!isBatchSizeUnderThreshold(newBatch)) {
                         const resp = await sendBatchPayload(api, newBatch);
                         if (!isResponseOk(resp)) {
                             // there was a problem with the transmission.
