@@ -90,7 +90,7 @@ export class PluginDataManager {
         }
 
         // call the focused handler
-        this.editorFocusHandler();
+        this.initializeFocusStats();
 
         // Initialize the midnight check handler
         this.dayCheckTimer = setInterval(() => {
@@ -110,6 +110,14 @@ export class PluginDataManager {
         }
     }
 
+    initializeFocusStats() {
+        const nowTimes = getNowTimes();
+        this.stats.last_unfocused_timestamp_utc = 0;
+        this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
+        // update the file
+        this.updateFileData();
+    }
+
     /**
      * Step 1) Replace last_focused_timestamp_utc with current time (utc)
      * Step 2) Update the elapsed_time_seconds based on the following condition
@@ -124,10 +132,11 @@ export class PluginDataManager {
 
         // Step 1) Replace last_focused_timestamp_utc with current time (utc)
         this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
+
         // Step 2) Update the elapsed_time_seconds
         const diff =
             nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc;
-        if (diff <= FIFTEEN_MIN_IN_SECONDS) {
+        if (diff > 0 && diff <= FIFTEEN_MIN_IN_SECONDS) {
             this.stats.elapsed_code_time_seconds += diff;
         }
         // Step 3) Clear "last_unfocused_timestamp_utc"
@@ -151,10 +160,11 @@ export class PluginDataManager {
 
         // Step 1) Replace last_focused_timestamp_utc with current time (utc)
         this.stats.last_unfocused_timestamp_utc = nowTimes.now_in_sec;
+
         // Step 2) Update elapsed_code_time_seconds
         const diff =
             nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc;
-        if (diff <= FIFTEEN_MIN_IN_SECONDS) {
+        if (diff > 0 && diff <= FIFTEEN_MIN_IN_SECONDS) {
             this.stats.elapsed_code_time_seconds += diff;
         }
         // Step 3) Clear "last_focused_timestamp_utc"
@@ -256,7 +266,7 @@ export class PluginDataManager {
 
         // Step 1) add to the elapsed code time seconds if its less than 15 min
         // set the focused_editor_seconds to the diff
-        if (diff <= FIFTEEN_MIN_IN_SECONDS) {
+        if (diff > 0 && diff <= FIFTEEN_MIN_IN_SECONDS) {
             this.stats.elapsed_code_time_seconds += diff;
         }
         this.stats.focused_editor_seconds = diff;
@@ -280,8 +290,9 @@ export class PluginDataManager {
         );
 
         // set the elapsed_active_code_time_seconds to the min of the above only
-        // if its less than 15 minutes
+        // if its greater than zero and less than/equal to 15 minutes
         this.stats.elapsed_active_code_time_seconds =
+            min_elapsed_active_code_time_seconds > 0 &&
             min_elapsed_active_code_time_seconds <= FIFTEEN_MIN_IN_SECONDS
                 ? min_elapsed_active_code_time_seconds
                 : 0;
