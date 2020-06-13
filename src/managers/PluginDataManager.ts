@@ -112,7 +112,6 @@ export class PluginDataManager {
 
     initializeFocusStats() {
         const nowTimes = getNowTimes();
-        this.stats.last_unfocused_timestamp_utc = 0;
         this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
         // update the file
         this.updateFileData();
