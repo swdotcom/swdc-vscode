@@ -11,6 +11,10 @@
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
+            "env": {
+                // let's keep this in test mode until we use it
+                "ENABLE_SWDC_TRACKER": "false"
+            },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"
             ],

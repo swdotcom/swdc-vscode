@@ -38,6 +38,8 @@ import {
     sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
+import swdcTracker from 'swdc-tracker';
+import { api_endpoint } from "./Constants";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -113,6 +115,9 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+    // initialize tracker with swdc api host, namespace, and appId
+    swdcTracker.initialize(api_endpoint, 'CodeTime', 'swdc-vscode')
+
     // add the code time commands
     ctx.subscriptions.push(createCommands(kpmController));
 
@@ -226,6 +231,25 @@ export async function intializePlugin(
     setTimeout(() => {
         commands.executeCommand("codetime.sendOfflineData");
     }, 1000 * 15);
+
+
+    // SAMPLE USAGE OF THE swdcTracker...
+    // const jwt = getItem("jwt")
+    // swdcTracker.trackEditorAction({
+    //     jwt: jwt.split("JWT ")[1],
+    //     entity: "editor",
+    //     type: "activate",
+    //     tz_offset_minutes: 420,
+    //     file_name: "your_file.js",
+    //     file_path: "/path/to/your_file.js",
+    //     file_syntax: "javascript",
+    //     file_line_count: 10,
+    //     file_character_count: 100,
+    //     project_name: "your_project_name",
+    //     project_directory: "/path/to/your/project",
+    //     plugin_id: 1,
+    //     plugin_version: "1.2.3"
+    // })
 }
 
 // add the interval jobs
