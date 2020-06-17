@@ -1,22 +1,10 @@
 import { window, ExtensionContext } from "vscode";
-import { getAppJwt, getUser } from "../DataController";
-import {
-    showOfflinePrompt,
-    getOsUsername,
-    getHostname,
-    setItem,
-    getItem,
-    getWorkspaceName,
-} from "../Util";
-import {
-    softwarePost,
-    isResponseOk,
-    serverIsAvailable,
-} from "../http/HttpClient";
-import { EventManager } from "../managers/EventManager";
+import { getUser } from "../DataController";
+import { showOfflinePrompt, setItem, getItem } from "../Util";
+import { serverIsAvailable } from "../http/HttpClient";
+import { createAnonymousUser } from "../menu/AccountManager";
 
 let retry_counter = 0;
-// 2 minute
 const one_min_millis = 1000 * 60;
 let atlassianOauthFetchTimeout = null;
 
@@ -85,45 +73,6 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
     await createAnonymousUser();
     // call the callback
     return callback(ctx, true /*anonCreated*/);
-}
-
-/**
- * create an anonymous user based on github email or mac addr
- */
-export async function createAnonymousUser() {
-    let appJwt = await getAppJwt();
-    if (appJwt) {
-        const jwt = getItem("jwt");
-        // check one more time before creating the anon user
-        if (!jwt) {
-            const creation_annotation = "NO_SESSION_FILE";
-            const username = await getOsUsername();
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const hostname = await getHostname();
-            const workspace_name = getWorkspaceName();
-            const eventType = `createanon-${workspace_name}`;
-            EventManager.getInstance().createCodeTimeEvent(
-                eventType,
-                "anon_creation",
-                "anon creation"
-            );
-            const resp = await softwarePost(
-                "/data/onboard",
-                {
-                    timezone,
-                    username,
-                    creation_annotation,
-                    hostname,
-                },
-                appJwt
-            );
-            if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-                setItem("jwt", resp.data.jwt);
-                return resp.data.jwt;
-            }
-        }
-    }
-    return null;
 }
 
 export function refetchAtlassianOauthLazily(tryCountUntilFoundUser = 40) {

@@ -813,7 +813,9 @@ export function humanizeMinutes(min) {
 
 export async function launchLogin(loginType = "software") {
     let loginUrl = await buildLoginUrl(loginType);
-    setItem("authType", loginType);
+    if (loginType !== "linkAccount") {
+        setItem("authType", loginType);
+    }
     launchWebUrl(loginUrl);
     // use the defaults
     refetchUserStatusLazily();
@@ -870,6 +872,8 @@ export async function buildLoginUrl(loginType = "software") {
             loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (loginType === "google") {
             loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+        } else if (loginType === "linkAccount") {
+            loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&login=true`;
         }
         return loginUrl;
     } else {

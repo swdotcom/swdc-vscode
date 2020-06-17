@@ -79,34 +79,46 @@ export class KpmProviderManager {
         const space = counter % 2 === 0 ? "" : " ";
         const treeItems: KpmItem[] = [];
         const loggedIn: boolean = await isLoggedIn();
+        const authType: string = getItem("authType");
 
         if (!loggedIn) {
-            const signupWithGoogle = `Sign up with Google${space}`;
-            const googleSignupButton: KpmItem = this.getActionButton(
-                signupWithGoogle,
+            const linkToAccountLabel = `Link to an existing account${space}`;
+            const linkToAccountButton: KpmItem = this.getActionButton(
+                linkToAccountLabel,
                 "",
-                "codetime.googleLogin",
-                "icons8-google.svg"
+                "codetime.linkAccout",
+                "registered-user.svg"
             );
-            treeItems.push(googleSignupButton);
+            treeItems.push(linkToAccountButton);
 
-            const signupWithGithub = `Sign up with GitHub${space}`;
-            const githubSignupButton: KpmItem = this.getActionButton(
-                signupWithGithub,
-                "",
-                "codetime.githubLogin",
-                "icons8-github.svg"
-            );
-            treeItems.push(githubSignupButton);
+            if (!authType) {
+                const signupWithGoogle = `Sign up with Google${space}`;
+                const googleSignupButton: KpmItem = this.getActionButton(
+                    signupWithGoogle,
+                    "",
+                    "codetime.googleLogin",
+                    "icons8-google.svg"
+                );
+                treeItems.push(googleSignupButton);
 
-            const signupWithEmail = `Sign up with email${space}`;
-            const softwareSignupButton: KpmItem = this.getActionButton(
-                signupWithEmail,
-                "",
-                "codetime.codeTimeLogin",
-                "envelope.svg"
-            );
-            treeItems.push(softwareSignupButton);
+                const signupWithGithub = `Sign up with GitHub${space}`;
+                const githubSignupButton: KpmItem = this.getActionButton(
+                    signupWithGithub,
+                    "",
+                    "codetime.githubLogin",
+                    "icons8-github.svg"
+                );
+                treeItems.push(githubSignupButton);
+
+                const signupWithEmail = `Sign up with email${space}`;
+                const softwareSignupButton: KpmItem = this.getActionButton(
+                    signupWithEmail,
+                    "",
+                    "codetime.codeTimeLogin",
+                    "envelope.svg"
+                );
+                treeItems.push(softwareSignupButton);
+            }
 
             const dividerButton: KpmItem = this.getActionButton(
                 "",
@@ -121,7 +133,7 @@ export class KpmProviderManager {
                 const connectedToButton: KpmItem = this.getActionButton(
                     connectedToInfo.label,
                     connectedToInfo.tooltip,
-                    null,
+                    "codetime.showAccountInfoMenu",
                     connectedToInfo.icon
                 );
                 treeItems.push(connectedToButton);
@@ -470,6 +482,19 @@ export class KpmProviderManager {
         return item;
     }
 
+    getSwitchAccountsButton(): KpmItem {
+        const name = getItem("name");
+        const loggedInMsg = name ? ` Connected as ${name}` : "";
+        const item: KpmItem = this.getActionButton(
+            "Switch accounts",
+            `Switch to a different account.${loggedInMsg}`,
+            "codetime.switchAccounts",
+            "paw.svg",
+            "TreeViewSwitchAccounts"
+        );
+        return item;
+    }
+
     getCodeTimeDashboardButton(): KpmItem {
         const item: KpmItem = this.getActionButton(
             "View summary",
@@ -488,19 +513,19 @@ export class KpmProviderManager {
         if (authType === "software") {
             return {
                 icon: "envelope.svg",
-                label: "Connected using email",
+                label: name, //"Connected using email",
                 tooltip,
             };
         } else if (authType === "google") {
             return {
                 icon: "icons8-google.svg",
-                label: "Connected using Google",
+                label: name, //"Connected using Google",
                 tooltip,
             };
         } else if (authType === "github") {
             return {
                 icon: "icons8-github.svg",
-                label: "Connected using GitHub",
+                label: name, //"Connected using GitHub",
                 tooltip,
             };
         }

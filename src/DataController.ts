@@ -117,6 +117,19 @@ export async function getUserRegistrationState() {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
             let state = resp.data.state ? resp.data.state : "UNKNOWN";
             if (state === "OK") {
+                // set the authType based on...
+                // github_access_token, google_access_token, or password being true
+                if (resp.data.user) {
+                    const user = resp.data.user;
+                    if (user.github_access_token) {
+                        setItem("authType", "github");
+                    } else if (user.google_access_token) {
+                        setItem("authType", "google");
+                    } else {
+                        setItem("authType", "software");
+                    }
+                }
+
                 let sessionEmail = getItem("name");
                 let email = resp.data.email;
 

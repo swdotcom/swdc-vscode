@@ -32,6 +32,10 @@ import {
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { sendOfflineData } from "./managers/FileManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
+import {
+    processSwitchAccounts,
+    showSwitchAccountsMenu,
+} from "./menu/AccountManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -58,6 +62,20 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.displayTree", () => {
             codetimeMenuTreeProvider.revealTree();
+        })
+    );
+
+    // SWITCH ACCOUNTS MENU BUTTON
+    cmds.push(
+        commands.registerCommand("codetime.showAccountInfoMenu", () => {
+            showSwitchAccountsMenu();
+        })
+    );
+
+    // SWITCH ACCOUNTS PROCESS BUTTON
+    cmds.push(
+        commands.registerCommand("codetime.switchAccounts", () => {
+            processSwitchAccounts();
         })
     );
 
@@ -181,6 +199,13 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.githubLogin", () => {
             launchLogin("github");
+        })
+    );
+
+    // LAUNCH LINK ACCOUNT OPTION
+    cmds.push(
+        commands.registerCommand("codetime.linkAccout", () => {
+            launchLogin("linkAccount");
         })
     );
 
