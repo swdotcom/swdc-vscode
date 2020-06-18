@@ -49,7 +49,7 @@ import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryDa
 const path = require("path");
 
 const FIFTEEN_MIN_IN_SECONDS: number = 60 * 15;
-const FIVE_MIN_INTERVAL: number = 1000 * 60 * 5;
+const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
 
 export class PluginDataManager {
   private static instance: PluginDataManager;
@@ -95,7 +95,7 @@ export class PluginDataManager {
     // Initialize the midnight check handler
     this.dayCheckTimer = setInterval(() => {
       this.midnightCheckHandler();
-    }, FIVE_MIN_INTERVAL);
+    }, TWO_MIN_INTERVAL);
 
     // check right away
     this.midnightCheckHandler();
@@ -192,7 +192,6 @@ export class PluginDataManager {
    *   Clear file metrics and set current day to today
    */
   async midnightCheckHandler() {
-    const nowTimes = getNowTimes();
 
     if (isNewDay()) {
       // send the offline data
@@ -214,6 +213,7 @@ export class PluginDataManager {
       clearFileChangeInfoSummaryData();
 
       // update the current day
+      const nowTimes = getNowTimes();
       setItem("currentDay", nowTimes.day);
 
       setTimeout(() => {
