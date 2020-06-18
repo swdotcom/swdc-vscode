@@ -127,6 +127,7 @@ export class PluginDataManager {
 	* Step 3) Clear "last_unfocused_timestamp_utc"
 	*/
   editorFocusHandler() {
+    this.stats = getFileDataAsJson(getTimeCounterFile());
     const nowTimes = getNowTimes();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -157,6 +158,7 @@ export class PluginDataManager {
 	* Step 3) Clear "last_focused_timestamp_utc"
 	*/
   editorUnFocusHandler() {
+    this.stats = getFileDataAsJson(getTimeCounterFile());
     const nowTimes = getNowTimes();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -245,6 +247,7 @@ export class PluginDataManager {
 	* Step 9) Clear "focused_editor_seconds"
 	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
+    this.stats = getFileDataAsJson(getTimeCounterFile());
     const nowTimes = getNowTimes();
 
     // Step 1) add to the elapsed code time seconds if its less than 15 min
