@@ -118,14 +118,14 @@ export class PluginDataManager {
   }
 
   /**
-     * Step 1) Replace last_focused_timestamp_utc with current time (utc)
-     * Step 2) Update the elapsed_time_seconds based on the following condition
-        const diff = now - last_unfocused_timestamp_utc;
-        if (diff <= fifteen_minutes_in_seconds) {
-            elapsed_code_time_seconds += diff;
-        }
-    * Step 3) Clear "last_unfocused_timestamp_utc"
-    */
+	 * Step 1) Replace last_focused_timestamp_utc with current time (utc)
+	 * Step 2) Update the elapsed_time_seconds based on the following condition
+		const diff = now - last_unfocused_timestamp_utc;
+		if (diff <= fifteen_minutes_in_seconds) {
+			elapsed_code_time_seconds += diff;
+		}
+	* Step 3) Clear "last_unfocused_timestamp_utc"
+	*/
   editorFocusHandler() {
     const nowTimes = getNowTimes();
 
@@ -148,14 +148,14 @@ export class PluginDataManager {
   }
 
   /**
-     * Step 1) Replace last_unfocused_timestamp_utc
-     * Step 2) Update elapsed_code_time_seconds based on the following condition
-        const diff = now - last_focused_timestamp_utc;
-        if (diff <=fifteen_minutes_in_seconds) {
-            elapsed_code_time_seconds += diff;
-        }
-    * Step 3) Clear "last_focused_timestamp_utc"
-    */
+	 * Step 1) Replace last_unfocused_timestamp_utc
+	 * Step 2) Update elapsed_code_time_seconds based on the following condition
+		const diff = now - last_focused_timestamp_utc;
+		if (diff <=fifteen_minutes_in_seconds) {
+			elapsed_code_time_seconds += diff;
+		}
+	* Step 3) Clear "last_focused_timestamp_utc"
+	*/
   editorUnFocusHandler() {
     const nowTimes = getNowTimes();
 
@@ -221,29 +221,29 @@ export class PluginDataManager {
   }
 
   /**
-     * Step 1) Updating the "elapsed_code_time_seconds" one more time based on the following condition
-        const diff = now - last_focused_timestamp_utc;
-        if (diff < fifteen_minutes_in_seconds) {
-            elapsed_code_time_seconds += diff;
-        }
-        focused_editor_seconds = diff;
-    * Step 2) Replace "last_focused_timestamp_utc" with now
-    * Step 3) Update "elapsed_seconds" with the following condition
-        elapsed_seconds = now - last_payload_end_utc;
-    * Step 4) Update "elapsed_active_code_time_seconds" with the following condition
-        get the MIN of elapsed_seconds and focused_editor_seconds
-        const min_elapsed_active_code_time_seconds = Math.min(
-            this.stats.elapsed_seconds,
-            this.stats.focused_editor_seconds
-        );
-    * Step 5) Update "cumulative_code_time_seconds" with the following condition
-        cumulative_code_time_seconds += elapsed_code_time_seconds;
-    * Step 6) Update "cumulative_active_code_time_seconds" with the following condition
-        cumulative_active_code_time_seconds += elapsed_active_code_time_seconds
-    * Step 7) Replace "last_payload_end_utc" with now
-    * Step 8) Clear "elapsed_code_time_seconds"
-    * Step 9) Clear "focused_editor_seconds"
-    */
+	 * Step 1) Updating the "elapsed_code_time_seconds" one more time based on the following condition
+		const diff = now - last_focused_timestamp_utc;
+		if (diff < fifteen_minutes_in_seconds) {
+			elapsed_code_time_seconds += diff;
+		}
+		focused_editor_seconds = diff;
+	* Step 2) Replace "last_focused_timestamp_utc" with now
+	* Step 3) Update "elapsed_seconds" with the following condition
+		elapsed_seconds = now - last_payload_end_utc;
+	* Step 4) Update "elapsed_active_code_time_seconds" with the following condition
+		get the MIN of elapsed_seconds and focused_editor_seconds
+		const min_elapsed_active_code_time_seconds = Math.min(
+			this.stats.elapsed_seconds,
+			this.stats.focused_editor_seconds
+		);
+	* Step 5) Update "cumulative_code_time_seconds" with the following condition
+		cumulative_code_time_seconds += elapsed_code_time_seconds;
+	* Step 6) Update "cumulative_active_code_time_seconds" with the following condition
+		cumulative_active_code_time_seconds += elapsed_active_code_time_seconds
+	* Step 7) Replace "last_payload_end_utc" with now
+	* Step 8) Clear "elapsed_code_time_seconds"
+	* Step 9) Clear "focused_editor_seconds"
+	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
     const nowTimes = getNowTimes();
 
