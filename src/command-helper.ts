@@ -204,8 +204,9 @@ export function createCommands(
 
     // LAUNCH LINK ACCOUNT OPTION
     cmds.push(
-        commands.registerCommand("codetime.linkAccout", () => {
-            launchLogin("linkAccount");
+        commands.registerCommand("codetime.linkAccount", () => {
+            // disabled for now
+            // launchLogin("linkAccount");
         })
     );
 

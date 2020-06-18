@@ -7,6 +7,7 @@ import {
     isLoggedIn,
     sendHeartbeat,
     initializePreferences,
+    getUserRegistrationState,
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import {
@@ -156,10 +157,6 @@ export async function intializePlugin(
     // load the last payload into memory
     getLastSavedKeystrokesStats();
 
-    // get the user preferences whether it's music time or code time
-    // this will also fetch the user and update loggedInCacheState if it's found
-    await initializePreferences();
-
     // add the interval jobs
     initializeIntervalJobs();
 
@@ -176,7 +173,7 @@ export async function intializePlugin(
     // in 4 minutes task
     setTimeout(() => {
         sendOfflineEvents();
-    }, one_min_millis * 3);
+    }, 15000);
 
     initializeLiveshare();
 
@@ -260,11 +257,6 @@ function initializeIntervalJobs() {
             }
         }
     }, one_min_millis * 20);
-
-    // every 15 minute tasks
-    fifteen_minute_interval = setInterval(async () => {
-        commands.executeCommand("codetime.sendOfflineData");
-    }, one_min_millis * 15);
 
     // update liveshare in the offline kpm data if it has been initiated
     liveshare_update_interval = setInterval(async () => {

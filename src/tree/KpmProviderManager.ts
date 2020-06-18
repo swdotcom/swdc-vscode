@@ -82,61 +82,58 @@ export class KpmProviderManager {
         const authType: string = getItem("authType");
 
         if (!loggedIn) {
-            const linkToAccountLabel = `Link to an existing account${space}`;
-            const linkToAccountButton: KpmItem = this.getActionButton(
-                linkToAccountLabel,
+            // const linkToAccountLabel = `Link to an existing account${space}`;
+            // const linkToAccountButton: KpmItem = this.getActionButton(
+            //     linkToAccountLabel,
+            //     "",
+            //     "codetime.linkAccount",
+            //     "registered-user.svg"
+            // );
+            // treeItems.push(linkToAccountButton);
+
+            // if (!authType) {
+            const signupWithGoogle = `Sign up with Google${space}`;
+            const googleSignupButton: KpmItem = this.getActionButton(
+                signupWithGoogle,
                 "",
-                "codetime.linkAccout",
-                "registered-user.svg"
+                "codetime.googleLogin",
+                "icons8-google.svg"
             );
-            treeItems.push(linkToAccountButton);
+            treeItems.push(googleSignupButton);
 
-            if (!authType) {
-                const signupWithGoogle = `Sign up with Google${space}`;
-                const googleSignupButton: KpmItem = this.getActionButton(
-                    signupWithGoogle,
-                    "",
-                    "codetime.googleLogin",
-                    "icons8-google.svg"
-                );
-                treeItems.push(googleSignupButton);
-
-                const signupWithGithub = `Sign up with GitHub${space}`;
-                const githubSignupButton: KpmItem = this.getActionButton(
-                    signupWithGithub,
-                    "",
-                    "codetime.githubLogin",
-                    "icons8-github.svg"
-                );
-                treeItems.push(githubSignupButton);
-
-                const signupWithEmail = `Sign up with email${space}`;
-                const softwareSignupButton: KpmItem = this.getActionButton(
-                    signupWithEmail,
-                    "",
-                    "codetime.codeTimeLogin",
-                    "envelope.svg"
-                );
-                treeItems.push(softwareSignupButton);
-            }
-
-            const dividerButton: KpmItem = this.getActionButton(
+            const signupWithGithub = `Sign up with GitHub${space}`;
+            const githubSignupButton: KpmItem = this.getActionButton(
+                signupWithGithub,
                 "",
-                "",
-                "",
-                "blue-line-96.png"
+                "codetime.githubLogin",
+                "icons8-github.svg"
             );
-            treeItems.push(dividerButton);
+            treeItems.push(githubSignupButton);
+
+            const signupWithEmail = `Sign up with email${space}`;
+            const softwareSignupButton: KpmItem = this.getActionButton(
+                signupWithEmail,
+                "",
+                "codetime.codeTimeLogin",
+                "envelope.svg"
+            );
+            treeItems.push(softwareSignupButton);
+            // }
+
+            treeItems.push(this.getDividerButton());
         } else {
             const connectedToInfo = this.getAuthTypeIconAndLabel();
             if (connectedToInfo) {
+                const cmd = null; //"codetime.showAccountInfoMenu";
                 const connectedToButton: KpmItem = this.getActionButton(
                     connectedToInfo.label,
                     connectedToInfo.tooltip,
-                    "codetime.showAccountInfoMenu",
+                    cmd,
                     connectedToInfo.icon
                 );
                 treeItems.push(connectedToButton);
+
+                treeItems.push(this.getDividerButton());
             }
 
             // show the web dashboard button
@@ -482,12 +479,23 @@ export class KpmProviderManager {
         return item;
     }
 
+    getDividerButton(): KpmItem {
+        const dividerButton: KpmItem = this.getActionButton(
+            "",
+            "",
+            "",
+            "blue-line-96.png"
+        );
+        return dividerButton;
+    }
+
     getSwitchAccountsButton(): KpmItem {
         const name = getItem("name");
         const loggedInMsg = name ? ` Connected as ${name}` : "";
+        const tooltip = `Switch to a different account.${loggedInMsg}`;
         const item: KpmItem = this.getActionButton(
             "Switch accounts",
-            `Switch to a different account.${loggedInMsg}`,
+            tooltip,
             "codetime.switchAccounts",
             "paw.svg",
             "TreeViewSwitchAccounts"
@@ -513,19 +521,19 @@ export class KpmProviderManager {
         if (authType === "software") {
             return {
                 icon: "envelope.svg",
-                label: name, //"Connected using email",
+                label: name,
                 tooltip,
             };
         } else if (authType === "google") {
             return {
                 icon: "icons8-google.svg",
-                label: name, //"Connected using Google",
+                label: name,
                 tooltip,
             };
         } else if (authType === "github") {
             return {
                 icon: "icons8-github.svg",
-                label: name, //"Connected using GitHub",
+                label: name,
                 tooltip,
             };
         }

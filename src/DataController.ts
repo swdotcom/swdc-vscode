@@ -162,7 +162,8 @@ export async function getUserRegistrationState() {
  */
 export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
-    if (name) {
+    const authType = getItem("authType");
+    if (name && authType) {
         return true;
     }
 
