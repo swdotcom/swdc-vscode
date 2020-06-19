@@ -268,16 +268,6 @@ export class PluginDataManager {
       this.stats.focused_editor_seconds = diff;
     }
 
-    // ensure the payload has the project info
-    await this.populatePayloadProject(payload);
-
-    // make sure all files have an end time
-    this.completeFileEndTimes(payload, nowTimes);
-
-    // Get time between payloads
-    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
-    await this.updateCumulativeSessionTime(payload, sessionMinutes);
-
     // Step 2) Replace "last_focused_timestamp_utc" with now
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
 
@@ -335,6 +325,20 @@ export class PluginDataManager {
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
+    // Step 8) Clear "elapsed_code_time_seconds"
+    // Step 9) Clear "focused_editor_seconds"
+    this.clearStatsForPayloadProcess();
+
+    // ensure the payload has the project info
+    await this.populatePayloadProject(payload);
+
+    // make sure all files have an end time
+    this.completeFileEndTimes(payload, nowTimes);
+
+    // Get time between payloads
+    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+    await this.updateCumulativeSessionTime(payload, sessionMinutes);
+
     // update the aggregation data for the tree info
     this.aggregateFileMetrics(payload, sessionMinutes);
 
@@ -348,10 +352,6 @@ export class PluginDataManager {
       storePayload(payload);
       logIt(`storing kpm metrics`);
     }
-
-    // Step 8) Clear "elapsed_code_time_seconds"
-    // Step 9) Clear "focused_editor_seconds"
-    this.clearStatsForPayloadProcess();
 
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
     setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
