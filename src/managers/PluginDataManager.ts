@@ -139,10 +139,10 @@ export class PluginDataManager {
       nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc,
       0
     );
-    // Check NULL
-    if ((diff = null)) {
-      diff = 0;
-    }
+    // // Check NULL
+    // if ((diff = null)) {
+    //   diff = 0;
+    // }
     // Check NaN
     diff = isNaN(diff) ? 0 : diff;
     // Check >15 minutes timeout
@@ -179,10 +179,10 @@ export class PluginDataManager {
       nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
       0
     );
-    // Check NULL
-    if ((diff = null)) {
-      diff = 0;
-    }
+    // // Check NULL
+    // if ((diff = null)) {
+    //   diff = 0;
+    // }
     // Check NaN
     diff = isNaN(diff) ? 0 : diff;
     // Check >15 minutes timeout
@@ -280,10 +280,10 @@ export class PluginDataManager {
       nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
       0
     );
-    // Check NULL
-    if ((diff = null)) {
-      diff = 0;
-    }
+    // // Check NULL
+    // if ((diff = null)) {
+    //   diff = 0;
+    // }
     // Check NaN
     diff = isNaN(diff) ? 0 : diff;
     // Check >15 minutes timeout
@@ -298,10 +298,10 @@ export class PluginDataManager {
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
     let elapsed_seconds_dif =
       nowTimes.now_in_sec - this.stats.last_payload_end_utc;
-    // Check NULL
-    if ((elapsed_seconds_dif = null)) {
-      elapsed_seconds_dif = 0;
-    }
+    // // Check NULL
+    // if ((elapsed_seconds_dif = null)) {
+    //   elapsed_seconds_dif = 0;
+    // }
     // Check NaN
     elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
     this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 0);
@@ -317,10 +317,10 @@ export class PluginDataManager {
       min_elapsed_active_code_time_seconds,
       0
     );
-    // Check NULL
-    if ((min_elapsed_active_code_time_seconds = null)) {
-      min_elapsed_active_code_time_seconds = 0;
-    }
+    // // Check NULL
+    // if ((min_elapsed_active_code_time_seconds = null)) {
+    //   min_elapsed_active_code_time_seconds = 0;
+    // }
     // Check NaN
     min_elapsed_active_code_time_seconds = isNaN(
       min_elapsed_active_code_time_seconds
