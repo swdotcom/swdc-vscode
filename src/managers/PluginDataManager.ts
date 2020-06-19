@@ -192,7 +192,6 @@ export class PluginDataManager {
    *   Clear file metrics and set current day to today
    */
   async midnightCheckHandler() {
-
     if (isNewDay()) {
       // send the offline data
       await sendOfflineData();
@@ -355,9 +354,9 @@ export class PluginDataManager {
   }
 
   async clearStatsForPayloadProcess() {
-    this.stats.elapsed_active_code_time_seconds = 0;
+    // this.stats.elapsed_active_code_time_seconds = 0;
     this.stats.elapsed_code_time_seconds = 0;
-    this.stats.focused_editor_seconds = 0;
+    // this.stats.focused_editor_seconds = 0;
     // update the file with the updated stats
     this.updateFileData();
   }

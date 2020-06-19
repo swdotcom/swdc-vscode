@@ -34,100 +34,68 @@
         "ui",
         "workspace"
     ],
-    "engines": {
-        "vscode": "^1.35.0"
-    },
-    "main": "./dist/extension",
-    "scripts": {
-        "compile": "tsc -p ./",
-        "lint": "tslint -p ./",
-        "watch": "tsc -watch -p ./",
-        "vscode:prepublish": "webpack --mode production",
-        "webpack": "webpack --mode development",
-        "webpack-dev": "webpack --mode development --watch",
-        "test-compile": "tsc -p ./"
-    },
-    "contributes": {
-        "commands": [
-            {
-                "command": "codetime.softwarePaletteMenu",
-                "title": "Code Time: Menu options"
-            },
-            {
-                "command": "codetime.codeTimeMetrics",
-                "title": "Code Time: View summary"
-            },
-            {
-                "command": "codetime.softwareKpmDashboard",
-                "title": "Code Time: See advanced metrics"
-            },
-            {
-                "command": "codetime.displayReadme",
-                "title": "Code Time: Learn more"
-            }
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "Code Time",
-            "properties": {
-                "showGitMetrics": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Git metrics"
-                },
-                "toggleFileEventLogging": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable file event logging"
-                }
-            }
+    "configuration": {
+      "type": "object",
+      "title": "Code Time",
+      "properties": {
+        "showGitMetrics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Git metrics"
         },
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "code-time",
-                    "title": "Code Time",
-                    "icon": "resources/dark/paw-outlined.svg"
-                }
-            ]
-        },
-        "views": {
-            "code-time": [
-                {
-                    "id": "ct-menu-tree",
-                    "name": "MENU"
-                },
-                {
-                    "id": "ct-metrics-tree",
-                    "name": "DAILY METRICS"
-                },
-                {
-                    "id": "ct-team-tree",
-                    "name": "CONTRIBUTORS"
-                }
-            ]
+        "toggleFileEventLogging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable file event logging"
         }
+      }
     },
-    "devDependencies": {
-        "@types/mocha": "5.2.6",
-        "@types/node": "12.0.4",
-        "@types/vscode": "^1.35.0",
-        "copy-webpack-plugin": "^6.0.1",
-        "file-loader": "^6.0.0",
-        "ts-loader": "^6.2.1",
-        "typescript": "^3.5.1",
-        "webpack": "^4.41.5",
-        "webpack-cli": "^3.3.10"
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "code-time",
+          "title": "Code Time",
+          "icon": "resources/dark/paw-outlined.svg"
+        }
+      ]
     },
-    "dependencies": {
-        "@slack/web-api": "^5.8.0",
-        "aws-sdk": "^2.470.0",
-        "axios": "^0.19.0",
-        "clipboardy": "^2.1.0",
-        "moment-timezone": "^0.5.25",
-        "node-cache": "^5.1.0",
-        "numeral": "^2.0.6",
-        "open": "^6.4.0",
-        "vsls": "0.3.1291"
+    "views": {
+      "code-time": [
+        {
+          "id": "ct-menu-tree",
+          "name": "MENU"
+        },
+        {
+          "id": "ct-metrics-tree",
+          "name": "DAILY METRICS"
+        },
+        {
+          "id": "ct-team-tree",
+          "name": "CONTRIBUTORS"
+        }
+      ]
     }
+  },
+  "devDependencies": {
+    "@types/mocha": "5.2.6",
+    "@types/node": "12.0.4",
+    "@types/vscode": "^1.35.0",
+    "copy-webpack-plugin": "^6.0.1",
+    "file-loader": "^6.0.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.5.1",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "@slack/web-api": "^5.8.0",
+    "aws-sdk": "^2.470.0",
+    "axios": "^0.19.0",
+    "clipboardy": "^2.1.0",
+    "moment-timezone": "^0.5.25",
+    "node-cache": "^5.1.0",
+    "numeral": "^2.0.6",
+    "open": "^6.4.0",
+    "vsls": "0.3.1291"
+  }
 }
