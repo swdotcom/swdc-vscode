@@ -1,7 +1,7 @@
 {
     "name": "swdc-vscode",
     "displayName": "Code Time",
-    "version": "2.2.15",
+    "version": "2.2.16",
     "publisher": "softwaredotcom",
     "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
     "author": {
@@ -34,46 +34,79 @@
         "ui",
         "workspace"
     ],
-    "configuration": {
-        "type": "object",
-        "title": "Code Time",
-        "properties": {
-            "showGitMetrics": {
-                "type": "boolean",
-                "default": false,
-                "description": "Git metrics"
+    "engines": {
+        "vscode": "^1.35.0"
+    },
+    "main": "./dist/extension",
+    "scripts": {
+        "compile": "tsc -p ./",
+        "lint": "tslint -p ./",
+        "watch": "tsc -watch -p ./",
+        "vscode:prepublish": "webpack --mode production",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "test-compile": "tsc -p ./"
+    },
+    "contributes": {
+        "commands": [
+            {
+                "command": "codetime.softwarePaletteMenu",
+                "title": "Code Time: Menu options"
             },
-            "toggleFileEventLogging": {
-                "type": "boolean",
-                "default": false,
-                "description": "Enable file event logging"
+            {
+                "command": "codetime.codeTimeMetrics",
+                "title": "Code Time: View summary"
+            },
+            {
+                "command": "codetime.softwareKpmDashboard",
+                "title": "Code Time: See advanced metrics"
+            },
+            {
+                "command": "codetime.displayReadme",
+                "title": "Code Time: Learn more"
             }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Code Time",
+            "properties": {
+                "showGitMetrics": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Git metrics"
+                },
+                "toggleFileEventLogging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable file event logging"
+                }
+            }
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "code-time",
+                    "title": "Code Time",
+                    "icon": "resources/dark/paw-outlined.svg"
+                }
+            ]
+        },
+        "views": {
+            "code-time": [
+                {
+                    "id": "ct-menu-tree",
+                    "name": "MENU"
+                },
+                {
+                    "id": "ct-metrics-tree",
+                    "name": "DAILY METRICS"
+                },
+                {
+                    "id": "ct-team-tree",
+                    "name": "CONTRIBUTORS"
+                }
+            ]
         }
-    },
-    "viewsContainers": {
-        "activitybar": [
-            {
-                "id": "code-time",
-                "title": "Code Time",
-                "icon": "resources/dark/paw-outlined.svg"
-            }
-        ]
-    },
-    "views": {
-        "code-time": [
-            {
-                "id": "ct-menu-tree",
-                "name": "MENU"
-            },
-            {
-                "id": "ct-metrics-tree",
-                "name": "DAILY METRICS"
-            },
-            {
-                "id": "ct-team-tree",
-                "name": "CONTRIBUTORS"
-            }
-        ]
     },
     "devDependencies": {
         "@types/mocha": "5.2.6",
