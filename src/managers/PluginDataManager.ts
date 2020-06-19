@@ -134,13 +134,22 @@ export class PluginDataManager {
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 2) Update the elapsed_time_seconds
-    const diff = Math.max(
+    // Define, check negative number
+    let diff = Math.max(
       nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc,
       0
     );
+    // Check NULL
+    if ((diff = null)) {
+      diff = 0;
+    }
+    // Check NaN
+    diff = isNaN(diff) ? 0 : diff;
+    // Check >15 minutes timeout
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
     }
+
     // Step 3) Clear "last_unfocused_timestamp_utc"
     this.stats.last_unfocused_timestamp_utc = 0;
 
@@ -165,10 +174,18 @@ export class PluginDataManager {
     this.stats.last_unfocused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 2) Update elapsed_code_time_seconds
-    const diff = Math.max(
+    // Define, check negative number
+    let diff = Math.max(
       nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
       0
     );
+    // Check NULL
+    if ((diff = null)) {
+      diff = 0;
+    }
+    // Check NaN
+    diff = isNaN(diff) ? 0 : diff;
+    // Check >15 minutes timeout
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
     }
@@ -258,11 +275,18 @@ export class PluginDataManager {
     // Step 1) add to the elapsed code time seconds if its less than 15 min
     // set the focused_editor_seconds to the diff
     // get the time from the last time the window was focused and unfocused
+    // Define, check negative number
     let diff = Math.max(
       nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
       0
     );
+    // Check NULL
+    if ((diff = null)) {
+      diff = 0;
+    }
+    // Check NaN
     diff = isNaN(diff) ? 0 : diff;
+    // Check >15 minutes timeout
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
       this.stats.focused_editor_seconds = diff;
@@ -274,8 +298,13 @@ export class PluginDataManager {
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
     let elapsed_seconds_dif =
       nowTimes.now_in_sec - this.stats.last_payload_end_utc;
+    // Check NULL
+    if ((elapsed_seconds_dif = null)) {
+      elapsed_seconds_dif = 0;
+    }
+    // Check NaN
     elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
-    this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 60);
+    this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 0);
 
     // Step 4) Update "elapsed_active_code_time_seconds"
     // get the MIN of elapsed_seconds and focused_editor_seconds
@@ -283,16 +312,21 @@ export class PluginDataManager {
       this.stats.elapsed_seconds,
       this.stats.focused_editor_seconds
     );
+    // Check negative number
+    min_elapsed_active_code_time_seconds = Math.max(
+      min_elapsed_active_code_time_seconds,
+      0
+    );
+    // Check NULL
+    if ((min_elapsed_active_code_time_seconds = null)) {
+      min_elapsed_active_code_time_seconds = 0;
+    }
+    // Check NaN
     min_elapsed_active_code_time_seconds = isNaN(
       min_elapsed_active_code_time_seconds
     )
       ? 0
       : min_elapsed_active_code_time_seconds;
-    // make sure min_elapsed_active_code_time_seconds is not negative
-    min_elapsed_active_code_time_seconds = Math.max(
-      min_elapsed_active_code_time_seconds,
-      0
-    );
 
     // set the elapsed_active_code_time_seconds to the min of the above only
     // if its greater than zero and less than/equal to 15 minutes
