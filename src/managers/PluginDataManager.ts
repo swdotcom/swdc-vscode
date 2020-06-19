@@ -134,22 +134,12 @@ export class PluginDataManager {
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 2) Update the elapsed_time_seconds
-    // Define, check negative number
-    let diff = Math.max(
-      nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc,
-      0
-    );
-    // // Check NULL
-    // if ((diff = null)) {
-    //   diff = 0;
-    // }
-    // Check NaN
-    diff = isNaN(diff) ? 0 : diff;
-    // Check >15 minutes timeout
+    let unfocused_diff =
+      nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc || 0;
+    const diff = Math.max(unfocused_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
     }
-
     // Step 3) Clear "last_unfocused_timestamp_utc"
     this.stats.last_unfocused_timestamp_utc = 0;
 
@@ -174,18 +164,9 @@ export class PluginDataManager {
     this.stats.last_unfocused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 2) Update elapsed_code_time_seconds
-    // Define, check negative number
-    let diff = Math.max(
-      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
-      0
-    );
-    // // Check NULL
-    // if ((diff = null)) {
-    //   diff = 0;
-    // }
-    // Check NaN
-    diff = isNaN(diff) ? 0 : diff;
-    // Check >15 minutes timeout
+    let focused_diff =
+      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc || 0;
+    const diff = Math.max(focused_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
     }
@@ -275,22 +256,23 @@ export class PluginDataManager {
     // Step 1) add to the elapsed code time seconds if its less than 15 min
     // set the focused_editor_seconds to the diff
     // get the time from the last time the window was focused and unfocused
-    // Define, check negative number
-    let diff = Math.max(
-      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
-      0
-    );
-    // // Check NULL
-    // if ((diff = null)) {
-    //   diff = 0;
-    // }
-    // Check NaN
-    diff = isNaN(diff) ? 0 : diff;
-    // Check >15 minutes timeout
+    let payload_diff =
+      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc || 0;
+    let diff = Math.max(payload_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
       this.stats.focused_editor_seconds = diff;
     }
+
+    // ensure the payload has the project info
+    await this.populatePayloadProject(payload);
+
+    // make sure all files have an end time
+    this.completeFileEndTimes(payload, nowTimes);
+
+    // Get time between payloads
+    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+    await this.updateCumulativeSessionTime(payload, sessionMinutes);
 
     // Step 2) Replace "last_focused_timestamp_utc" with now
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
@@ -298,11 +280,6 @@ export class PluginDataManager {
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
     let elapsed_seconds_dif =
       nowTimes.now_in_sec - this.stats.last_payload_end_utc;
-    // // Check NULL
-    // if ((elapsed_seconds_dif = null)) {
-    //   elapsed_seconds_dif = 0;
-    // }
-    // Check NaN
     elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
     this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 0);
 
@@ -312,21 +289,16 @@ export class PluginDataManager {
       this.stats.elapsed_seconds,
       this.stats.focused_editor_seconds
     );
-    // Check negative number
-    min_elapsed_active_code_time_seconds = Math.max(
-      min_elapsed_active_code_time_seconds,
-      0
-    );
-    // // Check NULL
-    // if ((min_elapsed_active_code_time_seconds = null)) {
-    //   min_elapsed_active_code_time_seconds = 0;
-    // }
-    // Check NaN
     min_elapsed_active_code_time_seconds = isNaN(
       min_elapsed_active_code_time_seconds
     )
       ? 0
       : min_elapsed_active_code_time_seconds;
+    // make sure min_elapsed_active_code_time_seconds is not negative
+    min_elapsed_active_code_time_seconds = Math.max(
+      min_elapsed_active_code_time_seconds,
+      0
+    );
 
     // set the elapsed_active_code_time_seconds to the min of the above only
     // if its greater than zero and less than/equal to 15 minutes
@@ -344,34 +316,22 @@ export class PluginDataManager {
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = nowTimes.now_in_sec;
 
-    // // set the following new attributes into the payload
-    // // code time (the editor seconds: greater or equal to active code time)
-    // let elapsed_code_time_seconds = Math.max(
-    //   this.stats.elapsed_code_time_seconds,
-    //   this.stats.elapsed_active_code_time_seconds
-    // );
-    // elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds)
-    //   ? 0
-    //   : elapsed_code_time_seconds;
-
     payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
-    // Step 8) Clear "elapsed_code_time_seconds"
-    // Step 9) Clear "focused_editor_seconds"
-    this.clearStatsForPayloadProcess();
-
-    // ensure the payload has the project info
-    await this.populatePayloadProject(payload);
-
-    // make sure all files have an end time
-    this.completeFileEndTimes(payload, nowTimes);
-
-    // Get time between payloads
-    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
-    await this.updateCumulativeSessionTime(payload, sessionMinutes);
+    // Iterate over all attributes of this.stats
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === null || payload[key] === undefined) {
+        console.log(`payload_key: ${key}`);
+      }
+    });
+    Object.keys(this.stats).forEach((key) => {
+      if (this.stats[key] === null || this.stats[key] === undefined) {
+        console.log(`stats_key: ${key}`);
+      }
+    });
 
     // update the aggregation data for the tree info
     this.aggregateFileMetrics(payload, sessionMinutes);
@@ -386,6 +346,10 @@ export class PluginDataManager {
       storePayload(payload);
       logIt(`storing kpm metrics`);
     }
+
+    // Step 8) Clear "elapsed_code_time_seconds"
+    // Step 9) Clear "focused_editor_seconds"
+    this.clearStatsForPayloadProcess();
 
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
     setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
