@@ -6,8 +6,6 @@ import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     isLoggedIn,
     sendHeartbeat,
-    initializePreferences,
-    getUserRegistrationState,
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import {
@@ -20,7 +18,6 @@ import {
     getItem,
     displayReadmeIfNotExists,
     setItem,
-    getWorkspaceName,
 } from "./Util";
 import { getHistoricalCommits } from "./repo/KpmRepoManager";
 import { manageLiveshareSession } from "./LiveshareManager";
@@ -39,6 +36,7 @@ import {
     sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
+import { TrackerManager } from "./managers/TrackerManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -141,12 +139,11 @@ export async function intializePlugin(
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
+    // const tracker: TrackerManager = TrackerManager.getInstance();
+    // await tracker.init();
+
     // store the activate event
-    EventManager.getInstance().createCodeTimeEvent(
-        "resource",
-        "load",
-        "EditorActivate"
-    );
+    // tracker.trackEditorAction("activate", "load", "EditorActivate");
 
     // INIT the plugin data manager
     PluginDataManager.getInstance();
