@@ -250,13 +250,20 @@ export class PluginDataManager {
     this.stats = getFileDataAsJson(getTimeCounterFile());
     const nowTimes = getNowTimes();
 
+    // set the payload's end times
+    payload.end = nowTimes.now_in_sec;
+    payload.local_end = nowTimes.local_now_in_sec;
+    // set the timezone
+    payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     // Step 1) add to the elapsed code time seconds if its less than 15 min
     // set the focused_editor_seconds to the diff
     // get the time from the last time the window was focused and unfocused
-    const diff = Math.max(
+    let diff = Math.max(
       nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc,
       0
     );
+    diff = isNaN(diff) ? 0 : diff;
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
     }
@@ -268,13 +275,6 @@ export class PluginDataManager {
     // make sure all files have an end time
     this.completeFileEndTimes(payload, nowTimes);
 
-    // set the payload's end times
-    payload.end = nowTimes.now_in_sec;
-    payload.local_end = nowTimes.local_now_in_sec;
-
-    // set the timezone
-    payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
     // Get time between payloads
     const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
     await this.updateCumulativeSessionTime(payload, sessionMinutes);
@@ -283,10 +283,9 @@ export class PluginDataManager {
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
-    this.stats.elapsed_seconds = Math.max(
-      nowTimes.now_in_sec - this.stats.last_payload_end_utc,
-      60
-    );
+    let elapsed_seconds_dif = nowTimes.now_in_sec - this.stats.last_payload_end_utc;
+    elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
+    this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 60);
 
     // Step 4) Update "elapsed_active_code_time_seconds"
     // get the MIN of elapsed_seconds and focused_editor_seconds
@@ -294,6 +293,7 @@ export class PluginDataManager {
       this.stats.elapsed_seconds,
       this.stats.focused_editor_seconds
     );
+    min_elapsed_active_code_time_seconds = isNaN(min_elapsed_active_code_time_seconds) ? 0 : min_elapsed_active_code_time_seconds;
     // make sure min_elapsed_active_code_time_seconds is not negative
     min_elapsed_active_code_time_seconds = Math.max(
       min_elapsed_active_code_time_seconds,
@@ -318,10 +318,13 @@ export class PluginDataManager {
 
     // set the following new attributes into the payload
     // code time (the editor seconds: greater or equal to active code time)
-    payload.elapsed_code_time_seconds = Math.max(
+    let elapsed_code_time_seconds = Math.max(
       this.stats.elapsed_code_time_seconds,
       this.stats.elapsed_active_code_time_seconds
     );
+    elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds) ? 0 : elapsed_code_time_seconds;
+
+    payload.elapsed_code_time_seconds = elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;

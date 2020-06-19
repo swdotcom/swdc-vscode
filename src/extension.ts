@@ -224,7 +224,7 @@ export async function intializePlugin(
         updateStatusBarWithSummaryData();
     }, 0);
 
-    // in 30 seconds
+    // in 15 seconds
     setTimeout(() => {
         commands.executeCommand("codetime.sendOfflineData");
     }, 1000 * 15);
@@ -256,7 +256,7 @@ function initializeIntervalJobs() {
                 isLoggedIn();
             }
         }
-    }, one_min_millis * 20);
+    }, one_min_millis * 30);
 
     // update liveshare in the offline kpm data if it has been initiated
     liveshare_update_interval = setInterval(async () => {
@@ -264,6 +264,12 @@ function initializeIntervalJobs() {
             updateLiveshareTime();
         }
     }, one_min_millis);
+
+    // every 15 minutes
+    // PLUGIN DATA TIMER
+    fifteen_minute_interval = setInterval(() => {
+        commands.executeCommand("codetime.sendOfflineData");
+    }, one_min_millis * 15);
 }
 
 function handlePauseMetricsEvent() {
