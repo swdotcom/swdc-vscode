@@ -8,6 +8,7 @@ import {
   logIt,
   getWorkspaceName,
   getHostname,
+  coalesceNumber,
 } from "../Util";
 import {
   storeJsonData,
@@ -46,6 +47,7 @@ import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 
+const moment = require("moment-timezone");
 const path = require("path");
 
 const FIFTEEN_MIN_IN_SECONDS: number = 60 * 15;
@@ -128,14 +130,13 @@ export class PluginDataManager {
 	*/
   editorFocusHandler() {
     this.stats = getFileDataAsJson(getTimeCounterFile());
-    const nowTimes = getNowTimes();
+    const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
-    this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
+    this.stats.last_focused_timestamp_utc = now;
 
     // Step 2) Update the elapsed_time_seconds
-    let unfocused_diff =
-      nowTimes.now_in_sec - this.stats.last_unfocused_timestamp_utc || 0;
+    let unfocused_diff = coalesceNumber(now - this.stats.last_unfocused_timestamp_utc);
     const diff = Math.max(unfocused_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
@@ -158,14 +159,13 @@ export class PluginDataManager {
 	*/
   editorUnFocusHandler() {
     this.stats = getFileDataAsJson(getTimeCounterFile());
-    const nowTimes = getNowTimes();
+    const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
-    this.stats.last_unfocused_timestamp_utc = nowTimes.now_in_sec;
+    this.stats.last_unfocused_timestamp_utc = now;
 
     // Step 2) Update elapsed_code_time_seconds
-    let focused_diff =
-      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc || 0;
+    let focused_diff = coalesceNumber(now - this.stats.last_focused_timestamp_utc);
     const diff = Math.max(focused_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
@@ -247,8 +247,10 @@ export class PluginDataManager {
     this.stats = getFileDataAsJson(getTimeCounterFile());
     const nowTimes = getNowTimes();
 
+    const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
+
     // set the payload's end times
-    payload.end = nowTimes.now_in_sec;
+    payload.end = now;
     payload.local_end = nowTimes.local_now_in_sec;
     // set the timezone
     payload.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -256,8 +258,7 @@ export class PluginDataManager {
     // Step 1) add to the elapsed code time seconds if its less than 15 min
     // set the focused_editor_seconds to the diff
     // get the time from the last time the window was focused and unfocused
-    let payload_diff =
-      nowTimes.now_in_sec - this.stats.last_focused_timestamp_utc || 0;
+    let payload_diff = coalesceNumber(now - this.stats.last_focused_timestamp_utc);
     let diff = Math.max(payload_diff, 0);
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
@@ -271,16 +272,15 @@ export class PluginDataManager {
     this.completeFileEndTimes(payload, nowTimes);
 
     // Get time between payloads
-    const { sessionMinutes, elapsedSeconds } = getTimeBetweenLastPayload();
+    const { sessionMinutes } = getTimeBetweenLastPayload();
     await this.updateCumulativeSessionTime(payload, sessionMinutes);
 
     // Step 2) Replace "last_focused_timestamp_utc" with now
-    this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
+    this.stats.last_focused_timestamp_utc = now;
 
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
-    let elapsed_seconds_dif =
-      nowTimes.now_in_sec - this.stats.last_payload_end_utc;
-    elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
+    let elapsed_seconds_dif = coalesceNumber(now - this.stats.last_payload_end_utc);
+    elapsed_seconds_dif = coalesceNumber(elapsed_seconds_dif);
     this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 0);
 
     // Step 4) Update "elapsed_active_code_time_seconds"
@@ -289,11 +289,7 @@ export class PluginDataManager {
       this.stats.elapsed_seconds,
       this.stats.focused_editor_seconds
     );
-    min_elapsed_active_code_time_seconds = isNaN(
-      min_elapsed_active_code_time_seconds
-    )
-      ? 0
-      : min_elapsed_active_code_time_seconds;
+    min_elapsed_active_code_time_seconds = coalesceNumber(min_elapsed_active_code_time_seconds);
     // make sure min_elapsed_active_code_time_seconds is not negative
     min_elapsed_active_code_time_seconds = Math.max(
       min_elapsed_active_code_time_seconds,
@@ -314,7 +310,7 @@ export class PluginDataManager {
     this.stats.cumulative_active_code_time_seconds += this.stats.elapsed_active_code_time_seconds;
 
     // Step 7) Replace "last_payload_end_utc" with now
-    this.stats.last_payload_end_utc = nowTimes.now_in_sec;
+    this.stats.last_payload_end_utc = now;
 
     payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
@@ -322,16 +318,16 @@ export class PluginDataManager {
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
     // Iterate over all attributes of this.stats
-    Object.keys(payload).forEach((key) => {
-      if (payload[key] === null || payload[key] === undefined) {
-        console.log(`payload_key: ${key}`);
-      }
-    });
-    Object.keys(this.stats).forEach((key) => {
-      if (this.stats[key] === null || this.stats[key] === undefined) {
-        console.log(`stats_key: ${key}`);
-      }
-    });
+    // Object.keys(payload).forEach((key) => {
+    //   if (payload[key] === null || payload[key] === undefined) {
+    //     console.log(`payload_key: ${key}`);
+    //   }
+    // });
+    // Object.keys(this.stats).forEach((key) => {
+    //   if (this.stats[key] === null || this.stats[key] === undefined) {
+    //     console.log(`stats_key: ${key}`);
+    //   }
+    // });
 
     // update the aggregation data for the tree info
     this.aggregateFileMetrics(payload, sessionMinutes);
@@ -352,7 +348,7 @@ export class PluginDataManager {
     this.clearStatsForPayloadProcess();
 
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
-    setItem("latestPayloadTimestampEndUtc", nowTimes.now_in_sec);
+    setItem("latestPayloadTimestampEndUtc", now);
 
     // update the status and tree
     WallClockManager.getInstance().dispatchStatusViewUpdate();

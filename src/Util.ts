@@ -659,6 +659,13 @@ export function isNewDay() {
     return currentDay !== day ? true : false;
 }
 
+export function coalesceNumber(val, defaultVal = 0) {
+    if (val === null || val === undefined || isNaN(val)) {
+        return defaultVal;
+    }
+    return val;
+}
+
 /**
  * now - current time in UTC (Moment object)
  * now_in_sec - current time in UTC, unix seconds
