@@ -265,8 +265,8 @@ export class PluginDataManager {
     diff = isNaN(diff) ? 0 : diff;
     if (diff <= FIFTEEN_MIN_IN_SECONDS) {
       this.stats.elapsed_code_time_seconds += diff;
+      this.stats.focused_editor_seconds = diff;
     }
-    this.stats.focused_editor_seconds = diff;
 
     // ensure the payload has the project info
     await this.populatePayloadProject(payload);
@@ -282,7 +282,8 @@ export class PluginDataManager {
     this.stats.last_focused_timestamp_utc = nowTimes.now_in_sec;
 
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
-    let elapsed_seconds_dif = nowTimes.now_in_sec - this.stats.last_payload_end_utc;
+    let elapsed_seconds_dif =
+      nowTimes.now_in_sec - this.stats.last_payload_end_utc;
     elapsed_seconds_dif = isNaN(elapsed_seconds_dif) ? 0 : elapsed_seconds_dif;
     this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 60);
 
@@ -292,7 +293,11 @@ export class PluginDataManager {
       this.stats.elapsed_seconds,
       this.stats.focused_editor_seconds
     );
-    min_elapsed_active_code_time_seconds = isNaN(min_elapsed_active_code_time_seconds) ? 0 : min_elapsed_active_code_time_seconds;
+    min_elapsed_active_code_time_seconds = isNaN(
+      min_elapsed_active_code_time_seconds
+    )
+      ? 0
+      : min_elapsed_active_code_time_seconds;
     // make sure min_elapsed_active_code_time_seconds is not negative
     min_elapsed_active_code_time_seconds = Math.max(
       min_elapsed_active_code_time_seconds,
@@ -321,7 +326,9 @@ export class PluginDataManager {
       this.stats.elapsed_code_time_seconds,
       this.stats.elapsed_active_code_time_seconds
     );
-    elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds) ? 0 : elapsed_code_time_seconds;
+    elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds)
+      ? 0
+      : elapsed_code_time_seconds;
 
     payload.elapsed_code_time_seconds = elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
