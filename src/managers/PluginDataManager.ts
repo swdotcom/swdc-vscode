@@ -320,17 +320,17 @@ export class PluginDataManager {
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = nowTimes.now_in_sec;
 
-    // set the following new attributes into the payload
-    // code time (the editor seconds: greater or equal to active code time)
-    let elapsed_code_time_seconds = Math.max(
-      this.stats.elapsed_code_time_seconds,
-      this.stats.elapsed_active_code_time_seconds
-    );
-    elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds)
-      ? 0
-      : elapsed_code_time_seconds;
+    // // set the following new attributes into the payload
+    // // code time (the editor seconds: greater or equal to active code time)
+    // let elapsed_code_time_seconds = Math.max(
+    //   this.stats.elapsed_code_time_seconds,
+    //   this.stats.elapsed_active_code_time_seconds
+    // );
+    // elapsed_code_time_seconds = isNaN(elapsed_code_time_seconds)
+    //   ? 0
+    //   : elapsed_code_time_seconds;
 
-    payload.elapsed_code_time_seconds = elapsed_code_time_seconds;
+    payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
