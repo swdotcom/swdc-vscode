@@ -38,7 +38,7 @@ export class TrackerManager {
 		const project_directory = (workspaceFolders.length) ? workspaceFolders[0].uri.fsPath : "";
 		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
 
-		const eventData = {
+		const e = {
 			jwt: getItem("jwt").split("JWT ")[1],
 			entity: "editor",
 			type,
@@ -52,8 +52,10 @@ export class TrackerManager {
 			plugin_version: getVersion()
 		};
 
-		swdcTracker.trackEditorAction(eventData).catch(e => {
-			console.log(`editor action tracking error: ${e.message}`);
+		swdcTracker.trackEditorAction(e).then(result => {
+			console.log(`sent editor action: ${e.type} ${e.name} ${e.description}`)
+		}).catch(e => {
+			console.log(`editor action send error: ${e.message}`);
 		});
 	}
 }
