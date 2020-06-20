@@ -53,6 +53,9 @@ const path = require("path");
 const FIFTEEN_MIN_IN_SECONDS: number = 60 * 15;
 const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
 
+let prev_cumulative_code_time_seconds = 0;
+let prev_cumulative_active_code_time_seconds = 0;
+
 export class PluginDataManager {
   private static instance: PluginDataManager;
 
@@ -90,6 +93,10 @@ export class PluginDataManager {
     if (!this.stats) {
       this.stats = new TimeCounterStats();
     }
+
+    prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
+    prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
+
 
     // call the focused handler
     this.initializeFocusStats();
@@ -245,6 +252,7 @@ export class PluginDataManager {
 	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
     this.stats = getFileDataAsJson(getTimeCounterFile());
+
     const nowTimes = getNowTimes();
 
     const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
@@ -312,6 +320,15 @@ export class PluginDataManager {
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = now;
 
+    if (prev_cumulative_code_time_seconds > this.stats.cumulative_code_time_seconds) {
+      this.stats.cumulative_code_time_seconds = prev_cumulative_code_time_seconds;
+      // console.log("prev cumulative code time was larger: ", prev_cumulative_code_time_seconds, this.stats.cumulative_code_time_seconds);
+    }
+    if (prev_cumulative_active_code_time_seconds > this.stats.cumulative_active_code_time_seconds) {
+      this.stats.cumulative_active_code_time_seconds = prev_cumulative_active_code_time_seconds;
+      // console.log("prev cumulative active code time was larger: ", prev_cumulative_active_code_time_seconds, this.stats.cumulative_active_code_time_seconds);
+    }
+
     payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
@@ -323,6 +340,7 @@ export class PluginDataManager {
     //     console.log(`payload_key: ${key}`);
     //   }
     // });
+
     // Object.keys(this.stats).forEach((key) => {
     //   if (this.stats[key] === null || this.stats[key] === undefined) {
     //     console.log(`stats_key: ${key}`);
@@ -346,6 +364,9 @@ export class PluginDataManager {
     // Step 8) Clear "elapsed_code_time_seconds"
     // Step 9) Clear "focused_editor_seconds"
     this.clearStatsForPayloadProcess();
+
+    prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
+    prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
     setItem("latestPayloadTimestampEndUtc", now);
@@ -373,6 +394,9 @@ export class PluginDataManager {
     this.stats.current_day = nowTimes.day;
     // update the file with the updated stats
     this.updateFileData();
+
+    prev_cumulative_code_time_seconds = 0;
+    prev_cumulative_active_code_time_seconds = 0;
   }
 
   //// Everything after this line is for time counter v1 ////
