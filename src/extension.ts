@@ -52,6 +52,8 @@ const one_min_millis = 1000 * 60;
 const thirty_min_millis = one_min_millis * 30;
 const one_hour_millis = one_min_millis * 60;
 
+const tracker: TrackerManager = TrackerManager.getInstance();
+
 //
 // Add the keystroke controller to the ext ctx, which
 // will then listen for text document changes.
@@ -71,11 +73,7 @@ export function deactivate(ctx: ExtensionContext) {
     PluginDataManager.getInstance().editorUnFocusHandler();
 
     // store the deactivate event
-    EventManager.getInstance().createCodeTimeEvent(
-        "resource",
-        "unload",
-        "EditorDeactivate"
-    );
+    tracker.trackEditorAction("deactivate" /*type*/, "unload" /*name*/, "plugin_deactivate" /*description*/);
 
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
@@ -138,12 +136,10 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
-
-    // const tracker: TrackerManager = TrackerManager.getInstance();
-    // await tracker.init();
+    await tracker.init();
 
     // store the activate event
-    // tracker.trackEditorAction("activate", "load", "EditorActivate");
+    tracker.trackEditorAction("activate" /*type*/, "load" /*name*/, "plugin_activate" /*description*/);
 
     // INIT the plugin data manager
     PluginDataManager.getInstance();
