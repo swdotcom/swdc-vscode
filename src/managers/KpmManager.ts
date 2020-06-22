@@ -556,11 +556,6 @@ export class KpmManager {
     //     this.sendKeystrokeDataIntervalHandler();
     // }, DEFAULT_DURATION_MILLIS);
 
-    const timeout = DEFAULT_DURATION_MILLIS;
-    setTimeout(() => {
-      this.sendKeystrokeDataIntervalHandler();
-    }, timeout);
-
     return keystrokeStats;
   }
 
