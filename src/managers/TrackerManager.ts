@@ -28,7 +28,8 @@ export class TrackerManager {
 	}
 
 	public async trackEditorAction(type: string, name: string, description: string) {
-		if (!this.trackerReady) {
+		const jwt = getItem("jwt");
+		if (!this.trackerReady || !jwt) {
 			return;
 		}
 		const local = moment().local();
@@ -38,8 +39,9 @@ export class TrackerManager {
 		const project_directory = (workspaceFolders.length) ? workspaceFolders[0].uri.fsPath : "";
 		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
 
+		const token = jwt.split("JWT ")[1];
 		const e = {
-			jwt: getItem("jwt").split("JWT ")[1],
+			jwt: token,
 			entity: "editor",
 			type,
 			name,
