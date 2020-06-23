@@ -3174,10 +3174,10 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.6.tgz#4a28af9786b13f6d3c05b0146e8301bfc685c70f"
-  integrity sha512-jdrhUqNn19rz2dYd1+KyeMwasFRx2ylCzuBVv+C+2/5ZdtAXogSpYPEIwd0rDS8+RVDKFxv9FXCzN9fDbNKBMA==
+swdc-tracker@^1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.8.tgz#e645624e7efaf254206fc671dc7bd87abb058516"
+  integrity sha512-tNZSQfgwnjYgG6QPYQYqGk6snOAiQU45GWrRaXVfEXe/x+u0wQvRuUQwUF/58F5T5nvOR1DNA8dzlqtPzjP/Gg==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.19.2"
