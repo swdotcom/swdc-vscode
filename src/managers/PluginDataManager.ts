@@ -64,6 +64,7 @@ export class PluginDataManager {
 
   private stats: TimeCounterStats = null;
   private dayCheckTimer: any = null;
+  private initialized: boolean = false;
 
   private constructor() {
     this.initializePluginDataMgr();
@@ -90,10 +91,13 @@ export class PluginDataManager {
    */
   initializePluginDataMgr() {
     // get the time counter file
-    this.stats = getFileDataAsJson(getTimeCounterFile());
-
-    // if our stats are null, initialize it with defaults
-    if (!this.stats) {
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    } else {
+      // if our stats are null, initialize it with defaults
       this.stats = new TimeCounterStats();
     }
 
@@ -111,6 +115,8 @@ export class PluginDataManager {
 
     // check right away
     this.midnightCheckHandler();
+
+    this.initialized = true;
   }
 
   /**
@@ -139,7 +145,18 @@ export class PluginDataManager {
 	* Step 3) Clear "last_unfocused_timestamp_utc"
 	*/
   editorFocusHandler() {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
     const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -168,7 +185,18 @@ export class PluginDataManager {
 	* Step 3) Clear "last_focused_timestamp_utc"
 	*/
   editorUnFocusHandler() {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
     const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -254,7 +282,18 @@ export class PluginDataManager {
 	* Step 9) Clear "focused_editor_seconds"
 	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
 
     const nowTimes = getNowTimes();
 
