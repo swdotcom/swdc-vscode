@@ -46,7 +46,7 @@ import { storePayload } from "./PayloadManager";
 import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
-import { TrackerManager } from "./TrackerManager";
+// import { TrackerManager } from "./TrackerManager";
 
 const moment = require("moment-timezone");
 const path = require("path");
@@ -54,7 +54,7 @@ const path = require("path");
 const FIFTEEN_MIN_IN_SECONDS: number = 60 * 15;
 const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
 
-const tracker: TrackerManager = TrackerManager.getInstance();
+// const tracker: TrackerManager = TrackerManager.getInstance();
 
 let prev_cumulative_code_time_seconds = 0;
 let prev_cumulative_active_code_time_seconds = 0;
@@ -64,6 +64,7 @@ export class PluginDataManager {
 
   private stats: TimeCounterStats = null;
   private dayCheckTimer: any = null;
+  private initialized: boolean = false;
 
   private constructor() {
     this.initializePluginDataMgr();
@@ -90,10 +91,13 @@ export class PluginDataManager {
    */
   initializePluginDataMgr() {
     // get the time counter file
-    this.stats = getFileDataAsJson(getTimeCounterFile());
-
-    // if our stats are null, initialize it with defaults
-    if (!this.stats) {
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    } else {
+      // if our stats are null, initialize it with defaults
       this.stats = new TimeCounterStats();
     }
 
@@ -111,6 +115,8 @@ export class PluginDataManager {
 
     // check right away
     this.midnightCheckHandler();
+
+    this.initialized = true;
   }
 
   /**
@@ -139,7 +145,18 @@ export class PluginDataManager {
 	* Step 3) Clear "last_unfocused_timestamp_utc"
 	*/
   editorFocusHandler() {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
     const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -168,7 +185,18 @@ export class PluginDataManager {
 	* Step 3) Clear "last_focused_timestamp_utc"
 	*/
   editorUnFocusHandler() {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
     const now = moment.utc().unix();
 
     // Step 1) Replace last_focused_timestamp_utc with current time (utc)
@@ -254,7 +282,18 @@ export class PluginDataManager {
 	* Step 9) Clear "focused_editor_seconds"
 	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
-    this.stats = getFileDataAsJson(getTimeCounterFile());
+    // this may be called while we're initializing the time counter,
+    // bail out if it hasn't fully initialized
+    if (!this.initialized) {
+      return;
+    }
+
+    const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
+    if (timeCounterJson) {
+      this.stats = {
+        ...timeCounterJson,
+      };
+    }
 
     const nowTimes = getNowTimes();
 
@@ -326,12 +365,12 @@ export class PluginDataManager {
     if (prev_cumulative_code_time_seconds > this.stats.cumulative_code_time_seconds) {
       this.stats.cumulative_code_time_seconds = prev_cumulative_code_time_seconds;
       // store the deactivate event
-      tracker.trackEditorAction("calc" /*type*/, "cumulative_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
+      // tracker.trackEditorAction("calc" /*type*/, "cumulative_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
       // console.log("prev cumulative code time was larger: ", prev_cumulative_code_time_seconds, this.stats.cumulative_code_time_seconds);
     }
     if (prev_cumulative_active_code_time_seconds > this.stats.cumulative_active_code_time_seconds) {
       this.stats.cumulative_active_code_time_seconds = prev_cumulative_active_code_time_seconds;
-      tracker.trackEditorAction("calc" /*type*/, "cumulative_active_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
+      // tracker.trackEditorAction("calc" /*type*/, "cumulative_active_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
       // console.log("prev cumulative active code time was larger: ", prev_cumulative_active_code_time_seconds, this.stats.cumulative_active_code_time_seconds);
     }
 
