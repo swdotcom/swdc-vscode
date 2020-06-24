@@ -31,12 +31,11 @@ import {
     updateStatusBarWithSummaryData,
 } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
-import { EventManager } from "./managers/EventManager";
 import {
     sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
-// import { TrackerManager } from "./managers/TrackerManager";
+import { TrackerManager } from "./managers/TrackerManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -52,7 +51,7 @@ const one_min_millis = 1000 * 60;
 const thirty_min_millis = one_min_millis * 30;
 const one_hour_millis = one_min_millis * 60;
 
-// const tracker: TrackerManager = TrackerManager.getInstance();
+const tracker: TrackerManager = TrackerManager.getInstance();
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -73,7 +72,7 @@ export function deactivate(ctx: ExtensionContext) {
     PluginDataManager.getInstance().editorUnFocusHandler();
 
     // store the deactivate event
-    // tracker.trackEditorAction("deactivate" /*type*/, "unload" /*name*/, "plugin_deactivate" /*description*/);
+    tracker.trackEditorAction("deactivate" /*type*/, "unload" /*name*/, "plugin_deactivate" /*description*/);
 
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
@@ -136,10 +135,10 @@ export async function intializePlugin(
     createdAnonUser: boolean
 ) {
     logIt(`Loaded ${getPluginName()} v${getVersion()}`);
-    // await tracker.init();
+    await tracker.init();
 
     // store the activate event
-    // tracker.trackEditorAction("activate" /*type*/, "load" /*name*/, "plugin_activate" /*description*/);
+    tracker.trackEditorAction("activate" /*type*/, "load" /*name*/, "plugin_activate" /*description*/);
 
     // INIT the plugin data manager
     PluginDataManager.getInstance();
