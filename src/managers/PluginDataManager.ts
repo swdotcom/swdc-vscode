@@ -46,7 +46,7 @@ import { storePayload } from "./PayloadManager";
 import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
 import { incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
-// import { TrackerManager } from "./TrackerManager";
+import { TrackerManager } from "./TrackerManager";
 
 const moment = require("moment-timezone");
 const path = require("path");
@@ -54,7 +54,7 @@ const path = require("path");
 const FIFTEEN_MIN_IN_SECONDS: number = 60 * 15;
 const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
 
-// const tracker: TrackerManager = TrackerManager.getInstance();
+const tracker: TrackerManager = TrackerManager.getInstance();
 
 let prev_cumulative_code_time_seconds = 0;
 let prev_cumulative_active_code_time_seconds = 0;
@@ -365,12 +365,12 @@ export class PluginDataManager {
     if (prev_cumulative_code_time_seconds > this.stats.cumulative_code_time_seconds) {
       this.stats.cumulative_code_time_seconds = prev_cumulative_code_time_seconds;
       // store the deactivate event
-      // tracker.trackEditorAction("calc" /*type*/, "cumulative_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
+      tracker.trackEditorAction("calc" /*type*/, "cumulative_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
       // console.log("prev cumulative code time was larger: ", prev_cumulative_code_time_seconds, this.stats.cumulative_code_time_seconds);
     }
     if (prev_cumulative_active_code_time_seconds > this.stats.cumulative_active_code_time_seconds) {
       this.stats.cumulative_active_code_time_seconds = prev_cumulative_active_code_time_seconds;
-      // tracker.trackEditorAction("calc" /*type*/, "cumulative_active_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
+      tracker.trackEditorAction("calc" /*type*/, "cumulative_active_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
       // console.log("prev cumulative active code time was larger: ", prev_cumulative_active_code_time_seconds, this.stats.cumulative_active_code_time_seconds);
     }
 

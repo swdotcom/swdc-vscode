@@ -22,7 +22,7 @@ export class TrackerManager {
 		const pluginName = getPluginName();
 		// initialize tracker with swdc api host, namespace, and appId
 		const result = await swdcTracker.initialize(api_endpoint, "CodeTime", pluginName);
-		if (result && result.status && result.status === "success") {
+		if (result.status === 200) {
 			this.trackerReady = true;
 		}
 	}
