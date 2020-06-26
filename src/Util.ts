@@ -26,6 +26,7 @@ import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 
+const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
 const { exec } = require("child_process");
@@ -290,23 +291,11 @@ export function validateEmail(email) {
 }
 
 export function setItem(key, value) {
-    // now save it on file
-    const jsonObj = getSoftwareSessionAsJson();
-    jsonObj[key] = value;
-
-    const content = JSON.stringify(jsonObj);
-
-    const sessionFile = getSoftwareSessionFile();
-    fs.writeFileSync(sessionFile, content, (err) => {
-        if (err)
-            logIt(`Error writing to the Software session file: ${err.message}`);
-    });
+    fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
 }
 
 export function getItem(key) {
-    // get it from the file
-    const jsonObj = getSoftwareSessionAsJson();
-    const val = jsonObj[key] || null;
+    const val = fileIt.getJsonValue(getSoftwareSessionFile(), key);
     return val;
 }
 
@@ -573,20 +562,9 @@ export function getExtensionName() {
     const resourcePath: string = path.join(__dirname, "resources");
     const extInfoFile = path.join(resourcePath, "extensioninfo.json");
 
-    if (fs.existsSync(extInfoFile)) {
-        const content = fs
-            .readFileSync(extInfoFile, { encoding: "utf8" })
-            .toString();
-        if (content) {
-            try {
-                let data = JSON.parse(cleanJsonString(content));
-                if (data) {
-                    extensionName = data.name;
-                }
-            } catch (e) {
-                logIt(`unable to read ext info name: ${e.message}`);
-            }
-        }
+    const extensionJson = fileIt.readJsonFileSync(extInfoFile);
+    if (extensionJson) {
+        extensionName = extensionJson.name;
     }
     if (!extensionName) {
         extensionName = "swdc-vscode";
@@ -603,28 +581,6 @@ export function logEvent(message) {
 
 export function logIt(message) {
     console.log(`${getExtensionName()}: ${message}`);
-}
-
-export function getSoftwareSessionAsJson() {
-    let data = null;
-
-    const sessionFile = getSoftwareSessionFile();
-    if (fs.existsSync(sessionFile)) {
-        const content = fs
-            .readFileSync(sessionFile, { encoding: "utf8" })
-            .toString();
-        if (content) {
-            try {
-                data = JSON.parse(cleanJsonString(content));
-            } catch (e) {
-                logIt(`unable to read session info: ${e.message}`);
-                // error trying to read the session file, delete it
-                deleteFile(sessionFile);
-                data = {};
-            }
-        }
-    }
-    return data ? data : {};
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {
@@ -1132,62 +1088,16 @@ export function cleanJsonString(content) {
 }
 
 export function getFileDataAsJson(file) {
-    let data = null;
-    if (fs.existsSync(file)) {
-        let content = fs.readFileSync(file, { encoding: "utf8" }).toString();
-        if (content) {
-            try {
-                data = JSON.parse(cleanJsonString(content));
-            } catch (e) {
-                logIt(`unable to read session info: ${e.message}`);
-                // error trying to read the session file, delete it
-                deleteFile(file);
-            }
-        }
-    }
+    let data = fileIt.readJsonFileSync(file);
     return data;
 }
 
 export function getFileDataArray(file) {
-    let payloads: any[] = [];
-    if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file, { encoding: "utf8" }).toString();
-        try {
-            let jsonData = JSON.parse(cleanJsonString(content));
-            if (!Array.isArray(jsonData)) {
-                payloads.push(jsonData);
-            } else {
-                payloads = jsonData;
-            }
-        } catch (e) {
-            logIt(`Error reading file array data: ${e.message}`);
-        }
-    }
+    let payloads: any[] = fileIt.readJsonArraySync(file);
     return payloads;
 }
 
 export function getFileDataPayloadsAsJson(file) {
-    let payloads: any[] = [];
-    if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file, { encoding: "utf8" }).toString();
-        if (content) {
-            payloads = content
-                .split(/\r?\n/)
-                .map((item) => {
-                    let obj = null;
-                    if (item) {
-                        try {
-                            obj = JSON.parse(item);
-                        } catch (e) {
-                            //
-                        }
-                    }
-                    if (obj) {
-                        return obj;
-                    }
-                })
-                .filter((item) => item);
-        }
-    }
+    let payloads: any[] = fileIt.readJsonLinesSync(file);
     return payloads;
 }

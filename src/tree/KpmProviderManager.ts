@@ -82,6 +82,7 @@ export class KpmProviderManager {
         const authType: string = getItem("authType");
 
         if (!loggedIn) {
+            // UNCOMMENT when we're ready to provide this feature
             // const linkToAccountLabel = `Link to an existing account${space}`;
             // const linkToAccountButton: KpmItem = this.getActionButton(
             //     linkToAccountLabel,
@@ -555,6 +556,8 @@ export class KpmProviderManager {
         item.icon = icon;
         item.contextValue = "action_button";
         item.eventDescription = eventDescription;
+        item.location = "tree"
+        item.color = "blue";
         return item;
     }
 
@@ -968,12 +971,12 @@ export const handleKpmChangeSelection = (
     item: KpmItem
 ) => {
     if (item.command) {
-        const args = item.commandArgs || null;
-        if (args) {
+        const args = item.commandArgs || [];
+        if (args.length) {
             commands.executeCommand(item.command, ...args);
         } else {
             // run the command
-            commands.executeCommand(item.command);
+            commands.executeCommand(item.command, item);
         }
 
         // send event types

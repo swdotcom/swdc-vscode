@@ -36,6 +36,8 @@ import {
     processSwitchAccounts,
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
+import UIElement from "./model/UIElement";
+import { TrackerManager } from "./managers/TrackerManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -234,7 +236,11 @@ export function createCommands(
 
     // DISPLAY CODE TIME METRICS REPORT
     cmds.push(
-        commands.registerCommand("codetime.codeTimeMetrics", () => {
+        commands.registerCommand("codetime.codeTimeMetrics", (item: KpmItem) => {
+            if (item) {
+                const uiEl: UIElement = UIElement.transformKpmItemToUIElement(item);
+                TrackerManager.getInstance().trackUICommandInteraction(uiEl);
+            }
             displayCodeTimeMetricsDashboard();
         })
     );

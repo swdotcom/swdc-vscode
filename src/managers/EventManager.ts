@@ -1,13 +1,14 @@
 import { CodeTimeEvent } from "../model/models";
-import { logIt, getPluginEventsFile, getNowTimes, getHostname } from "../Util";
+import { getPluginEventsFile, getNowTimes, getHostname } from "../Util";
 
+const fileIt = require("file-it");
 const fs = require("fs");
 const os = require("os");
 
 export class EventManager {
     private static instance: EventManager;
 
-    private constructor() {}
+    private constructor() { }
 
     static getInstance(): EventManager {
         if (!EventManager.instance) {
@@ -18,17 +19,7 @@ export class EventManager {
     }
 
     storeEvent(event) {
-        fs.appendFile(
-            getPluginEventsFile(),
-            JSON.stringify(event) + os.EOL,
-            (err) => {
-                if (err) {
-                    logIt(
-                        `Error appending to the events data file: ${err.message}`
-                    );
-                }
-            }
-        );
+        fileIt.appendJsonFileSync(getPluginEventsFile(), event);
     }
 
     /**

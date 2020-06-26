@@ -1,6 +1,7 @@
 import swdcTracker from "swdc-tracker";
 import { api_endpoint } from "../Constants";
-import { getPluginName, getItem, getPluginId, getVersion, findFirstActiveDirectoryOrWorkspaceDirectory, getWorkspaceFolders } from "../Util";
+import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
+import UIElement from "../model/UIElement";
 const moment = require("moment-timezone");
 
 export class TrackerManager {
@@ -27,11 +28,60 @@ export class TrackerManager {
 		}
 	}
 
+	public async trackUICommandInteraction(ui_element: UIElement) {
+		this.trackUIInteraction("execute_command", ui_element);
+	}
+
+	public async trackUIClickInteraction(ui_element: UIElement) {
+		this.trackUIInteraction("click", ui_element);
+	}
+
+	/**
+	 * @param type execute_command | click
+	 * @param ui_element {element_name, element_location, color, icon_name, cta_text}
+	 */
+	private async trackUIInteraction(interaction_type: string, ui_element: UIElement) {
+		const jwt = getItem("jwt");
+		if (!this.trackerReady || !jwt) {
+			return;
+		}
+
+		const e = {
+			interaction_type,
+			...ui_element,
+			...this.getBaseTrackerInfo()
+		};
+
+		swdcTracker.trackEditorAction(e).then(result => {
+			console.log(`sent editor action: ${JSON.stringify(e)}`)
+		}).catch(e => {
+			console.log(`editor action send error: ${e.message}`);
+		});
+	}
+
 	public async trackEditorAction(type: string, name: string, description: string) {
 		const jwt = getItem("jwt");
 		if (!this.trackerReady || !jwt) {
 			return;
 		}
+
+		const e = {
+			entity: "editor",
+			type,
+			name,
+			description,
+			...this.getBaseTrackerInfo()
+		};
+
+		swdcTracker.trackEditorAction(e).then(result => {
+			console.log(`sent editor action: ${e.type} ${e.name} ${e.description}`)
+		}).catch(e => {
+			console.log(`editor action send error: ${e.message}`);
+		});
+	}
+
+	getBaseTrackerInfo() {
+		const jwt = getItem("jwt");
 		const local = moment().local();
 		const tz_offset_minutes =
 			moment.parseZone(local).utcOffset();
@@ -40,12 +90,8 @@ export class TrackerManager {
 		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
 
 		const token = jwt.split("JWT ")[1];
-		const e = {
+		const baseInfo = {
 			jwt: token,
-			entity: "editor",
-			type,
-			name,
-			description,
 			tz_offset_minutes,
 			project_directory,
 			project_name,
@@ -53,11 +99,6 @@ export class TrackerManager {
 			plugin_name: getPluginName(),
 			plugin_version: getVersion()
 		};
-
-		swdcTracker.trackEditorAction(e).then(result => {
-			console.log(`sent editor action: ${e.type} ${e.name} ${e.description}`)
-		}).catch(e => {
-			console.log(`editor action send error: ${e.message}`);
-		});
+		return baseInfo;
 	}
 }

@@ -2,7 +2,6 @@ import { SessionSummary, KeystrokeAggregate } from "../model/models";
 import {
     isWindows,
     getSoftwareDir,
-    logIt,
     getNowTimes,
     getItem,
     showStatus,
@@ -12,7 +11,8 @@ import {
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "./TimeSummaryData";
-const fs = require("fs");
+
+const fileIt = require("file-it");
 
 export function getSessionThresholdSeconds() {
     const thresholdSeconds =
@@ -58,11 +58,6 @@ function coalesceMissingAttributes(data): SessionSummary {
     return data;
 }
 
-export function sessionSummaryExists(): boolean {
-    const file = getSessionSummaryFile();
-    return fs.existsSync(file);
-}
-
 export function getSessionSummaryFileAsJson(): SessionSummary {
     const file = getSessionSummaryFile();
     let sessionSummary = getFileDataAsJson(file);
@@ -75,18 +70,7 @@ export function getSessionSummaryFileAsJson(): SessionSummary {
 
 export function saveSessionSummaryToDisk(sessionSummaryData) {
     const file = getSessionSummaryFile();
-    try {
-        // JSON.stringify(data, replacer, number of spaces)
-        const content = JSON.stringify(sessionSummaryData, null, 4);
-        fs.writeFileSync(file, content, (err) => {
-            if (err)
-                logIt(
-                    `Deployer: Error writing session summary data: ${err.message}`
-                );
-        });
-    } catch (e) {
-        //
-    }
+    fileIt.writeJsonFileSync(file, sessionSummaryData, { spaces: 4 });
 }
 
 export function setSessionSummaryLiveshareMinutes(minutes) {
