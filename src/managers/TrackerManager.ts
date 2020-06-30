@@ -2,6 +2,7 @@ import swdcTracker from "swdc-tracker";
 import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
 import UIElement from "../model/UIElement";
+import { KpmItem } from "../model/models";
 const moment = require("moment-timezone");
 
 export class TrackerManager {
@@ -28,11 +29,16 @@ export class TrackerManager {
 		}
 	}
 
-	public async trackUICommandInteraction(ui_element: UIElement) {
+	public async trackUICommandInteraction(item: KpmItem) {
+		// build the command palette ui_element from the KpmItem
+		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
+		ui_element.element_location = "ct_command_palette";
 		this.trackUIInteraction("execute_command", ui_element);
 	}
 
-	public async trackUIClickInteraction(ui_element: UIElement) {
+	public async trackUIClickInteraction(item: KpmItem) {
+		// build the click ui_element from the KpmItem
+		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
 		this.trackUIInteraction("click", ui_element);
 	}
 
@@ -41,27 +47,32 @@ export class TrackerManager {
 	 * @param ui_element {element_name, element_location, color, icon_name, cta_text}
 	 */
 	private async trackUIInteraction(interaction_type: string, ui_element: UIElement) {
-		const jwt = getItem("jwt");
-		if (!this.trackerReady || !jwt) {
+		if (!this.trackerReady) {
+			return;
+		}
+
+		const baseInfo = this.getBaseTrackerInfo();
+		if (!baseInfo.jwt) {
 			return;
 		}
 
 		const e = {
 			interaction_type,
 			...ui_element,
-			...this.getBaseTrackerInfo()
+			...baseInfo
 		};
 
-		swdcTracker.trackEditorAction(e).then(result => {
-			console.log(`sent editor action: ${JSON.stringify(e)}`)
-		}).catch(e => {
-			console.log(`editor action send error: ${e.message}`);
-		});
+		// send the editor action
+		swdcTracker.trackUIInteraction(e);
 	}
 
 	public async trackEditorAction(type: string, name: string, description: string) {
-		const jwt = getItem("jwt");
-		if (!this.trackerReady || !jwt) {
+		if (!this.trackerReady) {
+			return;
+		}
+
+		const baseInfo = this.getBaseTrackerInfo();
+		if (!baseInfo.jwt) {
 			return;
 		}
 
@@ -70,14 +81,11 @@ export class TrackerManager {
 			type,
 			name,
 			description,
-			...this.getBaseTrackerInfo()
+			...baseInfo
 		};
 
-		swdcTracker.trackEditorAction(e).then(result => {
-			console.log(`sent editor action: ${e.type} ${e.name} ${e.description}`)
-		}).catch(e => {
-			console.log(`editor action send error: ${e.message}`);
-		});
+		// send the 
+		swdcTracker.trackEditorAction(e);
 	}
 
 	getBaseTrackerInfo() {

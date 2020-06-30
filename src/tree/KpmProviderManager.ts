@@ -546,7 +546,8 @@ export class KpmProviderManager {
         tooltip,
         command,
         icon = null,
-        eventDescription: string = null
+        eventDescription: string = "",
+        color = "blue"
     ): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip = tooltip;
@@ -556,8 +557,8 @@ export class KpmProviderManager {
         item.icon = icon;
         item.contextValue = "action_button";
         item.eventDescription = eventDescription;
-        item.location = "tree"
-        item.color = "blue";
+        item.location = "ct_tree_menu"
+        item.color = color;
         return item;
     }
 

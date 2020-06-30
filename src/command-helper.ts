@@ -36,7 +36,6 @@ import {
     processSwitchAccounts,
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
-import UIElement from "./model/UIElement";
 import { TrackerManager } from "./managers/TrackerManager";
 
 export function createCommands(
@@ -45,6 +44,9 @@ export function createCommands(
     dispose: () => void;
 } {
     let cmds = [];
+
+    const trackerMgr: TrackerManager = TrackerManager.getInstance();
+    const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
     cmds.push(kpmController);
 
@@ -237,10 +239,16 @@ export function createCommands(
     // DISPLAY CODE TIME METRICS REPORT
     cmds.push(
         commands.registerCommand("codetime.codeTimeMetrics", (item: KpmItem) => {
-            if (item) {
-                const uiEl: UIElement = UIElement.transformKpmItemToUIElement(item);
-                TrackerManager.getInstance().trackUICommandInteraction(uiEl);
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getCodeTimeDashboardButton();
+                trackerMgr.trackUICommandInteraction(item);
+            } else {
+                // it's from the tree menu
+                trackerMgr.trackUIClickInteraction(item);
             }
+
             displayCodeTimeMetricsDashboard();
         })
     );

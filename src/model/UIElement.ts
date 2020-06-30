@@ -8,12 +8,24 @@ export default class UIElement {
 	cta_text: string = "";
 
 	static transformKpmItemToUIElement(kpmItem: KpmItem): UIElement {
+		const cta_text = kpmItem.description || kpmItem.tooltip;
+		return this.buildUIElement(kpmItem.label, kpmItem.location, kpmItem.icon, cta_text, kpmItem.color);
+	}
+
+	static buildUIElement(
+		element_name: string,
+		element_location: string,
+		icon_name: string,
+		cta_text: string,
+		color: string): UIElement {
+
 		const uiEl: UIElement = new UIElement();
-		uiEl.color = kpmItem.color;
-		uiEl.cta_text = kpmItem.description || kpmItem.tooltip;
-		uiEl.element_location = kpmItem.location;
-		uiEl.element_name = kpmItem.label;
-		uiEl.icon_name = kpmItem.icon;
+		uiEl.color = color;
+		uiEl.cta_text = cta_text;
+		uiEl.element_location = element_location;
+		uiEl.element_name = element_name;
+		uiEl.icon_name = icon_name;
 		return uiEl;
+
 	}
 }
