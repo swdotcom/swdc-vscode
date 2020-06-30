@@ -9,7 +9,7 @@ export default class UIElement {
 
 	static transformKpmItemToUIElement(kpmItem: KpmItem): UIElement {
 		const cta_text = kpmItem.description || kpmItem.tooltip;
-		return this.buildUIElement(kpmItem.label, kpmItem.location, kpmItem.icon, cta_text, kpmItem.color);
+		return this.buildUIElement(kpmItem.name, kpmItem.location, kpmItem.icon, cta_text, kpmItem.color);
 	}
 
 	static buildUIElement(

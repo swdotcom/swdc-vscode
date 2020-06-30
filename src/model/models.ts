@@ -18,6 +18,7 @@ export class KpmItem {
     children: KpmItem[] = [];
     color: string = "";
     location: string = "";
+    name: string = "";
     eventDescription: string = null;
     initialCollapsibleState: TreeItemCollapsibleState =
         TreeItemCollapsibleState.Collapsed;

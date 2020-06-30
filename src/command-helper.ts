@@ -255,7 +255,16 @@ export function createCommands(
 
     // DISPLAY PROJECT METRICS REPORT
     cmds.push(
-        commands.registerCommand("codetime.generateProjectSummary", () => {
+        commands.registerCommand("codetime.generateProjectSummary", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getViewProjectSummaryButton();
+                trackerMgr.trackUICommandInteraction(item);
+            } else {
+                // it's from the tree menu
+                trackerMgr.trackUIClickInteraction(item);
+            }
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
         })
     );

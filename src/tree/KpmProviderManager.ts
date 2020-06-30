@@ -191,18 +191,11 @@ export class KpmProviderManager {
         );
         treeItems.push(reportDividerButton);
 
-        // codetime metrics editor dashboard
+        // view summary button node
         treeItems.push(this.getCodeTimeDashboardButton());
 
-        // generate codetime commit project data
-        const commitSummitLabel = `View project summary${space}`;
-        const generateProjectSummaryButton: KpmItem = this.getActionButton(
-            commitSummitLabel,
-            "",
-            "codetime.generateProjectSummary",
-            "folder.svg"
-        );
-        treeItems.push(generateProjectSummaryButton);
+        // view project summary button node
+        treeItems.push(this.getViewProjectSummaryButton());
 
         // const addProjectNoteLabel: string = `Add a note${space}`;
         // const addProjectNoteButton: KpmItem = this.getActionButton(
@@ -505,6 +498,19 @@ export class KpmProviderManager {
         return item;
     }
 
+    getViewProjectSummaryButton(): KpmItem {
+        const commitSummitLabel = `View project summary`;
+        const item: KpmItem = this.getActionButton(
+            commitSummitLabel,
+            "",
+            "codetime.generateProjectSummary",
+            "folder.svg"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_project_summary_btn";
+        return item;
+    }
+
     getCodeTimeDashboardButton(): KpmItem {
         const item: KpmItem = this.getActionButton(
             "View summary",
@@ -513,6 +519,8 @@ export class KpmProviderManager {
             "dashboard.svg",
             "TreeViewLaunchDashboard"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_summary_btn";
         return item;
     }
 
@@ -558,7 +566,6 @@ export class KpmProviderManager {
         item.icon = icon;
         item.contextValue = "action_button";
         item.eventDescription = eventDescription;
-        item.location = "ct_tree_menu"
         item.color = color;
         return item;
     }
