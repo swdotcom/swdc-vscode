@@ -82,44 +82,45 @@ export class KpmProviderManager {
         const authType: string = getItem("authType");
 
         if (!loggedIn) {
-            // UNCOMMENT when we're ready to provide this feature
-            // const linkToAccountLabel = `Link to an existing account${space}`;
-            // const linkToAccountButton: KpmItem = this.getActionButton(
-            //     linkToAccountLabel,
-            //     "",
-            //     "codetime.linkAccount",
-            //     "registered-user.svg"
-            // );
-            // treeItems.push(linkToAccountButton);
+            if (process.env.LINK_TO_ACCOUNT_ENABLED === "true") {
+                const linkToAccountLabel = `Link to an existing account${space}`;
+                const linkToAccountButton: KpmItem = this.getActionButton(
+                    linkToAccountLabel,
+                    "",
+                    "codetime.linkAccount",
+                    "registered-user.svg"
+                );
+                treeItems.push(linkToAccountButton);
+            } else {
 
-            // if (!authType) {
-            const signupWithGoogle = `Sign up with Google${space}`;
-            const googleSignupButton: KpmItem = this.getActionButton(
-                signupWithGoogle,
-                "",
-                "codetime.googleLogin",
-                "icons8-google.svg"
-            );
-            treeItems.push(googleSignupButton);
+                const signupText = authType ? "Log in" : "Sign up";
+                const signupWithGoogle = `${signupText} with Google${space}`;
+                const googleSignupButton: KpmItem = this.getActionButton(
+                    signupWithGoogle,
+                    "",
+                    "codetime.googleLogin",
+                    "icons8-google.svg"
+                );
+                treeItems.push(googleSignupButton);
 
-            const signupWithGithub = `Sign up with GitHub${space}`;
-            const githubSignupButton: KpmItem = this.getActionButton(
-                signupWithGithub,
-                "",
-                "codetime.githubLogin",
-                "icons8-github.svg"
-            );
-            treeItems.push(githubSignupButton);
+                const signupWithGithub = `${signupText} with GitHub${space}`;
+                const githubSignupButton: KpmItem = this.getActionButton(
+                    signupWithGithub,
+                    "",
+                    "codetime.githubLogin",
+                    "icons8-github.svg"
+                );
+                treeItems.push(githubSignupButton);
 
-            const signupWithEmail = `Sign up with email${space}`;
-            const softwareSignupButton: KpmItem = this.getActionButton(
-                signupWithEmail,
-                "",
-                "codetime.codeTimeLogin",
-                "envelope.svg"
-            );
-            treeItems.push(softwareSignupButton);
-            // }
+                const signupWithEmail = `${signupText} with email${space}`;
+                const softwareSignupButton: KpmItem = this.getActionButton(
+                    signupWithEmail,
+                    "",
+                    "codetime.codeTimeLogin",
+                    "envelope.svg"
+                );
+                treeItems.push(softwareSignupButton);
+            }
 
             treeItems.push(this.getDividerButton());
         } else {

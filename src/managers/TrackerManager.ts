@@ -97,7 +97,10 @@ export class TrackerManager {
 		const project_directory = (workspaceFolders.length) ? workspaceFolders[0].uri.fsPath : "";
 		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
 
-		const token = jwt.split("JWT ")[1];
+		// if the jwt is null, just set it to null so the
+		// caller can key off of the baseInfo.jwt to determine if
+		// it should be sent or not
+		const token = jwt ? jwt.split("JWT ")[1] : null;
 		const baseInfo = {
 			jwt: token,
 			tz_offset_minutes,
