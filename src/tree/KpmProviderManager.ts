@@ -82,43 +82,23 @@ export class KpmProviderManager {
         const authType: string = getItem("authType");
 
         if (!loggedIn) {
-            // const linkToAccountLabel = `Link to an existing account${space}`;
-            // const linkToAccountButton: KpmItem = this.getActionButton(
-            //     linkToAccountLabel,
-            //     "",
-            //     "codetime.linkAccount",
-            //     "registered-user.svg"
-            // );
-            // treeItems.push(linkToAccountButton);
+            if (process.env.LINK_TO_ACCOUNT_ENABLED === "true") {
+                const linkToAccountLabel = `Link to an existing account${space}`;
+                const linkToAccountButton: KpmItem = this.getActionButton(
+                    linkToAccountLabel,
+                    "",
+                    "codetime.linkAccount",
+                    "registered-user.svg"
+                );
+                treeItems.push(linkToAccountButton);
+            } else {
 
-            // if (!authType) {
-            const signupWithGoogle = `Sign up with Google${space}`;
-            const googleSignupButton: KpmItem = this.getActionButton(
-                signupWithGoogle,
-                "",
-                "codetime.googleLogin",
-                "icons8-google.svg"
-            );
-            treeItems.push(googleSignupButton);
+                treeItems.push(this.getSignUpButton("Google", "multi"));
 
-            const signupWithGithub = `Sign up with GitHub${space}`;
-            const githubSignupButton: KpmItem = this.getActionButton(
-                signupWithGithub,
-                "",
-                "codetime.githubLogin",
-                "icons8-github.svg"
-            );
-            treeItems.push(githubSignupButton);
+                treeItems.push(this.getSignUpButton("GitHub", "white"));
 
-            const signupWithEmail = `Sign up with email${space}`;
-            const softwareSignupButton: KpmItem = this.getActionButton(
-                signupWithEmail,
-                "",
-                "codetime.codeTimeLogin",
-                "envelope.svg"
-            );
-            treeItems.push(softwareSignupButton);
-            // }
+                treeItems.push(this.getSignUpButton("email", "grey"));
+            }
 
             treeItems.push(this.getDividerButton());
         } else {
@@ -141,29 +121,10 @@ export class KpmProviderManager {
         }
 
         // toggle status bar button
-        let toggleStatusBarTextLabel = "Hide status bar metrics";
-        let toggleStatusBarIcon = "visible.svg";
-        if (!isStatusBarTextVisible()) {
-            toggleStatusBarTextLabel = "Show status bar metrics";
-        }
-
-        const toggleStatusBarButton: KpmItem = this.getActionButton(
-            toggleStatusBarTextLabel,
-            "Toggle the Code Time status bar metrics text",
-            "codetime.toggleStatusBar",
-            toggleStatusBarIcon
-        );
-        treeItems.push(toggleStatusBarButton);
+        treeItems.push(this.getHideStatusBarMetricsButton());
 
         // readme button
-        const learnMoreLabel = `Learn more${space}`;
-        const readmeButton: KpmItem = this.getActionButton(
-            learnMoreLabel,
-            "View the Code Time Readme to learn more",
-            "codetime.displayReadme",
-            "readme.svg"
-        );
-        treeItems.push(readmeButton);
+        treeItems.push(this.getLearnMoreButton());
 
         const feedbackButton: KpmItem = this.getActionButton(
             "Submit feedback",
@@ -189,18 +150,11 @@ export class KpmProviderManager {
         );
         treeItems.push(reportDividerButton);
 
-        // codetime metrics editor dashboard
+        // view summary button node
         treeItems.push(this.getCodeTimeDashboardButton());
 
-        // generate codetime commit project data
-        const commitSummitLabel = `View project summary${space}`;
-        const generateProjectSummaryButton: KpmItem = this.getActionButton(
-            commitSummitLabel,
-            "",
-            "codetime.generateProjectSummary",
-            "folder.svg"
-        );
-        treeItems.push(generateProjectSummaryButton);
+        // view project summary button node
+        treeItems.push(this.getViewProjectSummaryButton());
 
         // const addProjectNoteLabel: string = `Add a note${space}`;
         // const addProjectNoteButton: KpmItem = this.getActionButton(
@@ -466,6 +420,34 @@ export class KpmProviderManager {
         return item;
     }
 
+    getSignUpButton(signUpAuthName: string, iconColor: string): KpmItem {
+        const authType = getItem("authType");
+        const signupText = authType ? "Log in" : "Sign up";
+        const nameText = authType ? "log_in" : "sign_up";
+        const label = `${signupText} with ${signUpAuthName}`;
+        let icon = "envelope.svg";
+        let command = "codetime.codeTimeLogin";
+        const lcType = signUpAuthName.toLowerCase();
+        if (lcType === "google") {
+            icon = "icons8-google.svg";
+            command = "codetime.googleLogin"
+        } else if (lcType === "github") {
+            icon = "icons8-github.svg";
+            command = "codetime.githubLogin"
+        }
+        const item: KpmItem = this.getActionButton(
+            label,
+            "",
+            command,
+            icon,
+            "",
+            iconColor
+        );
+        item.location = "ct_menu_tree";
+        item.name = `ct_${nameText}_${lcType}_btn`;
+        return item;
+    }
+
     getWebViewDashboardButton(): KpmItem {
         const name = getItem("name");
         const loggedInMsg = name ? ` Connected as ${name}` : "";
@@ -476,6 +458,8 @@ export class KpmProviderManager {
             "paw.svg",
             "TreeViewLaunchWebDashboard"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_web_metrics_btn";
         return item;
     }
 
@@ -500,6 +484,55 @@ export class KpmProviderManager {
             "paw.svg",
             "TreeViewSwitchAccounts"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_switch_accounts_btn";
+        return item;
+    }
+
+    getHideStatusBarMetricsButton(): KpmItem {
+        let toggleStatusBarTextLabel = "Hide status bar metrics";
+        if (!isStatusBarTextVisible()) {
+            toggleStatusBarTextLabel = "Show status bar metrics";
+        }
+
+        const item: KpmItem = this.getActionButton(
+            toggleStatusBarTextLabel,
+            "Toggle the Code Time status bar metrics text",
+            "codetime.toggleStatusBar",
+            "visible.svg"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_hide_status_bar_metrics_btn";
+        return item;
+    }
+
+    getLearnMoreButton(): KpmItem {
+        const learnMoreLabel = `Learn more`;
+        const item: KpmItem = this.getActionButton(
+            learnMoreLabel,
+            "View the Code Time Readme to learn more",
+            "codetime.displayReadme",
+            "readme.svg",
+            "",
+            "yellow"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_learn_more_btn";
+        return item;
+    }
+
+    getViewProjectSummaryButton(): KpmItem {
+        const commitSummitLabel = `View project summary`;
+        const item: KpmItem = this.getActionButton(
+            commitSummitLabel,
+            "",
+            "codetime.generateProjectSummary",
+            "folder.svg",
+            "",
+            "red"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_project_summary_btn";
         return item;
     }
 
@@ -509,8 +542,11 @@ export class KpmProviderManager {
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
             "dashboard.svg",
-            "TreeViewLaunchDashboard"
+            "TreeViewLaunchDashboard",
+            "purple"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_summary_btn";
         return item;
     }
 
@@ -545,7 +581,8 @@ export class KpmProviderManager {
         tooltip,
         command,
         icon = null,
-        eventDescription: string = null
+        eventDescription: string = "",
+        color = "blue"
     ): KpmItem {
         const item: KpmItem = new KpmItem();
         item.tooltip = tooltip;
@@ -555,6 +592,7 @@ export class KpmProviderManager {
         item.icon = icon;
         item.contextValue = "action_button";
         item.eventDescription = eventDescription;
+        item.color = color;
         return item;
     }
 
@@ -968,12 +1006,12 @@ export const handleKpmChangeSelection = (
     item: KpmItem
 ) => {
     if (item.command) {
-        const args = item.commandArgs || null;
-        if (args) {
+        const args = item.commandArgs || [];
+        if (args.length) {
             commands.executeCommand(item.command, ...args);
         } else {
             // run the command
-            commands.executeCommand(item.command);
+            commands.executeCommand(item.command, item);
         }
 
         // send event types

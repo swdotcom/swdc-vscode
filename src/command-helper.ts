@@ -10,7 +10,6 @@ import {
 } from "./menu/MenuManager";
 import {
     launchWebUrl,
-    handleCodeTimeStatusToggle,
     launchLogin,
     openFileInEditor,
     displayReadmeIfNotExists,
@@ -22,7 +21,7 @@ import {
     CodeTimeMenuProvider,
     connectCodeTimeMenuTreeView,
 } from "./tree/CodeTimeMenuProvider";
-import { KpmItem } from "./model/models";
+import { KpmItem, UIInteractionType } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import {
@@ -36,6 +35,7 @@ import {
     processSwitchAccounts,
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
+import { TrackerManager } from "./managers/TrackerManager";
 
 export function createCommands(
     kpmController: KpmManager
@@ -43,6 +43,9 @@ export function createCommands(
     dispose: () => void;
 } {
     let cmds = [];
+
+    const trackerMgr: TrackerManager = TrackerManager.getInstance();
+    const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
     cmds.push(kpmController);
 
@@ -173,7 +176,15 @@ export function createCommands(
 
     // REFRESH MENU
     cmds.push(
-        commands.registerCommand("codetime.toggleStatusBar", () => {
+        commands.registerCommand("codetime.toggleStatusBar", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getHideStatusBarMetricsButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             toggleStatusBar();
             setTimeout(() => {
                 commands.executeCommand("codetime.refreshCodetimeMenuTree");
@@ -183,21 +194,45 @@ export function createCommands(
 
     // LAUNCH EMAIL LOGIN
     cmds.push(
-        commands.registerCommand("codetime.codeTimeLogin", () => {
+        commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getSignUpButton("email", "grey");
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             launchLogin("software");
         })
     );
 
     // LAUNCH GOOGLE LOGIN
     cmds.push(
-        commands.registerCommand("codetime.googleLogin", () => {
+        commands.registerCommand("codetime.googleLogin", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getSignUpButton("Google", "multi");
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             launchLogin("google");
         })
     );
 
     // LAUNCH GITHUB LOGIN
     cmds.push(
-        commands.registerCommand("codetime.githubLogin", () => {
+        commands.registerCommand("codetime.githubLogin", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getSignUpButton("GitHub", "white");
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             launchLogin("github");
         })
     );
@@ -227,21 +262,45 @@ export function createCommands(
 
     // DISPLAY README MD
     cmds.push(
-        commands.registerCommand("codetime.displayReadme", () => {
+        commands.registerCommand("codetime.displayReadme", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getLearnMoreButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             displayReadmeIfNotExists(true /*override*/);
         })
     );
 
     // DISPLAY CODE TIME METRICS REPORT
     cmds.push(
-        commands.registerCommand("codetime.codeTimeMetrics", () => {
+        commands.registerCommand("codetime.codeTimeMetrics", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getCodeTimeDashboardButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             displayCodeTimeMetricsDashboard();
         })
     );
 
     // DISPLAY PROJECT METRICS REPORT
     cmds.push(
-        commands.registerCommand("codetime.generateProjectSummary", () => {
+        commands.registerCommand("codetime.generateProjectSummary", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getViewProjectSummaryButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
             ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
         })
     );
@@ -273,12 +332,6 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.viewSoftwareTop40", () => {
             launchWebUrl("https://api.software.com/music/top40");
-        })
-    );
-
-    cmds.push(
-        commands.registerCommand("codetime.codeTimeStatusToggle", () => {
-            handleCodeTimeStatusToggle();
         })
     );
 

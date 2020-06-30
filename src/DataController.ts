@@ -50,7 +50,7 @@ import {
 import CodeTimeSummary from "./model/CodeTimeSummary";
 import { getCodeTimeSummary } from "./storage/TimeSummaryData";
 
-const fs = require("fs");
+const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
 let toggleFileEventLogging = null;
@@ -311,10 +311,6 @@ export async function updatePreferences() {
                     prefs.showGit !== null && prefs.showGit !== undefined
                         ? prefs.showGit
                         : null;
-                let prefsShowRank =
-                    prefs.showRank !== null && prefs.showRank !== undefined
-                        ? prefs.showRank
-                        : null;
 
                 if (prefsShowGit === null || prefsShowGit !== showGitMetrics) {
                     await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
@@ -435,28 +431,13 @@ export async function writeCommitSummaryData() {
     ).catch((err) => {
         return null;
     });
+    let content = "WEEKLY COMMIT SUMMARY";
     if (isResponseOk(result) && result.data) {
         // get the string content out
-        const content = result.data;
-        fs.writeFileSync(filePath, content, (err) => {
-            if (err) {
-                logIt(
-                    `Error writing to the weekly commit summary content file: ${err.message}`
-                );
-            }
-        });
+        content = result.data;
     }
 
-    if (!fs.existsSync(filePath)) {
-        // just create an empty file
-        fs.writeFileSync(filePath, "WEEKLY COMMIT SUMMARY", (err) => {
-            if (err) {
-                logIt(
-                    `Error writing to the weekly commit summary content file: ${err.message}`
-                );
-            }
-        });
-    }
+    fileIt.writeContentFileSync(filePath, content);
 }
 
 export async function writeDailyReportDashboard(
@@ -466,13 +447,7 @@ export async function writeDailyReportDashboard(
     let dashboardContent = "";
 
     const file = getDailyReportSummaryFile();
-    fs.writeFileSync(file, dashboardContent, (err) => {
-        if (err) {
-            logIt(
-                `Error writing to the daily report content file: ${err.message}`
-            );
-        }
-    });
+    fileIt.writeContentFileSync(file, dashboardContent);
 }
 
 export async function writeProjectCommitDashboardByStartEnd(
@@ -577,13 +552,7 @@ export async function writeProjectCommitDashboard(
     }
 
     const file = getProjectCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, (err) => {
-        if (err) {
-            logIt(
-                `Error writing to the code time summary content file: ${err.message}`
-            );
-        }
-    });
+    fileIt.writeContentFileSync(file, dashboardContent);
 }
 
 export async function writeProjectContributorCommitDashboardFromGitLogs(
@@ -699,13 +668,7 @@ export async function writeProjectContributorCommitDashboardFromGitLogs(
     dashboardContent += "\n";
 
     const file = getProjectContributorCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, (err) => {
-        if (err) {
-            logIt(
-                `Error writing to the code time summary content file: ${err.message}`
-            );
-        }
-    });
+    fileIt.writeContentFileSync(file, dashboardContent);
 }
 
 export async function writeProjectContributorCommitDashboard(identifier) {
@@ -802,13 +765,7 @@ export async function writeProjectContributorCommitDashboard(identifier) {
     }
 
     const file = getProjectContributorCodeSummaryFile();
-    fs.writeFileSync(file, dashboardContent, (err) => {
-        if (err) {
-            logIt(
-                `Error writing to the code time summary content file: ${err.message}`
-            );
-        }
-    });
+    fileIt.writeContentFileSync(file, dashboardContent);
 }
 
 function getRowNumberData(summary, title, attribute) {
@@ -865,13 +822,7 @@ export async function writeCodeTimeMetricsDashboard() {
     if (isResponseOk(result)) {
         // get the string content out
         const content = result.data;
-        fs.writeFileSync(summaryInfoFile, content, (err) => {
-            if (err) {
-                logIt(
-                    `Error writing to the code time summary content file: ${err.message}`
-                );
-            }
-        });
+        fileIt.writeContentFileSync(summaryInfoFile, content);
     }
 
     // create the header
@@ -916,22 +867,13 @@ export async function writeCodeTimeMetricsDashboard() {
     }
 
     // get the summary info we just made a call for and add it to the dashboard content
-    if (fs.existsSync(summaryInfoFile)) {
-        const summaryContent = fs
-            .readFileSync(summaryInfoFile, { encoding: "utf8" })
-            .toString();
-
+    const summaryContent = fileIt.readContentFileSync(summaryInfoFile);
+    if (summaryContent) {
         // create the dashboard file
         dashboardContent += summaryContent;
     }
 
     // now write it all out to the dashboard file
     const dashboardFile = getDashboardFile();
-    fs.writeFileSync(dashboardFile, dashboardContent, (err) => {
-        if (err) {
-            logIt(
-                `Error writing to the code time dashboard content file: ${err.message}`
-            );
-        }
-    });
+    fileIt.writeContentFileSync(dashboardFile, dashboardContent);
 }

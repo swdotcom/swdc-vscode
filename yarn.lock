@@ -96,6 +96,11 @@
   resolved "https://registry.yarnpkg.com/@types/retry/-/retry-0.12.0.tgz#2b35eccfcee7d38cd72ad99232fbd58bffb3c84d"
   integrity sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
 
+"@types/universalify@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/universalify/-/universalify-1.0.0.tgz#0fecec0da49839da8b705ddc714600c480ea3dee"
+  integrity sha512-Cqm/s2DU7YxTcTtQZkfG7kyOULQKsl0Mpd3dKAm0CbSStcRsQdy1nctCBGCmyNvxWUEYReqWkBIUvNHBN/Ja6w==
+
 "@types/vscode@^1.35.0":
   version "1.46.0"
   resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.46.0.tgz#53f2075986e901ed25cd1ec5f3ffa5db84a111b3"
@@ -1280,6 +1285,14 @@ figgy-pudding@^3.5.1:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/figgy-pudding/-/figgy-pudding-3.5.2.tgz#b4eee8148abb01dcf1d1ac34367d59e12fa61d6e"
   integrity sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==
+
+file-it@^1.0.23:
+  version "1.0.23"
+  resolved "https://registry.yarnpkg.com/file-it/-/file-it-1.0.23.tgz#7838d0b851c7f0efd4ef364b56891cccebcfb3d3"
+  integrity sha512-5j08nuyf+VITWLBC7mqa4+SLNA8pP3lscgE9HIb1DtX4L+eIp6GWO5Fywhe9u68y6UiN01cBbosOJll6qcjWpQ==
+  dependencies:
+    "@types/universalify" "^1.0.0"
+    universalify "^1.0.0"
 
 file-loader@^6.0.0:
   version "6.0.0"
@@ -3174,10 +3187,10 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.6.tgz#4a28af9786b13f6d3c05b0146e8301bfc685c70f"
-  integrity sha512-jdrhUqNn19rz2dYd1+KyeMwasFRx2ylCzuBVv+C+2/5ZdtAXogSpYPEIwd0rDS8+RVDKFxv9FXCzN9fDbNKBMA==
+swdc-tracker@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.10.tgz#5a114a6bc870d5a0b884c7fe67abc5ab8c55e060"
+  integrity sha512-YoN/m+zn3H2DYJJw5g8X85X8V+u5xO4PBdjvT22+Z7MVbGWdfi3h8CZUJh7942k+4ktcDzUwa84pg2Wib2csQQ==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.19.2"
@@ -3352,6 +3365,11 @@ unique-slug@^2.0.0:
   integrity sha512-zoWr9ObaxALD3DOPfjPSqxt4fnZiWblxHIgeWqW8x7UqDzEtHEQLzji2cuJYQFCU6KmoJikOYAZlrTHHebjx2w==
   dependencies:
     imurmurhash "^0.1.4"
+
+universalify@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/universalify/-/universalify-1.0.0.tgz#b61a1da173e8435b2fe3c67d29b9adf8594bd16d"
+  integrity sha512-rb6X1W158d7pRQBg5gkR8uPaSfiids68LTJQYOtEUhoJUWBdaQHsuT/EUduxXYxcrt4r5PJ4fuHW1MHT6p0qug==
 
 unset-value@^1.0.0:
   version "1.0.0"

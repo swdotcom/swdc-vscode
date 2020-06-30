@@ -1,7 +1,11 @@
 import { getVersion, getPluginId, getHostname, getOs } from "../Util";
 import { NO_PROJ_NAME } from "../Constants";
 import { TreeItemCollapsibleState } from "vscode";
-import Project from "./Project";
+
+export enum UIInteractionType {
+    Keyboard = "keyboard",
+    Click = "click",
+}
 
 export class KpmItem {
     id: string = "";
@@ -16,9 +20,13 @@ export class KpmItem {
     callback: any = null;
     icon: string = null;
     children: KpmItem[] = [];
+    color: string = "";
+    location: string = "";
+    name: string = "";
     eventDescription: string = null;
     initialCollapsibleState: TreeItemCollapsibleState =
         TreeItemCollapsibleState.Collapsed;
+    interactionType: UIInteractionType = UIInteractionType.Click;
 }
 
 export class KeystrokeAggregate {

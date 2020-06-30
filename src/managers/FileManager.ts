@@ -22,6 +22,7 @@ import {
 } from "../storage/TimeSummaryData";
 import KeystrokeStats from "../model/KeystrokeStats";
 
+const fileIt = require("file-it");
 const fs = require("fs");
 
 // each file within the plugin data is about 1 to 2kb. the queue
@@ -70,13 +71,9 @@ export async function batchSendArrayData(api, file) {
     if (!isonline) {
         return;
     }
-    try {
-        if (fs.existsSync(file)) {
-            const payloads = getFileDataArray(file);
-            batchSendPayloadData(api, file, payloads);
-        }
-    } catch (e) {
-        logIt(`Error batch sending payloads: ${e.message}`);
+    const payloads = getFileDataArray(file);
+    if (payloads && payloads.length) {
+        batchSendPayloadData(api, file, payloads);
     }
 }
 
@@ -96,22 +93,9 @@ export async function batchSendData(api, file) {
 }
 
 export async function getLastSavedKeystrokesStats() {
-    const dataFile = getSoftwareDataStoreFile();
-    try {
-        // try to get the last paylaod from the file first (data.json)
-        if (fs.existsSync(dataFile)) {
-            const currentPayloads = getFileDataPayloadsAsJson(dataFile);
-            if (currentPayloads && currentPayloads.length) {
-                // sort in descending order
-                currentPayloads.sort(
-                    (a: KeystrokeStats, b: KeystrokeStats) => b.start - a.start
-                );
-                // get the 1st element
-                latestPayload = currentPayloads[0];
-            }
-        }
-    } catch (e) {
-        logIt(`Error fetching last payload: ${e.message}`);
+    const el = fileIt.findSortedJsonElement(getSoftwareDataStoreFile(), "start", "desc");
+    if (el) {
+        return el;
     }
     // returns one in memory if not found in file
     return latestPayload;
@@ -127,7 +111,7 @@ export async function batchSendPayloadData(api, file, payloads) {
         // for example an event payload, then just make sure it's batched with
         // a limit of 100 or so to keep it under the 256k per POST request.
 
-        logEvent(`sending batch payloads: ${JSON.stringify(payloads)}`);
+        logIt(`sending batch payloads`);
 
         // send batch_limit at a time
         let batch = [];
@@ -277,23 +261,9 @@ export function getCurrentPayloadFile() {
 }
 
 export async function storeCurrentPayload(payload) {
-    try {
-        const content = JSON.stringify(payload, null, 4);
-        fs.writeFileSync(this.getCurrentPayloadFile(), content, (err) => {
-            if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
-        });
-    } catch (e) {
-        //
-    }
+    storeJsonData(this.getCurrentPayloadFile(), payload);
 }
 
 export async function storeJsonData(fileName, data) {
-    try {
-        const content = JSON.stringify(data, null, 4);
-        fs.writeFileSync(fileName, content, (err) => {
-            if (err) logIt(`Error writing time data: ${err.message}`);
-        });
-    } catch (e) {
-        //
-    }
+    fileIt.writeJsonFileSync(fileName, data);
 }
