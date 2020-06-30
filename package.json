@@ -58,6 +58,10 @@
         "title": "Code Time: View summary"
       },
       {
+        "command": "codetime.generateProjectSummary",
+        "title": "Code Time: View project summary"
+      },
+      {
         "command": "codetime.softwareKpmDashboard",
         "title": "Code Time: See advanced metrics"
       },
@@ -128,7 +132,8 @@
     "node-cache": "^5.1.0",
     "numeral": "^2.0.6",
     "open": "^6.4.0",
-    "swdc-tracker": "^1.0.9",
-    "vsls": "0.3.1291"
+    "swdc-tracker": "^1.0.10",
+    "vsls": "0.3.1291",
+    "file-it": "^1.0.23"
   }
 }

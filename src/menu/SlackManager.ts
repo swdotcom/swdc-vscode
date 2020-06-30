@@ -12,7 +12,8 @@ import { showQuickPick } from "./MenuManager";
 import { softwarePut } from "../http/HttpClient";
 import { window } from "vscode";
 import { getSlackReportCommits } from "../repo/GitUtil";
-const fs = require("fs");
+
+const fileIt = require("file-it");
 
 //// NEW LOGIC /////
 
@@ -47,9 +48,7 @@ export async function sendGeneratedReportReport() {
         }
     } else {
         const filePath = getDailyReportSummaryFile();
-        const content = fs
-            .readFileSync(filePath, { encoding: "utf8" })
-            .toString();
+        const content = fileIt.readContentFileSync(filePath);
         const selectedChannel = await showSlackChannelMenu();
         if (!selectedChannel) {
             return;

@@ -1,7 +1,6 @@
 import {
     getSoftwareDir,
     isWindows,
-    logIt,
     getFileDataArray,
     getNowTimes,
     getActiveProjectWorkspace,
@@ -13,7 +12,7 @@ import CodeTimeSummary from "../model/CodeTimeSummary";
 import Project from "../model/Project";
 import TimeData from "../model/TimeData";
 
-const fs = require("fs");
+const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
 export function getTimeDataSummaryFile() {
@@ -54,14 +53,7 @@ async function getNewTimeDataSummary(project: Project): Promise<TimeData> {
 export async function clearTimeDataSummary() {
     const file = getTimeDataSummaryFile();
     let payloads: TimeData[] = [];
-    try {
-        const content = JSON.stringify(payloads, null, 4);
-        fs.writeFileSync(file, content, (err) => {
-            if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
-        });
-    } catch (e) {
-        //
-    }
+    fileIt.writeJsonFileSync(file, payloads, { spaces: 4 });
 }
 
 export async function getCurrentTimeSummaryProject(
@@ -280,12 +272,5 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
         payloads = [data];
     }
 
-    try {
-        const content = JSON.stringify(payloads, null, 4);
-        fs.writeFileSync(file, content, (err) => {
-            if (err) logIt(`Deployer: Error writing time data: ${err.message}`);
-        });
-    } catch (e) {
-        //
-    }
+    fileIt.writeJsonFileSync(file, payloads, { spaces: 4 });
 }
