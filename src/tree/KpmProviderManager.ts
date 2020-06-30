@@ -93,33 +93,11 @@ export class KpmProviderManager {
                 treeItems.push(linkToAccountButton);
             } else {
 
-                const signupText = authType ? "Log in" : "Sign up";
-                const signupWithGoogle = `${signupText} with Google${space}`;
-                const googleSignupButton: KpmItem = this.getActionButton(
-                    signupWithGoogle,
-                    "",
-                    "codetime.googleLogin",
-                    "icons8-google.svg"
-                );
-                treeItems.push(googleSignupButton);
+                treeItems.push(this.getSignUpButton("Google", "multi"));
 
-                const signupWithGithub = `${signupText} with GitHub${space}`;
-                const githubSignupButton: KpmItem = this.getActionButton(
-                    signupWithGithub,
-                    "",
-                    "codetime.githubLogin",
-                    "icons8-github.svg"
-                );
-                treeItems.push(githubSignupButton);
+                treeItems.push(this.getSignUpButton("GitHub", "white"));
 
-                const signupWithEmail = `${signupText} with email${space}`;
-                const softwareSignupButton: KpmItem = this.getActionButton(
-                    signupWithEmail,
-                    "",
-                    "codetime.codeTimeLogin",
-                    "envelope.svg"
-                );
-                treeItems.push(softwareSignupButton);
+                treeItems.push(this.getSignUpButton("email", "grey"));
             }
 
             treeItems.push(this.getDividerButton());
@@ -143,29 +121,10 @@ export class KpmProviderManager {
         }
 
         // toggle status bar button
-        let toggleStatusBarTextLabel = "Hide status bar metrics";
-        let toggleStatusBarIcon = "visible.svg";
-        if (!isStatusBarTextVisible()) {
-            toggleStatusBarTextLabel = "Show status bar metrics";
-        }
-
-        const toggleStatusBarButton: KpmItem = this.getActionButton(
-            toggleStatusBarTextLabel,
-            "Toggle the Code Time status bar metrics text",
-            "codetime.toggleStatusBar",
-            toggleStatusBarIcon
-        );
-        treeItems.push(toggleStatusBarButton);
+        treeItems.push(this.getHideStatusBarMetricsButton());
 
         // readme button
-        const learnMoreLabel = `Learn more${space}`;
-        const readmeButton: KpmItem = this.getActionButton(
-            learnMoreLabel,
-            "View the Code Time Readme to learn more",
-            "codetime.displayReadme",
-            "readme.svg"
-        );
-        treeItems.push(readmeButton);
+        treeItems.push(this.getLearnMoreButton());
 
         const feedbackButton: KpmItem = this.getActionButton(
             "Submit feedback",
@@ -461,6 +420,34 @@ export class KpmProviderManager {
         return item;
     }
 
+    getSignUpButton(signUpAuthName: string, iconColor: string): KpmItem {
+        const authType = getItem("authType");
+        const signupText = authType ? "Log in" : "Sign up";
+        const nameText = authType ? "log_in" : "sign_up";
+        const label = `${signupText} with ${signUpAuthName}`;
+        let icon = "envelope.svg";
+        let command = "codetime.codeTimeLogin";
+        const lcType = signUpAuthName.toLowerCase();
+        if (lcType === "google") {
+            icon = "icons8-google.svg";
+            command = "codetime.googleLogin"
+        } else if (lcType === "github") {
+            icon = "icons8-github.svg";
+            command = "codetime.githubLogin"
+        }
+        const item: KpmItem = this.getActionButton(
+            label,
+            "",
+            command,
+            icon,
+            "",
+            iconColor
+        );
+        item.location = "ct_menu_tree";
+        item.name = `ct_${nameText}_${lcType}_btn`;
+        return item;
+    }
+
     getWebViewDashboardButton(): KpmItem {
         const name = getItem("name");
         const loggedInMsg = name ? ` Connected as ${name}` : "";
@@ -471,6 +458,8 @@ export class KpmProviderManager {
             "paw.svg",
             "TreeViewLaunchWebDashboard"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_web_metrics_btn";
         return item;
     }
 
@@ -495,6 +484,40 @@ export class KpmProviderManager {
             "paw.svg",
             "TreeViewSwitchAccounts"
         );
+        item.location = "ct_menu_tree";
+        item.name = "ct_switch_accounts_btn";
+        return item;
+    }
+
+    getHideStatusBarMetricsButton(): KpmItem {
+        let toggleStatusBarTextLabel = "Hide status bar metrics";
+        if (!isStatusBarTextVisible()) {
+            toggleStatusBarTextLabel = "Show status bar metrics";
+        }
+
+        const item: KpmItem = this.getActionButton(
+            toggleStatusBarTextLabel,
+            "Toggle the Code Time status bar metrics text",
+            "codetime.toggleStatusBar",
+            "visible.svg"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_hide_status_bar_metrics_btn";
+        return item;
+    }
+
+    getLearnMoreButton(): KpmItem {
+        const learnMoreLabel = `Learn more`;
+        const item: KpmItem = this.getActionButton(
+            learnMoreLabel,
+            "View the Code Time Readme to learn more",
+            "codetime.displayReadme",
+            "readme.svg",
+            "",
+            "yellow"
+        );
+        item.location = "ct_menu_tree";
+        item.name = "ct_learn_more_btn";
         return item;
     }
 
@@ -504,7 +527,9 @@ export class KpmProviderManager {
             commitSummitLabel,
             "",
             "codetime.generateProjectSummary",
-            "folder.svg"
+            "folder.svg",
+            "",
+            "red"
         );
         item.location = "ct_menu_tree";
         item.name = "ct_project_summary_btn";
@@ -517,7 +542,8 @@ export class KpmProviderManager {
             "View your latest coding metrics right here in your editor",
             "codetime.codeTimeMetrics",
             "dashboard.svg",
-            "TreeViewLaunchDashboard"
+            "TreeViewLaunchDashboard",
+            "purple"
         );
         item.location = "ct_menu_tree";
         item.name = "ct_summary_btn";

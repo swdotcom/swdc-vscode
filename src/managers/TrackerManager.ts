@@ -29,27 +29,16 @@ export class TrackerManager {
 		}
 	}
 
-	public async trackUICommandInteraction(item: KpmItem) {
-		// build the command palette ui_element from the KpmItem
-		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
-		ui_element.element_location = "ct_command_palette";
-		this.trackUIInteraction("execute_command", ui_element);
-	}
-
-	public async trackUIClickInteraction(item: KpmItem) {
-		// build the click ui_element from the KpmItem
-		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
-		this.trackUIInteraction("click", ui_element);
-	}
-
 	/**
 	 * @param type execute_command | click
 	 * @param ui_element {element_name, element_location, color, icon_name, cta_text}
 	 */
-	private async trackUIInteraction(interaction_type: string, ui_element: UIElement) {
+	public async trackUIInteraction(item: KpmItem) {
 		if (!this.trackerReady) {
 			return;
 		}
+
+		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
 
 		const baseInfo = this.getBaseTrackerInfo();
 		if (!baseInfo.jwt) {
@@ -57,7 +46,7 @@ export class TrackerManager {
 		}
 
 		const e = {
-			interaction_type,
+			interaction_type: item.interactionType,
 			...ui_element,
 			...baseInfo
 		};

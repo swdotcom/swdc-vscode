@@ -311,10 +311,6 @@ export function showStatus(fullMsg, tooltip) {
     updateStatusBar(fullMsg, tooltip);
 }
 
-export function handleCodeTimeStatusToggle() {
-    toggleStatusBar();
-}
-
 function updateStatusBar(msg, tooltip) {
     let loggedInName = getItem("name");
     let userInfo = "";
