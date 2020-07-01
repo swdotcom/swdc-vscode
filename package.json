@@ -28,7 +28,7 @@
     "spotify"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "extensionKind": [
     "ui",
