@@ -28,7 +28,7 @@
     "spotify"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "extensionKind": [
     "ui",
@@ -134,6 +134,6 @@
     "open": "^6.4.0",
     "swdc-tracker": "^1.0.10",
     "vsls": "0.3.1291",
-    "file-it": "^1.0.23"
+    "file-it": "^1.0.24"
   }
 }
