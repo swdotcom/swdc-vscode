@@ -319,7 +319,7 @@ export class PluginDataManager {
     await this.populatePayloadProject(payload);
 
     // make sure all files have an end time
-    this.completeFileEndTimes(payload, nowTimes);
+    await this.completeFileEndTimes(payload, nowTimes);
 
     // Get time between payloads
     const { sessionMinutes } = getTimeBetweenLastPayload();
