@@ -104,7 +104,6 @@ export class PluginDataManager {
     prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
-
     // call the focused handler
     this.initializeFocusStats();
 
@@ -179,7 +178,6 @@ export class PluginDataManager {
 	* Step 3) Clear "last_focused_timestamp_utc"
 	*/
   editorUnFocusHandler() {
-
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
       this.stats = {
@@ -270,7 +268,8 @@ export class PluginDataManager {
 	* Step 8) Clear "elapsed_code_time_seconds"
 	* Step 9) Clear "focused_editor_seconds"
 	*/
-  async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
+  async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean, nowTimes: any) {
+    const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
 
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
@@ -278,10 +277,6 @@ export class PluginDataManager {
         ...timeCounterJson,
       };
     }
-
-    const nowTimes = getNowTimes();
-
-    const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
 
     // set the payload's end times
     payload.end = now;
@@ -314,10 +309,7 @@ export class PluginDataManager {
     );
     min_elapsed_active_code_time_seconds = coalesceNumber(min_elapsed_active_code_time_seconds);
     // make sure min_elapsed_active_code_time_seconds is not negative
-    min_elapsed_active_code_time_seconds = Math.max(
-      min_elapsed_active_code_time_seconds,
-      0
-    );
+    min_elapsed_active_code_time_seconds = Math.max(min_elapsed_active_code_time_seconds, 0);
     // set the elapsed_active_code_time_seconds to the min of the above only
     // if its greater than zero and less than/equal to 15 minutes
     this.stats.elapsed_active_code_time_seconds =
@@ -410,19 +402,13 @@ export class PluginDataManager {
   }
 
   async populateRepoMetrics(payload: KeystrokeStats) {
-    if (
-      payload.project &&
-      payload.project.identifier &&
-      payload.project.directory
-    ) {
+    if (payload.project && payload.project.identifier && payload.project.directory) {
       // REPO contributor count
       const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
         payload.project.directory,
         true
       );
-      payload.repoContributorCount = repoContributorInfo
-        ? repoContributorInfo.count || 0
-        : 0;
+      payload.repoContributorCount = repoContributorInfo ? repoContributorInfo.count || 0 : 0;
 
       // REPO file count
       const repoFileCount = await getRepoFileCount(payload.project.directory);
@@ -461,8 +447,7 @@ export class PluginDataManager {
     p.directory = directory;
     p.name = projName;
     p.resource = resourceInfo;
-    p.identifier =
-      resourceInfo && resourceInfo.identifier ? resourceInfo.identifier : "";
+    p.identifier = resourceInfo && resourceInfo.identifier ? resourceInfo.identifier : "";
     payload.project = p;
 
     await this.populateRepoMetrics(payload);
@@ -477,8 +462,7 @@ export class PluginDataManager {
     const keys = Object.keys(payload.source);
     // go through each file and make sure the end time is set
     if (keys && keys.length > 0) {
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+      for await (let key of keys) {
         const fileInfo: FileChangeInfo = payload.source[key];
         // ensure there is an end time
         if (!fileInfo.end) {
@@ -503,10 +487,7 @@ export class PluginDataManager {
    * @param payload
    * @param sessionMinutes
    */
-  async updateCumulativeSessionTime(
-    payload: KeystrokeStats,
-    sessionMinutes: number
-  ) {
+  async updateCumulativeSessionTime(payload: KeystrokeStats, sessionMinutes: number) {
     // increment the projects session and file seconds
     // This will find a time data object based on the current day
     let td: TimeData = await incrementSessionAndFileSecondsAndFetch(
@@ -554,8 +535,7 @@ export class PluginDataManager {
         cumulative_editor_seconds = lastPayload.cumulative_editor_seconds + 60;
       }
       if (lastPayload.cumulative_session_seconds) {
-        cumulative_session_seconds =
-          lastPayload.cumulative_session_seconds + 60;
+        cumulative_session_seconds = lastPayload.cumulative_session_seconds + 60;
       }
     }
 
@@ -606,8 +586,7 @@ export class PluginDataManager {
         // aggregate
         existingFileInfo.update_count += 1;
         existingFileInfo.keystrokes += fileInfo.keystrokes;
-        existingFileInfo.kpm =
-          existingFileInfo.keystrokes / existingFileInfo.update_count;
+        existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
         existingFileInfo.add += fileInfo.add;
         existingFileInfo.close += fileInfo.close;
         existingFileInfo.delete += fileInfo.delete;
