@@ -3,7 +3,6 @@ import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import {
   getRootPathForFile,
-  isEmptyObj,
   getNowTimes,
   logEvent,
   getFileAgeInDays,
@@ -49,9 +48,7 @@ export class KpmManager {
   }
 
   public hasKeystrokeData() {
-    return _keystrokeMap &&
-      !isEmptyObj(_keystrokeMap) &&
-      Object.keys(_keystrokeMap).length
+    return _keystrokeMap && Object.keys(_keystrokeMap).length
       ? true
       : false;
   }
@@ -68,6 +65,7 @@ export class KpmManager {
         const key = keys[i];
         const keystrokeStats = _keystrokeMap[key];
 
+        // check if we have keystroke data
         const hasData = keystrokeStats.hasData();
 
         if (hasData) {
@@ -230,8 +228,8 @@ export class KpmManager {
 
     // check if its a character deletion
     if (textChangeLen === 0 && rangeChangeLen > 0) {
-      // since new count is zero, check the range length.
-      // if there's range length then it's a deletion
+      // NO content text but has a range change length, set the textChangeLen
+      // to the inverse of the rangeLength to show the chars deleted
       textChangeLen = event.contentChanges[0].rangeLength / -1;
     }
 
@@ -241,6 +239,7 @@ export class KpmManager {
       linesAdded === 0 &&
       linesDeleted === 0
     ) {
+      // No changes
       return;
     }
 
