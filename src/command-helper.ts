@@ -155,8 +155,6 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.sendOfflineData", () => {
             sendOfflineData();
-            // clear the time counter stats
-            PluginDataManager.getInstance().clearStatsForPayloadProcess();
         })
     );
 
@@ -309,8 +307,16 @@ export function createCommands(
     cmds.push(
         commands.registerCommand(
             "codetime.generateContributorSummary",
-            (identifier) => {
-                displayProjectContributorCommitsDashboard(identifier);
+            (item: KpmItem) => {
+                if (!item) {
+                    // it's from the command palette, create a kpm item so
+                    // it can build the ui_element in the tracker manager
+                    item = kpmProviderMgr.getContributorReportButton(item.value);
+                    item.location = "ct_command_palette";
+                    item.interactionType = UIInteractionType.Keyboard;
+                }
+                trackerMgr.trackUIInteraction(item);
+                displayProjectContributorCommitsDashboard(item.value);
             }
         )
     );

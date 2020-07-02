@@ -368,13 +368,8 @@ export class KpmProviderManager {
 
         if (teamMembers && teamMembers.length) {
             // get the 1st one to get the identifier
-            const titleItem: KpmItem = new KpmItem();
-            titleItem.label = teamMembers[0].identifier;
-            titleItem.icon = "icons8-github.svg";
-            titleItem.command = "codetime.generateContributorSummary";
-            titleItem.commandArgs = [teamMembers[0].identifier];
-            titleItem.tooltip = "Generate contributor commit summary";
-            treeItems.push(titleItem);
+            const item: KpmItem = KpmProviderManager.getInstance().getContributorReportButton(teamMembers[0].identifier);
+            treeItems.push(item);
 
             for (let i = 0; i < teamMembers.length; i++) {
                 const member: TeamMember = teamMembers[i];
@@ -518,6 +513,19 @@ export class KpmProviderManager {
         );
         item.location = "ct_menu_tree";
         item.name = "ct_learn_more_btn";
+        return item;
+    }
+
+    getContributorReportButton(identifier: string): KpmItem {
+        const item: KpmItem = new KpmItem();
+        item.label = identifier;
+        item.icon = "icons8-github.svg";
+        item.command = "codetime.generateContributorSummary";
+        item.color = "white";
+        item.value = identifier;
+        item.tooltip = "Generate contributor commit summary";
+        item.location = "ct_contributors_tree";
+        item.name = "ct_contributor_repo_identifier_btn";
         return item;
     }
 

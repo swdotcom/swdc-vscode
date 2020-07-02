@@ -145,12 +145,6 @@ export class PluginDataManager {
 	* Step 3) Clear "last_unfocused_timestamp_utc"
 	*/
   editorFocusHandler() {
-    // this may be called while we're initializing the time counter,
-    // bail out if it hasn't fully initialized
-    if (!this.initialized) {
-      return;
-    }
-
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
       this.stats = {
@@ -185,11 +179,6 @@ export class PluginDataManager {
 	* Step 3) Clear "last_focused_timestamp_utc"
 	*/
   editorUnFocusHandler() {
-    // this may be called while we're initializing the time counter,
-    // bail out if it hasn't fully initialized
-    if (!this.initialized) {
-      return;
-    }
 
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
@@ -282,11 +271,6 @@ export class PluginDataManager {
 	* Step 9) Clear "focused_editor_seconds"
 	*/
   async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean) {
-    // this may be called while we're initializing the time counter,
-    // bail out if it hasn't fully initialized
-    if (!this.initialized) {
-      return;
-    }
 
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
@@ -315,22 +299,11 @@ export class PluginDataManager {
       this.stats.focused_editor_seconds = diff;
     }
 
-    // ensure the payload has the project info
-    await this.populatePayloadProject(payload);
-
-    // make sure all files have an end time
-    await this.completeFileEndTimes(payload, nowTimes);
-
-    // Get time between payloads
-    const { sessionMinutes } = getTimeBetweenLastPayload();
-    await this.updateCumulativeSessionTime(payload, sessionMinutes);
-
     // Step 2) Replace "last_focused_timestamp_utc" with now
     this.stats.last_focused_timestamp_utc = now;
 
     // Step 3) update the elapsed seconds based on the now minus the last payload end time
     let elapsed_seconds_dif = coalesceNumber(now - this.stats.last_payload_end_utc);
-    elapsed_seconds_dif = coalesceNumber(elapsed_seconds_dif);
     this.stats.elapsed_seconds = Math.max(elapsed_seconds_dif, 0);
 
     // Step 4) Update "elapsed_active_code_time_seconds"
@@ -345,7 +318,6 @@ export class PluginDataManager {
       min_elapsed_active_code_time_seconds,
       0
     );
-
     // set the elapsed_active_code_time_seconds to the min of the above only
     // if its greater than zero and less than/equal to 15 minutes
     this.stats.elapsed_active_code_time_seconds =
@@ -362,35 +334,29 @@ export class PluginDataManager {
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = now;
 
-    if (prev_cumulative_code_time_seconds > this.stats.cumulative_code_time_seconds) {
-      this.stats.cumulative_code_time_seconds = prev_cumulative_code_time_seconds;
-      // store the deactivate event
-      tracker.trackEditorAction("calc" /*type*/, "cumulative_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
-      // console.log("prev cumulative code time was larger: ", prev_cumulative_code_time_seconds, this.stats.cumulative_code_time_seconds);
-    }
-    if (prev_cumulative_active_code_time_seconds > this.stats.cumulative_active_code_time_seconds) {
-      this.stats.cumulative_active_code_time_seconds = prev_cumulative_active_code_time_seconds;
-      tracker.trackEditorAction("calc" /*type*/, "cumulative_active_code_time_seconds" /*name*/, "prev_value_greater" /*description*/);
-      // console.log("prev cumulative active code time was larger: ", prev_cumulative_active_code_time_seconds, this.stats.cumulative_active_code_time_seconds);
-    }
+    // Step 8) Clear "elapsed_code_time_seconds"
+    // Step 9) Clear "focused_editor_seconds"
+    this.stats.focused_editor_seconds = 0;
+    this.stats.elapsed_code_time_seconds = 0;
 
+    // FINAL: update the file with the updated stats
+    this.updateFileData();
+
+    // PAYLOAD related updates. stats have been merged to payload object by now
     payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
-    // Iterate over all attributes of this.stats
-    // Object.keys(payload).forEach((key) => {
-    //   if (payload[key] === null || payload[key] === undefined) {
-    //     console.log(`payload_key: ${key}`);
-    //   }
-    // });
+    // ensure the payload has the project info
+    await this.populatePayloadProject(payload);
 
-    // Object.keys(this.stats).forEach((key) => {
-    //   if (this.stats[key] === null || this.stats[key] === undefined) {
-    //     console.log(`stats_key: ${key}`);
-    //   }
-    // });
+    // make sure all files have an end time
+    await this.completeFileEndTimes(payload, nowTimes);
+
+    // Get time between payloads
+    const { sessionMinutes } = getTimeBetweenLastPayload();
+    await this.updateCumulativeSessionTime(payload, sessionMinutes);
 
     // update the aggregation data for the tree info
     this.aggregateFileMetrics(payload, sessionMinutes);
@@ -406,10 +372,6 @@ export class PluginDataManager {
       logIt(`storing kpm metrics`);
     }
 
-    // Step 8) Clear "elapsed_code_time_seconds"
-    // Step 9) Clear "focused_editor_seconds"
-    this.clearStatsForPayloadProcess();
-
     prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
 
@@ -418,14 +380,6 @@ export class PluginDataManager {
 
     // update the status and tree
     WallClockManager.getInstance().dispatchStatusViewUpdate();
-  }
-
-  async clearStatsForPayloadProcess() {
-    // this.stats.elapsed_active_code_time_seconds = 0;
-    this.stats.elapsed_code_time_seconds = 0;
-    // this.stats.focused_editor_seconds = 0;
-    // update the file with the updated stats
-    this.updateFileData();
   }
 
   async clearStatsForNewDay() {

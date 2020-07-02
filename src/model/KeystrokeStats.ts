@@ -2,6 +2,7 @@ import { getOs, getVersion, getPluginId } from "../Util";
 import { FileChangeInfo } from "./models";
 import Project from "./Project";
 import { PluginDataManager } from "../managers/PluginDataManager";
+import { window } from "vscode";
 
 export default class KeystrokeStats {
     public source: {};
@@ -107,6 +108,15 @@ export default class KeystrokeStats {
      * send the payload
      */
     async postData(sendNow: boolean = false) {
-        PluginDataManager.getInstance().processPayloadHandler(this, sendNow);
+        // Have non-primary windows wait 6 seconds to
+        // process the payload to help prevent contention
+        if (window.state.focused) {
+            PluginDataManager.getInstance().processPayloadHandler(this, sendNow);
+        } else {
+            // process it in 6 seconds
+            setTimeout(() => {
+                PluginDataManager.getInstance().processPayloadHandler(this, sendNow);
+            }, 6000);
+        }
     }
 }
