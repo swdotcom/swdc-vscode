@@ -3187,10 +3187,10 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.0.10:
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.10.tgz#5a114a6bc870d5a0b884c7fe67abc5ab8c55e060"
-  integrity sha512-YoN/m+zn3H2DYJJw5g8X85X8V+u5xO4PBdjvT22+Z7MVbGWdfi3h8CZUJh7942k+4ktcDzUwa84pg2Wib2csQQ==
+swdc-tracker@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.11.tgz#550fa99c399f24ac064d75f1e95a9fd03df13a3f"
+  integrity sha512-djjLQnt9/XqkXugVl7xVMXfSbdBCAf+DMg/exIu2tjOTdlQ+T9ETFzTtkj2ng+BYSsEKtfEByYis55UJfGkEMw==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.19.2"
