@@ -108,7 +108,7 @@ export default class KeystrokeStats {
     if (window.state.focused) {
       PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
     } else {
-      // process it in 6 seconds
+      // process it in a few seconds
       setTimeout(() => {
         PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
       }, 4000);
