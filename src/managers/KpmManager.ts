@@ -239,6 +239,7 @@ export class KpmManager {
       linesAdded === 0 &&
       linesDeleted === 0
     ) {
+      // No changes
       return;
     }
 
