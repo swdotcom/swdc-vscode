@@ -11,14 +11,14 @@ const moment = require("moment-timezone");
 
 const dateFormat = "YYYY-MM-DD";
 
-let selectedStartTime = 0;
-let selectedEndTime = 0;
-let selectedRangeType = "";
-let local_start = 0;
-let local_end = 0;
-
 export class ProjectCommitManager {
     private static instance: ProjectCommitManager;
+
+    private selectedStartTime: number = 0;
+    private selectedEndTime: number = 0;
+    private selectedRangeType: string = "";
+    private local_start: number = 0;
+    private local_end: number = 0;
 
     private items: any[] = [
         {
@@ -49,6 +49,10 @@ export class ProjectCommitManager {
             label: "Last month",
             value: "lastMonth",
         },
+        {
+            label: "Last 90 days",
+            value: "lastNinetyDays",
+        },
     ];
 
     private constructor() {
@@ -63,7 +67,21 @@ export class ProjectCommitManager {
         return ProjectCommitManager.instance;
     }
 
+    resetDateRange() {
+        this.selectedStartTime = 0;
+        this.selectedEndTime = 0;
+        this.selectedRangeType = "";
+        this.local_start = 0;
+        this.local_end = 0;
+    }
+
+    hasDateSelected() {
+        return this.selectedRangeType || this.local_start;
+    }
+
     async launchDailyReportMenuFlow() {
+        this.resetDateRange();
+
         const pickItems: QuickPickItem[] = this.items.map((item) => {
             return {
                 label: item.label,
@@ -81,10 +99,26 @@ export class ProjectCommitManager {
         return null;
     }
 
-    async launchProjectCommitMenuFlow() {
-        selectedStartTime = 0;
-        selectedEndTime = 0;
-        selectedRangeType = "";
+    async launchViewProjectSummaryMenuFlow() {
+        this.resetDateRange();
+
+        const projectCheckboxes: Checkbox[] = await this.getAllProjects();
+        return this.launchProjectSelectionMenu(projectCheckboxes);
+    }
+
+    // old date to project menu selection flow
+    async launchProjectSummaryMenuFlow() {
+        this.resetDateRange();
+
+        await this.getSelectedDateRange();
+
+        if (this.hasDateSelected()) {
+            // date was selected, continue with showing the projects
+            return this.launchViewProjectSummaryMenuFlow();
+        }
+    }
+
+    async getSelectedDateRange() {
         const pickItems: QuickPickItem[] = this.items.map((item) => {
             return {
                 label: item.label,
@@ -95,6 +129,10 @@ export class ProjectCommitManager {
         const pick = await window.showQuickPick(pickItems, {
             placeHolder: "Select a date range",
         });
+        const local = moment().local();
+        const offset_in_sec =
+            moment.parseZone(local).utcOffset() * 60;
+
         if (pick && pick.label) {
             const val = pick["value"];
             if (val === "custom") {
@@ -110,12 +148,12 @@ export class ProjectCommitManager {
                 );
                 if (startDateText) {
                     // START DATE (begin of day)
-                    selectedStartTime = moment(startDateText, dateFormat)
+                    this.selectedStartTime = moment(startDateText, dateFormat)
                         .startOf("day")
                         .unix();
 
                     const endVal = moment
-                        .unix(selectedStartTime)
+                        .unix(this.selectedStartTime)
                         .add(1, "day")
                         .format(dateFormat);
                     const endDateText = await this.showDateInputBox(
@@ -125,38 +163,29 @@ export class ProjectCommitManager {
                     );
                     if (endDateText) {
                         // END DATE (the end of the day)
-                        selectedEndTime = moment(endDateText, dateFormat)
+                        this.selectedEndTime = moment(endDateText, dateFormat)
                             .endOf("day")
                             .unix();
 
                         // create the local start and end
-                        const local = moment().local();
-                        const offset_in_sec =
-                            moment.parseZone(local).utcOffset() * 60;
-                        local_start = selectedStartTime + offset_in_sec;
-                        local_end = selectedEndTime + offset_in_sec;
-
-                        // fetch the project checkboxes by start/end values
-                        const checkboxes: Checkbox[] = await this.getProjectCheckboxesByStartEnd(
-                            local_start,
-                            local_end
-                        );
-                        return this.launchProjectSelectionMenu(checkboxes);
+                        this.local_start = this.selectedStartTime + offset_in_sec;
+                        this.local_end = this.selectedEndTime + offset_in_sec;
                     }
                 }
             } else {
-                selectedRangeType = val;
-                // fetch the project checkboxes by range type (i.e. "yesterday")
-                const checkboxes: Checkbox[] = await this.getProjectCheckboxesByRangeType(
-                    selectedRangeType
-                );
-                return this.launchProjectSelectionMenu(checkboxes);
+                if (val === "lastNinetyDays") {
+                    // create the local_start and local_end
+                    this.local_start = moment().startOf("day").subtract(90, "days").unix() + offset_in_sec;
+                    this.local_end = moment().startOf("day").unix() + offset_in_sec;
+                } else {
+                    // fetch the project checkboxes by range type (i.e. "yesterday")
+                    this.selectedRangeType = val;
+                }
             }
         }
-        return null;
     }
 
-    async launchProjectSelectionMenu(checkboxes: Checkbox[]) {
+    async getSelectedProjects(checkboxes: Checkbox[]) {
         const pickItems: QuickPickItem[] = checkboxes.map((checkbox) => {
             return {
                 value: checkbox.value,
@@ -172,29 +201,47 @@ export class ProjectCommitManager {
             canPickMany: true,
         });
 
+        return picks;
+    }
+
+    async launchProjectSelectionMenu(projectCheckboxes: Checkbox[]) {
+        const picks = await this.getSelectedProjects(projectCheckboxes);
+
         // will return an array of ... (value is the projectIds)
         // [{description, label, picked, value}]
         if (picks && picks.length) {
+            if (!this.hasDateSelected()) {
+                // launch the date selection menu
+                await this.getSelectedDateRange();
+                if (!this.hasDateSelected()) {
+                    // the menu selection was cancelled
+                    return;
+                }
+            }
             // go through the array and get the project IDs
             const projectIds = [];
             picks.forEach((item) => {
                 projectIds.push(...item["value"]);
             });
 
-            if (selectedRangeType) {
+            if (this.selectedRangeType) {
                 displayProjectCommitsDashboardByRangeType(
-                    selectedRangeType,
+                    this.selectedRangeType,
                     projectIds
                 );
-            } else if (local_start && local_end) {
+            } else if (this.local_start && this.local_end) {
                 displayProjectCommitsDashboardByStartEnd(
-                    local_start,
-                    local_end,
+                    this.local_start,
+                    this.local_end,
                     projectIds
                 );
             }
         }
         return null;
+    }
+
+    async getAllProjects(): Promise<Checkbox[]> {
+        return await this.getProjectCheckboxesByQueryString();
     }
 
     async getProjectCheckboxesByStartEnd(start, end): Promise<Checkbox[]> {
@@ -210,7 +257,7 @@ export class ProjectCommitManager {
         return await this.getProjectCheckboxesByQueryString(qryStr);
     }
 
-    async getProjectCheckboxesByQueryString(qryStr): Promise<Checkbox[]> {
+    async getProjectCheckboxesByQueryString(qryStr: string = ""): Promise<Checkbox[]> {
         // fetch the projects from the backend
         const api = `/projects${qryStr}`;
         const resp = await softwareGet(api, getItem("jwt"));
@@ -232,13 +279,13 @@ export class ProjectCommitManager {
                     const name = p.project_name
                         ? p.project_name
                         : p.name
-                        ? p.name
-                        : "";
+                            ? p.name
+                            : "";
                     const projectIds = p.projectIds
                         ? p.projectIds
                         : p.id
-                        ? [p.id]
-                        : [];
+                            ? [p.id]
+                            : [];
                     if (name && projectIds.length) {
                         const percentage =
                             (p.coding_records / total_records) * 100;
@@ -281,9 +328,9 @@ export class ProjectCommitManager {
                 }
                 const endTime = moment(text, dateFormat).unix();
                 if (
-                    selectedStartTime &&
+                    this.selectedStartTime &&
                     endTime &&
-                    selectedStartTime > endTime
+                    this.selectedStartTime > endTime
                 ) {
                     return `Please make sure the end date is after the start date`;
                 }

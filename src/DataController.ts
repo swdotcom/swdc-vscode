@@ -405,7 +405,7 @@ export async function sendHeartbeat(reason) {
     }
 }
 
-export async function handleKpmClickedEvent() {
+export async function launchWebDashboard() {
     // {loggedIn: true|false}
     let loggedIn: boolean = await isLoggedIn();
     let webUrl = await buildWebDashboardUrl();
