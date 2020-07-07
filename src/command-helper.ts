@@ -1,6 +1,6 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
-    handleKpmClickedEvent,
+    launchWebDashboard,
     updatePreferences,
     sendTeamInvite,
 } from "./DataController";
@@ -160,8 +160,16 @@ export function createCommands(
 
     // SHOW ASCII DASHBOARD
     cmds.push(
-        commands.registerCommand("codetime.softwareKpmDashboard", () => {
-            handleKpmClickedEvent();
+        commands.registerCommand("codetime.softwareKpmDashboard", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getWebViewDashboardButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            trackerMgr.trackUIInteraction(item);
+            launchWebDashboard();
         })
     );
 
@@ -299,7 +307,7 @@ export function createCommands(
                 item.interactionType = UIInteractionType.Keyboard;
             }
             trackerMgr.trackUIInteraction(item);
-            ProjectCommitManager.getInstance().launchProjectCommitMenuFlow();
+            ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
         })
     );
 
