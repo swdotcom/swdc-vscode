@@ -22,26 +22,48 @@ export async function showSwitchAccountsMenu() {
         type = "GitHub";
     }
 
-    const label = `Connected as ${name} using ${type}`;
+    const placeholder = `Connected using ${type} (${name})`;
     items.push({
-        label,
-        command: null,
-    });
-    items.push({
-        label: "Switch accounts",
-        detail: "Click to log out and link to a different account.",
+        label: "Switch to a different account?",
+        detail: "Click to link to a different account.",
         cb: resetData,
     });
     const menuOptions = {
         items,
-        placeholder: "Switch accounts",
+        placeholder,
     };
-    await showQuickPick(menuOptions);
+    const selection = await showQuickPick(menuOptions);
+    if (selection) {
+        // show the google, github, email menu options
+        showLogInMenuOptions();
+    }
+}
+
+function showLogInMenuOptions() {
+    const items = [];
+    const placeholder = `Log in using...`;
+    items.push({
+        label: "Log in with Google",
+        command: "codetime.googleLogin"
+    });
+    items.push({
+        label: "Log in with GitHub",
+        command: "codetime.githubLogin"
+    });
+    items.push({
+        label: "Log in with Email",
+        command: "codetime.codeTimeLogin"
+    });
+    const menuOptions = {
+        items,
+        placeholder,
+    };
+    showQuickPick(menuOptions);
 }
 
 export async function processSwitchAccounts() {
     const selection = await window.showInformationMessage(
-        "Are you sure you would like to switch accounts?",
+        "Switch to a different account?",
         { modal: true },
         ...["Yes"]
     );

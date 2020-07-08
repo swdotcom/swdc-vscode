@@ -12,8 +12,7 @@
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "env": {
-                "ENABLE_SWDC_TRACKER": "true",
-                "LINK_TO_ACCOUNT_ENABLED": "false"
+                "ENABLE_SWDC_TRACKER": "true"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"

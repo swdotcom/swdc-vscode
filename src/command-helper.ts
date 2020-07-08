@@ -68,17 +68,10 @@ export function createCommands(
         })
     );
 
-    // SWITCH ACCOUNTS MENU BUTTON
-    cmds.push(
-        commands.registerCommand("codetime.showAccountInfoMenu", () => {
-            showSwitchAccountsMenu();
-        })
-    );
-
-    // SWITCH ACCOUNTS PROCESS BUTTON
+    // SWITCH ACCOUNT BUTTON
     cmds.push(
         commands.registerCommand("codetime.switchAccounts", () => {
-            processSwitchAccounts();
+            showSwitchAccountsMenu();
         })
     );
 

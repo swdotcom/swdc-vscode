@@ -3,9 +3,11 @@ import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { incrementEditorSeconds } from "../storage/TimeSummaryData";
 import { KpmManager } from "./KpmManager";
+import { serverIsAvailable } from "../http/HttpClient";
 
 const SECONDS_INTERVAL = 30;
 const CLOCK_INTERVAL = 1000 * SECONDS_INTERVAL;
+let clock_mgr_interval = null;
 
 export class WallClockManager {
     private static instance: WallClockManager;
@@ -24,12 +26,16 @@ export class WallClockManager {
         return WallClockManager.instance;
     }
 
+    public dispose() {
+        clearInterval(clock_mgr_interval);
+    }
+
     private initTimer() {
         const kpmMgr: KpmManager = KpmManager.getInstance();
 
         this._wctime = getItem("wctime") || 0;
-        setInterval(() => {
-            // If the window is focused
+        clock_mgr_interval = setInterval(async () => {
+            // If the window is focused or we have in-memory keystroke data
             if (window.state.focused || kpmMgr.hasKeystrokeData()) {
                 // set the wctime (deprecated, remove one day when all plugins use time data info)
                 this._wctime = getItem("wctime");
@@ -42,7 +48,6 @@ export class WallClockManager {
                 // update the file info file
                 incrementEditorSeconds(SECONDS_INTERVAL);
             }
-
             // dispatch to the various views (statusbar and treeview)
             this.dispatchStatusViewUpdate();
         }, CLOCK_INTERVAL);

@@ -71,59 +71,28 @@ export class KpmProviderManager {
     const space = counter % 2 === 0 ? "" : " ";
     const treeItems: KpmItem[] = [];
     const loggedIn: boolean = await isLoggedIn();
-    const authType: string = getItem("authType");
 
     if (!loggedIn) {
-      if (process.env.LINK_TO_ACCOUNT_ENABLED === "true") {
-        const linkToAccountLabel = `Link to an existing account${space}`;
-        const linkToAccountButton: KpmItem = this.getActionButton(
-          linkToAccountLabel,
-          "",
-          "codetime.linkAccount",
-          "registered-user.svg"
-        );
-        treeItems.push(linkToAccountButton);
-      } else {
-        treeItems.push(this.getSignUpButton("Google", "multi"));
+      treeItems.push(this.getSignUpButton("Google", ""));
 
-        treeItems.push(this.getSignUpButton("GitHub", "white"));
+      treeItems.push(this.getSignUpButton("GitHub", "white"));
 
-        treeItems.push(this.getSignUpButton("email", "gray"));
-      }
-
-      treeItems.push(this.getDividerButton());
+      treeItems.push(this.getSignUpButton("email", "gray"));
     } else {
-      const connectedToInfo = this.getAuthTypeIconAndLabel();
-      if (connectedToInfo) {
-        const cmd = null; //"codetime.showAccountInfoMenu";
-        const connectedToButton: KpmItem = this.getActionButton(
-          connectedToInfo.label,
-          connectedToInfo.tooltip,
-          cmd,
-          connectedToInfo.icon
-        );
-        treeItems.push(connectedToButton);
-
-        treeItems.push(this.getDividerButton());
-      }
-
-      // show the web dashboard button
-      treeItems.push(this.getWebViewDashboardButton());
+      treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
     }
 
-    // toggle status bar button
-    treeItems.push(this.getHideStatusBarMetricsButton());
+    if (!loggedIn) {
+      treeItems.push(this.getDividerButton());
 
-    // readme button
-    treeItems.push(this.getLearnMoreButton());
+      // toggle status bar button
+      treeItems.push(this.getHideStatusBarMetricsButton());
 
-    const feedbackButton: KpmItem = this.getActionButton(
-      "Submit feedback",
-      "Send us an email at cody@software.com",
-      "codetime.sendFeedback",
-      "message.svg"
-    );
-    treeItems.push(feedbackButton);
+      // readme button
+      treeItems.push(this.getLearnMoreButton());
+
+      treeItems.push(this.getFeedbackButton());
+    }
 
     // const submitReportButton: KpmItem = this.getActionButton(
     //     "Generate slack report",
@@ -133,8 +102,9 @@ export class KpmProviderManager {
     // );
     // treeItems.push(submitReportButton);
 
-    const reportDividerButton: KpmItem = this.getActionButton("", "", "", "blue-line-96.png");
-    treeItems.push(reportDividerButton);
+    treeItems.push(this.getDividerButton());
+
+    treeItems.push(this.getWebViewDashboardButton());
 
     // view summary button node
     treeItems.push(this.getCodeTimeDashboardButton());
@@ -163,6 +133,35 @@ export class KpmProviderManager {
     treeItems.push(...commitTreeParents);
 
     return treeItems;
+  }
+
+  getLoggedInTree(collapsibleState: TreeItemCollapsibleState): KpmItem {
+    const connectedToInfo = this.getAuthTypeIconAndLabel();
+    const children: KpmItem[] = [];
+    children.push(this.getSwitchAccountsButton());
+    children.push(this.getLearnMoreButton());
+    children.push(this.getHideStatusBarMetricsButton());
+    children.push(this.getFeedbackButton());
+    return this.buildTreeForChildren(
+      collapsibleState,
+      children,
+      connectedToInfo.label,
+      connectedToInfo.tooltip,
+      connectedToInfo.icon);
+  }
+
+  buildTreeForChildren(
+    collapsibleState: TreeItemCollapsibleState,
+    children: KpmItem[],
+    label: string,
+    tooltip: string,
+    icon: string = null): KpmItem {
+    const parent: KpmItem = this.buildMessageItem(label, tooltip, icon);
+    if (collapsibleState) {
+      parent.initialCollapsibleState = collapsibleState;
+    }
+    parent.children.push(...children);
+    return parent;
   }
 
   async getKpmTreeParents(): Promise<KpmItem[]> {
@@ -350,17 +349,6 @@ export class KpmProviderManager {
     return treeItems;
   }
 
-  getCodyConnectButton(): KpmItem {
-    const item: KpmItem = this.getActionButton(
-      "See advanced metrics",
-      `To see your coding data in Code Time, please log in to your account`,
-      "codetime.codeTimeLogin",
-      "paw.svg",
-      "TreeViewLogin"
-    );
-    return item;
-  }
-
   getSignUpButton(signUpAuthName: string, iconColor: string): KpmItem {
     const authType = getItem("authType");
     const signupText = authType ? "Log in" : "Sign up";
@@ -409,7 +397,7 @@ export class KpmProviderManager {
     const loggedInMsg = name ? ` Connected as ${name}` : "";
     const tooltip = `Switch to a different account.${loggedInMsg}`;
     const item: KpmItem = this.getActionButton(
-      "Switch accounts",
+      "Switch account",
       tooltip,
       "codetime.switchAccounts",
       "paw.svg",
@@ -453,6 +441,16 @@ export class KpmProviderManager {
     return item;
   }
 
+  getFeedbackButton(): KpmItem {
+    const feedbackButton: KpmItem = this.getActionButton(
+      "Submit feedback",
+      "Send us an email at cody@software.com",
+      "codetime.sendFeedback",
+      "message.svg"
+    );
+    return feedbackButton;
+  }
+
   getContributorReportButton(identifier: string): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = identifier;
@@ -485,7 +483,7 @@ export class KpmProviderManager {
 
   getCodeTimeDashboardButton(): KpmItem {
     const item: KpmItem = this.getActionButton(
-      "View summary",
+      `View summary`,
       "View your latest coding metrics right here in your editor",
       "codetime.codeTimeMetrics",
       "dashboard.svg",
@@ -882,9 +880,9 @@ export class KpmTreeItem extends TreeItem {
 function getTreeItemIcon(treeItem: KpmItem): any {
   const iconName = treeItem.icon;
   const lightPath =
-    iconName && treeItem.children.length === 0 ? path.join(resourcePath, "light", iconName) : null;
+    iconName ? path.join(resourcePath, "light", iconName) : null;
   const darkPath =
-    iconName && treeItem.children.length === 0 ? path.join(resourcePath, "dark", iconName) : null;
+    iconName ? path.join(resourcePath, "dark", iconName) : null;
   return { lightPath, darkPath };
 }
 
