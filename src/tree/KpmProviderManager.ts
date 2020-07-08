@@ -82,18 +82,6 @@ export class KpmProviderManager {
       treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
     }
 
-    if (!loggedIn) {
-      treeItems.push(this.getDividerButton());
-
-      // toggle status bar button
-      treeItems.push(this.getHideStatusBarMetricsButton());
-
-      // readme button
-      treeItems.push(this.getLearnMoreButton());
-
-      treeItems.push(this.getFeedbackButton());
-    }
-
     // const submitReportButton: KpmItem = this.getActionButton(
     //     "Generate slack report",
     //     "",
@@ -112,14 +100,17 @@ export class KpmProviderManager {
     // view project summary button node
     treeItems.push(this.getViewProjectSummaryButton());
 
-    // const addProjectNoteLabel: string = `Add a note${space}`;
-    // const addProjectNoteButton: KpmItem = this.getActionButton(
-    //     addProjectNoteLabel,
-    //     "",
-    //     "codetime.addProjectNote",
-    //     "message.svg"
-    // );
-    // treeItems.push(addProjectNoteButton);
+    if (!loggedIn) {
+      treeItems.push(this.getDividerButton());
+
+      // toggle status bar button
+      treeItems.push(this.getHideStatusBarMetricsButton());
+
+      // readme button
+      treeItems.push(this.getLearnMoreButton());
+
+      treeItems.push(this.getFeedbackButton());
+    }
 
     return treeItems;
   }
