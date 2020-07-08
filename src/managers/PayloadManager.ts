@@ -8,6 +8,9 @@ const fileIt = require("file-it");
  * @param payload
  */
 export async function storePayload(payload: KeystrokeStats) {
-    // store the payload into the data.json file
-    fileIt.appendJsonFileSync(getSoftwareDataStoreFile(), payload);
+    // make sure the data that is stored is valid
+    if (payload && Object.keys(payload).length && Object.keys(payload.source).length) {
+        // store the payload into the data.json file
+        fileIt.appendJsonFileSync(getSoftwareDataStoreFile(), payload);
+    }
 }

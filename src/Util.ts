@@ -1094,6 +1094,15 @@ export function getFileDataArray(file) {
 }
 
 export function getFileDataPayloadsAsJson(file) {
+    // Still trying to find out when "undefined" is set into the data.json
+    // but this will help remove it so we can process the json lines without failure
+    let content = fileIt.readContentFileSync(file);
+    if (content.indexOf("undefined") !== -1) {
+        const re = /undefined/gi;
+        // remove "undefined" and re-save, then read
+        content = content.replace(re, "");
+        fileIt.writeContentFileSync(file, content);
+    }
     let payloads: any[] = fileIt.readJsonLinesSync(file);
     return payloads;
 }

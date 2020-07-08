@@ -26,6 +26,8 @@ export class KpmManager {
 
   private _currentPayloadTimeout;
 
+  private _keystrokeTriggerTimeout;
+
   constructor() {
     let subscriptions: Disposable[] = [];
 
@@ -61,16 +63,13 @@ export class KpmManager {
     if (this.hasKeystrokeData()) {
       let keys = Object.keys(_keystrokeMap);
       // use a normal for loop since we have an await within the loop
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+      for (let key of keys) {
         const keystrokeStats = _keystrokeMap[key];
 
         // check if we have keystroke data
-        const hasData = keystrokeStats.hasData();
-
-        if (hasData) {
+        if (keystrokeStats.hasData()) {
           // post the payload offline until the batch interval sends it out
-          setTimeout(() => keystrokeStats.postData(), 0);
+          keystrokeStats.postData();
         }
       }
     }
@@ -545,11 +544,18 @@ export class KpmManager {
 
     // start the minute timer to send the data
     const timeout = DEFAULT_DURATION_MILLIS;
-    setTimeout(() => {
+    this._keystrokeTriggerTimeout = setTimeout(() => {
       this.sendKeystrokeDataIntervalHandler();
     }, timeout);
 
     return keystrokeStats;
+  }
+
+  public processKeystrokeData() {
+    if (this._keystrokeTriggerTimeout) {
+      clearTimeout(this._keystrokeTriggerTimeout);
+    }
+    this.sendKeystrokeDataIntervalHandler();
   }
 
   public dispose() {

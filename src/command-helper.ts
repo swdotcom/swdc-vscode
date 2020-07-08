@@ -82,6 +82,13 @@ export function createCommands(
         })
     );
 
+    // PROCESS KEYSTROKES NOW
+    cmds.push(
+        commands.registerCommand("codetime.processKeystrokeData", () => {
+            kpmController.processKeystrokeData();
+        })
+    );
+
     // DAILY METRICS TREE: INIT
     const kpmTreeProvider = new KpmProvider();
     const kpmTreeView: TreeView<KpmItem> = window.createTreeView(
