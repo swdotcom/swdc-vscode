@@ -68,17 +68,10 @@ export function createCommands(
         })
     );
 
-    // SWITCH ACCOUNTS MENU BUTTON
-    cmds.push(
-        commands.registerCommand("codetime.showAccountInfoMenu", () => {
-            showSwitchAccountsMenu();
-        })
-    );
-
-    // SWITCH ACCOUNTS PROCESS BUTTON
+    // SWITCH ACCOUNT BUTTON
     cmds.push(
         commands.registerCommand("codetime.switchAccounts", () => {
-            processSwitchAccounts();
+            showSwitchAccountsMenu();
         })
     );
 
@@ -86,6 +79,13 @@ export function createCommands(
     cmds.push(
         commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
             codetimeMenuTreeProvider.refresh();
+        })
+    );
+
+    // PROCESS KEYSTROKES NOW
+    cmds.push(
+        commands.registerCommand("codetime.processKeystrokeData", () => {
+            kpmController.processKeystrokeData();
         })
     );
 

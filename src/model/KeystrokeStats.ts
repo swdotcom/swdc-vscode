@@ -102,16 +102,6 @@ export default class KeystrokeStats {
   async postData(sendNow: boolean = false) {
     // create the now times in case it's the secondary window and we have to wait
     const nowTimes = getNowTimes();
-
-    // Have non-primary windows wait a few seconds to
-    // process the payload to help prevent contention
-    if (window.state.focused) {
-      PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
-    } else {
-      // process it in a few seconds
-      setTimeout(() => {
-        PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
-      }, 4000);
-    }
+    PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
   }
 }

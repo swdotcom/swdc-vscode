@@ -32,7 +32,7 @@ import {
 import { SummaryManager } from "./SummaryManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
-import { WorkspaceFolder } from "vscode";
+import { WorkspaceFolder, commands } from "vscode";
 import {
   getResourceInfo,
   getRepoContributorInfo,
@@ -56,15 +56,11 @@ const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
-let prev_cumulative_code_time_seconds = 0;
-let prev_cumulative_active_code_time_seconds = 0;
-
 export class PluginDataManager {
   private static instance: PluginDataManager;
 
   private stats: TimeCounterStats = null;
   private dayCheckTimer: any = null;
-  private initialized: boolean = false;
 
   private constructor() {
     this.initializePluginDataMgr();
@@ -101,9 +97,6 @@ export class PluginDataManager {
       this.stats = new TimeCounterStats();
     }
 
-    prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
-    prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
-
     // call the focused handler
     this.initializeFocusStats();
 
@@ -114,8 +107,6 @@ export class PluginDataManager {
 
     // check right away
     this.midnightCheckHandler();
-
-    this.initialized = true;
   }
 
   /**
@@ -200,6 +191,9 @@ export class PluginDataManager {
 
     // update the file
     this.updateFileData();
+
+    // Process this window's keystroke data since the window has become unfocused
+    commands.executeCommand("codetime.processKeystrokeData");
   }
 
   /**
@@ -364,9 +358,6 @@ export class PluginDataManager {
       logIt(`storing kpm metrics`);
     }
 
-    prev_cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
-    prev_cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
-
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
     setItem("latestPayloadTimestampEndUtc", now);
 
@@ -385,9 +376,6 @@ export class PluginDataManager {
     this.stats.current_day = nowTimes.day;
     // update the file with the updated stats
     this.updateFileData();
-
-    prev_cumulative_code_time_seconds = 0;
-    prev_cumulative_active_code_time_seconds = 0;
   }
 
   //// Everything after this line is for time counter v1 ////

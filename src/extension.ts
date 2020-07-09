@@ -88,6 +88,7 @@ export function deactivate(ctx: ExtensionContext) {
 
     // dispose the new day timer
     PluginDataManager.getInstance().dispose();
+    WallClockManager.getInstance().dispose();
 
     clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
