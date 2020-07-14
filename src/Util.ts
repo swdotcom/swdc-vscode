@@ -295,8 +295,7 @@ export function setItem(key, value) {
 }
 
 export function getItem(key) {
-    const val = fileIt.getJsonValue(getSoftwareSessionFile(), key);
-    return val;
+    return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
 export function showLoading() {
@@ -425,11 +424,11 @@ export async function getOsUsername() {
 }
 
 function getFile(name) {
-    let file = getSoftwareDir();
+    let file_path = getSoftwareDir();
     if (isWindows()) {
-        return `${file}\\${name}`;
+        return `${file_path}\\${name}`;
     }
-    return `${file}/${name}`;
+    return `${file_path}/${name}`;
 }
 
 export function getSoftwareSessionFile() {

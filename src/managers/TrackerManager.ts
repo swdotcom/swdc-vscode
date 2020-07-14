@@ -1,7 +1,6 @@
 import swdcTracker from "swdc-tracker";
 import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
-import UIElement from "../model/UIElement";
 import { KpmItem } from "../model/models";
 const moment = require("moment-timezone");
 
@@ -9,6 +8,9 @@ export class TrackerManager {
 	private static instance: TrackerManager;
 
 	private trackerReady: boolean = false;
+	private pluginParams: any = this.getPluginParams();
+	private tzOffsetParams: any = this.getTzOffsetParams();
+	private jwtParams: any = this.getJwtParams();
 
 	private constructor() { }
 
@@ -21,84 +23,97 @@ export class TrackerManager {
 	}
 
 	public async init() {
-		const pluginName = getPluginName();
 		// initialize tracker with swdc api host, namespace, and appId
-		const result = await swdcTracker.initialize(api_endpoint, "CodeTime", pluginName);
+		const result = await swdcTracker.initialize(api_endpoint, "CodeTime", this.pluginParams.plugin_name);
 		if (result.status === 200) {
 			this.trackerReady = true;
 		}
 	}
 
-	/**
-	 * @param type execute_command | click
-	 * @param ui_element {element_name, element_location, color, icon_name, cta_text}
-	 */
+	public resetJwt() {
+		this.jwtParams = this.getJwtParams();
+	}
+
 	public async trackUIInteraction(item: KpmItem) {
 		if (!this.trackerReady) {
 			return;
 		}
 
-		const ui_element: UIElement = UIElement.transformKpmItemToUIElement(item);
-
-		const baseInfo = this.getBaseTrackerInfo();
-		if (!baseInfo.jwt) {
-			return;
+		const ui_interaction = {
+			interaction_type: item.interactionType,
 		}
 
-		const e = {
-			interaction_type: item.interactionType,
+		const ui_element = {
+			element_name: item.name,
+			element_location: item.location,
+			color: item.color ? item.color : null,
+			icon_name: item.interactionIcon ? item.interactionIcon : null,
+			cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : "redacted"
+		}
+
+		const event = {
+			...ui_interaction,
 			...ui_element,
-			...baseInfo
+			...this.pluginParams,
+			...this.jwtParams,
+			...this.tzOffsetParams
 		};
 
-		// send the editor action
-		swdcTracker.trackUIInteraction(e);
+		swdcTracker.trackUIInteraction(event);
 	}
 
-	public async trackEditorAction(type: string, name: string, description: string) {
+	public async trackEditorAction(entity: string, type: string) {
 		if (!this.trackerReady) {
 			return;
 		}
 
-		const baseInfo = this.getBaseTrackerInfo();
-		if (!baseInfo.jwt) {
-			return;
-		}
-
 		const e = {
-			entity: "editor",
+			entity,
 			type,
-			name,
-			description,
-			...baseInfo
+			...this.pluginParams,
+			...this.jwtParams,
+			...this.tzOffsetParams,
+			...this.getFileParams(),
+			...this.getProjectParams(),
+			...this.getRepoParams()
 		};
-
-		// send the 
+		// send the event
 		swdcTracker.trackEditorAction(e);
 	}
 
-	getBaseTrackerInfo() {
-		const jwt = getItem("jwt");
-		const local = moment().local();
-		const tz_offset_minutes =
-			moment.parseZone(local).utcOffset();
+	// Static attributes
+
+	getJwtParams(): any {
+		return { jwt: getItem("jwt").split("JWT ")[1] }
+	}
+
+	getPluginParams(): any {
+		return {
+			plugin_id: getPluginId(),
+			plugin_name: getPluginName(),
+			plugin_version: getVersion()
+		}
+	}
+
+	getTzOffsetParams(): any {
+		return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() }
+	}
+
+	// Dynamic attributes
+
+	getProjectParams() {
 		const workspaceFolders = getWorkspaceFolders();
 		const project_directory = (workspaceFolders.length) ? workspaceFolders[0].uri.fsPath : "";
 		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
 
-		// if the jwt is null, just set it to null so the
-		// caller can key off of the baseInfo.jwt to determine if
-		// it should be sent or not
-		const token = jwt ? jwt.split("JWT ")[1] : null;
-		const baseInfo = {
-			jwt: token,
-			tz_offset_minutes,
-			project_directory,
-			project_name,
-			plugin_id: getPluginId(),
-			plugin_name: getPluginName(),
-			plugin_version: getVersion()
-		};
-		return baseInfo;
+		return { project_directory, project_name }
+	}
+
+	getRepoParams() {
+		return {}
+	}
+
+	getFileParams() {
+		return {}
 	}
 }

@@ -21,11 +21,11 @@
     "Other"
   ],
   "keywords": [
-    "time tracking",
-    "productivity",
-    "timer",
-    "git",
-    "spotify"
+    "code time",
+    "time tracker",
+    "productivity tracker",
+    "project tracker",
+    "timer"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -128,12 +128,12 @@
     "aws-sdk": "^2.470.0",
     "axios": "^0.19.0",
     "clipboardy": "^2.1.0",
+    "file-it": "^1.0.24",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",
     "numeral": "^2.0.6",
     "open": "^6.4.0",
-    "swdc-tracker": "^1.0.11",
-    "vsls": "0.3.1291",
-    "file-it": "^1.0.24"
+    "swdc-tracker": "^1.0.13",
+    "vsls": "0.3.1291"
   }
 }

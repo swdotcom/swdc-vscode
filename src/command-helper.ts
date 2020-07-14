@@ -44,7 +44,7 @@ export function createCommands(
 } {
     let cmds = [];
 
-    const trackerMgr: TrackerManager = TrackerManager.getInstance();
+    const tracker: TrackerManager = TrackerManager.getInstance();
     const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
     cmds.push(kpmController);
@@ -70,8 +70,10 @@ export function createCommands(
 
     // SWITCH ACCOUNT BUTTON
     cmds.push(
-        commands.registerCommand("codetime.switchAccounts", () => {
+        commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {
+            tracker.trackUIInteraction(item);
             showSwitchAccountsMenu();
+
         })
     );
 
@@ -168,7 +170,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             launchWebDashboard();
         })
     );
@@ -190,7 +192,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             toggleStatusBar();
             setTimeout(() => {
                 commands.executeCommand("codetime.refreshCodetimeMenuTree");
@@ -208,7 +210,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             launchLogin("software");
         })
     );
@@ -219,11 +221,12 @@ export function createCommands(
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
-                item = kpmProviderMgr.getSignUpButton("Google", "multi");
+                item = kpmProviderMgr.getSignUpButton("Google", null);
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            item.interactionIcon = "google";
+            tracker.trackUIInteraction(item);
             launchLogin("google");
         })
     );
@@ -238,7 +241,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             launchLogin("github");
         })
     );
@@ -276,7 +279,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             displayReadmeIfNotExists(true /*override*/);
         })
     );
@@ -291,7 +294,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             displayCodeTimeMetricsDashboard();
         })
     );
@@ -306,7 +309,7 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
             }
-            trackerMgr.trackUIInteraction(item);
+            tracker.trackUIInteraction(item);
             ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
         })
     );
@@ -323,7 +326,7 @@ export function createCommands(
                     item.location = "ct_command_palette";
                     item.interactionType = UIInteractionType.Keyboard;
                 }
-                trackerMgr.trackUIInteraction(item);
+                tracker.trackUIInteraction(item);
                 displayProjectContributorCommitsDashboard(item.value);
             }
         )

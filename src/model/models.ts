@@ -27,6 +27,7 @@ export class KpmItem {
   initialCollapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed;
   interactionType: UIInteractionType = UIInteractionType.Click;
   interactionIcon: string = "";
+  hideCTAInTracker: boolean = false;
 }
 
 export class KeystrokeAggregate {
