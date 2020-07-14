@@ -73,7 +73,7 @@ export class KpmProviderManager {
     const loggedIn: boolean = await isLoggedIn();
 
     if (!loggedIn) {
-      treeItems.push(this.getSignUpButton("Google", ""));
+      treeItems.push(this.getSignUpButton("Google", null));
 
       treeItems.push(this.getSignUpButton("GitHub", "white"));
 
@@ -340,25 +340,28 @@ export class KpmProviderManager {
     return treeItems;
   }
 
-  getSignUpButton(signUpAuthName: string, iconColor: string): KpmItem {
+  getSignUpButton(signUpAuthName: string, iconColor?: string): KpmItem {
     const authType = getItem("authType");
     const signupText = authType ? "Log in" : "Sign up";
     const nameText = authType ? "log_in" : "sign_up";
     const label = `${signupText} with ${signUpAuthName}`;
     let icon = "envelope.svg";
+    let iconName = "envelope";
     let command = "codetime.codeTimeLogin";
     const lcType = signUpAuthName.toLowerCase();
     if (lcType === "google") {
       icon = "icons8-google.svg";
       command = "codetime.googleLogin";
+      iconName = "google";
     } else if (lcType === "github") {
       icon = "icons8-github.svg";
       command = "codetime.githubLogin";
+      iconName = "github";
     }
     const item: KpmItem = this.getActionButton(label, "", command, icon, "", iconColor);
     item.location = "ct_menu_tree";
     item.name = `ct_${nameText}_${lcType}_btn`;
-    item.interactionIcon = "connect";
+    item.interactionIcon = iconName;
     return item;
   }
 
@@ -370,7 +373,8 @@ export class KpmProviderManager {
       `See rich data visualizations in the web app.${loggedInMsg}`,
       "codetime.softwareKpmDashboard",
       "paw.svg",
-      "TreeViewLaunchWebDashboard"
+      "TreeViewLaunchWebDashboard",
+      "blue"
     );
     item.location = "ct_menu_tree";
     item.name = "ct_web_metrics_btn";
@@ -392,10 +396,12 @@ export class KpmProviderManager {
       tooltip,
       "codetime.switchAccounts",
       "paw.svg",
-      "TreeViewSwitchAccounts"
+      "TreeViewSwitchAccounts",
+      "blue"
     );
     item.location = "ct_menu_tree";
     item.name = "ct_switch_accounts_btn";
+    item.interactionIcon = "paw";
     return item;
   }
 
@@ -413,6 +419,8 @@ export class KpmProviderManager {
     );
     item.location = "ct_menu_tree";
     item.name = "ct_toggle_status_bar_metrics_btn";
+    item.color = "blue";
+    item.interactionIcon = "slash-eye";
     return item;
   }
 
@@ -453,6 +461,7 @@ export class KpmProviderManager {
     item.location = "ct_contributors_tree";
     item.name = "ct_contributor_repo_identifier_btn";
     item.interactionIcon = "repo";
+    item.hideCTAInTracker = true;
     return item;
   }
 
@@ -519,7 +528,7 @@ export class KpmProviderManager {
     command,
     icon = null,
     eventDescription: string = "",
-    color = "blue"
+    color = null
   ): KpmItem {
     const item: KpmItem = new KpmItem();
     item.tooltip = tooltip;

@@ -49,6 +49,7 @@ import {
 } from "./repo/GitUtil";
 import CodeTimeSummary from "./model/CodeTimeSummary";
 import { getCodeTimeSummary } from "./storage/TimeSummaryData";
+import { TrackerManager } from "./managers/TrackerManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -143,6 +144,7 @@ export async function getUserRegistrationState() {
                 if (pluginJwt && pluginJwt !== jwt) {
                     // update it
                     setItem("jwt", pluginJwt);
+                    TrackerManager.getInstance().resetJwt();
                 }
 
                 // if we need the user it's "resp.data.user"

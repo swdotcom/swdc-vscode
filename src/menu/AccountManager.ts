@@ -10,6 +10,7 @@ import {
 import { getAppJwt } from "../DataController";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
+import { TrackerManager } from "../managers/TrackerManager";
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -82,6 +83,7 @@ async function resetData() {
     // delete the current JWT and call the onboard logic so that we
     // create a anon user JWT
     await createAnonymousUser();
+    TrackerManager.getInstance().resetJwt();
 }
 
 export async function resetUserData() {

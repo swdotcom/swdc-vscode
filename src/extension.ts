@@ -72,7 +72,7 @@ export function deactivate(ctx: ExtensionContext) {
     PluginDataManager.getInstance().editorUnFocusHandler();
 
     // store the deactivate event
-    tracker.trackEditorAction("deactivate" /*type*/, "unload" /*name*/, "plugin_deactivate" /*description*/);
+    tracker.trackEditorAction("editor", "deactivate");
 
     if (_ls && _ls.id) {
         // the IDE is closing, send this off
@@ -139,7 +139,7 @@ export async function intializePlugin(
     await tracker.init();
 
     // store the activate event
-    tracker.trackEditorAction("activate" /*type*/, "load" /*name*/, "plugin_activate" /*description*/);
+    tracker.trackEditorAction("editor", "activate");
 
     // INIT the plugin data manager
     PluginDataManager.getInstance();
