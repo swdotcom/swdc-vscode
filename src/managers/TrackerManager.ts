@@ -84,7 +84,7 @@ export class TrackerManager {
 	// Static attributes
 
 	getJwtParams(): any {
-		return { jwt: getItem("jwt").split("JWT ")[1] }
+		return { jwt: getItem("jwt")?.split("JWT ")[1] }
 	}
 
 	getPluginParams(): any {
