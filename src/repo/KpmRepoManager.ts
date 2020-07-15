@@ -247,7 +247,6 @@ export async function getResourceInfo(projectDir) {
         resourceInfo = { branch, identifier, email, tag };
         cacheMgr.set(cacheId, resourceInfo, cacheTimeoutSeconds);
     }
-    // we don't have git info, return an empty object
     return resourceInfo;
 }
 
