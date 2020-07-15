@@ -1,4 +1,4 @@
-import { workspace, Disposable, window } from "vscode";
+import { workspace, Disposable, window, commands } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import {
@@ -55,7 +55,7 @@ export class KpmManager {
       : false;
   }
 
-  public async sendKeystrokeDataIntervalHandler() {
+  public async sendKeystrokeDataIntervalHandler(isUnfocus: boolean = false) {
     //
     // Go through all keystroke count objects found in the map and send
     // the ones that have data (data is greater than 1), then clear the map
@@ -69,7 +69,7 @@ export class KpmManager {
         // check if we have keystroke data
         if (keystrokeStats.hasData()) {
           // post the payload offline until the batch interval sends it out
-          keystrokeStats.postData();
+          keystrokeStats.postData(false /*sendNow*/, isUnfocus);
         }
       }
     }
@@ -85,7 +85,8 @@ export class KpmManager {
     if (event.focused) {
       PluginDataManager.getInstance().editorFocusHandler();
     } else {
-      PluginDataManager.getInstance().editorUnFocusHandler();
+      // Process this window's keystroke data since the window has become unfocused
+      commands.executeCommand("codetime.processKeystrokeData");
     }
   }
 
@@ -466,7 +467,9 @@ export class KpmManager {
     fileInfo.local_start = local_start;
     keystrokeStats.source[fileName] = fileInfo;
 
-    setTimeout(() => keystrokeStats.postData(true /*sendNow*/), 0);
+    setTimeout(() => {
+      keystrokeStats.postData(true /*sendNow*/);
+    }, 0);
   }
 
   private endPreviousModifiedFiles(filename, rootPath) {
@@ -551,11 +554,11 @@ export class KpmManager {
     return keystrokeStats;
   }
 
-  public processKeystrokeData() {
+  public processKeystrokeData(isUnfocus: boolean = false) {
     if (this._keystrokeTriggerTimeout) {
       clearTimeout(this._keystrokeTriggerTimeout);
     }
-    this.sendKeystrokeDataIntervalHandler();
+    this.sendKeystrokeDataIntervalHandler(isUnfocus);
   }
 
   public dispose() {

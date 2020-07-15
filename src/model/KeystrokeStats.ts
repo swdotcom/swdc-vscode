@@ -99,9 +99,9 @@ export default class KeystrokeStats {
   /**
    * send the payload
    */
-  async postData(sendNow: boolean = false) {
+  async postData(sendNow: boolean = false, isUnfocus: boolean = false) {
     // create the now times in case it's the secondary window and we have to wait
     const nowTimes = getNowTimes();
-    PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes);
+    PluginDataManager.getInstance().processPayloadHandler(this, sendNow, nowTimes, isUnfocus);
   }
 }
