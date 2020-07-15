@@ -102,26 +102,6 @@ export class KpmManager {
       return;
     }
     this.tracker.trackEditorAction("file", "close", event);
-
-    // const filename = this.getFileName(event);
-    // if (!this.isTrueEventFile(event, filename)) {
-    //   return;
-    // }
-    // const staticInfo = await this.getStaticEventInfo(event, filename);
-
-    // let rootPath = getRootPathForFile(staticInfo.filename);
-
-    // if (!rootPath) {
-    //   rootPath = NO_PROJ_NAME;
-    // }
-
-    // await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
-
-    // const rootObj = _keystrokeMap[rootPath];
-    // this.updateStaticValues(rootObj, staticInfo);
-
-    // rootObj.source[staticInfo.filename].close += 1;
-    // logEvent(`File closed`);
   }
 
   /**
