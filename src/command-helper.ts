@@ -87,7 +87,7 @@ export function createCommands(
     // PROCESS KEYSTROKES NOW
     cmds.push(
         commands.registerCommand("codetime.processKeystrokeData", () => {
-            kpmController.processKeystrokeData();
+            kpmController.processKeystrokeData(true /*isUnfocus*/);
         })
     );
 

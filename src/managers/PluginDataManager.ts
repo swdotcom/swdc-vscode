@@ -191,9 +191,6 @@ export class PluginDataManager {
 
     // update the file
     this.updateFileData();
-
-    // Process this window's keystroke data since the window has become unfocused
-    commands.executeCommand("codetime.processKeystrokeData");
   }
 
   /**
@@ -262,7 +259,7 @@ export class PluginDataManager {
 	* Step 8) Clear "elapsed_code_time_seconds"
 	* Step 9) Clear "focused_editor_seconds"
 	*/
-  async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean, nowTimes: any) {
+  async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean, nowTimes: any, isUnfocus: boolean = false) {
     const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
 
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
@@ -320,11 +317,6 @@ export class PluginDataManager {
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = now;
 
-    // Step 8) Clear "elapsed_code_time_seconds"
-    // Step 9) Clear "focused_editor_seconds"
-    this.stats.focused_editor_seconds = 0;
-    this.stats.elapsed_code_time_seconds = 0;
-
     // FINAL: update the file with the updated stats
     this.updateFileData();
 
@@ -333,6 +325,12 @@ export class PluginDataManager {
     payload.elapsed_active_code_time_seconds = this.stats.elapsed_active_code_time_seconds;
     payload.cumulative_code_time_seconds = this.stats.cumulative_code_time_seconds;
     payload.cumulative_active_code_time_seconds = this.stats.cumulative_active_code_time_seconds;
+
+    // Final steps after setting the payload above
+    // Step 8) Clear "elapsed_code_time_seconds"
+    // Step 9) Clear "focused_editor_seconds"
+    this.stats.focused_editor_seconds = 0;
+    this.stats.elapsed_code_time_seconds = 0;
 
     // ensure the payload has the project info
     await this.populatePayloadProject(payload);
@@ -363,6 +361,10 @@ export class PluginDataManager {
 
     // update the status and tree
     WallClockManager.getInstance().dispatchStatusViewUpdate();
+
+    if (isUnfocus) {
+      this.editorUnFocusHandler();
+    }
   }
 
   async clearStatsForNewDay() {

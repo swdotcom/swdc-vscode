@@ -68,8 +68,8 @@ export function getStatusBarItem() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
-    // update the unfocused info
-    PluginDataManager.getInstance().editorUnFocusHandler();
+    // Process this window's keystroke data since the window has become unfocused/deactivated
+    commands.executeCommand("codetime.processKeystrokeData");
 
     // store the deactivate event
     tracker.trackEditorAction("editor", "deactivate");
