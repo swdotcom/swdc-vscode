@@ -132,6 +132,7 @@ export class KpmManager {
     if (!event || !window.state.focused) {
       return;
     }
+    this.tracker.trackEditorAction("file", "open", event);
 
     const filename = this.getFileName(event);
     if (!this.isTrueEventFile(event, filename)) {
