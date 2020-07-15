@@ -7,6 +7,7 @@ import {
     showStatus,
     getFileDataAsJson,
     humanizeMinutes,
+    coalesceNumber,
 } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import CodeTimeSummary from "../model/CodeTimeSummary";
@@ -81,12 +82,12 @@ export function setSessionSummaryLiveshareMinutes(minutes) {
 }
 
 /**
- * Return {elapsedSeconds, sessionMinutes}
+ * Return {elapsedSeconds, sessionSeconds}
  * The session minutes is based on a threshold of 15 minutes
  */
 export function getTimeBetweenLastPayload() {
     // default to 1 minute
-    let sessionMinutes = 1;
+    let sessionSeconds = 0;
     let elapsedSeconds = 60;
 
     // will be zero if its a new day
@@ -94,10 +95,8 @@ export function getTimeBetweenLastPayload() {
 
     // the last payload end time is reset within the new day checker
     if (lastPayloadEnd && lastPayloadEnd > 0) {
-        const nowTimes = getNowTimes();
-        const nowInSec = nowTimes.now_in_sec;
         // diff from the previous end time
-        elapsedSeconds = Math.max(60, nowInSec - lastPayloadEnd);
+        elapsedSeconds = coalesceNumber(getNowTimes().now_in_sec - lastPayloadEnd);
 
         // if it's less than the threshold then add the minutes to the session time
         if (
@@ -105,21 +104,23 @@ export function getTimeBetweenLastPayload() {
             elapsedSeconds <= getSessionThresholdSeconds()
         ) {
             // it's still the same session, add the gap time in minutes
-            sessionMinutes = elapsedSeconds / 60;
+            sessionSeconds = elapsedSeconds;
         }
-        sessionMinutes = Math.max(1, sessionMinutes);
+        sessionSeconds = coalesceNumber(sessionSeconds);
     }
 
-    return { sessionMinutes, elapsedSeconds };
+    return { sessionSeconds, elapsedSeconds };
 }
 
 export async function incrementSessionSummaryData(
     aggregates: KeystrokeAggregate,
-    sessionMinutes: number
+    sessionSeconds: number
 ) {
     let sessionSummaryData = getSessionSummaryData();
     // fill in missing attributes
     sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
+    // convert to minutes
+    const sessionMinutes = sessionSeconds ? sessionSeconds / 60 : 0;
     sessionSummaryData.currentDayMinutes += sessionMinutes;
 
     // increment the current day attributes except for the current day minutes

@@ -159,13 +159,13 @@ export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
 
 export async function incrementSessionAndFileSecondsAndFetch(
     project: Project,
-    sessionMinutes: number
+    sessionSeconds: number
 ): Promise<TimeData> {
     // get the matching time data object or create one
     const timeData: TimeData = await getTodayTimeDataSummary(project);
 
     if (timeData) {
-        const session_seconds = sessionMinutes * 60;
+        const session_seconds = sessionSeconds;
         timeData.session_seconds += session_seconds;
         // max editor seconds should be equal or greater than session seconds
         timeData.editor_seconds = Math.max(

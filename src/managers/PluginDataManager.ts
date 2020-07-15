@@ -339,11 +339,11 @@ export class PluginDataManager {
     await this.completeFileEndTimes(payload, nowTimes);
 
     // Get time between payloads
-    const { sessionMinutes } = getTimeBetweenLastPayload();
-    await this.updateCumulativeSessionTime(payload, sessionMinutes);
+    const { sessionSeconds } = getTimeBetweenLastPayload();
+    await this.updateCumulativeSessionTime(payload, sessionSeconds);
 
     // update the aggregation data for the tree info
-    this.aggregateFileMetrics(payload, sessionMinutes);
+    this.aggregateFileMetrics(payload, sessionSeconds);
 
     // async for either
     if (sendNow) {
@@ -357,11 +357,15 @@ export class PluginDataManager {
     }
 
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
-    setItem("latestPayloadTimestampEndUtc", now);
+    const latestPayloadTimestampEndUtc = getNowTimes().now_in_sec;
+    setItem("latestPayloadTimestampEndUtc", latestPayloadTimestampEndUtc);
 
     // update the status and tree
     WallClockManager.getInstance().dispatchStatusViewUpdate();
 
+    // Set the unfocused timestamp only if the isUnfocus flag is true.
+    // When the user is typing more than a minute or if this is the bootstrap
+    // payload, the "isUnfocus" will not be set to true
     if (isUnfocus) {
       this.editorUnFocusHandler();
     }
@@ -382,10 +386,10 @@ export class PluginDataManager {
 
   //// Everything after this line is for time counter v1 ////
 
-  async aggregateFileMetrics(payload, sessionMinutes) {
+  async aggregateFileMetrics(payload, sessionSeconds) {
     // get a mapping of the current files
     const fileChangeInfoMap = getFileChangeSummaryAsJson();
-    await this.updateAggregateInfo(fileChangeInfoMap, payload, sessionMinutes);
+    await this.updateAggregateInfo(fileChangeInfoMap, payload, sessionSeconds);
 
     // write the fileChangeInfoMap
     saveFileChangeInfoToDisk(fileChangeInfoMap);
@@ -475,14 +479,14 @@ export class PluginDataManager {
    * This will update the cumulative editor and session seconds.
    * It will also provide any error details if any are encountered.
    * @param payload
-   * @param sessionMinutes
+   * @param sessionSeconds
    */
-  async updateCumulativeSessionTime(payload: KeystrokeStats, sessionMinutes: number) {
+  async updateCumulativeSessionTime(payload: KeystrokeStats, sessionSeconds: number) {
     // increment the projects session and file seconds
     // This will find a time data object based on the current day
     let td: TimeData = await incrementSessionAndFileSecondsAndFetch(
       payload.project,
-      sessionMinutes
+      sessionSeconds
     );
 
     // default error to empty
@@ -540,7 +544,7 @@ export class PluginDataManager {
     payload.cumulative_session_seconds = cumulative_session_seconds;
   }
 
-  async updateAggregateInfo(fileChangeInfoMap, payload, sessionMinutes) {
+  async updateAggregateInfo(fileChangeInfoMap, payload, sessionSeconds) {
     const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
     aggregate.directory = payload.project
       ? payload.project.directory || NO_PROJ_NAME
@@ -594,6 +598,6 @@ export class PluginDataManager {
     });
 
     // this will increment and store it offline
-    await incrementSessionSummaryData(aggregate, sessionMinutes);
+    await incrementSessionSummaryData(aggregate, sessionSeconds);
   }
 }
