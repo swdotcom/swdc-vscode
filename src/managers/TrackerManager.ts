@@ -2,6 +2,8 @@ import swdcTracker from "swdc-tracker";
 import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
 import { KpmItem } from "../model/models";
+import { getResourceInfo } from "../repo/KpmRepoManager";
+
 const moment = require("moment-timezone");
 
 export class TrackerManager {
@@ -51,7 +53,7 @@ export class TrackerManager {
 			cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : "redacted"
 		}
 
-		const event = {
+		const ui_event = {
 			...ui_interaction,
 			...ui_element,
 			...this.pluginParams,
@@ -59,26 +61,28 @@ export class TrackerManager {
 			...this.tzOffsetParams
 		};
 
-		swdcTracker.trackUIInteraction(event);
+		swdcTracker.trackUIInteraction(ui_event);
 	}
 
-	public async trackEditorAction(entity: string, type: string) {
+	public async trackEditorAction(entity: string, type: string, event?: any) {
 		if (!this.trackerReady) {
 			return;
 		}
+		const projectParams = this.getProjectParams();
+		const repoParams = await this.getRepoParams(projectParams.project_directory)
 
-		const e = {
+		const editor_event = {
 			entity,
 			type,
 			...this.pluginParams,
 			...this.jwtParams,
 			...this.tzOffsetParams,
-			...this.getFileParams(),
-			...this.getProjectParams(),
-			...this.getRepoParams()
+			...projectParams,
+			...this.getFileParams(event, projectParams.project_directory),
+			...repoParams
 		};
 		// send the event
-		swdcTracker.trackEditorAction(e);
+		swdcTracker.trackEditorAction(editor_event);
 	}
 
 	// Static attributes
@@ -109,11 +113,38 @@ export class TrackerManager {
 		return { project_directory, project_name }
 	}
 
-	getRepoParams() {
-		return {}
+	async getRepoParams(projectRootPath) {
+		const resourceInfo = await getResourceInfo(projectRootPath);
+
+		let ownerId = ""
+		if(resourceInfo.identifier.includes(":")) {
+			ownerId = resourceInfo.identifier.split("/")?.[0]?.split(":")?.[1]
+		} else {
+			ownerId = resourceInfo.identifier.split("/")?.slice(-2)?.[0]
+		}
+
+		return {
+			repo_identifier: resourceInfo.identifier,
+			repo_name: resourceInfo.identifier?.split("/")?.slice(-1)?.[0]?.split(".git")?.[0],
+			git_branch: resourceInfo.branch,
+			git_tag: resourceInfo.tag,
+			owner_id: ownerId
+		}
 	}
 
-	getFileParams() {
-		return {}
+	getFileParams(event, projectRootPath) {
+		if (!event)
+			return {}
+		// File Open and Close have document attributes on the event.
+		// File Change has it on a `document` attribute
+		const textDoc = event.document || event
+
+		return {
+			file_name: textDoc.fileName?.split(projectRootPath)?.[1],
+			file_path: textDoc.uri?.path,
+			syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
+			line_count: textDoc.lineCount || 0,
+			character_count: textDoc.getText()?.length || 0
+		}
 	}
 }

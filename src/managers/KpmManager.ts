@@ -15,6 +15,7 @@ import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
+import { TrackerManager } from "./TrackerManager";
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -28,12 +29,15 @@ export class KpmManager {
 
   private _keystrokeTriggerTimeout;
 
+  private tracker: TrackerManager;
+
   constructor() {
     let subscriptions: Disposable[] = [];
+    this.tracker = TrackerManager.getInstance();
 
     // document listener handlers
     workspace.onDidOpenTextDocument(this._onOpenHandler, this);
-    // workspace.onDidCloseTextDocument(this._onCloseHandler, this);
+    workspace.onDidCloseTextDocument(this._onCloseHandler, this);
     workspace.onDidChangeTextDocument(this._onEventHandler, this);
     // window state changed handler
     window.onDidChangeWindowState(this._windowStateChanged, this);
@@ -98,25 +102,7 @@ export class KpmManager {
     if (!event || !window.state.focused) {
       return;
     }
-    const filename = this.getFileName(event);
-    if (!this.isTrueEventFile(event, filename)) {
-      return;
-    }
-    const staticInfo = await this.getStaticEventInfo(event, filename);
-
-    let rootPath = getRootPathForFile(staticInfo.filename);
-
-    if (!rootPath) {
-      rootPath = NO_PROJ_NAME;
-    }
-
-    await this.initializeKeystrokesCount(staticInfo.filename, rootPath);
-
-    const rootObj = _keystrokeMap[rootPath];
-    this.updateStaticValues(rootObj, staticInfo);
-
-    rootObj.source[staticInfo.filename].close += 1;
-    logEvent(`File closed`);
+    this.tracker.trackEditorAction("file", "close", event);
   }
 
   /**
@@ -127,6 +113,7 @@ export class KpmManager {
     if (!event || !window.state.focused) {
       return;
     }
+    this.tracker.trackEditorAction("file", "open", event);
 
     const filename = this.getFileName(event);
     if (!this.isTrueEventFile(event, filename)) {
@@ -327,52 +314,18 @@ export class KpmManager {
   }
 
   private async getStaticEventInfo(event, filename) {
-    let languageId = "";
-    let length = 0;
-    let lineCount = 0;
-
-    // get the filename, length of the file, and the languageId
-    if (event.fileName) {
-      if (event.languageId) {
-        languageId = event.languageId;
-      }
-      if (event.getText()) {
-        length = event.getText().length;
-      }
-      if (event.lineCount) {
-        lineCount = event.lineCount;
-      }
-    } else if (event.document && event.document.fileName) {
-      if (event.document.languageId) {
-        languageId = event.document.languageId;
-      }
-      if (event.document.getText()) {
-        length = event.document.getText().length;
-      }
-
-      if (event.document.lineCount) {
-        lineCount = event.document.lineCount;
-      }
+    if (_staticInfoMap[filename]) {
+      return _staticInfoMap[filename];
     }
 
-    let staticInfo = _staticInfoMap[filename];
-
-    if (staticInfo) {
-      return staticInfo;
-    }
-
+    const textDoc = event.document || event;
+    const languageId = textDoc.languageId || textDoc.fileName.split(".").slice(-1)[0];
+    const length = textDoc.getText().length || 0;
+    const lineCount = textDoc.lineCount || 0;
     // get the age of this file
     const fileAgeDays = getFileAgeInDays(filename);
 
-    // if the languageId is not assigned, use the file type
-    if (!languageId && filename.indexOf(".") !== -1) {
-      let fileType = getFileType(filename);
-      if (fileType) {
-        languageId = fileType;
-      }
-    }
-
-    staticInfo = {
+    _staticInfoMap[filename] = {
       filename,
       languageId,
       length,
@@ -380,9 +333,7 @@ export class KpmManager {
       lineCount,
     };
 
-    _staticInfoMap[filename] = staticInfo;
-
-    return staticInfo;
+    return _staticInfoMap[filename];
   }
 
   async processSelectedTextForJira() {
