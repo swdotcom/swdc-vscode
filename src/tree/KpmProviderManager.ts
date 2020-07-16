@@ -696,7 +696,6 @@ export class KpmProviderManager {
   }
 
   buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null) {
-    label = label.toString();
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
