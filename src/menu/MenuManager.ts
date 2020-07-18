@@ -4,6 +4,7 @@ import {
     QuickPickOptions,
     ViewColumn,
     commands,
+    ProgressLocation,
 } from "vscode";
 import {
     launchWebUrl,
@@ -19,6 +20,7 @@ import {
 } from "../DataController";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { EventManager } from "../managers/EventManager";
+import { resolve } from "dns";
 
 /**
  * Pass in the following array of objects
@@ -164,13 +166,21 @@ export async function launchWebDashboardView() {
 
 export async function displayCodeTimeMetricsDashboard() {
     // 1st write the code time metrics dashboard file
-    await writeCodeTimeMetricsDashboard();
-    const filePath = getDashboardFile();
-
-    workspace.openTextDocument(filePath).then((doc) => {
-        // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
-            // done
+    window.withProgress({
+        location: ProgressLocation.Notification,
+        title: "Loading view summary...",
+        cancellable: false
+    }, async (progress, token) => {
+        progress.report({ increment: 45 });
+        await writeCodeTimeMetricsDashboard();
+        const filePath = getDashboardFile();
+        progress.report({ increment: 90 });
+        workspace.openTextDocument(filePath).then((doc) => {
+            // only focus if it's not already open
+            window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
+                // done
+            });
+            progress.report({ increment: 100 });
         });
     });
 }

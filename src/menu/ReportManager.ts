@@ -9,7 +9,7 @@ import {
     getProjectContributorCodeSummaryFile,
     getDailyReportSummaryFile,
 } from "../Util";
-import { workspace, window, ViewColumn } from "vscode";
+import { workspace, window, ViewColumn, ProgressLocation } from "vscode";
 import { sendGeneratedReportReport } from "./SlackManager";
 
 export async function displayProjectCommitsDashboardByStartEnd(
@@ -17,18 +17,34 @@ export async function displayProjectCommitsDashboardByStartEnd(
     end,
     projectIds = []
 ) {
-    // 1st write the code time metrics dashboard file
-    await writeProjectCommitDashboardByStartEnd(start, end, projectIds);
-    openProjectCommitDocument();
+    window.withProgress({
+        location: ProgressLocation.Notification,
+        title: "Loading view project summary...",
+        cancellable: false
+    }, async (progress, token) => {
+        progress.report({ increment: 45 });
+        // 1st write the code time metrics dashboard file
+        await writeProjectCommitDashboardByStartEnd(start, end, projectIds);
+        progress.report({ increment: 95 });
+        openProjectCommitDocument();
+    });
 }
 
 export async function displayProjectCommitsDashboardByRangeType(
     type = "lastWeek",
     projectIds = []
 ) {
-    // 1st write the code time metrics dashboard file
-    await writeProjectCommitDashboardByRangeType(type, projectIds);
-    openProjectCommitDocument();
+    window.withProgress({
+        location: ProgressLocation.Notification,
+        title: "Loading view project summary...",
+        cancellable: false
+    }, async (progress, token) => {
+        progress.report({ increment: 45 });
+        // 1st write the code time metrics dashboard file
+        await writeProjectCommitDashboardByRangeType(type, projectIds);
+        progress.report({ increment: 95 });
+        openProjectCommitDocument();
+    });
 }
 
 function openProjectCommitDocument() {
