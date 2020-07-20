@@ -259,8 +259,15 @@ export class PluginDataManager {
 	* Step 8) Clear "elapsed_code_time_seconds"
 	* Step 9) Clear "focused_editor_seconds"
 	*/
-  async processPayloadHandler(payload: KeystrokeStats, sendNow: boolean, nowTimes: any, isUnfocus: boolean = false) {
-    const now = Math.max(nowTimes.now_in_sec, payload.start + 60);
+  async processPayloadHandler(
+    payload: KeystrokeStats,
+    sendNow: boolean,
+    nowTimes: any,
+    isUnfocus: boolean = false
+  ) {
+    // this should take the now_in_sec as the truth since the unfocus
+    // will trigger the process payload and can happen under a minute
+    const now = Math.min(nowTimes.now_in_sec, payload.start + 60);
 
     const timeCounterJson = getFileDataAsJson(getTimeCounterFile());
     if (timeCounterJson) {
@@ -310,15 +317,11 @@ export class PluginDataManager {
 
     // Step 5) Update "cumulative_code_time_seconds"
     this.stats.cumulative_code_time_seconds += this.stats.elapsed_code_time_seconds;
-
     // Step 6) Update "cumulative_active_code_time_seconds"
     this.stats.cumulative_active_code_time_seconds += this.stats.elapsed_active_code_time_seconds;
 
     // Step 7) Replace "last_payload_end_utc" with now
     this.stats.last_payload_end_utc = now;
-
-    // FINAL: update the file with the updated stats
-    this.updateFileData();
 
     // PAYLOAD related updates. stats have been merged to payload object by now
     payload.elapsed_code_time_seconds = this.stats.elapsed_code_time_seconds;
@@ -331,6 +334,9 @@ export class PluginDataManager {
     // Step 9) Clear "focused_editor_seconds"
     this.stats.focused_editor_seconds = 0;
     this.stats.elapsed_code_time_seconds = 0;
+
+    // FINAL: update the file with the updated stats
+    this.updateFileData();
 
     // ensure the payload has the project info
     await this.populatePayloadProject(payload);

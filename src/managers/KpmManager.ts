@@ -6,7 +6,6 @@ import {
   getNowTimes,
   logEvent,
   getFileAgeInDays,
-  getFileType,
   showInformationMessage,
   isFileActive,
 } from "../Util";
@@ -54,9 +53,7 @@ export class KpmManager {
   }
 
   public hasKeystrokeData() {
-    return _keystrokeMap && Object.keys(_keystrokeMap).length
-      ? true
-      : false;
+    return _keystrokeMap && Object.keys(_keystrokeMap).length ? true : false;
   }
 
   public async sendKeystrokeDataIntervalHandler(isUnfocus: boolean = false) {
@@ -171,76 +168,26 @@ export class KpmManager {
     const rootObj = _keystrokeMap[rootPath];
     const sourceObj: FileChangeInfo = rootObj.source[staticInfo.filename];
     const currLineCount =
-      event.document && event.document.lineCount
-        ? event.document.lineCount
-        : event.lineCount || 0;
+      event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
     this.updateStaticValues(rootObj, staticInfo);
 
-    // Use the contentChanges to figure out most of the events
-    let linesAdded = 0;
-    let linesDeleted = 0;
-    let hasNonNewLineData = false;
-    let textChangeLen = 0;
-    let rangeChangeLen = 0;
-    let contentText = "";
-    let isCharDelete = false;
-    if (event.contentChanges && event.contentChanges.length) {
-      for (let i = 0; i < event.contentChanges.length; i++) {
-        const range = event.contentChanges[i].range;
-        rangeChangeLen += event.contentChanges[i].rangeLength || 0;
-        contentText = event.contentChanges[i].text;
-        const newLineMatches = contentText.match(/[\n\r]/g);
-        if (newLineMatches && newLineMatches.length) {
-          // it's a new line
-          linesAdded = newLineMatches.length;
-          if (contentText) {
-            textChangeLen += contentText.length;
-          }
-          contentText = "";
-        } else if (contentText.length > 0) {
-          // has text changes
-          hasNonNewLineData = true;
-          textChangeLen += contentText.length;
-        } else if (range && !range.isEmpty && !range.isSingleLine) {
-          if (range.start && range.start.line && range.end && range.end.line) {
-            linesDeleted = Math.abs(range.start.line - range.end.line);
-          } else {
-            linesDeleted = 1;
-          }
-        } else if (rangeChangeLen && rangeChangeLen > 0 && contentText === "") {
-          isCharDelete = true;
-        }
-      }
-    }
+    // get {hasChanges, linesAdded, linesDeleted, isCharDelete, textChangeLen, hasNonNewLineData}
+    const textChangeInfo = this.getTextChangeInfo(event);
 
-    // check if its a character deletion
-    if (textChangeLen === 0 && rangeChangeLen > 0) {
-      // NO content text but has a range change length, set the textChangeLen
-      // to the inverse of the rangeLength to show the chars deleted
-      textChangeLen = event.contentChanges[0].rangeLength / -1;
-    }
-
-    if (
-      !isCharDelete &&
-      textChangeLen === 0 &&
-      linesAdded === 0 &&
-      linesDeleted === 0
-    ) {
+    if (!textChangeInfo.hasChanges) {
       // No changes
       return;
     }
 
-    if (textChangeLen > 8) {
-      //
+    if (textChangeInfo.textChangeLen > 8) {
       // it's a copy and paste event
-      //
       sourceObj.paste += 1;
       logEvent("Copy+Paste Incremented");
-    } else if (textChangeLen < 0) {
+    } else if (textChangeInfo.textChangeLen < 0) {
       sourceObj.delete += 1;
       // update the overall count
       logEvent("Delete Incremented");
-    } else if (hasNonNewLineData) {
+    } else if (textChangeInfo.hasNonNewLineData) {
       // update the data for this fileInfo keys count
       sourceObj.add += 1;
       // update the overall count
@@ -253,12 +200,12 @@ export class KpmManager {
     sourceObj.netkeys = sourceObj.add - sourceObj.delete;
     sourceObj.lines = currLineCount;
 
-    if (linesDeleted > 0) {
-      logEvent(`Removed ${linesDeleted} lines`);
-      sourceObj.linesRemoved += linesDeleted;
-    } else if (linesAdded > 0) {
-      logEvent(`Added ${linesAdded} lines`);
-      sourceObj.linesAdded += linesAdded;
+    if (textChangeInfo.linesDeleted) {
+      logEvent(`Removed ${textChangeInfo.linesDeleted} lines`);
+      sourceObj.linesRemoved += textChangeInfo.linesDeleted;
+    } else if (textChangeInfo.linesAdded) {
+      logEvent(`Added ${textChangeInfo.linesAdded} lines`);
+      sourceObj.linesAdded += textChangeInfo.linesAdded;
     }
 
     this.updateLatestPayloadLazily(rootObj);
@@ -313,6 +260,79 @@ export class KpmManager {
     return filename;
   }
 
+  /**
+   * Get the text change info:
+   * linesAdded, linesDeleted, isCharDelete,
+   * hasNonNewLineData, textChangeLen, hasChanges
+   * @param event
+   */
+  private getTextChangeInfo(event) {
+    const info = {
+      linesAdded: 0,
+      linesDeleted: 0,
+      isCharDelete: false,
+      hasNonNewLineData: false,
+      textChangeLen: 0,
+      hasChanges: false,
+    };
+    // find the range in the contentChanges array
+    const range = event.contentChanges.find((n) => n.range);
+
+    let rangeLength = 0;
+    let textChangeLen = 0;
+
+    // if we have a range there will be more info to extract
+    if (range) {
+      // get the range length
+      rangeLength = range.rangeLength;
+
+      // Get the range data
+      const rangeData = JSON.parse(JSON.stringify(range));
+      let linesChanged = 0;
+      if (rangeData.range && rangeData.range.length) {
+        // get the number of lines that have changed
+        linesChanged = rangeData.range[1].line - rangeData.range[0].line;
+      }
+
+      const rangeText = range.text;
+      const newLineMatch = rangeText?.match(/[\n\r]/g);
+      textChangeLen = rangeText?.length;
+
+      // set the text change length
+      info.textChangeLen = textChangeLen;
+
+      if (linesChanged) {
+        // update removed lines
+        info.linesDeleted = linesChanged;
+      } else if (newLineMatch && !linesChanged && textChangeLen) {
+        // this means there are new lines added
+        info.linesAdded = newLineMatch.length;
+      } else if (rangeLength && !rangeText) {
+        // this may be a character delete
+        info.isCharDelete = true;
+      }
+    }
+
+    // check if its a character deletion
+    if (!textChangeLen && rangeLength) {
+      // NO content text but has a range change length, set the textChangeLen
+      // to the inverse of the rangeLength to show the chars deleted
+      info.textChangeLen = event.contentChanges[0].rangeLength / -1;
+    }
+
+    if (info.textChangeLen && !info.linesAdded && !info.linesDeleted) {
+      // flag to state we have chars deleted but no new lines
+      info.hasNonNewLineData = true;
+    }
+
+    if (info.linesAdded || info.linesDeleted || info.textChangeLen || info.isCharDelete) {
+      // there are changes
+      info.hasChanges = true;
+    }
+
+    return info;
+  }
+
   private async getStaticEventInfo(event, filename) {
     if (_staticInfoMap[filename]) {
       return _staticInfoMap[filename];
@@ -363,17 +383,11 @@ export class KpmManager {
     let scheme = "";
     if (event.uri && event.uri.scheme) {
       scheme = event.uri.scheme;
-    } else if (
-      event.document &&
-      event.document.uri &&
-      event.document.uri.scheme
-    ) {
+    } else if (event.document && event.document.uri && event.document.uri.scheme) {
       scheme = event.document.uri.scheme;
     }
 
-    const isLiveshareTmpFile = filename.match(
-      /.*\.code-workspace.*vsliveshare.*tmp-.*/
-    );
+    const isLiveshareTmpFile = filename.match(/.*\.code-workspace.*vsliveshare.*tmp-.*/);
     const isInternalFile = filename.match(
       /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
     );
@@ -458,11 +472,7 @@ export class KpmManager {
     // create the keystroke count if it doesn't exist
     if (!keystrokeStats) {
       // add keystroke count wrapper
-      keystrokeStats = await this.createKeystrokeStats(
-        filename,
-        rootPath,
-        nowTimes
-      );
+      keystrokeStats = await this.createKeystrokeStats(filename, rootPath, nowTimes);
     }
 
     // check if we have this file or not
