@@ -17,7 +17,7 @@ export async function displayProjectCommitsDashboardByStartEnd(start, end, proje
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading view project summary...",
+      title: "Loading project summary...",
       cancellable: false,
     },
     async (progress, token) => {
@@ -40,7 +40,7 @@ export async function displayProjectCommitsDashboardByRangeType(
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading view project summary...",
+      title: "Loading project summary...",
       cancellable: false,
     },
     async (progress, token) => {

@@ -158,7 +158,7 @@ export async function displayCodeTimeMetricsDashboard() {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading view summary...",
+      title: "Loading summary...",
       cancellable: false,
     },
     async (progress, token) => {
