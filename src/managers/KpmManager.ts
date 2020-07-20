@@ -53,9 +53,7 @@ export class KpmManager {
   }
 
   public hasKeystrokeData() {
-    return _keystrokeMap && Object.keys(_keystrokeMap).length
-      ? true
-      : false;
+    return _keystrokeMap && Object.keys(_keystrokeMap).length ? true : false;
   }
 
   public async sendKeystrokeDataIntervalHandler(isUnfocus: boolean = false) {
@@ -170,9 +168,7 @@ export class KpmManager {
     const rootObj = _keystrokeMap[rootPath];
     const sourceObj: FileChangeInfo = rootObj.source[staticInfo.filename];
     const currLineCount =
-      event.document && event.document.lineCount
-        ? event.document.lineCount
-        : event.lineCount || 0;
+      event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
     this.updateStaticValues(rootObj, staticInfo);
 
     // get {hasChanges, linesAdded, linesDeleted, isCharDelete, textChangeLen, hasNonNewLineData}
@@ -268,7 +264,7 @@ export class KpmManager {
    * Get the text change info:
    * linesAdded, linesDeleted, isCharDelete,
    * hasNonNewLineData, textChangeLen, hasChanges
-   * @param event 
+   * @param event
    */
   private getTextChangeInfo(event) {
     const info = {
@@ -277,10 +273,10 @@ export class KpmManager {
       isCharDelete: false,
       hasNonNewLineData: false,
       textChangeLen: 0,
-      hasChanges: false
-    }
+      hasChanges: false,
+    };
     // find the range in the contentChanges array
-    const range = event.contentChanges.find(n => n.range);
+    const range = event.contentChanges.find((n) => n.range);
 
     let rangeLength = 0;
     let textChangeLen = 0;
@@ -387,17 +383,11 @@ export class KpmManager {
     let scheme = "";
     if (event.uri && event.uri.scheme) {
       scheme = event.uri.scheme;
-    } else if (
-      event.document &&
-      event.document.uri &&
-      event.document.uri.scheme
-    ) {
+    } else if (event.document && event.document.uri && event.document.uri.scheme) {
       scheme = event.document.uri.scheme;
     }
 
-    const isLiveshareTmpFile = filename.match(
-      /.*\.code-workspace.*vsliveshare.*tmp-.*/
-    );
+    const isLiveshareTmpFile = filename.match(/.*\.code-workspace.*vsliveshare.*tmp-.*/);
     const isInternalFile = filename.match(
       /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
     );
@@ -482,11 +472,7 @@ export class KpmManager {
     // create the keystroke count if it doesn't exist
     if (!keystrokeStats) {
       // add keystroke count wrapper
-      keystrokeStats = await this.createKeystrokeStats(
-        filename,
-        rootPath,
-        nowTimes
-      );
+      keystrokeStats = await this.createKeystrokeStats(filename, rootPath, nowTimes);
     }
 
     // check if we have this file or not
