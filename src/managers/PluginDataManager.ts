@@ -375,6 +375,9 @@ export class PluginDataManager {
     if (isUnfocus) {
       this.editorUnFocusHandler();
     }
+
+    // enable this after fully testing via snowplow micro
+    // tracker.trackCodeTimeEvent(payload);
   }
 
   async clearStatsForNewDay() {

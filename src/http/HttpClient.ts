@@ -15,6 +15,7 @@ import { CacheManager } from "../cache/CacheManager";
 // build the axios api base url
 const beApi = axios.create({
     baseURL: `${api_endpoint}`,
+    timeout: 15000
 });
 
 beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();
@@ -178,10 +179,12 @@ export function isResponseOk(resp) {
  */
 function getResponseStatus(resp) {
     let status = null;
-    if (resp && resp.status) {
+    if (resp?.status) {
         status = resp.status;
-    } else if (resp && resp.response && resp.response.status) {
+    } else if (resp?.response?.status) {
         status = resp.response.status;
+    } else if (resp?.code === "ECONNABORTED") {
+        status = 500;
     }
     return status;
 }

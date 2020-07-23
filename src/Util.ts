@@ -583,7 +583,7 @@ export async function showOfflinePrompt(addReconnectMsg = false) {
     let infoMsg = "Our service is temporarily unavailable. ";
     if (addReconnectMsg) {
         infoMsg +=
-            "We will try to reconnect again in 10 minutes. Your status bar will not update at this time.";
+            "We will try to reconnect again in a minute. Your status bar will not update at this time.";
     } else {
         infoMsg += "Please try again later.";
     }
