@@ -179,11 +179,11 @@ export function isResponseOk(resp) {
  */
 function getResponseStatus(resp) {
     let status = null;
-    if (resp?.status) {
+    if (resp && resp.status) {
         status = resp.status;
-    } else if (resp?.response?.status) {
+    } else if (resp && resp.response && resp.response.status) {
         status = resp.response.status;
-    } else if (resp?.code === "ECONNABORTED") {
+    } else if (resp && resp.code && resp.code === "ECONNABORTED") {
         status = 500;
     }
     return status;
