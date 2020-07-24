@@ -50,10 +50,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "codetime.softwarePaletteMenu",
-        "title": "Code Time: Menu options"
-      },
-      {
         "command": "codetime.codeTimeMetrics",
         "title": "Code Time: View summary"
       },
