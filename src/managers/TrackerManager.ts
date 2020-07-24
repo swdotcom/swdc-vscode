@@ -66,8 +66,8 @@ export class TrackerManager {
 				pastes: fileData.paste,
 				lines_added: fileData.linesAdded,
 				lines_deleted: fileData.linesRemoved,
-				start_time: moment.unix(fileData.start).format(),
-				end_time: moment.unix(fileData.end).format(),
+				start_time: moment.unix(fileData.start).utc().format(),
+				end_time: moment.unix(fileData.end).utc().format(),
 				tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes
 			};
 
