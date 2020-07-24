@@ -6,7 +6,6 @@ import {
 } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
-    showMenuOptions,
 } from "./menu/MenuManager";
 import {
     launchWebUrl,
@@ -30,12 +29,11 @@ import {
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { sendOfflineData } from "./managers/FileManager";
-import { PluginDataManager } from "./managers/PluginDataManager";
 import {
-    processSwitchAccounts,
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
+import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
 
 export function createCommands(
     kpmController: KpmManager
@@ -61,9 +59,11 @@ export function createCommands(
     codetimeMenuTreeProvider.bindView(codetimeMenuTreeView);
     cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
-    // MENU TREE: REVEAL
+    // STATUS BAR CLICK - MENU TREE REVEAL
     cmds.push(
         commands.registerCommand("codetime.displayTree", () => {
+            const item: KpmItem = getStatusBarKpmItem();
+            tracker.trackUIInteraction(item);
             codetimeMenuTreeProvider.revealTree();
         })
     );
@@ -114,13 +114,6 @@ export function createCommands(
     );
     codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
     cmds.push(connectCodeTimeTeamTreeView(codetimeTeamTreeView));
-
-    // TEAM TREE: REFRESH
-    cmds.push(
-        commands.registerCommand("codetime.refreshCodetimeTeamTree", () => {
-            codetimeTeamTreeProvider.refresh();
-        })
-    );
 
     cmds.push(
         commands.registerCommand("codetime.refreshTreeViews", () => {
@@ -182,7 +175,7 @@ export function createCommands(
         })
     );
 
-    // REFRESH MENU
+    // TOGGLE STATUS BAR METRIC VISIBILITY
     cmds.push(
         commands.registerCommand("codetime.toggleStatusBar", (item: KpmItem) => {
             if (!item) {
@@ -334,15 +327,10 @@ export function createCommands(
 
     // LAUNCH COMMIT URL
     cmds.push(
-        commands.registerCommand("codetime.launchCommitUrl", (commitLink) => {
+        commands.registerCommand("codetime.launchCommitUrl", (item: KpmItem, commitLink: string) => {
+            // this only comes from the tree view so item will be available
+            tracker.trackUIInteraction(item);
             launchWebUrl(commitLink);
-        })
-    );
-
-    // DISPLAY PALETTE MENU
-    cmds.push(
-        commands.registerCommand("codetime.softwarePaletteMenu", () => {
-            showMenuOptions();
         })
     );
 

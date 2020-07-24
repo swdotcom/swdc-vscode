@@ -326,7 +326,13 @@ export class KpmProviderManager {
           const commitItem: KpmItem = new KpmItem();
           commitItem.label = lastCommitInfo.comment;
           commitItem.command = "codetime.launchCommitUrl";
-          commitItem.commandArgs = [`${remoteUrl}/commit/${lastCommitInfo.commitId}`];
+
+          commitItem.location = "ct_contributors_tree";
+          commitItem.name = "ct_contributor_last_commit_url_link";
+          commitItem.interactionIcon = "none";
+          commitItem.hideCTAInTracker = true;
+
+          commitItem.commandArgs = [commitItem, `${remoteUrl}/commit/${lastCommitInfo.commitId}`];
           item.children = [commitItem];
         }
 

@@ -25,6 +25,7 @@ export class KpmManager {
   private _disposable: Disposable;
 
   private _currentPayloadTimeout;
+  private _scrollingTimeout;
 
   private _keystrokeTriggerTimeout;
 
@@ -40,6 +41,8 @@ export class KpmManager {
     workspace.onDidChangeTextDocument(this._onEventHandler, this);
     // window state changed handler
     window.onDidChangeWindowState(this._windowStateChanged, this);
+    // scrolling handler
+    window.onDidChangeTextEditorVisibleRanges(this._visibleRangeChangeHandler, this);
 
     this._disposable = Disposable.from(...subscriptions);
   }
@@ -80,6 +83,25 @@ export class KpmManager {
 
     // clear out the static info map
     _staticInfoMap = {};
+  }
+
+  private async _visibleRangeChangeHandler(event) {
+    // scroll event check
+    if (event && event.visibleRanges && event.visibleRanges.length) {
+      // this will cancel the other scroll timeout if it
+      // hasn't already been triggered
+      if (this._scrollingTimeout) {
+        // cancel the current one
+        clearTimeout(this._scrollingTimeout);
+        this._scrollingTimeout = null;
+      }
+
+      // 5 second timeout to prevent sending the scroll event too rapidly.
+      // we only need to know they scrolled.
+      this._scrollingTimeout = setTimeout(() => {
+        this.tracker.trackEditorAction("file", "scroll", event);
+      }, 5000);
+    }
   }
 
   private async _windowStateChanged(event) {

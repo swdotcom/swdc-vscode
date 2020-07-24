@@ -209,7 +209,6 @@ export async function intializePlugin(
             tooltip = `${tooltip} (${name})`;
         }
         statusBarItem.tooltip = tooltip;
-        // statusBarItem.command = "codetime.softwarePaletteMenu";
         statusBarItem.command = "codetime.displayTree";
         statusBarItem.show();
 
