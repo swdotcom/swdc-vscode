@@ -3,210 +3,234 @@ import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
 import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
+import { getRepoIdentifierInfo } from "../repo/GitUtil";
 import KeystrokeStats from "../model/KeystrokeStats";
 
 const moment = require("moment-timezone");
 
 export class TrackerManager {
-	private static instance: TrackerManager;
+  private static instance: TrackerManager;
 
-	private trackerReady: boolean = false;
-	private pluginParams: any = this.getPluginParams();
-	private tzOffsetParams: any = this.getTzOffsetParams();
-	private jwtParams: any = this.getJwtParams();
+  private trackerReady: boolean = false;
+  private pluginParams: any = this.getPluginParams();
+  private tzOffsetParams: any = this.getTzOffsetParams();
+  private jwtParams: any = this.getJwtParams();
 
-	private constructor() { }
+  private constructor() {}
 
-	static getInstance(): TrackerManager {
-		if (!TrackerManager.instance) {
-			TrackerManager.instance = new TrackerManager();
-		}
+  static getInstance(): TrackerManager {
+    if (!TrackerManager.instance) {
+      TrackerManager.instance = new TrackerManager();
+    }
 
-		return TrackerManager.instance;
-	}
+    return TrackerManager.instance;
+  }
 
-	public async init() {
-		// initialize tracker with swdc api host, namespace, and appId
-		const result = await swdcTracker.initialize(api_endpoint, "CodeTime", this.pluginParams.plugin_name);
-		if (result.status === 200) {
-			this.trackerReady = true;
-		}
-	}
+  public async init() {
+    // initialize tracker with swdc api host, namespace, and appId
+    const result = await swdcTracker.initialize(
+      api_endpoint,
+      "CodeTime",
+      this.pluginParams.plugin_name
+    );
+    if (result.status === 200) {
+      this.trackerReady = true;
+    }
+  }
 
-	public resetJwt() {
-		this.jwtParams = this.getJwtParams();
-	}
+  public resetJwt() {
+    this.jwtParams = this.getJwtParams();
+  }
 
-	private readyJwt() {
-		if (!this.jwtParams || !this.jwtParams.jwt) {
-			this.resetJwt();
-		}
-	}
+  private hasJwtReady() {
+    return !this.jwtParams || !this.jwtParams.jwt ? false : true;
+  }
 
-	public async trackCodeTimeEvent(item: KeystrokeStats) {
-		if (!this.trackerReady) {
-			return;
-		}
+  private readyJwt() {
+    if (!this.hasJwtReady()) {
+      this.resetJwt();
+    }
+  }
 
-		this.readyJwt();
+  public async trackCodeTimeEvent(item: KeystrokeStats) {
+    if (!this.trackerReady) {
+      return;
+    }
 
-		// extract the project info from the keystroke stats
-		const projectInfo = { project_directory: item.project.directory, project_name: item.project.name };
+    this.readyJwt();
 
-		// loop through the files in the keystroke stats "source"
-		const fileKeys = Object.keys(item.source);
-		for await (let file of fileKeys) {
-			const fileData: FileChangeInfo = item.source[file];
+    if (!this.hasJwtReady()) {
+      return;
+    }
 
-			// missing "chars_pasted"
-			const codetime_entity = {
-				keystrokes: fileData.keystrokes,
-				chars_added: fileData.add,
-				chars_deleted: fileData.delete,
-				pastes: fileData.paste,
-				lines_added: fileData.linesAdded,
-				lines_deleted: fileData.linesRemoved,
-				start_time: moment.unix(fileData.start).utc().format(),
-				end_time: moment.unix(fileData.end).utc().format(),
-				tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes
-			};
+    // extract the project info from the keystroke stats
+    const projectInfo = {
+      project_directory: item.project.directory,
+      project_name: item.project.name,
+    };
 
-			const file_entity = {
-				file_name: fileData.name,
-				file_path: fileData.fsPath,
-				syntax: fileData.syntax,
-				line_count: fileData.lines,
-				character_count: fileData.length,
-			}
+    // loop through the files in the keystroke stats "source"
+    const fileKeys = Object.keys(item.source);
+    for await (let file of fileKeys) {
+      const fileData: FileChangeInfo = item.source[file];
 
-			const repoParams = await this.getRepoParams(item.project.directory);
+      // missing "chars_pasted"
+      const codetime_entity = {
+        keystrokes: fileData.keystrokes,
+        chars_added: fileData.add,
+        chars_deleted: fileData.delete,
+        pastes: fileData.paste,
+        lines_added: fileData.linesAdded,
+        lines_deleted: fileData.linesRemoved,
+        start_time: moment.unix(fileData.start).utc().format(),
+        end_time: moment.unix(fileData.end).utc().format(),
+        tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes,
+      };
 
-			const codetime_event = {
-				...codetime_entity,
-				...file_entity,
-				...projectInfo,
-				...this.pluginParams,
-				...this.jwtParams,
-				...this.tzOffsetParams,
-				...repoParams
-			}
+      const file_entity = {
+        file_name: fileData.name,
+        file_path: fileData.fsPath,
+        syntax: fileData.syntax,
+        line_count: fileData.lines,
+        character_count: fileData.length,
+      };
 
-			const resp = await swdcTracker.trackCodeTimeEvent(codetime_event);
-		}
-	}
+      const repoParams = await this.getRepoParams(item.project.directory);
 
-	public async trackUIInteraction(item: KpmItem) {
-		if (!this.trackerReady) {
-			return;
-		}
+      const codetime_event = {
+        ...codetime_entity,
+        ...file_entity,
+        ...projectInfo,
+        ...this.pluginParams,
+        ...this.jwtParams,
+        ...this.tzOffsetParams,
+        ...repoParams,
+      };
 
-		const ui_interaction = {
-			interaction_type: item.interactionType,
-		}
+      const resp = await swdcTracker.trackCodeTimeEvent(codetime_event);
+    }
+  }
 
-		const ui_element = {
-			element_name: item.name,
-			element_location: item.location,
-			color: item.color ? item.color : null,
-			icon_name: item.interactionIcon ? item.interactionIcon : null,
-			cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : "redacted"
-		}
+  public async trackUIInteraction(item: KpmItem) {
+    if (!this.trackerReady) {
+      return;
+    }
 
-		const ui_event = {
-			...ui_interaction,
-			...ui_element,
-			...this.pluginParams,
-			...this.jwtParams,
-			...this.tzOffsetParams
-		};
+    const ui_interaction = {
+      interaction_type: item.interactionType,
+    };
 
-		swdcTracker.trackUIInteraction(ui_event);
-	}
+    const ui_element = {
+      element_name: item.name,
+      element_location: item.location,
+      color: item.color ? item.color : null,
+      icon_name: item.interactionIcon ? item.interactionIcon : null,
+      cta_text: !item.hideCTAInTracker
+        ? item.label || item.description || item.tooltip
+        : "redacted",
+    };
 
-	public async trackEditorAction(entity: string, type: string, event?: any) {
-		if (!this.trackerReady) {
-			return;
-		}
+    const ui_event = {
+      ...ui_interaction,
+      ...ui_element,
+      ...this.pluginParams,
+      ...this.jwtParams,
+      ...this.tzOffsetParams,
+    };
 
-		const projectParams = this.getProjectParams();
-		const repoParams = await this.getRepoParams(projectParams.project_directory);
+    swdcTracker.trackUIInteraction(ui_event);
+  }
 
-		const editor_event = {
-			entity,
-			type,
-			...this.pluginParams,
-			...this.jwtParams,
-			...this.tzOffsetParams,
-			...projectParams,
-			...this.getFileParams(event, projectParams.project_directory),
-			...repoParams
-		};
-		// send the event
-		swdcTracker.trackEditorAction(editor_event);
-	}
+  public async trackEditorAction(entity: string, type: string, event?: any) {
+    if (!this.trackerReady) {
+      return;
+    }
 
-	// Static attributes
+    // editor actions include activate, which means we may not
+    // be able to get the jwt in time if there's a timeout. bail
+    // if we don't have a jwt
+    this.readyJwt();
 
-	getJwtParams(): any {
-		return { jwt: getItem("jwt")?.split("JWT ")[1] }
-	}
+    const projectParams = this.getProjectParams();
+    const repoParams = await this.getRepoParams(projectParams.project_directory);
 
-	getPluginParams(): any {
-		return {
-			plugin_id: getPluginId(),
-			plugin_name: getPluginName(),
-			plugin_version: getVersion()
-		}
-	}
+    const editor_event = {
+      entity,
+      type,
+      ...this.pluginParams,
+      ...this.jwtParams,
+      ...this.tzOffsetParams,
+      ...projectParams,
+      ...this.getFileParams(event, projectParams.project_directory),
+      ...repoParams,
+    };
+    // send the event
+    swdcTracker.trackEditorAction(editor_event);
+  }
 
-	getTzOffsetParams(): any {
-		return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() };
-	}
+  // Static attributes
 
-	// Dynamic attributes
+  getJwtParams(): any {
+    return { jwt: getItem("jwt")?.split("JWT ")[1] };
+  }
 
-	getProjectParams() {
-		const workspaceFolders = getWorkspaceFolders();
-		const project_directory = (workspaceFolders.length) ? workspaceFolders[0].uri.fsPath : "";
-		const project_name = (workspaceFolders.length) ? workspaceFolders[0].name : "";
+  getPluginParams(): any {
+    return {
+      plugin_id: getPluginId(),
+      plugin_name: getPluginName(),
+      plugin_version: getVersion(),
+    };
+  }
 
-		return { project_directory, project_name }
-	}
+  getTzOffsetParams(): any {
+    return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() };
+  }
 
-	async getRepoParams(projectRootPath) {
-		const resourceInfo = await getResourceInfo(projectRootPath);
+  // Dynamic attributes
 
-		let ownerId = ""
-		if (resourceInfo.identifier) {
-			if (resourceInfo.identifier.includes(":")) {
-				ownerId = resourceInfo.identifier.split("/")?.[0]?.split(":")?.[1]
-			} else {
-				ownerId = resourceInfo.identifier.split("/")?.slice(-2)?.[0]
-			}
-		}
+  getProjectParams() {
+    const workspaceFolders = getWorkspaceFolders();
+    const project_directory = workspaceFolders.length ? workspaceFolders[0].uri.fsPath : "";
+    const project_name = workspaceFolders.length ? workspaceFolders[0].name : "";
 
-		return {
-			repo_identifier: resourceInfo.identifier,
-			repo_name: resourceInfo.identifier?.split("/")?.slice(-1)?.[0]?.split(".git")?.[0],
-			git_branch: resourceInfo.branch,
-			git_tag: resourceInfo.tag,
-			owner_id: ownerId
-		}
-	}
+    return { project_directory, project_name };
+  }
 
-	getFileParams(event, projectRootPath) {
-		if (!event)
-			return {}
-		// File Open and Close have document attributes on the event.
-		// File Change has it on a `document` attribute
-		const textDoc = event.document || event
+  async getRepoParams(projectRootPath) {
+    const resourceInfo = (await getResourceInfo(projectRootPath)) || { identifier: "" };
 
-		return {
-			file_name: textDoc.fileName?.split(projectRootPath)?.[1],
-			file_path: textDoc.uri?.path,
-			syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
-			line_count: textDoc.lineCount || 0,
-			character_count: textDoc.getText()?.length || 0
-		}
-	}
+    // retrieve the git identifier info
+    const gitIdentifiers = getRepoIdentifierInfo(resourceInfo.identifier);
+
+    return {
+      ...gitIdentifiers,
+      repo_identifier: resourceInfo.identifier,
+      git_branch: resourceInfo.branch,
+      git_tag: resourceInfo.tag,
+    };
+  }
+
+  getFileParams(event, projectRootPath) {
+    if (!event) return {};
+    // File Open and Close have document attributes on the event.
+    // File Change has it on a `document` attribute
+    const textDoc = event.document || event;
+    if (!textDoc) {
+      return {
+        file_name: "",
+        file_path: "",
+        syntax: "",
+        line_count: 0,
+        character_count: 0,
+      };
+    }
+
+    return {
+      file_name: textDoc.fileName?.split(projectRootPath)?.[1],
+      file_path: textDoc.uri?.path,
+      syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
+      line_count: textDoc.lineCount || 0,
+      character_count: textDoc.getText().length || 0,
+    };
+  }
 }
