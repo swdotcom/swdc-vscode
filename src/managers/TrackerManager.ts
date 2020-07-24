@@ -37,10 +37,18 @@ export class TrackerManager {
 		this.jwtParams = this.getJwtParams();
 	}
 
+	private readyJwt() {
+		if (!this.jwtParams || !this.jwtParams.jwt) {
+			this.resetJwt();
+		}
+	}
+
 	public async trackCodeTimeEvent(item: KeystrokeStats) {
 		if (!this.trackerReady) {
 			return;
 		}
+
+		this.readyJwt();
 
 		// extract the project info from the keystroke stats
 		const projectInfo = { project_directory: item.project.directory, project_name: item.project.name };
@@ -58,8 +66,8 @@ export class TrackerManager {
 				pastes: fileData.paste,
 				lines_added: fileData.linesAdded,
 				lines_deleted: fileData.linesRemoved,
-				start_time: fileData.start,
-				end_time: fileData.end,
+				start_time: moment.unix(fileData.start).format(),
+				end_time: moment.unix(fileData.end).format(),
 				tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes
 			};
 

@@ -376,8 +376,8 @@ export class PluginDataManager {
       this.editorUnFocusHandler();
     }
 
-    // enable this after fully testing via snowplow micro
-    // tracker.trackCodeTimeEvent(payload);
+    // send the payload to the tracker manager
+    tracker.trackCodeTimeEvent(payload);
   }
 
   async clearStatsForNewDay() {
