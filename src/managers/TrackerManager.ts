@@ -177,10 +177,12 @@ export class TrackerManager {
 		const resourceInfo = await getResourceInfo(projectRootPath);
 
 		let ownerId = ""
-		if (resourceInfo.identifier.includes(":")) {
-			ownerId = resourceInfo.identifier.split("/")?.[0]?.split(":")?.[1]
-		} else {
-			ownerId = resourceInfo.identifier.split("/")?.slice(-2)?.[0]
+		if (resourceInfo.identifier) {
+			if (resourceInfo.identifier.includes(":")) {
+				ownerId = resourceInfo.identifier.split("/")?.[0]?.split(":")?.[1]
+			} else {
+				ownerId = resourceInfo.identifier.split("/")?.slice(-2)?.[0]
+			}
 		}
 
 		return {
