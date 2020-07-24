@@ -197,7 +197,12 @@ export class TrackerManager {
   }
 
   async getRepoParams(projectRootPath) {
-    const resourceInfo = (await getResourceInfo(projectRootPath)) || { identifier: "" };
+    const resourceInfo = (await getResourceInfo(projectRootPath)) || {
+      identifier: "",
+      branch: "",
+      tag: "",
+      email: "",
+    };
 
     // retrieve the git identifier info
     const gitIdentifiers = getRepoIdentifierInfo(resourceInfo.identifier);
