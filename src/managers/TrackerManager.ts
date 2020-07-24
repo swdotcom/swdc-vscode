@@ -1,8 +1,9 @@
 import swdcTracker from "swdc-tracker";
 import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders } from "../Util";
-import { KpmItem } from "../model/models";
+import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
+import KeystrokeStats from "../model/KeystrokeStats";
 
 const moment = require("moment-timezone");
 
@@ -34,6 +35,64 @@ export class TrackerManager {
 
 	public resetJwt() {
 		this.jwtParams = this.getJwtParams();
+	}
+
+	private readyJwt() {
+		if (!this.jwtParams || !this.jwtParams.jwt) {
+			this.resetJwt();
+		}
+	}
+
+	public async trackCodeTimeEvent(item: KeystrokeStats) {
+		if (!this.trackerReady) {
+			return;
+		}
+
+		this.readyJwt();
+
+		// extract the project info from the keystroke stats
+		const projectInfo = { project_directory: item.project.directory, project_name: item.project.name };
+
+		// loop through the files in the keystroke stats "source"
+		const fileKeys = Object.keys(item.source);
+		for await (let file of fileKeys) {
+			const fileData: FileChangeInfo = item.source[file];
+
+			// missing "chars_pasted"
+			const codetime_entity = {
+				keystrokes: fileData.keystrokes,
+				chars_added: fileData.add,
+				chars_deleted: fileData.delete,
+				pastes: fileData.paste,
+				lines_added: fileData.linesAdded,
+				lines_deleted: fileData.linesRemoved,
+				start_time: moment.unix(fileData.start).utc().format(),
+				end_time: moment.unix(fileData.end).utc().format(),
+				tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes
+			};
+
+			const file_entity = {
+				file_name: fileData.name,
+				file_path: fileData.fsPath,
+				syntax: fileData.syntax,
+				line_count: fileData.lines,
+				character_count: fileData.length,
+			}
+
+			const repoParams = await this.getRepoParams(item.project.directory);
+
+			const codetime_event = {
+				...codetime_entity,
+				...file_entity,
+				...projectInfo,
+				...this.pluginParams,
+				...this.jwtParams,
+				...this.tzOffsetParams,
+				...repoParams
+			}
+
+			const resp = await swdcTracker.trackCodeTimeEvent(codetime_event);
+		}
 	}
 
 	public async trackUIInteraction(item: KpmItem) {
@@ -68,8 +127,9 @@ export class TrackerManager {
 		if (!this.trackerReady) {
 			return;
 		}
+
 		const projectParams = this.getProjectParams();
-		const repoParams = await this.getRepoParams(projectParams.project_directory)
+		const repoParams = await this.getRepoParams(projectParams.project_directory);
 
 		const editor_event = {
 			entity,
@@ -100,7 +160,7 @@ export class TrackerManager {
 	}
 
 	getTzOffsetParams(): any {
-		return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() }
+		return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() };
 	}
 
 	// Dynamic attributes
@@ -117,7 +177,7 @@ export class TrackerManager {
 		const resourceInfo = await getResourceInfo(projectRootPath);
 
 		let ownerId = ""
-		if(resourceInfo.identifier.includes(":")) {
+		if (resourceInfo.identifier.includes(":")) {
 			ownerId = resourceInfo.identifier.split("/")?.[0]?.split(":")?.[1]
 		} else {
 			ownerId = resourceInfo.identifier.split("/")?.slice(-2)?.[0]

@@ -375,6 +375,9 @@ export class PluginDataManager {
     if (isUnfocus) {
       this.editorUnFocusHandler();
     }
+
+    // send the payload to the tracker manager
+    tracker.trackCodeTimeEvent(payload);
   }
 
   async clearStatsForNewDay() {
