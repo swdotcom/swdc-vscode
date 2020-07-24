@@ -197,12 +197,18 @@ export class TrackerManager {
   }
 
   async getRepoParams(projectRootPath) {
-    const resourceInfo = (await getResourceInfo(projectRootPath)) || {
-      identifier: "",
-      branch: "",
-      tag: "",
-      email: "",
-    };
+    const resourceInfo = await getResourceInfo(projectRootPath);
+    if (!resourceInfo || !resourceInfo.identifier) {
+      // return empty data, no need to parse further
+      return {
+        identifier: "",
+        org_name: "",
+        repo_name: "",
+        repo_identifier: "",
+        git_branch: "",
+        git_tag: "",
+      };
+    }
 
     // retrieve the git identifier info
     const gitIdentifiers = getRepoIdentifierInfo(resourceInfo.identifier);
@@ -230,12 +236,17 @@ export class TrackerManager {
       };
     }
 
+    let character_count = 0;
+    if (typeof textDoc.getText === "function") {
+      character_count = textDoc.getText().length;
+    }
+
     return {
       file_name: textDoc.fileName?.split(projectRootPath)?.[1],
       file_path: textDoc.uri?.path,
       syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
       line_count: textDoc.lineCount || 0,
-      character_count: textDoc.getText().length || 0,
+      character_count,
     };
   }
 }

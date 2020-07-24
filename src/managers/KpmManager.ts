@@ -362,7 +362,10 @@ export class KpmManager {
 
     const textDoc = event.document || event;
     const languageId = textDoc.languageId || textDoc.fileName.split(".").slice(-1)[0];
-    const length = textDoc.getText().length || 0;
+    let length = 0;
+    if (typeof textDoc.getText === "function") {
+      length = textDoc.getText().length;
+    }
     const lineCount = textDoc.lineCount || 0;
     // get the age of this file
     const fileAgeDays = getFileAgeInDays(filename);
