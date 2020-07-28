@@ -73,7 +73,6 @@ export function createCommands(
         commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {
             tracker.trackUIInteraction(item);
             showSwitchAccountsMenu();
-
         })
     );
 
@@ -236,14 +235,6 @@ export function createCommands(
             }
             tracker.trackUIInteraction(item);
             launchLogin("github");
-        })
-    );
-
-    // LAUNCH LINK ACCOUNT OPTION
-    cmds.push(
-        commands.registerCommand("codetime.linkAccount", () => {
-            // disabled for now
-            // launchLogin("linkAccount");
         })
     );
 

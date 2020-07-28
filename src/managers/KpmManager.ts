@@ -42,7 +42,7 @@ export class KpmManager {
     // window state changed handler
     window.onDidChangeWindowState(this._windowStateChanged, this);
     // scrolling handler
-    window.onDidChangeTextEditorVisibleRanges(this._visibleRangeChangeHandler, this);
+    // window.onDidChangeTextEditorVisibleRanges(this._visibleRangeChangeHandler, this);
 
     this._disposable = Disposable.from(...subscriptions);
   }
@@ -85,6 +85,10 @@ export class KpmManager {
     _staticInfoMap = {};
   }
 
+  /**
+   * Currently not used
+   * @param event 
+   */
   private async _visibleRangeChangeHandler(event) {
     // scroll event check
     if (event && event.visibleRanges && event.visibleRanges.length) {

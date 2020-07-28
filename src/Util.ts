@@ -21,6 +21,7 @@ import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
     getAppJwt,
+    getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
@@ -770,10 +771,18 @@ export function humanizeMinutes(min) {
 }
 
 export async function launchLogin(loginType = "software") {
-    let loginUrl = await buildLoginUrl(loginType);
-    if (loginType !== "linkAccount") {
-        setItem("authType", loginType);
+    // First check if they have already onboarded.
+    // A user may not have completed the onboarding flow (letting
+    // the web signup view stay open) by the time our lazy refetch
+    // user status has given up.
+    const result = await getUserRegistrationState();
+    if (result.loggedOn) {
+        return;
     }
+
+    // continue with onboaring
+    let loginUrl = await buildLoginUrl(loginType);
+    setItem("authType", loginType);
     launchWebUrl(loginUrl);
     // use the defaults
     refetchUserStatusLazily();
@@ -821,23 +830,28 @@ export async function buildLoginUrl(loginType = "software") {
         jwt = await getAppJwt();
         setItem("jwt", jwt);
     }
-    if (jwt) {
-        const encodedJwt = encodeURIComponent(jwt);
-        let loginUrl = "";
-        if (loginType === "software") {
-            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
-        } else if (loginType === "github") {
+    const authType = getItem("authType");
+
+    const encodedJwt = jwt ? encodeURIComponent(jwt) : null;
+    let loginUrl = launch_url;
+
+    if (encodedJwt) {
+        if (loginType === "github") {
+            // github signup/login flow
             loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (loginType === "google") {
+            // google signup/login flow
             loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
-        } else if (loginType === "linkAccount") {
+        } else if (!authType) {
+            // never onboarded, show the signup view
+            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
+        } else {
+            // they've already onboarded before, take them to the login page
             loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&login=true`;
         }
-        return loginUrl;
-    } else {
-        // no need to build an onboarding url if we dn't have the token
-        return launch_url;
     }
+
+    return loginUrl;
 }
 
 export async function connectAtlassian() {
