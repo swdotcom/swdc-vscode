@@ -107,7 +107,7 @@ export class TrackerManager {
         ...repoParams,
       };
 
-      await swdcTracker.trackCodeTimeEvent(codetime_event);
+      swdcTracker.trackCodeTimeEvent(codetime_event);
     }
   }
 
