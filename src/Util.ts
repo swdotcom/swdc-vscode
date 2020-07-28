@@ -21,6 +21,7 @@ import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
     getAppJwt,
+    getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { EventManager } from "./managers/EventManager";
@@ -770,6 +771,16 @@ export function humanizeMinutes(min) {
 }
 
 export async function launchLogin(loginType = "software") {
+    // First check if they have already onboarded.
+    // A user may not have completed the onboarding flow (letting
+    // the web signup view stay open) by the time our lazy refetch
+    // user status has given up.
+    const result = await getUserRegistrationState();
+    if (result.loggedOn) {
+        return;
+    }
+
+    // continue with onboaring
     let loginUrl = await buildLoginUrl(loginType);
     if (loginType !== "linkAccount") {
         setItem("authType", loginType);
