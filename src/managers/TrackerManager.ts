@@ -16,7 +16,7 @@ export class TrackerManager {
   private tzOffsetParams: any = this.getTzOffsetParams();
   private jwtParams: any = this.getJwtParams();
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): TrackerManager {
     if (!TrackerManager.instance) {
@@ -107,7 +107,7 @@ export class TrackerManager {
         ...repoParams,
       };
 
-      const resp = await swdcTracker.trackCodeTimeEvent(codetime_event);
+      await swdcTracker.trackCodeTimeEvent(codetime_event);
     }
   }
 

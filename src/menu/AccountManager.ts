@@ -83,7 +83,6 @@ async function resetData() {
     // delete the current JWT and call the onboard logic so that we
     // create a anon user JWT
     await createAnonymousUser();
-    TrackerManager.getInstance().resetJwt();
 }
 
 export async function resetUserData() {
