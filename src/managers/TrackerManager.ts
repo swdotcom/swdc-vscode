@@ -151,6 +151,10 @@ export class TrackerManager {
     // if we don't have a jwt
     this.readyJwt();
 
+    if (!this.hasJwtReady()) {
+      return;
+    }
+
     const projectParams = this.getProjectParams();
     const repoParams = await this.getRepoParams(projectParams.project_directory);
 
