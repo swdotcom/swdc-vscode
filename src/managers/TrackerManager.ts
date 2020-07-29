@@ -38,7 +38,8 @@ export class TrackerManager {
   }
 
   public async trackCodeTimeEvent(item: KeystrokeStats) {
-    if (!this.isReady()) {
+    const jwtParams = this.getJwtParams();
+    if (!this.trackerReady || !jwtParams) {
       return;
     }
 
@@ -81,7 +82,7 @@ export class TrackerManager {
         ...file_entity,
         ...projectInfo,
         ...this.pluginParams,
-        ...this.getJwtParams(),
+        ...jwtParams,
         ...this.tzOffsetParams,
         ...repoParams,
       };
@@ -91,7 +92,8 @@ export class TrackerManager {
   }
 
   public async trackUIInteraction(item: KpmItem) {
-    if (!this.isReady()) {
+    const jwtParams = this.getJwtParams();
+    if (!this.trackerReady || !jwtParams) {
       return;
     }
 
@@ -113,7 +115,7 @@ export class TrackerManager {
       ...ui_interaction,
       ...ui_element,
       ...this.pluginParams,
-      ...this.getJwtParams(),
+      ...jwtParams,
       ...this.tzOffsetParams,
     };
 
@@ -121,7 +123,8 @@ export class TrackerManager {
   }
 
   public async trackEditorAction(entity: string, type: string, event?: any) {
-    if (!this.isReady()) {
+    const jwtParams = this.getJwtParams();
+    if (!this.trackerReady || !jwtParams) {
       return;
     }
 
@@ -132,7 +135,7 @@ export class TrackerManager {
       entity,
       type,
       ...this.pluginParams,
-      ...this.getJwtParams(),
+      ...jwtParams,
       ...this.tzOffsetParams,
       ...projectParams,
       ...this.getFileParams(event, projectParams.project_directory),
@@ -144,14 +147,9 @@ export class TrackerManager {
 
   // Static attributes
 
-  isReady() {
-    const jwtParams = this.getJwtParams();
-    return jwtParams && jwtParams.jwt && this.trackerReady ? true : false;
-  }
-
   getJwtParams(): any {
     const jwt = getItem("jwt");
-    return { jwt: jwt ? jwt.split("JWT ")[1] : null };
+    return jwt ? { jwt: jwt.split("JWT ")[1] } : null;
   }
 
   getPluginParams(): any {
