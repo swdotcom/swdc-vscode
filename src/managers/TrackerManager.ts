@@ -39,7 +39,7 @@ export class TrackerManager {
 
   public async trackCodeTimeEvent(item: KeystrokeStats) {
     const jwtParams = this.getJwtParams();
-    if (!this.trackerReady || !jwtParams) {
+    if (!this.trackerReady || !jwtParams.jwt) {
       return;
     }
 
@@ -92,8 +92,8 @@ export class TrackerManager {
   }
 
   public async trackUIInteraction(item: KpmItem) {
-    const jwtParams = this.getJwtParams();
-    if (!this.trackerReady || !jwtParams) {
+    // ui interaction doesn't require a jwt, no need to check for that here
+    if (!this.trackerReady) {
       return;
     }
 
@@ -115,7 +115,7 @@ export class TrackerManager {
       ...ui_interaction,
       ...ui_element,
       ...this.pluginParams,
-      ...jwtParams,
+      ...this.getJwtParams(),
       ...this.tzOffsetParams,
     };
 
@@ -124,7 +124,7 @@ export class TrackerManager {
 
   public async trackEditorAction(entity: string, type: string, event?: any) {
     const jwtParams = this.getJwtParams();
-    if (!this.trackerReady || !jwtParams) {
+    if (!this.trackerReady || !jwtParams.jwt) {
       return;
     }
 
@@ -148,8 +148,7 @@ export class TrackerManager {
   // Static attributes
 
   getJwtParams(): any {
-    const jwt = getItem("jwt");
-    return jwt ? { jwt: jwt.split("JWT ")[1] } : null;
+    return { jwt: getItem("jwt")?.split("JWT ")[1] };
   }
 
   getPluginParams(): any {
