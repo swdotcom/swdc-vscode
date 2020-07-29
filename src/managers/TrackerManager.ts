@@ -38,8 +38,7 @@ export class TrackerManager {
   }
 
   public async trackCodeTimeEvent(item: KeystrokeStats) {
-    const jwtParams = this.getJwtParams();
-    if (!this.trackerReady || !jwtParams.jwt) {
+    if (!this.trackerReady) {
       return;
     }
 
@@ -82,7 +81,7 @@ export class TrackerManager {
         ...file_entity,
         ...projectInfo,
         ...this.pluginParams,
-        ...jwtParams,
+        ...this.getJwtParams(),
         ...this.tzOffsetParams,
         ...repoParams,
       };
@@ -123,8 +122,7 @@ export class TrackerManager {
   }
 
   public async trackEditorAction(entity: string, type: string, event?: any) {
-    const jwtParams = this.getJwtParams();
-    if (!this.trackerReady || !jwtParams.jwt) {
+    if (!this.trackerReady) {
       return;
     }
 
@@ -135,7 +133,7 @@ export class TrackerManager {
       entity,
       type,
       ...this.pluginParams,
-      ...jwtParams,
+      ...this.getJwtParams(),
       ...this.tzOffsetParams,
       ...projectParams,
       ...this.getFileParams(event, projectParams.project_directory),
