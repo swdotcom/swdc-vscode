@@ -14,7 +14,6 @@ export class TrackerManager {
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
   private tzOffsetParams: any = this.getTzOffsetParams();
-  private jwtParams: any = this.getJwtParams();
 
   private constructor() { }
 
@@ -38,28 +37,8 @@ export class TrackerManager {
     }
   }
 
-  public resetJwt() {
-    this.jwtParams = this.getJwtParams();
-  }
-
-  private hasJwtReady() {
-    return !this.jwtParams || !this.jwtParams.jwt ? false : true;
-  }
-
-  private readyJwt() {
-    if (!this.hasJwtReady()) {
-      this.resetJwt();
-    }
-  }
-
   public async trackCodeTimeEvent(item: KeystrokeStats) {
-    if (!this.trackerReady) {
-      return;
-    }
-
-    this.readyJwt();
-
-    if (!this.hasJwtReady()) {
+    if (!this.isReady()) {
       return;
     }
 
@@ -102,7 +81,7 @@ export class TrackerManager {
         ...file_entity,
         ...projectInfo,
         ...this.pluginParams,
-        ...this.jwtParams,
+        ...this.getJwtParams(),
         ...this.tzOffsetParams,
         ...repoParams,
       };
@@ -112,7 +91,7 @@ export class TrackerManager {
   }
 
   public async trackUIInteraction(item: KpmItem) {
-    if (!this.trackerReady) {
+    if (!this.isReady()) {
       return;
     }
 
@@ -134,7 +113,7 @@ export class TrackerManager {
       ...ui_interaction,
       ...ui_element,
       ...this.pluginParams,
-      ...this.jwtParams,
+      ...this.getJwtParams(),
       ...this.tzOffsetParams,
     };
 
@@ -142,16 +121,7 @@ export class TrackerManager {
   }
 
   public async trackEditorAction(entity: string, type: string, event?: any) {
-    if (!this.trackerReady) {
-      return;
-    }
-
-    // editor actions include activate, which means we may not
-    // be able to get the jwt in time if there's a timeout. bail
-    // if we don't have a jwt
-    this.readyJwt();
-
-    if (!this.hasJwtReady()) {
+    if (!this.isReady()) {
       return;
     }
 
@@ -162,7 +132,7 @@ export class TrackerManager {
       entity,
       type,
       ...this.pluginParams,
-      ...this.jwtParams,
+      ...this.getJwtParams(),
       ...this.tzOffsetParams,
       ...projectParams,
       ...this.getFileParams(event, projectParams.project_directory),
@@ -174,8 +144,14 @@ export class TrackerManager {
 
   // Static attributes
 
+  isReady() {
+    const jwtParams = this.getJwtParams();
+    return jwtParams && jwtParams.jwt && this.trackerReady ? true : false;
+  }
+
   getJwtParams(): any {
-    return { jwt: getItem("jwt")?.split("JWT ")[1] };
+    const jwt = getItem("jwt");
+    return { jwt: jwt ? jwt.split("JWT ")[1] : null };
   }
 
   getPluginParams(): any {
