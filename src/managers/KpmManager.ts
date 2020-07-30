@@ -87,7 +87,7 @@ export class KpmManager {
 
   /**
    * Currently not used
-   * @param event 
+   * @param event
    */
   private async _visibleRangeChangeHandler(event) {
     // scroll event check
@@ -208,16 +208,19 @@ export class KpmManager {
     if (textChangeInfo.textChangeLen > 8) {
       // it's a copy and paste event
       sourceObj.paste += 1;
+      sourceObj.charsPasted += textChangeInfo.textChangeLen;
       logEvent("Copy+Paste Incremented");
     } else if (textChangeInfo.textChangeLen < 0) {
       sourceObj.delete += 1;
       // update the overall count
       logEvent("Delete Incremented");
+      logEvent(sourceObj.delete);
     } else if (textChangeInfo.hasNonNewLineData) {
       // update the data for this fileInfo keys count
       sourceObj.add += 1;
       // update the overall count
       logEvent("KPM incremented");
+      logEvent(sourceObj.add);
     }
     // increment keystrokes by 1
     rootObj.keystrokes += 1;

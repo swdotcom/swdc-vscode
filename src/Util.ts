@@ -201,7 +201,6 @@ export function getWorkspaceFolders(): WorkspaceFolder[] {
             let workspaceFolder = workspace.workspaceFolders[i];
             let folderUri = workspaceFolder.uri;
             if (folderUri && folderUri.fsPath) {
-                // paths.push(folderUri.fsPath);
                 folders.push(workspaceFolder);
             }
         }
@@ -777,6 +776,7 @@ export async function launchLogin(loginType = "software") {
     // user status has given up.
     const result = await getUserRegistrationState();
     if (result.loggedOn) {
+        window.showInformationMessage("You are already logged in. Please wait...");
         return;
     }
 

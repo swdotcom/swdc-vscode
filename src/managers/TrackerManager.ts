@@ -13,8 +13,6 @@ export class TrackerManager {
 
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
-  private tzOffsetParams: any = this.getTzOffsetParams();
-  private jwtParams: any = this.getJwtParams();
 
   private constructor() { }
 
@@ -38,28 +36,8 @@ export class TrackerManager {
     }
   }
 
-  public resetJwt() {
-    this.jwtParams = this.getJwtParams();
-  }
-
-  private hasJwtReady() {
-    return !this.jwtParams || !this.jwtParams.jwt ? false : true;
-  }
-
-  private readyJwt() {
-    if (!this.hasJwtReady()) {
-      this.resetJwt();
-    }
-  }
-
   public async trackCodeTimeEvent(item: KeystrokeStats) {
     if (!this.trackerReady) {
-      return;
-    }
-
-    this.readyJwt();
-
-    if (!this.hasJwtReady()) {
       return;
     }
 
@@ -74,17 +52,16 @@ export class TrackerManager {
     for await (let file of fileKeys) {
       const fileData: FileChangeInfo = item.source[file];
 
-      // missing "chars_pasted"
       const codetime_entity = {
         keystrokes: fileData.keystrokes,
         chars_added: fileData.add,
         chars_deleted: fileData.delete,
+        chars_pasted: fileData.charsPasted,
         pastes: fileData.paste,
         lines_added: fileData.linesAdded,
         lines_deleted: fileData.linesRemoved,
         start_time: moment.unix(fileData.start).utc().format(),
         end_time: moment.unix(fileData.end).utc().format(),
-        tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes,
       };
 
       const file_entity = {
@@ -102,8 +79,7 @@ export class TrackerManager {
         ...file_entity,
         ...projectInfo,
         ...this.pluginParams,
-        ...this.jwtParams,
-        ...this.tzOffsetParams,
+        ...this.getJwtParams(),
         ...repoParams,
       };
 
@@ -112,6 +88,7 @@ export class TrackerManager {
   }
 
   public async trackUIInteraction(item: KpmItem) {
+    // ui interaction doesn't require a jwt, no need to check for that here
     if (!this.trackerReady) {
       return;
     }
@@ -134,8 +111,7 @@ export class TrackerManager {
       ...ui_interaction,
       ...ui_element,
       ...this.pluginParams,
-      ...this.jwtParams,
-      ...this.tzOffsetParams,
+      ...this.getJwtParams(),
     };
 
     swdcTracker.trackUIInteraction(ui_event);
@@ -146,15 +122,6 @@ export class TrackerManager {
       return;
     }
 
-    // editor actions include activate, which means we may not
-    // be able to get the jwt in time if there's a timeout. bail
-    // if we don't have a jwt
-    this.readyJwt();
-
-    if (!this.hasJwtReady()) {
-      return;
-    }
-
     const projectParams = this.getProjectParams();
     const repoParams = await this.getRepoParams(projectParams.project_directory);
 
@@ -162,8 +129,7 @@ export class TrackerManager {
       entity,
       type,
       ...this.pluginParams,
-      ...this.jwtParams,
-      ...this.tzOffsetParams,
+      ...this.getJwtParams(),
       ...projectParams,
       ...this.getFileParams(event, projectParams.project_directory),
       ...repoParams,
@@ -184,10 +150,6 @@ export class TrackerManager {
       plugin_name: getPluginName(),
       plugin_version: getVersion(),
     };
-  }
-
-  getTzOffsetParams(): any {
-    return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() };
   }
 
   // Dynamic attributes

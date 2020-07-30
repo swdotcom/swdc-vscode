@@ -144,7 +144,6 @@ export async function getUserRegistrationState() {
                 if (pluginJwt && pluginJwt !== jwt) {
                     // update it
                     setItem("jwt", pluginJwt);
-                    TrackerManager.getInstance().resetJwt();
                 }
 
                 // if we need the user it's "resp.data.user"

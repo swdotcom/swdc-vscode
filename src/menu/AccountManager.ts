@@ -122,7 +122,6 @@ export async function createAnonymousUser() {
             );
             if (isResponseOk(resp) && resp.data && resp.data.jwt) {
                 setItem("jwt", resp.data.jwt);
-                TrackerManager.getInstance().resetJwt();
                 return resp.data.jwt;
             }
         }

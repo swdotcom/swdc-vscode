@@ -66,18 +66,15 @@ export async function getFileContributorCount(fileName) {
         return 0;
     }
 
-    const projectDir = getProjectDir(fileName);
-    if (!projectDir || !isGitProject(projectDir)) {
+    const directory = getProjectDir(fileName);
+    if (!directory || !isGitProject(directory)) {
         return 0;
     }
-
-    // all we need is the filename of the path
-    // const baseName = path.basename(fileName);
 
     const cmd = `git log --pretty="%an" ${fileName}`;
 
     // get the list of users that modified this file
-    let resultList = await getCommandResult(cmd, projectDir);
+    let resultList = await getCommandResult(cmd, directory);
     if (!resultList) {
         // something went wrong, but don't try to parse a null or undefined str
         return 0;
@@ -96,16 +93,19 @@ export async function getFileContributorCount(fileName) {
     return 0;
 }
 
-export async function getRepoFileCount(fileName) {
-    const projectDir = getProjectDir(fileName);
-    if (!projectDir || !isGitProject(projectDir)) {
+/**
+ * Returns the number of files in this directory
+ * @param directory 
+ */
+export async function getRepoFileCount(directory) {
+    if (!directory || !isGitProject(directory)) {
         return 0;
     }
 
     // windows doesn't support the wc -l so we'll just count the list
     let cmd = `git ls-files`;
     // get the author name and email
-    let resultList = await getCommandResult(cmd, projectDir);
+    let resultList = await getCommandResult(cmd, directory);
     if (!resultList) {
         // something went wrong, but don't try to parse a null or undefined str
         return 0;
@@ -150,12 +150,12 @@ export async function getRepoContributorInfo(
     fileName: string,
     filterOutNonEmails: boolean = true
 ): Promise<RepoContributorInfo> {
-    const projectDir = getProjectDir(fileName);
-    if (!projectDir || !isGitProject(projectDir)) {
+    const directory = getProjectDir(fileName);
+    if (!directory || !isGitProject(directory)) {
         return null;
     }
 
-    const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+    const noSpacesProjDir = directory.replace(/^\s+/g, "");
     const cacheId = `project-repo-contributor-info-${noSpacesProjDir}`;
 
     let repoContributorInfo: RepoContributorInfo = cacheMgr.get(cacheId);
@@ -167,7 +167,7 @@ export async function getRepoContributorInfo(
     repoContributorInfo = new RepoContributorInfo();
 
     // get the repo url, branch, and tag
-    let resourceInfo = await getResourceInfo(projectDir);
+    let resourceInfo = await getResourceInfo(directory);
     if (resourceInfo && resourceInfo.identifier) {
         repoContributorInfo.identifier = resourceInfo.identifier;
         repoContributorInfo.tag = resourceInfo.tag;
@@ -176,7 +176,7 @@ export async function getRepoContributorInfo(
         // username, email
         let cmd = `git log --format='%an,%ae' | sort -u`;
         // get the author name and email
-        let resultList = await getCommandResult(cmd, projectDir);
+        let resultList = await getCommandResult(cmd, directory);
         if (!resultList) {
             // something went wrong, but don't try to parse a null or undefined str
             return repoContributorInfo;
