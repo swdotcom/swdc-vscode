@@ -13,7 +13,6 @@ export class TrackerManager {
 
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
-  private tzOffsetParams: any = this.getTzOffsetParams();
 
   private constructor() { }
 
@@ -53,17 +52,16 @@ export class TrackerManager {
     for await (let file of fileKeys) {
       const fileData: FileChangeInfo = item.source[file];
 
-      // missing "chars_pasted"
       const codetime_entity = {
         keystrokes: fileData.keystrokes,
         chars_added: fileData.add,
         chars_deleted: fileData.delete,
+        chars_pasted: fileData.charsPasted,
         pastes: fileData.paste,
         lines_added: fileData.linesAdded,
         lines_deleted: fileData.linesRemoved,
         start_time: moment.unix(fileData.start).utc().format(),
         end_time: moment.unix(fileData.end).utc().format(),
-        tz_offset_minutes: this.tzOffsetParams.tz_offset_minutes,
       };
 
       const file_entity = {
@@ -82,7 +80,6 @@ export class TrackerManager {
         ...projectInfo,
         ...this.pluginParams,
         ...this.getJwtParams(),
-        ...this.tzOffsetParams,
         ...repoParams,
       };
 
@@ -115,7 +112,6 @@ export class TrackerManager {
       ...ui_element,
       ...this.pluginParams,
       ...this.getJwtParams(),
-      ...this.tzOffsetParams,
     };
 
     swdcTracker.trackUIInteraction(ui_event);
@@ -134,7 +130,6 @@ export class TrackerManager {
       type,
       ...this.pluginParams,
       ...this.getJwtParams(),
-      ...this.tzOffsetParams,
       ...projectParams,
       ...this.getFileParams(event, projectParams.project_directory),
       ...repoParams,
@@ -155,10 +150,6 @@ export class TrackerManager {
       plugin_name: getPluginName(),
       plugin_version: getVersion(),
     };
-  }
-
-  getTzOffsetParams(): any {
-    return { tz_offset_minutes: moment.parseZone(moment().local()).utcOffset() };
   }
 
   // Dynamic attributes

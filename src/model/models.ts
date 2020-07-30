@@ -51,6 +51,7 @@ export class FileChangeInfo {
   add: number = 0;
   netkeys: number = 0;
   paste: number = 0;
+  charsPasted: number = 0;
   open: number = 0;
   close: number = 0;
   delete: number = 0;
