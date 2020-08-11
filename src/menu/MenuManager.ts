@@ -19,7 +19,6 @@ import {
   isLoggedIn,
 } from "../DataController";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { EventManager } from "../managers/EventManager";
 import { ProgressManager } from "../managers/ProgressManager";
 
 /**
@@ -49,10 +48,6 @@ export function showQuickPick(pickOptions): any {
       } else if (command) {
         commands.executeCommand(command);
       }
-
-      if (item["eventDescription"]) {
-        EventManager.getInstance().createCodeTimeEvent("mouse", "click", item["eventDescription"]);
-      }
     }
     return item;
   });
@@ -63,7 +58,6 @@ export async function buildWebDashboardUrl() {
 }
 
 export async function showMenuOptions() {
-  EventManager.getInstance().createCodeTimeEvent("mouse", "click", "ShowPaletteMenu");
 
   const loggedIn: boolean = await isLoggedIn();
 

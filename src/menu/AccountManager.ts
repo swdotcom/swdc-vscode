@@ -1,5 +1,4 @@
 import { window, commands } from "vscode";
-import { EventManager } from "../managers/EventManager";
 import {
     getItem,
     getOsUsername,
@@ -10,7 +9,6 @@ import {
 import { getAppJwt } from "../DataController";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
-import { TrackerManager } from "../managers/TrackerManager";
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -104,12 +102,7 @@ export async function createAnonymousUser() {
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const hostname = await getHostname();
             const workspace_name = getWorkspaceName();
-            const eventType = `createanon-${workspace_name}`;
-            EventManager.getInstance().createCodeTimeEvent(
-                eventType,
-                "anon_creation",
-                "anon creation"
-            );
+
             const resp = await softwarePost(
                 "/data/onboard",
                 {

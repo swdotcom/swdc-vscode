@@ -6,8 +6,6 @@ import {
 import {
     getSoftwareDataStoreFile,
     deleteFile,
-    logEvent,
-    getPluginEventsFile,
     logIt,
     getFileDataPayloadsAsJson,
     getFileDataArray,
@@ -45,13 +43,6 @@ export async function sendOfflineTimeData() {
     // clear time data data. this will also clear the
     // code time and active code time numbers
     clearTimeDataSummary();
-}
-
-/**
- * send the offline Event payloads
- */
-export async function sendOfflineEvents() {
-    batchSendData("/data/event", getPluginEventsFile());
 }
 
 /**
