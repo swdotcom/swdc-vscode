@@ -3207,10 +3207,10 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.0.20:
-  version "1.0.20"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.20.tgz#07ef9a09f0fb9839aabafaff781f5e3f5144e9c9"
-  integrity sha512-EpNnr9mFuMFP0i9KXEA9yWuu/93ohWcdkbHMMHWaclcv+C2vZSNh1cZuZ++URPOxWl7QKE8iPVwBIpI8o7VT2w==
+swdc-tracker@^1.0.21:
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.0.21.tgz#27f11b5dc2f55cdf77e4c7004d97beb20b26cb62"
+  integrity sha512-8+aI1XXiS2al754dm8fV7itRZX3NxvPjshBikpaZrc+g/N/VTFf6/HQjLWjTkB1B3vb/NdJY8BarMzFJcGBEdg==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.19.2"

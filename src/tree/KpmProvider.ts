@@ -12,7 +12,6 @@ import {
     KpmTreeItem,
     handleKpmChangeSelection
 } from "./KpmProviderManager";
-import { EventManager } from "../managers/EventManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
@@ -29,13 +28,6 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             const item: KpmItem = e.element;
             kpmCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Expanded;
-            if (item.eventDescription) {
-                EventManager.getInstance().createCodeTimeEvent(
-                    "mouse",
-                    "click",
-                    `TreeViewItemExpand_${item.eventDescription}`
-                );
-            }
         }),
 
         view.onDidChangeSelection(async e => {
@@ -48,11 +40,7 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
-                EventManager.getInstance().createCodeTimeEvent(
-                    "mouse",
-                    "click",
-                    "ShowTreeView"
-                );
+                //
             }
         })
     );

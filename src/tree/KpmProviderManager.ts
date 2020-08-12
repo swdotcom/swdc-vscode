@@ -24,9 +24,8 @@ import {
 } from "vscode";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
-import { EventManager } from "../managers/EventManager";
 import TeamMember from "../model/TeamMember";
-import { getRepoContributors, getResourceInfo } from "../repo/KpmRepoManager";
+import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 
@@ -909,11 +908,6 @@ export const handleKpmChangeSelection = (view: TreeView<KpmItem>, item: KpmItem)
     } else {
       // run the command
       commands.executeCommand(item.command, item);
-    }
-
-    // send event types
-    if (item.eventDescription) {
-      EventManager.getInstance().createCodeTimeEvent("mouse", "click", item.eventDescription);
     }
   }
 

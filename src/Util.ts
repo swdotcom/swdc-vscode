@@ -24,7 +24,6 @@ import {
     getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
-import { EventManager } from "./managers/EventManager";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 
 const fileIt = require("file-it");
@@ -814,12 +813,6 @@ export async function showLoginPrompt(serverIsOnline) {
         eventName = "close";
         eventType = "window";
     }
-
-    EventManager.getInstance().createCodeTimeEvent(
-        eventType,
-        eventName,
-        "OnboardPrompt"
-    );
 }
 
 export async function buildLoginUrl(loginType = "software") {

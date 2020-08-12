@@ -32,7 +32,6 @@ import {
 } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
 import {
-    sendOfflineEvents,
     getLastSavedKeystrokesStats,
 } from "./managers/FileManager";
 import { TrackerManager } from "./managers/TrackerManager";
@@ -163,11 +162,6 @@ export async function intializePlugin(
         }, 1000 * secondDelay);
     }, one_min_millis * 2);
 
-    // in 4 minutes task
-    setTimeout(() => {
-        sendOfflineEvents();
-    }, 15000);
-
     initializeLiveshare();
 
     // get the login status
@@ -238,7 +232,6 @@ function initializeIntervalJobs() {
     }, thirty_min_millis);
 
     twenty_minute_interval = setInterval(async () => {
-        await sendOfflineEvents();
         // this will get the login status if the window is focused
         // and they're currently not a logged in
         if (window.state.focused) {
