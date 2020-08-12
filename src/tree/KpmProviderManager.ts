@@ -169,7 +169,7 @@ export class KpmProviderManager {
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
       treeItems.push(
-        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`)
+        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`, null, null, "ct_top_files_by_kpm_toggle_node")
       );
 
       // get the file change info
@@ -279,14 +279,16 @@ export class KpmProviderManager {
       const openChangesParent: KpmItem = this.buildParentItem(
         "Open changes",
         "Lines added and deleted in this repo that have not yet been committed.",
-        openChangesChildren
+        openChangesChildren,
+        "ct_open_changes_toggle_node"
       );
       treeItems.push(openChangesParent);
 
       const committedChangesParent: KpmItem = this.buildParentItem(
         "Committed today",
         "",
-        committedChangesChildren
+        committedChangesChildren,
+        "ct_committed_today_toggle_node"
       );
       treeItems.push(committedChangesParent);
     }
@@ -562,7 +564,8 @@ export class KpmProviderManager {
         "Code time",
         "Code time: total time you have spent in your editor today.",
         values,
-        TreeItemCollapsibleState.Expanded
+        TreeItemCollapsibleState.Expanded,
+        "ct_codetime_toggle_node"
       )
     );
 
@@ -590,7 +593,8 @@ export class KpmProviderManager {
         "Active code time",
         "Active code time: total time you have been typing in your editor today.",
         values,
-        TreeItemCollapsibleState.Expanded
+        TreeItemCollapsibleState.Expanded,
+        "ct_active_codetime_toggle_node"
       )
     );
 
@@ -611,7 +615,13 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesAdded}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Lines added", "", values));
+    items.push(this.buildActivityComparisonNodes(
+      "Lines added",
+      "",
+      values,
+      TreeItemCollapsibleState.Collapsed,
+      "ct_lines_added_toggle_node"
+    ));
 
     values = [];
     const currLinesRemoved =
@@ -630,7 +640,13 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesRemoved}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Lines removed", "", values));
+    items.push(this.buildActivityComparisonNodes(
+      "Lines removed",
+      "",
+      values,
+      TreeItemCollapsibleState.Collapsed,
+      "ct_lines_removed_toggle_node"
+    ));
 
     values = [];
     const currKeystrokes =
@@ -649,18 +665,26 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalKeystrokes}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Keystrokes", "", values));
+    items.push(this.buildActivityComparisonNodes(
+      "Keystrokes",
+      "",
+      values,
+      TreeItemCollapsibleState.Collapsed,
+      "ct_keystrokes_toggle_node"
+    ));
 
     return items;
   }
 
-  buildMetricItem(label, value, tooltip = "", icon = null) {
+  buildMetricItem(label, value, tooltip = "", icon = null, name = "", location = "ct_metrics_tree") {
     const item: KpmItem = new KpmItem();
     item.label = `${label}: ${value}`;
     item.id = `${label}_metric`;
     item.contextValue = "metric_item";
     item.tooltip = tooltip;
     item.icon = icon;
+    item.location = location;
+    item.name = name;
     return item;
   }
 
@@ -669,10 +693,12 @@ export class KpmProviderManager {
     tooltip,
     value,
     icon = null,
-    collapsibleState: TreeItemCollapsibleState = null
+    collapsibleState: TreeItemCollapsibleState = null,
+    name = "",
+    location = "ct_metrics_tree"
   ) {
     const childItem = this.buildMessageItem(value);
-    const parentItem = this.buildMessageItem(label, tooltip, icon);
+    const parentItem = this.buildMessageItem(label, tooltip, icon, null, null, name, location);
     if (collapsibleState) {
       parentItem.initialCollapsibleState = collapsibleState;
     }
@@ -684,9 +710,11 @@ export class KpmProviderManager {
     label,
     tooltip,
     values,
-    collapsibleState: TreeItemCollapsibleState = null
+    collapsibleState: TreeItemCollapsibleState = null,
+    name = "",
+    location = "ct_metrics_tree"
   ) {
-    const parent: KpmItem = this.buildMessageItem(label, tooltip);
+    const parent: KpmItem = this.buildMessageItem(label, tooltip, null, null, null, name, location);
     if (collapsibleState) {
       parent.initialCollapsibleState = collapsibleState;
     }
@@ -700,7 +728,7 @@ export class KpmProviderManager {
     return parent;
   }
 
-  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null) {
+  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null, name = "", location = "") {
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
@@ -710,6 +738,8 @@ export class KpmProviderManager {
     item.id = `${label}_message`;
     item.contextValue = "message_item";
     item.eventDescription = null;
+    item.name = name;
+    item.location = location;
     return item;
   }
 
@@ -722,7 +752,7 @@ export class KpmProviderManager {
     return item;
   }
 
-  buildParentItem(label: string, tooltip: string, children: KpmItem[]) {
+  buildParentItem(label: string, tooltip: string, children: KpmItem[], name = "", location = "ct_metrics_tree") {
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
@@ -730,6 +760,8 @@ export class KpmProviderManager {
     item.contextValue = "title_item";
     item.children = children;
     item.eventDescription = null;
+    item.name = name;
+    item.location = location;
     return item;
   }
 
@@ -768,7 +800,8 @@ export class KpmProviderManager {
     const mostEditedParent = this.buildParentItem(
       "Top files by keystrokes",
       "",
-      mostEditedChildren
+      mostEditedChildren,
+      "ct_top_files_by_keystrokes_toggle_node"
     );
 
     return mostEditedParent;
@@ -797,7 +830,8 @@ export class KpmProviderManager {
     const highKpmParent = this.buildParentItem(
       "Top files by KPM",
       "Top files by KPM (keystrokes per minute)",
-      highKpmChildren
+      highKpmChildren,
+      "ct_top_files_by_kpm_toggle_node"
     );
     return highKpmParent;
   }
@@ -826,7 +860,8 @@ export class KpmProviderManager {
     const longestCodeTimeParent = this.buildParentItem(
       "Top files by code time",
       "",
-      longestCodeTimeChildren
+      longestCodeTimeChildren,
+      "ct_top_files_by_codetime_toggle_node"
     );
     return longestCodeTimeParent;
   }

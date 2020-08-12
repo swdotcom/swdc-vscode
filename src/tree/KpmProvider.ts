@@ -12,20 +12,25 @@ import {
     KpmTreeItem,
     handleKpmChangeSelection
 } from "./KpmProviderManager";
+import { TrackerManager } from "../managers/TrackerManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
 
 export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
+    const tracker: TrackerManager = TrackerManager.getInstance();
+
     return Disposable.from(
         view.onDidCollapseElement(async e => {
             const item: KpmItem = e.element;
+            tracker.trackUIInteraction(item);
             kpmCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Collapsed;
         }),
 
         view.onDidExpandElement(async e => {
             const item: KpmItem = e.element;
+            tracker.trackUIInteraction(item);
             kpmCollapsedStateMap[item.label] =
                 TreeItemCollapsibleState.Expanded;
         }),
