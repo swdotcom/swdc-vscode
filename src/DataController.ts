@@ -40,7 +40,7 @@ import {
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { SessionSummary, CommitChangeStats } from "./model/models";
-import { getSessionSummaryData } from "./storage/SessionSummaryData";
+import { getSessionSummaryData, clearSessionSummaryData } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
 import {
     getTodaysCommits,
@@ -50,6 +50,7 @@ import {
 import CodeTimeSummary from "./model/CodeTimeSummary";
 import { getCodeTimeSummary } from "./storage/TimeSummaryData";
 import { TrackerManager } from "./managers/TrackerManager";
+import { SummaryManager } from "./managers/SummaryManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -345,12 +346,17 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     } else {
         sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`);
 
+        clearSessionSummaryData();
+
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
 
         commands.executeCommand("codetime.sendOfflineData");
 
-        commands.executeCommand("codetime.refreshTreeViews");
+        setTimeout(async () => {
+            await SummaryManager.getInstance().updateSessionSummaryFromServer();
+            commands.executeCommand("codetime.refreshTreeViews");
+        }, 5000);
     }
 }
 
