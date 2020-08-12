@@ -39,11 +39,9 @@ export class SummaryManager {
             const summary: SessionSummary = getSessionSummaryData();
 
             Object.keys(data).forEach((key) => {
-                if (key.indexOf("currentDay") === -1) {
-                    const val = data[key];
-                    if (val !== null && val !== undefined) {
-                        summary[key] = val;
-                    }
+                const val = data[key];
+                if (val !== null && val !== undefined) {
+                    summary[key] = val;
                 }
             });
 
