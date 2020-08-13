@@ -1104,9 +1104,8 @@ export function getFileDataPayloadsAsJson(file) {
     // but this will help remove it so we can process the json lines without failure
     let content = fileIt.readContentFileSync(file);
     if (content.indexOf("undefined") !== -1) {
-        const re = /undefined/gi;
-        // remove "undefined" and re-save, then read
-        content = content.replace(re, "");
+        // remove "undefined" and re-save, then read (only found in the beginning of the content)
+        content = content.replace("undefined", "");
         fileIt.writeContentFileSync(file, content);
     }
     let payloads: any[] = fileIt.readJsonLinesSync(file);
