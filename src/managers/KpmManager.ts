@@ -336,7 +336,7 @@ export class KpmManager {
           changeInfo.changeType = "singleDelete";
     } else if (changeInfo.charactersAdded > 1 || changeInfo.linesAdded > 1) {
       if (contentChange.text.match(/^[\n\r]\s*$/)?.length == 1) {
-        changeInfo.charactersAdded = 1;
+        changeInfo.charactersAdded = 0;
         changeInfo.changeType = "autoIndent";
       } else
         changeInfo.changeType = "multiAdd";
