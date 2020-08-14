@@ -152,7 +152,7 @@ export function createCommands(
         })
     );
 
-    // SHOW ASCII DASHBOARD
+    // SHOW WEB ANALYTICS
     cmds.push(
         commands.registerCommand("codetime.softwareKpmDashboard", (item: KpmItem) => {
             if (!item) {
@@ -161,7 +161,9 @@ export function createCommands(
                 item = kpmProviderMgr.getWebViewDashboardButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
-                item.name = "ct_summary_cmd";
+                item.name = "ct_web_metrics_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchWebDashboard();
@@ -185,6 +187,8 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
                 item.name = "ct_toggle_status_bar_metrics_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             toggleStatusBar();
@@ -203,6 +207,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("email", "grey");
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchLogin("software");
@@ -218,6 +224,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("Google", null);
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             item.interactionIcon = "google";
             tracker.trackUIInteraction(item);
@@ -234,6 +242,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("GitHub", "white");
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchLogin("github");
@@ -265,6 +275,8 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
                 item.name = "ct_learn_more_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             displayReadmeIfNotExists(true /*override*/);
@@ -281,6 +293,8 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
                 item.name = "ct_summary_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             displayCodeTimeMetricsDashboard();
@@ -297,6 +311,8 @@ export function createCommands(
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
                 item.name = "ct_project_summary_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
@@ -315,6 +331,8 @@ export function createCommands(
                     item.location = "ct_command_palette";
                     item.interactionType = UIInteractionType.Keyboard;
                     item.name = "ct_contributor_repo_identifier_cmd";
+                    item.interactionIcon = null;
+                    item.color = null;
                 }
                 tracker.trackUIInteraction(item);
                 displayProjectContributorCommitsDashboard(item.value);
