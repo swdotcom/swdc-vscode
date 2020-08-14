@@ -36,30 +36,34 @@ export class TrackerManager {
     }
   }
 
-  public async trackCodeTimeEvent(item: KeystrokeStats) {
+  public async trackCodeTimeEvent(keystrokeStats: KeystrokeStats) {
     if (!this.trackerReady) {
       return;
     }
 
     // extract the project info from the keystroke stats
     const projectInfo = {
-      project_directory: item.project.directory,
-      project_name: item.project.name,
+      project_directory: keystrokeStats.project.directory,
+      project_name: keystrokeStats.project.name,
     };
 
     // loop through the files in the keystroke stats "source"
-    const fileKeys = Object.keys(item.source);
+    const fileKeys = Object.keys(keystrokeStats.source);
     for await (let file of fileKeys) {
-      const fileData: FileChangeInfo = item.source[file];
+      const fileData: FileChangeInfo = keystrokeStats.source[file];
 
       const codetime_entity = {
         keystrokes: fileData.keystrokes,
-        chars_added: fileData.add,
-        chars_deleted: fileData.delete,
-        chars_pasted: fileData.charsPasted,
-        pastes: fileData.paste,
-        lines_added: fileData.linesAdded,
-        lines_deleted: fileData.linesRemoved,
+        lines_added: fileData.documentChangeInfo.linesAdded,
+        lines_removed: fileData.documentChangeInfo.linesRemoved,
+        characters_added: fileData.documentChangeInfo.charactersAdded,
+        characters_removed: fileData.documentChangeInfo.charactersRemoved,
+        single_deletes: fileData.documentChangeInfo.singleDeletes,
+        multi_deletes: fileData.documentChangeInfo.multiDeletes,
+        single_adds: fileData.documentChangeInfo.singleAdds,
+        multi_adds: fileData.documentChangeInfo.multiAdds,
+        auto_indents: fileData.documentChangeInfo.autoIndents,
+        replacements: fileData.documentChangeInfo.replacements,
         start_time: moment.unix(fileData.start).utc().format(),
         end_time: moment.unix(fileData.end).utc().format(),
       };
@@ -72,7 +76,7 @@ export class TrackerManager {
         character_count: fileData.length,
       };
 
-      const repoParams = await this.getRepoParams(item.project.directory);
+      const repoParams = await this.getRepoParams(keystrokeStats.project.directory);
 
       const codetime_event = {
         ...codetime_entity,
@@ -139,11 +143,6 @@ export class TrackerManager {
   }
 
   // Static attributes
-
-  getJwtParams(): any {
-    return { jwt: getItem("jwt")?.split("JWT ")[1] };
-  }
-
   getPluginParams(): any {
     return {
       plugin_id: getPluginId(),
@@ -153,6 +152,10 @@ export class TrackerManager {
   }
 
   // Dynamic attributes
+
+  getJwtParams(): any {
+    return { jwt: getItem("jwt")?.split("JWT ")[1] };
+  }
 
   getProjectParams() {
     const workspaceFolders = getWorkspaceFolders();

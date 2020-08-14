@@ -77,7 +77,7 @@ export default class KeystrokeStats {
       const hasOpen = data.open > 0;
       const hasClose = data.close > 0;
       // tally the keystrokes for this file
-      data.keystrokes = data.add + data.paste + data.delete + data.linesAdded + data.linesRemoved;
+      // data.keystrokes = data.add + data.paste + data.delete + data.linesAdded + data.linesRemoved;
       const hasKeystrokes = data.keystrokes > 0;
       keystrokesTally += data.keystrokes;
       if ((hasOpen && !hasClose && !hasKeystrokes) || (hasClose && !hasOpen && !hasKeystrokes)) {

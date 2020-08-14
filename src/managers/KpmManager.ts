@@ -94,9 +94,9 @@ export class KpmManager {
   }
 
   /**
-   * File Close Handler
-   * @param event
-   */
+  * File Close Handler
+  * @param event
+  */
   private async _onCloseHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -105,9 +105,9 @@ export class KpmManager {
   }
 
   /**
-   * File Open Handler
-   * @param event
-   */
+  * File Open Handler
+  * @param event
+  */
   private async _onOpenHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -139,9 +139,9 @@ export class KpmManager {
   }
 
   /**
-   * File Change Event Handler
-   * @param event
-   */
+  * File Change Event Handler
+  * @param event
+  */
   private async _onEventHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -169,48 +169,84 @@ export class KpmManager {
 
     const rootObj = _keystrokeMap[rootPath];
     const sourceObj: FileChangeInfo = rootObj.source[staticInfo.filename];
-    const currLineCount =
-      event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
     this.updateStaticValues(rootObj, staticInfo);
 
-    // get {hasChanges, linesAdded, linesDeleted, isCharDelete, textChangeLen, hasNonNewLineData}
-    const textChangeInfo = this.getTextChangeInfo(event);
+    // find the contentChange with a range in the contentChanges array
+    // THIS CAN HAVE MULTIPLE CONTENTCHANGES WITH RANGES AT ONE TIME.
+    // LOOP THROUGH AND REPEAT COUNTS
+    const contentChanges = event.contentChanges.filter((change) => change.range);
+    // each changeset is triggered by a single keystroke
+    if (contentChanges.length > 0)
+      sourceObj.keystrokes += 1;
 
-    if (!textChangeInfo.hasChanges) {
-      // No changes
-      return;
-    }
+    for (let contentChange of contentChanges) {
+      // get {linesAdded, linesRemoved, charactersRemoved, charactersAdded, changeType}
+      const documentChangeCountsAndType = this.analyzeDocumentChange(contentChange);
+      // get {hasChanges, linesAdded, linesDeleted, isCharDelete, textChangeLen, hasNonNewLineData}
+      const textChangeInfo = this.getTextChangeInfo(contentChange);
+      sourceObj.documentChangeInfo.linesAdded += documentChangeCountsAndType.linesAdded;
+      sourceObj.documentChangeInfo.linesRemoved += documentChangeCountsAndType.linesRemoved;
+      sourceObj.documentChangeInfo.charactersAdded += documentChangeCountsAndType.charactersAdded;
+      sourceObj.documentChangeInfo.charactersRemoved += documentChangeCountsAndType.charactersRemoved;
 
-    if (textChangeInfo.textChangeLen > 8) {
-      // it's a copy and paste event
-      sourceObj.paste += 1;
-      sourceObj.charsPasted += textChangeInfo.textChangeLen;
-      logEvent("Copy+Paste Incremented");
-    } else if (textChangeInfo.textChangeLen < 0) {
-      sourceObj.delete += 1;
-      // update the overall count
-      logEvent("Delete Incremented");
-      logEvent(sourceObj.delete);
-    } else if (textChangeInfo.hasNonNewLineData) {
-      // update the data for this fileInfo keys count
-      sourceObj.add += 1;
-      // update the overall count
-      logEvent("KPM incremented");
-      logEvent(sourceObj.add);
-    }
-    // increment keystrokes by 1
-    rootObj.keystrokes += 1;
+      switch(documentChangeCountsAndType.changeType) {
+        case "singleDelete": {
+          sourceObj.documentChangeInfo.singleDeletes +=1;
+          break;
+        }
+        case "multiDelete": {
+          sourceObj.documentChangeInfo.multiDeletes += 1;
+          break;
+        }
+        case "singleAdd": {
+          sourceObj.documentChangeInfo.singleAdds += 1;
+          break;
+        }
+        case "multiAdd": {
+          sourceObj.documentChangeInfo.multiAdds += 1;
+          break;
+        }
+        case "autoIndent": {
+          sourceObj.documentChangeInfo.autoIndents += 1;
+          break;
+        }
+        case "replacement": {
+          sourceObj.documentChangeInfo.replacements += 1;
+          break;
+        }
+      }
 
-    // "netkeys" = add - delete
-    sourceObj.netkeys = sourceObj.add - sourceObj.delete;
-    sourceObj.lines = currLineCount;
+      if (textChangeInfo.textChangeLen > 4) {
+        // 4 is the threshold here due to typical tab size of 4 spaces
+        // it's a copy and paste event
+        sourceObj.paste += 1;
+        sourceObj.charsPasted += textChangeInfo.textChangeLen;
+        logEvent("Copy+Paste Incremented");
+      } else if (textChangeInfo.textChangeLen < 0) {
+        sourceObj.delete += 1;
+        // update the overall count
+      } else if (textChangeInfo.hasNonNewLineData) {
+        // update the data for this fileInfo keys count
+        sourceObj.add += 1;
+        // update the overall count
+        logEvent("charsAdded incremented");
+        logEvent("addEvents incremented");
+      }
+      // increment keystrokes by 1
+      rootObj.keystrokes += 1;
 
-    if (textChangeInfo.linesDeleted) {
-      logEvent(`Removed ${textChangeInfo.linesDeleted} lines`);
-      sourceObj.linesRemoved += textChangeInfo.linesDeleted;
-    } else if (textChangeInfo.linesAdded) {
-      logEvent(`Added ${textChangeInfo.linesAdded} lines`);
-      sourceObj.linesAdded += textChangeInfo.linesAdded;
+      // "netkeys" = add - delete
+      sourceObj.netkeys = sourceObj.add - sourceObj.delete;
+      sourceObj.lines =
+        event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
+
+      if (textChangeInfo.linesDeleted) {
+        logEvent(`Removed ${textChangeInfo.linesDeleted} lines`);
+        sourceObj.linesRemoved += textChangeInfo.linesDeleted;
+      } else if (textChangeInfo.linesAdded) {
+        logEvent(`Added ${textChangeInfo.linesAdded} lines`);
+        sourceObj.linesAdded += textChangeInfo.linesAdded;
+      }
     }
 
     this.updateLatestPayloadLazily(rootObj);
@@ -232,10 +268,10 @@ export class KpmManager {
   }
 
   /**
-   * Update some of the basic/static attributes
-   * @param sourceObj
-   * @param staticInfo
-   */
+  * Update some of the basic/static attributes
+  * @param sourceObj
+  * @param staticInfo
+  */
   private updateStaticValues(payload, staticInfo) {
     const sourceObj: FileChangeInfo = payload.source[staticInfo.filename];
     if (!sourceObj) {
@@ -265,13 +301,56 @@ export class KpmManager {
     return filename;
   }
 
+  private analyzeDocumentChange(contentChange) {
+    const info = {
+      linesAdded: 0,
+      linesRemoved: 0,
+      charactersRemoved: 0,
+      charactersAdded: 0,
+      changeType: ""
+    };
+
+    // extract lines and character change counts
+    this.extractChangeCounts(info, contentChange);
+    this.characterizeChange(info, contentChange);
+
+    return info;
+  }
+
+  private extractChangeCounts(changeInfo, contentChange) {
+    changeInfo.linesRemoved = contentChange.range.end.line - contentChange.range.start.line;
+    changeInfo.linesAdded = contentChange.text?.match(/[\n\r]/g)?.length || 0;
+
+    changeInfo.charactersRemoved = contentChange.rangeLength - changeInfo.linesRemoved;
+    changeInfo.charactersAdded = contentChange.text.length - changeInfo.linesAdded;
+  }
+
+  private characterizeChange(changeInfo, contentChange) {
+    if (changeInfo.charactersRemoved > 0) {
+      if (changeInfo.charactersAdded > 0)
+        changeInfo.changeType = "replacement";
+      else
+        if (changeInfo.charactersRemoved > 1 || changeInfo.linesRemoved > 1)
+          changeInfo.changeType = "multiDelete";
+        else if (changeInfo.charactersRemoved == 1 || changeInfo.linesRemoved == 1)
+          changeInfo.changeType = "singleDelete";
+    } else if (changeInfo.charactersAdded > 1 || changeInfo.linesAdded > 1) {
+      if (contentChange.text.match(/^[\n\r]\s*$/)?.length == 1) {
+        changeInfo.charactersAdded = 1;
+        changeInfo.changeType = "autoIndent";
+      } else
+        changeInfo.changeType = "multiAdd";
+    } else if (changeInfo.charactersAdded == 1 || changeInfo.linesAdded == 1)
+      changeInfo.changeType = "singleAdd";
+  }
+
   /**
-   * Get the text change info:
-   * linesAdded, linesDeleted, isCharDelete,
-   * hasNonNewLineData, textChangeLen, hasChanges
-   * @param event
-   */
-  private getTextChangeInfo(event) {
+  * Get the text change info:
+  * linesAdded, linesDeleted, isCharDelete,
+  * hasNonNewLineData, textChangeLen, hasChanges
+  * @param contentChange
+  */
+  private getTextChangeInfo(contentChange) {
     const info = {
       linesAdded: 0,
       linesDeleted: 0,
@@ -280,49 +359,40 @@ export class KpmManager {
       textChangeLen: 0,
       hasChanges: false,
     };
-    // find the range in the contentChanges array
-    const range = event.contentChanges.find((n) => n.range);
 
-    let rangeLength = 0;
     let textChangeLen = 0;
 
-    // if we have a range there will be more info to extract
-    if (range) {
-      // get the range length
-      rangeLength = range.rangeLength;
+    // Get the range data
+    const rangeData = JSON.parse(JSON.stringify(contentChange));
+    let linesChanged = 0;
+    if (rangeData.range && rangeData.range.length) {
+      // get the number of lines that have changed
+      linesChanged = rangeData.range[1].line - rangeData.range[0].line;
+    }
 
-      // Get the range data
-      const rangeData = JSON.parse(JSON.stringify(range));
-      let linesChanged = 0;
-      if (rangeData.range && rangeData.range.length) {
-        // get the number of lines that have changed
-        linesChanged = rangeData.range[1].line - rangeData.range[0].line;
-      }
+    const rangeText = contentChange.text;
+    const newLineMatches = rangeText?.match(/[\n\r]/g);
+    textChangeLen = rangeText?.length;
 
-      const rangeText = range.text;
-      const newLineMatch = rangeText?.match(/[\n\r]/g);
-      textChangeLen = rangeText?.length;
+    // set the text change length
+    info.textChangeLen = textChangeLen;
 
-      // set the text change length
-      info.textChangeLen = textChangeLen;
-
-      if (linesChanged) {
-        // update removed lines
-        info.linesDeleted = linesChanged;
-      } else if (newLineMatch && !linesChanged && textChangeLen) {
-        // this means there are new lines added
-        info.linesAdded = newLineMatch.length;
-      } else if (rangeLength && !rangeText) {
-        // this may be a character delete
-        info.isCharDelete = true;
-      }
+    if (linesChanged) {
+      // update removed lines
+      info.linesDeleted = linesChanged;
+    } else if (newLineMatches && !linesChanged && textChangeLen) {
+      // this means there are new lines added
+      info.linesAdded = newLineMatches.length;
+    } else if (contentChange.rangeLength && !rangeText) {
+      // this may be a character delete
+      info.isCharDelete = true;
     }
 
     // check if its a character deletion
-    if (!textChangeLen && rangeLength) {
+    if (!textChangeLen && contentChange.rangeLength) {
       // NO content text but has a range change length, set the textChangeLen
       // to the inverse of the rangeLength to show the chars deleted
-      info.textChangeLen = event.contentChanges[0].rangeLength / -1;
+      info.textChangeLen = contentChange.rangeLength / -1;
     }
 
     if (info.textChangeLen && !info.linesAdded && !info.linesDeleted) {
@@ -377,10 +447,10 @@ export class KpmManager {
   }
 
   /**
-   * This will return true if it's a true file. we don't
-   * want to send events for .git or other event triggers
-   * such as extension.js.map events
-   */
+  * This will return true if it's a true file. we don't
+  * want to send events for .git or other event triggers
+  * such as extension.js.map events
+  */
   private isTrueEventFile(event, filename) {
     if (!filename) {
       return false;
@@ -427,15 +497,15 @@ export class KpmManager {
       identifier: "",
       resource: {},
     });
-    keystrokeStats.keystrokes = 1;
+    keystrokeStats.keystrokes = 0;
     let nowTimes = getNowTimes();
     const start = nowTimes.now_in_sec - 60;
     const local_start = nowTimes.local_now_in_sec - 60;
     keystrokeStats.start = start;
     keystrokeStats.local_start = local_start;
     const fileInfo = new FileChangeInfo();
-    fileInfo.add = 1;
-    fileInfo.keystrokes = 1;
+    fileInfo.add = 0;
+    fileInfo.keystrokes = 0;
     fileInfo.start = start;
     fileInfo.local_start = local_start;
     keystrokeStats.source[fileName] = fileInfo;
