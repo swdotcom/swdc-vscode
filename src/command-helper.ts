@@ -152,7 +152,7 @@ export function createCommands(
         })
     );
 
-    // SHOW ASCII DASHBOARD
+    // SHOW WEB ANALYTICS
     cmds.push(
         commands.registerCommand("codetime.softwareKpmDashboard", (item: KpmItem) => {
             if (!item) {
@@ -161,6 +161,9 @@ export function createCommands(
                 item = kpmProviderMgr.getWebViewDashboardButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.name = "ct_web_metrics_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchWebDashboard();
@@ -183,6 +186,9 @@ export function createCommands(
                 item = kpmProviderMgr.getHideStatusBarMetricsButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.name = "ct_toggle_status_bar_metrics_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             toggleStatusBar();
@@ -201,6 +207,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("email", "grey");
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchLogin("software");
@@ -216,6 +224,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("Google", null);
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             item.interactionIcon = "google";
             tracker.trackUIInteraction(item);
@@ -232,6 +242,8 @@ export function createCommands(
                 item = kpmProviderMgr.getSignUpButton("GitHub", "white");
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             launchLogin("github");
@@ -262,6 +274,9 @@ export function createCommands(
                 item = kpmProviderMgr.getLearnMoreButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.name = "ct_learn_more_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             displayReadmeIfNotExists(true /*override*/);
@@ -277,6 +292,9 @@ export function createCommands(
                 item = kpmProviderMgr.getCodeTimeDashboardButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.name = "ct_summary_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             displayCodeTimeMetricsDashboard();
@@ -292,6 +310,9 @@ export function createCommands(
                 item = kpmProviderMgr.getViewProjectSummaryButton();
                 item.location = "ct_command_palette";
                 item.interactionType = UIInteractionType.Keyboard;
+                item.name = "ct_project_summary_cmd";
+                item.interactionIcon = null;
+                item.color = null;
             }
             tracker.trackUIInteraction(item);
             ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
@@ -309,6 +330,9 @@ export function createCommands(
                     item = kpmProviderMgr.getContributorReportButton(item.value);
                     item.location = "ct_command_palette";
                     item.interactionType = UIInteractionType.Keyboard;
+                    item.name = "ct_contributor_repo_identifier_cmd";
+                    item.interactionIcon = null;
+                    item.color = null;
                 }
                 tracker.trackUIInteraction(item);
                 displayProjectContributorCommitsDashboard(item.value);
@@ -336,66 +360,6 @@ export function createCommands(
             launchWebUrl("mailto:cody@software.com");
         })
     );
-
-    // // CONNECT SLACK
-    // cmds.push(
-    //     commands.registerCommand("codetime.connectSlack", () => {
-    //         connectSlack();
-    //     })
-    // );
-
-    // // DISCONNECT SLACK
-    // cmds.push(
-    //     commands.registerCommand("codetime.disconnectSlack", () => {
-    //         disconnectSlack();
-    //     })
-    // );
-
-    // // SLACK CONTRIBUTOR
-    // cmds.push(
-    //     commands.registerCommand("musictime.slackContributor", () => {
-    //         slackContributor();
-    //     })
-    // );
-
-    // // GENERATE SLACK REPORT
-    // cmds.push(
-    //     commands.registerCommand("codetime.generateSlackReport", () => {
-    //         generateSlackReport();
-    //     })
-    // );
-
-    // const addProjectNoteCmd = commands.registerCommand(
-    //     "codetime.addProjectNote",
-    //     () => {
-    //         ProjectNoteManager.getInstance().addNote();
-    //     }
-    // );
-    // cmds.push(addProjectNoteCmd);
-
-    // const connectAtlassianCmd = commands.registerCommand(
-    //     "codetime.connectAtlassian",
-    //     () => {
-    //         connectAtlassian();
-    //     }
-    // );
-    // cmds.push(connectAtlassianCmd);
-
-    // const copyToJiraCmd = commands.registerCommand(
-    //     "codetime.copyToJira",
-    //     doc => {
-    //         /**
-    //         authority:""
-    //         fragment:""
-    //         fsPath:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
-    //         path:"/Users/xavierluiz/software/swdc-job-service/app/jobs/songStats.job.js"
-    //         query:""
-    //         scheme:"file"
-    //          */
-    //         KpmController.getInstance().processSelectedTextForJira();
-    //     }
-    // );
-    // cmds.push(copyToJiraCmd);
 
     cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 

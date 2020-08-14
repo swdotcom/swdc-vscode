@@ -507,13 +507,7 @@ export class KpmProviderManager {
     const authType = getItem("authType");
     const name = getItem("name");
     let tooltip = name ? `Connected as ${name}` : "";
-    if (authType === "software") {
-      return {
-        icon: "envelope.svg",
-        label: name,
-        tooltip,
-      };
-    } else if (authType === "google") {
+    if (authType === "google") {
       return {
         icon: "icons8-google.svg",
         label: name,
@@ -525,8 +519,18 @@ export class KpmProviderManager {
         label: name,
         tooltip,
       };
+    } else if (authType) {
+      return {
+        icon: "envelope.svg",
+        label: name,
+        tooltip,
+      };
     }
-    return null;
+    return {
+      icon: null,
+      label: null,
+      tooltip: null,
+    };
   }
 
   getActionButton(
