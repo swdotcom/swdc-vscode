@@ -55,9 +55,9 @@ export class TrackerManager {
       const codetime_entity = {
         keystrokes: fileData.keystrokes,
         lines_added: fileData.documentChangeInfo.linesAdded,
-        lines_removed: fileData.documentChangeInfo.linesRemoved,
+        lines_deleted: fileData.documentChangeInfo.linesDeleted,
         characters_added: fileData.documentChangeInfo.charactersAdded,
-        characters_removed: fileData.documentChangeInfo.charactersRemoved,
+        characters_deleted: fileData.documentChangeInfo.charactersDeleted,
         single_deletes: fileData.documentChangeInfo.singleDeletes,
         multi_deletes: fileData.documentChangeInfo.multiDeletes,
         single_adds: fileData.documentChangeInfo.singleAdds,

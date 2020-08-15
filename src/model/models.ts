@@ -44,9 +44,9 @@ export class KeystrokeAggregate {
 
 export class DocumentChangeInfo {
   linesAdded: number = 0;
-  linesRemoved: number = 0;
+  linesDeleted: number = 0;
   charactersAdded: number = 0;
-  charactersRemoved: number = 0;
+  charactersDeleted: number = 0;
   singleDeletes: number = 0;
   multiDeletes: number = 0;
   singleAdds: number = 0;

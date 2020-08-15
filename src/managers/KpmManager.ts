@@ -180,14 +180,14 @@ export class KpmManager {
       sourceObj.keystrokes += 1;
 
     for (let contentChange of contentChanges) {
-      // get {linesAdded, linesRemoved, charactersRemoved, charactersAdded, changeType}
+      // get {linesAdded, linesDeleted, charactersDeleted, charactersAdded, changeType}
       const documentChangeCountsAndType = this.analyzeDocumentChange(contentChange);
       // get {hasChanges, linesAdded, linesDeleted, isCharDelete, textChangeLen, hasNonNewLineData}
       const textChangeInfo = this.getTextChangeInfo(contentChange);
       sourceObj.documentChangeInfo.linesAdded += documentChangeCountsAndType.linesAdded;
-      sourceObj.documentChangeInfo.linesRemoved += documentChangeCountsAndType.linesRemoved;
+      sourceObj.documentChangeInfo.linesDeleted += documentChangeCountsAndType.linesDeleted;
       sourceObj.documentChangeInfo.charactersAdded += documentChangeCountsAndType.charactersAdded;
-      sourceObj.documentChangeInfo.charactersRemoved += documentChangeCountsAndType.charactersRemoved;
+      sourceObj.documentChangeInfo.charactersDeleted += documentChangeCountsAndType.charactersDeleted;
 
       switch(documentChangeCountsAndType.changeType) {
         case "singleDelete": {
@@ -304,8 +304,8 @@ export class KpmManager {
   private analyzeDocumentChange(contentChange) {
     const info = {
       linesAdded: 0,
-      linesRemoved: 0,
-      charactersRemoved: 0,
+      linesDeleted: 0,
+      charactersDeleted: 0,
       charactersAdded: 0,
       changeType: ""
     };
@@ -318,21 +318,21 @@ export class KpmManager {
   }
 
   private extractChangeCounts(changeInfo, contentChange) {
-    changeInfo.linesRemoved = contentChange.range.end.line - contentChange.range.start.line;
+    changeInfo.linesDeleted = contentChange.range.end.line - contentChange.range.start.line;
     changeInfo.linesAdded = contentChange.text?.match(/[\n\r]/g)?.length || 0;
 
-    changeInfo.charactersRemoved = contentChange.rangeLength - changeInfo.linesRemoved;
+    changeInfo.charactersDeleted = contentChange.rangeLength - changeInfo.linesDeleted;
     changeInfo.charactersAdded = contentChange.text.length - changeInfo.linesAdded;
   }
 
   private characterizeChange(changeInfo, contentChange) {
-    if (changeInfo.charactersRemoved > 0) {
+    if (changeInfo.charactersDeleted > 0) {
       if (changeInfo.charactersAdded > 0)
         changeInfo.changeType = "replacement";
       else
-        if (changeInfo.charactersRemoved > 1 || changeInfo.linesRemoved > 1)
+        if (changeInfo.charactersDeleted > 1 || changeInfo.linesDeleted > 1)
           changeInfo.changeType = "multiDelete";
-        else if (changeInfo.charactersRemoved == 1 || changeInfo.linesRemoved == 1)
+        else if (changeInfo.charactersDeleted == 1 || changeInfo.linesDeleted == 1)
           changeInfo.changeType = "singleDelete";
     } else if (changeInfo.charactersAdded > 1 || changeInfo.linesAdded > 1) {
       if (contentChange.text.match(/^[\n\r]\s*$/)?.length == 1) {
