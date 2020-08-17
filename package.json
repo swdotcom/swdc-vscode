@@ -130,7 +130,7 @@
     "node-cache": "^5.1.0",
     "numeral": "^2.0.6",
     "open": "^6.4.0",
-    "swdc-tracker": "file:../swdc-tracker",
+    "swdc-tracker": "^1.2.0",
     "vsls": "0.3.1291"
   }
 }
