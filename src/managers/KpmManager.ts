@@ -189,9 +189,9 @@ export class KpmManager {
       sourceObj.documentChangeInfo.charactersAdded += documentChangeCountsAndType.charactersAdded;
       sourceObj.documentChangeInfo.charactersDeleted += documentChangeCountsAndType.charactersDeleted;
 
-      switch(documentChangeCountsAndType.changeType) {
+      switch (documentChangeCountsAndType.changeType) {
         case "singleDelete": {
-          sourceObj.documentChangeInfo.singleDeletes +=1;
+          sourceObj.documentChangeInfo.singleDeletes += 1;
           break;
         }
         case "multiDelete": {
@@ -326,7 +326,7 @@ export class KpmManager {
   }
 
   private characterizeChange(changeInfo, contentChange) {
-    if (changeInfo.charactersDeleted > 0) {
+    if (changeInfo.charactersDeleted > 0 || changeInfo.linesDeleted > 0) {
       if (changeInfo.charactersAdded > 0)
         changeInfo.changeType = "replacement";
       else
@@ -336,6 +336,7 @@ export class KpmManager {
           changeInfo.changeType = "singleDelete";
     } else if (changeInfo.charactersAdded > 1 || changeInfo.linesAdded > 1) {
       if (contentChange.text.match(/^[\n\r]\s*$/)?.length == 1) {
+        // the regex matches a text that is a newline followed by only whitespace
         changeInfo.charactersAdded = 0;
         changeInfo.changeType = "autoIndent";
       } else
