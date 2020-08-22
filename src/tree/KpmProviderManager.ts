@@ -452,9 +452,27 @@ export class KpmProviderManager {
       "Submit feedback",
       "Send us an email at cody@software.com",
       "codetime.sendFeedback",
-      "message.svg"
+      "message.svg",
+      "",
+      "green"
     );
+    feedbackButton.name = "ct_submit_feedback_btn";
+    feedbackButton.location = "ct_menu_tree";
+    feedbackButton.interactionIcon = "text-bubble"
     return feedbackButton;
+
+    const item: KpmItem = this.getActionButton(
+      `View summary`,
+      "View your latest coding metrics right here in your editor",
+      "codetime.codeTimeMetrics",
+      "dashboard.svg",
+      "TreeViewLaunchDashboard",
+      "purple"
+    );
+    item.location = "ct_menu_tree";
+    item.name = "ct_summary_btn";
+    item.interactionIcon = "guage";
+    return item;
   }
 
   getContributorReportButton(identifier: string): KpmItem {

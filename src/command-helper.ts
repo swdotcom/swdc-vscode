@@ -356,7 +356,15 @@ export function createCommands(
     );
 
     cmds.push(
-        commands.registerCommand("codetime.sendFeedback", () => {
+        commands.registerCommand("codetime.sendFeedback", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getFeedbackButton();
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+            }
+            tracker.trackUIInteraction(item);
             launchWebUrl("mailto:cody@software.com");
         })
     );

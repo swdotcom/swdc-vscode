@@ -42,6 +42,19 @@ export class KeystrokeAggregate {
   directory: string = NO_PROJ_NAME;
 }
 
+export class DocumentChangeInfo {
+  linesAdded: number = 0;
+  linesDeleted: number = 0;
+  charactersAdded: number = 0;
+  charactersDeleted: number = 0;
+  singleDeletes: number = 0;
+  multiDeletes: number = 0;
+  singleAdds: number = 0;
+  multiAdds: number = 0;
+  autoIndents: number = 0;
+  replacements: number = 0;
+}
+
 export class FileChangeInfo {
   name: string = "";
   fsPath: string = "";
@@ -68,6 +81,7 @@ export class FileChangeInfo {
   local_end: number = 0;
   update_count: number = 0;
   duration_seconds: number = 0;
+  documentChangeInfo: DocumentChangeInfo = new DocumentChangeInfo();
 }
 
 export class SessionSummary {
