@@ -69,7 +69,7 @@ export class TrackerManager {
       };
 
       const file_entity = {
-        file_name: fileData.name,
+        file_name: fileData.fsPath?.split(fileData.projectDir)?.[1],
         file_path: fileData.fsPath,
         syntax: fileData.syntax,
         line_count: fileData.lines,
@@ -212,7 +212,7 @@ export class TrackerManager {
 
     return {
       file_name: textDoc.fileName?.split(projectRootPath)?.[1],
-      file_path: textDoc.uri?.path,
+      file_path: textDoc.fileName,
       syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
       line_count: textDoc.lineCount || 0,
       character_count,
