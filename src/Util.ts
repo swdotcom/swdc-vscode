@@ -156,7 +156,10 @@ export function getActiveProjectWorkspace(): WorkspaceFolder {
     return null;
 }
 
-export function isFileActive(file: string): boolean {
+export function isFileActive(file: string, isCloseEvent: boolean = false): boolean {
+    if (isCloseEvent)
+        return true;
+
     if (workspace.textDocuments) {
         for (let i = 0; i < workspace.textDocuments.length; i++) {
             const doc: TextDocument = workspace.textDocuments[i];
