@@ -29,7 +29,7 @@ export class TrackerManager {
     const result = await swdcTracker.initialize(
       api_endpoint,
       "CodeTime",
-      this.pluginParams.plugin_name
+      "swdc-vscode"
     );
     if (result.status === 200) {
       this.trackerReady = true;

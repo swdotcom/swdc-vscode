@@ -101,6 +101,12 @@ export class KpmManager {
     if (!event || !window.state.focused) {
       return;
     }
+
+    const filename = this.getFileName(event);
+    if (!this.isTrueEventFile(event, filename, true)) {
+      return;
+    }
+
     this.tracker.trackEditorAction("file", "close", event);
   }
 
@@ -112,12 +118,12 @@ export class KpmManager {
     if (!event || !window.state.focused) {
       return;
     }
-    this.tracker.trackEditorAction("file", "open", event);
 
     const filename = this.getFileName(event);
     if (!this.isTrueEventFile(event, filename)) {
       return;
     }
+    this.tracker.trackEditorAction("file", "open", event);
     const staticInfo = await this.getStaticEventInfo(event, filename);
 
     let rootPath = getRootPathForFile(staticInfo.filename);
@@ -452,7 +458,7 @@ export class KpmManager {
   * want to send events for .git or other event triggers
   * such as extension.js.map events
   */
-  private isTrueEventFile(event, filename) {
+  private isTrueEventFile(event, filename, isCloseEvent=false) {
     if (!filename) {
       return false;
     }
@@ -477,7 +483,7 @@ export class KpmManager {
       (scheme !== "file" && scheme !== "untitled") ||
       isLiveshareTmpFile ||
       isInternalFile ||
-      !isFileActive(filename)
+      !isFileActive(filename, isCloseEvent)
     ) {
       return false;
     }
