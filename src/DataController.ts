@@ -230,60 +230,16 @@ export async function initializePreferences() {
                 DEFAULT_SESSION_THRESHOLD_SECONDS;
 
             disableGitData = !!user.preferences.disableGitData;
-
-            let userId = parseInt(user.id, 10);
-            let prefs = user.preferences;
-            let prefsShowGit =
-                prefs.showGit !== null && prefs.showGit !== undefined
-                    ? prefs.showGit
-                    : null;
-            let prefsShowRank =
-                prefs.showRank !== null && prefs.showRank !== undefined
-                    ? prefs.showRank
-                    : null;
-
-            if (prefsShowGit === null || prefsShowRank === null) {
-                await sendPreferencesUpdate(userId, prefs);
-            } else {
-                if (prefsShowGit !== null) {
-                    await workspace
-                        .getConfiguration()
-                        .update(
-                            "showGitMetrics",
-                            prefsShowGit,
-                            ConfigurationTarget.Global
-                        );
-                }
-                if (prefsShowRank !== null) {
-                    // await workspace
-                    //     .getConfiguration()
-                    //     .update(
-                    //         "showWeeklyRanking",
-                    //         prefsShowRank,
-                    //         ConfigurationTarget.Global
-                    //     );
-                }
-            }
         }
     }
 
-    // update the session threshold in seconds config
+    // update values config
     setItem("sessionThresholdInSec", sessionThresholdInSec);
-
-    // update the disableGitData value in the config
     setItem("disableGitData", disableGitData);
 }
 
 async function sendPreferencesUpdate(userId, userPrefs) {
     let api = `/users/${userId}`;
-
-    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-    // let showWeeklyRanking = workspace
-    //     .getConfiguration()
-    //     .get("showWeeklyRanking");
-    userPrefs["showGit"] = showGitMetrics;
-    // userPrefs["showRank"] = showWeeklyRanking;
-
     // update the preferences
     // /:id/preferences
     api = `/users/${userId}/preferences`;
@@ -297,11 +253,6 @@ export async function updatePreferences() {
     toggleFileEventLogging = workspace
         .getConfiguration()
         .get("toggleFileEventLogging");
-
-    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-    // let showWeeklyRanking = workspace
-    //     .getConfiguration()
-    //     .get("showWeeklyRanking");
 
     // get the user's preferences and update them if they don't match what we have
     let jwt = getItem("jwt");
@@ -320,14 +271,7 @@ export async function updatePreferences() {
                 resp.data.data.preferences
             ) {
                 let prefs = resp.data.data.preferences;
-                let prefsShowGit =
-                    prefs.showGit !== null && prefs.showGit !== undefined
-                        ? prefs.showGit
-                        : null;
-
-                if (prefsShowGit === null || prefsShowGit !== showGitMetrics) {
-                    await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
-                }
+                await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
             }
         }
     }
@@ -831,10 +775,7 @@ export async function writeCodeTimeMetricsDashboard() {
     const summaryInfoFile = getSummaryInfoFile();
 
     // write the code time metrics summary to the summaryInfo file
-
-    let showGitMetrics = workspace.getConfiguration().get("showGitMetrics");
-
-    let api = `/dashboard?showMusic=false&showGit=${showGitMetrics}&showRank=false&linux=${isLinux()}&showToday=false`;
+    let api = `/dashboard?showMusic=false&showRank=false&linux=${isLinux()}&showToday=false`;
     const result = await softwareGet(api, getItem("jwt"));
 
     if (isResponseOk(result)) {
