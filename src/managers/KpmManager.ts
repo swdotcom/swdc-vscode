@@ -472,15 +472,19 @@ export class KpmManager {
       scheme = event.document.uri.scheme;
     }
 
+    // we'll get "git" as a scheme, but these are the schemes that match to open files in the editor
+    const isDocEventScheme = scheme === "file" || scheme === "untitled" || scheme === "vscode-remote";
+
     const isLiveshareTmpFile = filename.match(/.*\.code-workspace.*vsliveshare.*tmp-.*/);
     const isInternalFile = filename.match(
       /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
     );
 
-    // if it's not active or a liveshare tmp file or internal file or not the right scheme
-    // then it's not something to track
+    // return false that its not a doc that we want to track based on the
+    // following conditions: non-doc scheme, is liveshare tmp file, is internal file
+    // and the file is no longer active
     if (
-      (scheme !== "file" && scheme !== "untitled" && scheme !== "vscode-remote") ||
+      !isDocEventScheme ||
       isLiveshareTmpFile ||
       isInternalFile ||
       !isFileActive(filename, isCloseEvent)
