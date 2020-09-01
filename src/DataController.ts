@@ -229,7 +229,7 @@ export async function initializePreferences() {
                 user.preferences.sessionThresholdInSec ||
                 DEFAULT_SESSION_THRESHOLD_SECONDS;
 
-            disableGitData = user.preferences.disableGitData || false;
+            disableGitData = !!user.preferences.disableGitData;
 
             let userId = parseInt(user.id, 10);
             let prefs = user.preferences;
