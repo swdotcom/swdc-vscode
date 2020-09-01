@@ -20,11 +20,11 @@ import {
 import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
-    getAppJwt,
     getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
+import { createAnonymousUser } from "./menu/AccountManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -821,10 +821,10 @@ export async function showLoginPrompt(serverIsOnline) {
 export async function buildLoginUrl(loginType = "software") {
     let jwt = getItem("jwt");
     if (!jwt) {
-        // we should always have a jwt, but if  not create one
-        // this will serve as a temp token until they've onboarded
-        jwt = await getAppJwt();
-        setItem("jwt", jwt);
+        // we should always have a jwt, but if not, create an anonymous account,
+        // which will set the jwt, then use it to register
+        await createAnonymousUser();
+        jwt = getItem("jwt");
     }
     const authType = getItem("authType");
 
@@ -853,10 +853,10 @@ export async function buildLoginUrl(loginType = "software") {
 export async function connectAtlassian() {
     let jwt = getItem("jwt");
     if (!jwt) {
-        // we should always have a jwt, but if  not create one
-        // this will serve as a temp token until they've onboarded
-        jwt = await getAppJwt();
-        setItem("jwt", jwt);
+        // we should always have a jwt, but if not, create an anonymous account,
+        // which will set the jwt, then use it to register
+        await createAnonymousUser();
+        jwt = getItem("jwt");
     }
 
     const encodedJwt = encodeURIComponent(jwt);
