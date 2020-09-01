@@ -458,7 +458,7 @@ export class KpmManager {
   * want to send events for .git or other event triggers
   * such as extension.js.map events
   */
-  private isTrueEventFile(event, filename, isCloseEvent=false) {
+  private isTrueEventFile(event, filename, isCloseEvent = false) {
     if (!filename) {
       return false;
     }
@@ -480,7 +480,7 @@ export class KpmManager {
     // if it's not active or a liveshare tmp file or internal file or not the right scheme
     // then it's not something to track
     if (
-      (scheme !== "file" && scheme !== "untitled") ||
+      (scheme !== "file" && scheme !== "untitled" && scheme !== "vscode-remote") ||
       isLiveshareTmpFile ||
       isInternalFile ||
       !isFileActive(filename, isCloseEvent)
