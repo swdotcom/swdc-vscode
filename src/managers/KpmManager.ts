@@ -480,7 +480,7 @@ export class KpmManager {
     // if it's not active or a liveshare tmp file or internal file or not the right scheme
     // then it's not something to track
     if (
-      (scheme !== "file" && scheme !== "untitled" && scheme === "vscode-remote") ||
+      (scheme !== "file" && scheme !== "untitled" && scheme !== "vscode-remote") ||
       isLiveshareTmpFile ||
       isInternalFile ||
       !isFileActive(filename, isCloseEvent)
