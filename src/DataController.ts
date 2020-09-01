@@ -219,7 +219,7 @@ export async function initializePreferences() {
     let sessionThresholdInSec = DEFAULT_SESSION_THRESHOLD_SECONDS;
 
     // enable Git by default
-    let enableGit = true;
+    let disableGitData = false;
 
     if (jwt) {
         let user = await getUser(jwt);
@@ -229,7 +229,7 @@ export async function initializePreferences() {
                 user.preferences.sessionThresholdInSec ||
                 DEFAULT_SESSION_THRESHOLD_SECONDS;
 
-            enableGit = user.preferences.enableGit || true;
+            disableGitData = user.preferences.disableGitData || false;
 
             let userId = parseInt(user.id, 10);
             let prefs = user.preferences;
@@ -270,8 +270,8 @@ export async function initializePreferences() {
     // update the session threshold in seconds config
     setItem("sessionThresholdInSec", sessionThresholdInSec);
 
-    // update the enableGit value in the config
-    setItem("enableGit", enableGit);
+    // update the disableGitData value in the config
+    setItem("disableGitData", disableGitData);
 }
 
 async function sendPreferencesUpdate(userId, userPrefs) {

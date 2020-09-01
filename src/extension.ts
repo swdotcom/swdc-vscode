@@ -158,8 +158,8 @@ export async function intializePlugin(
     // initialize preferences
     await initializePreferences();
 
-    const enableGit = getItem("enableGit");
-    if (enableGit) {
+    const disableGitData = getItem("disableGitData");
+    if (!disableGitData) {
         // in 2 minutes task
         setTimeout(() => {
             // 2 to 15 second delay to account for mulitple windows as this is
@@ -224,8 +224,8 @@ function initializeIntervalJobs() {
         sendHeartbeat("HOURLY");
     }, one_hour_millis);
 
-    const enableGit = getItem("enableGit");
-    if (enableGit) {
+    const disableGitData = getItem("disableGitData");
+    if (!disableGitData) {
         thirty_minute_interval = setInterval(async () => {
             // 2 to 15 second delay to account for mulitple windows as this is
             // a larger operation
