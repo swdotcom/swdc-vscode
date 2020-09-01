@@ -6,6 +6,7 @@ import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     isLoggedIn,
     sendHeartbeat,
+    initializePreferences,
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import {
@@ -31,9 +32,7 @@ import {
     updateStatusBarWithSummaryData,
 } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
-import {
-    getLastSavedKeystrokesStats,
-} from "./managers/FileManager";
+import { getLastSavedKeystrokesStats } from "./managers/FileManager";
 import { TrackerManager } from "./managers/TrackerManager";
 
 let TELEMETRY_ON = true;
@@ -152,21 +151,27 @@ export async function intializePlugin(
     // add the interval jobs
     initializeIntervalJobs();
 
-    // in 2 minutes task
-    setTimeout(() => {
-        // 2 to 15 second delay to account for mulitple windows as this is
-        // a larger operation
-        const secondDelay = getRandomArbitrary(2, 15);
-        setTimeout(() => {
-            getHistoricalCommits();
-        }, 1000 * secondDelay);
-    }, one_min_millis * 2);
-
-    initializeLiveshare();
-
     // get the login status
     // {loggedIn: true|false}
     await isLoggedIn();
+
+    // initialize preferences
+    await initializePreferences();
+
+    const enableGit = getItem("enableGit");
+    if (enableGit) {
+        // in 2 minutes task
+        setTimeout(() => {
+            // 2 to 15 second delay to account for mulitple windows as this is
+            // a larger operation
+            const secondDelay = getRandomArbitrary(2, 15);
+            setTimeout(() => {
+                getHistoricalCommits();
+            }, 1000 * secondDelay);
+        }, one_min_millis * 2);
+    }
+
+    initializeLiveshare();
 
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
@@ -219,14 +224,17 @@ function initializeIntervalJobs() {
         sendHeartbeat("HOURLY");
     }, one_hour_millis);
 
-    thirty_minute_interval = setInterval(async () => {
-        // 2 to 15 second delay to account for mulitple windows as this is
-        // a larger operation
-        const secondDelay = getRandomArbitrary(2, 15);
-        setTimeout(() => {
-            getHistoricalCommits();
-        }, 1000 * secondDelay);
-    }, thirty_min_millis);
+    const enableGit = getItem("enableGit");
+    if (enableGit) {
+        thirty_minute_interval = setInterval(async () => {
+            // 2 to 15 second delay to account for mulitple windows as this is
+            // a larger operation
+            const secondDelay = getRandomArbitrary(2, 15);
+            setTimeout(() => {
+                getHistoricalCommits();
+            }, 1000 * secondDelay);
+        }, thirty_min_millis);
+    }
 
     twenty_minute_interval = setInterval(async () => {
         // this will get the login status if the window is focused

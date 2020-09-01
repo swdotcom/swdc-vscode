@@ -40,7 +40,10 @@ import {
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { SessionSummary, CommitChangeStats } from "./model/models";
-import { getSessionSummaryData, clearSessionSummaryData } from "./storage/SessionSummaryData";
+import {
+    getSessionSummaryData,
+    clearSessionSummaryData,
+} from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
 import {
     getTodaysCommits,
@@ -215,6 +218,9 @@ export async function initializePreferences() {
     // use a default if we're unable to get the user or preferences
     let sessionThresholdInSec = DEFAULT_SESSION_THRESHOLD_SECONDS;
 
+    // enable Git by default
+    let enableGit = true;
+
     if (jwt) {
         let user = await getUser(jwt);
         if (user && user.preferences) {
@@ -222,6 +228,8 @@ export async function initializePreferences() {
             sessionThresholdInSec =
                 user.preferences.sessionThresholdInSec ||
                 DEFAULT_SESSION_THRESHOLD_SECONDS;
+
+            enableGit = user.preferences.enableGit || true;
 
             let userId = parseInt(user.id, 10);
             let prefs = user.preferences;
@@ -261,6 +269,9 @@ export async function initializePreferences() {
 
     // update the session threshold in seconds config
     setItem("sessionThresholdInSec", sessionThresholdInSec);
+
+    // update the enableGit value in the config
+    setItem("enableGit", enableGit);
 }
 
 async function sendPreferencesUpdate(userId, userPrefs) {
