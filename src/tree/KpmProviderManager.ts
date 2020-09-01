@@ -39,8 +39,6 @@ let counter = 0;
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
-  private _currentKeystrokeStats: SessionSummary = new SessionSummary();
-
   constructor() {
     //
   }
@@ -51,18 +49,6 @@ export class KpmProviderManager {
     }
 
     return KpmProviderManager.instance;
-  }
-
-  public setCurrentKeystrokeStats(keystrokeStats) {
-    if (keystrokeStats) {
-      // update the current stats
-      Object.keys(keystrokeStats.source).forEach((key) => {
-        const fileInfo: FileChangeInfo = keystrokeStats.source[key];
-        this._currentKeystrokeStats.currentDayKeystrokes = fileInfo.keystrokes;
-        this._currentKeystrokeStats.currentDayLinesAdded = fileInfo.linesAdded;
-        this._currentKeystrokeStats.currentDayLinesRemoved = fileInfo.linesRemoved;
-      });
-    }
   }
 
   async getOptionsTreeParents(): Promise<KpmItem[]> {
@@ -80,14 +66,6 @@ export class KpmProviderManager {
     } else {
       treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
     }
-
-    // const submitReportButton: KpmItem = this.getActionButton(
-    //     "Generate slack report",
-    //     "",
-    //     "codetime.generateSlackReport",
-    //     "slack.svg"
-    // );
-    // treeItems.push(submitReportButton);
 
     treeItems.push(this.getDividerButton());
 
@@ -460,19 +438,6 @@ export class KpmProviderManager {
     feedbackButton.location = "ct_menu_tree";
     feedbackButton.interactionIcon = "text-bubble"
     return feedbackButton;
-
-    const item: KpmItem = this.getActionButton(
-      `View summary`,
-      "View your latest coding metrics right here in your editor",
-      "codetime.codeTimeMetrics",
-      "dashboard.svg",
-      "TreeViewLaunchDashboard",
-      "purple"
-    );
-    item.location = "ct_menu_tree";
-    item.name = "ct_summary_btn";
-    item.interactionIcon = "guage";
-    return item;
   }
 
   getContributorReportButton(identifier: string): KpmItem {
@@ -621,8 +586,7 @@ export class KpmProviderManager {
     );
 
     values = [];
-    const currLinesAdded =
-      this._currentKeystrokeStats.currentDayLinesAdded + data.currentDayLinesAdded;
+    const currLinesAdded = data.currentDayLinesAdded;
     const linesAdded = numeral(currLinesAdded).format("0 a");
     values.push({ label: `Today: ${linesAdded}`, icon: "rocket.svg" });
     const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
@@ -646,8 +610,7 @@ export class KpmProviderManager {
     ));
 
     values = [];
-    const currLinesRemoved =
-      this._currentKeystrokeStats.currentDayLinesRemoved + data.currentDayLinesRemoved;
+    const currLinesRemoved = data.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     values.push({ label: `Today: ${linesRemoved}`, icon: "rocket.svg" });
     const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format("0 a");
@@ -671,8 +634,7 @@ export class KpmProviderManager {
     ));
 
     values = [];
-    const currKeystrokes =
-      this._currentKeystrokeStats.currentDayKeystrokes + data.currentDayKeystrokes;
+    const currKeystrokes = data.currentDayKeystrokes;
     const keystrokes = numeral(currKeystrokes).format("0 a");
     values.push({ label: `Today: ${keystrokes}`, icon: "rocket.svg" });
     const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format("0 a");

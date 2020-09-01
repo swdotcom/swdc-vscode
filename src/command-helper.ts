@@ -254,12 +254,7 @@ export function createCommands(
     cmds.push(
         commands.registerCommand(
             "codetime.refreshKpmTree",
-            (keystrokeStats) => {
-                if (keystrokeStats) {
-                    KpmProviderManager.getInstance().setCurrentKeystrokeStats(
-                        keystrokeStats
-                    );
-                }
+            () => {
                 kpmTreeProvider.refresh();
             }
         )
