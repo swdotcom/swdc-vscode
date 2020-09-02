@@ -3,13 +3,27 @@ import { getUser } from "../DataController";
 import { showOfflinePrompt, setItem, getItem } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { createAnonymousUser } from "../menu/AccountManager";
+import jwt_decode = require('jwt-decode');
 
 let retry_counter = 0;
 const one_min_millis = 1000 * 60;
 let atlassianOauthFetchTimeout = null;
 
 export function onboardInit(ctx: ExtensionContext, callback: any) {
-    const jwt = getItem("jwt");
+    let jwt = getItem("jwt");
+
+    // first, verify that it is a valid jwt token
+    // if it isn't, nullify it
+    if (jwt) {
+        const decoded = jwt_decode(jwt.split("JWT")[1]);
+        // if the decoded id is not a valid user id (it's probably an "app jwt")
+        // set the jwt to null
+        if (decoded["id"] > 9999999999) {
+            setItem("jwt", null)
+            jwt = null
+        }
+    }
+
     if (jwt) {
         // we have the jwt, call the callback that anon was not created
         return callback(ctx, false /*anonCreated*/);
