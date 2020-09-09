@@ -71,11 +71,6 @@
       "type": "object",
       "title": "Code Time",
       "properties": {
-        "showGitMetrics": {
-          "type": "boolean",
-          "default": false,
-          "description": "Git metrics"
-        },
         "toggleFileEventLogging": {
           "type": "boolean",
           "default": false,
