@@ -724,6 +724,10 @@ export async function wrapExecPromise(cmd, projectDir) {
     return result;
 }
 
+export function countUniqueStrings(list: Array<string>) {
+    return new Set(list).size;
+}
+
 export function launchWebUrl(url) {
     open(url);
 }

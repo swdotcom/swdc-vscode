@@ -8,6 +8,7 @@ import {
     findFirstActiveDirectoryOrWorkspaceDirectory,
     isGitProject,
     isBatchSizeUnderThreshold,
+    countUniqueStrings
 } from "../Util";
 import { getCommandResult } from "./GitUtil";
 import RepoContributorInfo from "../model/RepoContributorInfo";
@@ -80,17 +81,11 @@ export async function getFileContributorCount(fileName) {
         return 0;
     }
 
-    if (resultList.length > 0) {
-        let map = {};
-        for (let i = 0; i < resultList.length; i++) {
-            const name = resultList[i];
-            if (!map[name]) {
-                map[name] = name;
-            }
-        }
-        return Object.keys(map).length;
+    let uniqueStrings = 0;
+    if (resultList.length) {
+        uniqueStrings = countUniqueStrings(resultList);
     }
-    return 0;
+    return uniqueStrings;
 }
 
 /**
