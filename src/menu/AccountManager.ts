@@ -71,7 +71,16 @@ export async function processSwitchAccounts() {
     }
 }
 
-async function resetData() {
+export async function resetDataAndAlertUser() {
+    resetData()
+    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
+        if (selection === "Log In") {
+            showLogInMenuOptions()
+        }
+    })
+}
+
+export async function resetData() {
     // clear the session.json
     await resetUserData();
 

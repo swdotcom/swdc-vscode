@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { api_endpoint } from "../Constants";
+import { resetDataAndAlertUser } from "../menu/AccountManager";
 
 import {
     logIt,
@@ -66,12 +67,17 @@ export async function spotifyApiPut(api, payload, accessToken) {
  * @param api
  * @param jwt
  */
+
 export async function softwareGet(api, jwt) {
     if (jwt) {
         beApi.defaults.headers.common["Authorization"] = jwt;
     }
 
     return await beApi.get(api).catch((err) => {
+        if (err.response.status === 401) {
+            resetDataAndAlertUser()
+        }
+
         logIt(`error fetching data for ${api}, message: ${err.message}`);
         return err;
     });
@@ -90,6 +96,10 @@ export async function softwarePut(api, payload, jwt) {
             return resp;
         })
         .catch((err) => {
+            if (err.response.status === 401) {
+                resetDataAndAlertUser()
+            }
+
             logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
@@ -107,6 +117,10 @@ export async function softwarePost(api, payload, jwt) {
             return resp;
         })
         .catch((err) => {
+            if (err.response.status === 401) {
+                resetDataAndAlertUser()
+            }
+
             logIt(`error posting data for ${api}, message: ${err.message}`);
             return err;
         });
@@ -123,6 +137,10 @@ export async function softwareDelete(api, jwt) {
             return resp;
         })
         .catch((err) => {
+            if (err.response.status === 401) {
+                resetDataAndAlertUser()
+            }
+
             logIt(
                 `error with delete request for ${api}, message: ${err.message}`
             );
