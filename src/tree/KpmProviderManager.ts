@@ -64,8 +64,13 @@ export class KpmProviderManager {
 
       treeItems.push(this.getSignUpButton("email", "gray"));
 
-      // existing account login button
-      treeItems.push(this.getSignUpButton("existing", "blue"));
+      const authType = getItem("authType");
+
+      // only show the "log in existing account" if they haven't already completed auth
+      if (!authType) {
+        // existing account login button
+        treeItems.push(this.getSignUpButton("existing", "blue"));
+      }
     } else {
       treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
     }
