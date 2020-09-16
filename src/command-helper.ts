@@ -215,6 +215,23 @@ export function createCommands(
         })
     );
 
+    // LAUNCH EXISTING ACCOUNT LOGIN
+    cmds.push(
+        commands.registerCommand("codetime.codeTimeExisting", (item: KpmItem) => {
+            if (!item) {
+                // it's from the command palette, create a kpm item so
+                // it can build the ui_element in the tracker manager
+                item = kpmProviderMgr.getSignUpButton("existing", "blue");
+                item.location = "ct_command_palette";
+                item.interactionType = UIInteractionType.Keyboard;
+                item.interactionIcon = null;
+                item.color = null;
+            }
+            tracker.trackUIInteraction(item);
+            launchLogin("existing");
+        })
+    );
+
     // LAUNCH GOOGLE LOGIN
     cmds.push(
         commands.registerCommand("codetime.googleLogin", (item: KpmItem) => {

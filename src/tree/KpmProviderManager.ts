@@ -63,6 +63,14 @@ export class KpmProviderManager {
       treeItems.push(this.getSignUpButton("GitHub", "white"));
 
       treeItems.push(this.getSignUpButton("email", "gray"));
+
+      const authType = getItem("authType");
+
+      // only show the "log in existing account" if they haven't already completed auth
+      if (!authType) {
+        // existing account login button
+        treeItems.push(this.getSignUpButton("existing", "blue"));
+      }
     } else {
       treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
     }
@@ -329,7 +337,7 @@ export class KpmProviderManager {
     const authType = getItem("authType");
     const signupText = authType ? "Log in" : "Sign up";
     const nameText = authType ? "log_in" : "sign_up";
-    const label = `${signupText} with ${signUpAuthName}`;
+    let label = `${signupText} with ${signUpAuthName}`;
     let icon = "envelope.svg";
     let iconName = "envelope";
     let command = "codetime.codeTimeLogin";
@@ -342,6 +350,11 @@ export class KpmProviderManager {
       icon = "icons8-github.svg";
       command = "codetime.githubLogin";
       iconName = "github";
+    } else if (lcType === "existing") {
+      label = "Log in with existing account";
+      icon = "paw.svg";
+      command = "codetime.codeTimeExisting";
+      iconName = "envelope";
     }
     const item: KpmItem = this.getActionButton(label, "", command, icon, "", iconColor);
     item.location = "ct_menu_tree";
@@ -879,17 +892,6 @@ export class KpmTreeItem extends TreeItem {
     }
 
     this.contextValue = getTreeItemContextValue(treeItem);
-  }
-
-  get tooltip(): string {
-    if (!this.treeItem) {
-      return "";
-    }
-    if (this.treeItem.tooltip) {
-      return this.treeItem.tooltip;
-    } else {
-      return this.treeItem.label;
-    }
   }
 
   iconPath = {
