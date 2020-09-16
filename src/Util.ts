@@ -818,6 +818,9 @@ export async function showLoginPrompt(serverIsOnline) {
     }
 }
 
+/**
+ * @param loginType "software" | "existing" | "google" | "github"
+ */
 export async function buildLoginUrl(loginType = "software") {
     let jwt = getItem("jwt");
     if (!jwt) {
@@ -838,11 +841,11 @@ export async function buildLoginUrl(loginType = "software") {
         } else if (loginType === "google") {
             // google signup/login flow
             loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
-        } else if (!authType) {
-            // never onboarded, show the signup view
+        } else if (!authType && loginType !== "existing") {
+            // never onboarded, show the "email" signup view
             loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
         } else {
-            // they've already onboarded before, take them to the login page
+            // they've already onboarded before or its an "existing login request", take them to the login page
             loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&login=true`;
         }
     }
