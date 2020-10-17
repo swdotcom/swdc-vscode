@@ -775,7 +775,7 @@ export async function writeCodeTimeMetricsDashboard() {
     const summaryInfoFile = getSummaryInfoFile();
 
     // write the code time metrics summary to the summaryInfo file
-    let api = `/dashboard?showMusic=false&showRank=false&linux=${isLinux()}&showToday=false`;
+    let api = `/dashboard?linux=${isLinux()}&showToday=true`;
     const result = await softwareGet(api, getItem("jwt"));
 
     if (isResponseOk(result)) {
@@ -786,44 +786,6 @@ export async function writeCodeTimeMetricsDashboard() {
 
     // create the header
     let dashboardContent = "";
-    const formattedDate = moment().format("ddd, MMM Do h:mma");
-    dashboardContent = `CODE TIME          (Last updated on ${formattedDate})`;
-    dashboardContent += "\n\n";
-
-    const todayStr = moment().format("ddd, MMM Do");
-    dashboardContent += getSectionHeader(`Today (${todayStr})`);
-
-    const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
-
-    // get the top section of the dashboard content (today's data)
-    const sessionSummary: SessionSummary = getSessionSummaryData();
-    if (sessionSummary) {
-        const averageTimeStr = humanizeMinutes(
-            sessionSummary.averageDailyMinutes
-        );
-
-        // code time today
-        const codeTimeToday = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
-        const activeCodeTimeToday = humanizeMinutes(
-            codeTimeSummary.activeCodeTimeMinutes
-        );
-
-        let liveshareTimeStr = null;
-        if (sessionSummary.liveshareMinutes) {
-            liveshareTimeStr = humanizeMinutes(sessionSummary.liveshareMinutes);
-        }
-
-        dashboardContent += getDashboardRow("Code time today", codeTimeToday);
-        dashboardContent += getDashboardRow(
-            "Active code time today",
-            activeCodeTimeToday
-        );
-        dashboardContent += getDashboardRow("90-day avg", averageTimeStr);
-        if (liveshareTimeStr) {
-            dashboardContent += getDashboardRow("Live Share", liveshareTimeStr);
-        }
-        dashboardContent += "\n";
-    }
 
     // get the summary info we just made a call for and add it to the dashboard content
     const summaryContent = fileIt.readContentFileSync(summaryInfoFile);
