@@ -1,5 +1,4 @@
-import { workspace, ConfigurationTarget, window, commands } from "vscode";
-
+import { workspace, window, commands } from "vscode";
 import {
     softwareGet,
     softwarePut,
@@ -21,7 +20,6 @@ import {
     getPluginId,
     getCommitSummaryFile,
     getSummaryInfoFile,
-    getSectionHeader,
     humanizeMinutes,
     getDashboardRow,
     getDashboardBottomBorder,
@@ -39,9 +37,8 @@ import {
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { SessionSummary, CommitChangeStats } from "./model/models";
+import { CommitChangeStats } from "./model/models";
 import {
-    getSessionSummaryData,
     clearSessionSummaryData,
 } from "./storage/SessionSummaryData";
 import TeamMember from "./model/TeamMember";
@@ -50,9 +47,6 @@ import {
     getThisWeeksCommits,
     getYesterdaysCommits,
 } from "./repo/GitUtil";
-import CodeTimeSummary from "./model/CodeTimeSummary";
-import { getCodeTimeSummary } from "./storage/TimeSummaryData";
-import { TrackerManager } from "./managers/TrackerManager";
 import { SummaryManager } from "./managers/SummaryManager";
 
 const fileIt = require("file-it");
