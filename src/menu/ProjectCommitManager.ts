@@ -26,10 +26,6 @@ export class ProjectCommitManager {
             value: "custom",
         },
         {
-            label: "Today",
-            value: "today",
-        },
-        {
             label: "Yesterday",
             value: "yesterday",
         },
