@@ -12,15 +12,17 @@ let atlassianOauthFetchTimeout = null;
 export function onboardInit(ctx: ExtensionContext, callback: any) {
     let jwt = getItem("jwt");
 
+    const windowState = window.state;
+
     // first, verify that it is a valid jwt token
-    // if it isn't, nullify it
-    if (jwt) {
+    if (jwt && windowState.focused) {
+        // it's the primary window as a secondary window
         const decoded = jwt_decode(jwt.split("JWT")[1]);
-        // if the decoded id is not a valid user id (it's probably an "app jwt")
-        // set the jwt to null
+        // check to see if its an app jwt ID
         if (decoded["id"] > 9999999999) {
-            setItem("jwt", null)
-            jwt = null
+            // its not valid and this is the primary window, nullify it
+            setItem("jwt", null);
+            jwt = null;
         }
     }
 
@@ -29,7 +31,6 @@ export function onboardInit(ctx: ExtensionContext, callback: any) {
         return callback(ctx, false /*anonCreated*/);
     }
 
-    const windowState = window.state;
     if (windowState.focused) {
         // perform primary window related work
         primaryWindowOnboarding(ctx, callback);
