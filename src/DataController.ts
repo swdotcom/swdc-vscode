@@ -416,11 +416,7 @@ export async function writeProjectCommitDashboardByStartEnd(
     )}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
-    const { rangeStart, rangeEnd } = createStartEndRangeByTimestamps(
-        start,
-        end
-    );
-    await writeProjectCommitDashboard(result, rangeStart, rangeEnd);
+    await writeProjectCommitDashboard(result);
 }
 
 export async function writeProjectCommitDashboardByRangeType(
@@ -431,86 +427,17 @@ export async function writeProjectCommitDashboardByRangeType(
     const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
     const api = `/projects/codeSummary${qryStr}`;
     const result = await softwareGet(api, getItem("jwt"));
-    // create the header
-    const { rangeStart, rangeEnd } = createStartEndRangeByType(type);
-    await writeProjectCommitDashboard(result, rangeStart, rangeEnd);
+    await writeProjectCommitDashboard(result);
 }
 
-export async function writeProjectCommitDashboard(
-    apiResult,
-    rangeStart,
-    rangeEnd
-) {
+export async function writeProjectCommitDashboard(apiResult) {
     let dashboardContent = "";
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
     if (isResponseOk(apiResult)) {
-        let report = apiResult.data;
-
-        if (typeof report === "string") {
-            // the API now returns the full string report
-            dashboardContent = report;
-        } else {
-            // use the report data, create the title
-            const formattedDate = moment().format("ddd, MMM Do h:mma");
-            dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
-            dashboardContent += "\n\n";
-
-            if (report && report.length) {
-                // filter out null project names
-                report = report.filter((n) => n.name);
-                report.forEach((el) => {
-                    dashboardContent += getDashboardRow(
-                        el.name,
-                        `${rangeStart} to ${rangeEnd}`,
-                        true
-                    );
-
-                    // hours
-                    const hours = humanizeMinutes(el.session_seconds / 60);
-                    dashboardContent += getDashboardRow("Code time", hours);
-
-                    // keystrokes
-                    const keystrokes = el.keystrokes
-                        ? formatNumber(el.keystrokes)
-                        : formatNumber(0);
-                    dashboardContent += getDashboardRow("Keystrokes", keystrokes);
-
-                    // commits
-                    const commits = el.commits
-                        ? formatNumber(el.commits)
-                        : formatNumber(0);
-                    dashboardContent += getDashboardRow("Commits", commits);
-
-                    // files_changed
-                    const files_changed = el.files_changed
-                        ? formatNumber(el.files_changed)
-                        : formatNumber(0);
-                    dashboardContent += getDashboardRow(
-                        "Files changed",
-                        files_changed
-                    );
-
-                    // insertions
-                    const insertions = el.insertions
-                        ? formatNumber(el.insertions)
-                        : formatNumber(0);
-                    dashboardContent += getDashboardRow("Insertions", insertions);
-
-                    // deletions
-                    const deletions = el.deletions
-                        ? formatNumber(el.deletions)
-                        : formatNumber(0);
-                    dashboardContent += getDashboardRow("Deletions", deletions);
-
-                    dashboardContent += getDashboardBottomBorder();
-                });
-            } else {
-                dashboardContent += "No data available";
-            }
-
-            dashboardContent += "\n";
-        }
+        dashboardContent = apiResult.data;
+    } else {
+        dashboardContent += "No data available\n";
     }
 
     const file = getProjectCodeSummaryFile();
