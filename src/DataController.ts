@@ -435,7 +435,64 @@ export async function writeProjectCommitDashboard(apiResult) {
     // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
     //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
     if (isResponseOk(apiResult)) {
-        dashboardContent = apiResult.data;
+        if (apiResult.data && typeof apiResult.data === "string") {
+            dashboardContent = apiResult.data;
+        } else {
+            let codeCommitData = apiResult.data;
+            const formattedDate = moment().format("ddd, MMM Do h:mma");
+            dashboardContent = `CODE TIME PROJECT SUMMARY     (Last updated on ${formattedDate})`;
+            dashboardContent += "\n\n";
+            if (codeCommitData && codeCommitData.length) {
+                // filter out null project names	
+                codeCommitData = codeCommitData.filter((n) => n.name);
+                codeCommitData.forEach((el) => {
+                    dashboardContent += getDashboardRow(
+                        el.name,
+                        "",
+                        true
+                    );
+
+                    // hours	
+                    const hours = humanizeMinutes(el.session_seconds / 60);
+                    dashboardContent += getDashboardRow("Code time", hours);
+
+                    // keystrokes	
+                    const keystrokes = el.keystrokes
+                        ? formatNumber(el.keystrokes)
+                        : formatNumber(0);
+                    dashboardContent += getDashboardRow("Keystrokes", keystrokes);
+
+                    // commits	
+                    const commits = el.commits
+                        ? formatNumber(el.commits)
+                        : formatNumber(0);
+                    dashboardContent += getDashboardRow("Commits", commits);
+
+                    // files_changed	
+                    const files_changed = el.files_changed
+                        ? formatNumber(el.files_changed)
+                        : formatNumber(0);
+                    dashboardContent += getDashboardRow(
+                        "Files changed",
+                        files_changed
+                    );
+
+                    // insertions	
+                    const insertions = el.insertions
+                        ? formatNumber(el.insertions)
+                        : formatNumber(0);
+                    dashboardContent += getDashboardRow("Insertions", insertions);
+
+                    // deletions	
+                    const deletions = el.deletions
+                        ? formatNumber(el.deletions)
+                        : formatNumber(0);
+                    dashboardContent += getDashboardRow("Deletions", deletions);
+
+                    dashboardContent += getDashboardBottomBorder();
+                });
+            }
+        }
     } else {
         dashboardContent += "No data available\n";
     }
