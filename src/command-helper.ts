@@ -1,8 +1,7 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import {
     launchWebDashboard,
-    updatePreferences,
-    sendTeamInvite,
+    updatePreferences
 } from "./DataController";
 import {
     displayCodeTimeMetricsDashboard,
@@ -28,7 +27,6 @@ import {
     connectCodeTimeTeamTreeView,
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
-import { sendOfflineData } from "./managers/FileManager";
 import {
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
@@ -119,36 +117,6 @@ export function createCommands(
             codetimeMenuTreeProvider.refresh();
             kpmTreeProvider.refresh();
             codetimeTeamTreeProvider.refresh();
-        })
-    );
-
-    // TEAM TREE: INVITE MEMBER
-    cmds.push(
-        commands.registerCommand(
-            "codetime.inviteTeamMember",
-            async (item: KpmItem) => {
-                // the identifier will be in the value
-                const identifier = item.value;
-                // email will be the description
-                const email = item.description;
-                const name = item.label;
-                const msg = `Send invitation to ${email}?`;
-                const selection = await window.showInformationMessage(
-                    msg,
-                    { modal: true },
-                    ...["YES"]
-                );
-                if (selection && selection === "YES") {
-                    sendTeamInvite(identifier, [email]);
-                }
-            }
-        )
-    );
-
-    // SEND OFFLINE DATA
-    cmds.push(
-        commands.registerCommand("codetime.sendOfflineData", () => {
-            sendOfflineData();
         })
     );
 

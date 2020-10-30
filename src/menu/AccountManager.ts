@@ -3,7 +3,6 @@ import {
     getItem,
     getOsUsername,
     getHostname,
-    getWorkspaceName,
     setItem,
 } from "../Util";
 import { getAppJwt } from "../DataController";
@@ -110,7 +109,6 @@ export async function createAnonymousUser() {
             const username = await getOsUsername();
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const hostname = await getHostname();
-            const workspace_name = getWorkspaceName();
 
             const resp = await softwarePost(
                 "/data/onboard",

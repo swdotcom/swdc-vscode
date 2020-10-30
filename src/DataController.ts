@@ -20,9 +20,6 @@ import {
     getPluginId,
     getCommitSummaryFile,
     getSummaryInfoFile,
-    humanizeMinutes,
-    getDashboardRow,
-    getDashboardBottomBorder,
     getDashboardFile,
     getProjectCodeSummaryFile,
     getProjectContributorCodeSummaryFile,
@@ -78,20 +75,6 @@ export async function getRegisteredTeamMembers(
         teamMembers = resp.data;
     }
     return teamMembers;
-}
-
-export async function sendTeamInvite(identifier, emails) {
-    const payload = {
-        identifier,
-        emails,
-    };
-    const api = `/users/invite`;
-    const resp = await softwarePost(api, payload, getItem("jwt"));
-    if (isResponseOk(resp)) {
-        window.showInformationMessage("Sent team invitation");
-    } else {
-        window.showErrorMessage(resp.data.message);
-    }
 }
 
 /**
@@ -299,8 +282,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
-
-        commands.executeCommand("codetime.sendOfflineData");
 
         setTimeout(async () => {
             await SummaryManager.getInstance().updateSessionSummaryFromServer();

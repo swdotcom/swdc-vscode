@@ -3,7 +3,6 @@ import { commands, window } from "vscode";
 import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { incrementEditorSeconds } from "../storage/TimeSummaryData";
 import { KpmManager } from "./KpmManager";
-import { serverIsAvailable } from "../http/HttpClient";
 
 const SECONDS_INTERVAL = 30;
 const CLOCK_INTERVAL = 1000 * SECONDS_INTERVAL;
