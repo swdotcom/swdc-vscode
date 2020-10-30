@@ -1,4 +1,4 @@
-import { isResponseOk, softwareGet, softwarePost } from "../http/HttpClient";
+import { isResponseOk, softwareGet } from "../http/HttpClient";
 import {
     wrapExecPromise,
     getItem,
@@ -6,8 +6,7 @@ import {
     normalizeGithubEmail,
     getFileType,
     findFirstActiveDirectoryOrWorkspaceDirectory,
-    isGitProject,
-    isBatchSizeUnderThreshold,
+    isGitProject
 } from "../Util";
 import { getCommandResult } from "./GitUtil";
 import RepoContributorInfo from "../model/RepoContributorInfo";
@@ -248,25 +247,4 @@ export async function getResourceInfo(projectDir) {
         cacheMgr.set(cacheId, resourceInfo, cacheTimeoutSeconds);
     }
     return resourceInfo;
-}
-
-export async function processRepoUsersForWorkspace() {
-    let activeWorkspaceDir: string = findFirstActiveDirectoryOrWorkspaceDirectory();
-    if (activeWorkspaceDir) {
-        postRepoContributors(activeWorkspaceDir);
-    }
-}
-
-/**
- * get the git repo users
- */
-export async function postRepoContributors(fileName) {
-    const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(
-        fileName
-    );
-
-    if (repoContributorInfo) {
-        // send this to the backend
-        softwarePost("/repo/contributors", repoContributorInfo, getItem("jwt"));
-    }
 }

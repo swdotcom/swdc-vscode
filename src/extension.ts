@@ -19,6 +19,8 @@ import {
     getItem,
     displayReadmeIfNotExists,
     setItem,
+    deleteFile,
+    getSoftwareDataStoreFile,
 } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
@@ -27,6 +29,7 @@ import { KpmManager } from "./managers/KpmManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
 import {
+    getSessionSummaryFile,
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData,
 } from "./storage/SessionSummaryData";
@@ -198,10 +201,8 @@ export async function intializePlugin(
         updateStatusBarWithSummaryData();
     }, 0);
 
-    // in 15 seconds
-    setTimeout(() => {
-        commands.executeCommand("codetime.sendOfflineData");
-    }, 1000 * 15);
+    // delete the data.json if it exists
+    deleteFile(getSoftwareDataStoreFile());
 }
 
 // add the interval jobs
@@ -228,12 +229,6 @@ function initializeIntervalJobs() {
             updateLiveshareTime();
         }
     }, one_min_millis);
-
-    // every 15 minutes
-    // PLUGIN DATA TIMER
-    fifteen_minute_interval = setInterval(() => {
-        commands.executeCommand("codetime.sendOfflineData");
-    }, one_min_millis * 15);
 }
 
 function handlePauseMetricsEvent() {
