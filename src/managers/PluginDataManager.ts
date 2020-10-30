@@ -5,7 +5,6 @@ import {
   isNewDay,
   setItem,
   getProjectFolder,
-  logIt,
   getWorkspaceName,
   getHostname,
   coalesceNumber,
@@ -29,7 +28,7 @@ import {
 import { SummaryManager } from "./SummaryManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
-import { WorkspaceFolder, commands } from "vscode";
+import { WorkspaceFolder } from "vscode";
 import {
   getResourceInfo,
   getRepoContributorInfo,
@@ -39,7 +38,6 @@ import {
 import Project from "../model/Project";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import { FileChangeInfo, KeystrokeAggregate } from "../model/models";
-import { storePayload } from "./PayloadManager";
 import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
 import { clearTimeDataSummary, incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";

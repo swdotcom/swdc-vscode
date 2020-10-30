@@ -13,7 +13,6 @@ import Project from "../model/Project";
 import TimeData from "../model/TimeData";
 
 const fileIt = require("file-it");
-const moment = require("moment-timezone");
 
 export function getTimeDataSummaryFile() {
     let file = getSoftwareDir();

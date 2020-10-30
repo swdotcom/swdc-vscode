@@ -26,10 +26,8 @@ import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
-import { SummaryManager } from "./managers/SummaryManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
 import {
-    getSessionSummaryFile,
     setSessionSummaryLiveshareMinutes,
     updateStatusBarWithSummaryData,
 } from "./storage/SessionSummaryData";
@@ -48,7 +46,6 @@ let hourly_interval = null;
 let liveshare_update_interval = null;
 
 const one_min_millis = 1000 * 60;
-const thirty_min_millis = one_min_millis * 30;
 const one_hour_millis = one_min_millis * 60;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
