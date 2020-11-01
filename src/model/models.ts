@@ -95,16 +95,7 @@ export class SessionSummary {
   averageDailyKpm: number = 0;
   averageLinesAdded: number = 0;
   averageLinesRemoved: number = 0;
-  timePercent: number = 0;
-  volumePercent: number = 0;
-  velocityPercent: number = 0;
   liveshareMinutes: number = 0;
-  latestPayloadTimestampEndUtc: number = 0;
-  latestPayloadTimestamp: number = 0;
-  lastUpdatedToday: boolean = false;
-  currentSessionGoalPercent: number = 0;
-  inFlow: boolean = false;
-  dailyMinutesGoal: number = 0;
   globalAverageSeconds: number = 0;
   globalAverageDailyMinutes: number = 0;
   globalAverageDailyKeystrokes: number = 0;
