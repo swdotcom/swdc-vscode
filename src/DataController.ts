@@ -38,7 +38,6 @@ import { CommitChangeStats } from "./model/models";
 import {
     clearSessionSummaryData,
 } from "./storage/SessionSummaryData";
-import TeamMember from "./model/TeamMember";
 import {
     getTodaysCommits,
     getThisWeeksCommits,
@@ -60,21 +59,6 @@ export function getToggleFileEventLoggingState() {
             .get("toggleFileEventLogging");
     }
     return toggleFileEventLogging;
-}
-
-export async function getRegisteredTeamMembers(
-    identifier
-): Promise<TeamMember[]> {
-    const encodedIdentifier = encodeURIComponent(identifier);
-    const api = `/repo/contributors?identifier=${encodedIdentifier}`;
-
-    let teamMembers: TeamMember[] = [];
-    // returns: [{email, name, identifier},..]
-    const resp = await softwareGet(api, getItem("jwt"));
-    if (isResponseOk(resp)) {
-        teamMembers = resp.data;
-    }
-    return teamMembers;
 }
 
 /**
