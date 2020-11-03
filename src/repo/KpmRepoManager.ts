@@ -13,8 +13,6 @@ import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
 import { CacheManager } from "../cache/CacheManager";
 
-let myRepoInfo = [];
-
 const cacheMgr: CacheManager = CacheManager.getInstance();
 const cacheTimeoutSeconds = 60 * 10;
 
@@ -41,21 +39,6 @@ function getProjectDir(fileName = null) {
         }
     }
     return null;
-}
-
-export async function getMyRepoInfo() {
-    if (myRepoInfo.length > 0) {
-        return myRepoInfo;
-    }
-    const jwt = getItem("jwt");
-    if (jwt) {
-        // list of [{identifier, tag, branch}]
-        const resp = await softwareGet("/repo/info", jwt);
-        if (isResponseOk(resp)) {
-            myRepoInfo = resp.data;
-        }
-    }
-    return myRepoInfo;
 }
 
 export async function getFileContributorCount(fileName) {
@@ -94,7 +77,7 @@ export async function getFileContributorCount(fileName) {
 
 /**
  * Returns the number of files in this directory
- * @param directory 
+ * @param directory
  */
 export async function getRepoFileCount(directory) {
     if (!directory || !isGitProject(directory)) {
