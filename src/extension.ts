@@ -5,7 +5,6 @@
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
     isLoggedIn,
-    sendHeartbeat,
     initializePreferences,
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
@@ -163,13 +162,6 @@ export async function intializePlugin(
     if (!initializedVscodePlugin) {
         setItem("vscode_CtInit", true);
 
-        // send a bootstrap kpm payload
-        // kpmController.buildBootstrapKpmPayload();
-
-        // send a heartbeat that the plugin as been installed
-        // (or the user has deleted the session.json and restarted the IDE)
-        sendHeartbeat("INSTALLED");
-
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");
         }, 1200);
@@ -204,13 +196,10 @@ export async function intializePlugin(
 
 // add the interval jobs
 function initializeIntervalJobs() {
-    hourly_interval = setInterval(async () => {
-        sendHeartbeat("HOURLY");
-    }, one_hour_millis);
 
     twenty_minute_interval = setInterval(async () => {
         // this will get the login status if the window is focused
-        // and they're currently not a logged in
+        // and they're currently not logged in
         if (window.state.focused) {
             const name = getItem("name");
             // but only if checkStatus is true

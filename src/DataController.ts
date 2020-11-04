@@ -260,7 +260,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
         }
     } else {
-        sendHeartbeat(`STATE_CHANGE:LOGGED_IN:true`);
 
         clearSessionSummaryData();
 
@@ -300,29 +299,6 @@ async function slackConnectStatusHandler(callback, tryCountUntilFound) {
         if (callback) {
             callback();
         }
-    }
-}
-
-export async function sendHeartbeat(reason) {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let heartbeat = {
-            pluginId: getPluginId(),
-            os: getOs(),
-            start: nowInSecs(),
-            version: getVersion(),
-            hostname: await getHostname(),
-            session_ctime: getSessionFileCreateTime(),
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            trigger_annotation: reason,
-            editor_token: getWorkspaceName(),
-        };
-        let api = `/data/heartbeat`;
-        softwarePost(api, heartbeat, jwt).then(async (resp) => {
-            if (!isResponseOk(resp)) {
-                logIt("unable to send heartbeat ping");
-            }
-        });
     }
 }
 
