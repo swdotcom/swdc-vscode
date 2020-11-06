@@ -218,10 +218,6 @@ export class PluginDataManager {
       // update the current day
       const nowTimes = getNowTimes();
       setItem("currentDay", nowTimes.day);
-
-      setTimeout(() => {
-        SummaryManager.getInstance().updateSessionSummaryFromServer();
-      }, 5000);
     }
   }
 

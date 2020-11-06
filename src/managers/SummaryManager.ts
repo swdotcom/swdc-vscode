@@ -7,6 +7,7 @@ import {
 import { updateSessionFromSummaryApi } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
+import { commands } from "vscode";
 
 // every 1 min
 const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
@@ -38,6 +39,7 @@ export class SummaryManager {
             saveSessionSummaryToDisk(summary);
         }
 
-        updateStatusBarWithSummaryData();
+        // update the code time metrics tree views
+        commands.executeCommand("codetime.refreshKpmTree");
     }
 }

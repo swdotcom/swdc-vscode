@@ -10,12 +10,15 @@ import { KpmItem } from "../model/models";
 import {
     KpmProviderManager,
     KpmTreeItem,
-    handleKpmChangeSelection
+    handleKpmChangeSelection,
+    treeDataUpdateCheck
 } from "./KpmProviderManager";
 import { TrackerManager } from "../managers/TrackerManager";
+import { SummaryManager } from "../managers/SummaryManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
+let treeViewDate = "";
 
 export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
     const tracker: TrackerManager = TrackerManager.getInstance();
@@ -45,7 +48,8 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
         }),
         view.onDidChangeVisibility(e => {
             if (e.visible) {
-                //
+                // check if its a new day, if so fetch the averages
+                treeDataUpdateCheck();
             }
         })
     );
@@ -62,7 +66,7 @@ export class KpmProvider implements TreeDataProvider<KpmItem> {
     private view: TreeView<KpmItem>;
 
     constructor() {
-        //
+
     }
 
     bindView(kpmTreeView: TreeView<KpmItem>): void {

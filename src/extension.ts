@@ -19,7 +19,6 @@ import {
     setItem,
     deleteFile,
     getSoftwareDataStoreFile,
-    isNewDay,
     getNowTimes,
 } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
@@ -162,13 +161,6 @@ export async function intializePlugin(
     const initializedVscodePlugin = getItem("vscode_CtInit");
     if (!initializedVscodePlugin) {
         setItem("vscode_CtInit", true);
-
-        if (window.state.focused) {
-            // update the current day
-            setItem("currentDay", getNowTimes().day);
-
-            await SummaryManager.getInstance().updateSessionSummaryFromServer();
-        }
 
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");

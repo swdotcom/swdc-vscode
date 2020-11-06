@@ -7,6 +7,8 @@ import {
   isStatusBarTextVisible,
   logIt,
   findFirstActiveDirectoryOrWorkspaceDirectory,
+  getNowTimes,
+  setItem,
 } from "../Util";
 import {
   getUncommitedChanges,
@@ -28,6 +30,7 @@ import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
+import { SummaryManager } from "../managers/SummaryManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -39,9 +42,7 @@ let counter = 0;
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
-  constructor() {
-    //
-  }
+  constructor() { }
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -571,19 +572,20 @@ export class KpmProviderManager {
 
     const dayStr = moment().format("ddd");
 
+    // ACTIVE CODE TIME MINUTES and AVERAGES
     values = [];
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
-    const avgMin = humanizeMinutes(data.averageDailyMinutes);
+    const avgMin = humanizeMinutes(data.averageDailyActiveCodeTimeMinutes);
     const activityLightningBolt =
-      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes
+      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyActiveCodeTimeMinutes
         ? "bolt.svg"
         : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
     });
-    const globalMinutesStr = humanizeMinutes(data.globalAverageSeconds / 60);
+    const globalMinutesStr = humanizeMinutes(data.globalAverageDailyActiveCodeTimeMinutes);
     values.push({
       label: `Global average (${dayStr}): ${globalMinutesStr}`,
       icon: "global-grey.svg",
@@ -943,3 +945,12 @@ export const handleKpmChangeSelection = (view: TreeView<KpmItem>, item: KpmItem)
     logIt(`Unable to deselect track: ${err.message}`);
   }
 };
+
+export const treeDataUpdateCheck = () => {
+  const { day } = getNowTimes();
+  const currentDay = getItem("updatedTreeDate");
+  if (currentDay !== day) {
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
+    setItem("updatedTreeDate", day);
+  }
+}
