@@ -14,11 +14,9 @@ import {
     treeDataUpdateCheck
 } from "./KpmProviderManager";
 import { TrackerManager } from "../managers/TrackerManager";
-import { SummaryManager } from "../managers/SummaryManager";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
-let treeViewDate = "";
 
 export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
     const tracker: TrackerManager = TrackerManager.getInstance();
@@ -50,6 +48,9 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
             if (e.visible) {
                 // check if its a new day, if so fetch the averages
                 treeDataUpdateCheck();
+                kpmProviderMgr.setKpmTreeOpen(true);
+            } else {
+                kpmProviderMgr.setKpmTreeOpen(false);
             }
         })
     );

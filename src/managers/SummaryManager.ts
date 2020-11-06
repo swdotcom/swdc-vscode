@@ -1,6 +1,7 @@
 import { getItem } from "../Util";
 import {
     getSessionSummaryData,
+    getSessionSummaryFileAsJson,
     saveSessionSummaryToDisk,
     updateStatusBarWithSummaryData,
 } from "../storage/SessionSummaryData";
@@ -32,10 +33,20 @@ export class SummaryManager {
      */
     async updateSessionSummaryFromServer() {
         const jwt = getItem("jwt");
-        const result = await softwareGet(`/metrics/averages`, jwt);
+        const result = await softwareGet(`/sessions/summary`, jwt);
         if (isResponseOk(result) && result.data) {
+            const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
             const summary: SessionSummary = result.data;
 
+            // update summary current day values with the existing current day values since
+            // any caller on this would have cleared the existing summary on a new day
+            summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
+            summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
+            summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
+            summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
+            summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
+
+            updateSessionFromSummaryApi(summary.currentDayMinutes);
             saveSessionSummaryToDisk(summary);
         }
 

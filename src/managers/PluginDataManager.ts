@@ -25,7 +25,6 @@ import {
   getFileChangeSummaryAsJson,
   saveFileChangeInfoToDisk,
 } from "../storage/FileChangeInfoSummaryData";
-import { SummaryManager } from "./SummaryManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
 import { WorkspaceFolder } from "vscode";

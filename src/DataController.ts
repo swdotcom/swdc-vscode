@@ -3,21 +3,14 @@ import {
     softwareGet,
     softwarePut,
     isResponseOk,
-    softwarePost,
 } from "./http/HttpClient";
 import {
     getItem,
     setItem,
     nowInSecs,
-    getSessionFileCreateTime,
-    getOs,
-    getVersion,
-    getHostname,
-    getWorkspaceName,
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    getPluginId,
     getCommitSummaryFile,
     getSummaryInfoFile,
     getDashboardFile,
@@ -43,7 +36,7 @@ import {
     getThisWeeksCommits,
     getYesterdaysCommits,
 } from "./repo/GitUtil";
-import { SummaryManager } from "./managers/SummaryManager";
+import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -264,6 +257,14 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
+
+        commands.executeCommand("codetime.refreshTreeViews");
+
+        // reset the updated tree date since they've established a new account
+        setItem("updatedTreeDate", null);
+        if (KpmProviderManager.getInstance().isKpmTreeOpen()) {
+            treeDataUpdateCheck();
+        }
     }
 }
 

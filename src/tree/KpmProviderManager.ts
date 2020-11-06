@@ -25,7 +25,7 @@ import {
   TreeView,
 } from "vscode";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
-import { getSessionSummaryData } from "../storage/SessionSummaryData";
+import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
@@ -42,6 +42,8 @@ let counter = 0;
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
+  private kpmTreeOpen: boolean = false;
+
   constructor() { }
 
   static getInstance(): KpmProviderManager {
@@ -50,6 +52,14 @@ export class KpmProviderManager {
     }
 
     return KpmProviderManager.instance;
+  }
+
+  public isKpmTreeOpen() {
+    return this.kpmTreeOpen;
+  }
+
+  public setKpmTreeOpen(isOpen: boolean) {
+    this.kpmTreeOpen = isOpen;
   }
 
   async getOptionsTreeParents(): Promise<KpmItem[]> {
@@ -576,16 +586,16 @@ export class KpmProviderManager {
     values = [];
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
-    const avgMin = humanizeMinutes(data.averageDailyActiveCodeTimeMinutes);
+    const avgMin = humanizeMinutes(data.averageDailyMinutes);
     const activityLightningBolt =
-      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyActiveCodeTimeMinutes
+      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes
         ? "bolt.svg"
         : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
     });
-    const globalMinutesStr = humanizeMinutes(data.globalAverageDailyActiveCodeTimeMinutes);
+    const globalMinutesStr = humanizeMinutes(data.globalAverageDailyMinutes);
     values.push({
       label: `Global average (${dayStr}): ${globalMinutesStr}`,
       icon: "global-grey.svg",
@@ -949,7 +959,8 @@ export const handleKpmChangeSelection = (view: TreeView<KpmItem>, item: KpmItem)
 export const treeDataUpdateCheck = () => {
   const { day } = getNowTimes();
   const currentDay = getItem("updatedTreeDate");
-  if (currentDay !== day) {
+  const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
+  if (currentDay !== day || existingSummary.globalAverageDailyMinutes === 0) {
     SummaryManager.getInstance().updateSessionSummaryFromServer();
     setItem("updatedTreeDate", day);
   }

@@ -138,10 +138,8 @@ export function updateStatusBarWithSummaryData() {
     const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
     const data = getSessionSummaryData();
 
-    const averageDailyActiveCodeTimeMinutes = data.averageDailyActiveCodeTimeMinutes;
-
     const inFlowIcon =
-        codeTimeSummary.activeCodeTimeMinutes > averageDailyActiveCodeTimeMinutes
+        codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes
             ? "$(rocket)"
             : "$(clock)";
     const minutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
