@@ -140,7 +140,6 @@ export function updateStatusBarWithSummaryData() {
 
     const averageDailyMinutes = data.averageDailyMinutes;
 
-    // const inFlowIcon = currentDayMinutes > averageDailyMinutes ? "🚀 " : "";
     const inFlowIcon =
         codeTimeSummary.activeCodeTimeMinutes > averageDailyMinutes
             ? "$(rocket)"

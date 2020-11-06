@@ -99,9 +99,6 @@ export class PluginDataManager {
     this.dayCheckTimer = setInterval(() => {
       this.midnightCheckHandler();
     }, TWO_MIN_INTERVAL);
-
-    // check right away
-    this.midnightCheckHandler();
   }
 
   /**
@@ -494,7 +491,6 @@ export class PluginDataManager {
         td = null;
         payload.project_null_error = `TimeData should be null as its a new day`;
       }
-      await this.midnightCheckHandler();
     }
 
     // set the workspace name

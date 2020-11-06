@@ -34,6 +34,7 @@ export class WallClockManager {
 
         this._wctime = getItem("wctime") || 0;
         clock_mgr_interval = setInterval(async () => {
+
             // If the window is focused or we have in-memory keystroke data
             if (window.state.focused || kpmMgr.hasKeystrokeData()) {
                 // set the wctime (deprecated, remove one day when all plugins use time data info)
@@ -52,7 +53,7 @@ export class WallClockManager {
         }, CLOCK_INTERVAL);
     }
 
-    public dispatchStatusViewUpdate() {
+    public async dispatchStatusViewUpdate() {
         // update the status bar
         updateStatusBarWithSummaryData();
 

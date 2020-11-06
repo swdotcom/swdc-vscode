@@ -260,16 +260,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
         }
     } else {
-
         clearSessionSummaryData();
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
-
-        setTimeout(async () => {
-            await SummaryManager.getInstance().updateSessionSummaryFromServer();
-            commands.executeCommand("codetime.refreshTreeViews");
-        }, 5000);
     }
 }
 

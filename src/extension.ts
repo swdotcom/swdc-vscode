@@ -9,7 +9,6 @@ import {
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import {
-    showStatus,
     nowInSecs,
     getOffsetSeconds,
     getVersion,
@@ -20,6 +19,8 @@ import {
     setItem,
     deleteFile,
     getSoftwareDataStoreFile,
+    isNewDay,
+    getNowTimes,
 } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
@@ -33,6 +34,7 @@ import {
 import { WallClockManager } from "./managers/WallClockManager";
 import { getLastSavedKeystrokesStats } from "./managers/FileManager";
 import { TrackerManager } from "./managers/TrackerManager";
+import { SummaryManager } from "./managers/SummaryManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -45,7 +47,6 @@ let hourly_interval = null;
 let liveshare_update_interval = null;
 
 const one_min_millis = 1000 * 60;
-const one_hour_millis = one_min_millis * 60;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -162,9 +163,16 @@ export async function intializePlugin(
     if (!initializedVscodePlugin) {
         setItem("vscode_CtInit", true);
 
+        if (window.state.focused) {
+            // update the current day
+            setItem("currentDay", getNowTimes().day);
+
+            await SummaryManager.getInstance().updateSessionSummaryFromServer();
+        }
+
         setTimeout(() => {
             commands.executeCommand("codetime.displayTree");
-        }, 1200);
+        }, 1000);
     }
 
     // show the readme if it doesn't exist
@@ -215,16 +223,6 @@ function initializeIntervalJobs() {
             updateLiveshareTime();
         }
     }, one_min_millis);
-}
-
-function handlePauseMetricsEvent() {
-    TELEMETRY_ON = false;
-    showStatus("Code Time Paused", "Enable metrics to resume");
-}
-
-function handleEnableMetricsEvent() {
-    TELEMETRY_ON = true;
-    showStatus("Code Time", null);
 }
 
 function updateLiveshareTime() {
