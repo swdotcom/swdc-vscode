@@ -53,7 +53,7 @@ export class WallClockManager {
         }, CLOCK_INTERVAL);
     }
 
-    public async dispatchStatusViewUpdate() {
+    public dispatchStatusViewUpdate() {
         // update the status bar
         updateStatusBarWithSummaryData();
 
