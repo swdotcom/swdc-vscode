@@ -91,6 +91,8 @@ export class SessionSummary {
   currentDayLinesAdded: number = 0;
   currentDayLinesRemoved: number = 0;
   averageDailyMinutes: number = 0;
+  averageDailyCodeTimeMinutes: number = 0;
+  averageDailyActiveCodeTimeMinutes: number = 0;
   averageDailyKeystrokes: number = 0;
   averageDailyKpm: number = 0;
   averageLinesAdded: number = 0;
@@ -98,6 +100,8 @@ export class SessionSummary {
   liveshareMinutes: number = 0;
   globalAverageSeconds: number = 0;
   globalAverageDailyMinutes: number = 0;
+  globalAverageDailyCodeTimeMinutes: number = 0;
+  globalAverageDailyActiveCodeTimeMinutes: number = 0;
   globalAverageDailyKeystrokes: number = 0;
   globalAverageLinesAdded: number = 0;
   globalAverageLinesRemoved: number = 0;

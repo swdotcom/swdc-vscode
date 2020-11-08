@@ -25,7 +25,6 @@ import {
   getFileChangeSummaryAsJson,
   saveFileChangeInfoToDisk,
 } from "../storage/FileChangeInfoSummaryData";
-import { SummaryManager } from "./SummaryManager";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
 import { WorkspaceFolder } from "vscode";
@@ -99,9 +98,6 @@ export class PluginDataManager {
     this.dayCheckTimer = setInterval(() => {
       this.midnightCheckHandler();
     }, TWO_MIN_INTERVAL);
-
-    // check right away
-    this.midnightCheckHandler();
   }
 
   /**
@@ -221,10 +217,6 @@ export class PluginDataManager {
       // update the current day
       const nowTimes = getNowTimes();
       setItem("currentDay", nowTimes.day);
-
-      setTimeout(() => {
-        SummaryManager.getInstance().updateSessionSummaryFromServer();
-      }, 5000);
     }
   }
 
@@ -494,7 +486,6 @@ export class PluginDataManager {
         td = null;
         payload.project_null_error = `TimeData should be null as its a new day`;
       }
-      await this.midnightCheckHandler();
     }
 
     // set the workspace name

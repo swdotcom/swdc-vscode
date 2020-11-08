@@ -1,15 +1,12 @@
 import { getItem } from "../Util";
 import {
-    getSessionSummaryData,
+    getSessionSummaryFileAsJson,
     saveSessionSummaryToDisk,
-    updateStatusBarWithSummaryData,
 } from "../storage/SessionSummaryData";
-import { updateSessionFromSummaryApi } from "../storage/TimeSummaryData";
+import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
-
-// every 1 min
-const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
+import { commands } from "vscode";
 
 export class SummaryManager {
     private static instance: SummaryManager;
@@ -31,28 +28,23 @@ export class SummaryManager {
      */
     async updateSessionSummaryFromServer() {
         const jwt = getItem("jwt");
-        const result = await softwareGet(`/sessions/summary?refresh=true`, jwt);
+        const result = await softwareGet(`/sessions/summary`, jwt);
         if (isResponseOk(result) && result.data) {
-            const data = result.data;
+            const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
+            const summary: SessionSummary = result.data;
 
-            // update the session summary data
-            const summary: SessionSummary = getSessionSummaryData();
+            // update summary current day values with the existing current day values
+            summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
+            summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
+            summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
+            summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
+            summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
 
-            Object.keys(data).forEach((key) => {
-                const val = data[key];
-                if (val !== null && val !== undefined) {
-                    summary[key] = val;
-                }
-            });
-
-            // if the summary.currentDayMinutes is greater than the wall
-            // clock time then it means the plugin was installed on a
-            // different computer or the session was deleted
-            updateSessionFromSummaryApi(summary.currentDayMinutes);
-
+            updateSessionAndEditorTime(summary.currentDayMinutes);
             saveSessionSummaryToDisk(summary);
         }
 
-        updateStatusBarWithSummaryData();
+        // update the code time metrics tree views
+        commands.executeCommand("codetime.refreshKpmTree");
     }
 }

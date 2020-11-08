@@ -7,6 +7,8 @@ import {
   isStatusBarTextVisible,
   logIt,
   findFirstActiveDirectoryOrWorkspaceDirectory,
+  getNowTimes,
+  setItem,
 } from "../Util";
 import {
   getUncommitedChanges,
@@ -23,11 +25,12 @@ import {
   TreeView,
 } from "vscode";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
-import { getSessionSummaryData } from "../storage/SessionSummaryData";
+import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
+import { SummaryManager } from "../managers/SummaryManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -39,9 +42,9 @@ let counter = 0;
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
-  constructor() {
-    //
-  }
+  private kpmTreeOpen: boolean = false;
+
+  constructor() { }
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -49,6 +52,14 @@ export class KpmProviderManager {
     }
 
     return KpmProviderManager.instance;
+  }
+
+  public isKpmTreeOpen() {
+    return this.kpmTreeOpen;
+  }
+
+  public setKpmTreeOpen(isOpen: boolean) {
+    this.kpmTreeOpen = isOpen;
   }
 
   async getOptionsTreeParents(): Promise<KpmItem[]> {
@@ -571,6 +582,7 @@ export class KpmProviderManager {
 
     const dayStr = moment().format("ddd");
 
+    // ACTIVE CODE TIME MINUTES and AVERAGES
     values = [];
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
@@ -583,7 +595,7 @@ export class KpmProviderManager {
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
     });
-    const globalMinutesStr = humanizeMinutes(data.globalAverageSeconds / 60);
+    const globalMinutesStr = humanizeMinutes(data.globalAverageDailyMinutes);
     values.push({
       label: `Global average (${dayStr}): ${globalMinutesStr}`,
       icon: "global-grey.svg",
@@ -943,3 +955,13 @@ export const handleKpmChangeSelection = (view: TreeView<KpmItem>, item: KpmItem)
     logIt(`Unable to deselect track: ${err.message}`);
   }
 };
+
+export const treeDataUpdateCheck = () => {
+  const { day } = getNowTimes();
+  const currentDay = getItem("updatedTreeDate");
+  const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
+  if (currentDay !== day || existingSummary.globalAverageDailyMinutes === 0) {
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
+    setItem("updatedTreeDate", day);
+  }
+}
