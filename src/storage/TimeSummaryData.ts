@@ -108,15 +108,15 @@ export async function incrementEditorSeconds(editor_seconds: number) {
     }
 }
 
-export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
+export async function updateSessionAndEditorTime(sessionSummaryActiveCodeTimeMinutes: number) {
     const { day } = getNowTimes();
 
     const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
 
     // find out if there's a diff
     const diffActiveCodeMinutesToAdd =
-        codeTimeSummary.activeCodeTimeMinutes < currentDayMinutes
-            ? currentDayMinutes - codeTimeSummary.activeCodeTimeMinutes
+        codeTimeSummary.activeCodeTimeMinutes < sessionSummaryActiveCodeTimeMinutes
+            ? sessionSummaryActiveCodeTimeMinutes - codeTimeSummary.activeCodeTimeMinutes
             : 0;
 
     // get the current open project
@@ -152,7 +152,8 @@ export async function updateSessionFromSummaryApi(currentDayMinutes: number) {
     const secondsToAdd = diffActiveCodeMinutesToAdd * 60;
     timeData.session_seconds += secondsToAdd;
     timeData.editor_seconds += secondsToAdd;
-    // make sure editor seconds isn't less
+
+    // persist offline
     saveTimeDataSummaryToDisk(timeData);
 }
 

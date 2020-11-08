@@ -19,7 +19,6 @@ import {
     setItem,
     deleteFile,
     getSoftwareDataStoreFile,
-    getNowTimes,
 } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
@@ -33,7 +32,6 @@ import {
 import { WallClockManager } from "./managers/WallClockManager";
 import { getLastSavedKeystrokesStats } from "./managers/FileManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import { SummaryManager } from "./managers/SummaryManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;

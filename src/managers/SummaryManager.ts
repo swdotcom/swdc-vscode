@@ -1,17 +1,12 @@
 import { getItem } from "../Util";
 import {
-    getSessionSummaryData,
     getSessionSummaryFileAsJson,
     saveSessionSummaryToDisk,
-    updateStatusBarWithSummaryData,
 } from "../storage/SessionSummaryData";
-import { updateSessionFromSummaryApi } from "../storage/TimeSummaryData";
+import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { commands } from "vscode";
-
-// every 1 min
-const DAY_CHECK_TIMER_INTERVAL = 1000 * 60;
 
 export class SummaryManager {
     private static instance: SummaryManager;
@@ -38,15 +33,14 @@ export class SummaryManager {
             const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
             const summary: SessionSummary = result.data;
 
-            // update summary current day values with the existing current day values since
-            // any caller on this would have cleared the existing summary on a new day
+            // update summary current day values with the existing current day values
             summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
             summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
             summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
             summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
             summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
 
-            updateSessionFromSummaryApi(summary.currentDayMinutes);
+            updateSessionAndEditorTime(summary.currentDayMinutes);
             saveSessionSummaryToDisk(summary);
         }
 
