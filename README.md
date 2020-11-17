@@ -1,31 +1,30 @@
-<br />
+# Code Time
 
-<h1 align="center">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-paw.png" width="30px" />
-  Code Time
-  <br />
-  &nbsp
-</h1>
-
-<br />
-
-<p align="center"><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time tracking. 
+<p>
+  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
+    <img alt="Marketplace" src="https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg?style=flat-square&color=00b4ee&label=marketplace">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
+    <img alt="Installs" src="https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg?style=flat-square&color=00b4ee">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
+    <img alt="Rating" src="https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg?style=flat-square&color=00b4ee">
+  </a>
 </p>
 
-<br />
+<p><a href="https://www.software.com"><img alt="Software" src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-logo-small.png" width="100px"></a></p>
+
+<p><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time tracking. Get the most advanced time tracker for Visual Studio Code that will save you time, so you can focus more on what matters.</p>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="Marketplace" src="https://vsmarketplacebadge.apphb.com/version-short/softwaredotcom.swdc-vscode.svg"></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="Installs" src="https://vsmarketplacebadge.apphb.com/installs-short/softwaredotcom.swdc-vscode.svg"></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=softwaredotcom.swdc-vscode">
-    <img alt="Rating" src="https://vsmarketplacebadge.apphb.com/rating-short/softwaredotcom.swdc-vscode.svg"></a>
-  <a href="https://aka.ms/vsls">
-    <img alt="Live Share enabled" src="https://aka.ms/vsls-badge"></a>
+  <a href="https://app.software.com/signup?ref=readme">
+    <img width="220px" alt="Sign up" src="https://swdc-vscode.s3-us-west-1.amazonaws.com/signup-button.png">
+  </a>
 </p>
 
-<br />
+<p>Join a community of over 100,000 data-informed developers. Discover best code times, defend code time, see the impact of meetings, and improve work-life balance. Track and visualize all of your projects, or export your data to connect to your billing and timesheet tools.</p>
+
+## Features
 
 <p align="center" style="margin: 0 0">
   <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/code-time-features.png" alt="Code Time features" />
