@@ -12,13 +12,13 @@
   </a>
 </p>
 
-<p><a href="https://www.software.com"><img alt="Software" src="https://swdc-vscode.s3-us-west-1.amazonaws.com/software-logo-small.png" width="100px"></a></p>
+<p><a href="https://www.software.com"><img alt="Software" src="https://d3tr3dh09dp329.cloudfront.net/readme/software-logo-light.png" width="100px"></a></p>
 
 <p><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time tracking. Get the most advanced time tracker for Visual Studio Code that will save you time, so you can focus more on what matters.</p>
 
 <p align="center">
   <a href="https://app.software.com/signup?ref=readme">
-    <img width="220px" alt="Sign up" src="https://swdc-vscode.s3-us-west-1.amazonaws.com/signup-button.png">
+    <img width="220px" alt="Sign up" src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/signup-button.png">
   </a>
 </p>
 
@@ -27,7 +27,7 @@
 ## Features
 
 <p align="center" style="margin: 0 0">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/code-time-features.png" alt="Code Time features" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features.png" alt="Code Time features" />
 </p>
 
 ## Getting started
@@ -35,7 +35,7 @@
 **1. Create your web account**
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/login-prompt.png" alt="Code Time for VS Code login prompt" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/login.png" alt="Code Time for VS Code login prompt" />
 </p>
 
 The Code Time web app has data visualizations and settings you can customize, such as your work hours and office type for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.
@@ -45,7 +45,7 @@ You can connect multiple code editors on multiple devices using the same email a
 **2. Track your progress during the day**
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/status-bar.png" alt="Code Time for VS Code status bar" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/status-bar.png" alt="Code Time for VS Code status bar" />
 </p>
 
 Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your active code time exceeds your daily average on this day of the week.
@@ -55,7 +55,7 @@ Your status bar shows you in real-time how many hours and minutes you code each 
 To see an overview of your coding activity and project metrics, open the **Code Time panel** by clicking on the Code Time icon in your side bar.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/side-bar.png" alt="Code Time for VS Code side bar" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/sidebar.png" alt="Code Time for VS Code side bar" />
 </p>
 
 In your **Daily Metrics**, your _code time_ is the total time you have spent in your editor today. Your _active code time_ is the total time you have been typing in your editor today. Each metric shows how you compare today to your average and the global average. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
@@ -69,7 +69,7 @@ If you have a Git repository open, **Contributors** provides a breakdown of cont
 At the end of your first day, open Code Time in your side bar and click _View summary_ to open your dashboard in a new editor tab. Your dashboard summarizes your coding data—such as your code time by project, lines of code, and keystrokes per minute—today, yesterday, last week, and over the last 90 days.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/editor-dashboard.png" alt="Code Time for VS Code dashboard" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/dashboard.png" alt="Code Time for VS Code dashboard" />
 </p>
 
 ## Web app data visualizations
@@ -81,7 +81,7 @@ Click "See advanced metrics" in the Code Time side bar or visit [app.software.co
 Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-daily-active-code-time.png" alt="Code Time for VS Code daily active code time" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/daily-active-code-time.png" alt="Code Time for VS Code daily active code time" />
 </p>
 
 **Top projects**
@@ -89,7 +89,7 @@ Visualize your daily active code time. See productivity trends compared to weekl
 See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-top-projects.png" alt="Code Time for VS Code top projects" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/top-projects.png" alt="Code Time for VS Code top projects" />
 </p>
 
 **Work-life balance**
@@ -97,7 +97,7 @@ See how much time you spend per project per week. Get a breakdown of your top pr
 Connect your Google Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
 
 <p align="center" style="margin: 0 10%">
-  <img src="https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-work-life-balance.png" alt="Code Time for VS Code meeting time and work life balance" />
+  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/work-life-balance.png" alt="Code Time for VS Code meeting time and work life balance" />
 </p>
 
 ## It’s safe, secure, and free
