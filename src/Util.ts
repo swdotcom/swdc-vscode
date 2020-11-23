@@ -837,10 +837,10 @@ export async function buildLoginUrl(loginType = "software") {
     if (encodedJwt) {
         if (loginType === "github") {
             // github signup/login flow
-            loginUrl = `${api_endpoint}/auth/github?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (loginType === "google") {
             // google signup/login flow
-            loginUrl = `${api_endpoint}/auth/google?token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
         } else if (!authType && loginType !== "existing") {
             // never onboarded, show the "email" signup view
             loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
