@@ -1,5 +1,4 @@
 import {
-    getSoftwareDataStoreFile,
     getSoftwareDir,
     isWindows,
 } from "../Util";
@@ -11,15 +10,6 @@ let latestPayload: KeystrokeStats = null;
 
 export function clearLastSavedKeystrokeStats() {
     latestPayload = null;
-}
-
-export async function getLastSavedKeystrokesStats() {
-    const el = fileIt.findSortedJsonElement(getSoftwareDataStoreFile(), "start", "desc");
-    if (el) {
-        return el;
-    }
-    // returns one in memory if not found in file
-    return latestPayload;
 }
 
 export function getCurrentPayloadFile() {

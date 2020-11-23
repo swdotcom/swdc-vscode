@@ -1,7 +1,5 @@
-import { isResponseOk, softwareGet } from "../http/HttpClient";
 import {
     wrapExecPromise,
-    getItem,
     getWorkspaceFolders,
     normalizeGithubEmail,
     getFileType,

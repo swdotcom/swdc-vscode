@@ -11,8 +11,7 @@ import {
 } from "../Util";
 import {
   storeJsonData,
-  clearLastSavedKeystrokeStats,
-  getLastSavedKeystrokesStats,
+  clearLastSavedKeystrokeStats
 } from "./FileManager";
 import TimeCounterStats from "../model/TimeCounterStats";
 import {
@@ -475,17 +474,11 @@ export class PluginDataManager {
     // default error to empty
     payload.project_null_error = "";
 
-    // get the latest payload (in-memory or on file)
-    let lastPayload: KeystrokeStats = await getLastSavedKeystrokesStats();
-
     // check to see if we're in a new day
-    if (isNewDay()) {
-      lastPayload = null;
-      if (td) {
-        // don't rely on the previous TimeData
-        td = null;
-        payload.project_null_error = `TimeData should be null as its a new day`;
-      }
+    if (isNewDay() && td) {
+      // don't rely on the previous TimeData
+      td = null;
+      payload.project_null_error = `TimeData should be null as its a new day`;
     }
 
     // set the workspace name
@@ -505,14 +498,6 @@ export class PluginDataManager {
       // We found a TimeData object, use that info
       cumulative_editor_seconds = td.editor_seconds;
       cumulative_session_seconds = td.session_seconds;
-    } else if (lastPayload) {
-      // use the last saved keystrokestats
-      if (lastPayload.cumulative_editor_seconds) {
-        cumulative_editor_seconds = lastPayload.cumulative_editor_seconds + 60;
-      }
-      if (lastPayload.cumulative_session_seconds) {
-        cumulative_session_seconds = lastPayload.cumulative_session_seconds + 60;
-      }
     }
 
     // Check if the final cumulative editor seconds is less than the cumulative session seconds

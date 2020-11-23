@@ -314,24 +314,6 @@ export async function launchWebDashboard() {
     launchWebUrl(webUrl);
 }
 
-export async function writeCommitSummaryData() {
-    const filePath = getCommitSummaryFile();
-
-    const result = await softwareGet(
-        `/dashboard/commits`,
-        getItem("jwt")
-    ).catch((err) => {
-        return null;
-    });
-    let content = "WEEKLY COMMIT SUMMARY";
-    if (isResponseOk(result) && result.data) {
-        // get the string content out
-        content = result.data;
-    }
-
-    fileIt.writeContentFileSync(filePath, content);
-}
-
 export async function writeDailyReportDashboard(
     type = "yesterday",
     projectIds = []
