@@ -30,17 +30,13 @@ import {
     updateStatusBarWithSummaryData,
 } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
-import { getLastSavedKeystrokesStats } from "./managers/FileManager";
 import { TrackerManager } from "./managers/TrackerManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
 
-let fifteen_minute_interval = null;
 let twenty_minute_interval = null;
-let thirty_minute_interval = null;
-let hourly_interval = null;
 let liveshare_update_interval = null;
 
 const one_min_millis = 1000 * 60;
@@ -84,10 +80,7 @@ export function deactivate(ctx: ExtensionContext) {
     PluginDataManager.getInstance().dispose();
     WallClockManager.getInstance().dispose();
 
-    clearInterval(fifteen_minute_interval);
     clearInterval(twenty_minute_interval);
-    clearInterval(thirty_minute_interval);
-    clearInterval(hourly_interval);
     clearInterval(liveshare_update_interval);
 
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
@@ -140,9 +133,6 @@ export async function intializePlugin(
 
     // initialize the wall clock timer
     WallClockManager.getInstance();
-
-    // load the last payload into memory
-    getLastSavedKeystrokesStats();
 
     // add the interval jobs
     initializeIntervalJobs();

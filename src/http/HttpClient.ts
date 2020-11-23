@@ -11,7 +11,6 @@ import {
     getOs,
     getOffsetSeconds,
 } from "../Util";
-import { CacheManager } from "../cache/CacheManager";
 
 // build the axios api base url
 const beApi = axios.create({
@@ -30,21 +29,14 @@ beApi.defaults.headers.common["X-SWDC-Plugin-Offset"] = getOffsetSeconds() / 60;
 
 const spotifyApi = axios.create({});
 
-const cacheMgr: CacheManager = CacheManager.getInstance();
-
 export async function serverIsAvailable() {
-    let isAvail = cacheMgr.get("serverAvailable");
-
-    if (isAvail === undefined || isAvail === null) {
-        isAvail = await softwareGet("/ping", null)
-            .then((result) => {
-                return isResponseOk(result);
-            })
-            .catch((e) => {
-                return false;
-            });
-        cacheMgr.set("serverAvailable", isAvail, 60);
-    }
+    const isAvail = await softwareGet("/ping", null)
+    .then((result) => {
+        return isResponseOk(result);
+    })
+    .catch((e) => {
+        return false;
+    });
     return isAvail;
 }
 

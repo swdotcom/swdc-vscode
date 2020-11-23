@@ -9,12 +9,10 @@ import {
 import {
   launchWebUrl,
   getDashboardFile,
-  getCommitSummaryFile,
   launchLogin,
   isStatusBarTextVisible,
 } from "../Util";
 import {
-  writeCommitSummaryData,
   writeCodeTimeMetricsDashboard,
   isLoggedIn,
 } from "../DataController";
@@ -171,17 +169,4 @@ export async function displayCodeTimeMetricsDashboard() {
       });
     }
   );
-}
-
-export async function displayWeeklyCommitSummary() {
-  // 1st write the commit summary data, then show it
-  await writeCommitSummaryData();
-  const filePath = getCommitSummaryFile();
-
-  workspace.openTextDocument(filePath).then((doc) => {
-    // only focus if it's not already open
-    window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
-      // done
-    });
-  });
 }
