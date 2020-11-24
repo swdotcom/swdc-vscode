@@ -100,9 +100,11 @@ export async function softwarePut(api, payload, jwt) {
 /**
  * perform a post request
  */
-export async function softwarePost(api, payload, jwt) {
+export async function softwarePost(api, payload, jwt = null) {
     // POST the kpm to the PluginManager
-    beApi.defaults.headers.common["Authorization"] = jwt;
+    if (jwt) {
+        beApi.defaults.headers.common["Authorization"] = jwt;
+    }
     return beApi
         .post(api, payload)
         .then((resp) => {

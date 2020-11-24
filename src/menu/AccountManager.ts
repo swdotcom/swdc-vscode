@@ -4,10 +4,12 @@ import {
     getOsUsername,
     getHostname,
     setItem,
+    getPluginUuid,
+    setPluginUuid,
 } from "../Util";
-import { getAppJwt } from "../DataController";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
+import { v4 as uuidv4 } from "uuid";
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -100,31 +102,34 @@ export async function resetUserData() {
  * create an anonymous user based on github email or mac addr
  */
 export async function createAnonymousUser() {
-    let appJwt = await getAppJwt();
-    if (appJwt) {
-        const jwt = getItem("jwt");
-        // check one more time before creating the anon user
-        if (!jwt) {
-            const creation_annotation = "NO_SESSION_FILE";
-            const username = await getOsUsername();
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const hostname = await getHostname();
+    const jwt = getItem("jwt");
+    // check one more time before creating the anon user
+    if (!jwt) {
+        // this should not be undefined if its an account reset
+        let plugin_uuid = getPluginUuid();
+        if (!plugin_uuid) {
+            plugin_uuid = uuidv4();
+            // write the plugin uuid to the device.json file
+            setPluginUuid(plugin_uuid);
+        }
+        const username = await getOsUsername();
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const hostname = await getHostname();
 
-            const resp = await softwarePost(
-                "/data/onboard",
-                {
-                    timezone,
-                    username,
-                    creation_annotation,
-                    hostname,
-                },
-                appJwt
-            );
-            if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-                setItem("jwt", resp.data.jwt);
-                return resp.data.jwt;
+        const resp = await softwarePost(
+            "/plugins/onboard",
+            {
+                timezone,
+                username,
+                plugin_uuid,
+                hostname,
             }
+        );
+        if (isResponseOk(resp) && resp.data && resp.data.jwt) {
+            setItem("jwt", resp.data.jwt);
+            return resp.data.jwt;
         }
     }
+
     return null;
 }

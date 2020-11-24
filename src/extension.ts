@@ -104,8 +104,8 @@ export async function activate(ctx: ExtensionContext) {
     if (window.state.focused) {
         onboardInit(ctx, intializePlugin /*successFunction*/);
     } else {
-        // 8 to 15 second delay
-        const secondDelay = getRandomArbitrary(8, 15);
+        // 9 to 20 second delay
+        const secondDelay = getRandomArbitrary(9, 20);
         // initialize in 5 seconds if this is the secondary window
         setTimeout(() => {
             onboardInit(ctx, intializePlugin /*successFunction*/);

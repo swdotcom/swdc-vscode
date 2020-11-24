@@ -54,18 +54,6 @@ export function getToggleFileEventLoggingState() {
     return toggleFileEventLogging;
 }
 
-/**
- * get the app jwt
- */
-export async function getAppJwt() {
-    // get the app jwt
-    let resp = await softwareGet(`/data/apptoken?token=${nowInSecs()}`, null);
-    if (isResponseOk(resp)) {
-        return resp.data.jwt;
-    }
-    return null;
-}
-
 export async function getUserRegistrationState() {
     let jwt = getItem("jwt");
     if (jwt) {

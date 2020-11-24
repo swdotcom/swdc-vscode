@@ -300,6 +300,14 @@ export function getItem(key) {
     return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
+export function getPluginUuid() {
+    return fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
+}
+
+export function setPluginUuid(value: string) {
+    fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+}
+
 export function showLoading() {
     let loadingMsg = "⏳ code time metrics";
     updateStatusBar(loadingMsg, "");
@@ -431,6 +439,10 @@ function getFile(name) {
         return `${file_path}\\${name}`;
     }
     return `${file_path}/${name}`;
+}
+
+export function getDeviceFile() {
+    return getFile("device.json");
 }
 
 export function getSoftwareSessionFile() {
