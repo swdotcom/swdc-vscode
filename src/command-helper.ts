@@ -168,7 +168,7 @@ export function createCommands(
 
     // LAUNCH EMAIL LOGIN
     cmds.push(
-        commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem) => {
+        commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem, reset_data: boolean = false) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -179,7 +179,7 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("software");
+            launchLogin("software", reset_data);
         })
     );
 
@@ -202,7 +202,7 @@ export function createCommands(
 
     // LAUNCH GOOGLE LOGIN
     cmds.push(
-        commands.registerCommand("codetime.googleLogin", (item: KpmItem) => {
+        commands.registerCommand("codetime.googleLogin", (item: KpmItem, reset_data: boolean = false) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -214,13 +214,13 @@ export function createCommands(
             }
             item.interactionIcon = "google";
             tracker.trackUIInteraction(item);
-            launchLogin("google");
+            launchLogin("google", reset_data);
         })
     );
 
     // LAUNCH GITHUB LOGIN
     cmds.push(
-        commands.registerCommand("codetime.githubLogin", (item: KpmItem) => {
+        commands.registerCommand("codetime.githubLogin", (item: KpmItem, reset_data: boolean = false) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -231,7 +231,7 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("github");
+            launchLogin("github", reset_data);
         })
     );
 

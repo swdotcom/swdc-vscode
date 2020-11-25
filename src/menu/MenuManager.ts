@@ -36,15 +36,16 @@ export function showQuickPick(pickOptions): any {
 
   return window.showQuickPick(pickOptions.items, options).then(async (item) => {
     if (item) {
-      let url = item["url"];
-      let cb = item["cb"];
-      let command = item["command"];
+      const url = item["url"];
+      const cb = item["cb"];
+      const command = item["command"];
+      const commandArgs = item["commandArgs"] || [];
       if (url) {
         launchWebUrl(url);
       } else if (cb) {
         cb();
       } else if (command) {
-        commands.executeCommand(command);
+        commands.executeCommand(command, ...commandArgs);
       }
     }
     return item;

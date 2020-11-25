@@ -7,11 +7,9 @@ import {
 import {
     getItem,
     setItem,
-    nowInSecs,
     buildLoginUrl,
     launchWebUrl,
     logIt,
-    getCommitSummaryFile,
     getSummaryInfoFile,
     getDashboardFile,
     getProjectCodeSummaryFile,

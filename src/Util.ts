@@ -24,7 +24,7 @@ import {
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
-import { createAnonymousUser } from "./menu/AccountManager";
+import { createAnonymousUser, resetData } from "./menu/AccountManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -783,15 +783,20 @@ export function humanizeMinutes(min) {
     return str;
 }
 
-export async function launchLogin(loginType = "software") {
-    // First check if they have already onboarded.
-    // A user may not have completed the onboarding flow (letting
-    // the web signup view stay open) by the time our lazy refetch
-    // user status has given up.
-    const result = await getUserRegistrationState();
-    if (result.loggedOn) {
-        window.showInformationMessage("You are already logged in. Please wait...");
-        return;
+export async function launchLogin(loginType: string = "software", reset_data: boolean = false) {
+    if (!reset_data) {
+        // First check if they have already onboarded.
+        // A user may not have completed the onboarding flow (letting
+        // the web signup view stay open) by the time our lazy refetch
+        // user status has given up.
+        const result = await getUserRegistrationState();
+        if (result.loggedOn) {
+            window.showInformationMessage("You are already logged in. Please wait...");
+            return;
+        }
+    } else {
+        // time to reset data
+        await resetData(false /*refresh_tree*/);
     }
 
     // continue with onboaring
