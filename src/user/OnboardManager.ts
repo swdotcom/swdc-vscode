@@ -80,6 +80,7 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
         setTimeout(() => {
             onboardInit(ctx, callback);
         }, one_min_millis);
+        return;
     } else if (retry_counter < 5) {
         if (serverIsOnline) {
             retry_counter++;
@@ -88,6 +89,7 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
         setTimeout(() => {
             onboardInit(ctx, callback);
         }, 1000 * 5);
+        return;
     }
 
     // tried enough times, create an anon user
