@@ -237,58 +237,26 @@ export class ProjectCommitManager {
     }
 
     async getAllProjects(): Promise<Checkbox[]> {
-        return await this.getProjectCheckboxesByQueryString();
+        return await this.getProjectCheckboxes();
     }
 
-    async getProjectCheckboxesByStartEnd(start, end): Promise<Checkbox[]> {
-        const qryStr = `?start=${start}&end=${end}`;
-        return await this.getProjectCheckboxesByQueryString(qryStr);
-    }
-
-    async getProjectCheckboxesByRangeType(
-        type = "lastWeek"
-    ): Promise<Checkbox[]> {
+    async getProjectCheckboxes(): Promise<Checkbox[]> {
         // fetch the projects from the backend
-        const qryStr = `?timeRange=${type}`;
-        return await this.getProjectCheckboxesByQueryString(qryStr);
-    }
-
-    async getProjectCheckboxesByQueryString(qryStr: string = ""): Promise<Checkbox[]> {
-        // fetch the projects from the backend
-        const api = `/projects${qryStr}`;
+        const api = "/v1/user_metrics/projects";
         const resp = await softwareGet(api, getItem("jwt"));
         let checkboxes: Checkbox[] = [];
         if (isResponseOk(resp)) {
             const projects = resp.data;
             let total_records = 0;
             if (projects && projects.length) {
-                projects.forEach((p) => {
-                    if (!p.coding_records) {
-                        p["coding_records"] = 1;
-                    }
-                    total_records += p.coding_records;
-                });
-
                 let lineNumber = 0;
                 for (let i = 0; i < projects.length; i++) {
                     const p = projects[i];
-                    const name = p.project_name
-                        ? p.project_name
-                        : p.name
-                            ? p.name
-                            : "";
-                    const projectIds = p.projectIds
-                        ? p.projectIds
-                        : p.id
-                            ? [p.id]
-                            : [];
+                    const name = p.name ? p.name : "";
+                    const projectIds = p.id ? [p.id] : [];
                     if (name && projectIds.length) {
-                        const percentage =
-                            (p.coding_records / total_records) * 100;
-                        // coding_records:419, project_name:"swdc-sublime-music-time", projectId:603593
+                        // name: "swdc-sublime-music-time", id: "52747d64cc45643e8eab8732bd4..."
                         const cb: Checkbox = new Checkbox();
-                        cb.coding_records = p.coding_records;
-                        cb.text = `(${percentage.toFixed(2)}%)`;
                         cb.label = name;
                         cb.checked = true;
                         cb.lineNumber = lineNumber;
@@ -297,11 +265,6 @@ export class ProjectCommitManager {
                         lineNumber++;
                     }
                 }
-
-                checkboxes.sort(
-                    (a: Checkbox, b: Checkbox) =>
-                        b.coding_records - a.coding_records
-                );
             }
         }
 
