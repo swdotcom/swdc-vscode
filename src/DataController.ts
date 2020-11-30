@@ -3,6 +3,7 @@ import {
     softwareGet,
     softwarePut,
     isResponseOk,
+    softwarePost,
 } from "./http/HttpClient";
 import {
     getItem,
@@ -315,11 +316,9 @@ export async function writeProjectCommitDashboardByStartEnd(
     end,
     projectIds
 ) {
-    const qryStr = `?start=${start}&end=${end}&projectIds=${projectIds.join(
-        ","
-    )}`;
-    const api = `/projects/codeSummary${qryStr}`;
-    const result = await softwareGet(api, getItem("jwt"));
+    const qryStr = `?start=${start}&end=${end}`;
+    const api = `/v1/user_metrics/projectSummary${qryStr}`;
+    const result = await softwarePost(api, projectIds, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
@@ -328,9 +327,9 @@ export async function writeProjectCommitDashboardByRangeType(
     projectIds
 ) {
     projectIds = projectIds.filter((n) => n);
-    const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
-    const api = `/projects/codeSummary${qryStr}`;
-    const result = await softwareGet(api, getItem("jwt"));
+    const qryStr = `?timeRange=${type}`;
+    const api = `/v1/user_metrics/projectSummary${qryStr}`;
+    const result = await softwarePost(api, projectIds, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
