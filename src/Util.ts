@@ -845,10 +845,10 @@ export async function buildLoginUrl(loginType = "software") {
     if (encodedJwt) {
         if (loginType === "github") {
             // github signup/login flow
-            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}`;
+            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}&plugin_id=${getPluginId()}}`;
         } else if (loginType === "google") {
             // google signup/login flow
-            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}`;
+            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}&plugin_id=${getPluginId()}`;
         } else if (!authType && loginType !== "existing") {
             // never onboarded, show the "email" signup view
             loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
