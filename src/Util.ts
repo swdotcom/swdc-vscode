@@ -819,19 +819,10 @@ export async function showLoginPrompt(serverIsOnline) {
         ...[LOGIN_LABEL]
     );
 
-    let eventName = "";
-    let eventType = "";
-
     if (selection === LOGIN_LABEL) {
         let loginUrl = await buildLoginUrl(serverIsOnline);
         launchWebUrl(loginUrl);
         refetchUserStatusLazily();
-        eventName = "click";
-        eventType = "mouse";
-    } else {
-        // create an event showing login was not selected
-        eventName = "close";
-        eventType = "window";
     }
 }
 
@@ -854,10 +845,10 @@ export async function buildLoginUrl(loginType = "software") {
     if (encodedJwt) {
         if (loginType === "github") {
             // github signup/login flow
-            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}`;
         } else if (loginType === "google") {
             // google signup/login flow
-            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}`;
         } else if (!authType && loginType !== "existing") {
             // never onboarded, show the "email" signup view
             loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
@@ -879,8 +870,7 @@ export async function connectAtlassian() {
         jwt = getItem("jwt");
     }
 
-    const encodedJwt = encodeURIComponent(jwt);
-    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?token=${jwt}&plugin=${getPluginType()}`;
+    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?plugin_token=${jwt}&plugin=${getPluginType()}`;
     launchWebUrl(connectAtlassianAuth);
     refetchAtlassianOauthLazily();
 }
