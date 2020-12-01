@@ -89,23 +89,20 @@ export async function resetData(refresh_tree: boolean = true) {
 
     // delete the current JWT and call the onboard logic so that we
     // create a anon user JWT
-    await createAnonymousUser();
+    await createAnonymousUser(true);
 }
 
 export async function resetUserData() {
-    setItem("jwt", null);
-    setItem("name", null);
-    // reset the plugin uuid to allow the user to reauth
-    setPluginUuid(null);
+    setItem("resetData", true);
 }
 
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(): Promise<string> {
+export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<string> {
     const jwt = getItem("jwt");
     // check one more time before creating the anon user
-    if (!jwt) {
+    if (!jwt || ignoreJwt) {
         // this should not be undefined if its an account reset
         let plugin_uuid = getPluginUuid();
         if (!plugin_uuid) {
@@ -128,6 +125,9 @@ export async function createAnonymousUser(): Promise<string> {
         );
         if (isResponseOk(resp) && resp.data && resp.data.jwt) {
             setItem("jwt", resp.data.jwt);
+            if (!resp.data.user.registered) {
+                setItem("name", null);
+            }
             return resp.data.jwt;
         }
     }

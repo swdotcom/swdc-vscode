@@ -63,14 +63,23 @@ export async function getUserRegistrationState() {
             // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
             let state = resp.data.state ? resp.data.state : "UNKNOWN";
             if (state === "OK") {
+                const resettingData = getItem("resetData");
+                const currentAuthType = getItem("authType");
                 // set the authType based on...
                 // github_access_token, google_access_token, or password being true
                 if (resp.data.user) {
                     const user = resp.data.user;
-                    if (user.github_access_token) {
-                        setItem("authType", "github");
-                    } else if (user.google_access_token) {
-                        setItem("authType", "google");
+
+                    if (currentAuthType) {
+                        const matchingAuth = user.auths ? user.auths.filter(n => n.type === currentAuthType) : null;
+                        let type = "";
+                        if (matchingAuth || !resettingData) {
+                            // singup or switch accounts completed
+                            setItem("resetData", false);
+                        } else if (resettingData && currentAuthType !== "software" && currentAuthType !== "email") {
+                            // it didn't return the new switch state
+                            return { loggedOn: false, state: "UNKNOWN" };
+                        }
                     } else {
                         setItem("authType", "software");
                     }
@@ -109,7 +118,8 @@ export async function getUserRegistrationState() {
 export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
     const authType = getItem("authType");
-    if (name && authType) {
+    const resetData = getItem("resetData");
+    if (name && authType && !resetData) {
         return true;
     }
 

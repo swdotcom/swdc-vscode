@@ -66,9 +66,10 @@ export class KpmProviderManager {
     counter++;
     const space = counter % 2 === 0 ? "" : " ";
     const treeItems: KpmItem[] = [];
-    const loggedIn: boolean = await isLoggedIn();
 
-    if (!loggedIn) {
+    const name = await getItem("name");
+
+    if (!name) {
       treeItems.push(this.getSignUpButton("Google", null));
 
       treeItems.push(this.getSignUpButton("GitHub", "white"));
@@ -96,7 +97,7 @@ export class KpmProviderManager {
     // view project summary button node
     treeItems.push(this.getViewProjectSummaryButton());
 
-    if (!loggedIn) {
+    if (!name) {
       treeItems.push(this.getDividerButton());
 
       // toggle status bar button
