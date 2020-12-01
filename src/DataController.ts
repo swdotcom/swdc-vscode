@@ -3,6 +3,7 @@ import {
     softwareGet,
     softwarePut,
     isResponseOk,
+    softwarePost,
 } from "./http/HttpClient";
 import {
     getItem,
@@ -327,24 +328,20 @@ export async function writeDailyReportDashboard(
 export async function writeProjectCommitDashboardByStartEnd(
     start,
     end,
-    projectIds
+    project_ids
 ) {
-    const qryStr = `?start=${start}&end=${end}&projectIds=${projectIds.join(
-        ","
-    )}`;
-    const api = `/projects/codeSummary${qryStr}`;
-    const result = await softwareGet(api, getItem("jwt"));
+    const api = `/v1/user_metrics/project_summary`;
+    const result = await softwarePost(api, {project_ids, start, end}, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
 export async function writeProjectCommitDashboardByRangeType(
     type = "lastWeek",
-    projectIds
+    project_ids
 ) {
-    projectIds = projectIds.filter((n) => n);
-    const qryStr = `?timeRange=${type}&projectIds=${projectIds.join(",")}`;
-    const api = `/projects/codeSummary${qryStr}`;
-    const result = await softwareGet(api, getItem("jwt"));
+    project_ids = project_ids.filter((n) => n);
+    const api = `/v1/user_metrics/project_summary`;
+    const result = await softwarePost(api, {project_ids, time_range: type}, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
