@@ -314,22 +314,20 @@ export async function writeDailyReportDashboard(
 export async function writeProjectCommitDashboardByStartEnd(
     start,
     end,
-    projectIds
+    project_ids
 ) {
-    const qryStr = `?start=${start}&end=${end}`;
-    const api = `/v1/user_metrics/projectSummary${qryStr}`;
-    const result = await softwarePost(api, projectIds, getItem("jwt"));
+    const api = `/v1/user_metrics/project_summary`;
+    const result = await softwarePost(api, {project_ids, start, end}, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
 export async function writeProjectCommitDashboardByRangeType(
     type = "lastWeek",
-    projectIds
+    project_ids
 ) {
-    projectIds = projectIds.filter((n) => n);
-    const qryStr = `?timeRange=${type}`;
-    const api = `/v1/user_metrics/projectSummary${qryStr}`;
-    const result = await softwarePost(api, projectIds, getItem("jwt"));
+    project_ids = project_ids.filter((n) => n);
+    const api = `/v1/user_metrics/project_summary`;
+    const result = await softwarePost(api, {project_ids, time_range: type}, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
