@@ -66,7 +66,7 @@ export async function softwareGet(api, jwt) {
     }
 
     return await beApi.get(api).catch((err) => {
-        if (err.response.status === 401) {
+        if (err.response && err.response.status === 401) {
             resetDataAndAlertUser()
         }
 
