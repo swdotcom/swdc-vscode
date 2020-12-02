@@ -851,7 +851,7 @@ export async function buildLoginUrl(loginType = "software") {
             loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}&plugin_uuid=${getPluginUuid()}&plugin_id=${getPluginId()}&pluginVersion=${getVersion()}`;
         } else if (!authType && loginType !== "existing") {
             // never onboarded, show the "email" signup view
-            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
+            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&plugin_uuid=${getPluginUuid()}&plugin_id=${getPluginId()}&pluginVersion=${getVersion()}`;
         } else {
             // they've already onboarded before or its an "existing login request", take them to the login page
             loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&login=true`;
