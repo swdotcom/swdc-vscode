@@ -1,4 +1,4 @@
-import { window, commands } from "vscode";
+import { window } from "vscode";
 import {
     getItem,
     getOsUsername,
@@ -6,6 +6,8 @@ import {
     setItem,
     getPluginUuid,
     setPluginUuid,
+    getAuthCallbackState,
+    setAuthCallbackState,
 } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
@@ -44,17 +46,17 @@ function showLogInMenuOptions() {
     items.push({
         label: "Log in with Google",
         command: "codetime.googleLogin",
-        commandArgs: [null /*KpmItem*/, true /*reset_data*/]
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     items.push({
         label: "Log in with GitHub",
         command: "codetime.githubLogin",
-        commandArgs: [null /*KpmItem*/, true /*reset_data*/]
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     items.push({
         label: "Log in with Email",
         command: "codetime.codeTimeLogin",
-        commandArgs: [null /*KpmItem*/, true /*reset_data*/]
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     const menuOptions = {
         items,
@@ -67,7 +69,7 @@ function showLogInMenuOptions() {
  * This is called if we ever get a 401
  */
 export async function resetDataAndAlertUser() {
-    await resetData()
+    await createAnonymousUser(true);
     window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
         if (selection === "Log In") {
             showLogInMenuOptions()
@@ -75,26 +77,6 @@ export async function resetDataAndAlertUser() {
     })
 }
 
-export async function resetData(refresh_tree: boolean = true) {
-    // clear the session.json
-    await resetUserData();
-
-    // refresh the tree
-    if (refresh_tree) {
-        commands.executeCommand("codetime.refreshTreeViews");
-    } else {
-        // just refresh the menu part of the tree view
-        commands.executeCommand("codetime.refreshCodetimeMenuTree");
-    }
-
-    // delete the current JWT and call the onboard logic so that we
-    // create a anon user JWT
-    await createAnonymousUser(true);
-}
-
-export async function resetUserData() {
-    setItem("resetData", true);
-}
 
 /**
  * create an anonymous user based on github email or mac addr
@@ -105,10 +87,15 @@ export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<st
     if (!jwt || ignoreJwt) {
         // this should not be undefined if its an account reset
         let plugin_uuid = getPluginUuid();
+        let auth_callback_state = getAuthCallbackState();
         if (!plugin_uuid) {
             plugin_uuid = uuidv4();
             // write the plugin uuid to the device.json file
             setPluginUuid(plugin_uuid);
+        }
+        if (!auth_callback_state) {
+            auth_callback_state = uuidv4();
+            setAuthCallbackState(auth_callback_state);
         }
         const username = await getOsUsername();
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -121,6 +108,7 @@ export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<st
                 username,
                 plugin_uuid,
                 hostname,
+                auth_callback_state
             }
         );
         if (isResponseOk(resp) && resp.data && resp.data.jwt) {

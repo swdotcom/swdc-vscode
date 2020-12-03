@@ -168,7 +168,7 @@ export function createCommands(
 
     // LAUNCH EMAIL LOGIN
     cmds.push(
-        commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem, reset_data: boolean = false) => {
+        commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem, switching_account: boolean) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -179,13 +179,13 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("software", reset_data);
+            launchLogin("software", switching_account);
         })
     );
 
     // LAUNCH EXISTING ACCOUNT LOGIN
     cmds.push(
-        commands.registerCommand("codetime.codeTimeExisting", (item: KpmItem) => {
+        commands.registerCommand("codetime.codeTimeExisting", (item: KpmItem, switching_account: boolean) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -196,13 +196,13 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("existing");
+            launchLogin("existing", switching_account);
         })
     );
 
     // LAUNCH GOOGLE LOGIN
     cmds.push(
-        commands.registerCommand("codetime.googleLogin", (item: KpmItem, reset_data: boolean = false) => {
+        commands.registerCommand("codetime.googleLogin", (item: KpmItem, switching_account: boolean) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -214,13 +214,13 @@ export function createCommands(
             }
             item.interactionIcon = "google";
             tracker.trackUIInteraction(item);
-            launchLogin("google", reset_data);
+            launchLogin("google", switching_account);
         })
     );
 
     // LAUNCH GITHUB LOGIN
     cmds.push(
-        commands.registerCommand("codetime.githubLogin", (item: KpmItem, reset_data: boolean = false) => {
+        commands.registerCommand("codetime.githubLogin", (item: KpmItem, switching_account: boolean) => {
             if (!item) {
                 // it's from the command palette, create a kpm item so
                 // it can build the ui_element in the tracker manager
@@ -231,7 +231,7 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("github", reset_data);
+            launchLogin("github", switching_account);
         })
     );
 
