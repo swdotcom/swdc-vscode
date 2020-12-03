@@ -8,10 +8,12 @@ import {
     setPluginUuid,
     getAuthCallbackState,
     setAuthCallbackState,
+    getNowTimes,
 } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
 import { v4 as uuidv4 } from "uuid";
+const moment = require("moment-timezone");
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -69,12 +71,19 @@ function showLogInMenuOptions() {
  * This is called if we ever get a 401
  */
 export async function resetDataAndAlertUser() {
-    await createAnonymousUser(true);
-    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
-        if (selection === "Log In") {
-            showLogInMenuOptions()
-        }
-    })
+    const lastResetDay = getItem("lastResetDay");
+    const { day } = getNowTimes();
+
+    // don't let this get called infinitely if the JWT is bad
+    if (!lastResetDay || lastResetDay !== day) {
+        setItem("lastResetDay", day);
+        await createAnonymousUser(true);
+        window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
+            if (selection === "Log In") {
+                showLogInMenuOptions()
+            }
+        });
+    }
 }
 
 
