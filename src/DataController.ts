@@ -8,11 +8,8 @@ import {
 import {
     getItem,
     setItem,
-    nowInSecs,
-    buildLoginUrl,
     launchWebUrl,
     logIt,
-    getCommitSummaryFile,
     getSummaryInfoFile,
     getDashboardFile,
     getProjectCodeSummaryFile,
@@ -25,6 +22,8 @@ import {
     getColumnHeaders,
     findFirstActiveDirectoryOrWorkspaceDirectory,
     getDailyReportSummaryFile,
+    getAuthCallbackState,
+    setAuthCallbackState,
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
@@ -55,63 +54,50 @@ export function getToggleFileEventLoggingState() {
     return toggleFileEventLogging;
 }
 
-/**
- * get the app jwt
- */
-export async function getAppJwt() {
-    // get the app jwt
-    let resp = await softwareGet(`/data/apptoken?token=${nowInSecs()}`, null);
-    if (isResponseOk(resp)) {
-        return resp.data.jwt;
-    }
-    return null;
-}
-
 export async function getUserRegistrationState() {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let api = "/users/plugin/state";
-        let resp = await softwareGet(api, jwt);
+    const jwt = getItem("jwt");
+    const auth_callback_state = getAuthCallbackState();
+    const switchingAccount = getItem("switching_account");
 
-        if (isResponseOk(resp) && resp.data) {
-            // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
-            let state = resp.data.state ? resp.data.state : "UNKNOWN";
-            if (state === "OK") {
-                // set the authType based on...
-                // github_access_token, google_access_token, or password being true
-                if (resp.data.user) {
-                    const user = resp.data.user;
-                    if (user.github_access_token) {
-                        setItem("authType", "github");
-                    } else if (user.google_access_token) {
-                        setItem("authType", "google");
-                    } else {
-                        setItem("authType", "software");
-                    }
+    let api = "/users/plugin/state";
+
+    const token = (auth_callback_state) ? auth_callback_state : jwt;
+
+    console.log("checking state using token: ", token);
+    const resp = await softwareGet(api, token);
+
+    if (isResponseOk(resp) && resp.data) {
+        // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
+        const state = resp.data.state ? resp.data.state : "UNKNOWN";
+        if (state === "OK") {
+            // set the authType based on...
+            // github_access_token, google_access_token, or password being true
+            if (resp.data.user) {
+                const user = resp.data.user;
+
+                setItem("jwt", user.plugin_jwt);
+                if (user.registered) {
+                    setItem("name", user.email);
+                } else {
+                    setItem("name", null);
                 }
 
-                let sessionEmail = getItem("name");
-                let email = resp.data.email;
-
-                // set the name using the email
-                if (email && sessionEmail !== email) {
-                    setItem("name", email);
+                const currentAuthType = getItem("authType");
+                if (!currentAuthType) {
+                    setItem("authType", "software");
                 }
-
-                // check the jwt
-                let pluginJwt = resp.data.jwt;
-                if (pluginJwt && pluginJwt !== jwt) {
-                    // update it
-                    setItem("jwt", pluginJwt);
-                }
-
-                // if we need the user it's "resp.data.user"
-                return { loggedOn: true, state };
             }
-            // return the state that is returned
-            return { loggedOn: false, state };
+
+            setItem("switching_account", false);
+            setAuthCallbackState(null);
+
+            // if we need the user it's "resp.data.user"
+            return { loggedOn: true, state };
         }
+        // return the state that is returned
+        return { loggedOn: false, state };
     }
+
     // all else fails, set false and UNKNOWN
     return { loggedOn: false, state: "UNKNOWN" };
 }
@@ -123,7 +109,8 @@ export async function getUserRegistrationState() {
 export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
     const authType = getItem("authType");
-    if (name && authType) {
+    const switching_account = getItem("switching_account");
+    if (name && authType && !switching_account) {
         return true;
     }
 
@@ -252,6 +239,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
+        } else {
+            // clear the auth callback state
+            setItem("switching_account", false);
+            setAuthCallbackState(null);
         }
     } else {
         clearSessionSummaryData();
@@ -299,19 +290,14 @@ async function slackConnectStatusHandler(callback, tryCountUntilFound) {
 }
 
 export async function launchWebDashboard() {
-    // {loggedIn: true|false}
-    let loggedIn: boolean = await isLoggedIn();
+
     let webUrl = await buildWebDashboardUrl();
 
-    if (!loggedIn) {
-        webUrl = await buildLoginUrl();
-        refetchUserStatusLazily();
-    } else {
-        // add the token=jwt
-        const jwt = getItem("jwt");
-        const encodedJwt = encodeURIComponent(jwt);
-        webUrl = `${webUrl}?token=${encodedJwt}`;
-    }
+    // add the token=jwt
+    const jwt = getItem("jwt");
+    const encodedJwt = encodeURIComponent(jwt);
+    webUrl = `${webUrl}?token=${encodedJwt}`;
+
     launchWebUrl(webUrl);
 }
 

@@ -11,10 +11,10 @@ import {
   getDashboardFile,
   launchLogin,
   isStatusBarTextVisible,
+  getItem,
 } from "../Util";
 import {
-  writeCodeTimeMetricsDashboard,
-  isLoggedIn,
+  writeCodeTimeMetricsDashboard
 } from "../DataController";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { ProgressManager } from "../managers/ProgressManager";
@@ -36,15 +36,16 @@ export function showQuickPick(pickOptions): any {
 
   return window.showQuickPick(pickOptions.items, options).then(async (item) => {
     if (item) {
-      let url = item["url"];
-      let cb = item["cb"];
-      let command = item["command"];
+      const url = item["url"];
+      const cb = item["cb"];
+      const command = item["command"];
+      const commandArgs = item["commandArgs"] || [];
       if (url) {
         launchWebUrl(url);
       } else if (cb) {
         cb();
       } else if (command) {
-        commands.executeCommand(command);
+        commands.executeCommand(command, ...commandArgs);
       }
     }
     return item;
@@ -57,7 +58,7 @@ export async function buildWebDashboardUrl() {
 
 export async function showMenuOptions() {
 
-  const loggedIn: boolean = await isLoggedIn();
+  const email = getItem("name");
 
   // {placeholder, items: [{label, description, url, details, tooltip},...]}
   let kpmMenuOptions = {
@@ -73,7 +74,7 @@ export async function showMenuOptions() {
   });
 
   let loginMsgDetail = "Finish creating your account and see rich data visualizations.";
-  if (!loggedIn) {
+  if (!email) {
     kpmMenuOptions.items.push({
       label: LOGIN_LABEL,
       detail: loginMsgDetail,
@@ -109,7 +110,7 @@ export async function showMenuOptions() {
     command: "codetime.sendFeedback",
   });
 
-  if (loggedIn) {
+  if (email) {
     kpmMenuOptions.items.push({
       label: "Web dashboard",
       detail: "See rich data visualizations in the web app",
@@ -118,24 +119,6 @@ export async function showMenuOptions() {
       eventDescription: "PaletteMenuLaunchWebDashboard",
     });
   }
-
-  // kpmMenuOptions.items.push({
-  //     label:
-  //         "___________________________________________________________________",
-  //     cb: null,
-  //     url: null,
-  //     command: null
-  // });
-
-  // const atlassianAccessToken = getItem("atlassian_access_token");
-  // if (!atlassianAccessToken) {
-  //     kpmMenuOptions.items.push({
-  //         label: "Connect Atlassian",
-  //         detail: "To integrate with your Jira projects",
-  //         cb: null,
-  //         command: "codetime.connectAtlassian"
-  //     });
-  // }
 
   showQuickPick(kpmMenuOptions);
 }

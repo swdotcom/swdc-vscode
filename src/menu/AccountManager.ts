@@ -1,13 +1,19 @@
-import { window, commands } from "vscode";
+import { window } from "vscode";
 import {
     getItem,
     getOsUsername,
     getHostname,
     setItem,
+    getPluginUuid,
+    setPluginUuid,
+    getAuthCallbackState,
+    setAuthCallbackState,
+    getNowTimes,
 } from "../Util";
-import { getAppJwt } from "../DataController";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
+import { v4 as uuidv4 } from "uuid";
+const moment = require("moment-timezone");
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -23,8 +29,7 @@ export async function showSwitchAccountsMenu() {
     const placeholder = `Connected using ${type} (${name})`;
     items.push({
         label: "Switch to a different account?",
-        detail: "Click to link to a different account.",
-        cb: resetData,
+        detail: "Click to link to a different account."
     });
     const menuOptions = {
         items,
@@ -42,15 +47,18 @@ function showLogInMenuOptions() {
     const placeholder = `Log in using...`;
     items.push({
         label: "Log in with Google",
-        command: "codetime.googleLogin"
+        command: "codetime.googleLogin",
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     items.push({
         label: "Log in with GitHub",
-        command: "codetime.githubLogin"
+        command: "codetime.githubLogin",
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     items.push({
         label: "Log in with Email",
-        command: "codetime.codeTimeLogin"
+        command: "codetime.codeTimeLogin",
+        commandArgs: [null /*KpmItem*/, true /*switching_account*/]
     });
     const menuOptions = {
         items,
@@ -59,72 +67,67 @@ function showLogInMenuOptions() {
     showQuickPick(menuOptions);
 }
 
-export async function processSwitchAccounts() {
-    const selection = await window.showInformationMessage(
-        "Switch to a different account?",
-        { modal: true },
-        ...["Yes"]
-    );
-    if (selection && selection === "Yes") {
-        await resetData();
+/**
+ * This is called if we ever get a 401
+ */
+export async function resetDataAndAlertUser() {
+    const lastResetDay = getItem("lastResetDay");
+    const { day } = getNowTimes();
+
+    // don't let this get called infinitely if the JWT is bad
+    if (!lastResetDay || lastResetDay !== day) {
+        setItem("lastResetDay", day);
+        await createAnonymousUser(true);
+        window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
+            if (selection === "Log In") {
+                showLogInMenuOptions()
+            }
+        });
     }
 }
 
-export async function resetDataAndAlertUser() {
-    resetData()
-    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then(selection => {
-        if (selection === "Log In") {
-            showLogInMenuOptions()
-        }
-    })
-}
-
-export async function resetData() {
-    // clear the session.json
-    await resetUserData();
-
-    // refresh the tree
-    commands.executeCommand("codetime.refreshTreeViews");
-
-    // delete the current JWT and call the onboard logic so that we
-    // create a anon user JWT
-    await createAnonymousUser();
-}
-
-export async function resetUserData() {
-    setItem("jwt", null);
-    setItem("name", null);
-}
 
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser() {
-    let appJwt = await getAppJwt();
-    if (appJwt) {
-        const jwt = getItem("jwt");
-        // check one more time before creating the anon user
-        if (!jwt) {
-            const creation_annotation = "NO_SESSION_FILE";
-            const username = await getOsUsername();
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const hostname = await getHostname();
+export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<string> {
+    const jwt = getItem("jwt");
+    // check one more time before creating the anon user
+    if (!jwt || ignoreJwt) {
+        // this should not be undefined if its an account reset
+        let plugin_uuid = getPluginUuid();
+        let auth_callback_state = getAuthCallbackState();
+        if (!plugin_uuid) {
+            plugin_uuid = uuidv4();
+            // write the plugin uuid to the device.json file
+            setPluginUuid(plugin_uuid);
+        }
+        if (!auth_callback_state) {
+            auth_callback_state = uuidv4();
+            setAuthCallbackState(auth_callback_state);
+        }
+        const username = await getOsUsername();
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const hostname = await getHostname();
 
-            const resp = await softwarePost(
-                "/data/onboard",
-                {
-                    timezone,
-                    username,
-                    creation_annotation,
-                    hostname,
-                },
-                appJwt
-            );
-            if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-                setItem("jwt", resp.data.jwt);
-                return resp.data.jwt;
+        const resp = await softwarePost(
+            "/plugins/onboard",
+            {
+                timezone,
+                username,
+                plugin_uuid,
+                hostname,
+                auth_callback_state
             }
+        );
+        if (isResponseOk(resp) && resp.data && resp.data.jwt) {
+            setItem("jwt", resp.data.jwt);
+            if (!resp.data.user.registered) {
+                setItem("name", null);
+            }
+            return resp.data.jwt;
         }
     }
+
     return null;
 }

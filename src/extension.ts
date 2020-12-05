@@ -4,8 +4,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import {
-    isLoggedIn,
-    initializePreferences,
+    initializePreferences
 } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import {
@@ -18,7 +17,7 @@ import {
     displayReadmeIfNotExists,
     setItem,
     deleteFile,
-    getSoftwareDataStoreFile,
+    getSoftwareDataStoreFile
 } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
@@ -36,7 +35,6 @@ let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
 
-let twenty_minute_interval = null;
 let liveshare_update_interval = null;
 
 const one_min_millis = 1000 * 60;
@@ -80,7 +78,6 @@ export function deactivate(ctx: ExtensionContext) {
     PluginDataManager.getInstance().dispose();
     WallClockManager.getInstance().dispose();
 
-    clearInterval(twenty_minute_interval);
     clearInterval(liveshare_update_interval);
 
     // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
@@ -104,8 +101,8 @@ export async function activate(ctx: ExtensionContext) {
     if (window.state.focused) {
         onboardInit(ctx, intializePlugin /*successFunction*/);
     } else {
-        // 8 to 15 second delay
-        const secondDelay = getRandomArbitrary(8, 15);
+        // 9 to 20 second delay
+        const secondDelay = getRandomArbitrary(9, 20);
         // initialize in 5 seconds if this is the secondary window
         setTimeout(() => {
             onboardInit(ctx, intializePlugin /*successFunction*/);
@@ -136,10 +133,6 @@ export async function intializePlugin(
 
     // add the interval jobs
     initializeIntervalJobs();
-
-    // get the login status
-    // {loggedIn: true|false}
-    await isLoggedIn();
 
     // initialize preferences
     await initializePreferences();
@@ -184,18 +177,6 @@ export async function intializePlugin(
 
 // add the interval jobs
 function initializeIntervalJobs() {
-
-    twenty_minute_interval = setInterval(async () => {
-        // this will get the login status if the window is focused
-        // and they're currently not logged in
-        if (window.state.focused) {
-            const name = getItem("name");
-            // but only if checkStatus is true
-            if (!name) {
-                isLoggedIn();
-            }
-        }
-    }, one_min_millis * 30);
 
     // update liveshare in the offline kpm data if it has been initiated
     liveshare_update_interval = setInterval(async () => {

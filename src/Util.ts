@@ -12,7 +12,6 @@ import {
 import {
     CODE_TIME_EXT_ID,
     launch_url,
-    LOGIN_LABEL,
     CODE_TIME_PLUGIN_ID,
     CODE_TIME_TYPE,
     api_endpoint,
@@ -25,7 +24,9 @@ import {
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
 import { createAnonymousUser } from "./menu/AccountManager";
+import { v4 as uuidv4 } from "uuid";
 
+const queryString = require('query-string');
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
@@ -300,6 +301,24 @@ export function getItem(key) {
     return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
+export function getPluginUuid() {
+    return fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
+}
+
+export function setPluginUuid(value: string) {
+    if (!getPluginId()) {
+        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+    }
+}
+
+export function getAuthCallbackState() {
+    return fileIt.getJsonValue(getDeviceFile(), "auth_callback_state");
+}
+
+export function setAuthCallbackState(value: string) {
+    fileIt.setJsonValue(getDeviceFile(), "auth_callback_state", value);
+}
+
 export function showLoading() {
     let loadingMsg = "⏳ code time metrics";
     updateStatusBar(loadingMsg, "");
@@ -431,6 +450,10 @@ function getFile(name) {
         return `${file_path}\\${name}`;
     }
     return `${file_path}/${name}`;
+}
+
+export function getDeviceFile() {
+    return getFile("device.json");
 }
 
 export function getSoftwareSessionFile() {
@@ -771,19 +794,36 @@ export function humanizeMinutes(min) {
     return str;
 }
 
-export async function launchLogin(loginType = "software") {
-    // First check if they have already onboarded.
-    // A user may not have completed the onboarding flow (letting
-    // the web signup view stay open) by the time our lazy refetch
-    // user status has given up.
-    const result = await getUserRegistrationState();
-    if (result.loggedOn) {
-        window.showInformationMessage("You are already logged in. Please wait...");
-        return;
+export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
+
+    if (!switching_account) {
+        // First check if they have already onboarded.
+        // A user may not have completed the onboarding flow (letting
+        // the web signup view stay open) by the time our lazy refetch
+        // user status has given up.
+        const result = await getUserRegistrationState();
+        if (result.loggedOn) {
+            window.showInformationMessage("You are already logged in. Please wait...");
+            return;
+        }
+    }
+
+    let auth_callback_state = getAuthCallbackState();
+    if (!auth_callback_state) {
+        auth_callback_state = uuidv4();
+        setAuthCallbackState(auth_callback_state);
+    }
+    if (switching_account) {
+        // make sure the user is not currently switching their account before changing the auth_callback_state
+        const current_switching_account_flag = getItem("switching_account");
+        if (!current_switching_account_flag) {
+            // set the auth_callback_state
+            setItem("switching_account", true);
+        }
     }
 
     // continue with onboaring
-    let loginUrl = await buildLoginUrl(loginType);
+    let loginUrl = await buildLoginUrl(loginType, auth_callback_state, switching_account);
     setItem("authType", loginType);
     launchWebUrl(loginUrl);
     // use the defaults
@@ -791,37 +831,9 @@ export async function launchLogin(loginType = "software") {
 }
 
 /**
- * check if the user needs to see the login prompt or not
- */
-export async function showLoginPrompt(serverIsOnline) {
-    const infoMsg = `Finish creating your account and see rich data visualizations.`;
-    // set the last update time so we don't try to ask too frequently
-    const selection = await window.showInformationMessage(
-        infoMsg,
-        { modal: true },
-        ...[LOGIN_LABEL]
-    );
-
-    let eventName = "";
-    let eventType = "";
-
-    if (selection === LOGIN_LABEL) {
-        let loginUrl = await buildLoginUrl(serverIsOnline);
-        launchWebUrl(loginUrl);
-        refetchUserStatusLazily();
-        eventName = "click";
-        eventType = "mouse";
-    } else {
-        // create an event showing login was not selected
-        eventName = "close";
-        eventType = "window";
-    }
-}
-
-/**
  * @param loginType "software" | "existing" | "google" | "github"
  */
-export async function buildLoginUrl(loginType = "software") {
+export async function buildLoginUrl(loginType: string, auth_callback_state: string = null, switching_account: boolean = false) {
     let jwt = getItem("jwt");
     if (!jwt) {
         // we should always have a jwt, but if not, create an anonymous account,
@@ -831,26 +843,47 @@ export async function buildLoginUrl(loginType = "software") {
     }
     const authType = getItem("authType");
 
-    const encodedJwt = jwt ? encodeURIComponent(jwt) : null;
     let loginUrl = launch_url;
 
-    if (encodedJwt) {
+    let obj = {
+        plugin_token: jwt,
+        plugin: getPluginType(),
+        plugin_uuid: getPluginUuid(),
+        pluginVersion: getVersion(),
+        plugin_id: getPluginId(),
+        auth_callback_state
+    }
+
+    if (switching_account) {
+        obj.plugin_token = auth_callback_state;
+    }
+
+    if (jwt) {
         if (loginType === "github") {
             // github signup/login flow
-            loginUrl = `${api_endpoint}/auth/github?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            obj["redirect"] = launch_url;
+            loginUrl = `${api_endpoint}/auth/github`;
         } else if (loginType === "google") {
             // google signup/login flow
-            loginUrl = `${api_endpoint}/auth/google?plugin_token=${encodedJwt}&plugin=${getPluginType()}&redirect=${launch_url}`;
+            obj["redirect"] = launch_url;
+            loginUrl = `${api_endpoint}/auth/google`;
         } else if (!authType && loginType !== "existing") {
+            obj["token"] = jwt;
+            obj["auth"] = "software";
             // never onboarded, show the "email" signup view
-            loginUrl = `${launch_url}/email-signup?token=${encodedJwt}&plugin=${getPluginType()}&auth=software`;
+            loginUrl = `${launch_url}/email-signup`;
         } else {
+            obj["token"] = jwt;
+            obj["auth"] = "software";
+            obj["login"] = true
             // they've already onboarded before or its an "existing login request", take them to the login page
-            loginUrl = `${launch_url}/onboarding?token=${encodedJwt}&plugin=${getPluginType()}&auth=software&login=true`;
+            loginUrl = `${launch_url}/onboarding`;
         }
     }
 
-    return loginUrl;
+    const qryStr = queryString.stringify(obj);
+
+    return `${loginUrl}?${qryStr}`;
 }
 
 export async function connectAtlassian() {
@@ -862,8 +895,7 @@ export async function connectAtlassian() {
         jwt = getItem("jwt");
     }
 
-    const encodedJwt = encodeURIComponent(jwt);
-    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?token=${jwt}&plugin=${getPluginType()}`;
+    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?plugin_token=${jwt}&plugin=${getPluginType()}`;
     launchWebUrl(connectAtlassianAuth);
     refetchAtlassianOauthLazily();
 }
@@ -1026,28 +1058,6 @@ export function getColumnHeaders(labels) {
     }
     content += "\n";
     return content;
-}
-
-export function buildQueryString(obj) {
-    let params = [];
-    if (obj) {
-        let keys = Object.keys(obj);
-        if (keys && keys.length > 0) {
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
-                let val = obj[key];
-                if (val && val !== undefined) {
-                    let encodedVal = encodeURIComponent(val);
-                    params.push(`${key}=${encodedVal}`);
-                }
-            }
-        }
-    }
-    if (params.length > 0) {
-        return "?" + params.join("&");
-    } else {
-        return "";
-    }
 }
 
 function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
