@@ -61,7 +61,9 @@ export async function getUserRegistrationState() {
 
     let api = "/users/plugin/state";
 
-    const token = (switchingAccount && auth_callback_state) ? auth_callback_state : jwt;
+    const token = (auth_callback_state) ? auth_callback_state : jwt;
+
+    console.log("checking state using token: ", token);
     const resp = await softwareGet(api, token);
 
     if (isResponseOk(resp) && resp.data) {
@@ -108,8 +110,7 @@ export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
     const authType = getItem("authType");
     const switching_account = getItem("switching_account");
-    const auth_callback_state = getAuthCallbackState();
-    if (name && authType && (!auth_callback_state || !switching_account)) {
+    if (name && authType && !switching_account) {
         return true;
     }
 
@@ -238,6 +239,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         if (tryCountUntilFoundUser > 0) {
             tryCountUntilFoundUser -= 1;
             refetchUserStatusLazily(tryCountUntilFoundUser, interval);
+        } else {
+            // clear the auth callback state
+            setItem("switching_account", false);
+            setAuthCallbackState(null);
         }
     } else {
         clearSessionSummaryData();

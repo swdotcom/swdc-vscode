@@ -1,5 +1,4 @@
 import { KpmItem, SessionSummary, FileChangeInfo, CommitChangeStats } from "../model/models";
-import { isLoggedIn } from "../DataController";
 import {
   humanizeMinutes,
   getWorkspaceFolders,

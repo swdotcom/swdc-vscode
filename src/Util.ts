@@ -306,7 +306,9 @@ export function getPluginUuid() {
 }
 
 export function setPluginUuid(value: string) {
-    fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+    if (!getPluginId()) {
+        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+    }
 }
 
 export function getAuthCallbackState() {
