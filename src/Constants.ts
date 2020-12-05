@@ -10,7 +10,7 @@ export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const CODE_TIME_TYPE = "codetime";
 
 // API ENDPOINT
-export const api_endpoint = "http://localhost:5000";// "https://api.software.com";
+export const api_endpoint = "https://api.software.com";
 
 // DASHBOARD URL
-export const launch_url = "http://localhost:3000";// "https://app.software.com";
+export const launch_url = "https://app.software.com";
