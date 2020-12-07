@@ -841,12 +841,10 @@ export async function buildLoginUrl(loginType: string, auth_callback_state: stri
         await createAnonymousUser();
         jwt = getItem("jwt");
     }
-    const authType = getItem("authType");
 
     let loginUrl = launch_url;
 
     let obj = {
-        plugin_token: jwt,
         plugin: getPluginType(),
         plugin_uuid: getPluginUuid(),
         pluginVersion: getVersion(),
@@ -854,31 +852,19 @@ export async function buildLoginUrl(loginType: string, auth_callback_state: stri
         auth_callback_state
     }
 
-    if (switching_account) {
-        obj.plugin_token = auth_callback_state;
-    }
-
-    if (jwt) {
-        if (loginType === "github") {
-            // github signup/login flow
-            obj["redirect"] = launch_url;
-            loginUrl = `${api_endpoint}/auth/github`;
-        } else if (loginType === "google") {
-            // google signup/login flow
-            obj["redirect"] = launch_url;
-            loginUrl = `${api_endpoint}/auth/google`;
-        } else if (!authType && loginType !== "existing") {
-            obj["token"] = jwt;
-            obj["auth"] = "software";
-            // never onboarded, show the "email" signup view
-            loginUrl = `${launch_url}/email-signup`;
-        } else {
-            obj["token"] = jwt;
-            obj["auth"] = "software";
-            obj["login"] = true
-            // they've already onboarded before or its an "existing login request", take them to the login page
-            loginUrl = `${launch_url}/onboarding`;
-        }
+    if (loginType === "github") {
+        // github signup/login flow
+        obj["redirect"] = launch_url;
+        loginUrl = `${api_endpoint}/auth/github`;
+    } else if (loginType === "google") {
+        // google signup/login flow
+        obj["redirect"] = launch_url;
+        loginUrl = `${api_endpoint}/auth/google`;
+    } else {
+        obj["token"] = jwt;
+        obj["auth"] = "software";
+        // never onboarded, show the "email" signup view
+        loginUrl = `${launch_url}/email-signup`;
     }
 
     const qryStr = queryString.stringify(obj);
