@@ -125,6 +125,8 @@ export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<st
             if (!resp.data.user.registered) {
                 setItem("name", null);
             }
+            setItem("switching_account", false);
+            setAuthCallbackState(null);
             return resp.data.jwt;
         }
     }
