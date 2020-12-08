@@ -796,14 +796,12 @@ export function humanizeMinutes(min) {
 
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
 
-    const auth_callback_state = uuidv4();
-    setAuthCallbackState(auth_callback_state);
-
+    setItem("authType", loginType);
     setItem("switching_account", switching_account);
 
     // continue with onboaring
-    const loginUrl = await buildLoginUrl(loginType, auth_callback_state, switching_account);
-    setItem("authType", loginType);
+    const loginUrl = await buildLoginUrl(loginType);
+
     launchWebUrl(loginUrl);
     // use the defaults
     refetchUserStatusLazily();
@@ -812,14 +810,10 @@ export async function launchLogin(loginType: string = "software", switching_acco
 /**
  * @param loginType "software" | "existing" | "google" | "github"
  */
-export async function buildLoginUrl(loginType: string, auth_callback_state: string = null, switching_account: boolean = false) {
-    let jwt = getItem("jwt");
-    if (!jwt) {
-        // we should always have a jwt, but if not, create an anonymous account,
-        // which will set the jwt, then use it to register
-        await createAnonymousUser();
-        jwt = getItem("jwt");
-    }
+export async function buildLoginUrl(loginType: string) {
+
+    const auth_callback_state = uuidv4();
+    setAuthCallbackState(auth_callback_state);
 
     let loginUrl = launch_url;
 
@@ -840,7 +834,7 @@ export async function buildLoginUrl(loginType: string, auth_callback_state: stri
         obj["redirect"] = launch_url;
         loginUrl = `${api_endpoint}/auth/google`;
     } else {
-        obj["token"] = jwt;
+        obj["token"] = getItem("jwt");
         obj["auth"] = "software";
         // never onboarded, show the "email" signup view
         loginUrl = `${launch_url}/email-signup`;

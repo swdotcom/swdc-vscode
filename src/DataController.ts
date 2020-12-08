@@ -57,50 +57,57 @@ export function getToggleFileEventLoggingState() {
 export async function getUserRegistrationState() {
     const jwt = getItem("jwt");
     const auth_callback_state = getAuthCallbackState();
+    const authType = getItem("authType");
 
-    let api = "/users/plugin/state";
+    const api = "/users/plugin/state";
 
     const token = (auth_callback_state) ? auth_callback_state : jwt;
 
-    const resp = await softwareGet(api, token);
+    let resp = await softwareGet("/users/plugin/state", token);
 
-    if (isResponseOk(resp) && resp.data) {
-        // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
-        const state = resp.data.state ? resp.data.state : "UNKNOWN";
-        if (state === "OK") {
-            let registered = 0;
-            // set the jwt, name (email), and use the registration flag
-            // to determine if they're logged in or not
-            if (resp.data.user) {
-                const user = resp.data.user;
+    let foundUser = (isResponseOk(resp) && resp.data && resp.data.user);
+    let state = (foundUser) ? resp.data.state : "UNKNOWN";
 
-                setItem("jwt", user.plugin_jwt);
-                if (user.registered) {
-                    setItem("name", user.email);
-                } else {
-                    setItem("name", null);
-                }
+    // Use the JWT to check if the user is available (tmp until server uses auth_callback_state for email accounts)
+    const isEmailAuth = (authType === "software" || authType === "email")
+    if (state !== "OK" && isEmailAuth) {
+        // use the jwt
+        resp = await softwareGet(api, jwt);
+        foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
+        state = (foundUser) ? resp.data.state : "UNKNOWN";
+    }
 
-                const currentAuthType = getItem("authType");
-                if (!currentAuthType) {
-                    setItem("authType", "software");
-                }
+    if (foundUser) {
+        let registered = 0;
+        // set the jwt, name (email), and use the registration flag
+        // to determine if they're logged in or not
+        if (resp.data.user) {
+            const user = resp.data.user;
 
-                registered = user.registered;
+            setItem("jwt", user.plugin_jwt);
+            if (user.registered) {
+                setItem("name", user.email);
+            } else {
+                setItem("name", null);
             }
 
-            setItem("switching_account", false);
-            setAuthCallbackState(null);
+            const currentAuthType = getItem("authType");
+            if (!currentAuthType) {
+                setItem("authType", "software");
+            }
 
-            // if we need the user it's "resp.data.user"
-            return { loggedOn: registered === 1, state };
+            registered = user.registered;
         }
-        // return the state that is returned
-        return { loggedOn: false, state };
+
+        setItem("switching_account", false);
+        setAuthCallbackState(null);
+
+        // if we need the user it's "resp.data.user"
+        return { loggedOn: registered === 1, state };
     }
 
     // all else fails, set false and UNKNOWN
-    return { loggedOn: false, state: "UNKNOWN" };
+    return { loggedOn: false, state };
 }
 
 /**
@@ -109,9 +116,8 @@ export async function getUserRegistrationState() {
  */
 export async function isLoggedIn(): Promise<boolean> {
     const name = getItem("name");
-    const authType = getItem("authType");
     const switching_account = getItem("switching_account");
-    if (name && authType && !switching_account) {
+    if (name && !switching_account) {
         return true;
     }
 
