@@ -65,11 +65,11 @@ export async function getUserRegistrationState() {
 
     let resp = await softwareGet("/users/plugin/state", token);
 
-    let foundUser = (isResponseOk(resp) && resp.data && resp.data.user);
+    let foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
     let state = (foundUser) ? resp.data.state : "UNKNOWN";
 
     // Use the JWT to check if the user is available (tmp until server uses auth_callback_state for email accounts)
-    const isEmailAuth = (authType === "software" || authType === "email")
+    const isEmailAuth = (authType === "software" || authType === "email");
     if (state !== "OK" && isEmailAuth) {
         // use the jwt
         resp = await softwareGet(api, jwt);
