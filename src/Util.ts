@@ -796,34 +796,13 @@ export function humanizeMinutes(min) {
 
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
 
-    if (!switching_account) {
-        // First check if they have already onboarded.
-        // A user may not have completed the onboarding flow (letting
-        // the web signup view stay open) by the time our lazy refetch
-        // user status has given up.
-        const result = await getUserRegistrationState();
-        if (result.loggedOn) {
-            window.showInformationMessage("You are already logged in. Please wait...");
-            return;
-        }
-    }
+    const auth_callback_state = uuidv4();
+    setAuthCallbackState(auth_callback_state);
 
-    let auth_callback_state = getAuthCallbackState();
-    if (!auth_callback_state) {
-        auth_callback_state = uuidv4();
-        setAuthCallbackState(auth_callback_state);
-    }
-    if (switching_account) {
-        // make sure the user is not currently switching their account before changing the auth_callback_state
-        const current_switching_account_flag = getItem("switching_account");
-        if (!current_switching_account_flag) {
-            // set the auth_callback_state
-            setItem("switching_account", true);
-        }
-    }
+    setItem("switching_account", switching_account);
 
     // continue with onboaring
-    let loginUrl = await buildLoginUrl(loginType, auth_callback_state, switching_account);
+    const loginUrl = await buildLoginUrl(loginType, auth_callback_state, switching_account);
     setItem("authType", loginType);
     launchWebUrl(loginUrl);
     // use the defaults

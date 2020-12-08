@@ -57,7 +57,6 @@ export function getToggleFileEventLoggingState() {
 export async function getUserRegistrationState() {
     const jwt = getItem("jwt");
     const auth_callback_state = getAuthCallbackState();
-    const switchingAccount = getItem("switching_account");
 
     let api = "/users/plugin/state";
 
@@ -319,7 +318,7 @@ export async function writeProjectCommitDashboardByStartEnd(
     project_ids
 ) {
     const api = `/v1/user_metrics/project_summary`;
-    const result = await softwarePost(api, {project_ids, start, end}, getItem("jwt"));
+    const result = await softwarePost(api, { project_ids, start, end }, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
@@ -329,7 +328,7 @@ export async function writeProjectCommitDashboardByRangeType(
 ) {
     project_ids = project_ids.filter((n) => n);
     const api = `/v1/user_metrics/project_summary`;
-    const result = await softwarePost(api, {project_ids, time_range: type}, getItem("jwt"));
+    const result = await softwarePost(api, { project_ids, time_range: type }, getItem("jwt"));
     await writeProjectCommitDashboard(result);
 }
 
