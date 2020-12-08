@@ -63,15 +63,15 @@ export async function getUserRegistrationState() {
 
     const token = (auth_callback_state) ? auth_callback_state : jwt;
 
-    console.log("checking state using token: ", token);
     const resp = await softwareGet(api, token);
 
     if (isResponseOk(resp) && resp.data) {
         // NOT_FOUND, ANONYMOUS, OK, UNKNOWN
         const state = resp.data.state ? resp.data.state : "UNKNOWN";
         if (state === "OK") {
-            // set the authType based on...
-            // github_access_token, google_access_token, or password being true
+            let registered = 0;
+            // set the jwt, name (email), and use the registration flag
+            // to determine if they're logged in or not
             if (resp.data.user) {
                 const user = resp.data.user;
 
@@ -86,13 +86,15 @@ export async function getUserRegistrationState() {
                 if (!currentAuthType) {
                     setItem("authType", "software");
                 }
+
+                registered = user.registered;
             }
 
             setItem("switching_account", false);
             setAuthCallbackState(null);
 
             // if we need the user it's "resp.data.user"
-            return { loggedOn: true, state };
+            return { loggedOn: registered === 1, state };
         }
         // return the state that is returned
         return { loggedOn: false, state };

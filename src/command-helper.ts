@@ -196,7 +196,8 @@ export function createCommands(
                 item.color = null;
             }
             tracker.trackUIInteraction(item);
-            launchLogin("existing", switching_account);
+            // launch the auth selection flow
+            showSwitchAccountsMenu();
         })
     );
 
