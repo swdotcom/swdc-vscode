@@ -19,11 +19,8 @@ import {
 import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
-    getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
-import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
-import { createAnonymousUser } from "./menu/AccountManager";
 import { v4 as uuidv4 } from "uuid";
 
 const queryString = require('query-string');
@@ -302,13 +299,13 @@ export function getItem(key) {
 }
 
 export function getPluginUuid() {
-    return fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
-}
-
-export function setPluginUuid(value: string) {
-    if (!getPluginId()) {
-        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+    let plugin_uuid = fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
+    if (!plugin_uuid) {
+        // set it for the 1st and only time
+        plugin_uuid = uuidv4();
+        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", plugin_uuid);
     }
+    return plugin_uuid;
 }
 
 export function getAuthCallbackState() {
@@ -796,14 +793,12 @@ export function humanizeMinutes(min) {
 
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
 
-    const auth_callback_state = uuidv4();
-    setAuthCallbackState(auth_callback_state);
-
+    setItem("authType", loginType);
     setItem("switching_account", switching_account);
 
     // continue with onboaring
-    const loginUrl = await buildLoginUrl(loginType, auth_callback_state, switching_account);
-    setItem("authType", loginType);
+    const loginUrl = await buildLoginUrl(loginType);
+
     launchWebUrl(loginUrl);
     // use the defaults
     refetchUserStatusLazily();
@@ -812,14 +807,10 @@ export async function launchLogin(loginType: string = "software", switching_acco
 /**
  * @param loginType "software" | "existing" | "google" | "github"
  */
-export async function buildLoginUrl(loginType: string, auth_callback_state: string = null, switching_account: boolean = false) {
-    let jwt = getItem("jwt");
-    if (!jwt) {
-        // we should always have a jwt, but if not, create an anonymous account,
-        // which will set the jwt, then use it to register
-        await createAnonymousUser();
-        jwt = getItem("jwt");
-    }
+export async function buildLoginUrl(loginType: string) {
+
+    const auth_callback_state = uuidv4();
+    setAuthCallbackState(auth_callback_state);
 
     let loginUrl = launch_url;
 
@@ -840,7 +831,7 @@ export async function buildLoginUrl(loginType: string, auth_callback_state: stri
         obj["redirect"] = launch_url;
         loginUrl = `${api_endpoint}/auth/google`;
     } else {
-        obj["token"] = jwt;
+        obj["token"] = getItem("jwt");
         obj["auth"] = "software";
         // never onboarded, show the "email" signup view
         loginUrl = `${launch_url}/email-signup`;
@@ -849,20 +840,6 @@ export async function buildLoginUrl(loginType: string, auth_callback_state: stri
     const qryStr = queryString.stringify(obj);
 
     return `${loginUrl}?${qryStr}`;
-}
-
-export async function connectAtlassian() {
-    let jwt = getItem("jwt");
-    if (!jwt) {
-        // we should always have a jwt, but if not, create an anonymous account,
-        // which will set the jwt, then use it to register
-        await createAnonymousUser();
-        jwt = getItem("jwt");
-    }
-
-    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?plugin_token=${jwt}&plugin=${getPluginType()}`;
-    launchWebUrl(connectAtlassianAuth);
-    refetchAtlassianOauthLazily();
 }
 
 export function showInformationMessage(message: string) {

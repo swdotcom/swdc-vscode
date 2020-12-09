@@ -5,7 +5,6 @@ import {
     getHostname,
     setItem,
     getPluginUuid,
-    setPluginUuid,
     getAuthCallbackState,
     setAuthCallbackState,
     getNowTimes,
@@ -13,7 +12,6 @@ import {
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
 import { v4 as uuidv4 } from "uuid";
-const moment = require("moment-timezone");
 
 export async function showSwitchAccountsMenu() {
     const items = [];
@@ -86,22 +84,16 @@ export async function resetDataAndAlertUser() {
     }
 }
 
-
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(ignoreJwt:boolean = false): Promise<string> {
+export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<string> {
     const jwt = getItem("jwt");
     // check one more time before creating the anon user
     if (!jwt || ignoreJwt) {
         // this should not be undefined if its an account reset
         let plugin_uuid = getPluginUuid();
         let auth_callback_state = getAuthCallbackState();
-        if (!plugin_uuid) {
-            plugin_uuid = uuidv4();
-            // write the plugin uuid to the device.json file
-            setPluginUuid(plugin_uuid);
-        }
         if (!auth_callback_state) {
             auth_callback_state = uuidv4();
             setAuthCallbackState(auth_callback_state);

@@ -1,5 +1,4 @@
 import { window, ExtensionContext } from "vscode";
-import { getUser } from "../DataController";
 import { showOfflinePrompt, setItem, getItem } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { createAnonymousUser } from "../menu/AccountManager";
@@ -7,7 +6,6 @@ import jwt_decode = require('jwt-decode');
 
 let retry_counter = 0;
 const one_min_millis = 1000 * 60;
-let atlassianOauthFetchTimeout = null;
 
 export function onboardInit(ctx: ExtensionContext, callback: any) {
     let jwt = getItem("jwt");
@@ -96,57 +94,4 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
     await createAnonymousUser();
     // call the callback
     return callback(ctx, true /*anonCreated*/);
-}
-
-export function refetchAtlassianOauthLazily(tryCountUntilFoundUser = 40) {
-    if (atlassianOauthFetchTimeout) {
-        return;
-    }
-    atlassianOauthFetchTimeout = setTimeout(() => {
-        atlassianOauthFetchTimeout = null;
-        refetchAtlassianOauthFetchHandler(tryCountUntilFoundUser);
-    }, 10000);
-}
-
-async function refetchAtlassianOauthFetchHandler(tryCountUntilFoundUser) {
-    const oauth = await getAtlassianOauth();
-    if (!oauth) {
-        // try again if the count is not zero
-        if (tryCountUntilFoundUser > 0) {
-            tryCountUntilFoundUser -= 1;
-            refetchAtlassianOauthLazily(tryCountUntilFoundUser);
-        }
-    } else {
-        const message = "Successfully connected to Atlassian";
-        window.showInformationMessage(message);
-    }
-}
-
-export async function getAtlassianOauth() {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let user = await getUser(jwt);
-        if (user && user.auths) {
-            // get the one that is "slack"
-            for (let i = 0; i < user.auths.length; i++) {
-                const oauthInfo = user.auths[i];
-                if (oauthInfo.type === "atlassian") {
-                    updateAtlassianAccessInfo(oauthInfo);
-                    return oauthInfo;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-export async function updateAtlassianAccessInfo(oauth) {
-    /**
-     * {access_token, refresh_token}
-     */
-    if (oauth) {
-        setItem("atlassian_access_token", oauth.access_token);
-    } else {
-        setItem("atlassian_access_token", null);
-    }
 }
