@@ -42,7 +42,6 @@ const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
 let toggleFileEventLogging = null;
-let slackFetchTimeout = null;
 let userFetchTimeout = null;
 
 export function getToggleFileEventLoggingState() {
@@ -126,22 +125,6 @@ export async function isLoggedIn(): Promise<boolean> {
         initializePreferences();
     }
     return state.loggedOn;
-}
-
-export async function getSlackOauth() {
-    let jwt = getItem("jwt");
-    if (jwt) {
-        let user = await getUser(jwt);
-        if (user && user.auths) {
-            // get the one that is "slack"
-            for (let i = 0; i < user.auths.length; i++) {
-                if (user.auths[i].type === "slack") {
-                    setItem("slack_access_token", user.auths[i].access_token);
-                    return user.auths[i];
-                }
-            }
-        }
-    }
 }
 
 export async function getUser(jwt) {
@@ -252,6 +235,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
             setAuthCallbackState(null);
         }
     } else {
+        // clear the auth callback state
+        setItem("switching_account", false);
+        setAuthCallbackState(null);
+
         clearSessionSummaryData();
 
         const message = "Successfully logged on to Code Time";
@@ -263,35 +250,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         setItem("updatedTreeDate", null);
         if (KpmProviderManager.getInstance().isKpmTreeOpen()) {
             treeDataUpdateCheck();
-        }
-    }
-}
-
-export function refetchSlackConnectStatusLazily(
-    callback,
-    tryCountUntilFound = 40
-) {
-    if (slackFetchTimeout) {
-        return;
-    }
-    slackFetchTimeout = setTimeout(() => {
-        slackFetchTimeout = null;
-        slackConnectStatusHandler(callback, tryCountUntilFound);
-    }, 10000);
-}
-
-async function slackConnectStatusHandler(callback, tryCountUntilFound) {
-    let oauth = await getSlackOauth();
-    if (!oauth) {
-        // try again if the count is not zero
-        if (tryCountUntilFound > 0) {
-            tryCountUntilFound -= 1;
-            refetchSlackConnectStatusLazily(callback, tryCountUntilFound);
-        }
-    } else {
-        window.showInformationMessage(`Successfully connected to Slack`);
-        if (callback) {
-            callback();
         }
     }
 }

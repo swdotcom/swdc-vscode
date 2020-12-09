@@ -89,7 +89,7 @@ async function getChangeStats(projectDir: string, cmd: string): Promise<CommitCh
   }
 
   /**
-	 * example:
+   * example:
      * -mbp-2:swdc-vscode xavierluiz$ git diff --stat
         lib/KpmProviderManager.ts | 22 ++++++++++++++++++++--
         1 file changed, 20 insertions(+), 2 deletions(-)
@@ -232,21 +232,6 @@ async function getCommitsInUtcRange(projectDir, start, end, useAuthor = true) {
     cacheMgr.set(cacheId, commitChanges, cacheTimeoutSeconds);
   }
   return commitChanges;
-}
-
-export async function getSlackReportCommits(projectDir) {
-  if (!projectDir || !isGitProject(projectDir)) {
-    return [];
-  }
-  const startEnd = getThisWeek();
-  const resourceInfo = await getResourceInfo(projectDir);
-  if (!resourceInfo || !resourceInfo.email) {
-    return [];
-  }
-  const authorOption = ` --author=${resourceInfo.email}`;
-  const cmd = `git log --pretty="%s" --since=${startEnd.start} --until=${startEnd.end}${authorOption}`;
-  const resultList = await getCommandResult(cmd, projectDir);
-  return resultList;
 }
 
 export async function getLastCommitId(projectDir, email) {

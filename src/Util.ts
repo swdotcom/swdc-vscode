@@ -19,11 +19,8 @@ import {
 import {
     refetchUserStatusLazily,
     getToggleFileEventLoggingState,
-    getUserRegistrationState,
 } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
-import { refetchAtlassianOauthLazily } from "./user/OnboardManager";
-import { createAnonymousUser } from "./menu/AccountManager";
 import { v4 as uuidv4 } from "uuid";
 
 const queryString = require('query-string');
@@ -302,13 +299,13 @@ export function getItem(key) {
 }
 
 export function getPluginUuid() {
-    return fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
-}
-
-export function setPluginUuid(value: string) {
-    if (!getPluginId()) {
-        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", value);
+    let plugin_uuid = fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
+    if (!plugin_uuid) {
+        // set it for the 1st and only time
+        plugin_uuid = uuidv4();
+        fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", plugin_uuid);
     }
+    return plugin_uuid;
 }
 
 export function getAuthCallbackState() {
@@ -843,20 +840,6 @@ export async function buildLoginUrl(loginType: string) {
     const qryStr = queryString.stringify(obj);
 
     return `${loginUrl}?${qryStr}`;
-}
-
-export async function connectAtlassian() {
-    let jwt = getItem("jwt");
-    if (!jwt) {
-        // we should always have a jwt, but if not, create an anonymous account,
-        // which will set the jwt, then use it to register
-        await createAnonymousUser();
-        jwt = getItem("jwt");
-    }
-
-    const connectAtlassianAuth = `${api_endpoint}/auth/atlassian?plugin_token=${jwt}&plugin=${getPluginType()}`;
-    launchWebUrl(connectAtlassianAuth);
-    refetchAtlassianOauthLazily();
 }
 
 export function showInformationMessage(message: string) {

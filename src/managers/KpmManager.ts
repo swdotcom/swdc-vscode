@@ -6,11 +6,9 @@ import {
   getNowTimes,
   logEvent,
   getFileAgeInDays,
-  showInformationMessage,
   isFileActive,
 } from "../Util";
 import { FileChangeInfo } from "../model/models";
-import { JiraClient } from "../http/JiraClient";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
@@ -439,18 +437,6 @@ export class KpmManager {
     };
 
     return _staticInfoMap[filename];
-  }
-
-  async processSelectedTextForJira() {
-    const editor = window.activeTextEditor;
-    const text = editor.document.getText(editor.selection);
-    if (text) {
-      // start the process
-      showInformationMessage(`Selected the following text: ${text}`);
-      const issues = await JiraClient.getInstance().fetchIssues();
-    } else {
-      showInformationMessage("Please select text to copy to your Jira project");
-    }
   }
 
   /**
