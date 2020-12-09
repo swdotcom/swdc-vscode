@@ -78,25 +78,22 @@ export async function getUserRegistrationState() {
     }
 
     if (foundUser) {
-        let registered = 0;
+
         // set the jwt, name (email), and use the registration flag
         // to determine if they're logged in or not
-        if (resp.data.user) {
-            const user = resp.data.user;
+        const user = resp.data.user;
+        const registered = user.registered;
 
-            setItem("jwt", user.plugin_jwt);
-            if (user.registered) {
-                setItem("name", user.email);
-            } else {
-                setItem("name", null);
-            }
+        setItem("jwt", user.plugin_jwt);
+        if (registered === 1) {
+            setItem("name", user.email);
+        } else {
+            setItem("name", null);
+        }
 
-            const currentAuthType = getItem("authType");
-            if (!currentAuthType) {
-                setItem("authType", "software");
-            }
-
-            registered = user.registered;
+        const currentAuthType = getItem("authType");
+        if (!currentAuthType) {
+            setItem("authType", "software");
         }
 
         setItem("switching_account", false);
