@@ -37,6 +37,7 @@ import {
     getYesterdaysCommits,
 } from "./repo/GitUtil";
 import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
+import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -240,6 +241,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
         setAuthCallbackState(null);
 
         clearSessionSummaryData();
+        clearTimeDataSummary();
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
