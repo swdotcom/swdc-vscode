@@ -28,6 +28,7 @@ import {
 } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import {
+    showExistingAccountMenu,
     showSwitchAccountsMenu,
 } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
@@ -197,7 +198,7 @@ export function createCommands(
             }
             tracker.trackUIInteraction(item);
             // launch the auth selection flow
-            showSwitchAccountsMenu();
+            showExistingAccountMenu();
         })
     );
 
