@@ -18,7 +18,7 @@ const switchAccountItem = {
     detail: "Click to link to a different account."
 };
 const logIntoExistingItem = {
-    label: "Log in with existing account?",
+    label: "Log in with an existing account?",
     detail: "Click to link to an existing account."
 };
 
