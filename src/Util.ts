@@ -73,28 +73,6 @@ export function getVersion() {
     return extension.packageJSON.version;
 }
 
-export function isCodeTimeMetricsFile(fileName) {
-    fileName = fileName || "";
-    if (fileName.includes(".software") && fileName.includes("CodeTime")) {
-        return true;
-    }
-    return false;
-}
-
-export function codeTimeExtInstalled() {
-    const codeTimeExt = extensions.getExtension(CODE_TIME_EXT_ID);
-    return codeTimeExt ? true : false;
-}
-
-export function getSessionFileCreateTime() {
-    let sessionFile = getSoftwareSessionFile();
-    const stat = fs.statSync(sessionFile);
-    if (stat.birthtime) {
-        return stat.birthtime;
-    }
-    return stat.ctime;
-}
-
 export function isGitProject(projectDir) {
     if (!projectDir) {
         return false;
@@ -104,14 +82,6 @@ export function isGitProject(projectDir) {
         return false;
     }
     return true;
-}
-
-export function isBatchSizeUnderThreshold(payloads) {
-    const payloadDataLen = Buffer.byteLength(JSON.stringify(payloads));
-    if (payloadDataLen <= 100000) {
-        return true;
-    }
-    return false;
 }
 
 /**
@@ -242,7 +212,6 @@ export function getRootPathForFile(fileName) {
 }
 
 export function getWorkspaceFolderByPath(path): WorkspaceFolder {
-    let liveshareFolder = null;
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
         for (let i = 0; i < workspace.workspaceFolders.length; i++) {
             let workspaceFolder: WorkspaceFolder =
@@ -285,11 +254,6 @@ export function getProjectFolder(fileName): WorkspaceFolder {
     return null;
 }
 
-export function validateEmail(email) {
-    let re = /\S+@\S+\.\S+/;
-    return re.test(email);
-}
-
 export function setItem(key, value) {
     fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
 }
@@ -314,11 +278,6 @@ export function getAuthCallbackState() {
 
 export function setAuthCallbackState(value: string) {
     fileIt.setJsonValue(getDeviceFile(), "auth_callback_state", value);
-}
-
-export function showLoading() {
-    let loadingMsg = "⏳ code time metrics";
-    updateStatusBar(loadingMsg, "");
 }
 
 export function showStatus(fullMsg, tooltip) {
@@ -360,10 +319,6 @@ export function toggleStatusBar() {
 
 export function isStatusBarTextVisible() {
     return showStatusBarText;
-}
-
-export function isEmptyObj(obj) {
-    return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
 export function isLinux() {
@@ -507,19 +462,6 @@ export function getSoftwareDir(autoCreate = true) {
     }
 
     return softwareDataDir;
-}
-
-export function softwareSessionFileExists() {
-    // don't auto create the file
-    const file = getSoftwareSessionFile();
-    // check if it exists
-    const sessionFileExists = fs.existsSync(file);
-    return sessionFileExists;
-}
-
-export function jwtExists() {
-    let jwt = getItem("jwt");
-    return !jwt ? false : true;
 }
 
 export function getLocalREADMEFile() {
@@ -850,43 +792,6 @@ export function showWarningMessage(message: string) {
     return window.showWarningMessage(`${message}`);
 }
 
-export function getDashboardRow(label, value, isSectionHeader = false) {
-    const spacesRequired = DASHBOARD_LABEL_WIDTH - label.length;
-    const spaces = getSpaces(spacesRequired);
-    const dashboardVal = getDashboardValue(value, isSectionHeader);
-    let content = `${label}${spaces}${dashboardVal}\n`;
-    if (isSectionHeader) {
-        // add 3 to account for the " : " between the columns
-        const dashLen = content.length;
-        for (let i = 0; i < dashLen; i++) {
-            content += "-";
-        }
-        content += "\n";
-    }
-    return content;
-}
-
-export function getDashboardBottomBorder() {
-    let content = "";
-    const len = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH;
-    for (let i = 0; i < len; i++) {
-        content += "-";
-    }
-    content += "\n\n";
-    return content;
-}
-
-export function getSectionHeader(label) {
-    let content = `${label}\n`;
-    // add 3 to account for the " : " between the columns
-    let dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH;
-    for (let i = 0; i < dashLen; i++) {
-        content += "-";
-    }
-    content += "\n";
-    return content;
-}
-
 function formatRightAlignedTableLabel(label, col_width) {
     const spacesRequired = col_width - label.length;
     let spaces = "";
@@ -1002,36 +907,6 @@ export function getColumnHeaders(labels) {
     return content;
 }
 
-function getDashboardLabel(label, width = DASHBOARD_LABEL_WIDTH) {
-    return getDashboardDataDisplay(width, label);
-}
-
-function getDashboardValue(value, isSectionHeader = false) {
-    const spacesRequired = DASHBOARD_VALUE_WIDTH - value.length - 2;
-    let spaces = getSpaces(spacesRequired);
-    if (!isSectionHeader) {
-        return `: ${spaces}${value}`;
-    } else {
-        // we won't show the column divider in the header
-        return `  ${spaces}${value}`;
-    }
-}
-
-function getDashboardDataDisplay(widthLen, data) {
-    let content = "";
-    for (let i = 0; i < widthLen; i++) {
-        content += " ";
-    }
-    return `${content}${data}`;
-}
-
-export function createSpotifyIdFromUri(id: string) {
-    if (id.indexOf("spotify:") === 0) {
-        return id.substring(id.lastIndexOf(":") + 1);
-    }
-    return id;
-}
-
 export function getFileType(fileName: string) {
     let fileType = "";
     const lastDotIdx = fileName.lastIndexOf(".");
@@ -1042,11 +917,6 @@ export function getFileType(fileName: string) {
     return fileType;
 }
 
-export function cleanJsonString(content) {
-    content = content.replace(/\r\n/g, "").replace(/\n/g, "").trim();
-    return content;
-}
-
 export function getFileDataAsJson(file) {
     let data = fileIt.readJsonFileSync(file);
     return data;
@@ -1054,19 +924,5 @@ export function getFileDataAsJson(file) {
 
 export function getFileDataArray(file) {
     let payloads: any[] = fileIt.readJsonArraySync(file);
-    return payloads;
-}
-
-export function getFileDataPayloadsAsJson(file) {
-    // Still trying to find out when "undefined" is set into the data.json
-    // but this will help remove it so we can process the json lines without failure
-    let content = fileIt.readContentFileSync(file);
-    // check if content is not null and has an "undefined" value
-    if (content && content.indexOf("undefined") !== -1) {
-        // remove "undefined" and re-save, then read (only found in the beginning of the content)
-        content = content.replace("undefined", "");
-        fileIt.writeContentFileSync(file, content);
-    }
-    let payloads: any[] = fileIt.readJsonLinesSync(file);
     return payloads;
 }
