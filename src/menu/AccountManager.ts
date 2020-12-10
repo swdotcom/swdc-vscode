@@ -13,22 +13,42 @@ import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
 import { v4 as uuidv4 } from "uuid";
 
+const switchAccountItem = {
+    label: "Switch to a different account?",
+    detail: "Click to link to a different account."
+};
+const logIntoExistingItem = {
+    label: "Log in with existing account?",
+    detail: "Click to link to an existing account."
+};
+
 export async function showSwitchAccountsMenu() {
+    accountMenuSelection(switchAccountItem);
+}
+
+export async function showExistingAccountMenu() {
+    accountMenuSelection(logIntoExistingItem);
+}
+
+async function accountMenuSelection(placeholderItem: any) {
     const items = [];
-    const authType = getItem("authType");
+    
+    let placeholder = "";
     const name = getItem("name");
-    let type = "email";
-    if (authType === "google") {
-        type = "Google";
-    } else if (authType === "github") {
-        type = "GitHub";
+    if (name) {
+        const authType = getItem("authType");
+        let type = "email";
+        if (authType === "google") {
+            type = "Google";
+        } else if (authType === "github") {
+            type = "GitHub";
+        }
+        placeholder = `Connected using ${type} (${name})`
+    } else {
+        placeholder = "Connect using one of the following";
     }
 
-    const placeholder = `Connected using ${type} (${name})`;
-    items.push({
-        label: "Switch to a different account?",
-        detail: "Click to link to a different account."
-    });
+    items.push(placeholderItem);
     const menuOptions = {
         items,
         placeholder,
