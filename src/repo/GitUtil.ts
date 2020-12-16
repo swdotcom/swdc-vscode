@@ -1,4 +1,4 @@
-import { CommitChangeStats } from "../model/models";
+import { CommitChangeStats, DiffNumStats} from "../model/models";
 import { wrapExecPromise, isGitProject } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 import { CacheManager } from "../cache/CacheManager";
@@ -41,6 +41,26 @@ export async function getCommandResultString(cmd, projectDir) {
   return result;
 }
 
+export function accumulateNumStatChanges(results): DiffNumStats[] {
+  /*
+  //Insert  Mods    Filename
+    10      0       src/api/billing_client.js
+    5       2       src/api/projects_client.js
+  */
+  const diffNumStatList = [];
+
+  for (const result of results) {
+    const diffNumStat = new DiffNumStats();
+    const parts = result.split("\t")
+    diffNumStat.insertions = parseInt(parts[0]);
+    diffNumStat.modifications = parseInt(parts[1]);
+    // Add backslash to match other filenames in tracking
+    diffNumStat.file_name = `/${parts[2]}`;
+    diffNumStatList.push(diffNumStat)
+  }
+
+  return diffNumStatList;
+}
 /**
  * Looks through all of the lines for
  * files changed, insertions, and deletions and aggregates
@@ -81,6 +101,7 @@ export function accumulateStatChanges(results): CommitChangeStats {
   return stats;
 }
 
+
 async function getChangeStats(projectDir: string, cmd: string): Promise<CommitChangeStats> {
   let changeStats: CommitChangeStats = new CommitChangeStats();
 
@@ -97,6 +118,8 @@ async function getChangeStats(projectDir: string, cmd: string): Promise<CommitCh
         for multiple files it will look like this...
         7 files changed, 137 insertions(+), 55 deletions(-)
      */
+
+
   const resultList = await getCommandResult(cmd, projectDir);
 
   if (!resultList) {
@@ -108,6 +131,26 @@ async function getChangeStats(projectDir: string, cmd: string): Promise<CommitCh
   changeStats = accumulateStatChanges(resultList);
 
   return changeStats;
+}
+
+export async function getLocalChanges(projectDir): Promise<DiffNumStats[]> {
+  let diffNumStats: DiffNumStats[];
+
+  if (!projectDir || !isGitProject(projectDir)) {
+    return diffNumStats;
+  }
+
+  const cmd = `git diff --numstat`;
+  const resultList = await getCommandResult(cmd, projectDir);
+  if (!resultList) {
+    // something went wrong, but don't try to parse a null or undefined str
+    return diffNumStats;
+  }
+
+  // just look for the line with "insertions" and "deletions"
+  diffNumStats = accumulateNumStatChanges(resultList);
+
+  return diffNumStats;
 }
 
 export async function getUncommitedChanges(projectDir): Promise<CommitChangeStats> {

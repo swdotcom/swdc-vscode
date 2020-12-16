@@ -5,6 +5,9 @@ import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { getRepoIdentifierInfo } from "../repo/GitUtil";
 import KeystrokeStats from "../model/KeystrokeStats";
+import { getLocalChanges } from '../repo/GitUtil';
+import { StatusBarAlignment } from "vscode";
+
 
 const moment = require("moment-timezone");
 
@@ -13,6 +16,7 @@ export class TrackerManager {
 
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
+  private eventVersions: Map<string, number> = new Map();
 
   private constructor() { }
 
@@ -121,9 +125,35 @@ export class TrackerManager {
     swdcTracker.trackUIInteraction(ui_event);
   }
 
+  public async trackGitEvent(gitEventName: string, event?: any) {
+    if (!this.trackerReady) {
+      return;
+    }
+    const projectParams = this.getProjectParams();
+    const repoParams = await this.getRepoParams(projectParams.project_directory);
+    const uncommittedChanges = await this.getUncommitedChangesParams(event, projectParams.project_directory);
+
+    const gitEvent = {
+      git_event: gitEventName,
+      ...this.pluginParams,
+      ...this.getJwtParams(),
+      ...projectParams,
+      ...repoParams,
+      ...uncommittedChanges,
+    };
+    // send the event
+    swdcTracker.trackGitEvent(gitEvent);
+
+  }
+
   public async trackEditorAction(entity: string, type: string, event?: any) {
     if (!this.trackerReady) {
       return;
+    }
+
+    if ( type == 'save') {
+      if ( this.eventVersionIsTheSame(event) ) return;
+      this.trackGitEvent("uncommitted_change", event);
     }
 
     const projectParams = this.getProjectParams();
@@ -188,6 +218,27 @@ export class TrackerManager {
       git_branch: resourceInfo.branch,
       git_tag: resourceInfo.tag,
     };
+  }
+
+  async getUncommitedChangesParams(event, projectRootPath) {
+    const stats = await getLocalChanges(projectRootPath);
+
+    return { uncommitted_changes: stats };
+  }
+
+  eventVersionIsTheSame(event) {
+    const isSame =  this.eventVersions.get(event.fileName) == event.version;
+    if ( isSame ) {
+      return true;
+    } else {
+      // Add filename and version to map
+      this.eventVersions.set(event.fileName, event.version)
+      if (this.eventVersions.size > 5) {
+        // remove oldest entry in map to stay small
+        this.eventVersions.delete(this.eventVersions.keys().next().value);
+      }
+      return false;
+    }
   }
 
   getFileParams(event, projectRootPath) {

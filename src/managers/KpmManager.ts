@@ -30,6 +30,7 @@ export class KpmManager {
     workspace.onDidOpenTextDocument(this._onOpenHandler, this);
     workspace.onDidCloseTextDocument(this._onCloseHandler, this);
     workspace.onDidChangeTextDocument(this._onEventHandler, this);
+    workspace.onDidSaveTextDocument(this._onSaveHandler, this);
     // window state changed handler
     window.onDidChangeWindowState(this._windowStateChanged, this);
 
@@ -102,6 +103,7 @@ export class KpmManager {
     this.tracker.trackEditorAction("file", "close", event);
   }
 
+
   /**
    * File Open Handler
    * @param event
@@ -134,6 +136,10 @@ export class KpmManager {
 
     rootObj.source[staticInfo.filename].open += 1;
     logEvent(`File opened`);
+  }
+
+  private async _onSaveHandler(event) {
+    this.tracker.trackEditorAction("file", "save", event);
   }
 
   /**
