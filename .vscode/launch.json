@@ -12,7 +12,9 @@
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "env": {
-                "NODE_ENV": "test"
+                "NODE_ENV": "test",
+                "WEBSOCKETS_ENABLED": "false",
+                "WEBSOCKET_SERVER_ENDPOINT": "ws://localhost:5000"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"

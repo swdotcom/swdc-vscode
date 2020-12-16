@@ -15,7 +15,11 @@ export const DISCONNECT_LABEL = "Disconnect";
 // API ENDPOINT
 export const api_endpoint = "https://api.software.com";
 
+// WEBSOCKETS ENDPOINT
+export const websockets_url = "wss://api.software.com/websockets";
+
 // DASHBOARD URL
 export const launch_url = "https://app.software.com";
 
+// ISSUES URL
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";

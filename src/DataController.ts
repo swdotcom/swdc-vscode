@@ -38,6 +38,7 @@ import {
 } from "./repo/GitUtil";
 import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
+import { initializeWebsockets } from "./websockets";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -240,6 +241,12 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
         const message = "Successfully logged on to Code Time";
         window.showInformationMessage(message);
+
+        try {
+            initializeWebsockets()
+        } catch (e) {
+            console.error("Failed to initialize websockets", e)
+        }
 
         commands.executeCommand("codetime.refreshTreeViews");
 
