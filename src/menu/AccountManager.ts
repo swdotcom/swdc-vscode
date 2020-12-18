@@ -114,10 +114,6 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
         // this should not be undefined if its an account reset
         let plugin_uuid = getPluginUuid();
         let auth_callback_state = getAuthCallbackState();
-        if (!auth_callback_state) {
-            auth_callback_state = uuidv4();
-            setAuthCallbackState(auth_callback_state);
-        }
         const username = await getOsUsername();
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const hostname = await getHostname();

@@ -48,6 +48,7 @@
     "webpack-dev": "webpack --mode development --watch",
     "test-compile": "tsc -p ./"
   },
+
   "contributes": {
     "commands": [
       {
@@ -65,6 +66,31 @@
       {
         "command": "codetime.displayReadme",
         "title": "Code Time: Learn more"
+      },
+      {
+        "command": "codetime.shareTextToSlack",
+        "title": "Share to slack",
+        "category": "codetime"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+            "submenu": "codetime.editor.context",
+            "group": "codetime"
+        }
+      ],
+      "codetime.editor.context": [
+        {
+            "command": "codetime.shareTextToSlack",
+            "group": "codetime"
+        }
+      ]
+    },
+    "submenus": [
+      {
+          "id": "codetime.editor.context",
+          "label": "Code Time"
       }
     ],
     "configuration": {
@@ -116,7 +142,7 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@slack/web-api": "^5.8.0",
+    "@slack/web-api": "^5.14.0",
     "@types/jwt-decode": "^2.2.1",
     "aws-sdk": "^2.470.0",
     "axios": "^0.19.0",
