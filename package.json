@@ -68,29 +68,16 @@
         "title": "Code Time: Learn more"
       },
       {
-        "command": "codetime.shareTextToSlack",
-        "title": "Share to slack",
-        "category": "codetime"
-      }
-    ],
-    "menus": {
-      "editor/context": [
-        {
-            "submenu": "codetime.editor.context",
-            "group": "codetime"
-        }
-      ],
-      "codetime.editor.context": [
-        {
-            "command": "codetime.shareTextToSlack",
-            "group": "codetime"
-        }
-      ]
-    },
-    "submenus": [
+        "command": "codetime.connectSlack",
+        "title": "Code Time: Connect Slack"
+      },
       {
-          "id": "codetime.editor.context",
-          "label": "Code Time"
+        "command": "codetime.disconnectWorkspace",
+        "title": "Disconnect workspace",
+        "icon": {
+          "light": "resources/light/remove.svg",
+          "dark": "resources/dark/remove.svg"
+        }
       }
     ],
     "configuration": {
@@ -126,6 +113,15 @@
         {
           "id": "ct-team-tree",
           "name": "CONTRIBUTORS"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "codetime.disconnectWorkspace",
+          "when": "viewItem =~ /slack_connection/",
+          "group": "inline@1"
         }
       ]
     }

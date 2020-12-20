@@ -10,10 +10,17 @@ import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { CodeTimeTeamProvider, connectCodeTimeTeamTreeView } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
-import { showExistingAccountMenu, showSwitchAccountsMenu } from "./menu/AccountManager";
+import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
-import { shareSlackMessage } from "./managers/SlackManager";
+import {
+  activateSlackSnooze,
+  endSlackSnooze,
+  connectSlack,
+  disconnectSlackAuth,
+  shareSlackMessage,
+} from "./managers/SlackManager";
+import { vscode_issues_url } from "./Constants";
 
 export function createCommands(
   kpmController: KpmManager
@@ -174,6 +181,14 @@ export function createCommands(
     })
   );
 
+  // LAUNCH SIGN UP FLOW
+  cmds.push(
+    commands.registerCommand("codetime.signUpAccount", (item: KpmItem, switching_account: boolean) => {
+      // launch the auth selection flow
+      showSignUpAccountMenu();
+    })
+  );
+
   // LAUNCH GOOGLE LOGIN
   cmds.push(
     commands.registerCommand("codetime.googleLogin", (item: KpmItem, switching_account: boolean) => {
@@ -213,6 +228,21 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.refreshKpmTree", () => {
       kpmTreeProvider.refresh();
+    })
+  );
+
+  // SUBMIT ON ISSUE
+  cmds.push(
+    commands.registerCommand("codetime.submitOnIssue", (item: KpmItem) => {
+      if (!item) {
+        // it's from the command palette, create a kpm item so
+        // it can build the ui_element in the tracker manager
+        item = kpmProviderMgr.getFeedbackButton();
+        item.location = "ct_command_palette";
+        item.interactionType = UIInteractionType.Keyboard;
+      }
+      tracker.trackUIInteraction(item);
+      launchWebUrl(vscode_issues_url);
     })
   );
 
@@ -327,6 +357,30 @@ export function createCommands(
       } else {
         window.showInformationMessage("Highlight and select text to share via Slack to continue.");
       }
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.connectSlack", () => {
+      connectSlack();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.disconnectWorkspace", (kptmItem: KpmItem) => {
+      disconnectSlackAuth(kptmItem.value);
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.activateSlackSnooze", (kpmItem: KpmItem) => {
+      activateSlackSnooze();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.endSlackSnooze", (kpmItem: KpmItem) => {
+      endSlackSnooze();
     })
   );
 

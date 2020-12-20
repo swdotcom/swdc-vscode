@@ -1,17 +1,19 @@
 import { commands, window } from "vscode";
-import { api_endpoint } from "../Constants";
-import { getUserRegistrationState, isLoggedIn } from "../DataController";
+import { api_endpoint, YES_LABEL } from "../Constants";
+import { getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
+  getIntegrations,
   getItem,
   getPluginId,
   getPluginType,
   getPluginUuid,
   getVersion,
   launchWebUrl,
-  setItem,
+  updateIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
+import { softwarePut } from "../http/HttpClient";
 
 const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
@@ -20,10 +22,18 @@ const { WebClient } = require("@slack/web-api");
 // - public methods
 // -------------------------------------------
 
-export function getSlackAccessToken() {
-  return getItem("slack_access_token");
+export async function getSlackAccessToken() {
+  const selectedTeamDomain = await showSlackWorkspaceSelection();
+
+  if (selectedTeamDomain) {
+    return getWorkspaceAccessToken(selectedTeamDomain);
+  }
+  return null;
 }
 
+/**
+ * Connect Slack
+ */
 export async function connectSlack() {
   const qryStr = queryString.stringify({
     plugin: getPluginType(),
@@ -42,6 +52,67 @@ export async function connectSlack() {
   setTimeout(() => {
     refetchSlackConnectStatusLazily(40);
   }, 10000);
+}
+
+/**
+ * Disconnect Slack
+ */
+export async function disconnectSlackAuth(authId) {
+  // get the domain
+  const integration = getIntegrations().find((n) => n.authId === authId);
+  if (!integration) {
+    window.showErrorMessage("Unable to find selected integration to disconnect");
+    commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    return;
+  }
+  // ask before disconnecting
+  const selection = await window.showInformationMessage(
+    `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
+    ...[YES_LABEL]
+  );
+
+  if (selection === YES_LABEL) {
+    await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
+    // disconnected, remove it from the integrations
+    removeSlackIntegration(authId);
+    commands.executeCommand("codetime.refreshCodetimeMenuTree");
+  }
+}
+
+export async function activateSlackSnooze() {
+  // ask which slack workspace to use
+  const accessToken = await getSlackAccessToken();
+
+  if (accessToken) {
+    const web = new WebClient(accessToken);
+
+    const result = await web.dnd.setSnooze({ num_minutes: 30 }).catch((err) => {
+      console.log("Unable to activate do not disturb: ", err.message);
+      return [];
+    });
+    if (result && result.ok) {
+      window.showInformationMessage("Successfully activated do not disturb for 30 minutes");
+      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    }
+  }
+}
+
+export async function endSlackSnooze() {
+  // ask which slack workspace to use
+  const accessToken = await getSlackAccessToken();
+
+  if (accessToken) {
+    const web = new WebClient(accessToken);
+
+    const result = await web.dnd.endSnooze().catch((err) => {
+      console.log("Error ending slack snooze: ", err.message);
+      return [];
+    });
+    if (result && result.ok) {
+      window.showInformationMessage("Successfully ended the snooze status");
+      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    }
+  }
 }
 
 /**
@@ -98,9 +169,56 @@ export async function shareSlackMessage(message) {
     });
 }
 
+export async function getDnDInfo(team_domain) {
+  let dndInfo = null;
+  const accessToken = getWorkspaceAccessToken(team_domain);
+  if (accessToken) {
+    const web = new WebClient(accessToken);
+    dndInfo = await web.dnd.info();
+    console.log("result: ", dndInfo);
+  }
+  return dndInfo;
+}
+
+export async function getDnDEnabledCount() {
+  const integrations = getIntegrations();
+  let dnd_enabled_count = 0;
+  for await (const integration of integrations) {
+    const dndInfo = await getDnDInfo(integration.team_domain);
+    if (dndInfo && dndInfo.snooze_enabled) {
+      dnd_enabled_count++;
+    }
+  }
+  return dnd_enabled_count;
+}
+
 // -------------------------------------------
 // - private methods
 // -------------------------------------------
+
+async function showSlackWorkspaceSelection() {
+  let menuOptions = {
+    items: [],
+    placeholder: `Select a Slack workspace`,
+  };
+
+  const integrations = getIntegrations();
+  integrations.forEach((integration) => {
+    menuOptions.items.push({
+      label: integration.team_domain,
+    });
+  });
+
+  menuOptions.items.push({
+    label: "Connect a Slack workspace",
+  });
+
+  const pick = await showQuickPick(menuOptions);
+  if (pick && pick.label) {
+    return pick.label;
+  }
+  return null;
+}
 
 /**
  * Show the list of channels in the command palette
@@ -133,11 +251,19 @@ function getTextSnippet(text) {
   return text.length > 20 ? text.substring(0, 20) + "..." : text;
 }
 
+function getWorkspaceAccessToken(team_domain) {
+  const integration = getIntegrations().find((n) => n.team_domain === team_domain);
+  if (integration) {
+    return integration.access_token;
+  }
+  return null;
+}
+
 /**
  * retrieve the slack channels to display
  */
-async function getChannels() {
-  const slackAccessToken = getItem("slack_access_token");
+async function getChannels(team_doamin) {
+  const slackAccessToken = getWorkspaceAccessToken(team_doamin);
   const web = new WebClient(slackAccessToken);
   const result = await web.conversations.list({ exclude_archived: true, exclude_members: true }).catch((err) => {
     console.log("Unable to retrieve slack channels: ", err.message);
@@ -153,11 +279,14 @@ async function getChannels() {
  * return the channel names
  */
 async function getChannelNames() {
-  const channels = await getChannels();
-  if (channels && channels.length > 0) {
-    return channels.map((channel) => {
-      return channel.name;
-    });
+  const selectedTeamDomain = await showSlackWorkspaceSelection();
+  if (selectedTeamDomain) {
+    const channels = await getChannels(selectedTeamDomain);
+    if (channels && channels.length > 0) {
+      return channels.map((channel) => {
+        return channel.name;
+      });
+    }
   }
   return [];
 }
@@ -178,6 +307,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
     }
   } else {
     window.showInformationMessage("Successfully connected to Slack");
+    commands.executeCommand("codetime.refreshCodetimeMenuTree");
   }
 }
 
@@ -185,18 +315,39 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  * Get the slack Oauth from the registered user
  */
 async function getSlackAuth() {
-  let slackAuth = null;
+  let foundNewIntegration = false;
   const { user } = await getUserRegistrationState();
-  if (user && user.auths) {
+  if (user && user.integrations) {
+    const currentIntegrations = getIntegrations();
     // find the slack auth
-    for (let i = 0; i < user.auths.length; i++) {
-      if (user.auths[i].type === "slack") {
-        slackAuth = user.auths[i];
-        setItem("slack_access_token", slackAuth.access_token);
+    for (const integration of user.integrations) {
+      // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
+      if (integration.name.toLowerCase() === "slack") {
+        // check if it exists
+        const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
+        if (!foundIntegration) {
+          // get the workspace domain using the authId
+          const web = new WebClient(integration.access_token);
+          const usersIdentify = await web.users.identity((e) => {
+            console.log("error fetching slack team info: ", e.message);
+            return null;
+          });
+          // usersIdentity returns
+          // {team: {id, name, domain, image_102, image_132, ....}...}
+          // set the domain
+          integration["team_domain"] = usersIdentify?.team?.domain;
+          integration["team_name"] = usersIdentify?.team?.name;
+          // add it
+          currentIntegrations.push(integration);
+
+          foundNewIntegration = true;
+        }
       }
     }
+
+    updateIntegrations(currentIntegrations);
   }
-  return slackAuth;
+  return foundNewIntegration;
 }
 
 /**
@@ -226,4 +377,15 @@ function postMessage(selectedChannel: any, message: string) {
           }
         });
     });
+}
+
+/**
+ * Remove an integration from the local copy
+ * @param authId
+ */
+function removeSlackIntegration(authId) {
+  const currentIntegrations = getIntegrations();
+
+  const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
+  updateIntegrations(newIntegrations);
 }

@@ -8,21 +8,10 @@ import {
   findFirstActiveDirectoryOrWorkspaceDirectory,
   getNowTimes,
   setItem,
+  getIntegrations,
 } from "../Util";
-import {
-  getUncommitedChanges,
-  getTodaysCommits,
-  getLastCommitId,
-  getRepoUrlLink,
-} from "../repo/GitUtil";
-import {
-  WorkspaceFolder,
-  TreeItem,
-  TreeItemCollapsibleState,
-  Command,
-  commands,
-  TreeView,
-} from "vscode";
+import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
+import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
 import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
 import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
@@ -30,20 +19,19 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
+import { getDnDEnabledCount } from "../managers/SlackManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 const path = require("path");
 const resourcePath: string = path.join(__dirname, "resources");
 
-let counter = 0;
-
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
   private kpmTreeOpen: boolean = false;
 
-  constructor() { }
+  constructor() {}
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -61,54 +49,54 @@ export class KpmProviderManager {
     this.kpmTreeOpen = isOpen;
   }
 
-  async getOptionsTreeParents(): Promise<KpmItem[]> {
-    counter++;
-    const space = counter % 2 === 0 ? "" : " ";
+  async getCodeTimeTreeMenu(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
-
-    const name = await getItem("name");
-
-    if (!name) {
-      treeItems.push(this.getSignUpButton("Google", null));
-
-      treeItems.push(this.getSignUpButton("GitHub", "white"));
-
-      treeItems.push(this.getSignUpButton("email", "gray"));
-
-      const authType = getItem("authType");
-
-      // only show the "log in existing account" if they haven't already completed auth
-      if (!authType) {
-        // existing account login button
-        treeItems.push(this.getSignUpButton("existing", "blue"));
-      }
-    } else {
-      treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
+    treeItems.push(this.getOptionsTreeParents());
+    treeItems.push(await this.getFlowTree());
+    const name = getItem("name");
+    if (name) {
+      treeItems.push(this.getViewProjectSummaryButton());
+      treeItems.push(this.getCodeTimeDashboardButton());
     }
-
-    treeItems.push(this.getDividerButton());
-
-    treeItems.push(this.getWebViewDashboardButton());
-
-    // view summary button node
-    treeItems.push(this.getCodeTimeDashboardButton());
-
-    // view project summary button node
-    treeItems.push(this.getViewProjectSummaryButton());
-
-    if (!name) {
-      treeItems.push(this.getDividerButton());
-
-      // toggle status bar button
-      treeItems.push(this.getHideStatusBarMetricsButton());
-
-      // readme button
-      treeItems.push(this.getLearnMoreButton());
-
-      treeItems.push(this.getFeedbackButton());
-    }
-
     return treeItems;
+  }
+
+  async getFlowTree(): Promise<KpmItem> {
+    const parentItem: KpmItem = this.buildMessageItem("FLOW", "", "", null, null);
+    parentItem.children = [];
+    parentItem.initialCollapsibleState = TreeItemCollapsibleState.Expanded;
+
+    const activateDnDItems = await this.getSlackNotificationToggleButtons();
+    activateDnDItems.forEach((item) => {
+      parentItem.children.push(item);
+    });
+
+    return parentItem;
+  }
+
+  getOptionsTreeParents(): KpmItem {
+    const name = getItem("name");
+    const parentItem: KpmItem = this.buildMessageItem("ACCOUNT", "", "", null, null);
+    parentItem.children = [];
+    parentItem.initialCollapsibleState = TreeItemCollapsibleState.Expanded;
+
+    // signup, login buttons if they're not already logged in
+    // else get the "Logged in with <auth>" button
+    if (!name) {
+      parentItem.children.push(this.getGeneralSignupButton());
+      parentItem.children.push(this.getGeneralLoginToExistingButton());
+    } else {
+      parentItem.children.push(this.getLoggedInButton());
+      parentItem.children.push(this.getSwitchAccountsButton());
+    }
+
+    parentItem.children.push(this.getLearnMoreButton());
+    parentItem.children.push(this.getFeedbackButton());
+    parentItem.children.push(this.getHideStatusBarMetricsButton());
+
+    parentItem.children.push(this.getSlackIntegrationsTree());
+
+    return parentItem;
   }
 
   async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
@@ -126,15 +114,19 @@ export class KpmProviderManager {
     const connectedToInfo = this.getAuthTypeIconAndLabel();
     const children: KpmItem[] = [];
     children.push(this.getSwitchAccountsButton());
-    children.push(this.getLearnMoreButton());
-    children.push(this.getHideStatusBarMetricsButton());
-    children.push(this.getFeedbackButton());
     return this.buildTreeForChildren(
       collapsibleState,
       children,
       connectedToInfo.label,
       connectedToInfo.tooltip,
-      connectedToInfo.icon);
+      connectedToInfo.icon
+    );
+  }
+
+  getLoggedInButton(): KpmItem {
+    const connectedToInfo = this.getAuthTypeIconAndLabel();
+    const item: KpmItem = this.buildMessageItem(connectedToInfo.label, connectedToInfo.tooltip, connectedToInfo.icon);
+    return item;
   }
 
   buildTreeForChildren(
@@ -142,7 +134,8 @@ export class KpmProviderManager {
     children: KpmItem[],
     label: string,
     tooltip: string,
-    icon: string = null): KpmItem {
+    icon: string = null
+  ): KpmItem {
     const parent: KpmItem = this.buildMessageItem(label, tooltip, icon);
     if (collapsibleState) {
       parent.initialCollapsibleState = collapsibleState;
@@ -166,7 +159,14 @@ export class KpmProviderManager {
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
       treeItems.push(
-        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`, null, null, "ct_top_files_by_kpm_toggle_node")
+        this.buildTreeMetricItem(
+          "Files changed",
+          "Files changed today",
+          `Today: ${filesChanged}`,
+          null,
+          null,
+          "ct_top_files_by_kpm_toggle_node"
+        )
       );
 
       // get the file change info
@@ -264,11 +264,7 @@ export class KpmProviderManager {
           )
         );
 
-        const committedChangesFolder: KpmItem = this.buildParentItem(
-          name,
-          "",
-          committedChangesMetrics
-        );
+        const committedChangesFolder: KpmItem = this.buildParentItem(name, "", committedChangesMetrics);
 
         committedChangesChildren.push(committedChangesFolder);
       }
@@ -305,9 +301,7 @@ export class KpmProviderManager {
 
     if (teamMembers && teamMembers.length) {
       // get the 1st one to get the identifier
-      const item: KpmItem = KpmProviderManager.getInstance().getContributorReportButton(
-        teamMembers[0].identifier
-      );
+      const item: KpmItem = KpmProviderManager.getInstance().getContributorReportButton(teamMembers[0].identifier);
       treeItems.push(item);
 
       for (let i = 0; i < teamMembers.length; i++) {
@@ -342,6 +336,55 @@ export class KpmProviderManager {
     }
 
     return treeItems;
+  }
+
+  async getSlackNotificationToggleButtons(): Promise<KpmItem[]> {
+    const items: KpmItem[] = [];
+    const integrations = getIntegrations();
+
+    // go through the domains and check if there are
+    // any workspaces the user can activate dnd on
+    const dndEnabledCount = await getDnDEnabledCount();
+    const allowActivate = integrations.length && integrations.length !== dndEnabledCount;
+    if (allowActivate) {
+      const activateButton: KpmItem = this.getActionButton(
+        "Activate Slack snooze",
+        "",
+        "codetime.activateSlackSnooze",
+        "slack.svg",
+        "",
+        ""
+      );
+      items.push(activateButton);
+    }
+
+    const allowDeactivate = integrations.length && dndEnabledCount > 0;
+    if (allowDeactivate) {
+      const endSlackSnooze: KpmItem = this.getActionButton(
+        "End Slack snooze",
+        "",
+        "codetime.endSlackSnooze",
+        "slack.svg",
+        "",
+        ""
+      );
+      items.push(endSlackSnooze);
+    }
+
+    return items;
+  }
+
+  getGeneralSignupButton() {
+    const item: KpmItem = this.getActionButton("Sign up", "", "codetime.signUpAccount", "signup.svg", "", "blue");
+    return item;
+  }
+
+  getGeneralLoginToExistingButton() {
+    const item: KpmItem = this.getActionButton("Log in", "", "codetime.codeTimeExisting", "paw.svg", "", "blue");
+    item.location = "ct_menu_tree";
+    item.name = `ct_log_in_btn`;
+    item.interactionIcon = "paw.svg";
+    return item;
   }
 
   getSignUpButton(signUpAuthName: string, iconColor?: string): KpmItem {
@@ -434,7 +477,7 @@ export class KpmProviderManager {
   }
 
   getLearnMoreButton(): KpmItem {
-    const learnMoreLabel = `Learn more`;
+    const learnMoreLabel = `Documentation`;
     const item: KpmItem = this.getActionButton(
       learnMoreLabel,
       "View the Code Time Readme to learn more",
@@ -451,17 +494,42 @@ export class KpmProviderManager {
 
   getFeedbackButton(): KpmItem {
     const feedbackButton: KpmItem = this.getActionButton(
-      "Submit feedback",
+      "Submit on issue",
       "Send us an email at cody@software.com",
-      "codetime.sendFeedback",
+      "codetime.submitOnIssue",
       "message.svg",
       "",
       "green"
     );
     feedbackButton.name = "ct_submit_feedback_btn";
     feedbackButton.location = "ct_menu_tree";
-    feedbackButton.interactionIcon = "text-bubble"
+    feedbackButton.interactionIcon = "text-bubble";
     return feedbackButton;
+  }
+
+  getSlackIntegrationsTree(): KpmItem {
+    const parentItem = this.buildMessageItem("Slack integrations", "", "slack.svg", null, null);
+    parentItem.children = [];
+    const integrations = getIntegrations();
+    if (integrations.length) {
+      for (const integration of integrations) {
+        if (integration.name.toLowerCase() === "slack") {
+          const workspace = this.buildMessageItem(integration.team_domain, "", "slack-multicolor.svg");
+          workspace.contextValue = "slack_connection";
+          workspace.value = integration.authId;
+          parentItem.children.push(workspace);
+        }
+      }
+    }
+    // fetch the integrations and build nodes
+    const connectWorkspaceButton = this.buildMessageItem(
+      "Connect to a Slack workspace",
+      "",
+      "add.svg",
+      "codetime.connectSlack"
+    );
+    parentItem.children.push(connectWorkspaceButton);
+    return parentItem;
   }
 
   getContributorReportButton(identifier: string): KpmItem {
@@ -540,14 +608,7 @@ export class KpmProviderManager {
     };
   }
 
-  getActionButton(
-    label,
-    tooltip,
-    command,
-    icon = null,
-    eventDescription: string = "",
-    color = null
-  ): KpmItem {
+  getActionButton(label, tooltip, command, icon = null, eventDescription: string = "", color = null): KpmItem {
     const item: KpmItem = new KpmItem();
     item.tooltip = tooltip;
     item.label = label;
@@ -588,9 +649,7 @@ export class KpmProviderManager {
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
     const avgMin = humanizeMinutes(data.averageDailyMinutes);
     const activityLightningBolt =
-      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes
-        ? "bolt.svg"
-        : "bolt-grey.svg";
+      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
@@ -615,8 +674,7 @@ export class KpmProviderManager {
     const linesAdded = numeral(currLinesAdded).format("0 a");
     values.push({ label: `Today: ${linesAdded}`, icon: "rocket.svg" });
     const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
-    const linesAddedLightningBolt =
-      data.currentDayLinesAdded > data.averageLinesAdded ? "bolt.svg" : "bolt-grey.svg";
+    const linesAddedLightningBolt = data.currentDayLinesAdded > data.averageLinesAdded ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${userLinesAddedAvg}`,
       icon: linesAddedLightningBolt,
@@ -626,13 +684,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesAdded}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes(
-      "Lines added",
-      "",
-      values,
-      TreeItemCollapsibleState.Collapsed,
-      "ct_lines_added_toggle_node"
-    ));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Lines added",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_lines_added_toggle_node"
+      )
+    );
 
     values = [];
     const currLinesRemoved = data.currentDayLinesRemoved;
@@ -650,13 +710,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesRemoved}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes(
-      "Lines removed",
-      "",
-      values,
-      TreeItemCollapsibleState.Collapsed,
-      "ct_lines_removed_toggle_node"
-    ));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Lines removed",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_lines_removed_toggle_node"
+      )
+    );
 
     values = [];
     const currKeystrokes = data.currentDayKeystrokes;
@@ -674,13 +736,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalKeystrokes}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes(
-      "Keystrokes",
-      "",
-      values,
-      TreeItemCollapsibleState.Collapsed,
-      "ct_keystrokes_toggle_node"
-    ));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Keystrokes",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_keystrokes_toggle_node"
+      )
+    );
 
     return items;
   }
@@ -737,7 +801,15 @@ export class KpmProviderManager {
     return parent;
   }
 
-  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null, name = "", location = "") {
+  buildMessageItem(
+    label,
+    tooltip = "",
+    icon = null,
+    command = null,
+    commandArgs = null,
+    name = "",
+    location = ""
+  ): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
@@ -791,9 +863,7 @@ export class KpmProviderManager {
       return null;
     }
     // Most Edited File
-    const sortedArray = fileChangeInfos.sort(
-      (a: FileChangeInfo, b: FileChangeInfo) => b.keystrokes - a.keystrokes
-    );
+    const sortedArray = fileChangeInfos.sort((a: FileChangeInfo, b: FileChangeInfo) => b.keystrokes - a.keystrokes);
     const mostEditedChildren: KpmItem[] = [];
     const len = Math.min(3, sortedArray.length);
     for (let i = 0; i < len; i++) {
@@ -801,9 +871,7 @@ export class KpmProviderManager {
       const keystrokes = sortedArray[i].keystrokes || 0;
       const keystrokesStr = numeral(keystrokes).format("0 a");
       const label = `${fileName} | ${keystrokesStr}`;
-      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [
-        sortedArray[i].fsPath,
-      ]);
+      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [sortedArray[i].fsPath]);
       mostEditedChildren.push(messageItem);
     }
     const mostEditedParent = this.buildParentItem(
@@ -821,9 +889,7 @@ export class KpmProviderManager {
       return null;
     }
     // Highest KPM
-    const sortedArray = fileChangeInfos.sort(
-      (a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm
-    );
+    const sortedArray = fileChangeInfos.sort((a: FileChangeInfo, b: FileChangeInfo) => b.kpm - a.kpm);
     const highKpmChildren: KpmItem[] = [];
     const len = Math.min(3, sortedArray.length);
     for (let i = 0; i < len; i++) {
@@ -831,9 +897,7 @@ export class KpmProviderManager {
       const kpm = sortedArray[i].kpm || 0;
       const kpmStr = kpm.toFixed(2);
       const label = `${fileName} | ${kpmStr}`;
-      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [
-        sortedArray[i].fsPath,
-      ]);
+      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [sortedArray[i].fsPath]);
       highKpmChildren.push(messageItem);
     }
     const highKpmParent = this.buildParentItem(
@@ -861,9 +925,7 @@ export class KpmProviderManager {
       const duration_minutes = minutes > 0 ? minutes / 60 : 0;
       const codeHours = humanizeMinutes(duration_minutes);
       const label = `${fileName} | ${codeHours}`;
-      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [
-        sortedArray[i].fsPath,
-      ]);
+      const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [sortedArray[i].fsPath]);
       longestCodeTimeChildren.push(messageItem);
     }
     const longestCodeTimeParent = this.buildParentItem(
@@ -916,10 +978,8 @@ export class KpmTreeItem extends TreeItem {
 
 function getTreeItemIcon(treeItem: KpmItem): any {
   const iconName = treeItem.icon;
-  const lightPath =
-    iconName ? path.join(resourcePath, "light", iconName) : null;
-  const darkPath =
-    iconName ? path.join(resourcePath, "dark", iconName) : null;
+  const lightPath = iconName ? path.join(resourcePath, "light", iconName) : null;
+  const darkPath = iconName ? path.join(resourcePath, "dark", iconName) : null;
   return { lightPath, darkPath };
 }
 
@@ -964,4 +1024,4 @@ export const treeDataUpdateCheck = () => {
     SummaryManager.getInstance().updateSessionSummaryFromServer();
     setItem("updatedTreeDate", day);
   }
-}
+};
