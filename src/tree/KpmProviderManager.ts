@@ -19,7 +19,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getDnDEnabledCount } from "../managers/SlackManager";
+import { getDnDEnabledCount, getSlackIntegrations } from "../managers/SlackManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -340,35 +340,37 @@ export class KpmProviderManager {
 
   async getSlackNotificationToggleButtons(): Promise<KpmItem[]> {
     const items: KpmItem[] = [];
-    const integrations = getIntegrations();
+    const integrations = getSlackIntegrations();
 
-    // go through the domains and check if there are
-    // any workspaces the user can activate dnd on
-    const dndEnabledCount = await getDnDEnabledCount();
-    const allowActivate = integrations.length && integrations.length !== dndEnabledCount;
-    if (allowActivate) {
-      const activateButton: KpmItem = this.getActionButton(
-        "Activate Slack snooze",
-        "",
-        "codetime.activateSlackSnooze",
-        "slack.svg",
-        "",
-        ""
-      );
-      items.push(activateButton);
-    }
+    if (integrations.length) {
+      // go through the domains and check if there are
+      // any workspaces the user can activate dnd on
+      const dndEnabledCount = await getDnDEnabledCount();
+      const allowActivate = integrations.length && integrations.length !== dndEnabledCount;
+      if (allowActivate) {
+        const activateButton: KpmItem = this.getActionButton(
+          "Activate Slack snooze",
+          "",
+          "codetime.activateSlackSnooze",
+          "slack.svg",
+          "",
+          ""
+        );
+        items.push(activateButton);
+      }
 
-    const allowDeactivate = integrations.length && dndEnabledCount > 0;
-    if (allowDeactivate) {
-      const endSlackSnooze: KpmItem = this.getActionButton(
-        "End Slack snooze",
-        "",
-        "codetime.endSlackSnooze",
-        "slack.svg",
-        "",
-        ""
-      );
-      items.push(endSlackSnooze);
+      const allowDeactivate = integrations.length && dndEnabledCount > 0;
+      if (allowDeactivate) {
+        const endSlackSnooze: KpmItem = this.getActionButton(
+          "End Slack snooze",
+          "",
+          "codetime.endSlackSnooze",
+          "slack.svg",
+          "",
+          ""
+        );
+        items.push(endSlackSnooze);
+      }
     }
 
     return items;

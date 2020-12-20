@@ -22,6 +22,10 @@ const { WebClient } = require("@slack/web-api");
 // - public methods
 // -------------------------------------------
 
+export function getSlackIntegrations() {
+  return getIntegrations().filter((n) => n.name.toLowerCase() === "slack");
+}
+
 export async function getSlackAccessToken() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
@@ -35,6 +39,11 @@ export async function getSlackAccessToken() {
  * Connect Slack
  */
 export async function connectSlack() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
   const qryStr = queryString.stringify({
     plugin: getPluginType(),
     plugin_uuid: getPluginUuid(),
@@ -59,7 +68,7 @@ export async function connectSlack() {
  */
 export async function disconnectSlackAuth(authId) {
   // get the domain
-  const integration = getIntegrations().find((n) => n.authId === authId);
+  const integration = getSlackIntegrations().find((n) => n.authId === authId);
   if (!integration) {
     window.showErrorMessage("Unable to find selected integration to disconnect");
     commands.executeCommand("codetime.refreshCodetimeMenuTree");
@@ -80,6 +89,11 @@ export async function disconnectSlackAuth(authId) {
 }
 
 export async function activateSlackSnooze() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
   // ask which slack workspace to use
   const accessToken = await getSlackAccessToken();
 
@@ -98,6 +112,11 @@ export async function activateSlackSnooze() {
 }
 
 export async function endSlackSnooze() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
   // ask which slack workspace to use
   const accessToken = await getSlackAccessToken();
 
@@ -120,22 +139,11 @@ export async function endSlackSnooze() {
  * @param message
  */
 export async function shareSlackMessage(message) {
-  if (!getItem("name")) {
-    window
-      .showInformationMessage(
-        "Log in with Code Time to continue.",
-        {
-          modal: true,
-        },
-        "Log in"
-      )
-      .then(async (selection) => {
-        if (selection === "Log in") {
-          commands.executeCommand("codetime.codeTimeExisting");
-        }
-      });
+  const registered = await checkRegistration();
+  if (!registered) {
     return;
   }
+
   let slackAccessToken = getSlackAccessToken();
   if (!slackAccessToken) {
     // prompt to connect
@@ -174,14 +182,16 @@ export async function getDnDInfo(team_domain) {
   const accessToken = getWorkspaceAccessToken(team_domain);
   if (accessToken) {
     const web = new WebClient(accessToken);
-    dndInfo = await web.dnd.info();
-    console.log("result: ", dndInfo);
+    dndInfo = await web.dnd.info().catch((e) => {
+      console.error("Error fetching slack do not disturb info: ", e.message);
+      return null;
+    });
   }
   return dndInfo;
 }
 
 export async function getDnDEnabledCount() {
-  const integrations = getIntegrations();
+  const integrations = getSlackIntegrations();
   let dnd_enabled_count = 0;
   for await (const integration of integrations) {
     const dndInfo = await getDnDInfo(integration.team_domain);
@@ -202,7 +212,7 @@ async function showSlackWorkspaceSelection() {
     placeholder: `Select a Slack workspace`,
   };
 
-  const integrations = getIntegrations();
+  const integrations = getSlackIntegrations();
   integrations.forEach((integration) => {
     menuOptions.items.push({
       label: integration.team_domain,
@@ -252,7 +262,7 @@ function getTextSnippet(text) {
 }
 
 function getWorkspaceAccessToken(team_domain) {
-  const integration = getIntegrations().find((n) => n.team_domain === team_domain);
+  const integration = getSlackIntegrations().find((n) => n.team_domain === team_domain);
   if (integration) {
     return integration.access_token;
   }
@@ -388,4 +398,24 @@ function removeSlackIntegration(authId) {
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
   updateIntegrations(newIntegrations);
+}
+
+async function checkRegistration() {
+  if (!getItem("name")) {
+    window
+      .showInformationMessage(
+        "Log in with Code Time to continue.",
+        {
+          modal: true,
+        },
+        "Log in"
+      )
+      .then(async (selection) => {
+        if (selection === "Log in") {
+          commands.executeCommand("codetime.codeTimeExisting");
+        }
+      });
+    return false;
+  }
+  return true;
 }
