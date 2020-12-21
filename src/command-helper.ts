@@ -1,7 +1,16 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { launchWebDashboard, updatePreferences } from "./DataController";
 import { displayCodeTimeMetricsDashboard } from "./menu/MenuManager";
-import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar } from "./Util";
+import {
+  launchWebUrl,
+  launchLogin,
+  openFileInEditor,
+  displayReadmeIfNotExists,
+  toggleStatusBar,
+  getItem,
+  setItem,
+  inZenMode,
+} from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTimeMenuProvider";
@@ -379,16 +388,25 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.enableFocusTime", async () => {
-      await pauseSlackNotifications();
-      // turn on vscode zen mode
-    })
-  );
+    commands.registerCommand("codetime.toggleFocusTime", async () => {
+      let zenMode = inZenMode();
 
-  cmds.push(
-    commands.registerCommand("codetime.disableFocusTime", async () => {
-      await enableSlackNotifications();
-      // turn off vscode zen mode
+      if (!zenMode) {
+        zenMode = true;
+        await pauseSlackNotifications();
+        // turn on vscode zen mode
+        // workbench.action.toggleZenMode removes the side bar
+        // workbench.action.toggleFullScreen full screen with the side bar
+        commands.executeCommand("workbench.action.toggleZenMode");
+      } else {
+        zenMode = false;
+        await enableSlackNotifications();
+        commands.executeCommand("workbench.action.exitZenMode");
+      }
+
+      setItem("zenMode", zenMode);
+
+      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 

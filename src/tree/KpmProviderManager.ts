@@ -9,6 +9,7 @@ import {
   getNowTimes,
   setItem,
   getIntegrations,
+  inZenMode,
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
 import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
@@ -277,7 +278,12 @@ export class KpmProviderManager {
 
     const integrations = getSlackIntegrations();
 
-    treeItems.push(this.getActionButton("Turn on focus mode", "", "codetime.enableZenMode", "focus.svg", "", ""));
+    if (!inZenMode()) {
+      treeItems.push(this.getActionButton("Turn on focus mode", "", "codetime.toggleFocusTime", "focus.svg", "", ""));
+    } else {
+      treeItems.push(this.getActionButton("Turn off focus mode", "", "codetime.toggleFocusTime", "focus.svg", "", ""));
+    }
+
     if (integrations.length) {
       treeItems.push(
         this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg", "", "")

@@ -231,6 +231,14 @@ export function getItem(key) {
   return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
+export function inZenMode() {
+  let inZenMode = getItem("zenMode");
+  if (inZenMode === null || inZenMode === undefined) {
+    inZenMode = false;
+  }
+  return inZenMode;
+}
+
 export function getIntegrations() {
   let integrations = getFileDataAsJson(getIntegrationsFile());
   if (!integrations) {
