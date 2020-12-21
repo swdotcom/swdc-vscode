@@ -1,5 +1,5 @@
 import { commands, window } from "vscode";
-import { api_endpoint, YES_LABEL } from "../Constants";
+import { api_endpoint, DISCONNECT_LABEL, YES_LABEL } from "../Constants";
 import { getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
@@ -75,14 +75,15 @@ export async function disconnectSlackAuth(authId) {
   // ask before disconnecting
   const selection = await window.showInformationMessage(
     `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
-    ...[YES_LABEL]
+    ...[DISCONNECT_LABEL]
   );
 
-  if (selection === YES_LABEL) {
+  if (selection === DISCONNECT_LABEL) {
     await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
     commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    commands.executeCommand("codetime.refreshFlowTree");
   }
 }
 
@@ -97,7 +98,7 @@ export async function pauseSlackNotifications() {
   let enabled = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
-    const result = await web.dnd.setSnooze({ num_minutes: 30 }).catch((err) => {
+    const result = await web.dnd.setSnooze({ num_minutes: 120 }).catch((err) => {
       console.log("Unable to activate do not disturb: ", err.message);
       return [];
     });
@@ -107,7 +108,7 @@ export async function pauseSlackNotifications() {
   }
 
   if (enabled) {
-    window.showInformationMessage("Slack notifications are paused for 30 minutes");
+    window.showInformationMessage("Slack notifications are paused for 2 hours");
   }
 
   commands.executeCommand("codetime.refreshCodetimeMenuTree");
@@ -228,9 +229,12 @@ export async function setProfileStatus() {
   // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
-    await web.users.profile.set({ status_text: message, status_expiration: 0 }).catch((e) => {
-      console.error("error setting profile status: ", e.message);
-    });
+    const result = await web.users.profile
+      .set({ profile: { status_text: message, status_expiration: 0 } })
+      .catch((e) => {
+        console.error("error setting profile status: ", e.message);
+      });
+    return result;
   }
 }
 
@@ -446,11 +450,11 @@ async function checkRegistration() {
   if (!getItem("name")) {
     window
       .showInformationMessage(
-        "Log in with Code Time to continue.",
+        "Connecting Slack requires a registered account. Sign up or log in to continue.",
         {
           modal: true,
         },
-        "Log in"
+        "Sign up"
       )
       .then(async (selection) => {
         if (selection === "Log in") {

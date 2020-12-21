@@ -51,52 +51,31 @@ export class KpmProviderManager {
 
   async getCodeTimeTreeMenu(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
-    treeItems.push(await this.getOptionsTreeParents());
-    treeItems.push(await this.getFlowTree());
-    const name = getItem("name");
-    if (name) {
-      treeItems.push(this.getViewProjectSummaryButton());
-      treeItems.push(this.getCodeTimeDashboardButton());
-    }
+    treeItems.push(...(await this.getOptionsTreeParents()));
     return treeItems;
   }
 
-  async getFlowTree(): Promise<KpmItem> {
-    const parentItem: KpmItem = this.buildMessageItem("FLOW", "", "", null, null);
-    parentItem.children = [];
-    parentItem.initialCollapsibleState = TreeItemCollapsibleState.Expanded;
-
-    const activateDnDItems = await this.getSlackNotificationToggleButtons();
-    activateDnDItems.forEach((item) => {
-      parentItem.children.push(item);
-    });
-
-    return parentItem;
-  }
-
-  async getOptionsTreeParents(): Promise<KpmItem> {
+  async getOptionsTreeParents(): Promise<KpmItem[]> {
     const name = getItem("name");
-    const parentItem: KpmItem = this.buildMessageItem("ACCOUNT", "", "", null, null);
-    parentItem.children = [];
-    parentItem.initialCollapsibleState = TreeItemCollapsibleState.Expanded;
+    const treeItems: KpmItem[] = [];
 
     // signup, login buttons if they're not already logged in
     // else get the "Logged in with <auth>" button
     if (!name) {
-      parentItem.children.push(this.getGeneralSignupButton());
-      parentItem.children.push(this.getGeneralLoginToExistingButton());
+      treeItems.push(this.getGeneralSignupButton());
+      treeItems.push(this.getGeneralLoginToExistingButton());
     } else {
-      parentItem.children.push(this.getLoggedInButton());
-      parentItem.children.push(this.getSwitchAccountsButton());
+      treeItems.push(this.getLoggedInButton());
+      treeItems.push(this.getSwitchAccountsButton());
     }
 
-    parentItem.children.push(this.getLearnMoreButton());
-    parentItem.children.push(this.getFeedbackButton());
-    parentItem.children.push(this.getHideStatusBarMetricsButton());
+    treeItems.push(this.getLearnMoreButton());
+    treeItems.push(this.getFeedbackButton());
+    treeItems.push(this.getHideStatusBarMetricsButton());
 
-    parentItem.children.push(await this.getSlackIntegrationsTree());
+    treeItems.push(await this.getSlackIntegrationsTree());
 
-    return parentItem;
+    return treeItems;
   }
 
   async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
@@ -146,6 +125,10 @@ export class KpmProviderManager {
 
   async getKpmTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
+
+    treeItems.push(this.getViewProjectSummaryButton());
+    treeItems.push(this.getCodeTimeDashboardButton());
+
     const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
     // get the session summary data
@@ -289,6 +272,32 @@ export class KpmProviderManager {
     return treeItems;
   }
 
+  async getFlowTreeParents(): Promise<KpmItem[]> {
+    const treeItems: KpmItem[] = [];
+
+    const integrations = getSlackIntegrations();
+
+    treeItems.push(this.getActionButton("Turn on focus mode", "", "codetime.enableZenMode", "focus.svg", "", ""));
+    if (integrations.length) {
+      treeItems.push(
+        this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg", "", "")
+      );
+    } else {
+      treeItems.push(
+        this.getActionButton(
+          "Connect Slack to set your status and pause notifications",
+          "",
+          "codetime.connectSlack",
+          "slack-new.svg",
+          "",
+          ""
+        )
+      );
+    }
+
+    return treeItems;
+  }
+
   async getTeamTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -336,39 +345,6 @@ export class KpmProviderManager {
     }
 
     return treeItems;
-  }
-
-  async getSlackNotificationToggleButtons(): Promise<KpmItem[]> {
-    const items: KpmItem[] = [];
-    const integrations = getSlackIntegrations();
-
-    if (integrations.length) {
-      // go through the domains and check if there are
-      // any workspaces the user can activate dnd on
-      const dndEnabledCount = await getSlackDnDEnabledCount();
-      if (dndEnabledCount === 0) {
-        items.push(
-          this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack.svg", "", "")
-        );
-      }
-
-      if (dndEnabledCount > 0) {
-        items.push(
-          this.getActionButton(
-            "Enable Slack notifications",
-            "",
-            "codetime.enableSlackNotifications",
-            "slack.svg",
-            "",
-            ""
-          )
-        );
-      }
-
-      items.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack.svg", "", ""));
-    }
-
-    return items;
   }
 
   getGeneralSignupButton() {
@@ -505,13 +481,13 @@ export class KpmProviderManager {
   }
 
   async getSlackIntegrationsTree(): Promise<KpmItem> {
-    const parentItem = this.buildMessageItem("Slack integrations", "", "slack.svg", null, null);
+    const parentItem = this.buildMessageItem("Slack workspaces", "", "slack-new.svg", null, null);
     parentItem.children = [];
     const integrations = getIntegrations();
     if (integrations.length) {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
-          const workspace = this.buildMessageItem(integration.team_domain, "", "slack-multicolor.svg");
+          const workspace = this.buildMessageItem(integration.team_domain, "", "");
           const snoozeEnabled = await isSlackSnoozeEnabled(integration.team_domain);
           workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
           workspace.value = integration.authId;

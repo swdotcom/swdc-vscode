@@ -11,7 +11,6 @@ import {
 } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
-import { v4 as uuidv4 } from "uuid";
 
 const switchAccountItem = {
   label: "Switch to a different account?",
@@ -20,11 +19,6 @@ const switchAccountItem = {
 const logIntoExistingItem = {
   label: "Log in with an existing account?",
   detail: "Click to link to an existing account.",
-};
-
-const signUpItem = {
-  label: "Sign up?",
-  detail: "Click to sign up an account.",
 };
 
 export async function showSwitchAccountsMenu() {
@@ -36,7 +30,7 @@ export async function showExistingAccountMenu() {
 }
 
 export async function showSignUpAccountMenu() {
-  accountMenuSelection(signUpItem);
+  showSignUpMenuOptions();
 }
 
 async function accountMenuSelection(placeholderItem: any) {
@@ -57,7 +51,9 @@ async function accountMenuSelection(placeholderItem: any) {
     placeholder = "Connect using one of the following";
   }
 
-  items.push(placeholderItem);
+  if (placeholderItem) {
+    items.push(placeholderItem);
+  }
   const menuOptions = {
     items,
     placeholder,
@@ -70,20 +66,28 @@ async function accountMenuSelection(placeholderItem: any) {
 }
 
 function showLogInMenuOptions() {
+  showAuthMenuOptions("Log in");
+}
+
+function showSignUpMenuOptions() {
+  showAuthMenuOptions("Sign up");
+}
+
+function showAuthMenuOptions(authText) {
   const items = [];
-  const placeholder = `Log in using...`;
+  const placeholder = `${authText} using...`;
   items.push({
-    label: "Log in with Google",
+    label: `${authText} with Google`,
     command: "codetime.googleLogin",
     commandArgs: [null /*KpmItem*/, true /*switching_account*/],
   });
   items.push({
-    label: "Log in with GitHub",
+    label: `${authText} with GitHub`,
     command: "codetime.githubLogin",
     commandArgs: [null /*KpmItem*/, true /*switching_account*/],
   });
   items.push({
-    label: "Log in with Email",
+    label: `${authText} with Email`,
     command: "codetime.codeTimeLogin",
     commandArgs: [null /*KpmItem*/, true /*switching_account*/],
   });

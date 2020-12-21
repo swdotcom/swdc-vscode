@@ -9,6 +9,7 @@ export const DEFAULT_SESSION_THRESHOLD_SECONDS = 60 * 5;
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const CODE_TIME_TYPE = "codetime";
 export const YES_LABEL = "Yes";
+export const DISCONNECT_LABEL = "Disconnect";
 
 // API ENDPOINT
 export const api_endpoint = "http://localhost:5000"; //"https://api.software.com";

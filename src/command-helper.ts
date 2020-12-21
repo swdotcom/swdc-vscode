@@ -8,7 +8,6 @@ import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTi
 import { KpmItem, UIInteractionType } from "./model/models";
 import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { CodeTimeTeamProvider, connectCodeTimeTeamTreeView } from "./tree/CodeTimeTeamProvider";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
@@ -22,6 +21,7 @@ import {
   setProfileStatus,
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
+import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
 
 export function createCommands(
   kpmController: KpmManager
@@ -43,6 +43,15 @@ export function createCommands(
   });
   codetimeMenuTreeProvider.bindView(codetimeMenuTreeView);
   cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
+
+  // FLOW TREE: INIT
+  const codetimeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
+    treeDataProvider: codetimeFlowTreeProvider,
+    showCollapseAll: false,
+  });
+  codetimeFlowTreeProvider.bindView(codetimeFlowTreeView);
+  cmds.push(connectCodeTimeFlowTreeView(codetimeFlowTreeView));
 
   // STATUS BAR CLICK - MENU TREE REVEAL
   cmds.push(
@@ -68,6 +77,13 @@ export function createCommands(
     })
   );
 
+  // FLOW TERE: REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.refreshFlowTree", () => {
+      codetimeFlowTreeProvider.refresh();
+    })
+  );
+
   // PROCESS KEYSTROKES NOW
   cmds.push(
     commands.registerCommand("codetime.processKeystrokeData", () => {
@@ -83,23 +99,6 @@ export function createCommands(
   });
   kpmTreeProvider.bindView(kpmTreeView);
   cmds.push(connectKpmTreeView(kpmTreeView));
-
-  // TEAM TREE: INIT
-  const codetimeTeamTreeProvider = new CodeTimeTeamProvider();
-  const codetimeTeamTreeView: TreeView<KpmItem> = window.createTreeView("ct-team-tree", {
-    treeDataProvider: codetimeTeamTreeProvider,
-    showCollapseAll: false,
-  });
-  codetimeTeamTreeProvider.bindView(codetimeTeamTreeView);
-  cmds.push(connectCodeTimeTeamTreeView(codetimeTeamTreeView));
-
-  cmds.push(
-    commands.registerCommand("codetime.refreshTreeViews", () => {
-      codetimeMenuTreeProvider.refresh();
-      kpmTreeProvider.refresh();
-      codetimeTeamTreeProvider.refresh();
-    })
-  );
 
   // SHOW WEB ANALYTICS
   cmds.push(
@@ -374,20 +373,22 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.pauseSlackNotifications", (kpmItem: KpmItem) => {
-      pauseSlackNotifications();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.enableSlackNotifications", (kpmItem: KpmItem) => {
-      enableSlackNotifications();
-    })
-  );
-
-  cmds.push(
     commands.registerCommand("codetime.updateProfileStatus", () => {
       setProfileStatus();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.enableFocusTime", async () => {
+      await pauseSlackNotifications();
+      // turn on vscode zen mode
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.disableFocusTime", async () => {
+      await enableSlackNotifications();
+      // turn off vscode zen mode
     })
   );
 

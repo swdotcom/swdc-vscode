@@ -104,15 +104,15 @@
       "code-time": [
         {
           "id": "ct-menu-tree",
-          "name": "MENU"
+          "name": "ACCOUNT"
+        },
+        {
+          "id": "ct-flow-tree",
+          "name": "FLOW"
         },
         {
           "id": "ct-metrics-tree",
-          "name": "DAILY METRICS"
-        },
-        {
-          "id": "ct-team-tree",
-          "name": "CONTRIBUTORS"
+          "name": "STATS"
         }
       ]
     },
