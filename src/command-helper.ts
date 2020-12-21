@@ -14,11 +14,12 @@ import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu 
 import { TrackerManager } from "./managers/TrackerManager";
 import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
 import {
-  activateSlackSnooze,
-  endSlackSnooze,
+  pauseSlackNotifications,
+  enableSlackNotifications,
   connectSlack,
   disconnectSlackAuth,
   shareSlackMessage,
+  setProfileStatus,
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 
@@ -373,14 +374,20 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.activateSlackSnooze", (kpmItem: KpmItem) => {
-      activateSlackSnooze();
+    commands.registerCommand("codetime.pauseSlackNotifications", (kpmItem: KpmItem) => {
+      pauseSlackNotifications();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.endSlackSnooze", (kpmItem: KpmItem) => {
-      endSlackSnooze();
+    commands.registerCommand("codetime.enableSlackNotifications", (kpmItem: KpmItem) => {
+      enableSlackNotifications();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.updateProfileStatus", () => {
+      setProfileStatus();
     })
   );
 

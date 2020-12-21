@@ -22,10 +22,12 @@ const { WebClient } = require("@slack/web-api");
 // - public methods
 // -------------------------------------------
 
+// get saved slack integrations
 export function getSlackIntegrations() {
   return getIntegrations().filter((n) => n.name.toLowerCase() === "slack");
 }
 
+// get the access token of a selected slack workspace
 export async function getSlackAccessToken() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
@@ -35,9 +37,7 @@ export async function getSlackAccessToken() {
   return null;
 }
 
-/**
- * Connect Slack
- */
+// connect slack flow
 export async function connectSlack() {
   const registered = await checkRegistration();
   if (!registered) {
@@ -63,9 +63,7 @@ export async function connectSlack() {
   }, 10000);
 }
 
-/**
- * Disconnect Slack
- */
+// disconnect slack flow
 export async function disconnectSlackAuth(authId) {
   // get the domain
   const integration = getSlackIntegrations().find((n) => n.authId === authId);
@@ -88,56 +86,60 @@ export async function disconnectSlackAuth(authId) {
   }
 }
 
-export async function activateSlackSnooze() {
+// pause notification on all slack integrations
+export async function pauseSlackNotifications() {
   const registered = await checkRegistration();
   if (!registered) {
     return;
   }
 
-  // ask which slack workspace to use
-  const accessToken = await getSlackAccessToken();
-
-  if (accessToken) {
-    const web = new WebClient(accessToken);
-
+  const integrations = getSlackIntegrations();
+  let enabled = false;
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
     const result = await web.dnd.setSnooze({ num_minutes: 30 }).catch((err) => {
       console.log("Unable to activate do not disturb: ", err.message);
       return [];
     });
     if (result && result.ok) {
-      window.showInformationMessage("Successfully activated do not disturb for 30 minutes");
-      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+      enabled = true;
     }
   }
+
+  if (enabled) {
+    window.showInformationMessage("Slack notifications are paused for 30 minutes");
+  }
+
+  commands.executeCommand("codetime.refreshCodetimeMenuTree");
 }
 
-export async function endSlackSnooze() {
+// enable notifications on all slack integrations
+export async function enableSlackNotifications() {
   const registered = await checkRegistration();
   if (!registered) {
     return;
   }
 
-  // ask which slack workspace to use
-  const accessToken = await getSlackAccessToken();
-
-  if (accessToken) {
-    const web = new WebClient(accessToken);
-
+  const integrations = getSlackIntegrations();
+  let enabled = false;
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
     const result = await web.dnd.endSnooze().catch((err) => {
       console.log("Error ending slack snooze: ", err.message);
       return [];
     });
     if (result && result.ok) {
-      window.showInformationMessage("Successfully ended the snooze status");
-      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+      enabled = true;
     }
   }
+
+  if (enabled) {
+    window.showInformationMessage("Slack notifications enabled");
+  }
+  commands.executeCommand("codetime.refreshCodetimeMenuTree");
 }
 
-/**
- * Shares a message to a selected slack user channel
- * @param message
- */
+// share a message to a selected slack channel
 export async function shareSlackMessage(message) {
   const registered = await checkRegistration();
   if (!registered) {
@@ -177,7 +179,8 @@ export async function shareSlackMessage(message) {
     });
 }
 
-export async function getDnDInfo(team_domain) {
+// get the slack do not disturb info
+export async function getSlackDnDInfo(team_domain) {
   let dndInfo = null;
   const accessToken = getWorkspaceAccessToken(team_domain);
   if (accessToken) {
@@ -190,16 +193,45 @@ export async function getDnDInfo(team_domain) {
   return dndInfo;
 }
 
-export async function getDnDEnabledCount() {
+// check if snooze is enabled for a slack workspace
+export async function isSlackSnoozeEnabled(domain) {
+  const dndInfo = await getSlackDnDInfo(domain);
+  return dndInfo && dndInfo.snooze_enabled;
+}
+
+// get the number of integrations that have snooze enabled
+export async function getSlackDnDEnabledCount() {
   const integrations = getSlackIntegrations();
   let dnd_enabled_count = 0;
   for await (const integration of integrations) {
-    const dndInfo = await getDnDInfo(integration.team_domain);
-    if (dndInfo && dndInfo.snooze_enabled) {
+    if (await isSlackSnoozeEnabled(integration.team_domain)) {
       dnd_enabled_count++;
     }
   }
   return dnd_enabled_count;
+}
+
+// set the slack profile status
+export async function setProfileStatus() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
+  const message = await showMessageInputPrompt();
+  if (!message) {
+    return;
+  }
+
+  const integrations = getSlackIntegrations();
+  // example:
+  // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    await web.users.profile.set({ status_text: message, status_expiration: 0 }).catch((e) => {
+      console.error("error setting profile status: ", e.message);
+    });
+  }
 }
 
 // -------------------------------------------
@@ -228,6 +260,16 @@ async function showSlackWorkspaceSelection() {
     return pick.label;
   }
   return null;
+}
+
+async function showMessageInputPrompt() {
+  return await window.showInputBox({
+    value: "",
+    placeHolder: "Enter a message to appear in your profile status",
+    validateInput: (text) => {
+      return !text ? "Please enter a valid message to continue." : null;
+    },
+  });
 }
 
 /**

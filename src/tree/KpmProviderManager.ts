@@ -19,7 +19,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getDnDEnabledCount, getSlackIntegrations } from "../managers/SlackManager";
+import { getSlackDnDEnabledCount, getSlackIntegrations, isSlackSnoozeEnabled } from "../managers/SlackManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -51,7 +51,7 @@ export class KpmProviderManager {
 
   async getCodeTimeTreeMenu(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
-    treeItems.push(this.getOptionsTreeParents());
+    treeItems.push(await this.getOptionsTreeParents());
     treeItems.push(await this.getFlowTree());
     const name = getItem("name");
     if (name) {
@@ -74,7 +74,7 @@ export class KpmProviderManager {
     return parentItem;
   }
 
-  getOptionsTreeParents(): KpmItem {
+  async getOptionsTreeParents(): Promise<KpmItem> {
     const name = getItem("name");
     const parentItem: KpmItem = this.buildMessageItem("ACCOUNT", "", "", null, null);
     parentItem.children = [];
@@ -94,7 +94,7 @@ export class KpmProviderManager {
     parentItem.children.push(this.getFeedbackButton());
     parentItem.children.push(this.getHideStatusBarMetricsButton());
 
-    parentItem.children.push(this.getSlackIntegrationsTree());
+    parentItem.children.push(await this.getSlackIntegrationsTree());
 
     return parentItem;
   }
@@ -345,32 +345,27 @@ export class KpmProviderManager {
     if (integrations.length) {
       // go through the domains and check if there are
       // any workspaces the user can activate dnd on
-      const dndEnabledCount = await getDnDEnabledCount();
-      const allowActivate = integrations.length && integrations.length !== dndEnabledCount;
-      if (allowActivate) {
-        const activateButton: KpmItem = this.getActionButton(
-          "Activate Slack snooze",
-          "",
-          "codetime.activateSlackSnooze",
-          "slack.svg",
-          "",
-          ""
+      const dndEnabledCount = await getSlackDnDEnabledCount();
+      if (dndEnabledCount === 0) {
+        items.push(
+          this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack.svg", "", "")
         );
-        items.push(activateButton);
       }
 
-      const allowDeactivate = integrations.length && dndEnabledCount > 0;
-      if (allowDeactivate) {
-        const endSlackSnooze: KpmItem = this.getActionButton(
-          "End Slack snooze",
-          "",
-          "codetime.endSlackSnooze",
-          "slack.svg",
-          "",
-          ""
+      if (dndEnabledCount > 0) {
+        items.push(
+          this.getActionButton(
+            "Enable Slack notifications",
+            "",
+            "codetime.enableSlackNotifications",
+            "slack.svg",
+            "",
+            ""
+          )
         );
-        items.push(endSlackSnooze);
       }
+
+      items.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack.svg", "", ""));
     }
 
     return items;
@@ -509,15 +504,16 @@ export class KpmProviderManager {
     return feedbackButton;
   }
 
-  getSlackIntegrationsTree(): KpmItem {
+  async getSlackIntegrationsTree(): Promise<KpmItem> {
     const parentItem = this.buildMessageItem("Slack integrations", "", "slack.svg", null, null);
     parentItem.children = [];
     const integrations = getIntegrations();
     if (integrations.length) {
-      for (const integration of integrations) {
+      for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
           const workspace = this.buildMessageItem(integration.team_domain, "", "slack-multicolor.svg");
-          workspace.contextValue = "slack_connection";
+          const snoozeEnabled = await isSlackSnoozeEnabled(integration.team_domain);
+          workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
           workspace.value = integration.authId;
           parentItem.children.push(workspace);
         }

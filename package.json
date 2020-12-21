@@ -120,8 +120,8 @@
       "view/item/context": [
         {
           "command": "codetime.disconnectWorkspace",
-          "when": "viewItem =~ /slack_connection/",
-          "group": "inline@1"
+          "when": "viewItem =~ /.*slack_connection.*/",
+          "group": "inline@3"
         }
       ]
     }
