@@ -1,4 +1,4 @@
-export const LOGIN_LABEL = "Complete setup";
+export const LOGIN_LABEL = "Log in";
 export const LOGOUT_LABEL = "Log out";
 export const UNTITLED = "Untitled";
 export const NO_PROJ_NAME = "Unnamed";
