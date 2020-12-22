@@ -78,6 +78,27 @@
           "light": "resources/light/remove.svg",
           "dark": "resources/dark/remove.svg"
         }
+      },
+      {
+        "command": "codetime.codeTimeMetrics",
+        "title": "Code Time: View summary"
+      },
+      {
+        "command": "codetime.generateProjectSummary",
+        "title": "Code Time: View project summary"
+      },
+      {
+        "command": "codetime.softwareKpmDashboard",
+        "title": "Code Time: See advanced metrics"
+      },
+      {
+        "command": "codetime.displayReadme",
+        "title": "Code Time: Learn more"
+      },
+      {
+        "command": "codetime.shareTextToSlack",
+        "title": "Share to a Slack channel",
+        "category": "codetime"
       }
     ],
     "configuration": {
@@ -123,8 +144,26 @@
           "when": "viewItem =~ /.*slack_connection.*/",
           "group": "inline@1"
         }
+      ],
+      "editor/context": [
+        {
+            "submenu": "codetime.editor.context",
+            "group": "codetime"
+        }
+      ],
+      "codetime.editor.context": [
+        {
+            "command": "codetime.shareTextToSlack",
+            "group": "codetime"
+        }
       ]
-    }
+    },
+    "submenus": [
+      {
+          "id": "codetime.editor.context",
+          "label": "Code Time"
+      }
+    ]
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",

@@ -149,13 +149,11 @@ export async function shareSlackMessage(message) {
   let slackAccessToken = getSlackAccessToken();
   if (!slackAccessToken) {
     // prompt to connect
-    window
-      .showInformationMessage("To share a message on Slack, please connect your account", ...["Connect"])
-      .then((selection) => {
-        if (selection === "Connect") {
-          connectSlack();
-        }
-      });
+    window.showInformationMessage("To share a message on Slack, please connect your account", ...["Connect"]).then((selection) => {
+      if (selection === "Connect") {
+        connectSlack();
+      }
+    });
     return;
   }
 
@@ -418,6 +416,7 @@ async function getSlackAuth() {
  * @param message
  */
 function postMessage(selectedChannel: any, message: string) {
+  message = "```" + message + "```";
   let slackAccessToken = getSlackAccessToken();
   const web = new WebClient(slackAccessToken);
   web.chat
@@ -432,6 +431,7 @@ function postMessage(selectedChannel: any, message: string) {
         .postMessage({
           text: message,
           channel: selectedChannel,
+          mrkdwn: true,
         })
         .catch((err) => {
           if (err.message) {
