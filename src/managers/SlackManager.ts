@@ -431,7 +431,6 @@ function postMessage(selectedChannel: any, message: string) {
         .postMessage({
           text: message,
           channel: selectedChannel,
-          mrkdwn: true,
         })
         .catch((err) => {
           if (err.message) {
