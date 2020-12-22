@@ -200,12 +200,8 @@ export class KpmProviderManager {
         const name = workspaceFolder.name;
 
         const openChangesMetrics: KpmItem[] = [];
-        openChangesMetrics.push(
-          this.buildMetricItem("Insertion(s)", currentChagesSummary.insertions, "", "insertion.svg")
-        );
-        openChangesMetrics.push(
-          this.buildMetricItem("Deletion(s)", currentChagesSummary.deletions, "", "deletion.svg")
-        );
+        openChangesMetrics.push(this.buildMetricItem("Insertion(s)", currentChagesSummary.insertions, "", "insertion.svg"));
+        openChangesMetrics.push(this.buildMetricItem("Deletion(s)", currentChagesSummary.deletions, "", "deletion.svg"));
 
         const openChangesFolder: KpmItem = this.buildParentItem(name, "", openChangesMetrics);
 
@@ -215,38 +211,18 @@ export class KpmProviderManager {
 
         const committedChangesMetrics: KpmItem[] = [];
         committedChangesMetrics.push(
-          this.buildMetricItem(
-            "Insertion(s)",
-            todaysChagesSummary.insertions,
-            "Number of total insertions today",
-            "insertion.svg"
-          )
+          this.buildMetricItem("Insertion(s)", todaysChagesSummary.insertions, "Number of total insertions today", "insertion.svg")
         );
         committedChangesMetrics.push(
-          this.buildMetricItem(
-            "Deletion(s)",
-            todaysChagesSummary.deletions,
-            "Number of total deletions today",
-            "deletion.svg"
-          )
+          this.buildMetricItem("Deletion(s)", todaysChagesSummary.deletions, "Number of total deletions today", "deletion.svg")
         );
 
         committedChangesMetrics.push(
-          this.buildMetricItem(
-            "Commit(s)",
-            todaysChagesSummary.commitCount,
-            "Number of total commits today",
-            "commit.svg"
-          )
+          this.buildMetricItem("Commit(s)", todaysChagesSummary.commitCount, "Number of total commits today", "commit.svg")
         );
 
         committedChangesMetrics.push(
-          this.buildMetricItem(
-            "Files changed",
-            todaysChagesSummary.fileCount,
-            "Number of total files changed today",
-            "files.svg"
-          )
+          this.buildMetricItem("Files changed", todaysChagesSummary.fileCount, "Number of total files changed today", "files.svg")
         );
 
         const committedChangesFolder: KpmItem = this.buildParentItem(name, "", committedChangesMetrics);
@@ -262,12 +238,7 @@ export class KpmProviderManager {
       );
       treeItems.push(openChangesParent);
 
-      const committedChangesParent: KpmItem = this.buildParentItem(
-        "Committed today",
-        "",
-        committedChangesChildren,
-        "ct_committed_today_toggle_node"
-      );
+      const committedChangesParent: KpmItem = this.buildParentItem("Committed today", "", committedChangesChildren, "ct_committed_today_toggle_node");
       treeItems.push(committedChangesParent);
     }
 
@@ -440,14 +411,7 @@ export class KpmProviderManager {
     const name = getItem("name");
     const loggedInMsg = name ? ` Connected as ${name}` : "";
     const tooltip = `Switch to a different account.${loggedInMsg}`;
-    const item: KpmItem = this.getActionButton(
-      "Switch account",
-      tooltip,
-      "codetime.switchAccounts",
-      "paw.svg",
-      "TreeViewSwitchAccounts",
-      "blue"
-    );
+    const item: KpmItem = this.getActionButton("Switch account", tooltip, "codetime.switchAccounts", "paw.svg", "TreeViewSwitchAccounts", "blue");
     item.location = "ct_menu_tree";
     item.name = "ct_switch_accounts_btn";
     item.interactionIcon = "paw";
@@ -547,14 +511,7 @@ export class KpmProviderManager {
 
   getViewProjectSummaryButton(): KpmItem {
     const commitSummitLabel = `View project summary`;
-    const item: KpmItem = this.getActionButton(
-      commitSummitLabel,
-      "",
-      "codetime.generateProjectSummary",
-      "folder.svg",
-      "",
-      "red"
-    );
+    const item: KpmItem = this.getActionButton(commitSummitLabel, "", "codetime.generateProjectSummary", "folder.svg", "", "red");
     item.location = "ct_menu_tree";
     item.name = "ct_project_summary_btn";
     item.interactionIcon = "folder";
@@ -697,8 +654,7 @@ export class KpmProviderManager {
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     values.push({ label: `Today: ${linesRemoved}`, icon: "rocket.svg" });
     const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format("0 a");
-    const linesRemovedLightningBolt =
-      data.currentDayLinesRemoved > data.averageLinesRemoved ? "bolt.svg" : "bolt-grey.svg";
+    const linesRemovedLightningBolt = data.currentDayLinesRemoved > data.averageLinesRemoved ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${userLinesRemovedAvg}`,
       icon: linesRemovedLightningBolt,
@@ -723,8 +679,7 @@ export class KpmProviderManager {
     const keystrokes = numeral(currKeystrokes).format("0 a");
     values.push({ label: `Today: ${keystrokes}`, icon: "rocket.svg" });
     const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format("0 a");
-    const keystrokesLightningBolt =
-      data.currentDayKeystrokes > data.averageDailyKeystrokes ? "bolt.svg" : "bolt-grey.svg";
+    const keystrokesLightningBolt = data.currentDayKeystrokes > data.averageDailyKeystrokes ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${userKeystrokesAvg}`,
       icon: keystrokesLightningBolt,
@@ -777,14 +732,7 @@ export class KpmProviderManager {
     return parentItem;
   }
 
-  buildActivityComparisonNodes(
-    label,
-    tooltip,
-    values,
-    collapsibleState: TreeItemCollapsibleState = null,
-    name = "",
-    location = "ct_metrics_tree"
-  ) {
+  buildActivityComparisonNodes(label, tooltip, values, collapsibleState: TreeItemCollapsibleState = null, name = "", location = "ct_metrics_tree") {
     const parent: KpmItem = this.buildMessageItem(label, tooltip, null, null, null, name, location);
     if (collapsibleState) {
       parent.initialCollapsibleState = collapsibleState;
@@ -872,12 +820,7 @@ export class KpmProviderManager {
       const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [sortedArray[i].fsPath]);
       mostEditedChildren.push(messageItem);
     }
-    const mostEditedParent = this.buildParentItem(
-      "Top files by keystrokes",
-      "",
-      mostEditedChildren,
-      "ct_top_files_by_keystrokes_toggle_node"
-    );
+    const mostEditedParent = this.buildParentItem("Top files by keystrokes", "", mostEditedChildren, "ct_top_files_by_keystrokes_toggle_node");
 
     return mostEditedParent;
   }
@@ -912,9 +855,7 @@ export class KpmProviderManager {
       return null;
     }
     // Longest Code Time
-    const sortedArray = fileChangeInfos.sort(
-      (a: FileChangeInfo, b: FileChangeInfo) => b.duration_seconds - a.duration_seconds
-    );
+    const sortedArray = fileChangeInfos.sort((a: FileChangeInfo, b: FileChangeInfo) => b.duration_seconds - a.duration_seconds);
     const longestCodeTimeChildren: KpmItem[] = [];
     const len = Math.min(3, sortedArray.length);
     for (let i = 0; i < len; i++) {
@@ -926,12 +867,7 @@ export class KpmProviderManager {
       const messageItem = this.buildMessageItem(label, "", null, "codetime.openFileInEditor", [sortedArray[i].fsPath]);
       longestCodeTimeChildren.push(messageItem);
     }
-    const longestCodeTimeParent = this.buildParentItem(
-      "Top files by code time",
-      "",
-      longestCodeTimeChildren,
-      "ct_top_files_by_codetime_toggle_node"
-    );
+    const longestCodeTimeParent = this.buildParentItem("Top files by code time", "", longestCodeTimeChildren, "ct_top_files_by_codetime_toggle_node");
     return longestCodeTimeParent;
   }
 }
@@ -942,11 +878,7 @@ export class KpmProviderManager {
  * based on that value.
  */
 export class KpmTreeItem extends TreeItem {
-  constructor(
-    private readonly treeItem: KpmItem,
-    public readonly collapsibleState: TreeItemCollapsibleState,
-    public readonly command?: Command
-  ) {
+  constructor(private readonly treeItem: KpmItem, public readonly collapsibleState: TreeItemCollapsibleState, public readonly command?: Command) {
     super(treeItem.label, collapsibleState);
 
     const { lightPath, darkPath } = getTreeItemIcon(treeItem);
