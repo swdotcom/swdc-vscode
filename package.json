@@ -68,11 +68,11 @@
         "title": "Code Time: Learn more"
       },
       {
-        "command": "codetime.connectSlack",
+        "command": "codetime.connectSlackWorkspace",
         "title": "Code Time: Connect Slack"
       },
       {
-        "command": "codetime.disconnectWorkspace",
+        "command": "codetime.disconnectSlackWorkspace",
         "title": "Disconnect workspace",
         "icon": {
           "light": "resources/light/remove.svg",
@@ -119,7 +119,7 @@
     "menus": {
       "view/item/context": [
         {
-          "command": "codetime.disconnectWorkspace",
+          "command": "codetime.disconnectSlackWorkspace",
           "when": "viewItem =~ /.*slack_connection.*/",
           "group": "inline@1"
         }

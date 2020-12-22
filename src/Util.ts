@@ -235,12 +235,12 @@ export function getIntegrations() {
   let integrations = getFileDataAsJson(getIntegrationsFile());
   if (!integrations) {
     integrations = [];
-    updateIntegrations(integrations);
+    syncIntegrations(integrations);
   }
   return integrations;
 }
 
-export function updateIntegrations(integrations) {
+export function syncIntegrations(integrations) {
   fileIt.writeJsonFileSync(getIntegrationsFile(), integrations);
 }
 

@@ -362,13 +362,13 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.connectSlack", () => {
+    commands.registerCommand("codetime.connectSlackWorkspace", () => {
       connectSlack();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.disconnectWorkspace", (kptmItem: KpmItem) => {
+    commands.registerCommand("codetime.disconnectSlackWorkspace", (kptmItem: KpmItem) => {
       disconnectSlackAuth(kptmItem.value);
     })
   );

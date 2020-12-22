@@ -10,7 +10,7 @@ import {
   getPluginUuid,
   getVersion,
   launchWebUrl,
-  updateIntegrations,
+  syncIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
 import { softwarePut } from "../http/HttpClient";
@@ -23,7 +23,7 @@ const { WebClient } = require("@slack/web-api");
 // -------------------------------------------
 
 // get saved slack integrations
-export function getSlackIntegrations() {
+export function getSlackWorkspaces() {
   return getIntegrations().filter((n) => n.name.toLowerCase() === "slack");
 }
 
@@ -61,7 +61,7 @@ export async function connectSlack() {
 // disconnect slack flow
 export async function disconnectSlackAuth(authId) {
   // get the domain
-  const integration = getSlackIntegrations().find((n) => n.authId === authId);
+  const integration = getSlackWorkspaces().find((n) => n.authId === authId);
   if (!integration) {
     window.showErrorMessage("Unable to find selected integration to disconnect");
     commands.executeCommand("codetime.refreshCodetimeMenuTree");
@@ -93,7 +93,7 @@ export async function pauseSlackNotifications() {
     return;
   }
 
-  const integrations = getSlackIntegrations();
+  const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
@@ -120,7 +120,7 @@ export async function enableSlackNotifications() {
     return;
   }
 
-  const integrations = getSlackIntegrations();
+  const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
@@ -194,17 +194,17 @@ export async function getSlackDnDInfo(team_domain) {
 }
 
 // check if snooze is enabled for a slack workspace
-export async function isSlackSnoozeEnabled(domain) {
+export async function isSlackDnDEnabled(domain) {
   const dndInfo = await getSlackDnDInfo(domain);
   return dndInfo && dndInfo.snooze_enabled;
 }
 
 // get the number of integrations that have snooze enabled
 export async function getSlackDnDEnabledCount() {
-  const integrations = getSlackIntegrations();
+  const integrations = getSlackWorkspaces();
   let dnd_enabled_count = 0;
   for await (const integration of integrations) {
-    if (await isSlackSnoozeEnabled(integration.team_domain)) {
+    if (await isSlackDnDEnabled(integration.team_domain)) {
       dnd_enabled_count++;
     }
   }
@@ -223,7 +223,7 @@ export async function setProfileStatus() {
     return;
   }
 
-  const integrations = getSlackIntegrations();
+  const integrations = getSlackWorkspaces();
   // example:
   // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
   for await (const integration of integrations) {
@@ -249,7 +249,7 @@ async function showSlackWorkspaceSelection() {
     placeholder: `Select a Slack workspace`,
   };
 
-  const integrations = getSlackIntegrations();
+  const integrations = getSlackWorkspaces();
   integrations.forEach((integration) => {
     menuOptions.items.push({
       label: integration.team_domain,
@@ -309,7 +309,7 @@ function getTextSnippet(text) {
 }
 
 function getWorkspaceAccessToken(team_domain) {
-  const integration = getSlackIntegrations().find((n) => n.team_domain === team_domain);
+  const integration = getSlackWorkspaces().find((n) => n.team_domain === team_domain);
   if (integration) {
     return integration.access_token;
   }
@@ -407,7 +407,7 @@ async function getSlackAuth() {
       }
     }
 
-    updateIntegrations(currentIntegrations);
+    syncIntegrations(currentIntegrations);
   }
   return foundNewIntegration;
 }
@@ -449,7 +449,7 @@ function removeSlackIntegration(authId) {
   const currentIntegrations = getIntegrations();
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
-  updateIntegrations(newIntegrations);
+  syncIntegrations(newIntegrations);
 }
 
 async function checkRegistration() {

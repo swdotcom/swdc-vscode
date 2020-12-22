@@ -20,7 +20,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDEnabledCount, getSlackIntegrations, isSlackSnoozeEnabled } from "../managers/SlackManager";
+import { getSlackDnDEnabledCount, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 
 const numeral = require("numeral");
@@ -277,7 +277,7 @@ export class KpmProviderManager {
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
-    const integrations = getSlackIntegrations();
+    const integrations = getSlackWorkspaces();
 
     treeItems.push(this.getActionButton("Toggle focus mode", "", "codetime.toggleFocusTime", "focus.svg"));
 
@@ -302,7 +302,7 @@ export class KpmProviderManager {
         this.getActionButton(
           "Connect Slack to set your status and pause notifications",
           "",
-          "codetime.connectSlack",
+          "codetime.connectSlackWorkspace",
           "slack-new.svg"
         )
       );
@@ -512,7 +512,7 @@ export class KpmProviderManager {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
           const workspace = this.buildMessageItem(integration.team_domain, "", "");
-          const snoozeEnabled = await isSlackSnoozeEnabled(integration.team_domain);
+          const snoozeEnabled = await isSlackDnDEnabled(integration.team_domain);
           workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
           workspace.value = integration.authId;
           parentItem.children.push(workspace);
@@ -524,7 +524,7 @@ export class KpmProviderManager {
       "Connect to a Slack workspace",
       "",
       "add.svg",
-      "codetime.connectSlack"
+      "codetime.connectSlackWorkspace"
     );
     parentItem.children.push(connectWorkspaceButton);
     return parentItem;
