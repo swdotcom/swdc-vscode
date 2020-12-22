@@ -10,6 +10,7 @@ import {
   getPluginUuid,
   getVersion,
   launchWebUrl,
+  setAuthCallbackState,
   syncIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
@@ -38,7 +39,7 @@ export async function getSlackAccessToken() {
 }
 
 // connect slack flow
-export async function connectSlack() {
+export async function connectSlackWorkspace() {
   const registered = await checkRegistration();
   if (!registered) {
     return;
@@ -364,8 +365,13 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
       setTimeout(() => {
         refetchSlackConnectStatusLazily(tryCountUntilFoundUser);
       }, 10000);
+    } else {
+      // clear the auth callback state
+      setAuthCallbackState(null);
     }
   } else {
+    // clear the auth callback state
+    setAuthCallbackState(null);
     window.showInformationMessage("Successfully connected to Slack");
 
     commands.executeCommand("codetime.refreshFlowTree");

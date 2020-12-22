@@ -15,7 +15,7 @@ import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
 import {
   pauseSlackNotifications,
   enableSlackNotifications,
-  connectSlack,
+  connectSlackWorkspace,
   disconnectSlackAuth,
   shareSlackMessage,
   setProfileStatus,
@@ -363,7 +363,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.connectSlackWorkspace", () => {
-      connectSlack();
+      connectSlackWorkspace();
     })
   );
 
