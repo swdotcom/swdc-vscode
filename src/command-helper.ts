@@ -393,7 +393,7 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleFocusTime", () => {
+    commands.registerCommand("codetime.toggleZenMode", () => {
       // display commands
       // workbench.action.toggleZenMode removes the side bar
       // workbench.action.toggleFullScreen full screen with the side bar

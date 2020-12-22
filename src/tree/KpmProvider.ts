@@ -71,8 +71,10 @@ export class KpmProvider implements TreeDataProvider<KpmItem> {
     let treeItem: KpmTreeItem = null;
     if (p.children.length) {
       let collasibleState = kpmCollapsedStateMap[p.label];
-      if (!collasibleState) {
+      if (p.initialCollapsibleState !== undefined) {
         treeItem = createKpmTreeItem(p, p.initialCollapsibleState);
+      } else if (!collasibleState) {
+        treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.Collapsed);
       } else {
         treeItem = createKpmTreeItem(p, collasibleState);
       }

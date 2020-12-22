@@ -135,9 +135,9 @@ export class KpmProviderManager {
     const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
 
     if (refClass === "user") {
-      treeItems.push(this.getActionButton("Today vs. your daily average", "", "codetime.switchAverageComparison"));
+      treeItems.push(this.getDescriptionButton("Today vs.", "your daily average", "", "codetime.switchAverageComparison"));
     } else {
-      treeItems.push(this.getActionButton("Today vs. the global daily average", "", "codetime.switchAverageComparison"));
+      treeItems.push(this.getDescriptionButton("Today vs.", "the global daily average", "", "codetime.switchAverageComparison"));
     }
 
     const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
@@ -308,7 +308,7 @@ export class KpmProviderManager {
 
     const integrations = getSlackWorkspaces();
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleFocusTime", "focus.svg"));
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "focus.svg"));
 
     if (integrations.length) {
       // slack status setter
@@ -617,6 +617,18 @@ export class KpmProviderManager {
     item.contextValue = "action_button";
     item.eventDescription = eventDescription;
     item.color = color;
+    return item;
+  }
+
+  getDescriptionButton(label, description, tooltip, command, icon = null) {
+    const item: KpmItem = new KpmItem();
+    item.tooltip = tooltip;
+    item.description = description;
+    item.label = label;
+    item.id = label;
+    item.command = command;
+    item.icon = icon;
+    item.contextValue = "detail_button";
     return item;
   }
 
