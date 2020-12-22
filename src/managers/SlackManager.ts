@@ -157,7 +157,7 @@ export async function shareSlackMessage(message) {
     // prompt to connect
     window.showInformationMessage("To share a message on Slack, please connect your account", ...["Connect"]).then((selection) => {
       if (selection === "Connect") {
-        connectSlack();
+        connectSlackWorkspace();
       }
     });
     return;
