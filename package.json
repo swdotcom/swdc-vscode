@@ -121,7 +121,7 @@
         {
           "command": "codetime.disconnectWorkspace",
           "when": "viewItem =~ /.*slack_connection.*/",
-          "group": "inline@3"
+          "group": "inline@1"
         }
       ]
     }

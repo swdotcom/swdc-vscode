@@ -1,16 +1,7 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { launchWebDashboard, updatePreferences } from "./DataController";
 import { displayCodeTimeMetricsDashboard } from "./menu/MenuManager";
-import {
-  launchWebUrl,
-  launchLogin,
-  openFileInEditor,
-  displayReadmeIfNotExists,
-  toggleStatusBar,
-  getItem,
-  setItem,
-  inZenMode,
-} from "./Util";
+import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTimeMenuProvider";
@@ -31,6 +22,7 @@ import {
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
+import { toggleDarkMode, toggleDockPosition } from "./managers/OsaScriptManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -388,25 +380,38 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleFocusTime", async () => {
-      let zenMode = inZenMode();
+    commands.registerCommand("codetime.pauseSlackNotifications", () => {
+      pauseSlackNotifications();
+    })
+  );
 
-      if (!zenMode) {
-        zenMode = true;
-        await pauseSlackNotifications();
-        // turn on vscode zen mode
-        // workbench.action.toggleZenMode removes the side bar
-        // workbench.action.toggleFullScreen full screen with the side bar
-        commands.executeCommand("workbench.action.toggleZenMode");
-      } else {
-        zenMode = false;
-        await enableSlackNotifications();
-        commands.executeCommand("workbench.action.exitZenMode");
-      }
+  cmds.push(
+    commands.registerCommand("codetime.enableSlackNotifications", () => {
+      enableSlackNotifications();
+    })
+  );
 
-      setItem("zenMode", zenMode);
+  cmds.push(
+    commands.registerCommand("codetime.toggleFocusTime", () => {
+      // display commands
+      // workbench.action.toggleZenMode removes the side bar
+      // workbench.action.toggleFullScreen full screen with the side bar
+      // workbench.action.toggleSidebarVisibility
+      // workbench.view.explorer
+      // workbench.action.exitZenMode
+      commands.executeCommand("workbench.action.toggleZenMode");
+    })
+  );
 
-      commands.executeCommand("codetime.refreshFlowTree");
+  cmds.push(
+    commands.registerCommand("codetime.toggleDarkMode", () => {
+      toggleDarkMode();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.toggleDocPosition", () => {
+      toggleDockPosition();
     })
   );
 

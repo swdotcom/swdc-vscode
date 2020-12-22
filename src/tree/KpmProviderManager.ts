@@ -9,7 +9,7 @@ import {
   getNowTimes,
   setItem,
   getIntegrations,
-  inZenMode,
+  isMac,
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
 import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
@@ -21,6 +21,7 @@ import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDEnabledCount, getSlackIntegrations, isSlackSnoozeEnabled } from "../managers/SlackManager";
+import { isDarkMode } from "../managers/OsaScriptManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -278,27 +279,44 @@ export class KpmProviderManager {
 
     const integrations = getSlackIntegrations();
 
-    if (!inZenMode()) {
-      treeItems.push(this.getActionButton("Turn on focus mode", "", "codetime.toggleFocusTime", "focus.svg", "", ""));
-    } else {
-      treeItems.push(this.getActionButton("Turn off focus mode", "", "codetime.toggleFocusTime", "focus.svg", "", ""));
-    }
+    treeItems.push(this.getActionButton("Toggle focus mode", "", "codetime.toggleFocusTime", "focus.svg"));
 
     if (integrations.length) {
-      treeItems.push(
-        this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg", "", "")
-      );
+      // slack status setter
+      treeItems.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg"));
+      // pause/enable slack notification
+      const snoozeCount = await getSlackDnDEnabledCount();
+      if (snoozeCount > 0) {
+        // show the disable button
+        treeItems.push(
+          this.getActionButton("Enable Slack notifications", "", "codetime.enableSlackNotifications", "slack-new.svg")
+        );
+      } else {
+        // show the enable button
+        treeItems.push(
+          this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg")
+        );
+      }
     } else {
       treeItems.push(
         this.getActionButton(
           "Connect Slack to set your status and pause notifications",
           "",
           "codetime.connectSlack",
-          "slack-new.svg",
-          "",
-          ""
+          "slack-new.svg"
         )
       );
+    }
+
+    if (isMac()) {
+      const darkmode = await isDarkMode();
+      if (darkmode) {
+        treeItems.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "light-mode.svg"));
+      } else {
+        treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "dark-mode.svg"));
+      }
+
+      treeItems.push(this.getActionButton("Toggle Dock Position", "", "codetime.toggleDocPosition", "settings.svg"));
     }
 
     return treeItems;

@@ -39,11 +39,6 @@ export async function getSlackAccessToken() {
 
 // connect slack flow
 export async function connectSlack() {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
-
   const qryStr = queryString.stringify({
     plugin: getPluginType(),
     plugin_uuid: getPluginUuid(),
@@ -82,8 +77,12 @@ export async function disconnectSlackAuth(authId) {
     await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
-    commands.executeCommand("codetime.refreshCodetimeMenuTree");
+
     commands.executeCommand("codetime.refreshFlowTree");
+
+    setTimeout(() => {
+      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    }, 1000);
   }
 }
 
@@ -111,7 +110,7 @@ export async function pauseSlackNotifications() {
     window.showInformationMessage("Slack notifications are paused for 2 hours");
   }
 
-  commands.executeCommand("codetime.refreshCodetimeMenuTree");
+  commands.executeCommand("codetime.refreshFlowTree");
 }
 
 // enable notifications on all slack integrations
@@ -137,7 +136,7 @@ export async function enableSlackNotifications() {
   if (enabled) {
     window.showInformationMessage("Slack notifications enabled");
   }
-  commands.executeCommand("codetime.refreshCodetimeMenuTree");
+  commands.executeCommand("codetime.refreshFlowTree");
 }
 
 // share a message to a selected slack channel
@@ -229,12 +228,14 @@ export async function setProfileStatus() {
   // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
-    const result = await web.users.profile
+    await web.users.profile
       .set({ profile: { status_text: message, status_expiration: 0 } })
+      .then((result) => {
+        window.showInformationMessage(`Updated your profile status to '${message}'`);
+      })
       .catch((e) => {
         console.error("error setting profile status: ", e.message);
       });
-    return result;
   }
 }
 
@@ -363,7 +364,12 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
     }
   } else {
     window.showInformationMessage("Successfully connected to Slack");
-    commands.executeCommand("codetime.refreshCodetimeMenuTree");
+
+    commands.executeCommand("codetime.refreshFlowTree");
+
+    setTimeout(() => {
+      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    }, 1000);
   }
 }
 
