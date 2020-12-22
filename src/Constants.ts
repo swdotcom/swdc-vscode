@@ -8,9 +8,13 @@ export const CODE_TIME_PLUGIN_ID = 2;
 export const DEFAULT_SESSION_THRESHOLD_SECONDS = 60 * 5;
 export const CODE_TIME_EXT_ID = "softwaredotcom.swdc-vscode";
 export const CODE_TIME_TYPE = "codetime";
+export const YES_LABEL = "Yes";
+export const DISCONNECT_LABEL = "Disconnect";
 
 // API ENDPOINT
-export const api_endpoint = "https://api.software.com";
+export const api_endpoint = "http://localhost:5000"; //"https://api.software.com";
 
 // DASHBOARD URL
-export const launch_url = "https://app.software.com";
+export const launch_url = "http://localhost:3000"; //"https://app.software.com";
+
+export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";

@@ -1,22 +1,21 @@
 import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable } from "vscode";
 import { KpmItem } from "../model/models";
 import { KpmProviderManager, KpmTreeItem, handleKpmChangeSelection } from "./KpmProviderManager";
-import { logIt } from "../Util";
 
 const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
-const codetimeCollapsedStateMap = {};
+const collapsedStateMap = {};
 
-export const connectCodeTimeMenuTreeView = (view: TreeView<KpmItem>) => {
+export const connectCodeTimeFlowTreeView = (view: TreeView<KpmItem>) => {
   return Disposable.from(
     view.onDidCollapseElement(async (e) => {
       const item: KpmItem = e.element;
-      codetimeCollapsedStateMap[item.label] = TreeItemCollapsibleState.Collapsed;
+      collapsedStateMap[item.label] = TreeItemCollapsibleState.Collapsed;
     }),
 
     view.onDidExpandElement(async (e) => {
       const item: KpmItem = e.element;
-      codetimeCollapsedStateMap[item.label] = TreeItemCollapsibleState.Expanded;
+      collapsedStateMap[item.label] = TreeItemCollapsibleState.Expanded;
     }),
 
     view.onDidChangeSelection(async (e) => {
@@ -25,7 +24,6 @@ export const connectCodeTimeMenuTreeView = (view: TreeView<KpmItem>) => {
       }
 
       const item: KpmItem = e.selection[0];
-
       handleKpmChangeSelection(view, item);
     }),
     view.onDidChangeVisibility((e) => {
@@ -36,33 +34,15 @@ export const connectCodeTimeMenuTreeView = (view: TreeView<KpmItem>) => {
   );
 };
 
-export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
+export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   private _onDidChangeTreeData: EventEmitter<KpmItem | undefined> = new EventEmitter<KpmItem | undefined>();
 
   readonly onDidChangeTreeData: Event<KpmItem | undefined> = this._onDidChangeTreeData.event;
 
   private view: TreeView<KpmItem>;
-  private initializedTree: boolean = false;
 
   constructor() {
     //
-  }
-
-  async revealTree() {
-    if (!this.initializedTree) {
-      await this.refresh();
-    }
-
-    const item: KpmItem = KpmProviderManager.getInstance().getCodeTimeDashboardButton();
-    try {
-      // select the readme item
-      this.view.reveal(item, {
-        focus: true,
-        select: false,
-      });
-    } catch (err) {
-      logIt(`Unable to select tree item: ${err.message}`);
-    }
   }
 
   bindView(kpmTreeView: TreeView<KpmItem>): void {
@@ -84,17 +64,14 @@ export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
   getTreeItem(p: KpmItem): KpmTreeItem {
     let treeItem: KpmTreeItem = null;
     if (p.children.length) {
-      let collasibleState = codetimeCollapsedStateMap[p.label];
-      if (p.initialCollapsibleState !== undefined) {
-        treeItem = createKpmTreeItem(p, p.initialCollapsibleState);
-      } else if (!collasibleState) {
+      let collasibleState = collapsedStateMap[p.label];
+      if (!collasibleState) {
         treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.Collapsed);
       } else {
         treeItem = createKpmTreeItem(p, collasibleState);
       }
     } else {
       treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.None);
-      this.initializedTree = true;
     }
 
     return treeItem;
@@ -107,7 +84,7 @@ export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
       kpmItems = element.children;
     } else {
       // return the parent elements
-      kpmItems = await kpmProviderMgr.getCodeTimeTreeMenu();
+      kpmItems = await kpmProviderMgr.getFlowTreeParents();
     }
     return kpmItems;
   }

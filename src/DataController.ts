@@ -100,11 +100,11 @@ export async function getUserRegistrationState() {
         setAuthCallbackState(null);
 
         // if we need the user it's "resp.data.user"
-        return { loggedOn: registered === 1, state };
+        return { loggedOn: registered === 1, state, user };
     }
 
     // all else fails, set false and UNKNOWN
-    return { loggedOn: false, state };
+    return { loggedOn: false, state, user: null };
 }
 
 /**
@@ -125,19 +125,17 @@ export async function isLoggedIn(): Promise<boolean> {
     return state.loggedOn;
 }
 
-export async function getUser(jwt) {
-    if (jwt) {
-        let api = `/users/me`;
-        let resp = await softwareGet(api, jwt);
-        if (isResponseOk(resp)) {
-            if (resp && resp.data && resp.data.data) {
-                const user = resp.data.data;
-                if (user.registered === 1) {
-                    // update jwt to what the jwt is for this spotify user
-                    setItem("name", user.email);
-                }
-                return user;
+export async function getUser() {
+    let api = `/users/me`;
+    let resp = await softwareGet(api, getItem("jwt"));
+    if (isResponseOk(resp)) {
+        if (resp && resp.data && resp.data.data) {
+            const user = resp.data.data;
+            if (user.registered === 1) {
+                // update jwt to what the jwt is for this spotify user
+                setItem("name", user.email);
             }
+            return user;
         }
     }
     return null;
@@ -152,7 +150,7 @@ export async function initializePreferences() {
     let disableGitData = false;
 
     if (jwt) {
-        let user = await getUser(jwt);
+        let user = await getUser();
         if (user && user.preferences) {
             // obtain the session threshold in seconds "sessionThresholdInSec"
             sessionThresholdInSec =
@@ -187,7 +185,7 @@ export async function updatePreferences() {
     // get the user's preferences and update them if they don't match what we have
     let jwt = getItem("jwt");
     if (jwt) {
-        let user = await getUser(jwt);
+        let user = await getUser();
         if (!user) {
             return;
         }

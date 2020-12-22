@@ -8,6 +8,8 @@ import {
   findFirstActiveDirectoryOrWorkspaceDirectory,
   getNowTimes,
   setItem,
+  getIntegrations,
+  isMac,
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
 import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
@@ -18,13 +20,13 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
+import { getSlackDnDEnabledCount, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
+import { isDarkMode } from "../managers/OsaScriptManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
 const path = require("path");
 const resourcePath: string = path.join(__dirname, "resources");
-
-let counter = 0;
 
 export class KpmProviderManager {
   private static instance: KpmProviderManager;
@@ -49,52 +51,31 @@ export class KpmProviderManager {
     this.kpmTreeOpen = isOpen;
   }
 
+  async getCodeTimeTreeMenu(): Promise<KpmItem[]> {
+    const treeItems: KpmItem[] = [];
+    treeItems.push(...(await this.getOptionsTreeParents()));
+    return treeItems;
+  }
+
   async getOptionsTreeParents(): Promise<KpmItem[]> {
-    counter++;
-    const space = counter % 2 === 0 ? "" : " ";
+    const name = getItem("name");
     const treeItems: KpmItem[] = [];
 
-    const name = await getItem("name");
-
+    // signup, login buttons if they're not already logged in
+    // else get the "Logged in with <auth>" button
     if (!name) {
-      treeItems.push(this.getSignUpButton("GitHub", "white"));
-
-      treeItems.push(this.getSignUpButton("Google", null));
-
-      treeItems.push(this.getSignUpButton("email", "gray"));
-
-      const authType = getItem("authType");
-
-      // only show the "log in existing account" if they haven't already completed auth
-      if (!authType) {
-        // existing account login button
-        treeItems.push(this.getSignUpButton("existing", "blue"));
-      }
+      treeItems.push(this.getGeneralSignupButton());
+      treeItems.push(this.getGeneralLoginToExistingButton());
     } else {
-      treeItems.push(this.getLoggedInTree(TreeItemCollapsibleState.Collapsed));
+      treeItems.push(this.getLoggedInButton());
+      treeItems.push(this.getSwitchAccountsButton());
     }
 
-    treeItems.push(this.getDividerButton());
+    treeItems.push(this.getLearnMoreButton());
+    treeItems.push(this.getFeedbackButton());
+    treeItems.push(this.getHideStatusBarMetricsButton());
 
-    treeItems.push(this.getWebViewDashboardButton());
-
-    // view summary button node
-    treeItems.push(this.getCodeTimeDashboardButton());
-
-    // view project summary button node
-    treeItems.push(this.getViewProjectSummaryButton());
-
-    if (!name) {
-      treeItems.push(this.getDividerButton());
-
-      // toggle status bar button
-      treeItems.push(this.getHideStatusBarMetricsButton());
-
-      // readme button
-      treeItems.push(this.getLearnMoreButton());
-
-      treeItems.push(this.getFeedbackButton());
-    }
+    treeItems.push(await this.getSlackIntegrationsTree());
 
     return treeItems;
   }
@@ -114,10 +95,19 @@ export class KpmProviderManager {
     const connectedToInfo = this.getAuthTypeIconAndLabel();
     const children: KpmItem[] = [];
     children.push(this.getSwitchAccountsButton());
-    children.push(this.getLearnMoreButton());
-    children.push(this.getHideStatusBarMetricsButton());
-    children.push(this.getFeedbackButton());
-    return this.buildTreeForChildren(collapsibleState, children, connectedToInfo.label, connectedToInfo.tooltip, connectedToInfo.icon);
+    return this.buildTreeForChildren(
+      collapsibleState,
+      children,
+      connectedToInfo.label,
+      connectedToInfo.tooltip,
+      connectedToInfo.icon
+    );
+  }
+
+  getLoggedInButton(): KpmItem {
+    const connectedToInfo = this.getAuthTypeIconAndLabel();
+    const item: KpmItem = this.buildMessageItem(connectedToInfo.label, connectedToInfo.tooltip, connectedToInfo.icon);
+    return item;
   }
 
   buildTreeForChildren(
@@ -137,6 +127,10 @@ export class KpmProviderManager {
 
   async getKpmTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
+
+    treeItems.push(this.getViewProjectSummaryButton());
+    treeItems.push(this.getCodeTimeDashboardButton());
+
     const sessionSummaryData: SessionSummary = getSessionSummaryData();
 
     // get the session summary data
@@ -150,7 +144,14 @@ export class KpmProviderManager {
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
       treeItems.push(
-        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`, null, null, "ct_top_files_by_kpm_toggle_node")
+        this.buildTreeMetricItem(
+          "Files changed",
+          "Files changed today",
+          `Today: ${filesChanged}`,
+          null,
+          null,
+          "ct_top_files_by_kpm_toggle_node"
+        )
       );
 
       // get the file change info
@@ -244,6 +245,54 @@ export class KpmProviderManager {
     return treeItems;
   }
 
+  async getFlowTreeParents(): Promise<KpmItem[]> {
+    const treeItems: KpmItem[] = [];
+
+    const integrations = getSlackWorkspaces();
+
+    treeItems.push(this.getActionButton("Toggle focus mode", "", "codetime.toggleFocusTime", "focus.svg"));
+
+    if (integrations.length) {
+      // slack status setter
+      treeItems.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg"));
+      // pause/enable slack notification
+      const snoozeCount = await getSlackDnDEnabledCount();
+      if (snoozeCount > 0) {
+        // show the disable button
+        treeItems.push(
+          this.getActionButton("Enable Slack notifications", "", "codetime.enableSlackNotifications", "slack-new.svg")
+        );
+      } else {
+        // show the enable button
+        treeItems.push(
+          this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg")
+        );
+      }
+    } else {
+      treeItems.push(
+        this.getActionButton(
+          "Connect Slack to set your status and pause notifications",
+          "",
+          "codetime.connectSlackWorkspace",
+          "slack-new.svg"
+        )
+      );
+    }
+
+    if (isMac()) {
+      const darkmode = await isDarkMode();
+      if (darkmode) {
+        treeItems.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "light-mode.svg"));
+      } else {
+        treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "dark-mode.svg"));
+      }
+
+      treeItems.push(this.getActionButton("Toggle Dock Position", "", "codetime.toggleDocPosition", "settings.svg"));
+    }
+
+    return treeItems;
+  }
+
   async getTeamTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -291,6 +340,19 @@ export class KpmProviderManager {
     }
 
     return treeItems;
+  }
+
+  getGeneralSignupButton() {
+    const item: KpmItem = this.getActionButton("Sign up", "", "codetime.signUpAccount", "signup.svg", "", "blue");
+    return item;
+  }
+
+  getGeneralLoginToExistingButton() {
+    const item: KpmItem = this.getActionButton("Log in", "", "codetime.codeTimeExisting", "paw.svg", "", "blue");
+    item.location = "ct_menu_tree";
+    item.name = `ct_log_in_btn`;
+    item.interactionIcon = "paw.svg";
+    return item;
   }
 
   getSignUpButton(signUpAuthName: string, iconColor?: string): KpmItem {
@@ -376,7 +438,7 @@ export class KpmProviderManager {
   }
 
   getLearnMoreButton(): KpmItem {
-    const learnMoreLabel = `Learn more`;
+    const learnMoreLabel = `Documentation`;
     const item: KpmItem = this.getActionButton(
       learnMoreLabel,
       "View the Code Time Readme to learn more",
@@ -393,9 +455,9 @@ export class KpmProviderManager {
 
   getFeedbackButton(): KpmItem {
     const feedbackButton: KpmItem = this.getActionButton(
-      "Submit feedback",
+      "Submit on issue",
       "Send us an email at cody@software.com",
-      "codetime.sendFeedback",
+      "codetime.submitOnIssue",
       "message.svg",
       "",
       "green"
@@ -404,6 +466,32 @@ export class KpmProviderManager {
     feedbackButton.location = "ct_menu_tree";
     feedbackButton.interactionIcon = "text-bubble";
     return feedbackButton;
+  }
+
+  async getSlackIntegrationsTree(): Promise<KpmItem> {
+    const parentItem = this.buildMessageItem("Slack workspaces", "", "slack-new.svg", null, null);
+    parentItem.children = [];
+    const integrations = getIntegrations();
+    if (integrations.length) {
+      for await (const integration of integrations) {
+        if (integration.name.toLowerCase() === "slack") {
+          const workspace = this.buildMessageItem(integration.team_domain, "", "");
+          const snoozeEnabled = await isSlackDnDEnabled(integration.team_domain);
+          workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
+          workspace.value = integration.authId;
+          parentItem.children.push(workspace);
+        }
+      }
+    }
+    // fetch the integrations and build nodes
+    const connectWorkspaceButton = this.buildMessageItem(
+      "Connect to a Slack workspace",
+      "",
+      "add.svg",
+      "codetime.connectSlackWorkspace"
+    );
+    parentItem.children.push(connectWorkspaceButton);
+    return parentItem;
   }
 
   getContributorReportButton(identifier: string): KpmItem {
@@ -515,7 +603,8 @@ export class KpmProviderManager {
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
     const avgMin = humanizeMinutes(data.averageDailyMinutes);
-    const activityLightningBolt = codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
+    const activityLightningBolt =
+      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
@@ -550,7 +639,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesAdded}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Lines added", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_added_toggle_node"));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Lines added",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_lines_added_toggle_node"
+      )
+    );
 
     values = [];
     const currLinesRemoved = data.currentDayLinesRemoved;
@@ -567,7 +664,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesRemoved}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Lines removed", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_removed_toggle_node"));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Lines removed",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_lines_removed_toggle_node"
+      )
+    );
 
     values = [];
     const currKeystrokes = data.currentDayKeystrokes;
@@ -584,7 +689,15 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalKeystrokes}`,
       icon: "global-grey.svg",
     });
-    items.push(this.buildActivityComparisonNodes("Keystrokes", "", values, TreeItemCollapsibleState.Collapsed, "ct_keystrokes_toggle_node"));
+    items.push(
+      this.buildActivityComparisonNodes(
+        "Keystrokes",
+        "",
+        values,
+        TreeItemCollapsibleState.Collapsed,
+        "ct_keystrokes_toggle_node"
+      )
+    );
 
     return items;
   }
@@ -634,7 +747,15 @@ export class KpmProviderManager {
     return parent;
   }
 
-  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null, name = "", location = "") {
+  buildMessageItem(
+    label,
+    tooltip = "",
+    icon = null,
+    command = null,
+    commandArgs = null,
+    name = "",
+    location = ""
+  ): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
