@@ -39,6 +39,11 @@ export async function getSlackAccessToken() {
 
 // connect slack flow
 export async function connectSlack() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
   const qryStr = queryString.stringify({
     plugin: getPluginType(),
     plugin_uuid: getPluginUuid(),
@@ -415,7 +420,7 @@ async function getSlackAuth() {
  * @param selectedChannel
  * @param message
  */
-function postMessage(selectedChannel: any, message: string) {
+async function postMessage(selectedChannel: any, message: string) {
   message = "```" + message + "```";
   let slackAccessToken = getSlackAccessToken();
   const web = new WebClient(slackAccessToken);
@@ -425,18 +430,10 @@ function postMessage(selectedChannel: any, message: string) {
       channel: selectedChannel,
       as_user: true,
     })
-    .catch(() => {
-      // try without sending "as_user"
-      web.chat
-        .postMessage({
-          text: message,
-          channel: selectedChannel,
-        })
-        .catch((err) => {
-          if (err.message) {
-            console.log("error posting slack message: ", err.message);
-          }
-        });
+    .catch((err) => {
+      if (err.message) {
+        console.log("error posting slack message: ", err.message);
+      }
     });
 }
 
@@ -462,8 +459,8 @@ async function checkRegistration() {
         "Sign up"
       )
       .then(async (selection) => {
-        if (selection === "Log in") {
-          commands.executeCommand("codetime.codeTimeExisting");
+        if (selection === "Sign up") {
+          commands.executeCommand("codetime.signUpAccount");
         }
       });
     return false;

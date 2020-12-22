@@ -22,7 +22,7 @@ import {
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
-import { toggleDarkMode, toggleDockPosition } from "./managers/OsaScriptManager";
+import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -411,7 +411,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.toggleDocPosition", () => {
-      toggleDockPosition();
+      toggleDock();
     })
   );
 

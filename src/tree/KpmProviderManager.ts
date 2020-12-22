@@ -95,13 +95,7 @@ export class KpmProviderManager {
     const connectedToInfo = this.getAuthTypeIconAndLabel();
     const children: KpmItem[] = [];
     children.push(this.getSwitchAccountsButton());
-    return this.buildTreeForChildren(
-      collapsibleState,
-      children,
-      connectedToInfo.label,
-      connectedToInfo.tooltip,
-      connectedToInfo.icon
-    );
+    return this.buildTreeForChildren(collapsibleState, children, connectedToInfo.label, connectedToInfo.tooltip, connectedToInfo.icon);
   }
 
   getLoggedInButton(): KpmItem {
@@ -144,14 +138,7 @@ export class KpmProviderManager {
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
       treeItems.push(
-        this.buildTreeMetricItem(
-          "Files changed",
-          "Files changed today",
-          `Today: ${filesChanged}`,
-          null,
-          null,
-          "ct_top_files_by_kpm_toggle_node"
-        )
+        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`, null, null, "ct_top_files_by_kpm_toggle_node")
       );
 
       // get the file change info
@@ -250,7 +237,7 @@ export class KpmProviderManager {
 
     const integrations = getSlackWorkspaces();
 
-    treeItems.push(this.getActionButton("Toggle focus mode", "", "codetime.toggleFocusTime", "focus.svg"));
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleFocusTime", "focus.svg"));
 
     if (integrations.length) {
       // slack status setter
@@ -259,23 +246,14 @@ export class KpmProviderManager {
       const snoozeCount = await getSlackDnDEnabledCount();
       if (snoozeCount > 0) {
         // show the disable button
-        treeItems.push(
-          this.getActionButton("Enable Slack notifications", "", "codetime.enableSlackNotifications", "slack-new.svg")
-        );
+        treeItems.push(this.getActionButton("Enable Slack notifications", "", "codetime.enableSlackNotifications", "slack-new.svg"));
       } else {
         // show the enable button
-        treeItems.push(
-          this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg")
-        );
+        treeItems.push(this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
       }
     } else {
       treeItems.push(
-        this.getActionButton(
-          "Connect Slack to set your status and pause notifications",
-          "",
-          "codetime.connectSlackWorkspace",
-          "slack-new.svg"
-        )
+        this.getActionButton("Connect Slack to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack-new.svg")
       );
     }
 
@@ -484,12 +462,7 @@ export class KpmProviderManager {
       }
     }
     // fetch the integrations and build nodes
-    const connectWorkspaceButton = this.buildMessageItem(
-      "Connect to a Slack workspace",
-      "",
-      "add.svg",
-      "codetime.connectSlackWorkspace"
-    );
+    const connectWorkspaceButton = this.buildMessageItem("Connect to a Slack workspace", "", "add.svg", "codetime.connectSlackWorkspace");
     parentItem.children.push(connectWorkspaceButton);
     return parentItem;
   }
@@ -603,8 +576,7 @@ export class KpmProviderManager {
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
     const avgMin = humanizeMinutes(data.averageDailyMinutes);
-    const activityLightningBolt =
-      codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
+    const activityLightningBolt = codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
     values.push({
       label: `Your average (${dayStr}): ${avgMin}`,
       icon: activityLightningBolt,
@@ -639,15 +611,7 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesAdded}`,
       icon: "global-grey.svg",
     });
-    items.push(
-      this.buildActivityComparisonNodes(
-        "Lines added",
-        "",
-        values,
-        TreeItemCollapsibleState.Collapsed,
-        "ct_lines_added_toggle_node"
-      )
-    );
+    items.push(this.buildActivityComparisonNodes("Lines added", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_added_toggle_node"));
 
     values = [];
     const currLinesRemoved = data.currentDayLinesRemoved;
@@ -664,15 +628,7 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalLinesRemoved}`,
       icon: "global-grey.svg",
     });
-    items.push(
-      this.buildActivityComparisonNodes(
-        "Lines removed",
-        "",
-        values,
-        TreeItemCollapsibleState.Collapsed,
-        "ct_lines_removed_toggle_node"
-      )
-    );
+    items.push(this.buildActivityComparisonNodes("Lines removed", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_removed_toggle_node"));
 
     values = [];
     const currKeystrokes = data.currentDayKeystrokes;
@@ -689,15 +645,7 @@ export class KpmProviderManager {
       label: `Global average (${dayStr}): ${globalKeystrokes}`,
       icon: "global-grey.svg",
     });
-    items.push(
-      this.buildActivityComparisonNodes(
-        "Keystrokes",
-        "",
-        values,
-        TreeItemCollapsibleState.Collapsed,
-        "ct_keystrokes_toggle_node"
-      )
-    );
+    items.push(this.buildActivityComparisonNodes("Keystrokes", "", values, TreeItemCollapsibleState.Collapsed, "ct_keystrokes_toggle_node"));
 
     return items;
   }
@@ -747,15 +695,7 @@ export class KpmProviderManager {
     return parent;
   }
 
-  buildMessageItem(
-    label,
-    tooltip = "",
-    icon = null,
-    command = null,
-    commandArgs = null,
-    name = "",
-    location = ""
-  ): KpmItem {
+  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null, name = "", location = ""): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = label;
     item.tooltip = tooltip;
