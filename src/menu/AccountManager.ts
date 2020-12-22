@@ -1,23 +1,15 @@
-import { window } from "vscode";
-import {
-  getItem,
-  getOsUsername,
-  getHostname,
-  setItem,
-  getPluginUuid,
-  getAuthCallbackState,
-  setAuthCallbackState,
-  getNowTimes,
-} from "../Util";
+import { commands, window } from "vscode";
+import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCallbackState, setAuthCallbackState, getNowTimes } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
+import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
 const switchAccountItem = {
   label: "Switch to a different account?",
   detail: "Click to link to a different account.",
 };
 const logIntoExistingItem = {
-  label: "Log in with an existing account?",
+  label: `${LOGIN_LABEL} with an existing account?`,
   detail: "Click to link to an existing account.",
 };
 
@@ -66,11 +58,11 @@ async function accountMenuSelection(placeholderItem: any) {
 }
 
 function showLogInMenuOptions() {
-  showAuthMenuOptions("Log in");
+  showAuthMenuOptions(LOGIN_LABEL);
 }
 
 function showSignUpMenuOptions() {
-  showAuthMenuOptions("Sign up");
+  showAuthMenuOptions(SIGN_UP_LABEL);
 }
 
 function showAuthMenuOptions(authText) {
@@ -109,9 +101,9 @@ export async function resetDataAndAlertUser() {
   if (!lastResetDay || lastResetDay !== day) {
     setItem("lastResetDay", day);
     await createAnonymousUser(true);
-    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...["Log In"]).then((selection) => {
-      if (selection === "Log In") {
-        showLogInMenuOptions();
+    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...[LOGIN_LABEL]).then((selection) => {
+      if (selection === LOGIN_LABEL) {
+        commands.executeCommand("codetime.codeTimeExisting");
       }
     });
   }

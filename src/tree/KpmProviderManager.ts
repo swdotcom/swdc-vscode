@@ -22,6 +22,7 @@ import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDEnabledCount, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
+import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -321,12 +322,12 @@ export class KpmProviderManager {
   }
 
   getGeneralSignupButton() {
-    const item: KpmItem = this.getActionButton("Sign up", "", "codetime.signUpAccount", "signup.svg", "", "blue");
+    const item: KpmItem = this.getActionButton(SIGN_UP_LABEL, "", "codetime.signUpAccount", "signup.svg", "", "blue");
     return item;
   }
 
   getGeneralLoginToExistingButton() {
-    const item: KpmItem = this.getActionButton("Log in", "", "codetime.codeTimeExisting", "paw.svg", "", "blue");
+    const item: KpmItem = this.getActionButton(LOGIN_LABEL, "", "codetime.codeTimeExisting", "paw.svg", "", "blue");
     item.location = "ct_menu_tree";
     item.name = `ct_log_in_btn`;
     item.interactionIcon = "paw.svg";
@@ -335,7 +336,7 @@ export class KpmProviderManager {
 
   getSignUpButton(signUpAuthName: string, iconColor?: string): KpmItem {
     const authType = getItem("authType");
-    const signupText = authType ? "Log in" : "Sign up";
+    const signupText = authType ? LOGIN_LABEL : SIGN_UP_LABEL;
     const nameText = authType ? "log_in" : "sign_up";
     let label = `${signupText} with ${signUpAuthName}`;
     let icon = "envelope.svg";
@@ -351,7 +352,7 @@ export class KpmProviderManager {
       command = "codetime.githubLogin";
       iconName = "github";
     } else if (lcType === "existing") {
-      label = "Log in with existing account";
+      label = `${LOGIN_LABEL} with existing account`;
       icon = "paw.svg";
       command = "codetime.codeTimeExisting";
       iconName = "envelope";

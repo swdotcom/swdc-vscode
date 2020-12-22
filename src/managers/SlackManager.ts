@@ -1,5 +1,5 @@
 import { commands, window } from "vscode";
-import { api_endpoint, DISCONNECT_LABEL, YES_LABEL } from "../Constants";
+import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL, YES_LABEL } from "../Constants";
 import { getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
@@ -462,10 +462,10 @@ async function checkRegistration() {
         {
           modal: true,
         },
-        "Sign up"
+        SIGN_UP_LABEL
       )
       .then(async (selection) => {
-        if (selection === "Sign up") {
+        if (selection === SIGN_UP_LABEL) {
           commands.executeCommand("codetime.signUpAccount");
         }
       });
