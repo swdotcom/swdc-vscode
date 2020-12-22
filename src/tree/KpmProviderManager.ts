@@ -81,6 +81,10 @@ export class KpmProviderManager {
     return treeItems;
   }
 
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -120,6 +124,63 @@ export class KpmProviderManager {
     return parent;
   }
 
+  async getStatsTreeItems(): Promise<KpmItem[]> {
+    const treeItems: KpmItem[] = [];
+
+    let refClass = getItem("reference-class") || "user";
+
+    const sessionSummary: SessionSummary = getSessionSummaryData();
+
+    // get the editor and session time
+    const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
+
+    if (refClass === "user") {
+      treeItems.push(this.getActionButton("Today vs. your daily average", "", "codetime.switchAverageComparison"));
+    } else {
+      treeItems.push(this.getActionButton("Today vs. the global daily average", "", "codetime.switchAverageComparison"));
+    }
+
+    const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
+    treeItems.push(this.getActionButton(`Code time: ${wallClktimeStr}`, "", "rocket.svg"));
+
+    const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
+    const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
+    const avgMinutesStr = humanizeMinutes(avgMinutes);
+    treeItems.push(this.getActionButton(`Active code time: ${dayMinutesStr} (vs. ${avgMinutesStr})`, "", "rocket.svg"));
+
+    const currLinesAdded = sessionSummary.currentDayLinesAdded;
+    const linesAdded = numeral(currLinesAdded).format("0 a");
+    const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
+    const avgLinesAddedStr = avgLinesAdded ? numeral(avgLinesAdded).format("0 a") : "0";
+    treeItems.push(this.getActionButton(`Lines added: ${linesAdded} (vs. ${avgLinesAddedStr})`, "", "rocket.svg"));
+
+    const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
+    const linesRemoved = numeral(currLinesRemoved).format("0 a");
+    const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
+    const avgLinesRemovedStr = avgLinesRemoved ? numeral(avgLinesRemoved).format("0 a") : "0";
+    treeItems.push(this.getActionButton(`Lines removed: ${linesRemoved} (vs. ${avgLinesRemovedStr})`, "", "rocket.svg"));
+
+    const currKeystrokes = sessionSummary.currentDayKeystrokes;
+    const keystrokes = numeral(currKeystrokes).format("0 a");
+    const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
+    const avgKeystrokesStr = avgKeystrokes ? numeral(avgKeystrokes).format("0 a") : "0";
+    treeItems.push(this.getActionButton(`Keystrokes: ${keystrokes} (vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
+
+    const filesChangedTreeItems = this.getFilesChangedNodes();
+    if (filesChangedTreeItems.length) {
+      treeItems.push(...filesChangedTreeItems);
+    }
+
+    treeItems.push(this.getViewProjectSummaryButton());
+    treeItems.push(this.getCodeTimeDashboardButton());
+
+    return treeItems;
+  }
+
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   async getKpmTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -135,6 +196,16 @@ export class KpmProviderManager {
     treeItems.push(...currentKeystrokesItems);
 
     // show the files changed metric
+    const filesChangedTreeItems = this.getFilesChangedNodes();
+    if (filesChangedTreeItems.length) {
+      treeItems.push(...filesChangedTreeItems);
+    }
+
+    return treeItems;
+  }
+
+  getFilesChangedNodes() {
+    const treeItems: KpmItem[] = [];
     const fileChangeInfoMap = getFileChangeSummaryAsJson();
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
@@ -168,7 +239,6 @@ export class KpmProviderManager {
         }
       }
     }
-
     return treeItems;
   }
 
@@ -550,6 +620,10 @@ export class KpmProviderManager {
     return item;
   }
 
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   getSessionSummaryItems(data: SessionSummary): KpmItem[] {
     const items: KpmItem[] = [];
     let values = [];

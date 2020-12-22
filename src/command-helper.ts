@@ -23,6 +23,7 @@ import {
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
+import { switchAverageComparison } from "./menu/ContextMenuManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -412,6 +413,13 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.toggleDocPosition", () => {
       toggleDock();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.switchAverageComparison", () => {
+      // launch the options command palette
+      switchAverageComparison();
     })
   );
 
