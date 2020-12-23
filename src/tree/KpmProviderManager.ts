@@ -146,25 +146,25 @@ export class KpmProviderManager {
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
     const avgMinutesStr = humanizeMinutes(avgMinutes);
-    treeItems.push(this.getActionButton(`Active code time: ${dayMinutesStr} (vs. ${avgMinutesStr})`, "", "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(vs. ${avgMinutesStr})`, "", "rocket.svg"));
 
     const currLinesAdded = sessionSummary.currentDayLinesAdded;
     const linesAdded = numeral(currLinesAdded).format("0 a");
     const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
     const avgLinesAddedStr = avgLinesAdded ? numeral(avgLinesAdded).format("0 a") : "0";
-    treeItems.push(this.getActionButton(`Lines added: ${linesAdded} (vs. ${avgLinesAddedStr})`, "", "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(vs. ${avgLinesAddedStr})`, "", "rocket.svg"));
 
     const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
     const avgLinesRemovedStr = avgLinesRemoved ? numeral(avgLinesRemoved).format("0 a") : "0";
-    treeItems.push(this.getActionButton(`Lines removed: ${linesRemoved} (vs. ${avgLinesRemovedStr})`, "", "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(vs. ${avgLinesRemovedStr})`, "", "rocket.svg"));
 
     const currKeystrokes = sessionSummary.currentDayKeystrokes;
     const keystrokes = numeral(currKeystrokes).format("0 a");
     const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
     const avgKeystrokesStr = avgKeystrokes ? numeral(avgKeystrokes).format("0 a") : "0";
-    treeItems.push(this.getActionButton(`Keystrokes: ${keystrokes} (vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
 
     const filesChangedTreeItems = this.getFilesChangedNodes();
     if (filesChangedTreeItems.length) {
@@ -519,22 +519,21 @@ export class KpmProviderManager {
 
   async getSlackIntegrationsTree(): Promise<KpmItem> {
     const parentItem = this.buildMessageItem("Slack workspaces", "", "slack-new.svg", null, null);
+    parentItem.contextValue = "slack_connection_parent";
     parentItem.children = [];
     const integrations = getIntegrations();
     if (integrations.length) {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
-          const workspace = this.buildMessageItem(integration.team_domain, "", "");
+          const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
+          workspaceItem.description = `(${integration.team_name})`;
           const snoozeEnabled = await isSlackDnDEnabled(integration.team_domain);
-          workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
-          workspace.value = integration.authId;
-          parentItem.children.push(workspace);
+          workspaceItem.contextValue = snoozeEnabled ? "slack_connection_node_asleep" : "slack_connection_node_awake";
+          workspaceItem.value = integration.authId;
+          parentItem.children.push(workspaceItem);
         }
       }
     }
-    // fetch the integrations and build nodes
-    const connectWorkspaceButton = this.buildMessageItem("Connect to a Slack workspace", "", "add.svg", "codetime.connectSlackWorkspace");
-    parentItem.children.push(connectWorkspaceButton);
     return parentItem;
   }
 

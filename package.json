@@ -69,14 +69,22 @@
       },
       {
         "command": "codetime.connectSlackWorkspace",
-        "title": "Code Time: Connect Slack"
+        "title": "Code Time: Connect Slack workspace"
       },
       {
         "command": "codetime.disconnectSlackWorkspace",
-        "title": "Disconnect workspace",
+        "title": "Disconnect Slack workspace",
         "icon": {
           "light": "resources/light/remove.svg",
           "dark": "resources/dark/remove.svg"
+        }
+      },
+      {
+        "command": "codetime.connectSlackWorkspace",
+        "title": "Add Slack workspace",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
         }
       }
     ],
@@ -120,7 +128,12 @@
       "view/item/context": [
         {
           "command": "codetime.disconnectSlackWorkspace",
-          "when": "viewItem =~ /.*slack_connection.*/",
+          "when": "viewItem =~ /.*slack_connection_node.*/",
+          "group": "inline@1"
+        },
+        {
+          "command": "codetime.connectSlackWorkspace",
+          "when": "viewItem =~ /.*slack_connection_parent.*/",
           "group": "inline@1"
         }
       ]

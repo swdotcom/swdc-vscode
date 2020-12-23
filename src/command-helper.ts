@@ -72,20 +72,6 @@ export function createCommands(
     })
   );
 
-  // MENU TREE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
-      codetimeMenuTreeProvider.refresh();
-    })
-  );
-
-  // FLOW TERE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshFlowTree", () => {
-      codetimeFlowTreeProvider.refresh();
-    })
-  );
-
   // PROCESS KEYSTROKES NOW
   cmds.push(
     commands.registerCommand("codetime.processKeystrokeData", () => {
@@ -226,10 +212,33 @@ export function createCommands(
     })
   );
 
+  // REFRESH ALL TREE VIEWS
+  cmds.push(
+    commands.registerCommand("codetime.refreshTreeViews", () => {
+      codetimeMenuTreeProvider.refresh();
+      codetimeFlowTreeProvider.refresh();
+      kpmTreeProvider.refresh();
+    })
+  );
+
   // REFRESH DAILY METRICS
   cmds.push(
     commands.registerCommand("codetime.refreshKpmTree", () => {
       kpmTreeProvider.refresh();
+    })
+  );
+
+  // MENU TREE: REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
+      codetimeMenuTreeProvider.refresh();
+    })
+  );
+
+  // FLOW TERE: REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.refreshFlowTree", () => {
+      codetimeFlowTreeProvider.refresh();
     })
   );
 
