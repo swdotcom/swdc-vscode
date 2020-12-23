@@ -23,6 +23,7 @@ import {
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
+import { switchAverageComparison } from "./menu/ContextMenuManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -68,20 +69,6 @@ export function createCommands(
     commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {
       tracker.trackUIInteraction(item);
       showSwitchAccountsMenu();
-    })
-  );
-
-  // MENU TREE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
-      codetimeMenuTreeProvider.refresh();
-    })
-  );
-
-  // FLOW TERE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshFlowTree", () => {
-      codetimeFlowTreeProvider.refresh();
     })
   );
 
@@ -225,10 +212,33 @@ export function createCommands(
     })
   );
 
+  // REFRESH ALL TREE VIEWS
+  cmds.push(
+    commands.registerCommand("codetime.refreshTreeViews", () => {
+      codetimeMenuTreeProvider.refresh();
+      codetimeFlowTreeProvider.refresh();
+      kpmTreeProvider.refresh();
+    })
+  );
+
   // REFRESH DAILY METRICS
   cmds.push(
     commands.registerCommand("codetime.refreshKpmTree", () => {
       kpmTreeProvider.refresh();
+    })
+  );
+
+  // MENU TREE: REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
+      codetimeMenuTreeProvider.refresh();
+    })
+  );
+
+  // FLOW TERE: REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.refreshFlowTree", () => {
+      codetimeFlowTreeProvider.refresh();
     })
   );
 
@@ -392,7 +402,7 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleFocusTime", () => {
+    commands.registerCommand("codetime.toggleZenMode", () => {
       // display commands
       // workbench.action.toggleZenMode removes the side bar
       // workbench.action.toggleFullScreen full screen with the side bar
@@ -412,6 +422,13 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.toggleDocPosition", () => {
       toggleDock();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.switchAverageComparison", () => {
+      // launch the options command palette
+      switchAverageComparison();
     })
   );
 

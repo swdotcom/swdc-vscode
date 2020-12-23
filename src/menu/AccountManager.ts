@@ -8,17 +8,13 @@ const switchAccountItem = {
   label: "Switch to a different account?",
   detail: "Click to link to a different account.",
 };
-const logIntoExistingItem = {
-  label: `${LOGIN_LABEL} with an existing account?`,
-  detail: "Click to link to an existing account.",
-};
 
 export async function showSwitchAccountsMenu() {
   accountMenuSelection(switchAccountItem);
 }
 
 export async function showExistingAccountMenu() {
-  accountMenuSelection(logIntoExistingItem);
+  showLogInMenuOptions();
 }
 
 export async function showSignUpAccountMenu() {

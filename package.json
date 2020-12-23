@@ -69,31 +69,23 @@
       },
       {
         "command": "codetime.connectSlackWorkspace",
-        "title": "Code Time: Connect Slack"
+        "title": "Code Time: Connect Slack workspace"
       },
       {
         "command": "codetime.disconnectSlackWorkspace",
-        "title": "Disconnect workspace",
+        "title": "Disconnect Slack workspace",
         "icon": {
           "light": "resources/light/remove.svg",
           "dark": "resources/dark/remove.svg"
         }
       },
       {
-        "command": "codetime.codeTimeMetrics",
-        "title": "Code Time: View summary"
-      },
-      {
-        "command": "codetime.generateProjectSummary",
-        "title": "Code Time: View project summary"
-      },
-      {
-        "command": "codetime.softwareKpmDashboard",
-        "title": "Code Time: See advanced metrics"
-      },
-      {
-        "command": "codetime.displayReadme",
-        "title": "Code Time: Learn more"
+        "command": "codetime.connectSlackWorkspace",
+        "title": "Add Slack workspace",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
+        }
       }
     ],
     "configuration": {
@@ -136,7 +128,12 @@
       "view/item/context": [
         {
           "command": "codetime.disconnectSlackWorkspace",
-          "when": "viewItem =~ /.*slack_connection.*/",
+          "when": "viewItem =~ /.*slack_connection_node.*/",
+          "group": "inline@1"
+        },
+        {
+          "command": "codetime.connectSlackWorkspace",
+          "when": "viewItem =~ /.*slack_connection_parent.*/",
           "group": "inline@1"
         }
       ]

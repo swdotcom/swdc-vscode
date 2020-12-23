@@ -1,8 +1,10 @@
 import { commands, window } from "vscode";
+import { getItem, setItem } from "../Util";
 
 const cp = require("child_process");
 
 export async function toggleDarkMode() {
+  setItem("let checked_sys_events", true);
   const darkModeCmd = `osascript -e \'
         tell application "System Events"
           tell appearance preferences
@@ -15,29 +17,39 @@ export async function toggleDarkMode() {
 }
 
 export async function isDarkMode() {
-  const getDarkModeFlag = `osascript -e \'
-    try
-      tell application "System Events"
-        tell appearance preferences
-          set t_info to dark mode
+  let isDarkMode = false;
+
+  // first check to see if the user has "System Events" authorized
+  const checked_sys_events = getItem("checked_sys_events");
+
+  if (checked_sys_events) {
+    const getDarkModeFlag = `osascript -e \'
+      try
+        tell application "System Events"
+          tell appearance preferences
+            set t_info to dark mode
+          end tell
         end tell
-      end tell
-    on error
-      return false
-    end try\'`;
-  let isDarkMode = await execPromise(getDarkModeFlag);
-  // convert it to a string
-  if (isDarkMode !== undefined && isDarkMode !== null) {
-    isDarkMode = JSON.parse(`${isDarkMode}`);
-  } else {
-    // it's not defined, set it
-    isDarkMode = false;
+      on error
+        return false
+      end try\'`;
+    const isDarkModeStr = await execPromise(getDarkModeFlag);
+    // convert it to a string
+    if (isDarkModeStr !== undefined && isDarkModeStr !== null) {
+      try {
+        isDarkMode = JSON.parse(`${isDarkModeStr}`);
+      } catch (e) {}
+    } else {
+      // it's not defined, set it
+      isDarkMode = false;
+    }
   }
   return isDarkMode;
 }
 
 // change the position of the dock depending on user input
 export async function toggleDockPosition() {
+  setItem("let checked_sys_events", true);
   let newPosition = await window.showInputBox({ placeHolder: "left, right, or bottom?" });
 
   function setPosition(position: any) {
@@ -56,6 +68,7 @@ export async function toggleDockPosition() {
 
 // hide and unhide the dock
 export async function toggleDock() {
+  setItem("let checked_sys_events", true);
   let toggleDockCmd = `osascript -e \'
     tell application "System Events"
       tell dock preferences

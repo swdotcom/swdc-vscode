@@ -20,7 +20,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDEnabledCount, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
+import { getSlackDnDEnabledCount, getSlackStatus, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -81,6 +81,10 @@ export class KpmProviderManager {
     return treeItems;
   }
 
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -120,6 +124,63 @@ export class KpmProviderManager {
     return parent;
   }
 
+  async getStatsTreeItems(): Promise<KpmItem[]> {
+    const treeItems: KpmItem[] = [];
+
+    let refClass = getItem("reference-class") || "user";
+
+    const sessionSummary: SessionSummary = getSessionSummaryData();
+
+    // get the editor and session time
+    const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
+
+    if (refClass === "user") {
+      treeItems.push(this.getDescriptionButton("Today vs.", "your daily average", "", "codetime.switchAverageComparison"));
+    } else {
+      treeItems.push(this.getDescriptionButton("Today vs.", "the global daily average", "", "codetime.switchAverageComparison"));
+    }
+
+    const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
+    treeItems.push(this.getActionButton(`Code time: ${wallClktimeStr}`, "", "rocket.svg"));
+
+    const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
+    const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
+    const avgMinutesStr = humanizeMinutes(avgMinutes);
+    treeItems.push(this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(vs. ${avgMinutesStr})`, "", "rocket.svg"));
+
+    const currLinesAdded = sessionSummary.currentDayLinesAdded;
+    const linesAdded = numeral(currLinesAdded).format("0 a");
+    const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
+    const avgLinesAddedStr = avgLinesAdded ? numeral(avgLinesAdded).format("0 a") : "0";
+    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(vs. ${avgLinesAddedStr})`, "", "rocket.svg"));
+
+    const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
+    const linesRemoved = numeral(currLinesRemoved).format("0 a");
+    const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
+    const avgLinesRemovedStr = avgLinesRemoved ? numeral(avgLinesRemoved).format("0 a") : "0";
+    treeItems.push(this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(vs. ${avgLinesRemovedStr})`, "", "rocket.svg"));
+
+    const currKeystrokes = sessionSummary.currentDayKeystrokes;
+    const keystrokes = numeral(currKeystrokes).format("0 a");
+    const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
+    const avgKeystrokesStr = avgKeystrokes ? numeral(avgKeystrokes).format("0 a") : "0";
+    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
+
+    const filesChangedTreeItems = this.getFilesChangedNodes();
+    if (filesChangedTreeItems.length) {
+      treeItems.push(...filesChangedTreeItems);
+    }
+
+    treeItems.push(this.getViewProjectSummaryButton());
+    treeItems.push(this.getCodeTimeDashboardButton());
+
+    return treeItems;
+  }
+
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   async getKpmTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
@@ -135,6 +196,16 @@ export class KpmProviderManager {
     treeItems.push(...currentKeystrokesItems);
 
     // show the files changed metric
+    const filesChangedTreeItems = this.getFilesChangedNodes();
+    if (filesChangedTreeItems.length) {
+      treeItems.push(...filesChangedTreeItems);
+    }
+
+    return treeItems;
+  }
+
+  getFilesChangedNodes() {
+    const treeItems: KpmItem[] = [];
     const fileChangeInfoMap = getFileChangeSummaryAsJson();
     const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
     if (filesChanged > 0) {
@@ -168,7 +239,6 @@ export class KpmProviderManager {
         }
       }
     }
-
     return treeItems;
   }
 
@@ -238,11 +308,12 @@ export class KpmProviderManager {
 
     const integrations = getSlackWorkspaces();
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleFocusTime", "focus.svg"));
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "focus.svg"));
 
     if (integrations.length) {
       // slack status setter
-      treeItems.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg"));
+      const slackStatus = await getSlackStatus();
+      treeItems.push(this.getDescriptionButton("Update Slack status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
       // pause/enable slack notification
       const snoozeCount = await getSlackDnDEnabledCount();
       if (snoozeCount > 0) {
@@ -449,22 +520,21 @@ export class KpmProviderManager {
 
   async getSlackIntegrationsTree(): Promise<KpmItem> {
     const parentItem = this.buildMessageItem("Slack workspaces", "", "slack-new.svg", null, null);
+    parentItem.contextValue = "slack_connection_parent";
     parentItem.children = [];
     const integrations = getIntegrations();
     if (integrations.length) {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
-          const workspace = this.buildMessageItem(integration.team_domain, "", "");
+          const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
+          workspaceItem.description = `(${integration.team_name})`;
           const snoozeEnabled = await isSlackDnDEnabled(integration.team_domain);
-          workspace.contextValue = snoozeEnabled ? "slack_connection_asleep" : "slack_connection_awake";
-          workspace.value = integration.authId;
-          parentItem.children.push(workspace);
+          workspaceItem.contextValue = snoozeEnabled ? "slack_connection_node_asleep" : "slack_connection_node_awake";
+          workspaceItem.value = integration.authId;
+          parentItem.children.push(workspaceItem);
         }
       }
     }
-    // fetch the integrations and build nodes
-    const connectWorkspaceButton = this.buildMessageItem("Connect to a Slack workspace", "", "add.svg", "codetime.connectSlackWorkspace");
-    parentItem.children.push(connectWorkspaceButton);
     return parentItem;
   }
 
@@ -550,6 +620,22 @@ export class KpmProviderManager {
     return item;
   }
 
+  getDescriptionButton(label, description, tooltip, command, icon = null) {
+    const item: KpmItem = new KpmItem();
+    item.tooltip = tooltip;
+    item.description = description;
+    item.label = label;
+    item.id = label;
+    item.command = command;
+    item.icon = icon;
+    item.contextValue = "detail_button";
+    return item;
+  }
+
+  /**
+   * Deprecated and not used but keeping until we remove
+   * the stats tree altogether
+   */
   getSessionSummaryItems(data: SessionSummary): KpmItem[] {
     const items: KpmItem[] = [];
     let values = [];
