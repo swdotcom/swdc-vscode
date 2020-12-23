@@ -20,7 +20,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDEnabledCount, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
+import { getSlackDnDEnabledCount, getSlackStatus, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -312,7 +312,8 @@ export class KpmProviderManager {
 
     if (integrations.length) {
       // slack status setter
-      treeItems.push(this.getActionButton("Set Slack status", "", "codetime.updateProfileStatus", "slack-new.svg"));
+      const slackStatus = await getSlackStatus();
+      treeItems.push(this.getDescriptionButton("Update Slack status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
       // pause/enable slack notification
       const snoozeCount = await getSlackDnDEnabledCount();
       if (snoozeCount > 0) {

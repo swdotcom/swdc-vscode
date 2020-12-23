@@ -234,13 +234,34 @@ export async function setProfileStatus() {
     const web = new WebClient(integration.access_token);
     await web.users.profile
       .set({ profile: { status_text: message, status_expiration: 0 } })
-      .then((result) => {
+      .then(() => {
         window.showInformationMessage(`Updated your profile status to '${message}'`);
+        commands.executeCommand("codetime.refreshFlowTree");
       })
       .catch((e) => {
         console.error("error setting profile status: ", e.message);
       });
   }
+}
+
+// Get the users slack status
+export async function getSlackStatus() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+  const integrations = getSlackWorkspaces();
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    // {profile: {avatar_hash, display_name, display_name_normalized, email, first_name,
+    //  image_1024, image_192, etc., last_name, is_custom_image, phone, real_name, real_name_normalized,
+    //  status_text, status_emoji, skype, status_expireation, status_text_canonical, title } }
+    const data = await web.users.profile.get().catch((e) => {
+      console.error("error fetching slack profile: ", e.message);
+    });
+    return `${data?.profile?.status_text ?? ""}`;
+  }
+  return null;
 }
 
 // -------------------------------------------
