@@ -10,6 +10,7 @@ import {
   setItem,
   getIntegrations,
   isMac,
+  getPercentOfReferenceAvg,
 } from "../Util";
 import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
 import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
@@ -145,26 +146,40 @@ export class KpmProviderManager {
 
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
-    const avgMinutesStr = humanizeMinutes(avgMinutes);
-    treeItems.push(this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(vs. ${avgMinutesStr})`, "", "rocket.svg"));
+    treeItems.push(
+      this.getDescriptionButton(
+        `Active code time: ${dayMinutesStr}`,
+        `(${getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes)})`,
+        "",
+        "rocket.svg"
+      )
+    );
 
     const currLinesAdded = sessionSummary.currentDayLinesAdded;
     const linesAdded = numeral(currLinesAdded).format("0 a");
     const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
-    const avgLinesAddedStr = avgLinesAdded ? numeral(avgLinesAdded).format("0 a") : "0";
-    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(vs. ${avgLinesAddedStr})`, "", "rocket.svg"));
+    treeItems.push(
+      this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${getPercentOfReferenceAvg(currLinesAdded, avgLinesAdded)})`, "", "rocket.svg")
+    );
 
     const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
-    const avgLinesRemovedStr = avgLinesRemoved ? numeral(avgLinesRemoved).format("0 a") : "0";
-    treeItems.push(this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(vs. ${avgLinesRemovedStr})`, "", "rocket.svg"));
+    treeItems.push(
+      this.getDescriptionButton(
+        `Lines removed: ${linesRemoved}`,
+        `(${getPercentOfReferenceAvg(currLinesRemoved, avgLinesRemoved)})`,
+        "",
+        "rocket.svg"
+      )
+    );
 
     const currKeystrokes = sessionSummary.currentDayKeystrokes;
     const keystrokes = numeral(currKeystrokes).format("0 a");
     const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
-    const avgKeystrokesStr = avgKeystrokes ? numeral(avgKeystrokes).format("0 a") : "0";
-    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
+    treeItems.push(
+      this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${getPercentOfReferenceAvg(currKeystrokes, avgKeystrokes)})`, "", "rocket.svg")
+    );
 
     treeItems.push(this.getCodeTimeDashboardButton());
     treeItems.push(this.getViewProjectSummaryButton());
