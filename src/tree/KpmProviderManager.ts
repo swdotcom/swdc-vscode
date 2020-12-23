@@ -166,13 +166,9 @@ export class KpmProviderManager {
     const avgKeystrokesStr = avgKeystrokes ? numeral(avgKeystrokes).format("0 a") : "0";
     treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(vs. ${avgKeystrokesStr})`, "", "rocket.svg"));
 
-    const filesChangedTreeItems = this.getFilesChangedNodes();
-    if (filesChangedTreeItems.length) {
-      treeItems.push(...filesChangedTreeItems);
-    }
-
-    treeItems.push(this.getViewProjectSummaryButton());
     treeItems.push(this.getCodeTimeDashboardButton());
+    treeItems.push(this.getViewProjectSummaryButton());
+    treeItems.push(this.getWebViewDashboardButton());
 
     return treeItems;
   }
@@ -439,7 +435,7 @@ export class KpmProviderManager {
     const name = getItem("name");
     const loggedInMsg = name ? ` Connected as ${name}` : "";
     const item: KpmItem = this.getActionButton(
-      "See advanced metrics",
+      "More data at Software.com",
       `See rich data visualizations in the web app.${loggedInMsg}`,
       "codetime.softwareKpmDashboard",
       "paw.svg",
@@ -554,7 +550,7 @@ export class KpmProviderManager {
   }
 
   getViewProjectSummaryButton(): KpmItem {
-    const commitSummitLabel = `View project summary`;
+    const commitSummitLabel = `Project summary`;
     const item: KpmItem = this.getActionButton(commitSummitLabel, "", "codetime.generateProjectSummary", "folder.svg", "", "red");
     item.location = "ct_menu_tree";
     item.name = "ct_project_summary_btn";
@@ -564,7 +560,7 @@ export class KpmProviderManager {
 
   getCodeTimeDashboardButton(): KpmItem {
     const item: KpmItem = this.getActionButton(
-      `View summary`,
+      `Dashboard`,
       "View your latest coding metrics right here in your editor",
       "codetime.codeTimeMetrics",
       "dashboard.svg",
