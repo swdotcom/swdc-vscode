@@ -19,6 +19,7 @@ import {
   disconnectSlackAuth,
   shareSlackMessage,
   setProfileStatus,
+  toggleSlackPresence,
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
@@ -435,6 +436,12 @@ export function createCommands(
     commands.registerCommand("codetime.switchAverageComparison", () => {
       // launch the options command palette
       switchAverageComparison();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.toggleSlackPresence", () => {
+      toggleSlackPresence();
     })
   );
 

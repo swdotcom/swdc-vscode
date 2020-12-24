@@ -20,6 +20,7 @@ const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
 
 let current_slack_status = "";
+let current_slack_presence;
 
 // -------------------------------------------
 // - public methods
@@ -249,7 +250,7 @@ export async function setProfileStatus() {
 export async function getSlackStatus() {
   const registered = await checkRegistration();
   if (!registered) {
-    return;
+    return null;
   }
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
@@ -265,6 +266,52 @@ export async function getSlackStatus() {
     return current_slack_status;
   }
   return null;
+}
+
+/**
+ * Return the users presence:
+ * {auto_away (bool), connection_count (int), last_activity (unix), manual_away (bool), ok (bool), online (bool), presence: ['active'|'away']}
+ */
+export async function getSlackPresence() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return null;
+  }
+  // return the 1st one
+  const integrations = getSlackWorkspaces();
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    const data = await web.users.getPresence().catch((e) => {
+      console.error("error fetching slack presence: ", e.message);
+    });
+    // set the cached var and return it
+    current_slack_presence = data?.presence ?? "active";
+    return current_slack_presence;
+  }
+  return null;
+}
+
+export async function toggleSlackPresence() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+
+  const integrations = getSlackWorkspaces();
+  // presence val can be either: auto or away
+  const presenceVal = current_slack_presence === "active" ? "away" : "auto";
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    await web.users
+      .setPresence({ presence: presenceVal })
+      .then(() => {
+        window.showInformationMessage(`Slack presence updated`);
+        commands.executeCommand("codetime.refreshFlowTree");
+      })
+      .catch((e) => {
+        console.error("error updating slack presence: ", e.message);
+      });
+  }
 }
 
 // -------------------------------------------
