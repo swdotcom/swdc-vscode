@@ -73,7 +73,7 @@
       },
       {
         "command": "codetime.disconnectSlackWorkspace",
-        "title": "Disconnect Slack workspace",
+        "title": "Code Time: Disconnect Slack workspace",
         "icon": {
           "light": "resources/light/remove.svg",
           "dark": "resources/dark/remove.svg"
@@ -81,10 +81,18 @@
       },
       {
         "command": "codetime.connectSlackWorkspace",
-        "title": "Add Slack workspace",
+        "title": "Code Time: Add Slack workspace",
         "icon": {
           "light": "resources/light/add.svg",
           "dark": "resources/dark/add.svg"
+        }
+      },
+      {
+        "command": "codetime.refreshFlowTree",
+        "title": "Code Time: Refresh flow info",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
         }
       }
     ],
@@ -135,6 +143,13 @@
           "command": "codetime.connectSlackWorkspace",
           "when": "viewItem =~ /.*slack_connection_parent.*/",
           "group": "inline@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "codetime.refreshFlowTree",
+          "group": "navigation@1",
+          "when": "view =~ /ct-flow-tree/"
         }
       ]
     }

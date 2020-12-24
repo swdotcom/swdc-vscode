@@ -21,7 +21,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDEnabledCount, getSlackStatus, getSlackWorkspaces, isSlackDnDEnabled } from "../managers/SlackManager";
+import { getSlackDnDInfo, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -324,19 +324,20 @@ export class KpmProviderManager {
     if (integrations.length) {
       // slack status setter
       const slackStatus = await getSlackStatus();
-      treeItems.push(this.getDescriptionButton("Update Slack status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
+      treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
       // pause/enable slack notification
-      const snoozeCount = await getSlackDnDEnabledCount();
-      if (snoozeCount > 0) {
+      const slackDnDInfo = await getSlackDnDInfo();
+      if (slackDnDInfo?.snooze_enabled) {
+        const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
         // show the disable button
-        treeItems.push(this.getActionButton("Enable Slack notifications", "", "codetime.enableSlackNotifications", "slack-new.svg"));
+        treeItems.push(this.getDescriptionButton("Turn off do not disturb", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
       } else {
         // show the enable button
-        treeItems.push(this.getActionButton("Pause Slack notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
+        treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
       }
     } else {
       treeItems.push(
-        this.getActionButton("Connect Slack to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack-new.svg")
+        this.getActionButton("Connect to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack-new.svg")
       );
     }
 
@@ -539,8 +540,6 @@ export class KpmProviderManager {
         if (integration.name.toLowerCase() === "slack") {
           const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
           workspaceItem.description = `(${integration.team_name})`;
-          const snoozeEnabled = await isSlackDnDEnabled(integration.team_domain);
-          workspaceItem.contextValue = snoozeEnabled ? "slack_connection_node_asleep" : "slack_connection_node_awake";
           workspaceItem.value = integration.authId;
           parentItem.children.push(workspaceItem);
         }
