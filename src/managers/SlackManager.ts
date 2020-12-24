@@ -19,6 +19,8 @@ import { softwarePut } from "../http/HttpClient";
 const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
 
+let current_slack_status = "";
+
 // -------------------------------------------
 // - public methods
 // -------------------------------------------
@@ -183,36 +185,21 @@ export async function shareSlackMessage(message) {
     });
 }
 
-// get the slack do not disturb info
-export async function getSlackDnDInfo(team_domain) {
-  let dndInfo = null;
-  const accessToken = getWorkspaceAccessToken(team_domain);
-  if (accessToken) {
-    const web = new WebClient(accessToken);
-    dndInfo = await web.dnd.info().catch((e) => {
-      console.error("Error fetching slack do not disturb info: ", e.message);
-      return null;
-    });
-  }
-  return dndInfo;
-}
-
-// check if snooze is enabled for a slack workspace
-export async function isSlackDnDEnabled(domain) {
-  const dndInfo = await getSlackDnDInfo(domain);
-  return dndInfo && dndInfo.snooze_enabled;
-}
-
-// get the number of integrations that have snooze enabled
-export async function getSlackDnDEnabledCount() {
+/**
+ * check if snooze is enabled for a slack workspace
+ * @param domain
+ * @returns {dnd_enabled (bool), next_dnd_end_ts (unix), next_dnd_start_ts (unix), snooze_endtime (unix), ok (bool), snooze_enabled (bool)}
+ * ts is in unix seconds
+ */
+export async function getSlackDnDInfo() {
   const integrations = getSlackWorkspaces();
-  let dnd_enabled_count = 0;
   for await (const integration of integrations) {
-    if (await isSlackDnDEnabled(integration.team_domain)) {
-      dnd_enabled_count++;
+    const dndInfo = await getSlackDnDInfoPerDomain(integration.team_domain);
+    if (dndInfo) {
+      return dndInfo;
     }
   }
-  return dnd_enabled_count;
+  return null;
 }
 
 // set the slack profile status
@@ -222,9 +209,23 @@ export async function setProfileStatus() {
     return;
   }
 
-  const message = await showMessageInputPrompt(100);
-  if (!message) {
+  // palette prompt to clear or set a new status
+  const decision = current_slack_status ? await showStatusUpdateOptions() : "update";
+  if (!decision) {
     return;
+  }
+
+  let status = {
+    status_text: "",
+    status_emoji: "",
+  };
+  if (decision === "update") {
+    const message = await showMessageInputPrompt(100);
+    if (!message) {
+      return;
+    }
+    status.status_text = message;
+    status["status_expiration"] = 0;
   }
 
   const integrations = getSlackWorkspaces();
@@ -233,9 +234,9 @@ export async function setProfileStatus() {
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
     await web.users.profile
-      .set({ profile: { status_text: message, status_expiration: 0 } })
+      .set({ profile: status })
       .then(() => {
-        window.showInformationMessage(`Updated your profile status to '${message}'`);
+        window.showInformationMessage(`Slack profile status updated`);
         commands.executeCommand("codetime.refreshFlowTree");
       })
       .catch((e) => {
@@ -259,7 +260,9 @@ export async function getSlackStatus() {
     const data = await web.users.profile.get().catch((e) => {
       console.error("error fetching slack profile: ", e.message);
     });
-    return `${data?.profile?.status_text ?? ""}`;
+    // set the cached var and return it
+    current_slack_status = data?.profile?.status_text ?? "";
+    return current_slack_status;
   }
   return null;
 }
@@ -499,4 +502,43 @@ async function checkRegistration() {
     return false;
   }
   return true;
+}
+
+/**
+ * Show the list of channels in the command palette
+ */
+async function showStatusUpdateOptions() {
+  let menuOptions = {
+    items: [
+      {
+        label: "Clear your status",
+        value: "clear",
+      },
+      {
+        label: "Set a new status",
+        value: "update",
+      },
+    ],
+    placeholder: "Select clear or update to continue",
+  };
+
+  const pick = await showQuickPick(menuOptions);
+  if (pick && pick.label) {
+    return pick.value;
+  }
+  return null;
+}
+
+// get the slack do not disturb info
+async function getSlackDnDInfoPerDomain(team_domain) {
+  let dndInfo = null;
+  const accessToken = getWorkspaceAccessToken(team_domain);
+  if (accessToken) {
+    const web = new WebClient(accessToken);
+    dndInfo = await web.dnd.info().catch((e) => {
+      console.error("Error fetching slack do not disturb info: ", e.message);
+      return null;
+    });
+  }
+  return dndInfo;
 }
