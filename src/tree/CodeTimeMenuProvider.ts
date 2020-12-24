@@ -53,7 +53,7 @@ export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
       await this.refresh();
     }
 
-    const item: KpmItem = KpmProviderManager.getInstance().getCodeTimeDashboardButton();
+    const item: KpmItem = KpmProviderManager.getInstance().getLearnMoreButton();
     try {
       // select the readme item
       this.view.reveal(item, {

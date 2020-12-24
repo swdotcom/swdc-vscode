@@ -403,13 +403,19 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.toggleZenMode", () => {
-      // display commands
-      // workbench.action.toggleZenMode removes the side bar
+      // other display tunables
       // workbench.action.toggleFullScreen full screen with the side bar
       // workbench.action.toggleSidebarVisibility
       // workbench.view.explorer
+      // workbench.action.toggleActivityBarVisibility
       // workbench.action.exitZenMode
       commands.executeCommand("workbench.action.toggleZenMode");
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.toggleFullScreen", () => {
+      commands.executeCommand("workbench.action.toggleFullScreen");
     })
   );
 

@@ -222,7 +222,7 @@ export async function setProfileStatus() {
     return;
   }
 
-  const message = await showMessageInputPrompt();
+  const message = await showMessageInputPrompt(100);
   if (!message) {
     return;
   }
@@ -292,12 +292,18 @@ async function showSlackWorkspaceSelection() {
   return null;
 }
 
-async function showMessageInputPrompt() {
+async function showMessageInputPrompt(maxChars = 0) {
   return await window.showInputBox({
     value: "",
     placeHolder: "Enter a message to appear in your profile status",
     validateInput: (text) => {
-      return !text ? "Please enter a valid message to continue." : null;
+      if (!text) {
+        return "Please enter a valid message to continue.";
+      }
+      if (maxChars && text.length > maxChars) {
+        return "The Slack status must be 100 characters or less.";
+      }
+      return null;
     },
   });
 }
@@ -408,7 +414,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  */
 async function getSlackAuth() {
   let foundNewIntegration = false;
-  const { user } = await getUserRegistrationState();
+  const { user } = await getUserRegistrationState(true);
   if (user && user.integrations) {
     const currentIntegrations = getIntegrations();
     // find the slack auth

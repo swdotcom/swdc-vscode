@@ -319,7 +319,7 @@ export class KpmProviderManager {
 
     const integrations = getSlackWorkspaces();
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "focus.svg"));
+    treeItems.push(this.getActionButton("Toggle full screen", "", "codetime.toggleFullScreen", "focus.svg"));
 
     if (integrations.length) {
       // slack status setter
