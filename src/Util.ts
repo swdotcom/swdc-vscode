@@ -879,3 +879,19 @@ export function getFileDataArray(file) {
   let payloads: any[] = fileIt.readJsonArraySync(file);
   return payloads;
 }
+
+// get the percent string dividing the reference value by the current value
+// this is meant to show the progressing percent of the daily average stats
+export function getPercentOfReferenceAvg(currentValue, referenceValue) {
+  currentValue = currentValue ?? 0;
+  let quotient = 1;
+  if (referenceValue) {
+    quotient = currentValue / referenceValue;
+    // at least show 1% if the current value is not zero and
+    // the quotient is less than 1 percent
+    if (currentValue && quotient < 0.01) {
+      quotient = 0.01;
+    }
+  }
+  return `${(quotient * 100).toFixed(0)}% of avg`;
+}

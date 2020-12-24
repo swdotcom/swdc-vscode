@@ -3,6 +3,7 @@ import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCal
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
+import jwt_decode = require("jwt-decode");
 
 const switchAccountItem = {
   label: "Switch to a different account?",
@@ -138,4 +139,24 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
   }
 
   return null;
+}
+
+export function updateJwt(newJwt) {
+  if (!newJwt) {
+    return;
+  }
+  const currentJwtId = getDecodedUserIdFromJwt(getItem("jwt"));
+  const newJwtId = getDecodedUserIdFromJwt(newJwt);
+  if (newJwtId !== currentJwtId) {
+    setItem("jwt", newJwt);
+  }
+}
+
+export function getDecodedUserIdFromJwt(jwt) {
+  try {
+    if (jwt && jwt.includes("JWT")) {
+      return jwt_decode(jwt.split("JWT")[1])["id"];
+    }
+  } catch (e) {}
+  return -1;
 }
