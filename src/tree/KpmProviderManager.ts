@@ -21,7 +21,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
+import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -317,12 +317,12 @@ export class KpmProviderManager {
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
-    const integrations = getSlackWorkspaces();
+    const hasSlackAccess = hasSlackWorkspaces();
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
     treeItems.push(this.getActionButton("Toggle full screen", "", "codetime.toggleFullScreen", "fullscreen.svg"));
 
-    if (integrations.length) {
+    if (hasSlackAccess) {
       // slack status setter
       const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
       treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));

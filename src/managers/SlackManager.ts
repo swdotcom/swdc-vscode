@@ -31,6 +31,10 @@ export function getSlackWorkspaces() {
   return getIntegrations().filter((n) => n.name.toLowerCase() === "slack");
 }
 
+export function hasSlackWorkspaces() {
+  return !!getSlackWorkspaces().length;
+}
+
 // get the access token of a selected slack workspace
 export async function getSlackAccessToken() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
