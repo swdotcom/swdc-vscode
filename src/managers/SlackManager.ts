@@ -227,7 +227,7 @@ export async function setProfileStatus() {
 
 // Get the users slack status
 export async function getSlackStatus() {
-  const registered = await checkRegistration();
+  const registered = await checkRegistration(false);
   if (!registered) {
     return null;
   }
@@ -252,7 +252,7 @@ export async function getSlackStatus() {
  * {auto_away (bool), connection_count (int), last_activity (unix), manual_away (bool), ok (bool), online (bool), presence: ['active'|'away']}
  */
 export async function getSlackPresence() {
-  const registered = await checkRegistration();
+  const registered = await checkRegistration(false);
   if (!registered) {
     return null;
   }
@@ -523,21 +523,23 @@ function removeSlackIntegration(authId) {
   syncIntegrations(newIntegrations);
 }
 
-async function checkRegistration() {
+async function checkRegistration(showSignup = true) {
   if (!getItem("name")) {
-    window
-      .showInformationMessage(
-        "Connecting Slack requires a registered account. Sign up or log in to continue.",
-        {
-          modal: true,
-        },
-        SIGN_UP_LABEL
-      )
-      .then(async (selection) => {
-        if (selection === SIGN_UP_LABEL) {
-          commands.executeCommand("codetime.signUpAccount");
-        }
-      });
+    if (showSignup) {
+      window
+        .showInformationMessage(
+          "Connecting Slack requires a registered account. Sign up or log in to continue.",
+          {
+            modal: true,
+          },
+          SIGN_UP_LABEL
+        )
+        .then(async (selection) => {
+          if (selection === SIGN_UP_LABEL) {
+            commands.executeCommand("codetime.signUpAccount");
+          }
+        });
+    }
     return false;
   }
   return true;
