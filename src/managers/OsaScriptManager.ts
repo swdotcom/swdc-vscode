@@ -4,7 +4,7 @@ import { getItem, setItem } from "../Util";
 const cp = require("child_process");
 
 export async function toggleDarkMode() {
-  setItem("let checked_sys_events", true);
+  setItem("checked_sys_events", true);
   const darkModeCmd = `osascript -e \'
         tell application "System Events"
           tell appearance preferences
@@ -49,7 +49,7 @@ export async function isDarkMode() {
 
 // change the position of the dock depending on user input
 export async function toggleDockPosition() {
-  setItem("let checked_sys_events", true);
+  setItem("checked_sys_events", true);
   let newPosition = await window.showInputBox({ placeHolder: "left, right, or bottom?" });
 
   function setPosition(position: any) {
@@ -68,7 +68,7 @@ export async function toggleDockPosition() {
 
 // hide and unhide the dock
 export async function toggleDock() {
-  setItem("let checked_sys_events", true);
+  setItem("checked_sys_events", true);
   let toggleDockCmd = `osascript -e \'
     tell application "System Events"
       tell dock preferences
