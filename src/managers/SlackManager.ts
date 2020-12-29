@@ -469,19 +469,21 @@ async function getSlackAuth() {
         if (!foundIntegration) {
           // get the workspace domain using the authId
           const web = new WebClient(integration.access_token);
-          const usersIdentify = await web.users.identity((e) => {
+          const usersIdentify = await web.users.identity().catch((e) => {
             console.log("error fetching slack team info: ", e.message);
             return null;
           });
-          // usersIdentity returns
-          // {team: {id, name, domain, image_102, image_132, ....}...}
-          // set the domain
-          integration["team_domain"] = usersIdentify?.team?.domain;
-          integration["team_name"] = usersIdentify?.team?.name;
-          // add it
-          currentIntegrations.push(integration);
+          if (usersIdentify) {
+            // usersIdentity returns
+            // {team: {id, name, domain, image_102, image_132, ....}...}
+            // set the domain
+            integration["team_domain"] = usersIdentify.team?.domain;
+            integration["team_name"] = usersIdentify.team?.name;
+            // add it
+            currentIntegrations.push(integration);
 
-          foundNewIntegration = true;
+            foundNewIntegration = true;
+          }
         }
       }
     }

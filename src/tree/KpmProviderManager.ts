@@ -545,6 +545,7 @@ export class KpmProviderManager {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
           const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
+          workspaceItem.contextValue = "slack_connection_node";
           workspaceItem.description = `(${integration.team_name})`;
           workspaceItem.value = integration.authId;
           parentItem.children.push(workspaceItem);
