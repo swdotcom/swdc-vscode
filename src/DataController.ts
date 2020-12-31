@@ -42,7 +42,7 @@ export function getToggleFileEventLoggingState() {
   return toggleFileEventLogging;
 }
 
-export async function getUserRegistrationState(isIntegrationReq = false) {
+export async function getUserRegistrationState() {
   const jwt = getItem("jwt");
   const auth_callback_state = getAuthCallbackState();
   const authType = getItem("authType");
