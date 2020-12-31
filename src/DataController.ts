@@ -27,7 +27,6 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
-import { updateJwt } from "./menu/AccountManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
