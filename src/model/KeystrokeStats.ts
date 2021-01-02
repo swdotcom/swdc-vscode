@@ -80,7 +80,7 @@ export default class KeystrokeStats {
       }
     });
 
-    if (keystrokesTally && !foundKpmData) {
+    if (keystrokesTally) {
       // use the keystrokes tally
       foundKpmData = true;
       this.keystrokes = keystrokesTally;
