@@ -141,17 +141,6 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
   return null;
 }
 
-export function updateJwt(newJwt) {
-  if (!newJwt) {
-    return;
-  }
-  const currentJwtId = getDecodedUserIdFromJwt(getItem("jwt"));
-  const newJwtId = getDecodedUserIdFromJwt(newJwt);
-  if (newJwtId !== currentJwtId) {
-    setItem("jwt", newJwt);
-  }
-}
-
 export function getDecodedUserIdFromJwt(jwt) {
   try {
     if (jwt && jwt.includes("JWT")) {

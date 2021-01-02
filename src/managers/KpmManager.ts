@@ -1,13 +1,7 @@
 import { workspace, Disposable, window, commands } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
-import {
-  getRootPathForFile,
-  getNowTimes,
-  logEvent,
-  getFileAgeInDays,
-  isFileActive,
-} from "../Util";
+import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive } from "../Util";
 import { FileChangeInfo } from "../model/models";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
@@ -68,7 +62,7 @@ export class KpmManager {
         // check if we have keystroke data
         if (keystrokeStats.hasData()) {
           // post the payload offline until the batch interval sends it out
-          keystrokeStats.postData(false /*sendNow*/, isUnfocus);
+          keystrokeStats.postData(isUnfocus);
         }
       }
     }
@@ -92,9 +86,9 @@ export class KpmManager {
   }
 
   /**
-  * File Close Handler
-  * @param event
-  */
+   * File Close Handler
+   * @param event
+   */
   private async _onCloseHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -109,9 +103,9 @@ export class KpmManager {
   }
 
   /**
-  * File Open Handler
-  * @param event
-  */
+   * File Open Handler
+   * @param event
+   */
   private async _onOpenHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -143,9 +137,9 @@ export class KpmManager {
   }
 
   /**
-  * File Change Event Handler
-  * @param event
-  */
+   * File Change Event Handler
+   * @param event
+   */
   private async _onEventHandler(event) {
     if (!event || !window.state.focused) {
       return;
@@ -180,8 +174,7 @@ export class KpmManager {
     // LOOP THROUGH AND REPEAT COUNTS
     const contentChanges = event.contentChanges.filter((change) => change.range);
     // each changeset is triggered by a single keystroke
-    if (contentChanges.length > 0)
-      sourceObj.keystrokes += 1;
+    if (contentChanges.length > 0) sourceObj.keystrokes += 1;
 
     for (let contentChange of contentChanges) {
       // get {linesAdded, linesDeleted, charactersDeleted, charactersAdded, changeType}
@@ -241,8 +234,7 @@ export class KpmManager {
 
       // "netkeys" = add - delete
       sourceObj.netkeys = sourceObj.add - sourceObj.delete;
-      sourceObj.lines =
-        event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
+      sourceObj.lines = event.document && event.document.lineCount ? event.document.lineCount : event.lineCount || 0;
 
       if (textChangeInfo.linesDeleted) {
         logEvent(`Removed ${textChangeInfo.linesDeleted} lines`);
@@ -272,10 +264,10 @@ export class KpmManager {
   }
 
   /**
-  * Update some of the basic/static attributes
-  * @param sourceObj
-  * @param staticInfo
-  */
+   * Update some of the basic/static attributes
+   * @param sourceObj
+   * @param staticInfo
+   */
   private updateStaticValues(payload, staticInfo) {
     const sourceObj: FileChangeInfo = payload.source[staticInfo.filename];
     if (!sourceObj) {
@@ -311,7 +303,7 @@ export class KpmManager {
       linesDeleted: 0,
       charactersDeleted: 0,
       charactersAdded: 0,
-      changeType: ""
+      changeType: "",
     };
 
     // extract lines and character change counts
@@ -331,30 +323,24 @@ export class KpmManager {
 
   private characterizeChange(changeInfo, contentChange) {
     if (changeInfo.charactersDeleted > 0 || changeInfo.linesDeleted > 0) {
-      if (changeInfo.charactersAdded > 0)
-        changeInfo.changeType = "replacement";
-      else
-        if (changeInfo.charactersDeleted > 1 || changeInfo.linesDeleted > 1)
-          changeInfo.changeType = "multiDelete";
-        else if (changeInfo.charactersDeleted == 1 || changeInfo.linesDeleted == 1)
-          changeInfo.changeType = "singleDelete";
+      if (changeInfo.charactersAdded > 0) changeInfo.changeType = "replacement";
+      else if (changeInfo.charactersDeleted > 1 || changeInfo.linesDeleted > 1) changeInfo.changeType = "multiDelete";
+      else if (changeInfo.charactersDeleted == 1 || changeInfo.linesDeleted == 1) changeInfo.changeType = "singleDelete";
     } else if (changeInfo.charactersAdded > 1 || changeInfo.linesAdded > 1) {
       if (contentChange.text.match(/^[\n\r]\s*$/)?.length == 1) {
         // the regex matches a text that is a newline followed by only whitespace
         changeInfo.charactersAdded = 0;
         changeInfo.changeType = "autoIndent";
-      } else
-        changeInfo.changeType = "multiAdd";
-    } else if (changeInfo.charactersAdded == 1 || changeInfo.linesAdded == 1)
-      changeInfo.changeType = "singleAdd";
+      } else changeInfo.changeType = "multiAdd";
+    } else if (changeInfo.charactersAdded == 1 || changeInfo.linesAdded == 1) changeInfo.changeType = "singleAdd";
   }
 
   /**
-  * Get the text change info:
-  * linesAdded, linesDeleted, isCharDelete,
-  * hasNonNewLineData, textChangeLen, hasChanges
-  * @param contentChange
-  */
+   * Get the text change info:
+   * linesAdded, linesDeleted, isCharDelete,
+   * hasNonNewLineData, textChangeLen, hasChanges
+   * @param contentChange
+   */
   private getTextChangeInfo(contentChange) {
     const info = {
       linesAdded: 0,
@@ -440,10 +426,10 @@ export class KpmManager {
   }
 
   /**
-  * This will return true if it's a true file. we don't
-  * want to send events for .git or other event triggers
-  * such as extension.js.map events
-  */
+   * This will return true if it's a true file. we don't
+   * want to send events for .git or other event triggers
+   * such as extension.js.map events
+   */
   private isTrueEventFile(event, filename, isCloseEvent = false) {
     if (!filename) {
       return false;
@@ -462,54 +448,16 @@ export class KpmManager {
     const isDocEventScheme = scheme === "file" || scheme === "untitled" || scheme === "vscode-remote";
 
     const isLiveshareTmpFile = filename.match(/.*\.code-workspace.*vsliveshare.*tmp-.*/);
-    const isInternalFile = filename.match(
-      /.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/
-    );
+    const isInternalFile = filename.match(/.*\.software.*(CommitSummary\.txt|CodeTime\.txt|session\.json|ProjectCodeSummary\.txt|data.json)/);
 
     // return false that its not a doc that we want to track based on the
     // following conditions: non-doc scheme, is liveshare tmp file, is internal file
     // and the file is no longer active
-    if (
-      !isDocEventScheme ||
-      isLiveshareTmpFile ||
-      isInternalFile ||
-      !isFileActive(filename, isCloseEvent)
-    ) {
+    if (!isDocEventScheme || isLiveshareTmpFile || isInternalFile || !isFileActive(filename, isCloseEvent)) {
       return false;
     }
 
     return true;
-  }
-
-  public buildBootstrapKpmPayload() {
-    let rootPath = UNTITLED;
-    let fileName = UNTITLED;
-    let name = NO_PROJ_NAME;
-
-    // send the code time bootstrap payload
-    let keystrokeStats = new KeystrokeStats({
-      // project.directory is used as an object key, must be string
-      directory: rootPath,
-      name,
-      identifier: "",
-      resource: {},
-    });
-    keystrokeStats.keystrokes = 0;
-    let nowTimes = getNowTimes();
-    const start = nowTimes.now_in_sec - 60;
-    const local_start = nowTimes.local_now_in_sec - 60;
-    keystrokeStats.start = start;
-    keystrokeStats.local_start = local_start;
-    const fileInfo = new FileChangeInfo();
-    fileInfo.add = 0;
-    fileInfo.keystrokes = 0;
-    fileInfo.start = start;
-    fileInfo.local_start = local_start;
-    keystrokeStats.source[fileName] = fileInfo;
-
-    setTimeout(() => {
-      keystrokeStats.postData(true /*sendNow*/);
-    }, 0);
   }
 
   private endPreviousModifiedFiles(filename, rootPath) {
