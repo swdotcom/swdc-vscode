@@ -882,7 +882,7 @@ export function getFileDataArray(file) {
 
 // get the percent string dividing the reference value by the current value
 // this is meant to show the progressing percent of the daily average stats
-export function getPercentOfReferenceAvg(currentValue, referenceValue) {
+export function getPercentOfReferenceAvg(currentValue, referenceValue, referenceValueDisplay) {
   currentValue = currentValue ?? 0;
   let quotient = 1;
   if (referenceValue) {
@@ -893,5 +893,5 @@ export function getPercentOfReferenceAvg(currentValue, referenceValue) {
       quotient = 0.01;
     }
   }
-  return `${(quotient * 100).toFixed(0)}% of avg`;
+  return `${(quotient * 100).toFixed(0)}% of ${referenceValueDisplay}`;
 }

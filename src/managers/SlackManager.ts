@@ -71,6 +71,20 @@ export async function connectSlackWorkspace() {
   }, 10000);
 }
 
+export async function disconnectSlackWorkspace() {
+  const registered = await checkRegistration();
+  if (!registered) {
+    return;
+  }
+  // pick the workspace to disconnect
+  const selectedTeamDomain = await showSlackWorkspaceSelection();
+
+  if (selectedTeamDomain) {
+    const slackIntegration = getSlackWorkspaces().find((n) => n.team_domain === selectedTeamDomain);
+    disconnectSlackAuth(selectedTeamDomain.authId);
+  }
+}
+
 // disconnect slack flow
 export async function disconnectSlackAuth(authId) {
   // get the domain
