@@ -1,4 +1,6 @@
 import { ViewColumn, WebviewPanel, window } from "vscode";
+import path = require("path");
+import fs = require("fs");
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = "";
@@ -45,5 +47,7 @@ function getReportGeneratorHtml() {
 }
 
 function getDashboardHtml() {
-  return "<html><body><div>hello i am the dashboard</div></body></html>"
+  const template = path.join(__dirname, "/templates/dashboard.html");
+  const html = fs.readFileSync(template).toString();
+  return html
 }
