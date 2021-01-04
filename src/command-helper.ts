@@ -28,6 +28,7 @@ import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
 import { toggleFullScreenMode, toggleZenMode } from "./managers/ScreenManager";
+import { showDashboard } from "./managers/WebViewManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -314,6 +315,22 @@ export function createCommands(
       ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
     })
   );
+
+  cmds.push(
+    commands.registerCommand("codetime.viewDashboard", (item: KpmItem) => {
+      // if (!item) {
+      //   item = kpmProviderMgr.getViewDashboardButton();
+      //   item.location = "ct_command_palette";
+      //   item.interactionType = UIInteractionType.Keyboard;
+      //   item.name = "ct_view_dashboard_cmd";
+      //   item.interactionIcon = null;
+      //   item.color = null;
+      // }
+
+      // tracker.trackUIInteraction(item)
+      showDashboard();
+    })
+  )
 
   // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
   cmds.push(

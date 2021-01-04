@@ -12,6 +12,13 @@ export async function showReportGenerator() {
   currentPanel.reveal(ViewColumn.One);
 }
 
+export async function showDashboard() {
+  initiatePanel("Dashboard", "dasboard");
+  const html = getDashboardHtml();
+  currentPanel.webview.html = html;
+  currentPanel.reveal(ViewColumn.One);
+}
+
 function initiatePanel(title: string, viewType: string) {
   if (currentPanel && title !== currentTitle) {
     // dipose the previous one
@@ -35,4 +42,8 @@ function initiatePanel(title: string, viewType: string) {
 function getReportGeneratorHtml() {
   // fetch the html from the app
   return "<html><body><div>html goes here</div></body></html>";
+}
+
+function getDashboardHtml() {
+  return "<html><body><div>hello i am the dashboard</div></body></html>"
 }

@@ -48,7 +48,6 @@
     "webpack-dev": "webpack --mode development --watch",
     "test-compile": "tsc -p ./"
   },
-
   "contributes": {
     "commands": [
       {
@@ -94,6 +93,10 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "codetime.viewDashboard",
+        "title": "Code Time: View Dashboard"
       }
     ],
     "configuration": [
