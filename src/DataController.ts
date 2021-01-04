@@ -27,7 +27,6 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
-import { updateJwt } from "./menu/AccountManager";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -71,8 +70,6 @@ export async function getUserRegistrationState() {
     const user = resp.data.user;
     const registered = user.registered;
 
-    // make sure we don't wipe out the jwt if its null and its the same user
-    updateJwt(user.plugin_jwt);
     if (user.plugin_jwt) {
       setItem("jwt", user.plugin_jwt);
     }

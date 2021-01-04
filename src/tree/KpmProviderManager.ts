@@ -186,7 +186,7 @@ export class KpmProviderManager {
       if (slackDnDInfo?.snooze_enabled) {
         const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
         // show the disable button
-        treeItems.push(this.getDescriptionButton("Turn off do not disturb", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
+        treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
       } else {
         // show the enable button
         treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
@@ -210,7 +210,7 @@ export class KpmProviderManager {
         treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "dark-mode.svg"));
       }
 
-      treeItems.push(this.getActionButton("Toggle Dock Position", "", "codetime.toggleDocPosition", "settings.svg"));
+      treeItems.push(this.getActionButton("Toggle dock position", "", "codetime.toggleDocPosition", "settings.svg"));
     }
 
     return treeItems;
@@ -400,6 +400,7 @@ export class KpmProviderManager {
       for await (const integration of integrations) {
         if (integration.name.toLowerCase() === "slack") {
           const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
+          workspaceItem.contextValue = "slack_connection_node";
           workspaceItem.description = `(${integration.team_name})`;
           workspaceItem.value = integration.authId;
           parentItem.children.push(workspaceItem);
