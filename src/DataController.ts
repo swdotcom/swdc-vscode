@@ -42,7 +42,7 @@ export function getToggleFileEventLoggingState() {
   return toggleFileEventLogging;
 }
 
-export async function getUserRegistrationState(isIntegrationReq = false) {
+export async function getUserRegistrationState() {
   const jwt = getItem("jwt");
   const auth_callback_state = getAuthCallbackState();
   const authType = getItem("authType");
@@ -73,10 +73,11 @@ export async function getUserRegistrationState(isIntegrationReq = false) {
 
     // make sure we don't wipe out the jwt if its null and its the same user
     updateJwt(user.plugin_jwt);
+    if (user.plugin_jwt) {
+      setItem("jwt", user.plugin_jwt);
+    }
     if (registered === 1) {
       setItem("name", user.email);
-    } else {
-      setItem("name", null);
     }
 
     const currentAuthType = getItem("authType");
