@@ -20,6 +20,7 @@ import {
   shareSlackMessage,
   setProfileStatus,
   toggleSlackPresence,
+  disconnectSlackWorkspace,
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
@@ -379,8 +380,12 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.disconnectSlackWorkspace", (kptmItem: KpmItem) => {
-      disconnectSlackAuth(kptmItem.value);
+    commands.registerCommand("codetime.disconnectSlackWorkspace", (kptmItem: any) => {
+      if (kptmItem && kptmItem.value) {
+        disconnectSlackAuth(kptmItem.value);
+      } else {
+        disconnectSlackWorkspace();
+      }
     })
   );
 
@@ -416,7 +421,9 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.toggleFullScreen", () => {
+      KpmProviderManager.getInstance().showingFullScreen = !KpmProviderManager.getInstance().showingFullScreen;
       commands.executeCommand("workbench.action.toggleFullScreen");
+      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 

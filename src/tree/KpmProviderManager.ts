@@ -1,7 +1,6 @@
 import { KpmItem, SessionSummary, FileChangeInfo, CommitChangeStats } from "../model/models";
 import {
   humanizeMinutes,
-  getWorkspaceFolders,
   getItem,
   isStatusBarTextVisible,
   logIt,
@@ -12,16 +11,15 @@ import {
   isMac,
   getPercentOfReferenceAvg,
 } from "../Util";
-import { getUncommitedChanges, getTodaysCommits, getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
-import { WorkspaceFolder, TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
-import { getFileChangeSummaryAsJson } from "../storage/FileChangeInfoSummaryData";
+import { getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
+import { TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
 import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
+import { getSlackDnDInfo, getSlackPresence, getSlackStatus, hasSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -34,6 +32,8 @@ export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
   private kpmTreeOpen: boolean = false;
+
+  public showingFullScreen: boolean = false;
 
   constructor() {}
 
@@ -78,21 +78,6 @@ export class KpmProviderManager {
     treeItems.push(this.getHideStatusBarMetricsButton());
 
     treeItems.push(await this.getSlackIntegrationsTree());
-
-    return treeItems;
-  }
-
-  /**
-   * Deprecated and not used but keeping until we remove
-   * the stats tree altogether
-   */
-  async getDailyMetricsTreeParents(): Promise<KpmItem[]> {
-    const treeItems: KpmItem[] = [];
-
-    const kpmTreeParents: KpmItem[] = await this.getKpmTreeParents();
-    treeItems.push(...kpmTreeParents);
-    const commitTreeParents: KpmItem[] = await this.getCommitTreeParents();
-    treeItems.push(...commitTreeParents);
 
     return treeItems;
   }
@@ -146,170 +131,36 @@ export class KpmProviderManager {
 
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
+    const activeCodeTimeAvgStr = humanizeMinutes(avgMinutes);
+    const activeCodeTimeTooltip = getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes, activeCodeTimeAvgStr);
     treeItems.push(
-      this.getDescriptionButton(
-        `Active code time: ${dayMinutesStr}`,
-        `(${getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes)})`,
-        "",
-        "rocket.svg"
-      )
+      this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "rocket.svg")
     );
 
     const currLinesAdded = sessionSummary.currentDayLinesAdded;
     const linesAdded = numeral(currLinesAdded).format("0 a");
     const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
-    treeItems.push(
-      this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${getPercentOfReferenceAvg(currLinesAdded, avgLinesAdded)})`, "", "rocket.svg")
-    );
+    const linesAddedAvgStr = numeral(avgLinesAdded).format("0 a");
+    const linesAddedTooltip = getPercentOfReferenceAvg(currLinesAdded, avgLinesAdded, linesAddedAvgStr);
+    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${linesAddedAvgStr} avg)`, linesAddedTooltip, "rocket.svg"));
 
     const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
-    treeItems.push(
-      this.getDescriptionButton(
-        `Lines removed: ${linesRemoved}`,
-        `(${getPercentOfReferenceAvg(currLinesRemoved, avgLinesRemoved)})`,
-        "",
-        "rocket.svg"
-      )
-    );
+    const linesRemovedAvgStr = numeral(avgLinesAdded).format("0 a");
+    const linesRemovedTooltip = getPercentOfReferenceAvg(currLinesRemoved, avgLinesRemoved, linesRemovedAvgStr);
+    treeItems.push(this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(${linesRemovedAvgStr} avg)`, linesRemovedTooltip, "rocket.svg"));
 
     const currKeystrokes = sessionSummary.currentDayKeystrokes;
     const keystrokes = numeral(currKeystrokes).format("0 a");
     const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
-    treeItems.push(
-      this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${getPercentOfReferenceAvg(currKeystrokes, avgKeystrokes)})`, "", "rocket.svg")
-    );
+    const keystrokesAvgStr = numeral(avgLinesAdded).format("0 a");
+    const keystrokesTooltip = getPercentOfReferenceAvg(keystrokes, avgKeystrokes, keystrokesAvgStr);
+    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${keystrokesAvgStr} avg)`, keystrokesTooltip, "rocket.svg"));
 
     treeItems.push(this.getCodeTimeDashboardButton());
     treeItems.push(this.getViewProjectSummaryButton());
     treeItems.push(this.getWebViewDashboardButton());
-
-    return treeItems;
-  }
-
-  /**
-   * Deprecated and not used but keeping until we remove
-   * the stats tree altogether
-   */
-  async getKpmTreeParents(): Promise<KpmItem[]> {
-    const treeItems: KpmItem[] = [];
-
-    treeItems.push(this.getViewProjectSummaryButton());
-    treeItems.push(this.getCodeTimeDashboardButton());
-
-    const sessionSummaryData: SessionSummary = getSessionSummaryData();
-
-    // get the session summary data
-    const currentKeystrokesItems: KpmItem[] = this.getSessionSummaryItems(sessionSummaryData);
-
-    // show the metrics per line
-    treeItems.push(...currentKeystrokesItems);
-
-    // show the files changed metric
-    const filesChangedTreeItems = this.getFilesChangedNodes();
-    if (filesChangedTreeItems.length) {
-      treeItems.push(...filesChangedTreeItems);
-    }
-
-    return treeItems;
-  }
-
-  getFilesChangedNodes() {
-    const treeItems: KpmItem[] = [];
-    const fileChangeInfoMap = getFileChangeSummaryAsJson();
-    const filesChanged = fileChangeInfoMap ? Object.keys(fileChangeInfoMap).length : 0;
-    if (filesChanged > 0) {
-      treeItems.push(
-        this.buildTreeMetricItem("Files changed", "Files changed today", `Today: ${filesChanged}`, null, null, "ct_top_files_by_kpm_toggle_node")
-      );
-
-      // get the file change info
-      if (filesChanged) {
-        // turn this into an array
-        const fileChangeInfos = Object.keys(fileChangeInfoMap).map((key) => {
-          return fileChangeInfoMap[key];
-        });
-
-        // Highest KPM
-        const highKpmParent = this.buildHighestKpmFileItem(fileChangeInfos);
-        if (highKpmParent) {
-          treeItems.push(highKpmParent);
-        }
-
-        // Most Edited File
-        const mostEditedFileItem: KpmItem = this.buildMostEditedFileItem(fileChangeInfos);
-        if (mostEditedFileItem) {
-          treeItems.push(mostEditedFileItem);
-        }
-
-        // Longest Code Time
-        const longestCodeTimeParent = this.buildLongestFileCodeTime(fileChangeInfos);
-        if (longestCodeTimeParent) {
-          treeItems.push(longestCodeTimeParent);
-        }
-      }
-    }
-    return treeItems;
-  }
-
-  async getCommitTreeParents(): Promise<KpmItem[]> {
-    const folders: WorkspaceFolder[] = getWorkspaceFolders();
-    const treeItems: KpmItem[] = [];
-
-    // show the git insertions and deletions
-    if (folders && folders.length > 0) {
-      const openChangesChildren: KpmItem[] = [];
-      const committedChangesChildren: KpmItem[] = [];
-      for (let i = 0; i < folders.length; i++) {
-        const workspaceFolder = folders[i];
-        const projectDir = workspaceFolder.uri.fsPath;
-        const currentChagesSummary: CommitChangeStats = await getUncommitedChanges(projectDir);
-        // get the folder name from the path
-        const name = workspaceFolder.name;
-
-        const openChangesMetrics: KpmItem[] = [];
-        openChangesMetrics.push(this.buildMetricItem("Insertion(s)", currentChagesSummary.insertions, "", "insertion.svg"));
-        openChangesMetrics.push(this.buildMetricItem("Deletion(s)", currentChagesSummary.deletions, "", "deletion.svg"));
-
-        const openChangesFolder: KpmItem = this.buildParentItem(name, "", openChangesMetrics);
-
-        openChangesChildren.push(openChangesFolder);
-
-        const todaysChagesSummary: CommitChangeStats = await getTodaysCommits(projectDir);
-
-        const committedChangesMetrics: KpmItem[] = [];
-        committedChangesMetrics.push(
-          this.buildMetricItem("Insertion(s)", todaysChagesSummary.insertions, "Number of total insertions today", "insertion.svg")
-        );
-        committedChangesMetrics.push(
-          this.buildMetricItem("Deletion(s)", todaysChagesSummary.deletions, "Number of total deletions today", "deletion.svg")
-        );
-
-        committedChangesMetrics.push(
-          this.buildMetricItem("Commit(s)", todaysChagesSummary.commitCount, "Number of total commits today", "commit.svg")
-        );
-
-        committedChangesMetrics.push(
-          this.buildMetricItem("Files changed", todaysChagesSummary.fileCount, "Number of total files changed today", "files.svg")
-        );
-
-        const committedChangesFolder: KpmItem = this.buildParentItem(name, "", committedChangesMetrics);
-
-        committedChangesChildren.push(committedChangesFolder);
-      }
-
-      const openChangesParent: KpmItem = this.buildParentItem(
-        "Open changes",
-        "Lines added and deleted in this repo that have not yet been committed.",
-        openChangesChildren,
-        "ct_open_changes_toggle_node"
-      );
-      treeItems.push(openChangesParent);
-
-      const committedChangesParent: KpmItem = this.buildParentItem("Committed today", "", committedChangesChildren, "ct_committed_today_toggle_node");
-      treeItems.push(committedChangesParent);
-    }
 
     return treeItems;
   }
@@ -320,7 +171,11 @@ export class KpmProviderManager {
     const hasSlackAccess = hasSlackWorkspaces();
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
-    treeItems.push(this.getActionButton("Toggle full screen", "", "codetime.toggleFullScreen", "fullscreen.svg"));
+    let fullScreenToggleLabel = "Enter full screen";
+    if (this.showingFullScreen) {
+      fullScreenToggleLabel = "Exit full screen";
+    }
+    treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", "fullscreen.svg"));
 
     if (hasSlackAccess) {
       // slack status setter
@@ -937,6 +792,8 @@ export class KpmTreeItem extends TreeItem {
       // no matching tag, remove the tree item icon path
       delete this.iconPath;
     }
+
+    this.tooltip = treeItem.tooltip;
 
     this.contextValue = getTreeItemContextValue(treeItem);
   }

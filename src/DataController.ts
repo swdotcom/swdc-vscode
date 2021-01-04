@@ -21,7 +21,7 @@ import {
   setAuthCallbackState,
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
-import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
+import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
 import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
@@ -228,6 +228,23 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 }
 
 export async function launchWebDashboard() {
+  if (!getItem("name")) {
+    window
+      .showInformationMessage(
+        "Sign up or log in to see more data visualizations.",
+        {
+          modal: true,
+        },
+        SIGN_UP_LABEL
+      )
+      .then(async (selection) => {
+        if (selection === SIGN_UP_LABEL) {
+          commands.executeCommand("codetime.signUpAccount");
+        }
+      });
+    return;
+  }
+
   let webUrl = await buildWebDashboardUrl();
 
   // add the token=jwt
