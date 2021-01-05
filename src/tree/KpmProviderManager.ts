@@ -169,7 +169,7 @@ export class KpmProviderManager {
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
 
     let fullScreenToggleLabel = "Enter full screen";
     let fullScreenIcon = "expand.svg";
@@ -181,21 +181,23 @@ export class KpmProviderManager {
 
     // slack status setter
     const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
-    treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
+    treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
     // pause/enable slack notification
     const slackDnDInfo = await getSlackDnDInfo();
     if (slackDnDInfo?.snooze_enabled) {
       const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
       // show the disable button
-      treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
+      treeItems.push(
+        this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "notifications-on.svg")
+      );
     } else {
       // show the enable button
-      treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
+      treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "notifications-off.svg"));
     }
     if (slackPresence === "active") {
-      treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+      treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "presence.svg"));
     } else {
-      treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+      treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "presence.svg"));
     }
 
     if (isMac()) {
