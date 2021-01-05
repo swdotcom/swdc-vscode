@@ -244,7 +244,7 @@ export function createCommands(
     })
   );
 
-  // SUBMIT ON ISSUE
+  // SUBMIT AN ISSUE
   cmds.push(
     commands.registerCommand("codetime.submitOnIssue", (item: KpmItem) => {
       if (!item) {
