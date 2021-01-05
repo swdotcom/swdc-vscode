@@ -170,7 +170,7 @@
     "@types/jwt-decode": "^2.2.1",
     "aws-sdk": "^2.470.0",
     "axios": "^0.19.0",
-    "file-it": "^1.0.26",
+    "file-it": "^1.0.27",
     "jwt-decode": "^2.2.0",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",

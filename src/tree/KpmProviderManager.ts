@@ -1,4 +1,4 @@
-import { KpmItem, SessionSummary, FileChangeInfo, CommitChangeStats } from "../model/models";
+import { KpmItem, SessionSummary, FileChangeInfo } from "../model/models";
 import {
   humanizeMinutes,
   getItem,
@@ -7,7 +7,6 @@ import {
   findFirstActiveDirectoryOrWorkspaceDirectory,
   getNowTimes,
   setItem,
-  getIntegrations,
   isMac,
   getPercentOfReferenceAvg,
 } from "../Util";
@@ -19,7 +18,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus, hasSlackWorkspaces } from "../managers/SlackManager";
+import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -170,9 +169,8 @@ export class KpmProviderManager {
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
-    const hasSlackAccess = hasSlackWorkspaces();
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
     let fullScreenToggleLabel = "Enter full screen";
     let fullScreenIcon = "expand.svg";
     if (this.showingFullScreen) {
@@ -181,29 +179,23 @@ export class KpmProviderManager {
     }
     treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
 
-    if (hasSlackAccess) {
-      // slack status setter
-      const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
-      treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
-      // pause/enable slack notification
-      const slackDnDInfo = await getSlackDnDInfo();
-      if (slackDnDInfo?.snooze_enabled) {
-        const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
-        // show the disable button
-        treeItems.push(
-          this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "notifications-on.svg")
-        );
-      } else {
-        // show the enable button
-        treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "notifications-off.svg"));
-      }
-      if (slackPresence === "active") {
-        treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "presence.svg"));
-      } else {
-        treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "presence.svg"));
-      }
+    // slack status setter
+    const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
+    treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
+    // pause/enable slack notification
+    const slackDnDInfo = await getSlackDnDInfo();
+    if (slackDnDInfo?.snooze_enabled) {
+      const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
+      // show the disable button
+      treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
     } else {
-      treeItems.push(this.getActionButton("Connect to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack.svg"));
+      // show the enable button
+      treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
+    }
+    if (slackPresence === "active") {
+      treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+    } else {
+      treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "slack-new.svg"));
     }
 
     if (isMac()) {
@@ -399,16 +391,14 @@ export class KpmProviderManager {
     const parentItem = this.buildMessageItem("Slack workspaces", "", "slack.svg", null, null);
     parentItem.contextValue = "slack_connection_parent";
     parentItem.children = [];
-    const integrations = getIntegrations();
-    if (integrations.length) {
-      for await (const integration of integrations) {
-        if (integration.name.toLowerCase() === "slack") {
-          const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
-          workspaceItem.contextValue = "slack_connection_node";
-          workspaceItem.description = `(${integration.team_name})`;
-          workspaceItem.value = integration.authId;
-          parentItem.children.push(workspaceItem);
-        }
+    const workspaces = getSlackWorkspaces();
+    if (workspaces.length) {
+      for await (const integration of workspaces) {
+        const workspaceItem = this.buildMessageItem(integration.team_domain, "", "");
+        workspaceItem.contextValue = "slack_connection_node";
+        workspaceItem.description = `(${integration.team_name})`;
+        workspaceItem.value = integration.authId;
+        parentItem.children.push(workspaceItem);
       }
     }
     return parentItem;
@@ -469,17 +459,11 @@ export class KpmProviderManager {
         label: name,
         tooltip,
       };
-    } else if (authType) {
-      return {
-        icon: "email.svg",
-        label: name,
-        tooltip,
-      };
     }
     return {
-      icon: null,
-      label: null,
-      tooltip: null,
+      icon: "email.svg",
+      label: name,
+      tooltip,
     };
   }
 
