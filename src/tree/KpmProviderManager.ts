@@ -132,8 +132,9 @@ export class KpmProviderManager {
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
     const activeCodeTimeAvgStr = humanizeMinutes(avgMinutes);
     const activeCodeTimeTooltip = getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes, activeCodeTimeAvgStr);
+    const activeCodeTimeIcon = codeTimeSummary.activeCodeTimeMinutes > sessionSummary.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
     treeItems.push(
-      this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "", "bolt-grey.svg")
+      this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "", activeCodeTimeIcon)
     );
 
     const currLinesAdded = sessionSummary.currentDayLinesAdded;
@@ -141,15 +142,17 @@ export class KpmProviderManager {
     const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
     const linesAddedAvgStr = numeral(avgLinesAdded).format("0 a");
     const linesAddedTooltip = getPercentOfReferenceAvg(currLinesAdded, avgLinesAdded, linesAddedAvgStr);
-    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${linesAddedAvgStr} avg)`, linesAddedTooltip, "", "bolt-grey.svg"));
+    const linesAddedIcon = sessionSummary.currentDayLinesAdded > sessionSummary.averageLinesAdded ? "bolt.svg" : "bolt-grey.svg";
+    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${linesAddedAvgStr} avg)`, linesAddedTooltip, "", linesAddedIcon));
 
     const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
     const linesRemovedAvgStr = numeral(avgLinesAdded).format("0 a");
     const linesRemovedTooltip = getPercentOfReferenceAvg(currLinesRemoved, avgLinesRemoved, linesRemovedAvgStr);
+    const linesRemovedIcon = sessionSummary.currentDayLinesRemoved > sessionSummary.averageLinesAdded ? "bolt.svg" : "bolt-grey.svg";
     treeItems.push(
-      this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(${linesRemovedAvgStr} avg)`, linesRemovedTooltip, "", "bolt-grey.svg")
+      this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(${linesRemovedAvgStr} avg)`, linesRemovedTooltip, "", linesRemovedIcon)
     );
 
     const currKeystrokes = sessionSummary.currentDayKeystrokes;
@@ -157,7 +160,8 @@ export class KpmProviderManager {
     const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
     const keystrokesAvgStr = numeral(avgLinesAdded).format("0 a");
     const keystrokesTooltip = getPercentOfReferenceAvg(keystrokes, avgKeystrokes, keystrokesAvgStr);
-    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${keystrokesAvgStr} avg)`, keystrokesTooltip, "", "bolt-grey.svg"));
+    const keystrokesIcon = sessionSummary.currentDayKeystrokes > sessionSummary.averageDailyKeystrokes ? "bolt.svg" : "bolt-grey.svg";
+    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${keystrokesAvgStr} avg)`, keystrokesTooltip, "", keystrokesIcon));
 
     treeItems.push(this.getCodeTimeDashboardButton());
     treeItems.push(this.getViewProjectSummaryButton());
@@ -492,111 +496,6 @@ export class KpmProviderManager {
     item.icon = icon;
     item.contextValue = "detail_button";
     return item;
-  }
-
-  /**
-   * Deprecated and not used but keeping until we remove
-   * the stats tree altogether
-   */
-  getSessionSummaryItems(data: SessionSummary): KpmItem[] {
-    const items: KpmItem[] = [];
-    let values = [];
-
-    // get the editor and session time
-    const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
-
-    const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
-    values.push({ label: `Today: ${wallClktimeStr}`, icon: "rocket.svg" });
-
-    items.push(
-      this.buildActivityComparisonNodes(
-        "Code time",
-        "Code time: total time you have spent in your editor today.",
-        values,
-        TreeItemCollapsibleState.Expanded,
-        "ct_codetime_toggle_node"
-      )
-    );
-
-    const dayStr = moment().format("ddd");
-
-    // ACTIVE CODE TIME MINUTES and AVERAGES
-    values = [];
-    const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
-    values.push({ label: `Today: ${dayMinutesStr}`, icon: "rocket.svg" });
-    const avgMin = humanizeMinutes(data.averageDailyMinutes);
-    const activityLightningBolt = codeTimeSummary.activeCodeTimeMinutes > data.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
-    values.push({
-      label: `Your average (${dayStr}): ${avgMin}`,
-      icon: activityLightningBolt,
-    });
-    const globalMinutesStr = humanizeMinutes(data.globalAverageDailyMinutes);
-    values.push({
-      label: `Global average (${dayStr}): ${globalMinutesStr}`,
-      icon: "global-grey.svg",
-    });
-    items.push(
-      this.buildActivityComparisonNodes(
-        "Active code time",
-        "Active code time: total time you have been typing in your editor today.",
-        values,
-        TreeItemCollapsibleState.Expanded,
-        "ct_active_codetime_toggle_node"
-      )
-    );
-
-    values = [];
-    const currLinesAdded = data.currentDayLinesAdded;
-    const linesAdded = numeral(currLinesAdded).format("0 a");
-    values.push({ label: `Today: ${linesAdded}`, icon: "rocket.svg" });
-    const userLinesAddedAvg = numeral(data.averageLinesAdded).format("0 a");
-    const linesAddedLightningBolt = data.currentDayLinesAdded > data.averageLinesAdded ? "bolt.svg" : "bolt-grey.svg";
-    values.push({
-      label: `Your average (${dayStr}): ${userLinesAddedAvg}`,
-      icon: linesAddedLightningBolt,
-    });
-    const globalLinesAdded = numeral(data.globalAverageLinesAdded).format("0 a");
-    values.push({
-      label: `Global average (${dayStr}): ${globalLinesAdded}`,
-      icon: "global-grey.svg",
-    });
-    items.push(this.buildActivityComparisonNodes("Lines added", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_added_toggle_node"));
-
-    values = [];
-    const currLinesRemoved = data.currentDayLinesRemoved;
-    const linesRemoved = numeral(currLinesRemoved).format("0 a");
-    values.push({ label: `Today: ${linesRemoved}`, icon: "rocket.svg" });
-    const userLinesRemovedAvg = numeral(data.averageLinesRemoved).format("0 a");
-    const linesRemovedLightningBolt = data.currentDayLinesRemoved > data.averageLinesRemoved ? "bolt.svg" : "bolt-grey.svg";
-    values.push({
-      label: `Your average (${dayStr}): ${userLinesRemovedAvg}`,
-      icon: linesRemovedLightningBolt,
-    });
-    const globalLinesRemoved = numeral(data.globalAverageLinesRemoved).format("0 a");
-    values.push({
-      label: `Global average (${dayStr}): ${globalLinesRemoved}`,
-      icon: "global-grey.svg",
-    });
-    items.push(this.buildActivityComparisonNodes("Lines removed", "", values, TreeItemCollapsibleState.Collapsed, "ct_lines_removed_toggle_node"));
-
-    values = [];
-    const currKeystrokes = data.currentDayKeystrokes;
-    const keystrokes = numeral(currKeystrokes).format("0 a");
-    values.push({ label: `Today: ${keystrokes}`, icon: "rocket.svg" });
-    const userKeystrokesAvg = numeral(data.averageDailyKeystrokes).format("0 a");
-    const keystrokesLightningBolt = data.currentDayKeystrokes > data.averageDailyKeystrokes ? "bolt.svg" : "bolt-grey.svg";
-    values.push({
-      label: `Your average (${dayStr}): ${userKeystrokesAvg}`,
-      icon: keystrokesLightningBolt,
-    });
-    const globalKeystrokes = numeral(data.globalAverageDailyKeystrokes).format("0 a");
-    values.push({
-      label: `Global average (${dayStr}): ${globalKeystrokes}`,
-      icon: "global-grey.svg",
-    });
-    items.push(this.buildActivityComparisonNodes("Keystrokes", "", values, TreeItemCollapsibleState.Collapsed, "ct_keystrokes_toggle_node"));
-
-    return items;
   }
 
   buildMetricItem(label, value, tooltip = "", icon = null, name = "", location = "ct_metrics_tree") {
