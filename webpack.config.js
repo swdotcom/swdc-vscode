@@ -34,8 +34,7 @@ const config = {
                 { from: "./resources", to: "resources" },
                 { from: "./images", to: "images" },
                 { from: "./README.md", to: "resources" },
-                { from: "./src/extensioninfo.json", to: "resources" },
-                { from: "./templates", to: "templates" },
+                { from: "./src/extensioninfo.json", to: "resources" }
             ],
         }),
     ],

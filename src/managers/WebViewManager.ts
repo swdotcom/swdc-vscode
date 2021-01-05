@@ -1,6 +1,6 @@
 import { ViewColumn, WebviewPanel, window } from "vscode";
-import path = require("path");
-import fs = require("fs");
+import { softwareGet, isResponseOk } from "../http/HttpClient";
+import { getItem } from "../Util";
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = "";
@@ -16,7 +16,7 @@ export async function showReportGenerator() {
 
 export async function showDashboard() {
   initiatePanel("Dashboard", "dasboard");
-  const html = getDashboardHtml();
+  const html = await getDashboardHtml();
   currentPanel.webview.html = html;
   currentPanel.reveal(ViewColumn.One);
 }
@@ -46,8 +46,11 @@ function getReportGeneratorHtml() {
   return "<html><body><div>html goes here</div></body></html>";
 }
 
-function getDashboardHtml() {
-  const template = path.join(__dirname, "/templates/dashboard.html");
-  const html = fs.readFileSync(template).toString();
-  return html
+async function getDashboardHtml() {
+  const resp = await softwareGet("/v1/plugin_dashboard", getItem("jwt"));
+  if (isResponseOk(resp)) {
+    return resp.data.html;
+  } else {
+    window.showErrorMessage("Unable to generate dashboard. Please try again later.");
+  }
 }
