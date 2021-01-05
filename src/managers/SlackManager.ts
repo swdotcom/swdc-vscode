@@ -473,7 +473,7 @@ async function getSlackAuth() {
   let foundNewIntegration = false;
   const { user } = await getUserRegistrationState();
   if (user && user.integrations) {
-    const currentIntegrations = getIntegrations();
+    const currentIntegrations = getSlackWorkspaces();
     // find the slack auth
     for (const integration of user.integrations) {
       // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
@@ -533,7 +533,7 @@ async function postMessage(selectedChannel: any, access_token, message: string) 
  * @param authId
  */
 function removeSlackIntegration(authId) {
-  const currentIntegrations = getIntegrations();
+  const currentIntegrations = getSlackWorkspaces();
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
   syncIntegrations(newIntegrations);
