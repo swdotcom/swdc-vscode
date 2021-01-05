@@ -88,25 +88,6 @@ function showAuthMenuOptions(authText) {
 }
 
 /**
- * This is called if we ever get a 401
- */
-export async function resetDataAndAlertUser() {
-  const lastResetDay = getItem("lastResetDay");
-  const { day } = getNowTimes();
-
-  // don't let this get called infinitely if the JWT is bad
-  if (!lastResetDay || lastResetDay !== day) {
-    setItem("lastResetDay", day);
-    await createAnonymousUser(true);
-    window.showWarningMessage("Your CodeTime session has expired. Please log in.", ...[LOGIN_LABEL]).then((selection) => {
-      if (selection === LOGIN_LABEL) {
-        commands.executeCommand("codetime.codeTimeExisting");
-      }
-    });
-  }
-}
-
-/**
  * create an anonymous user based on github email or mac addr
  */
 export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<string> {
