@@ -1,4 +1,4 @@
-import { KpmItem, SessionSummary, FileChangeInfo, CommitChangeStats } from "../model/models";
+import { KpmItem, SessionSummary, FileChangeInfo } from "../model/models";
 import {
   humanizeMinutes,
   getItem,
@@ -19,7 +19,7 @@ import { getRepoContributors } from "../repo/KpmRepoManager";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
 import { SummaryManager } from "../managers/SummaryManager";
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus, hasSlackWorkspaces } from "../managers/SlackManager";
+import { getSlackDnDInfo, getSlackPresence, getSlackStatus } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 
@@ -168,8 +168,6 @@ export class KpmProviderManager {
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
 
-    const hasSlackAccess = hasSlackWorkspaces();
-
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
     let fullScreenToggleLabel = "Enter full screen";
     if (this.showingFullScreen) {
@@ -177,29 +175,23 @@ export class KpmProviderManager {
     }
     treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", "fullscreen.svg"));
 
-    if (hasSlackAccess) {
-      // slack status setter
-      const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
-      treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
-      // pause/enable slack notification
-      const slackDnDInfo = await getSlackDnDInfo();
-      if (slackDnDInfo?.snooze_enabled) {
-        const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
-        // show the disable button
-        treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
-      } else {
-        // show the enable button
-        treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
-      }
-      if (slackPresence === "active") {
-        treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "slack-new.svg"));
-      } else {
-        treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "slack-new.svg"));
-      }
+    // slack status setter
+    const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
+    treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
+    // pause/enable slack notification
+    const slackDnDInfo = await getSlackDnDInfo();
+    if (slackDnDInfo?.snooze_enabled) {
+      const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
+      // show the disable button
+      treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
     } else {
-      treeItems.push(
-        this.getActionButton("Connect to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack-new.svg")
-      );
+      // show the enable button
+      treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
+    }
+    if (slackPresence === "active") {
+      treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+    } else {
+      treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "slack-new.svg"));
     }
 
     if (isMac()) {
@@ -465,17 +457,11 @@ export class KpmProviderManager {
         label: name,
         tooltip,
       };
-    } else if (authType) {
-      return {
-        icon: "envelope.svg",
-        label: name,
-        tooltip,
-      };
     }
     return {
-      icon: null,
-      label: null,
-      tooltip: null,
+      icon: "envelope.svg",
+      label: name,
+      tooltip,
     };
   }
 
