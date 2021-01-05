@@ -121,20 +121,20 @@ export class KpmProviderManager {
     const codeTimeSummary: CodeTimeSummary = getCodeTimeSummary();
 
     if (refClass === "user") {
-      treeItems.push(this.getDescriptionButton("Today vs.", "your daily average", "", "codetime.switchAverageComparison"));
+      treeItems.push(this.getDescriptionButton("Today vs.", "your daily average", "", "codetime.switchAverageComparison", "today.svg"));
     } else {
-      treeItems.push(this.getDescriptionButton("Today vs.", "the global daily average", "", "codetime.switchAverageComparison"));
+      treeItems.push(this.getDescriptionButton("Today vs.", "the global daily average", "", "codetime.switchAverageComparison", "today.svg"));
     }
 
     const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
-    treeItems.push(this.getActionButton(`Code time: ${wallClktimeStr}`, "", "rocket.svg"));
+    treeItems.push(this.getActionButton(`Code time: ${wallClktimeStr}`, "", "", "bolt-grey.svg"));
 
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
     const activeCodeTimeAvgStr = humanizeMinutes(avgMinutes);
     const activeCodeTimeTooltip = getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes, activeCodeTimeAvgStr);
     treeItems.push(
-      this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "rocket.svg")
+      this.getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "", "bolt-grey.svg")
     );
 
     const currLinesAdded = sessionSummary.currentDayLinesAdded;
@@ -142,21 +142,23 @@ export class KpmProviderManager {
     const avgLinesAdded = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesAdded;
     const linesAddedAvgStr = numeral(avgLinesAdded).format("0 a");
     const linesAddedTooltip = getPercentOfReferenceAvg(currLinesAdded, avgLinesAdded, linesAddedAvgStr);
-    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${linesAddedAvgStr} avg)`, linesAddedTooltip, "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Lines added: ${linesAdded}`, `(${linesAddedAvgStr} avg)`, linesAddedTooltip, "", "bolt-grey.svg"));
 
     const currLinesRemoved = sessionSummary.currentDayLinesRemoved;
     const linesRemoved = numeral(currLinesRemoved).format("0 a");
     const avgLinesRemoved = refClass === "user" ? sessionSummary.averageLinesAdded : sessionSummary.globalAverageLinesRemoved;
     const linesRemovedAvgStr = numeral(avgLinesAdded).format("0 a");
     const linesRemovedTooltip = getPercentOfReferenceAvg(currLinesRemoved, avgLinesRemoved, linesRemovedAvgStr);
-    treeItems.push(this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(${linesRemovedAvgStr} avg)`, linesRemovedTooltip, "rocket.svg"));
+    treeItems.push(
+      this.getDescriptionButton(`Lines removed: ${linesRemoved}`, `(${linesRemovedAvgStr} avg)`, linesRemovedTooltip, "", "bolt-grey.svg")
+    );
 
     const currKeystrokes = sessionSummary.currentDayKeystrokes;
     const keystrokes = numeral(currKeystrokes).format("0 a");
     const avgKeystrokes = refClass === "user" ? sessionSummary.averageDailyKeystrokes : sessionSummary.globalAverageDailyKeystrokes;
     const keystrokesAvgStr = numeral(avgLinesAdded).format("0 a");
     const keystrokesTooltip = getPercentOfReferenceAvg(keystrokes, avgKeystrokes, keystrokesAvgStr);
-    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${keystrokesAvgStr} avg)`, keystrokesTooltip, "rocket.svg"));
+    treeItems.push(this.getDescriptionButton(`Keystrokes: ${keystrokes}`, `(${keystrokesAvgStr} avg)`, keystrokesTooltip, "", "bolt-grey.svg"));
 
     treeItems.push(this.getCodeTimeDashboardButton());
     treeItems.push(this.getViewProjectSummaryButton());
@@ -170,47 +172,49 @@ export class KpmProviderManager {
 
     const hasSlackAccess = hasSlackWorkspaces();
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "yin-yang.svg"));
+    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
     let fullScreenToggleLabel = "Enter full screen";
+    let fullScreenIcon = "expand.svg";
     if (this.showingFullScreen) {
       fullScreenToggleLabel = "Exit full screen";
+      fullScreenIcon = "compress.svg";
     }
-    treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", "fullscreen.svg"));
+    treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
 
     if (hasSlackAccess) {
       // slack status setter
       const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
-      treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "slack-new.svg"));
+      treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
       // pause/enable slack notification
       const slackDnDInfo = await getSlackDnDInfo();
       if (slackDnDInfo?.snooze_enabled) {
         const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
         // show the disable button
-        treeItems.push(this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "slack-new.svg"));
+        treeItems.push(
+          this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "notifications-on.svg")
+        );
       } else {
         // show the enable button
-        treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "slack-new.svg"));
+        treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "notifications-off.svg"));
       }
       if (slackPresence === "active") {
-        treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+        treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "presence.svg"));
       } else {
-        treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "slack-new.svg"));
+        treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "presence.svg"));
       }
     } else {
-      treeItems.push(
-        this.getActionButton("Connect to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack-new.svg")
-      );
+      treeItems.push(this.getActionButton("Connect to set your status and pause notifications", "", "codetime.connectSlackWorkspace", "slack.svg"));
     }
 
     if (isMac()) {
       const darkmode = await isDarkMode();
       if (darkmode) {
-        treeItems.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "light-mode.svg"));
+        treeItems.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
       } else {
-        treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "dark-mode.svg"));
+        treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
       }
 
-      treeItems.push(this.getActionButton("Toggle dock position", "", "codetime.toggleDocPosition", "settings.svg"));
+      treeItems.push(this.getActionButton("Toggle dock position", "", "codetime.toggleDocPosition", "position.svg"));
     }
 
     return treeItems;
@@ -283,23 +287,23 @@ export class KpmProviderManager {
     const signupText = authType ? LOGIN_LABEL : SIGN_UP_LABEL;
     const nameText = authType ? "log_in" : "sign_up";
     let label = `${signupText} with ${signUpAuthName}`;
-    let icon = "envelope.svg";
-    let iconName = "envelope";
+    let icon = "email.svg";
+    let iconName = "email";
     let command = "codetime.codeTimeLogin";
     const lcType = signUpAuthName.toLowerCase();
     if (lcType === "google") {
-      icon = "icons8-google.svg";
+      icon = "google.svg";
       command = "codetime.googleLogin";
       iconName = "google";
     } else if (lcType === "github") {
-      icon = "icons8-github.svg";
+      icon = "github.svg";
       command = "codetime.githubLogin";
       iconName = "github";
     } else if (lcType === "existing") {
       label = `${LOGIN_LABEL} with existing account`;
       icon = "paw.svg";
       command = "codetime.codeTimeExisting";
-      iconName = "envelope";
+      iconName = "paw";
     }
     const item: KpmItem = this.getActionButton(label, "", command, icon, "", iconColor);
     item.location = "ct_menu_tree";
@@ -378,7 +382,7 @@ export class KpmProviderManager {
 
   getFeedbackButton(): KpmItem {
     const feedbackButton: KpmItem = this.getActionButton(
-      "Submit on issue",
+      "Submit an issue",
       "Send us an email at cody@software.com",
       "codetime.submitOnIssue",
       "message.svg",
@@ -392,7 +396,7 @@ export class KpmProviderManager {
   }
 
   async getSlackIntegrationsTree(): Promise<KpmItem> {
-    const parentItem = this.buildMessageItem("Slack workspaces", "", "slack-new.svg", null, null);
+    const parentItem = this.buildMessageItem("Slack workspaces", "", "slack.svg", null, null);
     parentItem.contextValue = "slack_connection_parent";
     parentItem.children = [];
     const integrations = getIntegrations();
@@ -413,7 +417,7 @@ export class KpmProviderManager {
   getContributorReportButton(identifier: string): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = identifier;
-    item.icon = "icons8-github.svg";
+    item.icon = "github.svg";
     item.command = "codetime.generateContributorSummary";
     item.color = "white";
     item.value = identifier;
@@ -455,19 +459,19 @@ export class KpmProviderManager {
     let tooltip = name ? `Connected as ${name}` : "";
     if (authType === "google") {
       return {
-        icon: "icons8-google.svg",
+        icon: "google.svg",
         label: name,
         tooltip,
       };
     } else if (authType === "github") {
       return {
-        icon: "icons8-github.svg",
+        icon: "github.svg",
         label: name,
         tooltip,
       };
     } else if (authType) {
       return {
-        icon: "envelope.svg",
+        icon: "email.svg",
         label: name,
         tooltip,
       };
