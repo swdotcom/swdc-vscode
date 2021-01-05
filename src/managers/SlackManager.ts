@@ -28,7 +28,7 @@ let current_slack_presence;
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
-  return getIntegrations().filter((n) => n.name.toLowerCase() === "slack");
+  return getIntegrations().filter((n) => n.name.toLowerCase() === "slack" && n.status.toLowerCase() === "active");
 }
 
 export function hasSlackWorkspaces() {
@@ -477,7 +477,7 @@ async function getSlackAuth() {
     // find the slack auth
     for (const integration of user.integrations) {
       // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
-      if (integration.name.toLowerCase() === "slack") {
+      if (integration.name.toLowerCase() === "slack" && integration.status.toLowerCase() === "active") {
         // check if it exists
         const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
         if (!foundIntegration) {
