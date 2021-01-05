@@ -19,8 +19,8 @@ import { softwarePut } from "../http/HttpClient";
 const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
 
-let current_slack_status = "";
-let current_slack_presence;
+let current_slack_status: string = "";
+let current_slack_presence: string = "";
 
 // -------------------------------------------
 // - public methods
