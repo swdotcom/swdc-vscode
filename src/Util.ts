@@ -416,6 +416,10 @@ export function getCommitSummaryFile() {
   return getFile("CommitSummary.txt");
 }
 
+export function getGitEventFile() {
+  return getFile("gitEvents.json");
+}
+
 export function getSummaryInfoFile() {
   return getFile("SummaryInfo.txt");
 }
@@ -893,4 +897,8 @@ export function getPercentOfReferenceAvg(currentValue, referenceValue, reference
     }
   }
   return `${(quotient * 100).toFixed(0)}% of ${referenceValueDisplay}`;
+}
+
+export function noSpacesProjectDir(projectDir: string): string {
+  return projectDir.replace(/^\s+/g, "");
 }

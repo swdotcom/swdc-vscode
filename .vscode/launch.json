@@ -33,5 +33,15 @@
             ],
             "preLaunchTask": "npm: test-compile"
         }
+    ],
+    "compounds": [
+        {
+            "name": "Multiple Extensions",
+            // Launch 2 debugger extensions at once
+            "configurations": [
+                "Launch Extension",
+                "Launch Extension"
+            ]
+        }
     ]
 }

@@ -121,7 +121,7 @@ export class CommitChangeStats {
 export class DiffNumStats {
   file_name: string = "";
   insertions: number = 0;
-  modifications: number = 0;
+  deletions: number = 0;
 }
 
 // example: {type: "window", name: "close", timestamp: 1234,
