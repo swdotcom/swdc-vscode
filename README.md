@@ -24,81 +24,57 @@
 
 <p>Join a community of over 100,000 data-informed developers. Discover best code times, defend code time, see the impact of meetings, and improve work-life balance. Track and visualize all of your projects, or export your data to connect to your billing and timesheet tools.</p>
 
-## Features
-
-<p align="center" style="margin: 0 0">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features.png" alt="Code Time features" />
-</p>
+![Code Time features for VS Code](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features-2.3.25.png)
 
 ## Getting started
 
-**1. Create your web account**
+**1. Create your account**
 
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/login.png" alt="Code Time for VS Code login prompt" />
-</p>
+Creating an account helps you keep track of your coding data and gives you access to advanced data visualizations in the Code Time web app. Under **Account**, select **Sign up** to create a new account, or **Log in** to sign into an existing account. 
 
-The Code Time web app has data visualizations and settings you can customize, such as your work hours and office type for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.
+The Code Time web app also includes settings you can customize, such as your work hours and office type, for advanced time tracking. You can also connect Outlook or Google Calendar to visualize your code time vs. meetings in a single calendar.
 
-You can connect multiple code editors on multiple devices using the same email account.
+You can connect multiple code editors on multiple devices using the same email account. Your code time data will sync automatically across your devices. 
 
 **2. Track your progress during the day**
 
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/status-bar.png" alt="Code Time for VS Code status bar" />
-</p>
-
 Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your active code time exceeds your daily average on this day of the week.
 
-**3. Check out your coding activity**
+## Boost productivity
+
+![Code Time for VS Code flow automations](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/stay-in-flow.png)
+
+Flow automations make it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. 
+
+You can quickly toggle Zen mode, enter full screen, and hide your Dock. If you connect a Slack workspace, you can also pause notifications, update your profile status, and set your presence to *away*. 
+
+Clicking an active flow automation again will reverse the original action, so you can resume receiving notifications or reset your Slack status without leaving Visual Studio Code.  
+
+## Track development metrics
+
+![Code Time programming metrics](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/measure-progress.png)
+
+Your coding stats can help you understand how you are improving over time. You can also see how you stack up against the Software community. 
 
 To see an overview of your coding activity and project metrics, open the **Code Time panel** by clicking on the Code Time icon in your side bar.
 
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/sidebar.png" alt="Code Time for VS Code side bar" />
-</p>
+Your *code time* is the total time you have spent in your editor today. Your *active code time* is the time you spend actively writing and editing code in your editor or IDE. It captures periods of intense focus and flow. 
 
-In your **Daily Metrics**, your _code time_ is the total time you have spent in your editor today. Your _active code time_ is the total time you have been typing in your editor today. Each metric shows how you compare today to your average and the global average. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
+Each metric shows how you compare today to your average and the global average. Click **Today vs** to switch between them. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
 
-You can also see your top files today by KPM (keystrokes per minute), keystrokes, and code time.
+To view additional coding stats, you can generate a Code Time summary and dashboard. At the end of your first day, open Code Time in your side bar and click **Dashboard** to open your personalized dashboard in a new editor tab. Your dashboard summarizes your coding data—such as your code time by project, lines of code, and keystrokes per minute—today, yesterday, last week, and over the last 90 days. Click **Project summary** to see a breakdown of your stats by project. 
 
-If you have a Git repository open, **Contributors** provides a breakdown of contributors to the current open project and their latest commits.
+## Data visualizations
 
-**4. Generate your Code Time summary**
+![Code Time web app](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/visualize-everything.png)
 
-At the end of your first day, open Code Time in your side bar and click _View summary_ to open your dashboard in a new editor tab. Your dashboard summarizes your coding data—such as your code time by project, lines of code, and keystrokes per minute—today, yesterday, last week, and over the last 90 days.
+Click **More data at software.com** in the Code Time side bar or visit [app.software.com](https://app.software.com) to see more advanced data visualizations. You will need to create a free Software account to use the web app. In the Code Time dashboard, you will be able to track: 
 
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/dashboard.png" alt="Code Time for VS Code dashboard" />
-</p>
+**Active code time.** Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.
 
-## Web app data visualizations
+**Top projects.** See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
 
-Click "See advanced metrics" in the Code Time side bar or visit [app.software.com](https://app.software.com/) to see more data visualizations. Here are a few examples of what you will see in your dashboard after your first week.
-
-**Active code time**
-
-Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.
-
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/daily-active-code-time.png" alt="Code Time for VS Code daily active code time" />
-</p>
-
-**Top projects**
-
-See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
-
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/top-projects.png" alt="Code Time for VS Code top projects" />
-</p>
-
-**Work-life balance**
-
-Connect your Google Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
-
-<p align="center" style="margin: 0 10%">
-  <img src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/work-life-balance.png" alt="Code Time for VS Code meeting time and work life balance" />
-</p>
+**Work-life balance.** Connect your Google Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
 
 ## It’s safe, secure, and free
 
