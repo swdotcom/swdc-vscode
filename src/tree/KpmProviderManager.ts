@@ -268,7 +268,7 @@ export class KpmProviderManager {
   }
 
   getGeneralSignupButton() {
-    const item: KpmItem = this.getActionButton(SIGN_UP_LABEL, "", "codetime.signUpAccount", "signup.svg", "", "blue");
+    const item: KpmItem = this.getActionButton(SIGN_UP_LABEL, "", "codetime.signUpAccount", "paw.svg", "", "blue");
     return item;
   }
 
