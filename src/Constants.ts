@@ -12,6 +12,9 @@ export const YES_LABEL = "Yes";
 export const SIGN_UP_LABEL = "Sign up";
 export const DISCONNECT_LABEL = "Disconnect";
 
+// Directory where software data is stored
+export const SOFTWARE_DIRECTORY = ".software"
+
 // API ENDPOINT
 export const api_endpoint = "https://api.software.com";
 

@@ -1,6 +1,6 @@
 import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint } from "./Constants";
+import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint, SOFTWARE_DIRECTORY } from "./Constants";
 import { refetchUserStatusLazily, getToggleFileEventLoggingState } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
@@ -440,9 +440,9 @@ export function getSoftwareDir(autoCreate = true) {
   const homedir = os.homedir();
   let softwareDataDir = homedir;
   if (isWindows()) {
-    softwareDataDir += "\\.software";
+    softwareDataDir += `\\${SOFTWARE_DIRECTORY}`;
   } else {
-    softwareDataDir += "/.software";
+    softwareDataDir += `/${SOFTWARE_DIRECTORY}`;
   }
 
   if (autoCreate && !fs.existsSync(softwareDataDir)) {
