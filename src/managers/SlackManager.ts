@@ -225,17 +225,22 @@ export async function setProfileStatus() {
   const integrations = getSlackWorkspaces();
   // example:
   // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
+  let profileStatusUpdated = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
     await web.users.profile
       .set({ profile: status })
       .then(() => {
-        window.showInformationMessage(`Slack profile status updated`);
-        commands.executeCommand("codetime.refreshFlowTree");
+        profileStatusUpdated = true;
       })
       .catch((e) => {
         console.error("error setting profile status: ", e.message);
       });
+  }
+
+  if (profileStatusUpdated) {
+    window.showInformationMessage(`Slack profile status updated`);
+    commands.executeCommand("codetime.refreshFlowTree");
   }
 }
 
@@ -293,17 +298,22 @@ export async function toggleSlackPresence() {
   const integrations = getSlackWorkspaces();
   // presence val can be either: auto or away
   const presenceVal = current_slack_presence === "active" ? "away" : "auto";
+  let presenceUpdated = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
     await web.users
       .setPresence({ presence: presenceVal })
       .then(() => {
-        window.showInformationMessage(`Slack presence updated`);
-        commands.executeCommand("codetime.refreshFlowTree");
+        presenceUpdated = true;
       })
       .catch((e) => {
         console.error("error updating slack presence: ", e.message);
       });
+  }
+
+  if (presenceUpdated) {
+    window.showInformationMessage(`Slack presence updated`);
+    commands.executeCommand("codetime.refreshFlowTree");
   }
 }
 
