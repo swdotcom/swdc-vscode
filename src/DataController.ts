@@ -41,9 +41,9 @@ export function getToggleFileEventLoggingState() {
   return toggleFileEventLogging;
 }
 
-export async function getUserRegistrationState() {
+export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
-  const auth_callback_state = getAuthCallbackState();
+  const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
   const authType = getItem("authType");
 
   const api = "/users/plugin/state";
@@ -70,11 +70,14 @@ export async function getUserRegistrationState() {
     const user = resp.data.user;
     const registered = user.registered;
 
-    if (user.plugin_jwt) {
-      setItem("jwt", user.plugin_jwt);
-    }
-    if (registered === 1) {
-      setItem("name", user.email);
+    // update the name and jwt if we're authenticating
+    if (!isIntegration) {
+      if (user.plugin_jwt) {
+        setItem("jwt", user.plugin_jwt);
+      }
+      if (registered === 1) {
+        setItem("name", user.email);
+      }
     }
 
     const currentAuthType = getItem("authType");

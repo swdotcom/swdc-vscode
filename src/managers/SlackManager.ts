@@ -471,7 +471,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  */
 async function getSlackAuth() {
   let foundNewIntegration = false;
-  const { user } = await getUserRegistrationState();
+  const { user } = await getUserRegistrationState(true /*isIntegration*/);
   if (user && user.integrations) {
     const currentIntegrations = getSlackWorkspaces();
     // find the slack auth

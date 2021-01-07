@@ -254,9 +254,9 @@ export function getPluginUuid() {
   return plugin_uuid;
 }
 
-export function getAuthCallbackState() {
+export function getAuthCallbackState(autoCreate = true) {
   let auth_callback_state = fileIt.getJsonValue(getDeviceFile(), "auth_callback_state");
-  if (!auth_callback_state) {
+  if (!auth_callback_state && autoCreate) {
     auth_callback_state = uuidv4();
     setAuthCallbackState(auth_callback_state);
   }
