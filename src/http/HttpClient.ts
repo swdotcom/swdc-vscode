@@ -7,7 +7,7 @@ import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds 
 // build the axios api base url
 const beApi = axios.create({
   baseURL: `${api_endpoint}`,
-  timeout: 15000,
+  timeout: 30000
 });
 
 beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();

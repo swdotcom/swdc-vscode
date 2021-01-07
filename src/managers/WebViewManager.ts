@@ -1,6 +1,7 @@
-import { ViewColumn, WebviewPanel, window } from "vscode";
+import { ViewColumn, WebviewPanel, window, ProgressLocation } from "vscode";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { getItem } from "../Util";
+import { ProgressManager } from "../managers/ProgressManager";
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = "";
@@ -15,10 +16,18 @@ export async function showReportGenerator() {
 }
 
 export async function showDashboard() {
-  initiatePanel("Dashboard", "dasboard");
-  const html = await getDashboardHtml();
-  currentPanel.webview.html = html;
-  currentPanel.reveal(ViewColumn.One);
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: "Loading dashboard...",
+      cancellable: false,
+    }, async () => {
+      initiatePanel("Dashboard", "dasboard");
+      const html = await getDashboardHtml();
+      currentPanel.webview.html = html;
+      currentPanel.reveal(ViewColumn.One);
+    }
+  )
 }
 
 function initiatePanel(title: string, viewType: string) {
