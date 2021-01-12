@@ -16,10 +16,10 @@ export const DISCONNECT_LABEL = "Disconnect";
 export const SOFTWARE_DIRECTORY = ".software";
 
 // API ENDPOINT
-export const api_endpoint = "http://localhost:5005"
+export const api_endpoint = "https://stagingapi.software.com"
 
 // DASHBOARD URL
-export const launch_url = "http://localhost:3000"
+export const launch_url = "https://staging.software.com"
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
 

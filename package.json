@@ -51,10 +51,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "codetime.codeTimeMetrics",
-        "title": "Code Time: View summary"
-      },
-      {
         "command": "codetime.generateProjectSummary",
         "title": "Code Time: View project summary"
       },
