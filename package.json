@@ -96,17 +96,45 @@
         }
       }
     ],
-    "configuration": {
-      "type": "object",
-      "title": "Code Time",
-      "properties": {
-        "toggleFileEventLogging": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable file event logging"
+    "configuration": [
+      {
+        "type": "object",
+        "title": "Code Time",
+        "properties": {
+          "slackAwayStatus": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically set my status away when I'm in flow"
+          },
+          "slackAwayStatusText": {
+            "type": "string",
+            "default": "CodeTime!",
+            "description": "Customize your away status in Slack"
+          },
+          "pauseSlackNotifications": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically pause Slack notifications when I'm in flow"
+          },
+          "zenMode": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically toggle VS Code Zen Mode when I'm in flow"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "title": "Code Time Debug",
+        "properties": {
+          "enableFileEventLogging": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable event debug logging"
+          }
         }
       }
-    },
+    ],
     "viewsContainers": {
       "activitybar": [
         {
