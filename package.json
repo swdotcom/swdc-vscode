@@ -122,17 +122,6 @@
             "description": "Automatically toggle VS Code Zen Mode when I'm in flow"
           }
         }
-      },
-      {
-        "type": "object",
-        "title": "Code Time Debug",
-        "properties": {
-          "enableFileEventLogging": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable event debug logging"
-          }
-        }
       }
     ],
     "viewsContainers": {

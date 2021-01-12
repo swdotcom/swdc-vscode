@@ -1,7 +1,7 @@
 import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint, SOFTWARE_DIRECTORY } from "./Constants";
-import { refetchUserStatusLazily, getToggleFileEventLoggingState } from "./DataController";
+import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS } from "./Constants";
+import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
@@ -509,8 +509,7 @@ export function getExtensionName() {
 }
 
 export function logEvent(message) {
-  const logEvents = getToggleFileEventLoggingState();
-  if (logEvents) {
+  if (LOG_FILE_EVENTS) {
     console.log(`${getExtensionName()}: ${message}`);
   }
 }

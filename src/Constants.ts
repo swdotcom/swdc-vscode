@@ -13,7 +13,7 @@ export const SIGN_UP_LABEL = "Sign up";
 export const DISCONNECT_LABEL = "Disconnect";
 
 // Directory where software data is stored
-export const SOFTWARE_DIRECTORY = ".software"
+export const SOFTWARE_DIRECTORY = ".software";
 
 // API ENDPOINT
 export const api_endpoint = "https://api.software.com";
@@ -22,3 +22,5 @@ export const api_endpoint = "https://api.software.com";
 export const launch_url = "https://app.software.com";
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
+
+export const LOG_FILE_EVENTS = false;
