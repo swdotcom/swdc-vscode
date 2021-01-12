@@ -31,15 +31,7 @@ import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
-let toggleFileEventLogging = null;
 let userFetchTimeout = null;
-
-export function getToggleFileEventLoggingState() {
-  if (toggleFileEventLogging === null) {
-    toggleFileEventLogging = workspace.getConfiguration().get("toggleFileEventLogging");
-  }
-  return toggleFileEventLogging;
-}
 
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
@@ -165,8 +157,6 @@ async function sendPreferencesUpdate(userId, userPrefs) {
 }
 
 export async function updatePreferences() {
-  toggleFileEventLogging = workspace.getConfiguration().get("toggleFileEventLogging");
-
   // get the user's preferences and update them if they don't match what we have
   let jwt = getItem("jwt");
   if (jwt) {

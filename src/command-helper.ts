@@ -26,6 +26,7 @@ import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
+import { enableFlow, pauseFlow } from "./managers/FlowManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -449,6 +450,18 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.toggleSlackPresence", () => {
       toggleSlackPresence();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.enableFlow", () => {
+      enableFlow();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.pauseFlow", () => {
+      pauseFlow();
     })
   );
 

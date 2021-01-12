@@ -21,6 +21,7 @@ import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
+import { isInFlowMode } from "../managers/FlowManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -126,7 +127,11 @@ export class KpmProviderManager {
     }
 
     const wallClktimeStr = humanizeMinutes(codeTimeSummary.codeTimeMinutes);
-    treeItems.push(this.getActionButton(`Code time: ${wallClktimeStr}`, "", "", "bolt-grey.svg"));
+    const avgCodeTimeMinutes = refClass === "user" ? sessionSummary.averageDailyCodeTimeMinutes : sessionSummary.globalAverageDailyCodeTimeMinutes;
+    const codeTimeAvgStr = humanizeMinutes(avgCodeTimeMinutes);
+    const codeTimeTooltip = getPercentOfReferenceAvg(codeTimeSummary.codeTimeMinutes, avgCodeTimeMinutes, codeTimeAvgStr);
+    const codeTimeIcon = codeTimeSummary.codeTimeMinutes > sessionSummary.averageDailyCodeTimeMinutes ? "bolt.svg" : "bolt-grey.svg";
+    treeItems.push(this.getDescriptionButton(`Code time: ${wallClktimeStr}`, `(${codeTimeAvgStr} avg)`, codeTimeTooltip, "", codeTimeIcon));
 
     const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
     const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
@@ -172,6 +177,14 @@ export class KpmProviderManager {
 
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
+    const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
+
+    const inCodeFlow = isInFlowMode(slackDnDInfo);
+    if (!inCodeFlow) {
+      treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", ""));
+    } else {
+      treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", ""));
+    }
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
 
@@ -184,10 +197,9 @@ export class KpmProviderManager {
     treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
 
     // slack status setter
-    const [slackStatus, slackPresence] = await Promise.all([getSlackStatus(), getSlackPresence()]);
+
     treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
     // pause/enable slack notification
-    const slackDnDInfo = await getSlackDnDInfo();
     if (slackDnDInfo?.snooze_enabled) {
       const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
       // show the disable button

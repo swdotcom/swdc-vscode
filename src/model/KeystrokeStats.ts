@@ -2,7 +2,6 @@ import { getOs, getVersion, getPluginId, getNowTimes } from "../Util";
 import { FileChangeInfo } from "./models";
 import Project from "./Project";
 import { PluginDataManager } from "../managers/PluginDataManager";
-import { window } from "vscode";
 
 export default class KeystrokeStats {
   public source: {};
