@@ -181,9 +181,9 @@ export class KpmProviderManager {
 
     const inCodeFlow = isInFlowMode(slackDnDInfo);
     if (!inCodeFlow) {
-      treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", ""));
+      treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", ""));
+      treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", "paw.svg"));
     }
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
