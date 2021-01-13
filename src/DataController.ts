@@ -141,8 +141,16 @@ export async function initializePreferences() {
   }
 
   // update values config
-  setItem("sessionThresholdInSec", sessionThresholdInSec);
-  setItem("disableGitData", disableGitData);
+  setPreference("sessionThresholdInSec", sessionThresholdInSec);
+  setPreference("disableGitData", disableGitData);
+}
+
+export function setPreference(preference: string, value) {
+  return setItem(preference, value);
+}
+
+export function getPreference(preference: string) {
+  return getItem(preference);
 }
 
 async function sendPreferencesUpdate(userId, userPrefs) {

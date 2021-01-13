@@ -24,6 +24,7 @@ import {
   commitAlreadyOnRemote,
   isMergeCommit
 } from '../repo/GitUtil';
+import { getPreference } from "../DataController";
 import { CacheManager } from "../cache/CacheManager";
 import { StatusBarAlignment } from "vscode";
 
@@ -236,6 +237,8 @@ export class TrackerManager {
   }
 
   private async sendGitEvent(gitEventName: string, projectParams, eventData?: any) {
+    if (getPreference("disableGitData") === true) return;
+
     const repoParams = await this.getRepoParams(projectParams.project_directory);
     const gitEvent = {
       git_event_type: gitEventName,

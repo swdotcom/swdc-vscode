@@ -14,6 +14,7 @@ import { FileChangeInfo } from "../model/models";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
+import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
 const fs = require("fs");
 
@@ -167,6 +168,8 @@ export class KpmManager {
   }
 
   private async _onCommitHandler(event: Uri) {
+    if (getPreference("disableGitData") === true) return;
+
     // Branches with naming style of "feature/fix_the_thing" will fire an
     // event when the /feature directory is created. Check if file.
     const stat = fs.statSync(event.path);
