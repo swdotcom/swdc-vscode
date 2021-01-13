@@ -18,7 +18,7 @@ import {
   connectSlackWorkspace,
   disconnectSlackAuth,
   shareSlackMessage,
-  setProfileStatus,
+  updateSlackProfileStatus,
   toggleSlackPresence,
   disconnectSlackWorkspace,
 } from "./managers/SlackManager";
@@ -392,7 +392,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.updateProfileStatus", () => {
-      setProfileStatus();
+      updateSlackProfileStatus();
     })
   );
 

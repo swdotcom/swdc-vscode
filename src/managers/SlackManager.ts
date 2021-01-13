@@ -197,7 +197,7 @@ export async function getSlackDnDInfo() {
 }
 
 // set the slack profile status
-export async function setProfileStatus() {
+export async function updateSlackProfileStatus() {
   const registered = await checkRegistration();
   if (!registered) {
     return;
@@ -304,7 +304,7 @@ export async function toggleSlackPresence() {
 
   // presence val can be either: auto or away
   const presenceVal = current_slack_presence === "active" ? "away" : "auto";
-  let presenceUpdated = await setSlackStatusPresence(presenceVal);
+  let presenceUpdated = await updateSlackPresence(presenceVal);
 
   if (presenceUpdated) {
     window.showInformationMessage(`Slack presence updated`);
@@ -312,7 +312,7 @@ export async function toggleSlackPresence() {
   }
 }
 
-export async function setSlackStatusPresence(presence) {
+export async function updateSlackPresence(presence: string) {
   let presenceUpdated = false;
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {

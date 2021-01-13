@@ -7,7 +7,7 @@ import {
   checkSlackConnection,
   pauseSlackNotifications,
   setSlackStatus,
-  setSlackStatusPresence,
+  updateSlackPresence,
   enableSlackNotifications,
 } from "./SlackManager";
 import { KpmProviderManager } from "../tree/KpmProviderManager";
@@ -26,7 +26,7 @@ export async function enableFlow() {
 
   // set slack status to away
   if (configSettings.slackAwayStatus) {
-    await setSlackStatusPresence("away");
+    await updateSlackPresence("away");
   }
 
   // set the status text to what the user set in the settings
@@ -67,7 +67,7 @@ export async function pauseFlow() {
   const configSettings: ConfigSettings = getConfigSettings();
 
   // set slack status to away
-  await setSlackStatusPresence("auto");
+  await updateSlackPresence("auto");
 
   // clear the status
   const status = {
