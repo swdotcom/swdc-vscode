@@ -1,6 +1,5 @@
-import { commands, window } from "vscode";
+import { commands } from "vscode";
 import ConfigSettings from "../model/ConfigSettings";
-import { setItem } from "../Util";
 import { getConfigSettings } from "./ConfigManager";
 import {
   checkRegistration,

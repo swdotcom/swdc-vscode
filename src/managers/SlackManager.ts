@@ -120,6 +120,11 @@ export async function pauseSlackNotifications() {
     return;
   }
 
+  const connected = checkSlackConnection(true);
+  if (!connected) {
+    return;
+  }
+
   const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
@@ -147,6 +152,11 @@ export async function enableSlackNotifications() {
     return;
   }
 
+  const connected = checkSlackConnection(true);
+  if (!connected) {
+    return;
+  }
+
   const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
@@ -169,6 +179,10 @@ export async function enableSlackNotifications() {
 export async function shareSlackMessage(message) {
   const registered = await checkRegistration();
   if (!registered) {
+    return;
+  }
+  const connected = checkSlackConnection(true);
+  if (!connected) {
     return;
   }
   const { selectedChannel, access_token } = await showSlackChannelMenu();
@@ -200,6 +214,11 @@ export async function getSlackDnDInfo() {
 export async function updateSlackProfileStatus() {
   const registered = await checkRegistration();
   if (!registered) {
+    return;
+  }
+
+  const connected = checkSlackConnection(true);
+  if (!connected) {
     return;
   }
 
@@ -257,6 +276,7 @@ export async function getSlackStatus() {
   if (!registered) {
     return null;
   }
+
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
@@ -299,6 +319,11 @@ export async function getSlackPresence() {
 export async function toggleSlackPresence() {
   const registered = await checkRegistration();
   if (!registered) {
+    return;
+  }
+
+  const connected = checkSlackConnection(true);
+  if (!connected) {
     return;
   }
 
