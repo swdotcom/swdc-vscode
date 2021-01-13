@@ -6,6 +6,6 @@ export function getConfigSettings(): ConfigSettings {
   settings.pauseSlackNotifications = workspace.getConfiguration().get("pauseSlackNotifications");
   settings.slackAwayStatus = workspace.getConfiguration().get("slackAwayStatus");
   settings.slackAwayStatusText = workspace.getConfiguration().get("slackAwayStatusText");
-  settings.zenMode = workspace.getConfiguration().get("zenMode");
+  settings.screenMode = workspace.getConfiguration().get("screenMode");
   return settings;
 }

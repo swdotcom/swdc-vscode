@@ -44,8 +44,10 @@ export async function enableFlow() {
   }
 
   // set to zen mode
-  if (configSettings.zenMode) {
+  if (configSettings.screenMode.includes("Full Screen")) {
     commands.executeCommand("workbench.action.toggleFullScreen");
+  } else if (configSettings.screenMode.includes("Zen")) {
+    commands.executeCommand("workbench.action.toggleZenMode");
   }
 
   KpmProviderManager.getInstance().showingFullScreen = !KpmProviderManager.getInstance().showingFullScreen;
@@ -87,7 +89,7 @@ export function isInFlowMode(slackDnDInfo) {
   const configSettings: ConfigSettings = getConfigSettings();
   if (slackDnDInfo?.snooze_enabled && configSettings.pauseSlackNotifications) {
     return true;
-  } else if (KpmProviderManager.getInstance().showingFullScreen && configSettings.zenMode) {
+  } else if (KpmProviderManager.getInstance().showingFullScreen) {
     return true;
   }
   return false;

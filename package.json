@@ -116,10 +116,11 @@
             "default": true,
             "description": "Automatically pause Slack notifications when I'm in flow"
           },
-          "zenMode": {
-            "type": "boolean",
-            "default": true,
-            "description": "Automatically toggle VS Code Zen Mode when I'm in flow"
+          "screenMode": {
+            "type": "string",
+            "enum": ["Zen", "Full Screen", "None"],
+            "default": "Zen",
+            "description": "Automatically toggle a selected screen mode when I'm in flow"
           }
         }
       }
