@@ -456,7 +456,7 @@ export class KpmProviderManager {
       "purple"
     );
     item.location = "ct_menu_tree";
-    item.name = "ct_summary_btn";
+    item.name = "ct_dashboard_btn";
     item.interactionIcon = "guage";
     return item;
   }

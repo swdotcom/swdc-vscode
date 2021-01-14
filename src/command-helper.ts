@@ -306,7 +306,7 @@ export function createCommands(
         item = kpmProviderMgr.getCodeTimeDashboardButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_summary_cmd";
+        item.name = "ct_dashboard_cmd";
         item.interactionIcon = null;
         item.color = null;
       }
