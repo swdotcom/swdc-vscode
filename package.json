@@ -119,7 +119,7 @@
           "screenMode": {
             "type": "string",
             "enum": ["Zen", "Full Screen", "None"],
-            "default": "Zen",
+            "default": "Full Screen",
             "description": "Automatically toggle a selected screen mode when I'm in flow"
           }
         }
