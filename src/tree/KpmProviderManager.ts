@@ -22,6 +22,7 @@ import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces }
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 import { isInFlowMode } from "../managers/FlowManager";
+import { isInFullScreenMode } from "../managers/ScreenManager";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -32,8 +33,6 @@ export class KpmProviderManager {
   private static instance: KpmProviderManager;
 
   private kpmTreeOpen: boolean = false;
-
-  public showingFullScreen: boolean = false;
 
   constructor() {}
 
@@ -179,8 +178,7 @@ export class KpmProviderManager {
     const treeItems: KpmItem[] = [];
     const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
 
-    const inCodeFlow = isInFlowMode(slackDnDInfo);
-    if (!inCodeFlow) {
+    if (!isInFlowMode()) {
       treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", "paw.svg"));
     } else {
       treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", "paw.svg"));
@@ -190,7 +188,7 @@ export class KpmProviderManager {
 
     let fullScreenToggleLabel = "Enter full screen";
     let fullScreenIcon = "expand.svg";
-    if (this.showingFullScreen) {
+    if (isInFullScreenMode()) {
       fullScreenToggleLabel = "Exit full screen";
       fullScreenIcon = "compress.svg";
     }

@@ -18,7 +18,7 @@ import {
   connectSlackWorkspace,
   disconnectSlackAuth,
   shareSlackMessage,
-  setProfileStatus,
+  updateSlackProfileStatus,
   toggleSlackPresence,
   disconnectSlackWorkspace,
 } from "./managers/SlackManager";
@@ -27,6 +27,7 @@ import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTi
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
+import { toggleFullScreenMode, toggleZenMode } from "./managers/ScreenManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -392,7 +393,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.updateProfileStatus", () => {
-      setProfileStatus();
+      updateSlackProfileStatus();
     })
   );
 
@@ -410,20 +411,14 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.toggleZenMode", () => {
-      // other display tunables
-      // workbench.action.toggleFullScreen full screen with the side bar
-      // workbench.action.toggleSidebarVisibility
-      // workbench.view.explorer
-      // workbench.action.toggleActivityBarVisibility
-      // workbench.action.exitZenMode
-      commands.executeCommand("workbench.action.toggleZenMode");
+      toggleZenMode();
+      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 
   cmds.push(
     commands.registerCommand("codetime.toggleFullScreen", () => {
-      KpmProviderManager.getInstance().showingFullScreen = !KpmProviderManager.getInstance().showingFullScreen;
-      commands.executeCommand("workbench.action.toggleFullScreen");
+      toggleFullScreenMode();
       commands.executeCommand("codetime.refreshFlowTree");
     })
   );

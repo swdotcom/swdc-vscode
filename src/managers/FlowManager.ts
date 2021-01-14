@@ -1,16 +1,17 @@
 import { commands, window } from "vscode";
 import ConfigSettings from "../model/ConfigSettings";
-import { setItem } from "../Util";
 import { getConfigSettings } from "./ConfigManager";
 import {
   checkRegistration,
   checkSlackConnection,
   pauseSlackNotifications,
   setSlackStatus,
-  setSlackStatusPresence,
+  updateSlackPresence,
   enableSlackNotifications,
 } from "./SlackManager";
-import { KpmProviderManager } from "../tree/KpmProviderManager";
+import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./ScreenManager";
+
+let flowEnabled = false;
 
 export async function enableFlow() {
   const registered = checkRegistration(true);
@@ -22,11 +23,13 @@ export async function enableFlow() {
     return;
   }
 
+  window.showInformationMessage("Enabling code flow");
+
   const configSettings: ConfigSettings = getConfigSettings();
 
   // set slack status to away
   if (configSettings.slackAwayStatus) {
-    await setSlackStatusPresence("away");
+    await updateSlackPresence("away");
   }
 
   // set the status text to what the user set in the settings
@@ -45,12 +48,13 @@ export async function enableFlow() {
 
   // set to zen mode
   if (configSettings.screenMode.includes("Full Screen")) {
-    commands.executeCommand("workbench.action.toggleFullScreen");
+    showFullScreenMode();
   } else if (configSettings.screenMode.includes("Zen")) {
-    commands.executeCommand("workbench.action.toggleZenMode");
+    showZenMode();
   }
 
-  KpmProviderManager.getInstance().showingFullScreen = !KpmProviderManager.getInstance().showingFullScreen;
+  flowEnabled = true;
+
   commands.executeCommand("codetime.refreshFlowTree");
 }
 
@@ -64,10 +68,12 @@ export async function pauseFlow() {
     return;
   }
 
+  window.showInformationMessage("Turning off code flow");
+
   const configSettings: ConfigSettings = getConfigSettings();
 
   // set slack status to away
-  await setSlackStatusPresence("auto");
+  await updateSlackPresence("auto");
 
   // clear the status
   const status = {
@@ -81,16 +87,13 @@ export async function pauseFlow() {
     await enableSlackNotifications();
   }
 
-  KpmProviderManager.getInstance().showingFullScreen = !KpmProviderManager.getInstance().showingFullScreen;
-  commands.executeCommand("workbench.action.toggleFullScreen");
+  showNormalScreenMode();
+
+  flowEnabled = false;
+
+  commands.executeCommand("codetime.refreshFlowTree");
 }
 
-export function isInFlowMode(slackDnDInfo) {
-  const configSettings: ConfigSettings = getConfigSettings();
-  if (slackDnDInfo?.snooze_enabled && configSettings.pauseSlackNotifications) {
-    return true;
-  } else if (KpmProviderManager.getInstance().showingFullScreen) {
-    return true;
-  }
-  return false;
+export function isInFlowMode() {
+  return flowEnabled;
 }

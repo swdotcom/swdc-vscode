@@ -120,6 +120,11 @@ export async function pauseSlackNotifications() {
     return;
   }
 
+  const connected = checkSlackConnection(true);
+  if (!connected) {
+    return;
+  }
+
   const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
@@ -147,6 +152,11 @@ export async function enableSlackNotifications() {
     return;
   }
 
+  const connected = checkSlackConnection(true);
+  if (!connected) {
+    return;
+  }
+
   const integrations = getSlackWorkspaces();
   let enabled = false;
   for await (const integration of integrations) {
@@ -169,6 +179,10 @@ export async function enableSlackNotifications() {
 export async function shareSlackMessage(message) {
   const registered = await checkRegistration();
   if (!registered) {
+    return;
+  }
+  const connected = checkSlackConnection(true);
+  if (!connected) {
     return;
   }
   const { selectedChannel, access_token } = await showSlackChannelMenu();
@@ -197,9 +211,14 @@ export async function getSlackDnDInfo() {
 }
 
 // set the slack profile status
-export async function setProfileStatus() {
+export async function updateSlackProfileStatus() {
   const registered = await checkRegistration();
   if (!registered) {
+    return;
+  }
+
+  const connected = checkSlackConnection(true);
+  if (!connected) {
     return;
   }
 
@@ -257,6 +276,7 @@ export async function getSlackStatus() {
   if (!registered) {
     return null;
   }
+
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
@@ -302,9 +322,14 @@ export async function toggleSlackPresence() {
     return;
   }
 
+  const connected = checkSlackConnection(true);
+  if (!connected) {
+    return;
+  }
+
   // presence val can be either: auto or away
   const presenceVal = current_slack_presence === "active" ? "away" : "auto";
-  let presenceUpdated = await setSlackStatusPresence(presenceVal);
+  let presenceUpdated = await updateSlackPresence(presenceVal);
 
   if (presenceUpdated) {
     window.showInformationMessage(`Slack presence updated`);
@@ -312,7 +337,7 @@ export async function toggleSlackPresence() {
   }
 }
 
-export async function setSlackStatusPresence(presence) {
+export async function updateSlackPresence(presence: string) {
   let presenceUpdated = false;
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
