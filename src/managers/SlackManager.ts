@@ -608,7 +608,7 @@ export async function checkRegistration(showSignup = true) {
   return true;
 }
 
-export async function checkSlackConnection(showConnect = true) {
+export function checkSlackConnection(showConnect = true) {
   if (!hasSlackWorkspaces()) {
     if (showConnect) {
       window
