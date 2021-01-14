@@ -162,8 +162,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // delete the data.json if it exists
   deleteFile(getSoftwareDataStoreFile());
-
-  commands.executeCommand("workbench.action.openSnippets");
 }
 
 // add the interval jobs
