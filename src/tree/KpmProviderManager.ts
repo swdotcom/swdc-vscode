@@ -182,9 +182,9 @@ export class KpmProviderManager {
 
     const inFlowSettingsTooltip = getConfigSettingsTooltip();
     if (!isInFlowMode()) {
-      treeItems.push(this.getActionButton("Enable flow", `Enable your code flow\n${inFlowSettingsTooltip}`, "codetime.enableFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Enable flow", `Enable flow: ${inFlowSettingsTooltip}`, "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow", `Turn off your code flow\n${inFlowSettingsTooltip}`, "codetime.pauseFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Pause flow", `Turn off flow: ${inFlowSettingsTooltip}`, "codetime.pauseFlow", "paw.svg"));
     }
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));

@@ -14,19 +14,19 @@ import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./ScreenM
 let flowEnabled = false;
 
 export function getConfigSettingsTooltip() {
+  const preferences = [];
   const configSettings: ConfigSettings = getConfigSettings();
-
-  // Screen mode, Pause Slack notifications, Slack away status
-  // (Settings => screen mode: Full screen, Pause notifications: on, Slack away: on using 'CodeTime!')
-  let slackAwayStatusText = configSettings.slackAwayStatus ? "on" : "off";
-  if (configSettings.slackAwayStatusText) {
-    slackAwayStatusText += ` using '${configSettings.slackAwayStatusText}'`;
+  if (configSettings.screenMode !== "None") {
+    preferences.push(configSettings.screenMode.toLowerCase());
+  }
+  if (configSettings.pauseSlackNotifications) {
+    preferences.push("pause notifications");
+  }
+  if (configSettings.slackAwayStatus) {
+    preferences.push("set Slack presence to away");
   }
 
-  const pauseNotificationText = configSettings.pauseSlackNotifications ? "on" : "off";
-  const screenModeText = configSettings.screenMode;
-
-  return `Screen mode: ${screenModeText}\nPause notifications: ${pauseNotificationText}\nSlack away: ${slackAwayStatusText}`;
+  return preferences.length ? preferences.join(", ") : "";
 }
 
 export async function enableFlow() {
