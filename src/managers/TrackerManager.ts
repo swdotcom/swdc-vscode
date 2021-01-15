@@ -7,7 +7,6 @@ import {
   getVersion,
   getWorkspaceFolders,
   getGitEventFile,
-  logIt
 } from "../Util";
 import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
@@ -248,8 +247,6 @@ export class TrackerManager {
       ...projectParams,
       ...repoParams,
     };
-    logIt(`Tracking ${gitEventName}`)
-    logIt(eventData);
     // send the event
     swdcTracker.trackGitEvent(gitEvent);
   }
