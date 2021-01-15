@@ -478,31 +478,3 @@ function createStartEndRangeByType(type = "lastWeek") {
     rangeEnd: endOf.format("MMM Do, YYYY"),
   };
 }
-
-export async function writeCodeTimeMetricsDashboard() {
-  const summaryInfoFile = getSummaryInfoFile();
-
-  // write the code time metrics summary to the summaryInfo file
-  let api = `/dashboard?linux=${isLinux()}&showToday=true`;
-  const result = await softwareGet(api, getItem("jwt"));
-
-  if (isResponseOk(result)) {
-    // get the string content out
-    const content = result.data;
-    fileIt.writeContentFileSync(summaryInfoFile, content);
-  }
-
-  // create the header
-  let dashboardContent = "";
-
-  // get the summary info we just made a call for and add it to the dashboard content
-  const summaryContent = fileIt.readContentFileSync(summaryInfoFile);
-  if (summaryContent) {
-    // create the dashboard file
-    dashboardContent += summaryContent;
-  }
-
-  // now write it all out to the dashboard file
-  const dashboardFile = getDashboardFile();
-  fileIt.writeContentFileSync(dashboardFile, dashboardContent);
-}

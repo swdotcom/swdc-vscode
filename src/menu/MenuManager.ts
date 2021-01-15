@@ -1,23 +1,16 @@
 import {
   window,
-  workspace,
   QuickPickOptions,
-  ViewColumn,
   commands,
-  ProgressLocation,
 } from "vscode";
 import {
   launchWebUrl,
-  getDashboardFile,
   launchLogin,
   isStatusBarTextVisible,
   getItem,
 } from "../Util";
-import {
-  writeCodeTimeMetricsDashboard
-} from "../DataController";
 import { launch_url, LOGIN_LABEL } from "../Constants";
-import { ProgressManager } from "../managers/ProgressManager";
+import { showDashboard } from "../managers/WebViewManager";
 
 /**
  * Pass in the following array of objects
@@ -69,7 +62,7 @@ export async function showMenuOptions() {
     label: "Generate dashboard",
     detail: "View your latest coding metrics right here in your editor",
     url: null,
-    cb: displayCodeTimeMetricsDashboard,
+    cb: showDashboard,
     eventDescription: "PaletteMenuLaunchDashboard",
   });
 
@@ -126,30 +119,4 @@ export async function showMenuOptions() {
 export async function launchWebDashboardView() {
   let webUrl = await buildWebDashboardUrl();
   launchWebUrl(`${webUrl}/login`);
-}
-
-export async function displayCodeTimeMetricsDashboard() {
-  // 1st write the code time metrics dashboard file
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: "Loading summary...",
-      cancellable: false,
-    },
-    async (progress, token) => {
-      const progressMgr: ProgressManager = ProgressManager.getInstance();
-      progressMgr.doneWriting = false;
-      progressMgr.reportProgress(progress, 20);
-      await writeCodeTimeMetricsDashboard();
-      progressMgr.doneWriting = true;
-      const filePath = getDashboardFile();
-      workspace.openTextDocument(filePath).then((doc) => {
-        // only focus if it's not already open
-        window.showTextDocument(doc, ViewColumn.One, false).then((e) => {
-          // done
-        });
-        progress.report({ increment: 100 });
-      });
-    }
-  );
 }

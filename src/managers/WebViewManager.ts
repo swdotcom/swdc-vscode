@@ -1,4 +1,6 @@
-import { ViewColumn, WebviewPanel, window } from "vscode";
+import { ViewColumn, WebviewPanel, window, ProgressLocation } from "vscode";
+import { softwareGet, isResponseOk } from "../http/HttpClient";
+import { getItem } from "../Util";
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = "";
@@ -10,6 +12,21 @@ export async function showReportGenerator() {
 
   currentPanel.webview.html = html;
   currentPanel.reveal(ViewColumn.One);
+}
+
+export async function showDashboard() {
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: "Loading dashboard...",
+      cancellable: false,
+    }, async () => {
+      initiatePanel("Dashboard", "dashboard");
+      const html = await getDashboardHtml();
+      currentPanel.webview.html = html;
+      currentPanel.reveal(ViewColumn.One);
+    }
+  )
 }
 
 function initiatePanel(title: string, viewType: string) {
@@ -35,4 +52,13 @@ function initiatePanel(title: string, viewType: string) {
 function getReportGeneratorHtml() {
   // fetch the html from the app
   return "<html><body><div>html goes here</div></body></html>";
+}
+
+async function getDashboardHtml() {
+  const resp = await softwareGet("/v1/plugin_dashboard", getItem("jwt"));
+  if (isResponseOk(resp)) {
+    return resp.data.html;
+  } else {
+    window.showErrorMessage("Unable to generate dashboard. Please try again later.");
+  }
 }

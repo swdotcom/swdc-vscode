@@ -1,6 +1,5 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { launchWebDashboard, updatePreferences } from "./DataController";
-import { displayCodeTimeMetricsDashboard } from "./menu/MenuManager";
 import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -28,6 +27,7 @@ import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
 import { toggleFullScreenMode, toggleZenMode } from "./managers/ScreenManager";
+import { showDashboard } from "./managers/WebViewManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -279,24 +279,6 @@ export function createCommands(
     })
   );
 
-  // DISPLAY CODE TIME METRICS REPORT
-  cmds.push(
-    commands.registerCommand("codetime.codeTimeMetrics", (item: KpmItem) => {
-      if (!item) {
-        // it's from the command palette, create a kpm item so
-        // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getCodeTimeDashboardButton();
-        item.location = "ct_command_palette";
-        item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_summary_cmd";
-        item.interactionIcon = null;
-        item.color = null;
-      }
-      tracker.trackUIInteraction(item);
-      displayCodeTimeMetricsDashboard();
-    })
-  );
-
   // DISPLAY PROJECT METRICS REPORT
   cmds.push(
     commands.registerCommand("codetime.generateProjectSummary", (item: KpmItem) => {
@@ -314,6 +296,24 @@ export function createCommands(
       ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
     })
   );
+
+  // DISPLAY CODETIME DASHBOARD WEBVIEW
+  cmds.push(
+    commands.registerCommand("codetime.viewDashboard", (item: KpmItem) => {
+      if (!item) {
+        // it's from the command palette, create a kpm item so
+        // it can build the ui_element in the tracker manager
+        item = kpmProviderMgr.getCodeTimeDashboardButton();
+        item.location = "ct_command_palette";
+        item.interactionType = UIInteractionType.Keyboard;
+        item.name = "ct_dashboard_cmd";
+        item.interactionIcon = null;
+        item.color = null;
+      }
+      tracker.trackUIInteraction(item);
+      showDashboard();
+    })
+  )
 
   // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
   cmds.push(

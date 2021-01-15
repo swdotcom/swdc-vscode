@@ -3202,10 +3202,10 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.3.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.3.3.tgz#1e75f3bbe4e586d00d6b71c6a7af932596449f43"
-  integrity sha512-sXvc8LSGFabmwfmWl34/+1C+ufrMhaDAsAi+/nVzgqa3DKlJF5pMsFXLuLijP+ReKw3+ctuEDviQkNvNCFHGMA==
+swdc-tracker@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.2.tgz#26e991d5c51ac2151ef63f3f875513b108d523a6"
+  integrity sha512-64PKd0vXFQ6HNXmU9ZyV3W+/i/dE0qC/HSuvGh7atNYxesJKZ0Qeg36vRYbDHts2KR381MYoX/anAU3f2avdzw==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.19.2"

@@ -34,7 +34,9 @@ export class KpmProviderManager {
 
   private kpmTreeOpen: boolean = false;
 
-  constructor() {}
+  public showingFullScreen: boolean = false;
+
+  constructor() { }
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -448,13 +450,13 @@ export class KpmProviderManager {
     const item: KpmItem = this.getActionButton(
       `Dashboard`,
       "View your latest coding metrics right here in your editor",
-      "codetime.codeTimeMetrics",
+      "codetime.viewDashboard",
       "dashboard.svg",
       "TreeViewLaunchDashboard",
       "purple"
     );
     item.location = "ct_menu_tree";
-    item.name = "ct_summary_btn";
+    item.name = "ct_dashboard_btn";
     item.interactionIcon = "guage";
     return item;
   }
