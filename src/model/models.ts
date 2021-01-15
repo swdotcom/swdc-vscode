@@ -118,6 +118,12 @@ export class CommitChangeStats {
   commitCount: number = 0;
 }
 
+export class DiffNumStats {
+  file_name: string = "";
+  insertions: number = 0;
+  deletions: number = 0;
+}
+
 // example: {type: "window", name: "close", timestamp: 1234,
 // timestamp_local: 1233, description: "OnboardPrompt"}
 export class CodeTimeEvent {

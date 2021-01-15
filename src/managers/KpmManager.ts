@@ -1,12 +1,22 @@
-import { workspace, Disposable, window, commands } from "vscode";
+import { workspace, Disposable, RelativePattern, window, commands, Uri } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
-import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive } from "../Util";
+import {
+  getRootPathForFile,
+  getNowTimes,
+  logEvent,
+  getFileAgeInDays,
+  isFileActive,
+  getFirstWorkspaceFolder,
+  logIt
+} from "../Util";
 import { FileChangeInfo } from "../model/models";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
+import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
+const fs = require("fs");
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
@@ -27,11 +37,27 @@ export class KpmManager {
     this.tracker = TrackerManager.getInstance();
 
     // document listener handlers
-    workspace.onDidOpenTextDocument(this._onOpenHandler, this);
-    workspace.onDidCloseTextDocument(this._onCloseHandler, this);
-    workspace.onDidChangeTextDocument(this._onEventHandler, this);
+    subscriptions.push(workspace.onDidOpenTextDocument(this._onOpenHandler, this));
+    subscriptions.push(workspace.onDidCloseTextDocument(this._onCloseHandler, this));
+    subscriptions.push(workspace.onDidChangeTextDocument(this._onEventHandler, this));
+    subscriptions.push(workspace.onDidSaveTextDocument(this._onSaveHandler, this));
     // window state changed handler
-    window.onDidChangeWindowState(this._windowStateChanged, this);
+    subscriptions.push(window.onDidChangeWindowState(this._windowStateChanged, this));
+
+    // Watch .git directory changes
+    // Only works if the git directory is in the workspace
+    const localGitWatcher = workspace.createFileSystemWatcher(
+      new RelativePattern(getFirstWorkspaceFolder(), '{**/.git/refs/heads/**}')
+    );
+    const remoteGitWatcher = workspace.createFileSystemWatcher(
+      new RelativePattern(getFirstWorkspaceFolder(), '{**/.git/refs/remotes/**}')
+    );
+    subscriptions.push(localGitWatcher);
+    subscriptions.push(remoteGitWatcher);
+    subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
+    subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
+    subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
+    subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
 
     this._disposable = Disposable.from(...subscriptions);
   }
@@ -102,6 +128,7 @@ export class KpmManager {
     this.tracker.trackEditorAction("file", "close", event);
   }
 
+
   /**
    * File Open Handler
    * @param event
@@ -134,6 +161,38 @@ export class KpmManager {
 
     rootObj.source[staticInfo.filename].open += 1;
     logEvent(`File opened`);
+  }
+
+  private async _onSaveHandler(event) {
+    this.tracker.trackEditorAction("file", "save", event);
+  }
+
+  private async _onCommitHandler(event: Uri) {
+    if (getPreference("disableGitData") === true) return;
+
+    // Branches with naming style of "feature/fix_the_thing" will fire an
+    // event when the /feature directory is created. Check if file.
+    const stat = fs.statSync(event.path);
+    if (!stat?.isFile()) return;
+
+    if (event.path.includes("/.git/refs/heads/")) {
+      // /.git/refs/heads/<branch_name>
+      const branch = event.path.split(".git/")[1]
+      let commit;
+      try {
+        commit = fs.readFileSync(event.path, 'utf8').trimEnd()
+      } catch (err) {
+        logIt(`Error reading ${event.path}: ${err.message}`);
+      }
+      this.tracker.trackGitLocalEvent("local_commit", branch, commit);
+    } else if (event.path.includes("/.git/refs/remotes/")) {
+      // /.git/refs/remotes/<branch_name>
+      this.tracker.trackGitRemoteEvent(event)
+    }
+  }
+
+  private async _onBranchDeleteHandler(event: Uri) {
+    this.tracker.trackGitDeleteEvent(event);
   }
 
   /**

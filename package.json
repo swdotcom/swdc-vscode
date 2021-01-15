@@ -180,14 +180,15 @@
     "ts-loader": "^6.2.1",
     "typescript": "^3.5.1",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^3.3.10",
+    "yarn-check-webpack-plugin": "^1.2.0"
   },
   "dependencies": {
     "@slack/web-api": "^5.14.0",
     "@types/jwt-decode": "^2.2.1",
-    "aws-sdk": "^2.470.0",
     "axios": "^0.21.1",
-    "file-it": "^1.0.27",
+    "clipboardy": "^2.1.0",
+    "file-it": "^1.0.24",
     "jwt-decode": "^2.2.0",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",

@@ -1,7 +1,8 @@
-import { CommitChangeStats } from "../model/models";
-import { wrapExecPromise, isGitProject } from "../Util";
+import { CommitChangeStats, DiffNumStats } from "../model/models";
+import { wrapExecPromise, isGitProject, noSpacesProjectDir } from "../Util";
 import { getResourceInfo } from "./KpmRepoManager";
 import { CacheManager } from "../cache/CacheManager";
+import { config } from "process";
 
 const path = require("path");
 const moment = require("moment-timezone");
@@ -13,7 +14,7 @@ const ONE_WEEK_SEC = ONE_DAY_SEC * 7;
 const cacheMgr: CacheManager = CacheManager.getInstance();
 const cacheTimeoutSeconds = 60 * 10;
 
-export async function getCommandResult(cmd, projectDir) {
+export async function getCommandResult(cmd, projectDir): Promise<string[] | null> {
   let result = await wrapExecPromise(cmd, projectDir);
   if (!result) {
     // something went wrong, but don't try to parse a null or undefined str
@@ -41,6 +42,26 @@ export async function getCommandResultString(cmd, projectDir) {
   return result;
 }
 
+export function accumulateNumStatChanges(results): DiffNumStats[] {
+  /*
+  //Insert  Mods    Filename
+    10      0       src/api/billing_client.js
+    5       2       src/api/projects_client.js
+  */
+  const diffNumStatList = [];
+
+  for (const result of results) {
+    const diffNumStat = new DiffNumStats();
+    const parts = result.split("\t")
+    diffNumStat.insertions = parseInt(parts[0]);
+    diffNumStat.deletions = parseInt(parts[1]);
+    // Add backslash to match other filenames in tracking
+    diffNumStat.file_name = `/${parts[2]}`;
+    diffNumStatList.push(diffNumStat)
+  }
+
+  return diffNumStatList;
+}
 /**
  * Looks through all of the lines for
  * files changed, insertions, and deletions and aggregates
@@ -81,6 +102,7 @@ export function accumulateStatChanges(results): CommitChangeStats {
   return stats;
 }
 
+
 async function getChangeStats(projectDir: string, cmd: string): Promise<CommitChangeStats> {
   let changeStats: CommitChangeStats = new CommitChangeStats();
 
@@ -97,6 +119,8 @@ async function getChangeStats(projectDir: string, cmd: string): Promise<CommitCh
         for multiple files it will look like this...
         7 files changed, 137 insertions(+), 55 deletions(-)
      */
+
+
   const resultList = await getCommandResult(cmd, projectDir);
 
   if (!resultList) {
@@ -108,6 +132,201 @@ async function getChangeStats(projectDir: string, cmd: string): Promise<CommitCh
   changeStats = accumulateStatChanges(resultList);
 
   return changeStats;
+}
+
+export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch: string): Promise<string> {
+  if (!projectDir || !isGitProject(projectDir)) {
+    return "";
+  }
+
+  const remotes = await getCommandResult("git remote", projectDir) || [];
+  const remoteName = remotes.sort((a, b) => b.length - a.length).find(r => remoteBranch.includes(r))
+
+  if (remoteName) {
+    // Check if the remote has a HEAD symbolic-ref defined
+    const headBranchList = await getCommandResult(
+      `git symbolic-ref refs/remotes/${remoteName}/HEAD`,
+      projectDir
+    )
+    if (headBranchList) return headBranchList[0];
+
+    const assumedDefaultBranch = await guessDefaultBranchForRemote(projectDir, remoteName)
+    if (assumedDefaultBranch) return assumedDefaultBranch;
+  }
+
+  // Check if any HEAD branch is defined on any remote
+  const remoteBranchesResult = await getCommandResult("git branch -r -l '*/HEAD'", projectDir);
+  if (remoteBranchesResult) {
+    // ['origin/HEAD - origin/main']
+    const remoteBranches = remoteBranchesResult[0].split(" ")
+    return remoteBranches[remoteBranches.length - 1]
+  }
+
+  const originIndex = remotes.indexOf("origin")
+  if (originIndex > 0) {
+    // Move origin to the beginning
+    remotes.unshift(remotes.splice(originIndex, 1)[0])
+  }
+
+  // Check each remote for a possible default branch
+  for (const remote of remotes) {
+    const assumedRemoteDefaultBranch = await guessDefaultBranchForRemote(projectDir, remote);
+
+    if (assumedRemoteDefaultBranch) return assumedRemoteDefaultBranch;
+  }
+
+  // We have no clue, return something
+  return ""
+}
+
+async function guessDefaultBranchForRemote(projectDir, remoteName: string): Promise<string | undefined> {
+  // Get list of branches for the remote
+  const remoteBranchesList = await getCommandResult(`git branch -r -l '${remoteName}/*'`, projectDir) || [];
+  const possibleDefaultBranchNames = ['main', 'master'];
+  let assumedDefault;
+
+  for (const possibleDefault of possibleDefaultBranchNames) {
+    assumedDefault = remoteBranchesList.find(b => b === `${remoteName}/${possibleDefault}`)
+
+    if (assumedDefault) break;
+  }
+
+  return assumedDefault;
+}
+
+export async function getLatestCommitForBranch(projectDir, branch: string): Promise<string> {
+  const cmd = `git rev-parse ${branch}`;
+
+  if (!projectDir || !isGitProject(projectDir)) {
+    return "";
+  }
+
+  const resultList = await getCommandResult(cmd, projectDir);
+  if (!resultList) {
+    // something went wrong, but don't try to parse a null or undefined str
+    return "";
+  }
+
+  return resultList[0] || ""
+}
+
+export async function commitAlreadyOnRemote(projectDir: string, commit: string): Promise<boolean> {
+  const resultList = await getCommandResult(
+    `git branch -r --contains ${commit}`,
+    projectDir
+  )
+
+  // If results returned, then that means the commit exists on
+  // at least 1 remote branch, so return true.
+  return resultList?.length ? true : false;
+}
+
+export async function isMergeCommit(projectDir: string, commit: string): Promise<boolean> {
+  const resultList = await getCommandResult(
+    `git rev-list --parents -n 1 ${commit}`,
+    projectDir
+  )
+
+  const parents = resultList?.[0]?.split(" ")
+
+  // If more than 2 commit SHA's are returned, then it
+  // has multiple parents and is therefore a merge commit.
+  return parents?.length > 2 ? true : false;
+}
+
+export async function getInfoForCommit(projectDir, commit: string) {
+  const resultList = await getCommandResult(
+    `git show ${commit} --pretty=format:"%aI" -s`,
+    projectDir
+  )
+
+  return { authoredTimestamp: resultList[0] }
+}
+
+// Returns an array of authors including names and emails from the git config
+export async function authors(projectDir: string): Promise<string[]> {
+  if (!projectDir || !isGitProject(projectDir)) {
+    return [];
+  }
+
+  const cacheId = `git-authors-${noSpacesProjectDir(projectDir)}`;
+
+  let authors = cacheMgr.get(cacheId);
+  if (authors) {
+    return authors;
+  }
+  const configUsers = await getCommandResult(`git config --get-regex "^user\\."`, projectDir)
+
+  authors = configUsers.map(configUser => {
+    let [_, ...author] = configUser.split(" ")
+    return author.join(" ")
+  });
+  const uniqueAuthors = authors.filter((author, index, self) => {
+    return self.indexOf(author) === index;
+  });
+
+  cacheMgr.set(cacheId, uniqueAuthors, ONE_HOUR_IN_SEC);
+
+  return uniqueAuthors
+}
+
+export async function getCommitsForAuthors(projectDir, branch: string, startRef: string, authors: string[]) {
+  if (!projectDir || !isGitProject(projectDir)) {
+    return [];
+  }
+
+  const range = startRef !== "" ? `${startRef}..HEAD` : "HEAD"
+  let cmd = `git log ${branch} ${range} --no-merges --pretty=format:"%aI =.= %H"`
+  for (const author of authors) {
+    cmd += ` --author="${author}"`
+  }
+
+  const resultList = await getCommandResult(cmd, projectDir);
+
+  return resultList?.map(result => {
+    const [authoredTimestamp, commit] = result.split(" =.= ")
+    return { commit, authoredTimestamp }
+  }) || [];
+}
+
+export async function getChangesForCommit(projectDir, commit: string): Promise<DiffNumStats[]> {
+  let diffNumStats: DiffNumStats[];
+
+  if (!projectDir || !isGitProject(projectDir) || !commit) {
+    return diffNumStats;
+  }
+
+  const cmd = `git diff --numstat ${commit}~`;
+  const resultList = await getCommandResult(cmd, projectDir);
+  if (!resultList) {
+    // something went wrong, but don't try to parse a null or undefined str
+    return diffNumStats;
+  }
+
+  // just look for the line with "insertions" and "deletions"
+  diffNumStats = accumulateNumStatChanges(resultList);
+
+  return diffNumStats;
+}
+
+export async function getLocalChanges(projectDir): Promise<DiffNumStats[]> {
+  let diffNumStats: DiffNumStats[];
+
+  if (!projectDir || !isGitProject(projectDir)) {
+    return diffNumStats;
+  }
+
+  const cmd = `git diff --numstat`;
+  const resultList = await getCommandResult(cmd, projectDir);
+  if (!resultList) {
+    // something went wrong, but don't try to parse a null or undefined str
+    return diffNumStats;
+  }
+
+  // just look for the line with "insertions" and "deletions"
+  diffNumStats = accumulateNumStatChanges(resultList);
+
+  return diffNumStats;
 }
 
 export async function getUncommitedChanges(projectDir): Promise<CommitChangeStats> {
