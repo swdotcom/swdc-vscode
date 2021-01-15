@@ -13,20 +13,24 @@ import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./ScreenM
 
 let flowEnabled = false;
 
+/**
+ * Screen Mode: full screen
+Pause Notifications: on
+Slack Away Msg: It's CodeTime!
+ */
 export function getConfigSettingsTooltip() {
   const preferences = [];
   const configSettings: ConfigSettings = getConfigSettings();
-  if (configSettings.screenMode !== "None") {
-    preferences.push(configSettings.screenMode.toLowerCase());
-  }
-  if (configSettings.pauseSlackNotifications) {
-    preferences.push("pause notifications");
-  }
-  if (configSettings.slackAwayStatus) {
-    preferences.push("set Slack presence to away");
-  }
+  preferences.push(`**Screen Mode**: *${configSettings.screenMode.toLowerCase()}*`);
 
-  return preferences.length ? preferences.join(", ") : "";
+  const notificationState = configSettings.pauseSlackNotifications ? "on" : "off";
+  preferences.push(`**Pause Notifications**: *${notificationState}*`);
+
+  const slackAwayStatusMsg = configSettings.slackAwayStatusText ?? "";
+  preferences.push(`**Slack Away Msg**: *${slackAwayStatusMsg}*`);
+
+  // 2 spaces followed by a newline will create newlines in markdown
+  return preferences.length ? preferences.join("  \n") : "";
 }
 
 export async function enableFlow() {

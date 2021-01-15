@@ -11,7 +11,7 @@ import {
   getPercentOfReferenceAvg,
 } from "../Util";
 import { getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
-import { TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Command, commands, TreeView, MarkdownString } from "vscode";
 import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
@@ -181,10 +181,11 @@ export class KpmProviderManager {
     const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
 
     const inFlowSettingsTooltip = getConfigSettingsTooltip();
+    const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
     if (!isInFlowMode()) {
-      treeItems.push(this.getActionButton("Enable flow", `Enable flow: ${inFlowSettingsTooltip}`, "codetime.enableFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Enable flow", mdstr, "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow", `Turn off flow: ${inFlowSettingsTooltip}`, "codetime.pauseFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Pause flow", mdstr, "codetime.pauseFlow", "paw.svg"));
     }
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
