@@ -18,10 +18,7 @@ export function getConfigSettingsTooltip() {
 
   // Screen mode, Pause Slack notifications, Slack away status
   // (Settings => screen mode: Full screen, Pause notifications: on, Slack away: on using 'CodeTime!')
-  let slackAwayStatusText = "";
-  if (configSettings.slackAwayStatus) {
-    slackAwayStatusText += "on";
-  }
+  let slackAwayStatusText = configSettings.slackAwayStatus ? "on" : "off";
   if (configSettings.slackAwayStatusText) {
     slackAwayStatusText += ` using '${configSettings.slackAwayStatusText}'`;
   }
