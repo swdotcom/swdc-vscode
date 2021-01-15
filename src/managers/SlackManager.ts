@@ -586,7 +586,7 @@ function removeSlackIntegration(authId) {
   syncIntegrations(newIntegrations);
 }
 
-export async function checkRegistration(showSignup = true) {
+export function checkRegistration(showSignup = true) {
   if (!getItem("name")) {
     if (showSignup) {
       window

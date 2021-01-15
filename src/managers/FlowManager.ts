@@ -13,6 +13,25 @@ import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./ScreenM
 
 let flowEnabled = false;
 
+export function getConfigSettingsTooltip() {
+  const configSettings: ConfigSettings = getConfigSettings();
+
+  // Screen mode, Pause Slack notifications, Slack away status
+  // (Settings => screen mode: Full screen, Pause notifications: on, Slack away: on using 'CodeTime!')
+  let slackAwayStatusText = "";
+  if (configSettings.slackAwayStatus) {
+    slackAwayStatusText += "on";
+  }
+  if (configSettings.slackAwayStatusText) {
+    slackAwayStatusText += ` using '${configSettings.slackAwayStatusText}'`;
+  }
+
+  const pauseNotificationText = configSettings.pauseSlackNotifications ? "on" : "off";
+  const screenModeText = configSettings.screenMode;
+
+  return `Screen mode: ${screenModeText}\nPause notifications: ${pauseNotificationText}\nSlack away: ${slackAwayStatusText}`;
+}
+
 export async function enableFlow() {
   const registered = checkRegistration(true);
   if (!registered) {

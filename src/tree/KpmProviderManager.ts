@@ -21,7 +21,7 @@ import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { isInFlowMode } from "../managers/FlowManager";
+import { getConfigSettingsTooltip, isInFlowMode } from "../managers/FlowManager";
 import { isInFullScreenMode } from "../managers/ScreenManager";
 
 const numeral = require("numeral");
@@ -36,7 +36,7 @@ export class KpmProviderManager {
 
   public showingFullScreen: boolean = false;
 
-  constructor() { }
+  constructor() {}
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -180,10 +180,11 @@ export class KpmProviderManager {
     const treeItems: KpmItem[] = [];
     const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
 
+    const inFlowSettingsTooltip = getConfigSettingsTooltip();
     if (!isInFlowMode()) {
-      treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Enable flow", `Enable your code flow\n${inFlowSettingsTooltip}`, "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Pause flow", `Turn off your code flow\n${inFlowSettingsTooltip}`, "codetime.pauseFlow", "paw.svg"));
     }
 
     treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
