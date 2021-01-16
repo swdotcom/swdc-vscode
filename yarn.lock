@@ -430,7 +430,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.10.1.tgz#e1e82e4f3e999e2cfd61b161280d16a111f86428"
   integrity sha512-zg7Hz2k5lI8kb7U32998pRRFin7zJlkfezGJjUc2heaD4Pw2wObakCDVzkKztTm/Ln7eiVvYsjqak0Ed4LkMDA==
 
-axios@^0.19.0, axios@^0.19.2:
+axios@^0.19.0:
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.19.2.tgz#3ea36c5d8818d0d5f8a8a97a6d36b86cdc00cb27"
   integrity sha512-fjgm5MvRHLhx+osE2xoekY70AhARk3a6hkN+3Io1jc00jtquGvxYlKlsFUhmUET0V5te6CcZI7lcv2Ym61mjHA==
@@ -3222,13 +3222,13 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-swdc-tracker@^1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.2.tgz#26e991d5c51ac2151ef63f3f875513b108d523a6"
-  integrity sha512-64PKd0vXFQ6HNXmU9ZyV3W+/i/dE0qC/HSuvGh7atNYxesJKZ0Qeg36vRYbDHts2KR381MYoX/anAU3f2avdzw==
+swdc-tracker@^1.4.3:
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.3.tgz#5f79540dbb0b711489ce2fdfaf8ccf098d750e2d"
+  integrity sha512-I4Uby3NHWzLOFqKSGmITgWmE3HLRvf9XrUy5oWERE3BL3WolOreAgfV8wxQL0hLoYYglciKLGKDjNLdq+Uo6ig==
   dependencies:
     "@types/node" "^14.0.13"
-    axios "^0.19.2"
+    axios "^0.21.1"
     file-it "^1.0.24"
     libsodium "^0.7.6"
     libsodium-wrappers "^0.7.6"
