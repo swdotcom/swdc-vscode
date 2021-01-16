@@ -150,7 +150,12 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
       `git symbolic-ref refs/remotes/${remoteName}/HEAD`,
       projectDir
     )
-    if (headBranchList) return headBranchList[0];
+    if (headBranchList) {
+      // Make sure it's not a broken HEAD ref
+      const verify = await getCommandResult(`git show-ref --verify '${headBranchList[0]}'`, projectDir) || []
+
+      if (verify[0]?.split(" ")?.[0] !== "fatal:") return headBranchList[0];
+    }
 
     const assumedDefaultBranch = await guessDefaultBranchForRemote(projectDir, remoteName)
     if (assumedDefaultBranch) return assumedDefaultBranch;
