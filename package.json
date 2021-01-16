@@ -117,7 +117,11 @@
           },
           "screenMode": {
             "type": "string",
-            "enum": ["Zen", "Full Screen", "None"],
+            "enum": [
+              "Zen",
+              "Full Screen",
+              "None"
+            ],
             "default": "Full Screen",
             "description": "Automatically toggle a selected screen mode when I'm in flow"
           }
@@ -195,7 +199,7 @@
     "numeral": "^2.0.6",
     "open": "^6.4.0",
     "query-string": "^6.13.7",
-    "swdc-tracker": "^1.4.2",
+    "swdc-tracker": "^1.4.3",
     "uuid": "^8.3.1",
     "vsls": "0.3.1291"
   }

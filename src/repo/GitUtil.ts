@@ -44,20 +44,22 @@ export async function getCommandResultString(cmd, projectDir) {
 
 export function accumulateNumStatChanges(results): DiffNumStats[] {
   /*
-  //Insert  Mods    Filename
+  //Insert  Delete    Filename
     10      0       src/api/billing_client.js
     5       2       src/api/projects_client.js
+    -       -       binary_file.bin
   */
   const diffNumStatList = [];
 
   for (const result of results) {
     const diffNumStat = new DiffNumStats();
     const parts = result.split("\t")
-    diffNumStat.insertions = parseInt(parts[0]);
-    diffNumStat.deletions = parseInt(parts[1]);
+    diffNumStat.insertions = Number(parts[0]);
+    diffNumStat.deletions = Number(parts[1]);
     // Add backslash to match other filenames in tracking
     diffNumStat.file_name = `/${parts[2]}`;
-    diffNumStatList.push(diffNumStat)
+    if (Number.isInteger(diffNumStat.insertions) && Number.isInteger(diffNumStat.deletions))
+      diffNumStatList.push(diffNumStat)
   }
 
   return diffNumStatList;
