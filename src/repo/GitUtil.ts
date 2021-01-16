@@ -152,9 +152,9 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
     )
     if (headBranchList) {
       // Make sure it's not a broken HEAD ref
-      const verify = await getCommandResult(`git show-ref --verify '${headBranchList[0]}'`, projectDir) || []
+      const verify = await getCommandResult(`git show-ref --verify '${headBranchList[0]}'`, projectDir)
 
-      if (verify[0]?.split(" ")?.[0] !== "fatal:") return headBranchList[0];
+      if (verify) return headBranchList[0];
     }
 
     const assumedDefaultBranch = await guessDefaultBranchForRemote(projectDir, remoteName)
@@ -193,12 +193,12 @@ async function guessDefaultBranchForRemote(projectDir, remoteName: string): Prom
   let assumedDefault;
 
   for (const possibleDefault of possibleDefaultBranchNames) {
-    assumedDefault = remoteBranchesList.find(b => b === `${remoteName}/${possibleDefault}`)
+    assumedDefault = remoteBranchesList.find(b => b.trim() === `${remoteName}/${possibleDefault}`)
 
     if (assumedDefault) break;
   }
 
-  return assumedDefault;
+  return assumedDefault?.trim();
 }
 
 export async function getLatestCommitForBranch(projectDir, branch: string): Promise<string> {
