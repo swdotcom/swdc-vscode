@@ -378,17 +378,15 @@ async function showSlackWorkspaceSelection() {
   });
 
   const pick = await showQuickPick(menuOptions);
-  if (pick && pick.label) {
-    const pick = await showQuickPick(menuOptions);
-    if (pick) {
-      if (pick.value) {
-        return pick.value;
-      } else if (pick.command) {
-        commands.executeCommand(pick.command);
-        return null;
-      }
+  if (pick) {
+    if (pick.value) {
+      return pick.value;
+    } else if (pick.command) {
+      commands.executeCommand(pick.command);
+      return null;
     }
   }
+
   return null;
 }
 

@@ -28,6 +28,7 @@ import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
 import { toggleFullScreenMode, toggleZenMode } from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
+import { configureSettings } from "./managers/ConfigManager";
 
 export function createCommands(
   kpmController: KpmManager
@@ -313,7 +314,7 @@ export function createCommands(
       tracker.trackUIInteraction(item);
       showDashboard();
     })
-  )
+  );
 
   // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
   cmds.push(
@@ -457,6 +458,12 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.pauseFlow", () => {
       pauseFlow();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.configureSettings", () => {
+      configureSettings();
     })
   );
 
