@@ -4,6 +4,23 @@ import fs = require("fs");
 import ConfigSettings from "../model/ConfigSettings";
 
 let currentPanel: WebviewPanel | undefined = undefined;
+let currentColorKind: number = undefined;
+
+function init() {
+  currentColorKind = window.activeColorTheme.kind;
+  window.onDidChangeActiveColorTheme((event) => {
+    const kind = event?.kind ?? currentColorKind;
+    if (kind !== currentColorKind) {
+      // reload the current panel if its not null/undefined
+      if (currentPanel) {
+        setTimeout(() => {
+          configureSettings();
+        }, 250);
+      }
+      currentColorKind = kind;
+    }
+  });
+}
 
 export function getConfigSettings(): ConfigSettings {
   const settings: ConfigSettings = new ConfigSettings();
@@ -15,6 +32,9 @@ export function getConfigSettings(): ConfigSettings {
 }
 
 export function configureSettings() {
+  if (currentColorKind == null) {
+    init();
+  }
   const generatedHtml = getEditSettingsHtml();
 
   if (currentPanel) {
@@ -50,7 +70,7 @@ export function getEditSettingsTemplate() {
 }
 
 export function getEditSettingsHtml(): string {
-  const { cardTextColor, cardBackgroundColor, cardGrayedLevel } = getInputFormStyles();
+  const { cardTextColor, cardBackgroundColor, cardInputHeaderColor } = getInputFormStyles();
 
   const configSettings: ConfigSettings = getConfigSettings();
   const slackAwayStatusPlaceholder: string = !configSettings.slackAwayStatusText ? "CodeTime!" : "";
@@ -64,7 +84,7 @@ export function getEditSettingsHtml(): string {
   const templateVars = {
     cardTextColor,
     cardBackgroundColor,
-    cardGrayedLevel,
+    cardInputHeaderColor,
     slackAwayStatusPlaceholder,
     slackAwayStatusText,
     zenSelected,
@@ -83,16 +103,19 @@ export function getEditSettingsHtml(): string {
   return fillTemplate(templateString, templateVars);
 }
 
+// window.activeColorTheme.kind
+// 1 = light color theme
+// 2 = dark color theme
 function getInputFormStyles() {
   let cardTextColor = "#FFFFFF";
   let cardBackgroundColor = "rgba(255,255,255,0.05)";
-  let cardGrayedLevel = "#474747";
+  let cardInputHeaderColor = "#e6e2e2";
   if (window.activeColorTheme.kind === 1) {
     cardTextColor = "#444444";
     cardBackgroundColor = "rgba(0,0,0,0.10)";
-    cardGrayedLevel = "#B5B5B5";
+    cardInputHeaderColor = "#565758";
   }
-  return { cardTextColor, cardBackgroundColor, cardGrayedLevel };
+  return { cardTextColor, cardBackgroundColor, cardInputHeaderColor };
 }
 
 async function updateConfigSettings(settings) {

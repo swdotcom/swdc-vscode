@@ -1,4 +1,4 @@
-import { commands, window, workspace, WorkspaceConfiguration } from "vscode";
+import { commands, window } from "vscode";
 import ConfigSettings from "../model/ConfigSettings";
 import { getConfigSettings } from "./ConfigManager";
 import {
@@ -10,7 +10,6 @@ import {
   enableSlackNotifications,
 } from "./SlackManager";
 import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./ScreenManager";
-import { showQuickPick } from "../menu/MenuManager";
 
 let flowEnabled = false;
 

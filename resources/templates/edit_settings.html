@@ -8,23 +8,23 @@
             padding: 16px;
             position: absolute;
             width: 450px;
-            top: 25px;
+            top: 30px;
             left: 50%;
             margin-left: -225px;
             background: ${this.cardBackgroundColor};
             border-radius: 2px;
         }
         /* Headings */
-        #head1 {
+        .titleHeader {
             font-size: 18px;
             line-height: 20px;
             font-weight: 600;
         }
-        .head2 {
+        .inputHeader {
             margin-top: 10px;
             margin-bottom: 5px;
             font-size: 14px;
-            color: #919eab;
+            color: ${this.cardInputHeaderColor};
             font-weight: 500;
         }
         .inputStyle {
@@ -89,25 +89,25 @@
     </style>
     <body>
         <div id="modal">
-            <div id="head1">Code Time Settings</div>
-            <div class="head2">Slack away status</div>
+            <div class="titleHeader">Code Time Settings</div>
+            <div class="inputHeader">Slack away status</div>
             <div class="inputStyle">
                 <input type="checkbox" class="checkbox" id="slackAwayStatus" ${this.slackAwayStatus}>
                 <label for="slackAwayStatus">Automatically set my status away when I'm in flow</label>
             </div>
 
-            <div class="head2">Slack away status text</div>
+            <div class="inputHeader">Slack away status text</div>
             <div class="inputStyle">
                 <input type="text" id="slackAwayStatusText" class="text" placeholder="${this.slackAwayStatusPlaceholder}" value="${this.slackAwayStatusText}"/>
             </div>
 
-            <div class="head2">Pause Slack notifications</div>
+            <div class="inputHeader">Pause Slack notifications</div>
             <div class="inputStyle">
                 <input type="checkbox" class="checkbox" id="pauseSlackNotifications" ${this.pauseSlackNotifications}>
                 <label for="pauseSlackNotifications">Automatically pause Slack notifications when I'm in flow</label>
             </div>
 
-            <div class="head2">Screen mode</div>
+            <div class="inputHeader">Screen mode</div>
             <div class="inputStyle">
                 <select name="screenMode" id="screenMode" class="select">
                     <option value="Zen" ${this.zenSelected}>Zen</option>
