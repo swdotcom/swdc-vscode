@@ -44,20 +44,23 @@ export class KpmManager {
     // window state changed handler
     subscriptions.push(window.onDidChangeWindowState(this._windowStateChanged, this));
 
-    // Watch .git directory changes
-    // Only works if the git directory is in the workspace
-    const localGitWatcher = workspace.createFileSystemWatcher(
-      new RelativePattern(getFirstWorkspaceFolder(), '{**/.git/refs/heads/**}')
-    );
-    const remoteGitWatcher = workspace.createFileSystemWatcher(
-      new RelativePattern(getFirstWorkspaceFolder(), '{**/.git/refs/remotes/**}')
-    );
-    subscriptions.push(localGitWatcher);
-    subscriptions.push(remoteGitWatcher);
-    subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
-    subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
-    subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
-    subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
+    const workspaceFolder = getFirstWorkspaceFolder();
+    if (workspaceFolder) {
+      // Watch .git directory changes
+      // Only works if the git directory is in the workspace
+      const localGitWatcher = workspace.createFileSystemWatcher(
+        new RelativePattern(workspaceFolder, '{**/.git/refs/heads/**}')
+      );
+      const remoteGitWatcher = workspace.createFileSystemWatcher(
+        new RelativePattern(workspaceFolder, '{**/.git/refs/remotes/**}')
+      );
+      subscriptions.push(localGitWatcher);
+      subscriptions.push(remoteGitWatcher);
+      subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
+      subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
+      subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
+      subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
+    }
 
     this._disposable = Disposable.from(...subscriptions);
   }
