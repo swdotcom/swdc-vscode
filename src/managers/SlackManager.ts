@@ -1,6 +1,6 @@
 import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { getUserRegistrationState } from "../DataController";
+import { foundNewSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -530,41 +530,8 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  * Get the slack Oauth from the registered user
  */
 async function getSlackAuth() {
-  let foundNewIntegration = false;
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  if (user && user.integrations) {
-    const currentIntegrations = getSlackWorkspaces();
-    // find the slack auth
-    for (const integration of user.integrations) {
-      // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
-      if (integration.name.toLowerCase() === "slack" && integration.status.toLowerCase() === "active") {
-        // check if it exists
-        const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
-        if (!foundIntegration) {
-          // get the workspace domain using the authId
-          const web = new WebClient(integration.access_token);
-          const usersIdentify = await web.users.identity().catch((e) => {
-            console.log("error fetching slack team info: ", e.message);
-            return null;
-          });
-          if (usersIdentify) {
-            // usersIdentity returns
-            // {team: {id, name, domain, image_102, image_132, ....}...}
-            // set the domain
-            integration["team_domain"] = usersIdentify.team?.domain;
-            integration["team_name"] = usersIdentify.team?.name;
-            // add it
-            currentIntegrations.push(integration);
-
-            foundNewIntegration = true;
-          }
-        }
-      }
-    }
-
-    syncIntegrations(currentIntegrations);
-  }
-  return foundNewIntegration;
+  return await foundNewSlackIntegrations(user);
 }
 
 /**
