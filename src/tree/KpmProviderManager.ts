@@ -11,7 +11,7 @@ import {
   getPercentOfReferenceAvg,
 } from "../Util";
 import { getLastCommitId, getRepoUrlLink } from "../repo/GitUtil";
-import { TreeItem, TreeItemCollapsibleState, Command, commands, TreeView } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Command, commands, TreeView, MarkdownString } from "vscode";
 import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 import TeamMember from "../model/TeamMember";
 import { getRepoContributors } from "../repo/KpmRepoManager";
@@ -21,7 +21,7 @@ import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { isInFlowMode } from "../managers/FlowManager";
+import { getConfigSettingsTooltip, isInFlowMode } from "../managers/FlowManager";
 import { isInFullScreenMode } from "../managers/ScreenManager";
 
 const numeral = require("numeral");
@@ -36,7 +36,7 @@ export class KpmProviderManager {
 
   public showingFullScreen: boolean = false;
 
-  constructor() { }
+  constructor() {}
 
   static getInstance(): KpmProviderManager {
     if (!KpmProviderManager.instance) {
@@ -178,54 +178,18 @@ export class KpmProviderManager {
 
   async getFlowTreeParents(): Promise<KpmItem[]> {
     const treeItems: KpmItem[] = [];
-    const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
 
+    const inFlowSettingsTooltip = getConfigSettingsTooltip();
+    const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
     if (!isInFlowMode()) {
-      treeItems.push(this.getActionButton("Enable flow", "Enable your code flow", "codetime.enableFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow", "Pause your code flow", "codetime.pauseFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "paw.svg"));
     }
 
-    treeItems.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
+    treeItems.push(this.getActionButton("Configure settings", "", "codetime.configureSettings", "profile.svg"));
 
-    let fullScreenToggleLabel = "Enter full screen";
-    let fullScreenIcon = "expand.svg";
-    if (isInFullScreenMode()) {
-      fullScreenToggleLabel = "Exit full screen";
-      fullScreenIcon = "compress.svg";
-    }
-    treeItems.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
-
-    // slack status setter
-
-    treeItems.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
-    // pause/enable slack notification
-    if (slackDnDInfo?.snooze_enabled) {
-      const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
-      // show the disable button
-      treeItems.push(
-        this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "notifications-on.svg")
-      );
-    } else {
-      // show the enable button
-      treeItems.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "notifications-off.svg"));
-    }
-    if (slackPresence === "active") {
-      treeItems.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "presence.svg"));
-    } else {
-      treeItems.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "presence.svg"));
-    }
-
-    if (isMac()) {
-      const darkmode = await isDarkMode();
-      if (darkmode) {
-        treeItems.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
-      } else {
-        treeItems.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
-      }
-
-      treeItems.push(this.getActionButton("Toggle dock position", "", "codetime.toggleDocPosition", "position.svg"));
-    }
+    treeItems.push(await this.getAutomationsTree());
 
     return treeItems;
   }
@@ -422,6 +386,54 @@ export class KpmProviderManager {
     return parentItem;
   }
 
+  async getAutomationsTree(): Promise<KpmItem> {
+    const parentItem: KpmItem = this.buildMessageItem("Automations", "", null);
+    const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
+
+    parentItem.children.push(this.getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
+
+    let fullScreenToggleLabel = "Enter full screen";
+    let fullScreenIcon = "expand.svg";
+    if (isInFullScreenMode()) {
+      fullScreenToggleLabel = "Exit full screen";
+      fullScreenIcon = "compress.svg";
+    }
+    parentItem.children.push(this.getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
+
+    // slack status setter
+    parentItem.children.push(this.getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));
+
+    // pause/enable slack notification
+    if (slackDnDInfo?.snooze_enabled) {
+      const description = `(${moment.unix(slackDnDInfo.snooze_endtime).format("h:mm a")})`;
+      // show the disable button
+      parentItem.children.push(
+        this.getDescriptionButton("Turn on notifications", description, "", "codetime.enableSlackNotifications", "notifications-on.svg")
+      );
+    } else {
+      // show the enable button
+      parentItem.children.push(this.getActionButton("Pause notifications", "", "codetime.pauseSlackNotifications", "notifications-off.svg"));
+    }
+    if (slackPresence === "active") {
+      parentItem.children.push(this.getActionButton("Set presence to away", "", "codetime.toggleSlackPresence", "presence.svg"));
+    } else {
+      parentItem.children.push(this.getActionButton("Set presence to active", "", "codetime.toggleSlackPresence", "presence.svg"));
+    }
+
+    if (isMac()) {
+      const darkmode = await isDarkMode();
+      if (darkmode) {
+        parentItem.children.push(this.getActionButton("Turn off dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
+      } else {
+        parentItem.children.push(this.getActionButton("Turn on dark mode", "", "codetime.toggleDarkMode", "adjust.svg"));
+      }
+
+      parentItem.children.push(this.getActionButton("Toggle dock position", "", "codetime.toggleDocPosition", "position.svg"));
+    }
+
+    return parentItem;
+  }
+
   getContributorReportButton(identifier: string): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = identifier;
@@ -485,9 +497,9 @@ export class KpmProviderManager {
     };
   }
 
-  getActionButton(label, tooltip, command, icon = null, eventDescription: string = "", color = null): KpmItem {
+  getActionButton(label, tooltip, command, icon = null, eventDescription: string = "", color = null, description: string = ""): KpmItem {
     const item: KpmItem = new KpmItem();
-    item.tooltip = tooltip;
+    item.tooltip = tooltip ?? "";
     item.label = label;
     item.id = label;
     item.command = command;
@@ -495,6 +507,7 @@ export class KpmProviderManager {
     item.contextValue = "action_button";
     item.eventDescription = eventDescription;
     item.color = color;
+    item.description = description;
     return item;
   }
 
@@ -555,10 +568,10 @@ export class KpmProviderManager {
     return parent;
   }
 
-  buildMessageItem(label, tooltip = "", icon = null, command = null, commandArgs = null, name = "", location = ""): KpmItem {
+  buildMessageItem(label, tooltip: any = "", icon = null, command = null, commandArgs = null, name = "", location = ""): KpmItem {
     const item: KpmItem = new KpmItem();
     item.label = label;
-    item.tooltip = tooltip;
+    item.tooltip = tooltip ?? "";
     item.icon = icon;
     item.command = command;
     item.commandArgs = commandArgs;

@@ -63,10 +63,6 @@
         "title": "Code Time: Learn more"
       },
       {
-        "command": "codetime.connectSlackWorkspace",
-        "title": "Code Time: Connect Slack workspace"
-      },
-      {
         "command": "codetime.disconnectSlackWorkspace",
         "title": "Code Time: Disconnect Slack workspace",
         "icon": {
@@ -93,6 +89,14 @@
       {
         "command": "codetime.viewDashboard",
         "title": "Code Time: View Dashboard"
+      },
+      {
+        "command": "codetime.enableFlow",
+        "title": "Code Time: Enable Flow Mode"
+      },
+      {
+        "command": "codetime.pauseFlow",
+        "title": "Code Time: Pause Flow Mode"
       }
     ],
     "configuration": [
