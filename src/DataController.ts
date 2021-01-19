@@ -19,6 +19,7 @@ import {
   getDailyReportSummaryFile,
   getAuthCallbackState,
   setAuthCallbackState,
+  syncIntegrations,
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
@@ -212,6 +213,9 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
     clearSessionSummaryData();
     clearTimeDataSummary();
+
+    // clear the integrations
+    syncIntegrations([] /*empty array*/);
 
     const message = "Successfully logged on to Code Time";
     window.showInformationMessage(message);

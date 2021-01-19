@@ -20,6 +20,7 @@ import {
   updateSlackProfileStatus,
   toggleSlackPresence,
   disconnectSlackWorkspace,
+  clearSlackInfoCache,
 } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
@@ -220,9 +221,10 @@ export function createCommands(
   // REFRESH ALL TREE VIEWS
   cmds.push(
     commands.registerCommand("codetime.refreshTreeViews", () => {
-      codetimeMenuTreeProvider.refresh();
-      codetimeFlowTreeProvider.refresh();
-      kpmTreeProvider.refresh();
+      // run the specific commands as each command may have its own specific logic to perform
+      commands.executeCommand("codetime.refreshCodetimeMenuTree");
+      commands.executeCommand("codetime.refreshFlowTree");
+      commands.executeCommand("codetime.refreshKpmTree");
     })
   );
 
@@ -243,6 +245,9 @@ export function createCommands(
   // FLOW TERE: REFRESH
   cmds.push(
     commands.registerCommand("codetime.refreshFlowTree", () => {
+      // clear the cache items to force a fetch from the Slack API
+      clearSlackInfoCache();
+      // refresh the flow tree provider
       codetimeFlowTreeProvider.refresh();
     })
   );
