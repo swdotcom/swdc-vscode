@@ -1,15 +1,12 @@
-import { workspace, window, commands } from "vscode";
+import { window, commands } from "vscode";
 import { softwareGet, softwarePut, isResponseOk, softwarePost } from "./http/HttpClient";
 import {
   getItem,
   setItem,
   launchWebUrl,
   logIt,
-  getSummaryInfoFile,
-  getDashboardFile,
   getProjectCodeSummaryFile,
   getProjectContributorCodeSummaryFile,
-  isLinux,
   formatNumber,
   getRightAlignedTableHeader,
   getRowLabels,
@@ -19,6 +16,8 @@ import {
   getDailyReportSummaryFile,
   getAuthCallbackState,
   setAuthCallbackState,
+  syncIntegrations,
+  getIntegrations,
 } from "./Util";
 import { buildWebDashboardUrl } from "./menu/MenuManager";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
@@ -27,7 +26,7 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
-
+const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
@@ -88,22 +87,42 @@ export async function getUserRegistrationState(isIntegration = false) {
   return { loggedOn: false, state, user: null };
 }
 
-/**
- * return whether the user is logged on or not
- * {loggedIn: true|false}
- */
-export async function isLoggedIn(): Promise<boolean> {
-  const name = getItem("name");
-  const switching_account = getItem("switching_account");
-  if (name && !switching_account) {
-    return true;
-  }
+export async function foundNewSlackIntegrations(user) {
+  let foundNewIntegration = false;
+  if (user && user.integrations) {
+    const currentIntegrations = getIntegrations();
+    // find the slack auth
+    for (const integration of user.integrations) {
+      // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
+      if (integration.name.toLowerCase() === "slack" && integration.status.toLowerCase() === "active") {
+        // check if it exists
+        const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
+        if (!foundIntegration) {
+          // get the workspace domain using the authId
+          const web = new WebClient(integration.access_token);
+          const usersIdentify = await web.users.identity().catch((e) => {
+            console.log("error fetching slack team info: ", e.message);
+            return null;
+          });
+          if (usersIdentify) {
+            // usersIdentity returns
+            // {team: {id, name, domain, image_102, image_132, ....}...}
+            // set the domain
+            integration["team_domain"] = usersIdentify.team?.domain;
+            integration["team_name"] = usersIdentify.team?.name;
+            integration["integration_id"] = usersIdentify.user?.id;
+            // add it
+            currentIntegrations.push(integration);
 
-  const state = await getUserRegistrationState();
-  if (state.loggedOn) {
-    initializePreferences();
+            foundNewIntegration = true;
+          }
+        }
+      }
+    }
+
+    syncIntegrations(currentIntegrations);
   }
-  return state.loggedOn;
+  return foundNewIntegration;
 }
 
 export async function getUser() {
@@ -194,8 +213,8 @@ export function refetchUserStatusLazily(tryCountUntilFoundUser = 50, interval = 
 }
 
 async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
-  let loggedIn: boolean = await isLoggedIn();
-  if (!loggedIn) {
+  const state = await getUserRegistrationState();
+  if (!state.loggedOn) {
     // try again if the count is not zero
     if (tryCountUntilFoundUser > 0) {
       tryCountUntilFoundUser -= 1;
@@ -213,10 +232,18 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     clearSessionSummaryData();
     clearTimeDataSummary();
 
+    // clear the integrations
+    syncIntegrations([] /*empty array*/);
+
+    // update this users integrations
+    await foundNewSlackIntegrations(state.user);
+
     const message = "Successfully logged on to Code Time";
     window.showInformationMessage(message);
 
     commands.executeCommand("codetime.refreshTreeViews");
+
+    initializePreferences();
 
     // reset the updated tree date since they've established a new account
     setItem("updatedTreeDate", null);

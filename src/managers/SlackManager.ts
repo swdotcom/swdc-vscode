@@ -1,6 +1,6 @@
 import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { getUserRegistrationState } from "../DataController";
+import { foundNewSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -19,12 +19,19 @@ import { softwarePut } from "../http/HttpClient";
 const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
 
-let current_slack_status: string = "";
-let current_slack_presence: string = "";
+let slackDndInfo: any = undefined;
+let slackPresence: string = undefined;
+let slackStatus: any = undefined;
 
 // -------------------------------------------
 // - public methods
 // -------------------------------------------
+
+export function clearSlackInfoCache() {
+  slackDndInfo = null;
+  slackPresence = null;
+  slackStatus = null;
+}
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
@@ -223,7 +230,7 @@ export async function updateSlackProfileStatus() {
   }
 
   // palette prompt to clear or set a new status
-  const decision = current_slack_status ? await showStatusUpdateOptions() : "update";
+  const decision = slackStatus ? await showStatusUpdateOptions() : "update";
   if (!decision) {
     return;
   }
@@ -277,6 +284,11 @@ export async function getSlackStatus() {
     return null;
   }
 
+  // use the cached value if its available
+  if (slackStatus) {
+    return slackStatus;
+  }
+
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
@@ -287,8 +299,8 @@ export async function getSlackStatus() {
       console.error("error fetching slack profile: ", e.message);
     });
     // set the cached var and return it
-    current_slack_status = data?.profile?.status_text ?? "";
-    return current_slack_status;
+    slackStatus = data?.profile?.status_text ?? "";
+    return slackStatus;
   }
   return null;
 }
@@ -302,6 +314,12 @@ export async function getSlackPresence() {
   if (!registered) {
     return null;
   }
+
+  // use the cached value if its available
+  if (slackPresence) {
+    return slackPresence;
+  }
+
   // return the 1st one
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
@@ -310,8 +328,8 @@ export async function getSlackPresence() {
       console.error("error fetching slack presence: ", e.message);
     });
     // set the cached var and return it
-    current_slack_presence = data?.presence ?? "active";
-    return current_slack_presence;
+    slackPresence = data?.presence ?? "active";
+    return slackPresence;
   }
   return null;
 }
@@ -328,10 +346,11 @@ export async function toggleSlackPresence() {
   }
 
   // presence val can be either: auto or away
-  const presenceVal = current_slack_presence === "active" ? "away" : "auto";
+  const presenceVal = slackPresence === "active" ? "away" : "auto";
   let presenceUpdated = await updateSlackPresence(presenceVal);
 
   if (presenceUpdated) {
+    slackPresence = presenceVal === "auto" ? "active" : "away";
     window.showInformationMessage(`Slack presence updated`);
     commands.executeCommand("codetime.refreshFlowTree");
   }
@@ -433,10 +452,6 @@ export async function showSlackChannelMenu() {
   return { selectedChannel: null, access_token };
 }
 
-function getTextSnippet(text) {
-  return text.length > 20 ? text.substring(0, 20) + "..." : text;
-}
-
 function getWorkspaceAccessToken(team_domain) {
   const integration = getSlackWorkspaces().find((n) => n.team_domain === team_domain);
   if (integration) {
@@ -515,41 +530,8 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  * Get the slack Oauth from the registered user
  */
 async function getSlackAuth() {
-  let foundNewIntegration = false;
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  if (user && user.integrations) {
-    const currentIntegrations = getSlackWorkspaces();
-    // find the slack auth
-    for (const integration of user.integrations) {
-      // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
-      if (integration.name.toLowerCase() === "slack" && integration.status.toLowerCase() === "active") {
-        // check if it exists
-        const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
-        if (!foundIntegration) {
-          // get the workspace domain using the authId
-          const web = new WebClient(integration.access_token);
-          const usersIdentify = await web.users.identity().catch((e) => {
-            console.log("error fetching slack team info: ", e.message);
-            return null;
-          });
-          if (usersIdentify) {
-            // usersIdentity returns
-            // {team: {id, name, domain, image_102, image_132, ....}...}
-            // set the domain
-            integration["team_domain"] = usersIdentify.team?.domain;
-            integration["team_name"] = usersIdentify.team?.name;
-            // add it
-            currentIntegrations.push(integration);
-
-            foundNewIntegration = true;
-          }
-        }
-      }
-    }
-
-    syncIntegrations(currentIntegrations);
-  }
-  return foundNewIntegration;
+  return await foundNewSlackIntegrations(user);
 }
 
 /**
@@ -655,16 +637,18 @@ async function showStatusUpdateOptions() {
 
 // get the slack do not disturb info
 async function getSlackDnDInfoPerDomain(team_domain) {
-  let dndInfo = null;
+  if (slackDndInfo) {
+    return slackDndInfo;
+  }
   const accessToken = getWorkspaceAccessToken(team_domain);
   if (accessToken) {
     const web = new WebClient(accessToken);
-    dndInfo = await web.dnd.info().catch((e) => {
+    slackDndInfo = await web.dnd.info().catch((e) => {
       console.error("Error fetching slack do not disturb info: ", e.message);
       return null;
     });
   }
-  return dndInfo;
+  return slackDndInfo;
 }
 
 function compareLabels(a, b) {
