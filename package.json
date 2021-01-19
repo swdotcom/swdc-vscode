@@ -92,11 +92,11 @@
       },
       {
         "command": "codetime.enableFlow",
-        "title": "Code Time: Enable flow"
+        "title": "Code Time: Enable Flow Mode"
       },
       {
         "command": "codetime.pauseFlow",
-        "title": "Code Time: Pause flow"
+        "title": "Code Time: Pause Flow Mode"
       }
     ],
     "configuration": [

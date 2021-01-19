@@ -182,9 +182,9 @@ export class KpmProviderManager {
     const inFlowSettingsTooltip = getConfigSettingsTooltip();
     const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
     if (!isInFlowMode()) {
-      treeItems.push(this.getActionButton("Enable flow mode", mdstr, "codetime.enableFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "paw.svg"));
     } else {
-      treeItems.push(this.getActionButton("Pause flow mode", mdstr, "codetime.pauseFlow", "paw.svg"));
+      treeItems.push(this.getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "paw.svg"));
     }
 
     treeItems.push(this.getActionButton("Configure settings", "", "codetime.configureSettings", "profile.svg"));
