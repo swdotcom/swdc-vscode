@@ -59,15 +59,11 @@ export async function enableFlow() {
       title: "Enabling flow...",
       cancellable: false,
     },
-    async (progress) => {
-      return new Promise(function (resolve, reject) {
-        initiateFlow()
-          .then(() => {
-            resolve(true);
-          })
-          .catch((e) => {
-            resolve(true);
-          });
+
+    (progress) => {
+      return new Promise((resolve, reject) => {
+        initiateFlow().catch((e) => {});
+        resolve(true);
       });
     }
   );
@@ -119,15 +115,10 @@ export async function pauseFlow() {
       title: "Turning off flow...",
       cancellable: false,
     },
-    async (progress) => {
-      return new Promise(function (resolve, reject) {
-        pauseFlowInitiate()
-          .then(() => {
-            resolve(true);
-          })
-          .catch((e) => {
-            resolve(true);
-          });
+    (progress) => {
+      return new Promise((resolve, reject) => {
+        pauseFlowInitiate().catch((e) => {});
+        resolve(true);
       });
     }
   );

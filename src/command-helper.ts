@@ -451,14 +451,12 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.toggleZenMode", () => {
       toggleZenMode();
-      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 
   cmds.push(
     commands.registerCommand("codetime.toggleFullScreen", () => {
       toggleFullScreenMode();
-      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 

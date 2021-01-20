@@ -112,11 +112,7 @@ export async function disconnectSlackAuth(authId) {
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
 
-    commands.executeCommand("codetime.refreshFlowTree");
-
-    setTimeout(() => {
-      commands.executeCommand("codetime.refreshCodetimeMenuTree");
-    }, 1000);
+    commands.executeCommand("codetime.refreshTreeViews");
   }
 }
 
@@ -518,11 +514,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
     setAuthCallbackState(null);
     window.showInformationMessage("Successfully connected to Slack");
 
-    commands.executeCommand("codetime.refreshFlowTree");
-
-    setTimeout(() => {
-      commands.executeCommand("codetime.refreshCodetimeMenuTree");
-    }, 1000);
+    commands.executeCommand("codetime.refreshTreeViews");
   }
 }
 
