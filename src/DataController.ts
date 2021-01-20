@@ -100,7 +100,7 @@ export async function foundNewSlackIntegrations(user) {
           // get the workspace domain using the authId
           const web = new WebClient(integration.access_token);
           const usersIdentify = await web.users.identity().catch((e) => {
-            console.log("error fetching slack team info: ", e.message);
+            console.log("Error fetching slack team info: ", e.message);
             return null;
           });
           if (usersIdentify) {

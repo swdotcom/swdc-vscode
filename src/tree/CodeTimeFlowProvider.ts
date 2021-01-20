@@ -45,7 +45,7 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
         } else if (!initialize) {
           setTimeout(() => {
             provider.refresh();
-          }, 0);
+          }, 500);
         }
       }
     })
