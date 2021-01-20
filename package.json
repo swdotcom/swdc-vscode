@@ -149,7 +149,18 @@
         },
         {
           "id": "ct-flow-tree",
-          "name": "FLOW"
+          "name": "FLOW",
+          "when": "isFullscreen == false && inZenMode == false"
+        },
+        {
+          "id": "ct-fullscreen-flow-tree",
+          "name": "FLOW",
+          "when": "isFullscreen == true"
+        },
+        {
+          "id": "ct-zenmode-flow-tree",
+          "name": "FLOW",
+          "when": "inZenMode == true"
         },
         {
           "id": "ct-metrics-tree",
@@ -174,7 +185,7 @@
         {
           "command": "codetime.refreshFlowTree",
           "group": "navigation@1",
-          "when": "view =~ /ct-flow-tree/"
+          "when": "view =~ /ct-.*flow-tree/"
         }
       ]
     }

@@ -1,12 +1,16 @@
-import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable } from "vscode";
+import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable, window } from "vscode";
+import { checkToDisableFlow } from "../managers/FlowManager";
+import { getScreenMode, NORMAL_SCREEN_MODE, updateScreenMode } from "../managers/ScreenManager";
 import { KpmItem } from "../model/models";
-import { KpmProviderManager, KpmTreeItem, handleKpmChangeSelection } from "./KpmProviderManager";
-
-const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
+import { getFlowTreeParents, KpmTreeItem } from "./KpmProviderManager";
+import { handleChangeSelection } from "./TreeUtil";
 
 const collapsedStateMap = {};
 
-export const connectCodeTimeFlowTreeView = (view: TreeView<KpmItem>) => {
+export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, view: TreeView<KpmItem>, screen_mode: number) => {
+  let screenMode = screen_mode;
+  let provider: CodeTimeFlowProvider = treeProvider;
+
   return Disposable.from(
     view.onDidCollapseElement(async (e) => {
       const item: KpmItem = e.element;
@@ -22,13 +26,21 @@ export const connectCodeTimeFlowTreeView = (view: TreeView<KpmItem>) => {
       if (!e.selection || e.selection.length === 0) {
         return;
       }
-
       const item: KpmItem = e.selection[0];
-      handleKpmChangeSelection(view, item);
+      handleChangeSelection(view, item);
     }),
+
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
-        //
+        const prevScreenMode = getScreenMode();
+
+        updateScreenMode(screenMode);
+        checkToDisableFlow();
+
+        if (prevScreenMode !== screenMode) {
+          // refresh the view
+          provider.refresh();
+        }
       }
     })
   );
@@ -41,9 +53,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
 
   private view: TreeView<KpmItem>;
 
-  constructor() {
-    //
-  }
+  constructor() {}
 
   bindView(kpmTreeView: TreeView<KpmItem>): void {
     this.view = kpmTreeView;
@@ -86,7 +96,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
       kpmItems = element.children;
     } else {
       // return the parent elements
-      kpmItems = await kpmProviderMgr.getFlowTreeParents();
+      kpmItems = await getFlowTreeParents();
     }
     return kpmItems;
   }

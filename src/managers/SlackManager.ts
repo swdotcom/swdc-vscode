@@ -121,7 +121,7 @@ export async function disconnectSlackAuth(authId) {
 }
 
 // pause notification on all slack integrations
-export async function pauseSlackNotifications() {
+export async function pauseSlackNotifications(showSuccessNotification = true) {
   const registered = await checkRegistration();
   if (!registered) {
     return;
@@ -145,7 +145,7 @@ export async function pauseSlackNotifications() {
     }
   }
 
-  if (enabled) {
+  if (enabled && showSuccessNotification) {
     window.showInformationMessage("Slack notifications are paused for 2 hours");
   }
 
@@ -153,7 +153,7 @@ export async function pauseSlackNotifications() {
 }
 
 // enable notifications on all slack integrations
-export async function enableSlackNotifications() {
+export async function enableSlackNotifications(showSuccessNotification = true) {
   const registered = await checkRegistration();
   if (!registered) {
     return;
@@ -177,7 +177,7 @@ export async function enableSlackNotifications() {
     }
   }
 
-  if (enabled) {
+  if (enabled && showSuccessNotification) {
     window.showInformationMessage("Slack notifications enabled");
   }
   commands.executeCommand("codetime.refreshFlowTree");

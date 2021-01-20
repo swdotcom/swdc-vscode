@@ -24,7 +24,6 @@ import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
 import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
-import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
@@ -244,12 +243,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     commands.executeCommand("codetime.refreshTreeViews");
 
     initializePreferences();
-
-    // reset the updated tree date since they've established a new account
-    setItem("updatedTreeDate", null);
-    if (KpmProviderManager.getInstance().isKpmTreeOpen()) {
-      treeDataUpdateCheck();
-    }
   }
 }
 

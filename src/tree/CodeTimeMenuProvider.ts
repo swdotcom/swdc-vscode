@@ -1,9 +1,9 @@
 import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable } from "vscode";
 import { KpmItem } from "../model/models";
-import { KpmProviderManager, KpmTreeItem, handleKpmChangeSelection } from "./KpmProviderManager";
+import { getCodeTimeTreeMenu, KpmTreeItem } from "./KpmProviderManager";
 import { logIt } from "../Util";
-
-const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
+import { handleChangeSelection } from "./TreeUtil";
+import { getLearnMoreButton } from "./TreeButtonProvider";
 
 const codetimeCollapsedStateMap = {};
 
@@ -26,7 +26,7 @@ export const connectCodeTimeMenuTreeView = (view: TreeView<KpmItem>) => {
 
       const item: KpmItem = e.selection[0];
 
-      handleKpmChangeSelection(view, item);
+      handleChangeSelection(view, item);
     }),
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
@@ -53,7 +53,7 @@ export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
       await this.refresh();
     }
 
-    const item: KpmItem = KpmProviderManager.getInstance().getLearnMoreButton();
+    const item: KpmItem = getLearnMoreButton();
     try {
       // select the readme item
       this.view.reveal(item, {
@@ -107,7 +107,7 @@ export class CodeTimeMenuProvider implements TreeDataProvider<KpmItem> {
       kpmItems = element.children;
     } else {
       // return the parent elements
-      kpmItems = await kpmProviderMgr.getCodeTimeTreeMenu();
+      kpmItems = await getCodeTimeTreeMenu();
     }
     return kpmItems;
   }
