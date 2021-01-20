@@ -24,7 +24,7 @@
 
 <p>Join a community of over 100,000 data-informed developers. Discover best code times, defend code time, see the impact of meetings, and improve work-life balance. Track and visualize all of your projects, or export your data to connect to your billing and timesheet tools.</p>
 
-![Code Time features for VS Code](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features-2.3.25.png)
+![Code Time features for VS Code](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features-2.4.0.png)
 
 ## Getting started
 
@@ -42,7 +42,7 @@ Your status bar shows you in real-time how many hours and minutes you code each 
 
 ## Boost productivity
 
-![Code Time for VS Code flow automations](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/stay-in-flow.png)
+![Code Time for VS Code flow automations](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/stay-in-flow-2.4.0.png)
 
 Flow automations make it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. 
 
@@ -52,7 +52,7 @@ Clicking an active flow automation again will reverse the original action, so yo
 
 ## Track development metrics
 
-![Code Time programming metrics](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/measure-progress.png)
+![Code Time programming metrics](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/measure-progress-2.4.0.png)
 
 Your coding stats can help you understand how you are improving over time. You can also see how you stack up against the Software community. 
 
