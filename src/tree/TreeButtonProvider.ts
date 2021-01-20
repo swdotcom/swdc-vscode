@@ -100,6 +100,12 @@ export function getDescriptionButton(label, description, tooltip, command, icon 
   return item;
 }
 
+export function buildEmptyButton(id) {
+  const item: KpmItem = new KpmItem();
+  item.id = id;
+  return item;
+}
+
 export function buildMetricItem(label, value, tooltip = "", icon = null, name = "", location = "ct_metrics_tree") {
   const item: KpmItem = new KpmItem();
   item.label = `${label}: ${value}`;

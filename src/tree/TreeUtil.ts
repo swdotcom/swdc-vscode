@@ -1,5 +1,6 @@
-import { commands, TreeView } from "vscode";
+import { commands, TreeView, window } from "vscode";
 import { KpmItem } from "../model/models";
+import { buildEmptyButton } from "./TreeButtonProvider";
 
 let treeOpen = false;
 
@@ -12,7 +13,7 @@ export function setKpmTreeOpen(isOpen: boolean) {
 }
 
 export function handleChangeSelection(view: TreeView<KpmItem>, item: KpmItem) {
-  if (item.command) {
+  if (item?.command) {
     const args = item.commandArgs || [];
     if (args.length) {
       commands.executeCommand(item.command, ...args);
@@ -22,12 +23,28 @@ export function handleChangeSelection(view: TreeView<KpmItem>, item: KpmItem) {
     }
   }
 
-  // deselect it
-  try {
-    // re-select the track without focus
-    view.reveal(item, {
-      focus: false,
-      select: false,
-    });
-  } catch (err) {}
+  if (item) {
+    // logic to deselect the current tree item
+    revealEmptyButton(view, true, item.location);
+    revealEmptyButton(view, false, item.location);
+  }
+}
+
+function revealEmptyButton(view: TreeView<KpmItem>, select: boolean, location: string) {
+  if (location) {
+    try {
+      let buttonId = "";
+      if (location === "ct-flow-tree") {
+        buttonId = "empty-flow-button";
+      }
+      if (buttonId) {
+        // set the select to false to deselect
+        view.reveal(buildEmptyButton(buttonId), {
+          select,
+        });
+      }
+    } catch (err) {
+      console.log("error revealing item: ", err);
+    }
+  }
 }

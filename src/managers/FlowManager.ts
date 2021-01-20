@@ -59,8 +59,16 @@ export async function enableFlow() {
       title: "Enabling flow...",
       cancellable: false,
     },
-    async () => {
-      initiateFlow();
+    async (progress) => {
+      return new Promise(function (resolve, reject) {
+        initiateFlow()
+          .then(() => {
+            resolve(true);
+          })
+          .catch((e) => {
+            resolve(true);
+          });
+      });
     }
   );
 }
@@ -108,11 +116,19 @@ export async function pauseFlow() {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Turning off code flow...",
+      title: "Turning off flow...",
       cancellable: false,
     },
-    async () => {
-      pauseFlowInitiate();
+    async (progress) => {
+      return new Promise(function (resolve, reject) {
+        pauseFlowInitiate()
+          .then(() => {
+            resolve(true);
+          })
+          .catch((e) => {
+            resolve(true);
+          });
+      });
     }
   );
 }

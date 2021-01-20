@@ -1,6 +1,6 @@
-import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable, window } from "vscode";
+import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, TreeView, Disposable } from "vscode";
 import { checkToDisableFlow } from "../managers/FlowManager";
-import { getScreenMode, NORMAL_SCREEN_MODE, updateScreenMode } from "../managers/ScreenManager";
+import { getScreenMode, updateScreenMode } from "../managers/ScreenManager";
 import { KpmItem } from "../model/models";
 import { getFlowTreeParents, KpmTreeItem } from "./KpmProviderManager";
 import { handleChangeSelection } from "./TreeUtil";

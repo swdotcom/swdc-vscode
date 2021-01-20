@@ -10,6 +10,7 @@ import { isDarkMode } from "../managers/OsaScriptManager";
 import { getConfigSettingsTooltip, isInFlowMode } from "../managers/FlowManager";
 import { FULL_SCREEN_MODE_ID, getScreenMode, ZEN_MODE_ID } from "../managers/ScreenManager";
 import {
+  buildEmptyButton,
   buildMessageItem,
   getActionButton,
   getCodeTimeDashboardButton,
@@ -124,20 +125,26 @@ export async function getStatsTreeItems(): Promise<KpmItem[]> {
 
 export async function getFlowTreeParents(): Promise<KpmItem[]> {
   const treeItems: KpmItem[] = [];
+  const location = "ct-flow-tree";
 
   const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
 
   const inFlowSettingsTooltip = getConfigSettingsTooltip();
   const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
+  let flowModeButton: KpmItem = null;
   if (!isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
-    treeItems.push(getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "paw.svg"));
+    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "paw.svg");
   } else {
-    treeItems.push(getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "paw.svg"));
+    flowModeButton = getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "paw.svg");
   }
+  flowModeButton.location = location;
+  treeItems.push(flowModeButton);
 
   treeItems.push(getActionButton("Configure settings", "", "codetime.configureSettings", "profile.svg"));
 
   treeItems.push(await getAutomationsTree(slackStatus, slackPresence, slackDnDInfo));
+
+  treeItems.push(buildEmptyButton("empty-flow-button"));
 
   return treeItems;
 }
