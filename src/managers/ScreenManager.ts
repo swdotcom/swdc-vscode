@@ -7,7 +7,6 @@ export const FULL_SCREEN_MODE_ID = 2;
 let screenMode: number = 0;
 
 export function updateScreenMode(screen_mode: number) {
-  console.log(`******** UPDATING SCREEN MODE TO: ${screen_mode}`);
   screenMode = screen_mode;
 }
 

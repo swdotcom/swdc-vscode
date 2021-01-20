@@ -61,13 +61,13 @@ export function createCommands(
   cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
   // FLOW TREE: INIT
-  const codetimeFlowTreeProvider = new CodeTimeFlowProvider();
-  const codetimeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
-    treeDataProvider: codetimeFlowTreeProvider,
+  const codetimeNormalModeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeNormalModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
+    treeDataProvider: codetimeNormalModeFlowTreeProvider,
     showCollapseAll: false,
   });
-  codetimeFlowTreeProvider.bindView(codetimeFlowTreeView);
-  cmds.push(connectCodeTimeFlowTreeView(codetimeFlowTreeProvider, codetimeFlowTreeView, NORMAL_SCREEN_MODE));
+  codetimeNormalModeFlowTreeProvider.bindView(codetimeNormalModeFlowTreeView);
+  cmds.push(connectCodeTimeFlowTreeView(codetimeNormalModeFlowTreeProvider, codetimeNormalModeFlowTreeView, NORMAL_SCREEN_MODE));
 
   // FULL SCREEN FLOW TREE: INIT
   const codetimeFullScreenFlowTreeProvider = new CodeTimeFlowProvider();
@@ -276,7 +276,7 @@ export function createCommands(
       const screenMode = getScreenMode();
       if (screenMode === NORMAL_SCREEN_MODE) {
         // refresh the flow tree provider
-        codetimeFlowTreeProvider.refresh();
+        codetimeNormalModeFlowTreeProvider.refresh();
       } else if (screenMode === FULL_SCREEN_MODE_ID) {
         codetimeFullScreenFlowTreeProvider.refresh();
       } else {

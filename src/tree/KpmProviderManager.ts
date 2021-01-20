@@ -178,7 +178,9 @@ async function getAutomationsTree(slackStatus, slackPresence, slackDnDInfo): Pro
     fullScreenToggleLabel = "Exit full screen";
     fullScreenIcon = "compress.svg";
   }
-  parentItem.children.push(getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon));
+  const fullScreenButton = getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon);
+  fullScreenButton.location = "ct-flow-tree";
+  parentItem.children.push(fullScreenButton);
 
   // slack status setter
   parentItem.children.push(getDescriptionButton("Update profile status", slackStatus, "", "codetime.updateProfileStatus", "profile.svg"));

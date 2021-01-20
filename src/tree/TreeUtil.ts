@@ -43,8 +43,6 @@ function revealEmptyButton(view: TreeView<KpmItem>, select: boolean, location: s
           select,
         });
       }
-    } catch (err) {
-      console.log("error revealing item: ", err);
-    }
+    } catch (err) {}
   }
 }

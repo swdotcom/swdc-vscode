@@ -60,49 +60,52 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   }
 
   getParent(_p: KpmItem) {
-    console.log(`-------------- GET PARENT: ${this.view.title}`);
     return void 0; // all playlists are in root
   }
 
   refresh(): void {
-    console.log(`-------------- REFRESHING: ${this.view.title}`);
-    this._onDidChangeTreeData.fire(null);
+    if (this.view && this.view.visible) {
+      this._onDidChangeTreeData.fire(null);
+    }
   }
 
   refreshParent(parent: KpmItem) {
-    console.log(`-------------- REFRESHING PARENT: ${this.view.title}`);
-    this._onDidChangeTreeData.fire(parent);
+    if (this.view && this.view.visible) {
+      this._onDidChangeTreeData.fire(parent);
+    }
   }
 
   getTreeItem(p: KpmItem): KpmTreeItem {
-    console.log(`-------------- GET TREE ITEM: ${this.view.title}`);
     let treeItem: KpmTreeItem = null;
-    if (p.children.length) {
-      let collasibleState = collapsedStateMap[p.label];
-      if (p.initialCollapsibleState !== undefined) {
-        treeItem = createKpmTreeItem(p, p.initialCollapsibleState);
-      } else if (!collasibleState) {
-        treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.Collapsed);
+    try {
+      if (p.children.length) {
+        let collasibleState = collapsedStateMap[p.label];
+        if (p.initialCollapsibleState !== undefined) {
+          treeItem = createKpmTreeItem(p, p.initialCollapsibleState);
+        } else if (!collasibleState) {
+          treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.Collapsed);
+        } else {
+          treeItem = createKpmTreeItem(p, collasibleState);
+        }
       } else {
-        treeItem = createKpmTreeItem(p, collasibleState);
+        treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.None);
       }
-    } else {
-      treeItem = createKpmTreeItem(p, TreeItemCollapsibleState.None);
-    }
+    } catch (e) {}
 
     return treeItem;
   }
 
   async getChildren(element?: KpmItem): Promise<KpmItem[]> {
-    console.log(`-------------- GET CHILDREN: ${this.view.title}`);
     let kpmItems: KpmItem[] = [];
-    if (element) {
-      // return the children of this element
-      kpmItems = element.children;
-    } else {
-      // return the parent elements
-      kpmItems = await getFlowTreeParents();
-    }
+    try {
+      if (element) {
+        // return the children of this element
+        kpmItems = element.children;
+      } else {
+        // return the parent elements
+        kpmItems = await getFlowTreeParents();
+      }
+    } catch (e) {}
     return kpmItems;
   }
 }
