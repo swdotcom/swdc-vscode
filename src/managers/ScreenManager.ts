@@ -7,6 +7,7 @@ export const FULL_SCREEN_MODE_ID = 2;
 let screenMode: number = 0;
 
 export function updateScreenMode(screen_mode: number) {
+  console.log(`******** UPDATING SCREEN MODE TO: ${screen_mode}`);
   screenMode = screen_mode;
 }
 
@@ -15,6 +16,9 @@ export function getScreenMode() {
 }
 
 export function toggleZenMode() {
+  if (screenMode !== ZEN_MODE_ID) {
+    updateScreenMode(ZEN_MODE_ID);
+  }
   commands.executeCommand("workbench.action.toggleZenMode");
 }
 

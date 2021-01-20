@@ -60,18 +60,22 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   }
 
   getParent(_p: KpmItem) {
+    console.log(`-------------- GET PARENT: ${this.view.title}`);
     return void 0; // all playlists are in root
   }
 
   refresh(): void {
+    console.log(`-------------- REFRESHING: ${this.view.title}`);
     this._onDidChangeTreeData.fire(null);
   }
 
   refreshParent(parent: KpmItem) {
+    console.log(`-------------- REFRESHING PARENT: ${this.view.title}`);
     this._onDidChangeTreeData.fire(parent);
   }
 
   getTreeItem(p: KpmItem): KpmTreeItem {
+    console.log(`-------------- GET TREE ITEM: ${this.view.title}`);
     let treeItem: KpmTreeItem = null;
     if (p.children.length) {
       let collasibleState = collapsedStateMap[p.label];
@@ -90,6 +94,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   }
 
   async getChildren(element?: KpmItem): Promise<KpmItem[]> {
+    console.log(`-------------- GET CHILDREN: ${this.view.title}`);
     let kpmItems: KpmItem[] = [];
     if (element) {
       // return the children of this element
