@@ -24,7 +24,6 @@ import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
 import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
-import { KpmProviderManager, treeDataUpdateCheck } from "./tree/KpmProviderManager";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
@@ -101,7 +100,7 @@ export async function foundNewSlackIntegrations(user) {
           // get the workspace domain using the authId
           const web = new WebClient(integration.access_token);
           const usersIdentify = await web.users.identity().catch((e) => {
-            console.log("error fetching slack team info: ", e.message);
+            console.log("Error fetching slack team info: ", e.message);
             return null;
           });
           if (usersIdentify) {
@@ -244,12 +243,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     commands.executeCommand("codetime.refreshTreeViews");
 
     initializePreferences();
-
-    // reset the updated tree date since they've established a new account
-    setItem("updatedTreeDate", null);
-    if (KpmProviderManager.getInstance().isKpmTreeOpen()) {
-      treeDataUpdateCheck();
-    }
   }
 }
 

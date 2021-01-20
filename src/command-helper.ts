@@ -5,7 +5,6 @@ import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTimeMenuProvider";
 import { KpmItem, UIInteractionType } from "./model/models";
-import { KpmProviderManager } from "./tree/KpmProviderManager";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
@@ -27,9 +26,19 @@ import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTi
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
-import { toggleFullScreenMode, toggleZenMode } from "./managers/ScreenManager";
+import { FULL_SCREEN_MODE_ID, getScreenMode, NORMAL_SCREEN_MODE, toggleFullScreenMode, toggleZenMode, ZEN_MODE_ID } from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
+import {
+  getCodeTimeDashboardButton,
+  getContributorReportButton,
+  getFeedbackButton,
+  getHideStatusBarMetricsButton,
+  getLearnMoreButton,
+  getSignUpButton,
+  getViewProjectSummaryButton,
+  getWebViewDashboardButton,
+} from "./tree/TreeButtonProvider";
 
 export function createCommands(
   kpmController: KpmManager
@@ -39,7 +48,6 @@ export function createCommands(
   let cmds = [];
 
   const tracker: TrackerManager = TrackerManager.getInstance();
-  const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 
   cmds.push(kpmController);
 
@@ -53,13 +61,31 @@ export function createCommands(
   cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
   // FLOW TREE: INIT
-  const codetimeFlowTreeProvider = new CodeTimeFlowProvider();
-  const codetimeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
-    treeDataProvider: codetimeFlowTreeProvider,
+  const codetimeNormalModeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeNormalModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
+    treeDataProvider: codetimeNormalModeFlowTreeProvider,
     showCollapseAll: false,
   });
-  codetimeFlowTreeProvider.bindView(codetimeFlowTreeView);
-  cmds.push(connectCodeTimeFlowTreeView(codetimeFlowTreeView));
+  codetimeNormalModeFlowTreeProvider.bindView(codetimeNormalModeFlowTreeView);
+  cmds.push(connectCodeTimeFlowTreeView(codetimeNormalModeFlowTreeProvider, codetimeNormalModeFlowTreeView, NORMAL_SCREEN_MODE));
+
+  // FULL SCREEN FLOW TREE: INIT
+  const codetimeFullScreenFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeFullScreenFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-fullscreen-flow-tree", {
+    treeDataProvider: codetimeFullScreenFlowTreeProvider,
+    showCollapseAll: false,
+  });
+  codetimeFullScreenFlowTreeProvider.bindView(codetimeFullScreenFlowTreeView);
+  cmds.push(connectCodeTimeFlowTreeView(codetimeFullScreenFlowTreeProvider, codetimeFullScreenFlowTreeView, FULL_SCREEN_MODE_ID));
+
+  // ZEN SCREEN FLOW TREE: INIT
+  const codetimeZenModeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeZenModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-zenmode-flow-tree", {
+    treeDataProvider: codetimeZenModeFlowTreeProvider,
+    showCollapseAll: false,
+  });
+  codetimeZenModeFlowTreeProvider.bindView(codetimeZenModeFlowTreeView);
+  cmds.push(connectCodeTimeFlowTreeView(codetimeZenModeFlowTreeProvider, codetimeZenModeFlowTreeView, ZEN_MODE_ID));
 
   // STATUS BAR CLICK - MENU TREE REVEAL
   cmds.push(
@@ -100,7 +126,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getWebViewDashboardButton();
+        item = getWebViewDashboardButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_web_metrics_cmd";
@@ -125,7 +151,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getHideStatusBarMetricsButton();
+        item = getHideStatusBarMetricsButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_toggle_status_bar_metrics_cmd";
@@ -146,7 +172,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getSignUpButton("email", "grey");
+        item = getSignUpButton("email", "grey");
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
@@ -163,7 +189,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getSignUpButton("existing", "blue");
+        item = getSignUpButton("existing", "blue");
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
@@ -189,7 +215,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getSignUpButton("Google", null);
+        item = getSignUpButton("Google", null);
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
@@ -207,7 +233,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getSignUpButton("GitHub", "white");
+        item = getSignUpButton("GitHub", "white");
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
@@ -242,13 +268,20 @@ export function createCommands(
     })
   );
 
-  // FLOW TERE: REFRESH
+  // FLOW TREE: REFRESH
   cmds.push(
     commands.registerCommand("codetime.refreshFlowTree", () => {
       // clear the cache items to force a fetch from the Slack API
       clearSlackInfoCache();
-      // refresh the flow tree provider
-      codetimeFlowTreeProvider.refresh();
+      const screenMode = getScreenMode();
+      if (screenMode === NORMAL_SCREEN_MODE) {
+        // refresh the flow tree provider
+        codetimeNormalModeFlowTreeProvider.refresh();
+      } else if (screenMode === FULL_SCREEN_MODE_ID) {
+        codetimeFullScreenFlowTreeProvider.refresh();
+      } else {
+        codetimeZenModeFlowTreeProvider.refresh();
+      }
     })
   );
 
@@ -258,7 +291,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getFeedbackButton();
+        item = getFeedbackButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
       }
@@ -273,7 +306,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getLearnMoreButton();
+        item = getLearnMoreButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_learn_more_cmd";
@@ -291,7 +324,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getViewProjectSummaryButton();
+        item = getViewProjectSummaryButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_project_summary_cmd";
@@ -309,7 +342,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getCodeTimeDashboardButton();
+        item = getCodeTimeDashboardButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_dashboard_cmd";
@@ -327,7 +360,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getContributorReportButton(item.value);
+        item = getContributorReportButton(item.value);
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
         item.name = "ct_contributor_repo_identifier_cmd";
@@ -359,7 +392,7 @@ export function createCommands(
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = kpmProviderMgr.getFeedbackButton();
+        item = getFeedbackButton();
         item.location = "ct_command_palette";
         item.interactionType = UIInteractionType.Keyboard;
       }
@@ -418,14 +451,12 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.toggleZenMode", () => {
       toggleZenMode();
-      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 
   cmds.push(
     commands.registerCommand("codetime.toggleFullScreen", () => {
       toggleFullScreenMode();
-      commands.executeCommand("codetime.refreshFlowTree");
     })
   );
 

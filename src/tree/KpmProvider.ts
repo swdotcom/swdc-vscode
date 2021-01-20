@@ -1,9 +1,9 @@
 import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, Disposable, TreeView } from "vscode";
 import { KpmItem } from "../model/models";
-import { KpmProviderManager, KpmTreeItem, handleKpmChangeSelection, treeDataUpdateCheck } from "./KpmProviderManager";
+import { getStatsTreeItems, KpmTreeItem, treeDataUpdateCheck } from "./KpmProviderManager";
 import { TrackerManager } from "../managers/TrackerManager";
+import { handleChangeSelection, setKpmTreeOpen } from "./TreeUtil";
 
-const kpmProviderMgr: KpmProviderManager = KpmProviderManager.getInstance();
 const kpmCollapsedStateMap = {};
 
 export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
@@ -28,15 +28,15 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
       }
 
       const item: KpmItem = e.selection[0];
-      handleKpmChangeSelection(view, item);
+      handleChangeSelection(view, item);
     }),
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
         // check if its a new day, if so fetch the averages
         treeDataUpdateCheck();
-        kpmProviderMgr.setKpmTreeOpen(true);
+        setKpmTreeOpen(true);
       } else {
-        kpmProviderMgr.setKpmTreeOpen(false);
+        setKpmTreeOpen(false);
       }
     })
   );
@@ -92,7 +92,7 @@ export class KpmProvider implements TreeDataProvider<KpmItem> {
       kpmItems = element.children;
     } else {
       // return the parent elements
-      kpmItems = await kpmProviderMgr.getStatsTreeItems();
+      kpmItems = await getStatsTreeItems();
     }
     return kpmItems;
   }
