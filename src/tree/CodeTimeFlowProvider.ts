@@ -7,6 +7,8 @@ import { handleChangeSelection } from "./TreeUtil";
 
 const collapsedStateMap = {};
 
+let initialize = false;
+
 export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, view: TreeView<KpmItem>, screen_mode: number) => {
   let screenMode = screen_mode;
   let provider: CodeTimeFlowProvider = treeProvider;
@@ -40,6 +42,10 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
         if (prevScreenMode !== screenMode) {
           // refresh the view
           provider.refresh();
+        } else if (!initialize) {
+          setTimeout(() => {
+            provider.refresh();
+          }, 0);
         }
       }
     })
@@ -97,15 +103,17 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
 
   async getChildren(element?: KpmItem): Promise<KpmItem[]> {
     let kpmItems: KpmItem[] = [];
-    try {
-      if (element) {
-        // return the children of this element
-        kpmItems = element.children;
-      } else {
-        // return the parent elements
-        kpmItems = await getFlowTreeParents();
-      }
-    } catch (e) {}
+    if (this.view && this.view.visible) {
+      try {
+        if (element) {
+          // return the children of this element
+          kpmItems = element.children;
+        } else {
+          // return the parent elements
+          kpmItems = await getFlowTreeParents();
+        }
+      } catch (e) {}
+    }
     return kpmItems;
   }
 }
