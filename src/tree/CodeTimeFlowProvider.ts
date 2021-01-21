@@ -4,6 +4,7 @@ import { getScreenMode, updateScreenMode } from "../managers/ScreenManager";
 import { KpmItem } from "../model/models";
 import { getFlowTreeParents, KpmTreeItem } from "./KpmProviderManager";
 import { handleChangeSelection } from "./TreeUtil";
+import { clearSlackInfoCache } from "../managers/SlackManager";
 
 const collapsedStateMap = {};
 
@@ -35,19 +36,30 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
         const prevScreenMode = getScreenMode();
-
+        // set the screen mode based on screen mode this flow is associated with
+        // full, zen, normal
         updateScreenMode(screenMode);
-        checkToDisableFlow();
 
         let refreshProvider = false;
-        if (prevScreenMode !== screenMode || !initialized) {
+        const screenModeChanged = prevScreenMode !== screenMode;
+        if (screenModeChanged || !initialized) {
           refreshProvider = true;
         }
 
+        // refresh this provider if the screen mode changed or we're initializing
         if (refreshProvider) {
+          clearSlackInfoCache();
           setTimeout(() => {
+            initialized = true;
             provider.refresh();
           }, 0);
+        }
+
+        if (screenModeChanged) {
+          // check to see if flow mode has ended manually
+          setTimeout(() => {
+            checkToDisableFlow();
+          }, 6000);
         }
       }
     })
@@ -105,7 +117,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
 
   async getChildren(element?: KpmItem): Promise<KpmItem[]> {
     let kpmItems: KpmItem[] = [];
-    if (this.view && this.view.visible) {
+    if (initialized && this.view.visible) {
       try {
         if (element) {
           // return the children of this element
@@ -115,7 +127,6 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
           kpmItems = await getFlowTreeParents();
         }
       } catch (e) {}
-      initialized = true;
     }
     return kpmItems;
   }

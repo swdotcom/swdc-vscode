@@ -92,7 +92,7 @@ async function initiateFlow() {
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await pauseSlackNotifications(false);
+    await pauseSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/);
   }
 
   // set to zen mode
@@ -143,7 +143,7 @@ async function pauseFlowInitiate() {
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await enableSlackNotifications(false);
+    await enableSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/);
   }
 
   showNormalScreenMode();
