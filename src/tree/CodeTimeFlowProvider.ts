@@ -47,7 +47,8 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
         }
 
         // refresh this provider if the screen mode changed or we're initializing
-        if (refreshProvider) {
+        if (refreshProvider || provider.refresh_scheduled) {
+          provider.refresh_scheduled = false;
           clearSlackInfoCache();
           setTimeout(() => {
             initialized = true;
@@ -59,7 +60,7 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
           // check to see if flow mode has ended manually
           setTimeout(() => {
             checkToDisableFlow();
-          }, 6000);
+          }, 0);
         }
       }
     })
@@ -72,8 +73,12 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   readonly onDidChangeTreeData: Event<KpmItem | undefined> = this._onDidChangeTreeData.event;
 
   private view: TreeView<KpmItem>;
+  public screen_mode: number = 0;
+  public refresh_scheduled: boolean = false;
 
-  constructor() {}
+  constructor(screenMode: number) {
+    this.screen_mode = screenMode;
+  }
 
   bindView(kpmTreeView: TreeView<KpmItem>): void {
     this.view = kpmTreeView;
@@ -87,6 +92,10 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
     if (this.view && this.view.visible) {
       this._onDidChangeTreeData.fire(null);
     }
+  }
+
+  scheduleRefresh(): void {
+    this.refresh_scheduled = true;
   }
 
   refreshParent(parent: KpmItem) {
@@ -133,7 +142,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
 }
 
 /**
- * Create the playlist tree item (root or leaf)
+ * Create the tree item (root or leaf)
  * @param p
  * @param cstate
  */

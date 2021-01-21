@@ -170,15 +170,22 @@ async function getAutomationsTree(slackStatus, slackPresence, slackDnDInfo): Pro
   const screen_mode = getScreenMode();
   const parentItem: KpmItem = buildMessageItem("Automations", "", null);
 
-  parentItem.children.push(getActionButton("Toggle Zen Mode", "", "codetime.toggleZenMode", "zen.svg"));
+  let zenModeScreeCommand = "codetime.showZenMode";
+  if (screen_mode === ZEN_MODE_ID) {
+    zenModeScreeCommand = "codetime.exitFullScreen";
+  }
+
+  parentItem.children.push(getActionButton("Toggle Zen Mode", "", zenModeScreeCommand, "zen.svg"));
 
   let fullScreenToggleLabel = "Enter full screen";
   let fullScreenIcon = "expand.svg";
+  let fullScreenCommand = "codetime.showFullScreen";
   if (screen_mode === FULL_SCREEN_MODE_ID || screen_mode === ZEN_MODE_ID) {
     fullScreenToggleLabel = "Exit full screen";
     fullScreenIcon = "compress.svg";
+    fullScreenCommand = "codetime.exitFullScreen";
   }
-  const fullScreenButton = getActionButton(fullScreenToggleLabel, "", "codetime.toggleFullScreen", fullScreenIcon);
+  const fullScreenButton = getActionButton(fullScreenToggleLabel, "", fullScreenCommand, fullScreenIcon);
   fullScreenButton.location = "ct-flow-tree";
   parentItem.children.push(fullScreenButton);
 

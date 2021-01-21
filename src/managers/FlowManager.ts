@@ -96,15 +96,20 @@ async function initiateFlow() {
   }
 
   // set to zen mode
+  let screenChanged = false;
   if (configSettings.screenMode.includes("Full Screen")) {
-    showFullScreenMode();
+    screenChanged = showFullScreenMode();
   } else if (configSettings.screenMode.includes("Zen")) {
-    showZenMode();
+    screenChanged = showZenMode();
   } else {
-    showNormalScreenMode();
+    screenChanged = showNormalScreenMode();
   }
 
-  commands.executeCommand("codetime.refreshFlowTree");
+  if (!screenChanged) {
+    commands.executeCommand("codetime.refreshFlowTree");
+  } else {
+    commands.executeCommand("codetime.scheduleFlowRefresh");
+  }
   enabledFlow = true;
 }
 
@@ -146,9 +151,13 @@ async function pauseFlowInitiate() {
     await enableSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/);
   }
 
-  showNormalScreenMode();
+  const screenChanged = showNormalScreenMode();
 
-  commands.executeCommand("codetime.refreshFlowTree");
+  if (!screenChanged) {
+    commands.executeCommand("codetime.refreshFlowTree");
+  } else {
+    commands.executeCommand("codetime.scheduleFlowRefresh");
+  }
   enabledFlow = false;
 }
 
