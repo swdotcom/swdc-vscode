@@ -133,7 +133,7 @@ export async function getFlowTreeParents(): Promise<KpmItem[]> {
   const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
   let flowModeButton: KpmItem = null;
   if (!isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
-    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "dot.svg");
+    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "dot-outlined.svg");
   } else {
     flowModeButton = getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "dot.svg");
   }

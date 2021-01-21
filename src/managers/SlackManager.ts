@@ -116,8 +116,8 @@ export async function disconnectSlackAuth(authId) {
 }
 
 // pause notification on all slack integrations
-export async function pauseSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true) {
-  if (!checkRegistration(true) || !checkSlackConnection(true)) {
+export async function pauseSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true, isFlowRequest = false) {
+  if (!isFlowRequest && (!checkRegistration(true) || !checkSlackConnection(true))) {
     return;
   }
 
@@ -148,8 +148,8 @@ export async function pauseSlackNotifications(showSuccessNotification = true, in
 }
 
 // enable notifications on all slack integrations
-export async function enableSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true) {
-  if (!checkRegistration(true) || !checkSlackConnection(true)) {
+export async function enableSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true, isFlowRequest = false) {
+  if (!isFlowRequest && (!checkRegistration(true) || !checkSlackConnection(true))) {
     return;
   }
 
@@ -560,23 +560,27 @@ function removeSlackIntegration(authId) {
 export function checkRegistration(showSignup = true) {
   if (!getItem("name")) {
     if (showSignup) {
-      window
-        .showInformationMessage(
-          "Connecting Slack requires a registered account. Sign up or log in to continue.",
-          {
-            modal: true,
-          },
-          SIGN_UP_LABEL
-        )
-        .then(async (selection) => {
-          if (selection === SIGN_UP_LABEL) {
-            commands.executeCommand("codetime.signUpAccount");
-          }
-        });
+      showModalSignupPrompt("Connecting Slack requires a registered account. Sign up or log in to continue.");
     }
     return false;
   }
   return true;
+}
+
+export function showModalSignupPrompt(msg: string) {
+  window
+    .showInformationMessage(
+      msg,
+      {
+        modal: true,
+      },
+      SIGN_UP_LABEL
+    )
+    .then(async (selection) => {
+      if (selection === SIGN_UP_LABEL) {
+        commands.executeCommand("codetime.signUpAccount");
+      }
+    });
 }
 
 export function checkSlackConnection(showConnect = true) {
@@ -599,6 +603,23 @@ export function checkSlackConnection(showConnect = true) {
     return false;
   }
   return true;
+}
+
+export async function checkSlackConnectionForFlowMode() {
+  if (!hasSlackWorkspaces()) {
+    const selection = await window.showInformationMessage("Slack isn't connected", { modal: true }, ...["Continue anyway", "Connect Slack"]);
+    if (!selection) {
+      // the user selected "cancel"
+      return { connected: false, usingAllSettingsForFlow: true };
+    } else if (selection === "Continue anyway") {
+      return { connected: true, usingAllSettingsForFlow: false };
+    } else {
+      // connect was selected
+      commands.executeCommand("codetime.connectSlackWorkspace");
+      return { connected: false, usingAllSettingsForFlow: true };
+    }
+  }
+  return { connected: true, usingAllSettingsForFlow: true };
 }
 
 /**
