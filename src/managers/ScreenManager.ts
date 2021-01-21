@@ -14,37 +14,33 @@ export function getScreenMode() {
   return screenMode;
 }
 
-export function toggleZenMode() {
-  if (screenMode !== ZEN_MODE_ID) {
-    updateScreenMode(ZEN_MODE_ID);
-  }
-  commands.executeCommand("workbench.action.toggleZenMode");
-}
-
-export function toggleFullScreenMode() {
-  commands.executeCommand("workbench.action.toggleFullScreen");
-}
-
 export function showZenMode() {
   if (screenMode !== ZEN_MODE_ID) {
     commands.executeCommand("workbench.action.toggleZenMode");
+    return true;
   }
+  return false;
 }
 
 export function showFullScreenMode() {
   if (screenMode !== FULL_SCREEN_MODE_ID) {
     commands.executeCommand("workbench.action.toggleFullScreen");
+    return true;
   }
+  return false;
 }
 
 export function showNormalScreenMode() {
   if (screenMode !== NORMAL_SCREEN_MODE) {
     if (screenMode == FULL_SCREEN_MODE_ID) {
       commands.executeCommand("workbench.action.toggleFullScreen");
+      return true;
     } else if (screenMode == ZEN_MODE_ID) {
       commands.executeCommand("workbench.action.toggleZenMode");
+      return true;
     }
   }
+  return false;
 }
 
 export function isInZenMode() {

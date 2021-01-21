@@ -1,4 +1,4 @@
-import { commands, window } from "vscode";
+import { commands, ProgressLocation, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
 import { foundNewSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
@@ -21,7 +21,7 @@ const { WebClient } = require("@slack/web-api");
 
 let slackDndInfo: any = undefined;
 let slackPresence: string = undefined;
-let slackStatus: any = undefined;
+let slackStatusMessage: any = undefined;
 
 // -------------------------------------------
 // - public methods
@@ -30,7 +30,7 @@ let slackStatus: any = undefined;
 export function clearSlackInfoCache() {
   slackDndInfo = null;
   slackPresence = null;
-  slackStatus = null;
+  slackStatusMessage = null;
 }
 
 // get saved slack integrations
@@ -87,7 +87,6 @@ export async function disconnectSlackWorkspace() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
   if (selectedTeamDomain) {
-    const slackIntegration = getSlackWorkspaces().find((n) => n.team_domain === selectedTeamDomain);
     disconnectSlackAuth(selectedTeamDomain.authId);
   }
 }
@@ -117,19 +116,13 @@ export async function disconnectSlackAuth(authId) {
 }
 
 // pause notification on all slack integrations
-export async function pauseSlackNotifications(showSuccessNotification = true) {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
-
-  const connected = checkSlackConnection(true);
-  if (!connected) {
+export async function pauseSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true, isFlowRequest = false) {
+  if (!isFlowRequest && (!checkRegistration(true) || !checkSlackConnection(true))) {
     return;
   }
 
   const integrations = getSlackWorkspaces();
-  let enabled = false;
+  let updated = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
     const result = await web.dnd.setSnooze({ num_minutes: 120 }).catch((err) => {
@@ -137,31 +130,31 @@ export async function pauseSlackNotifications(showSuccessNotification = true) {
       return [];
     });
     if (result && result.ok) {
-      enabled = true;
+      updated = true;
     }
   }
 
-  if (enabled && showSuccessNotification) {
-    window.showInformationMessage("Slack notifications are paused for 2 hours");
-  }
+  if (updated) {
+    // null out the slack dnd info cache
+    slackDndInfo = null;
+    if (showSuccessNotification) {
+      showSuccessMessage("Slack notifications are paused for 2 hours");
+    }
 
-  commands.executeCommand("codetime.refreshFlowTree");
+    if (initiateFlowRefresh) {
+      commands.executeCommand("codetime.refreshFlowTree");
+    }
+  }
 }
 
 // enable notifications on all slack integrations
-export async function enableSlackNotifications(showSuccessNotification = true) {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
-
-  const connected = checkSlackConnection(true);
-  if (!connected) {
+export async function enableSlackNotifications(showSuccessNotification = true, initiateFlowRefresh = true, isFlowRequest = false) {
+  if (!isFlowRequest && (!checkRegistration(true) || !checkSlackConnection(true))) {
     return;
   }
 
   const integrations = getSlackWorkspaces();
-  let enabled = false;
+  let updated = false;
   for await (const integration of integrations) {
     const web = new WebClient(integration.access_token);
     const result = await web.dnd.endSnooze().catch((err) => {
@@ -169,25 +162,28 @@ export async function enableSlackNotifications(showSuccessNotification = true) {
       return [];
     });
     if (result && result.ok) {
-      enabled = true;
+      updated = true;
     }
   }
 
-  if (enabled && showSuccessNotification) {
-    window.showInformationMessage("Slack notifications enabled");
+  if (updated) {
+    // clear slack dnd info cache
+    slackDndInfo = null;
+    if (showSuccessNotification) {
+      showSuccessMessage("Slack notifications enabled");
+    }
+
+    if (initiateFlowRefresh) {
+      commands.executeCommand("codetime.refreshFlowTree");
+    }
   }
-  commands.executeCommand("codetime.refreshFlowTree");
 }
 
 export async function shareSlackMessage(message) {
-  const registered = await checkRegistration();
-  if (!registered) {
+  if (!checkRegistration(true) || !checkSlackConnection(true)) {
     return;
   }
-  const connected = checkSlackConnection(true);
-  if (!connected) {
-    return;
-  }
+
   const { selectedChannel, access_token } = await showSlackChannelMenu();
   if (!selectedChannel) {
     return;
@@ -203,6 +199,10 @@ export async function shareSlackMessage(message) {
  * ts is in unix seconds
  */
 export async function getSlackDnDInfo() {
+  if (slackDndInfo) {
+    // return cache dnd info
+    return slackDndInfo;
+  }
   const integrations = getSlackWorkspaces();
   for await (const integration of integrations) {
     const dndInfo = await getSlackDnDInfoPerDomain(integration.team_domain);
@@ -214,19 +214,13 @@ export async function getSlackDnDInfo() {
 }
 
 // set the slack profile status
-export async function updateSlackProfileStatus() {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
-
-  const connected = checkSlackConnection(true);
-  if (!connected) {
+export async function updateSlackProfileStatus(showSuccessNotification = true, initiateFlowRefresh = true) {
+  if (!checkRegistration(true) || !checkSlackConnection(true)) {
     return;
   }
 
   // palette prompt to clear or set a new status
-  const decision = slackStatus ? await showStatusUpdateOptions() : "update";
+  const decision = slackStatusMessage ? await showStatusUpdateOptions() : "update";
   if (!decision) {
     return;
   }
@@ -246,11 +240,17 @@ export async function updateSlackProfileStatus() {
 
   // example:
   // { status_text: message, status_emoji: ":mountain_railway:", status_expiration: 0 }
-  let profileStatusUpdated = await setSlackStatus(status);
+  let updated = await setSlackStatus(status);
 
-  if (profileStatusUpdated) {
-    window.showInformationMessage(`Slack profile status updated`);
-    commands.executeCommand("codetime.refreshFlowTree");
+  if (updated) {
+    // null the slack status cache
+    slackStatusMessage = null;
+    if (showSuccessNotification) {
+      showSuccessMessage(`Slack profile status updated`);
+    }
+    if (initiateFlowRefresh) {
+      commands.executeCommand("codetime.refreshFlowTree");
+    }
   }
 }
 
@@ -281,8 +281,8 @@ export async function getSlackStatus() {
   }
 
   // use the cached value if its available
-  if (slackStatus) {
-    return slackStatus;
+  if (slackStatusMessage) {
+    return slackStatusMessage;
   }
 
   const integrations = getSlackWorkspaces();
@@ -295,8 +295,8 @@ export async function getSlackStatus() {
       console.error("error fetching slack profile: ", e.message);
     });
     // set the cached var and return it
-    slackStatus = data?.profile?.status_text ?? "";
-    return slackStatus;
+    slackStatusMessage = data?.profile?.status_text ?? "";
+    return slackStatusMessage;
   }
   return null;
 }
@@ -330,25 +330,24 @@ export async function getSlackPresence() {
   return null;
 }
 
-export async function toggleSlackPresence() {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
-
-  const connected = checkSlackConnection(true);
-  if (!connected) {
+export async function toggleSlackPresence(showSuccessNotification = true, initiateFlowRefresh = true) {
+  if (!checkRegistration(true) || !checkSlackConnection(true)) {
     return;
   }
 
   // presence val can be either: auto or away
   const presenceVal = slackPresence === "active" ? "away" : "auto";
-  let presenceUpdated = await updateSlackPresence(presenceVal);
+  let updated = await updateSlackPresence(presenceVal);
 
-  if (presenceUpdated) {
+  if (updated) {
+    // update the slack presence cache value
     slackPresence = presenceVal === "auto" ? "active" : "away";
-    window.showInformationMessage(`Slack presence updated`);
-    commands.executeCommand("codetime.refreshFlowTree");
+    if (showSuccessNotification) {
+      showSuccessMessage(`Slack presence updated`);
+    }
+    if (initiateFlowRefresh) {
+      commands.executeCommand("codetime.refreshFlowTree");
+    }
   }
 }
 
@@ -512,7 +511,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
   } else {
     // clear the auth callback state
     setAuthCallbackState(null);
-    window.showInformationMessage("Successfully connected to Slack");
+    showSuccessMessage("Successfully connected to Slack");
 
     commands.executeCommand("codetime.refreshTreeViews");
   }
@@ -561,23 +560,27 @@ function removeSlackIntegration(authId) {
 export function checkRegistration(showSignup = true) {
   if (!getItem("name")) {
     if (showSignup) {
-      window
-        .showInformationMessage(
-          "Connecting Slack requires a registered account. Sign up or log in to continue.",
-          {
-            modal: true,
-          },
-          SIGN_UP_LABEL
-        )
-        .then(async (selection) => {
-          if (selection === SIGN_UP_LABEL) {
-            commands.executeCommand("codetime.signUpAccount");
-          }
-        });
+      showModalSignupPrompt("Connecting Slack requires a registered account. Sign up or log in to continue.");
     }
     return false;
   }
   return true;
+}
+
+export function showModalSignupPrompt(msg: string) {
+  window
+    .showInformationMessage(
+      msg,
+      {
+        modal: true,
+      },
+      SIGN_UP_LABEL
+    )
+    .then(async (selection) => {
+      if (selection === SIGN_UP_LABEL) {
+        commands.executeCommand("codetime.signUpAccount");
+      }
+    });
 }
 
 export function checkSlackConnection(showConnect = true) {
@@ -600,6 +603,23 @@ export function checkSlackConnection(showConnect = true) {
     return false;
   }
   return true;
+}
+
+export async function checkSlackConnectionForFlowMode() {
+  if (!hasSlackWorkspaces()) {
+    const selection = await window.showInformationMessage("Slack isn't connected", { modal: true }, ...["Continue anyway", "Connect Slack"]);
+    if (!selection) {
+      // the user selected "cancel"
+      return { connected: false, usingAllSettingsForFlow: true };
+    } else if (selection === "Continue anyway") {
+      return { connected: true, usingAllSettingsForFlow: false };
+    } else {
+      // connect was selected
+      commands.executeCommand("codetime.connectSlackWorkspace");
+      return { connected: false, usingAllSettingsForFlow: true };
+    }
+  }
+  return { connected: true, usingAllSettingsForFlow: true };
 }
 
 /**
@@ -648,4 +668,21 @@ function compareLabels(a, b) {
   if (b.name > a.name) return -1;
 
   return 0;
+}
+
+function showSuccessMessage(message: string) {
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: message,
+      cancellable: false,
+    },
+    (progress) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(true);
+        }, 1000);
+      });
+    }
+  );
 }

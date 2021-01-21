@@ -4,6 +4,7 @@ import { getScreenMode, updateScreenMode } from "../managers/ScreenManager";
 import { KpmItem } from "../model/models";
 import { getFlowTreeParents, KpmTreeItem } from "./KpmProviderManager";
 import { handleChangeSelection } from "./TreeUtil";
+import { clearSlackInfoCache } from "../managers/SlackManager";
 
 const collapsedStateMap = {};
 
@@ -35,18 +36,30 @@ export const connectCodeTimeFlowTreeView = (treeProvider: CodeTimeFlowProvider, 
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
         const prevScreenMode = getScreenMode();
-
+        // set the screen mode based on screen mode this flow is associated with
+        // full, zen, normal
         updateScreenMode(screenMode);
-        checkToDisableFlow();
 
         let refreshProvider = false;
-        if (prevScreenMode !== screenMode || !initialized) {
+        const screenModeChanged = prevScreenMode !== screenMode;
+        if (screenModeChanged || !initialized) {
           refreshProvider = true;
         }
 
-        if (refreshProvider) {
+        // refresh this provider if the screen mode changed or we're initializing
+        if (refreshProvider || provider.refresh_scheduled) {
+          provider.refresh_scheduled = false;
+          clearSlackInfoCache();
           setTimeout(() => {
+            initialized = true;
             provider.refresh();
+          }, 0);
+        }
+
+        if (screenModeChanged) {
+          // check to see if flow mode has ended manually
+          setTimeout(() => {
+            checkToDisableFlow();
           }, 0);
         }
       }
@@ -60,8 +73,12 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
   readonly onDidChangeTreeData: Event<KpmItem | undefined> = this._onDidChangeTreeData.event;
 
   private view: TreeView<KpmItem>;
+  public screen_mode: number = 0;
+  public refresh_scheduled: boolean = false;
 
-  constructor() {}
+  constructor(screenMode: number) {
+    this.screen_mode = screenMode;
+  }
 
   bindView(kpmTreeView: TreeView<KpmItem>): void {
     this.view = kpmTreeView;
@@ -75,6 +92,10 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
     if (this.view && this.view.visible) {
       this._onDidChangeTreeData.fire(null);
     }
+  }
+
+  scheduleRefresh(): void {
+    this.refresh_scheduled = true;
   }
 
   refreshParent(parent: KpmItem) {
@@ -105,7 +126,7 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
 
   async getChildren(element?: KpmItem): Promise<KpmItem[]> {
     let kpmItems: KpmItem[] = [];
-    if (this.view && this.view.visible) {
+    if (initialized && this.view.visible) {
       try {
         if (element) {
           // return the children of this element
@@ -115,14 +136,13 @@ export class CodeTimeFlowProvider implements TreeDataProvider<KpmItem> {
           kpmItems = await getFlowTreeParents();
         }
       } catch (e) {}
-      initialized = true;
     }
     return kpmItems;
   }
 }
 
 /**
- * Create the playlist tree item (root or leaf)
+ * Create the tree item (root or leaf)
  * @param p
  * @param cstate
  */

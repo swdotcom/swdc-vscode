@@ -26,7 +26,15 @@ import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTi
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
-import { FULL_SCREEN_MODE_ID, getScreenMode, NORMAL_SCREEN_MODE, toggleFullScreenMode, toggleZenMode, ZEN_MODE_ID } from "./managers/ScreenManager";
+import {
+  FULL_SCREEN_MODE_ID,
+  getScreenMode,
+  NORMAL_SCREEN_MODE,
+  showFullScreenMode,
+  showNormalScreenMode,
+  showZenMode,
+  ZEN_MODE_ID,
+} from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
 import {
@@ -61,7 +69,7 @@ export function createCommands(
   cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
 
   // FLOW TREE: INIT
-  const codetimeNormalModeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeNormalModeFlowTreeProvider = new CodeTimeFlowProvider(NORMAL_SCREEN_MODE);
   const codetimeNormalModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
     treeDataProvider: codetimeNormalModeFlowTreeProvider,
     showCollapseAll: false,
@@ -70,7 +78,7 @@ export function createCommands(
   cmds.push(connectCodeTimeFlowTreeView(codetimeNormalModeFlowTreeProvider, codetimeNormalModeFlowTreeView, NORMAL_SCREEN_MODE));
 
   // FULL SCREEN FLOW TREE: INIT
-  const codetimeFullScreenFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeFullScreenFlowTreeProvider = new CodeTimeFlowProvider(FULL_SCREEN_MODE_ID);
   const codetimeFullScreenFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-fullscreen-flow-tree", {
     treeDataProvider: codetimeFullScreenFlowTreeProvider,
     showCollapseAll: false,
@@ -79,7 +87,7 @@ export function createCommands(
   cmds.push(connectCodeTimeFlowTreeView(codetimeFullScreenFlowTreeProvider, codetimeFullScreenFlowTreeView, FULL_SCREEN_MODE_ID));
 
   // ZEN SCREEN FLOW TREE: INIT
-  const codetimeZenModeFlowTreeProvider = new CodeTimeFlowProvider();
+  const codetimeZenModeFlowTreeProvider = new CodeTimeFlowProvider(ZEN_MODE_ID);
   const codetimeZenModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-zenmode-flow-tree", {
     treeDataProvider: codetimeZenModeFlowTreeProvider,
     showCollapseAll: false,
@@ -249,7 +257,7 @@ export function createCommands(
     commands.registerCommand("codetime.refreshTreeViews", () => {
       // run the specific commands as each command may have its own specific logic to perform
       commands.executeCommand("codetime.refreshCodetimeMenuTree");
-      commands.executeCommand("codetime.refreshFlowTree");
+      // commands.executeCommand("codetime.refreshFlowTree");
       commands.executeCommand("codetime.refreshKpmTree");
     })
   );
@@ -274,6 +282,7 @@ export function createCommands(
       // clear the cache items to force a fetch from the Slack API
       clearSlackInfoCache();
       const screenMode = getScreenMode();
+
       if (screenMode === NORMAL_SCREEN_MODE) {
         // refresh the flow tree provider
         codetimeNormalModeFlowTreeProvider.refresh();
@@ -282,6 +291,17 @@ export function createCommands(
       } else {
         codetimeZenModeFlowTreeProvider.refresh();
       }
+    })
+  );
+
+  // FLOW TREE: SCHEDULE REFRESH
+  cmds.push(
+    commands.registerCommand("codetime.scheduleFlowRefresh", () => {
+      // clear the cache items to force a fetch from the Slack API
+      clearSlackInfoCache();
+      codetimeNormalModeFlowTreeProvider.scheduleRefresh();
+      codetimeFullScreenFlowTreeProvider.scheduleRefresh();
+      codetimeZenModeFlowTreeProvider.scheduleRefresh();
     })
   );
 
@@ -449,14 +469,20 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleZenMode", () => {
-      toggleZenMode();
+    commands.registerCommand("codetime.showZenMode", () => {
+      showZenMode();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleFullScreen", () => {
-      toggleFullScreenMode();
+    commands.registerCommand("codetime.showFullScreen", () => {
+      showFullScreenMode();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.exitFullScreen", () => {
+      showNormalScreenMode();
     })
   );
 

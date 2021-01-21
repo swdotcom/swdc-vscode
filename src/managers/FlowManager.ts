@@ -11,6 +11,8 @@ import {
   getSlackStatus,
   getSlackPresence,
   getSlackDnDInfo,
+  showModalSignupPrompt,
+  checkSlackConnectionForFlowMode,
 } from "./SlackManager";
 import {
   FULL_SCREEN_MODE_ID,
@@ -23,6 +25,7 @@ import {
 } from "./ScreenManager";
 
 let enabledFlow = false;
+let usingAllSettingsForFlow = true;
 
 /**
  * Screen Mode: full screen
@@ -45,6 +48,10 @@ export function getConfigSettingsTooltip() {
 }
 
 export async function checkToDisableFlow() {
+  if (!usingAllSettingsForFlow) {
+    return;
+  }
+
   const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
   if (enabledFlow && !isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
     // disable it
@@ -70,7 +77,17 @@ export async function enableFlow() {
 }
 
 async function initiateFlow() {
-  if (!checkRegistration(true) || !checkSlackConnection(true)) {
+  const isRegistered = checkRegistration(false);
+  if (!isRegistered) {
+    // show the flow mode prompt
+    showModalSignupPrompt("To use Flow Mode, please first sign up or login.");
+    return;
+  }
+
+  // { connected, usingAllSettingsForFlow }
+  const connectInfo = await checkSlackConnectionForFlowMode();
+  usingAllSettingsForFlow = connectInfo.usingAllSettingsForFlow;
+  if (!connectInfo.connected) {
     return;
   }
 
@@ -84,7 +101,7 @@ async function initiateFlow() {
   // set the status text to what the user set in the settings
   const status = {
     status_text: configSettings.slackAwayStatusText,
-    status_emoji: "",
+    status_emoji: ":large_purple_circle:",
     status_expiration: 0,
   };
 
@@ -92,19 +109,24 @@ async function initiateFlow() {
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await pauseSlackNotifications(false);
+    await pauseSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
   }
 
   // set to zen mode
+  let screenChanged = false;
   if (configSettings.screenMode.includes("Full Screen")) {
-    showFullScreenMode();
+    screenChanged = showFullScreenMode();
   } else if (configSettings.screenMode.includes("Zen")) {
-    showZenMode();
+    screenChanged = showZenMode();
   } else {
-    showNormalScreenMode();
+    screenChanged = showNormalScreenMode();
   }
 
-  commands.executeCommand("codetime.refreshFlowTree");
+  if (!screenChanged) {
+    commands.executeCommand("codetime.refreshFlowTree");
+  } else {
+    commands.executeCommand("codetime.scheduleFlowRefresh");
+  }
   enabledFlow = true;
 }
 
@@ -125,10 +147,6 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  if (!checkRegistration(true) || !checkSlackConnection(true)) {
-    return;
-  }
-
   const configSettings: ConfigSettings = getConfigSettings();
 
   // set slack status to away
@@ -143,12 +161,16 @@ async function pauseFlowInitiate() {
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await enableSlackNotifications(false);
+    await enableSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
   }
 
-  showNormalScreenMode();
+  const screenChanged = showNormalScreenMode();
 
-  commands.executeCommand("codetime.refreshFlowTree");
+  if (!screenChanged) {
+    commands.executeCommand("codetime.refreshFlowTree");
+  } else {
+    commands.executeCommand("codetime.scheduleFlowRefresh");
+  }
   enabledFlow = false;
 }
 
@@ -188,5 +210,10 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
     slackAwayPresenceInFlowState = true;
   }
 
+  if (!usingAllSettingsForFlow && enabledFlow) {
+    return true;
+  }
+
+  // otherwise check the exact settings
   return screenInFlowState && pauseSlackNotificationsInFlowState && slackAwayStatusMsgInFlowState && slackAwayPresenceInFlowState;
 }
