@@ -303,7 +303,7 @@ export async function getChangesForCommit(projectDir, commit: string): Promise<D
     return diffNumStats;
   }
 
-  const cmd = `git diff --numstat ${commit}~`;
+  const cmd = `git diff --numstat ${commit}~ ${commit}`;
   const resultList = await getCommandResult(cmd, projectDir);
   if (!resultList) {
     // something went wrong, but don't try to parse a null or undefined str
