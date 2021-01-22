@@ -282,7 +282,8 @@ export async function getCommitsForAuthors(projectDir, branch: string, startRef:
     return [];
   }
 
-  const range = startRef !== "" ? `${startRef}..HEAD` : "HEAD"
+  // If there is no startRef, then only pull 2 weeks of history
+  const range = startRef !== "" ? `${startRef}..HEAD` : `HEAD --since="2 weeks ago"`
   let cmd = `git log ${branch} ${range} --no-merges --pretty=format:"%aI =.= %H"`
   for (const author of authors) {
     cmd += ` --author="${author}"`
