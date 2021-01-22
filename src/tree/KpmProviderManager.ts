@@ -150,10 +150,13 @@ export async function getFlowTreeParents(): Promise<KpmItem[]> {
 }
 
 async function getSlackIntegrationsTree(): Promise<KpmItem> {
-  const parentItem = buildMessageItem("Slack workspaces", "", "slack.svg", null, null);
+  const workspaces = getSlackWorkspaces();
+  // show the slack icon next to the folder if its empty
+  const folderIcon = workspaces?.length ? null : "slack.svg";
+  const parentItem = buildMessageItem("Slack workspaces", "", folderIcon);
   parentItem.contextValue = "slack_connection_parent";
   parentItem.children = [];
-  const workspaces = getSlackWorkspaces();
+
   if (workspaces.length) {
     for await (const integration of workspaces) {
       const workspaceItem = buildMessageItem(integration.team_domain, "", "");
