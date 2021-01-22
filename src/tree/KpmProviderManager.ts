@@ -159,7 +159,7 @@ async function getSlackIntegrationsTree(): Promise<KpmItem> {
 
   if (workspaces.length) {
     for await (const integration of workspaces) {
-      const workspaceItem = buildMessageItem(integration.team_domain, "", "");
+      const workspaceItem = buildMessageItem(integration.team_domain, "", "slack.svg");
       workspaceItem.contextValue = "slack_connection_node";
       workspaceItem.description = `(${integration.team_name})`;
       workspaceItem.value = integration.authId;
