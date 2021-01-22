@@ -551,7 +551,7 @@ async function postMessage(selectedChannel: any, access_token, message: string) 
  * @param authId
  */
 function removeSlackIntegration(authId) {
-  const currentIntegrations = getSlackWorkspaces();
+  const currentIntegrations = getIntegrations();
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
   syncIntegrations(newIntegrations);
