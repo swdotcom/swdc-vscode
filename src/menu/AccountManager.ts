@@ -61,7 +61,7 @@ function showSignUpMenuOptions() {
   showAuthMenuOptions(SIGN_UP_LABEL, true /*isSignup*/);
 }
 
-function showAuthMenuOptions(authText, isSignup = true) {
+function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
   const items = [];
   const placeholder = `${authText} using...`;
   items.push({
