@@ -60,7 +60,9 @@ export async function getUserRegistrationState(isIntegration = false) {
     // set the jwt, name (email), and use the registration flag
     // to determine if they're logged in or not
     const user = resp.data.user;
-    if (switching_account && user?.plugin_jwt === jwt) {
+    const currentName = getItem("name");
+    if (switching_account && user?.email === currentName) {
+      // user still hasn't switched
       return { loggedOn: false, state, user: null };
     }
     const registered = user.registered;
