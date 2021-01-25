@@ -7,6 +7,7 @@ import {
   getVersion,
   getWorkspaceFolders,
   getGitEventFile,
+  isGitProject,
 } from "../Util";
 import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
@@ -256,12 +257,15 @@ export class TrackerManager {
       return;
     }
 
+    const projectParams = this.getProjectParams();
+
     if (type == 'save') {
       if (this.eventVersionIsTheSame(event)) return;
-      this.trackGitLocalEvent("uncommitted_change", event);
+      if (isGitProject(projectParams.project_directory)) {
+        this.trackGitLocalEvent("uncommitted_change", event);
+      }
     }
 
-    const projectParams = this.getProjectParams();
     const repoParams = await this.getRepoParams(projectParams.project_directory);
 
     const editor_event = {
