@@ -35,6 +35,7 @@ let userFetchTimeout = null;
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
   const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
+  const switching_account = getItem("switching_account");
   const authType = getItem("authType");
 
   const api = "/users/plugin/state";
@@ -59,6 +60,9 @@ export async function getUserRegistrationState(isIntegration = false) {
     // set the jwt, name (email), and use the registration flag
     // to determine if they're logged in or not
     const user = resp.data.user;
+    if (switching_account && user?.plugin_jwt === jwt) {
+      return { loggedOn: false, state, user: null };
+    }
     const registered = user.registered;
 
     // update the name and jwt if we're authenticating

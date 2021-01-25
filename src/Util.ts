@@ -746,6 +746,7 @@ export async function buildLoginUrl(loginType: string) {
     pluginVersion: getVersion(),
     plugin_id: getPluginId(),
     auth_callback_state,
+    login: true,
   };
 
   if (loginType === "github") {
@@ -760,7 +761,7 @@ export async function buildLoginUrl(loginType: string) {
     // email login
     obj["token"] = getItem("jwt");
     obj["auth"] = "software";
-    url = `${launch_url}/login`;
+    url = `${launch_url}/onboarding`;
   }
 
   const qryStr = queryString.stringify(obj);

@@ -1,4 +1,3 @@
-import { commands, window } from "vscode";
 import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCallbackState, setAuthCallbackState, getNowTimes } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
