@@ -712,7 +712,6 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   const url = await buildEmailSignup();
 
   launchWebUrl(url);
-  // use the defaults
   refetchUserStatusLazily();
 }
 
@@ -782,7 +781,6 @@ export async function buildEmailSignup() {
     auth_callback_state,
   };
 
-  // never onboarded, show the "email" signup view
   loginUrl = `${launch_url}/email-signup`;
 
   const qryStr = queryString.stringify(obj);
