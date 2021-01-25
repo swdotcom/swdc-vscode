@@ -185,7 +185,7 @@ async function pauseFlowInitiate() {
 export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
   if (enablingFlow) {
     return true;
-  } else if (!enableFlow) {
+  } else if (!enabledFlow) {
     return false;
   }
   const configSettings: ConfigSettings = getConfigSettings();
