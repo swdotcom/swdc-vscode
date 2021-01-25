@@ -690,16 +690,21 @@ export function humanizeMinutes(min) {
   min = parseInt(min, 0) || 0;
   let str = "";
   if (min === 60) {
-    str = "1 hr";
+    str = "1h";
   } else if (min > 60) {
     let hrs = parseFloat(min) / 60;
-    const roundedTime = roundUp(hrs, 1);
-    str = roundedTime.toFixed(1) + " hrs";
+    const hoursStr = hrs.toFixed(0) + "h";
+    if (hrs % 1 === 0) {
+      str = hoursStr;
+    } else {
+      const minutesStr = (60 * (hrs % 1)).toFixed(0) + "m";
+      str = `${hoursStr} ${minutesStr}`;
+    }
   } else if (min === 1) {
-    str = "1 min";
+    str = "1m";
   } else {
     // less than 60 seconds
-    str = min.toFixed(0) + " min";
+    str = min.toFixed(0) + "m";
   }
   return str;
 }

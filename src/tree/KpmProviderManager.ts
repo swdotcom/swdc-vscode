@@ -84,10 +84,10 @@ export async function getStatsTreeItems(): Promise<KpmItem[]> {
   treeItems.push(getDescriptionButton(`Code time: ${wallClktimeStr}`, `(${codeTimeAvgStr} avg)`, codeTimeTooltip, "", codeTimeIcon));
 
   const dayMinutesStr = humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
-  const avgMinutes = refClass === "user" ? sessionSummary.averageDailyMinutes : sessionSummary.globalAverageDailyMinutes;
+  const avgMinutes = refClass === "user" ? sessionSummary.averageDailyActiveCodeTimeMinutes : sessionSummary.globalAverageDailyActiveCodeTimeMinutes;
   const activeCodeTimeAvgStr = humanizeMinutes(avgMinutes);
   const activeCodeTimeTooltip = getPercentOfReferenceAvg(codeTimeSummary.activeCodeTimeMinutes, avgMinutes, activeCodeTimeAvgStr);
-  const activeCodeTimeIcon = codeTimeSummary.activeCodeTimeMinutes > sessionSummary.averageDailyMinutes ? "bolt.svg" : "bolt-grey.svg";
+  const activeCodeTimeIcon = codeTimeSummary.activeCodeTimeMinutes > sessionSummary.averageDailyActiveCodeTimeMinutes ? "bolt.svg" : "bolt-grey.svg";
   treeItems.push(
     getDescriptionButton(`Active code time: ${dayMinutesStr}`, `(${activeCodeTimeAvgStr} avg)`, activeCodeTimeTooltip, "", activeCodeTimeIcon)
   );
