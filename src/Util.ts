@@ -704,14 +704,26 @@ export function humanizeMinutes(min) {
   return str;
 }
 
+export async function launchEmailSignup(switching_account: boolean = false) {
+  setItem("authType", "software");
+  setItem("switching_account", switching_account);
+
+  // continue with onboaring
+  const url = await buildEmailSignup();
+
+  launchWebUrl(url);
+  // use the defaults
+  refetchUserStatusLazily();
+}
+
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
   setItem("authType", loginType);
   setItem("switching_account", switching_account);
 
   // continue with onboaring
-  const loginUrl = await buildLoginUrl(loginType);
+  const url = await buildLoginUrl(loginType);
 
-  launchWebUrl(loginUrl);
+  launchWebUrl(url);
   // use the defaults
   refetchUserStatusLazily();
 }
@@ -720,10 +732,9 @@ export async function launchLogin(loginType: string = "software", switching_acco
  * @param loginType "software" | "existing" | "google" | "github"
  */
 export async function buildLoginUrl(loginType: string) {
-  const auth_callback_state = uuidv4();
-  setAuthCallbackState(auth_callback_state);
+  const auth_callback_state = getAuthCallbackState(true);
 
-  let loginUrl = launch_url;
+  let url = launch_url;
 
   let obj = {
     plugin: getPluginType(),
@@ -736,17 +747,43 @@ export async function buildLoginUrl(loginType: string) {
   if (loginType === "github") {
     // github signup/login flow
     obj["redirect"] = launch_url;
-    loginUrl = `${api_endpoint}/auth/github`;
+    url = `${api_endpoint}/auth/github`;
   } else if (loginType === "google") {
     // google signup/login flow
     obj["redirect"] = launch_url;
-    loginUrl = `${api_endpoint}/auth/google`;
+    url = `${api_endpoint}/auth/google`;
   } else {
+    // email login
     obj["token"] = getItem("jwt");
     obj["auth"] = "software";
-    // never onboarded, show the "email" signup view
-    loginUrl = `${launch_url}/email-signup`;
+    url = `${launch_url}/login`;
   }
+
+  const qryStr = queryString.stringify(obj);
+
+  return `${url}?${qryStr}`;
+}
+
+/**
+ * @param loginType "software" | "existing" | "google" | "github"
+ */
+export async function buildEmailSignup() {
+  const auth_callback_state = getAuthCallbackState(true);
+
+  let loginUrl = launch_url;
+
+  let obj = {
+    token: getItem("jwt"),
+    auth: "software",
+    plugin: getPluginType(),
+    plugin_uuid: getPluginUuid(),
+    pluginVersion: getVersion(),
+    plugin_id: getPluginId(),
+    auth_callback_state,
+  };
+
+  // never onboarded, show the "email" signup view
+  loginUrl = `${launch_url}/email-signup`;
 
   const qryStr = queryString.stringify(obj);
 

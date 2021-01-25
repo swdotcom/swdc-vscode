@@ -1,6 +1,6 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
 import { launchWebDashboard, updatePreferences } from "./DataController";
-import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar } from "./Util";
+import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
 import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTimeMenuProvider";
@@ -188,6 +188,23 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       launchLogin("software", switching_account);
+    })
+  );
+
+  // LAUNCH EMAIL LOGIN
+  cmds.push(
+    commands.registerCommand("codetime.codeTimeSignup", (item: KpmItem, switching_account: boolean) => {
+      if (!item) {
+        // it's from the command palette, create a kpm item so
+        // it can build the ui_element in the tracker manager
+        item = getSignUpButton("email", "grey");
+        item.location = "ct_command_palette";
+        item.interactionType = UIInteractionType.Keyboard;
+        item.interactionIcon = null;
+        item.color = null;
+      }
+      tracker.trackUIInteraction(item);
+      launchEmailSignup(switching_account);
     })
   );
 
