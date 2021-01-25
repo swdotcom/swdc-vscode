@@ -1,4 +1,3 @@
-import { commands, window } from "vscode";
 import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCallbackState, setAuthCallbackState, getNowTimes } from "../Util";
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
@@ -55,14 +54,14 @@ async function accountMenuSelection(placeholderItem: any) {
 }
 
 function showLogInMenuOptions() {
-  showAuthMenuOptions(LOGIN_LABEL);
+  showAuthMenuOptions(LOGIN_LABEL, false /*isSignup*/);
 }
 
 function showSignUpMenuOptions() {
-  showAuthMenuOptions(SIGN_UP_LABEL);
+  showAuthMenuOptions(SIGN_UP_LABEL, true /*isSignup*/);
 }
 
-function showAuthMenuOptions(authText) {
+function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
   const items = [];
   const placeholder = `${authText} using...`;
   items.push({
@@ -75,11 +74,19 @@ function showAuthMenuOptions(authText) {
     command: "codetime.githubLogin",
     commandArgs: [null /*KpmItem*/, true /*switching_account*/],
   });
-  items.push({
-    label: `${authText} with Email`,
-    command: "codetime.codeTimeLogin",
-    commandArgs: [null /*KpmItem*/, true /*switching_account*/],
-  });
+  if (isSignup) {
+    items.push({
+      label: `${authText} with Email`,
+      command: "codetime.codeTimeSignup",
+      commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+    });
+  } else {
+    items.push({
+      label: `${authText} with Email`,
+      command: "codetime.codeTimeLogin",
+      commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+    });
+  }
   const menuOptions = {
     items,
     placeholder,
