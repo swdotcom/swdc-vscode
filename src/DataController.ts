@@ -25,6 +25,7 @@ import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
+import { SummaryManager } from "./managers/SummaryManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -230,6 +231,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
     clearSessionSummaryData();
     clearTimeDataSummary();
+
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
 
     // clear the integrations
     syncIntegrations([] /*empty array*/);
