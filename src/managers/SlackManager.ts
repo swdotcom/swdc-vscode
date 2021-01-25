@@ -610,16 +610,18 @@ export async function checkSlackConnectionForFlowMode() {
     const selection = await window.showInformationMessage("Slack isn't connected", { modal: true }, ...["Continue anyway", "Connect Slack"]);
     if (!selection) {
       // the user selected "cancel"
-      return { connected: false, usingAllSettingsForFlow: true };
+      return { continue: false, useSlackSettings: true };
     } else if (selection === "Continue anyway") {
-      return { connected: true, usingAllSettingsForFlow: false };
+      // slack is not connected, but continue. set useSlackSettings to FALSE
+      // set continue to TRUE
+      return { continue: true, useSlackSettings: false };
     } else {
       // connect was selected
       commands.executeCommand("codetime.connectSlackWorkspace");
-      return { connected: false, usingAllSettingsForFlow: true };
+      return { continue: false, useSlackSettings: true };
     }
   }
-  return { connected: true, usingAllSettingsForFlow: true };
+  return { continue: true, useSlackSettings: true };
 }
 
 /**
