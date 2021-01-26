@@ -35,36 +35,18 @@ let userFetchTimeout = null;
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
   const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
-  const switching_account = getItem("switching_account");
-  const authType = getItem("authType");
-
-  const api = "/users/plugin/state";
 
   const token = auth_callback_state ? auth_callback_state : jwt;
 
-  let resp = await softwareGet("/users/plugin/state", token);
+  const resp = await softwareGet("/users/plugin/state", token);
 
-  let foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
-  let state = foundUser ? resp.data.state : "UNKNOWN";
-
-  // Use the JWT to check if the user is available (tmp until server uses auth_callback_state for email accounts)
-  const isEmailAuth = authType === "software" || authType === "email";
-  if (state !== "OK" && isEmailAuth) {
-    // use the jwt
-    resp = await softwareGet(api, jwt);
-    foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
-    state = foundUser ? resp.data.state : "UNKNOWN";
-  }
+  const foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
+  const state = foundUser ? resp.data.state : "UNKNOWN";
 
   if (foundUser) {
     // set the jwt, name (email), and use the registration flag
     // to determine if they're logged in or not
     const user = resp.data.user;
-    const currentName = getItem("name");
-    if (switching_account && user?.email === currentName) {
-      // user still hasn't switched
-      return { loggedOn: false, state, user: null };
-    }
     const registered = user.registered;
 
     // update the name and jwt if we're authenticating
