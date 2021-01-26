@@ -38,10 +38,10 @@ export async function getUserRegistrationState(isIntegration = false) {
 
   const token = auth_callback_state ? auth_callback_state : jwt;
 
-  let resp = await softwareGet("/users/plugin/state", token);
+  const resp = await softwareGet("/users/plugin/state", token);
 
-  let foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
-  let state = foundUser ? resp.data.state : "UNKNOWN";
+  const foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
+  const state = foundUser ? resp.data.state : "UNKNOWN";
 
   if (foundUser) {
     // set the jwt, name (email), and use the registration flag
