@@ -13,13 +13,13 @@ export const SIGN_UP_LABEL = "Sign up";
 export const DISCONNECT_LABEL = "Disconnect";
 
 // Directory where software data is stored
-export const SOFTWARE_DIRECTORY = ".software";
+export const SOFTWARE_DIRECTORY = ".software_local";
 
 // API ENDPOINT
-export const api_endpoint = "https://api.software.com";
+export const api_endpoint = "http://localhost:5000";
 
 // DASHBOARD URL
-export const launch_url = "https://app.software.com";
+export const launch_url = "http://localhost:3000";
 
 export const websockets_url = "wss://api.software.com/websockets";
 

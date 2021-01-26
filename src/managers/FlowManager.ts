@@ -1,10 +1,15 @@
 import { commands, ProgressLocation, window } from "vscode";
 import ConfigSettings from "../model/ConfigSettings";
 import { getConfigSettings } from "./ConfigManager";
+import { softwarePost, softwareDelete } from "../http/HttpClient";
+import { getItem } from "../Util";
+
 import {
   checkRegistration,
   pauseSlackNotifications,
   setSlackStatus,
+  setDnD,
+  endDnD,
   updateSlackPresence,
   enableSlackNotifications,
   getSlackStatus,
@@ -40,8 +45,8 @@ export function getConfigSettingsTooltip() {
   const notificationState = configSettings.pauseSlackNotifications ? "on" : "off";
   preferences.push(`**Pause Notifications**: *${notificationState}*`);
 
-  const slackAwayStatusMsg = configSettings.slackAwayStatusText ?? "";
-  preferences.push(`**Slack Away Msg**: *${slackAwayStatusMsg}*`);
+  const slackStatusText = configSettings.slackStatusText ?? "";
+  preferences.push(`**Slack Away Msg**: *${slackStatusText}*`);
 
   const flowModeReminders = configSettings.flowModeReminders ? "on" : "off";
   preferences.push(`**Flow Mode reminders**: *${flowModeReminders}*`);
@@ -103,23 +108,34 @@ async function initiateFlow() {
 
   const configSettings: ConfigSettings = getConfigSettings();
 
+  // create a FlowSession on backend
+  softwarePost(
+    "/v1/flow_sessions",
+    {
+      automated: false,
+      automations: configSettings,
+      duration_minutes: configSettings.durationMinutes
+    },
+    getItem("jwt")
+  );
+
   // set slack status to away
-  if (configSettings.slackAwayStatus) {
-    await updateSlackPresence("away");
+  if (configSettings.setSlackToAway) {
+    updateSlackPresence("away");
   }
 
   // set the status text to what the user set in the settings
   const status = {
-    status_text: configSettings.slackAwayStatusText,
+    status_text: configSettings.slackStatusText,
     status_emoji: ":large_purple_circle:",
-    status_expiration: 0,
+    status_expiration: new Date((new Date).getTime() + Number(configSettings.durationMinutes)*60*1000),
   };
 
   await setSlackStatus(status);
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await pauseSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
+    setDnD(configSettings.durationMinutes);
   }
 
   // set to zen mode
@@ -160,8 +176,9 @@ export async function pauseFlow() {
 async function pauseFlowInitiate() {
   const configSettings: ConfigSettings = getConfigSettings();
 
-  // set slack status to away
-  await updateSlackPresence("auto");
+  softwareDelete("/v1/flow_sessions", getItem("jwt"));
+  // set slack status to auto
+  updateSlackPresence("away");
 
   // clear the status
   const status = {
@@ -172,7 +189,7 @@ async function pauseFlowInitiate() {
 
   // pause slack notifications
   if (configSettings.pauseSlackNotifications) {
-    await enableSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
+    endDnD();
   }
 
   const screenChanged = showNormalScreenMode();
@@ -184,6 +201,7 @@ async function pauseFlowInitiate() {
   }
   enabledFlow = false;
 }
+
 
 export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
   if (enablingFlow) {
@@ -207,6 +225,7 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
   }
 
   // determine if the slack away status text is in flow
+<<<<<<< HEAD
   let slackAwayStatusMsgInFlowState = false;
   if (!useSlackSettings) {
     slackAwayStatusMsgInFlowState = true;
@@ -218,13 +237,22 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
   if (!useSlackSettings) {
     slackAwayPresenceInFlowState = true;
   } else if (configSettings.slackAwayStatus && slackPresence === "away") {
+=======
+  let slackStatusTextInFlowState = false;
+  if (configSettings.slackStatusText === slackStatus) {
+    slackStatusTextInFlowState = true;
+  }
+
+  let slackAwayPresenceInFlowState = false;
+  if (configSettings.setSlackToAway && slackPresence === "away") {
+>>>>>>> moving config page to be server side and updating names of variables
     slackAwayPresenceInFlowState = true;
-  } else if (!configSettings.slackAwayStatus && slackPresence === "active") {
+  } else if (!configSettings.setSlackToAway && slackPresence === "active") {
     slackAwayPresenceInFlowState = true;
   }
 
   // otherwise check the exact settings
-  return screenInFlowState && pauseSlackNotificationsInFlowState && slackAwayStatusMsgInFlowState && slackAwayPresenceInFlowState;
+  return screenInFlowState && pauseSlackNotificationsInFlowState && slackStatusTextInFlowState && slackAwayPresenceInFlowState;
 }
 
 function isScreenStateInFlow() {

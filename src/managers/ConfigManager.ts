@@ -1,6 +1,8 @@
 import { ConfigurationTarget, ViewColumn, WebviewPanel, window, workspace, WorkspaceConfiguration } from "vscode";
 import path = require("path");
 import fs = require("fs");
+import { softwareGet, isResponseOk } from "../http/HttpClient";
+import { getItem } from "../Util";
 import ConfigSettings from "../model/ConfigSettings";
 
 let currentPanel: WebviewPanel | undefined = undefined;
@@ -25,18 +27,21 @@ function init() {
 export function getConfigSettings(): ConfigSettings {
   const settings: ConfigSettings = new ConfigSettings();
   settings.pauseSlackNotifications = workspace.getConfiguration().get("pauseSlackNotifications");
-  settings.slackAwayStatus = workspace.getConfiguration().get("slackAwayStatus");
-  settings.slackAwayStatusText = workspace.getConfiguration().get("slackAwayStatusText");
+  settings.setSlackToAway = workspace.getConfiguration().get("setSlackToAway");
+  settings.slackStatusText = workspace.getConfiguration().get("slackStatusText");
   settings.screenMode = workspace.getConfiguration().get("screenMode");
+<<<<<<< HEAD
   settings.flowModeReminders = workspace.getConfiguration().get("flowModeReminders");
+=======
+  settings.durationMinutes = workspace.getConfiguration().get("durationMinutes");
+>>>>>>> moving config page to be server side and updating names of variables
   return settings;
 }
 
-export function configureSettings() {
+export async function configureSettings() {
   if (currentColorKind == null) {
     init();
   }
-  const generatedHtml = getEditSettingsHtml();
 
   if (currentPanel) {
     // dipose the previous one. always use the same tab
@@ -60,10 +65,11 @@ export function configureSettings() {
       }
     });
   }
-  currentPanel.webview.html = generatedHtml;
+  currentPanel.webview.html = await getEditSettingsHtml();
   currentPanel.reveal(ViewColumn.One);
 }
 
+<<<<<<< HEAD
 export function getEditSettingsTemplate() {
   const resourcePath: string = path.join(__dirname, "resources/templates");
   const file = path.join(resourcePath, "edit_settings.html");
@@ -104,20 +110,22 @@ export function getEditSettingsHtml(): string {
   // return the html content
   return fillTemplate(templateString, templateVars);
 }
+=======
+export async function getEditSettingsHtml(): Promise<string> {
+  const resp = await softwareGet(
+    `/users/me/edit_preferences`,
+    getItem("jwt"),
+    {
+      isLightMode: window.activeColorTheme.kind == 1
+    }
+  );
+>>>>>>> moving config page to be server side and updating names of variables
 
-// window.activeColorTheme.kind
-// 1 = light color theme
-// 2 = dark color theme
-function getInputFormStyles() {
-  let cardTextColor = "#FFFFFF";
-  let cardBackgroundColor = "rgba(255,255,255,0.05)";
-  let cardInputHeaderColor = "#e6e2e2";
-  if (window.activeColorTheme.kind === 1) {
-    cardTextColor = "#444444";
-    cardBackgroundColor = "rgba(0,0,0,0.10)";
-    cardInputHeaderColor = "#565758";
+  if (isResponseOk(resp)) {
+    return resp.data.html;
+  } else {
+    window.showErrorMessage("Unable to generate view. Please try again later.");
   }
-  return { cardTextColor, cardBackgroundColor, cardInputHeaderColor };
 }
 
 async function updateConfigSettings(settings) {
@@ -125,10 +133,14 @@ async function updateConfigSettings(settings) {
 
   await Promise.all([
     configuration.update("pauseSlackNotifications", settings.pauseSlackNotifications, ConfigurationTarget.Global),
-    configuration.update("slackAwayStatus", settings.slackAwayStatus, ConfigurationTarget.Global),
-    configuration.update("slackAwayStatusText", settings.slackAwayStatusText, ConfigurationTarget.Global),
+    configuration.update("setSlackToAway", settings.setSlackToAway, ConfigurationTarget.Global),
+    configuration.update("slackStatusText", settings.slackStatusText, ConfigurationTarget.Global),
     configuration.update("screenMode", settings.screenMode, ConfigurationTarget.Global),
+<<<<<<< HEAD
     configuration.update("flowModeReminders", settings.flowModeReminders, ConfigurationTarget.Global)
+=======
+    configuration.update("durationMinutes", settings.durationMinutes, ConfigurationTarget.Global),
+>>>>>>> moving config page to be server side and updating names of variables
   ]).catch((e) => {
     console.error("error updating global code time settings: ", e.message);
   });

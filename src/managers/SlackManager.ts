@@ -377,6 +377,40 @@ export async function updateSlackPresence(presence: string) {
   return presenceUpdated;
 }
 
+export async function setDnD(num_minutes: number) {
+  let presenceUpdated = false;
+  const integrations = getSlackWorkspaces();
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    await web.dnd
+      .setSnooze({ num_minutes: num_minutes ?? 120 })
+      .then(() => {
+        presenceUpdated = true;
+      })
+      .catch((e) => {
+        console.error("error updating slack DnD: ", e.message);
+      });
+  }
+  return presenceUpdated;
+}
+
+export async function endDnD() {
+  let presenceUpdated = false;
+  const integrations = getSlackWorkspaces();
+  for await (const integration of integrations) {
+    const web = new WebClient(integration.access_token);
+    await web.dnd
+      .endDnd()
+      .then(() => {
+        presenceUpdated = true;
+      })
+      .catch((e) => {
+        console.error("error updating slack DnD: ", e.message);
+      });
+  }
+  return presenceUpdated;
+}
+
 // -------------------------------------------
 // - private methods
 // -------------------------------------------

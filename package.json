@@ -104,15 +104,20 @@
         "type": "object",
         "title": "Code Time",
         "properties": {
-          "slackAwayStatus": {
+          "setSlackToAway": {
             "type": "boolean",
             "default": true,
             "description": "Automatically set my status away when I'm in flow"
           },
-          "slackAwayStatusText": {
+          "slackStatusText": {
             "type": "string",
             "default": "CodeTime!",
             "description": "Customize your away status in Slack"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "default": "120",
+            "description": "How long Flow Mode will be enabled for"
           },
           "pauseSlackNotifications": {
             "type": "boolean",

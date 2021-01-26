@@ -1,5 +1,6 @@
 import { window, commands } from "vscode";
 import { softwareGet, softwarePut, isResponseOk, softwarePost } from "./http/HttpClient";
+import { getConfigSettings } from "./managers/ConfigManager";
 import {
   getItem,
   setItem,
@@ -146,7 +147,6 @@ export async function initializePreferences() {
     if (user && user.preferences) {
       // obtain the session threshold in seconds "sessionThresholdInSec"
       sessionThresholdInSec = user.preferences.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
-
       disableGitData = !!user.preferences.disableGitData;
     }
   }
@@ -164,33 +164,19 @@ export function getPreference(preference: string) {
   return getItem(preference);
 }
 
-async function sendPreferencesUpdate(userId, userPrefs) {
-  let api = `/users/${userId}`;
-  // update the preferences
-  // /:id/preferences
-  api = `/users/${userId}/preferences`;
-  let resp = await softwarePut(api, userPrefs, getItem("jwt"));
-  if (isResponseOk(resp)) {
-    logIt("update user code time preferences");
-  }
-}
-
 export async function updatePreferences() {
   // get the user's preferences and update them if they don't match what we have
-  let jwt = getItem("jwt");
-  if (jwt) {
-    let user = await getUser();
-    if (!user) {
-      return;
-    }
-    let api = `/users/${user.id}`;
-    let resp = await softwareGet(api, jwt);
-    if (isResponseOk(resp)) {
-      if (resp && resp.data && resp.data.data && resp.data.data.preferences) {
-        let prefs = resp.data.data.preferences;
-        await sendPreferencesUpdate(parseInt(user.id, 10), prefs);
-      }
-    }
+  let user = await getUser();
+  if (!user) return;
+
+  let updatedPrefs = {...user.preferences, ...getConfigSettings() };
+  let api = `/users/${user.id}`;
+  // update the preferences
+  // /:id/preferences
+  api = `/users/${user.id}/preferences`;
+  let resp = await softwarePut(api, updatedPrefs, getItem("jwt"));
+  if (isResponseOk(resp)) {
+    logIt("update user code time preferences");
   }
 }
 

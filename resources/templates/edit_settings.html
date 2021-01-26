@@ -6,6 +6,7 @@
         color: $ {
             this.cardTextColor
         }
+<<<<<<< HEAD
     }
 
     #modal {
@@ -38,6 +39,23 @@
 
         color: $ {
             this.cardInputHeaderColor
+=======
+        #modal {
+            padding: 26px;
+            position: absolute;
+            width: 550px;
+            top: 30px;
+            left: 50%;
+            margin-left: -225px;
+            background: ${this.cardBackgroundColor};
+            border-radius: 2px;
+        }
+        /* Headings */
+        .titleHeader {
+            font-size: 24px;
+            line-height: 40px;
+            font-weight: 600;
+>>>>>>> moving config page to be server side and updating names of variables
         }
 
         ;
@@ -64,11 +82,21 @@
         background-color: $ {
             this.cardBackgroundColor
         }
+<<<<<<< HEAD
 
         ;
 
         color: $ {
             this.cardTextColor
+=======
+        .half-width {
+            width: 45%;
+        }
+        .inputStyle {
+            font-size: 12px;
+            color: #919eab;
+            font-weight: 500;
+>>>>>>> moving config page to be server side and updating names of variables
         }
 
         ;
@@ -141,6 +169,7 @@
         color: $ {
             this.cardTextColor
         }
+<<<<<<< HEAD
 
         ;
         background: #00b4ee;
@@ -158,6 +187,59 @@
         <div class="inputStyle">
             <input type="checkbox" class="checkbox" id="slackAwayStatus" ${this.slackAwayStatus}>
             <label for="slackAwayStatus">Automatically set my status away when I'm in flow</label>
+=======
+    </style>
+    <body>
+        <div id="modal">
+            <h1>Code Time Settings</h1>
+            <h2>Flow Mode</h2>
+            <p>Maximize deep work with flow automations.</p>
+            <p>Silence notifications, set screen modes, and more.</p>
+
+            <div class="inputHeader">Auto Expire Flow Mode</div>
+            <div class="inputStyle">
+                <select name="durationMinutes" id="durationMinutes" class="select">
+                    <option value="0" ${this.durationMinutes == 0}>Never</option>
+                    <option value="120" ${this.durationMinutes == 120}>2 hrs</option>
+                    <option value="90" ${this.durationMinutes == 90}>1.5 hrs</option>
+                    <option value="60" ${this.durationMinutes == 60}>1 hr</option>
+                    <option value="45" ${this.durationMinutes == 45}>45 mins</option>
+                    <option value="30" ${this.durationMinutes == 30}>30 mins</option>
+                </select>
+                <label for="durationMinutes">Return from Flow Mode after a set time</label>
+             </div>
+            <h3>Slack</h3>
+            <hr>
+            <div class="inputHeader">Notifications Settings</div>
+            <div class="inputStyle" style="display:inline-block;">
+                <input type="checkbox" class="checkbox" id="pauseSlackNotifications" ${this.pauseSlackNotifications}>
+                <label for="pauseSlackNotifications">Pause Slack Notifications</label>
+                <input type="checkbox" class="checkbox" id="slackAwayStatus" ${this.slackAwayStatus}>
+                <label for="slackAwayStatus">Set my status to "away"</label>
+            </div>
+
+            <div class="inputHeader">Set Status Message</div>
+            <div class="inputStyle">
+                <input type="text" id="slackAwayStatusText" class="text" placeholder="${this.slackAwayStatusPlaceholder}" value="${this.slackAwayStatusText}"/>
+            </div>
+
+            <h3>Editor</h3>
+            <hr>
+            <div class="inputHeader">Screen mode</div>
+            <div class="inputStyle">
+                <select name="screenMode" id="screenMode" class="select">
+                    <option value="Zen" ${this.zenSelected}>Zen</option>
+                    <option value="Full Screen" ${this.fullScreenSelected}>Full Screen</option>
+                    <option value="None" ${this.noneSelected}>None</option>
+                </select>
+                <label for="screenMode">Toggle a selected screen mode</label>
+             </div>
+
+            <div class="buttons">
+                <button id="submit">Save</button>
+                <button id="cancel">Cancel</button>
+            </div>
+>>>>>>> moving config page to be server side and updating names of variables
         </div>
 
         <div class="inputHeader">Slack away status text</div>
