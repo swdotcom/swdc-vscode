@@ -2,14 +2,18 @@ import { enableFlow } from "../managers/FlowManager";
 import { window } from "vscode";
 
 export async function handleFlowScoreMessage(message: any) {
-	console.debug("[CodeTime] Received flow score message", message);
+  console.debug("[CodeTime] Received flow score message", message);
 
-	const selection = await window.showInformationMessage(
-		"Would you like to minimize distractions and enable flow mode?",
-		...["Yes"]
-	);
+  const { notificationText } = message;
 
-	if (selection === "Yes") {
-		enableFlow()
-	}
+  if (notificationText) {
+    const selection = await window.showInformationMessage(
+      notificationText,
+      ...["Yes"]
+    );
+
+    if (selection === "Yes") {
+      enableFlow();
+    }
+  }
 }
