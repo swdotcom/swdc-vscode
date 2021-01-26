@@ -4,15 +4,13 @@ import { window } from "vscode";
 export async function handleFlowScoreMessage(message: any) {
   console.debug("[CodeTime] Received flow score message", message);
 
-  const { notificationText } = message;
-
-  if (notificationText) {
+  if (message.body?.notificationText) {
     const selection = await window.showInformationMessage(
-      notificationText,
-      ...["Yes"]
+      message.body.notificationText,
+      "Enable Flow Mode"
     );
 
-    if (selection === "Yes") {
+    if (selection === "Enable Flow Mode") {
       enableFlow();
     }
   }

@@ -29,7 +29,7 @@ export function initializeWebsockets() {
   ws.on('close', function close() {
     console.debug("[CodeTime] websockets connection closed - will retry connecting in 10 seconds");
 
-    clearInterval(intervalId)
+    clearWebsocketConnectionRetryInterval();
     intervalId = setInterval(() => {
       console.log("[CodeTime] attempting to reinitialize websockets connection");
       initializeWebsockets();
@@ -41,16 +41,20 @@ export function initializeWebsockets() {
   });
 }
 
+export function clearWebsocketConnectionRetryInterval() {
+  clearInterval(intervalId);
+}
+
 const handleIncomingMessage = (data: any) => {
   try {
     const message = JSON.parse(data);
 
     switch (message.type) {
       case "info":
-        console.info(`[CodeTime] ${message.body}`)
+        console.info(`[CodeTime] ${message.body}`);
         break;
       case "flow_score":
-        handleFlowScoreMessage(message.body);
+        handleFlowScoreMessage(message);
         break;
       default:
         console.warn("[CodeTime] received unhandled websocket message type", data);

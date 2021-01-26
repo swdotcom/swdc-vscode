@@ -25,7 +25,7 @@ import { PluginDataManager } from "./managers/PluginDataManager";
 import { setSessionSummaryLiveshareMinutes, updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import { initializeWebsockets } from "./websockets";
+import { initializeWebsockets, clearWebsocketConnectionRetryInterval } from "./websockets";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -75,6 +75,7 @@ export function deactivate(ctx: ExtensionContext) {
   WallClockManager.getInstance().dispose();
 
   clearInterval(liveshare_update_interval);
+  clearWebsocketConnectionRetryInterval();
 
   // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
   //     if (isResponseOk(resp)) {
