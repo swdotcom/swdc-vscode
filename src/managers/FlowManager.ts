@@ -23,11 +23,9 @@ import {
   ZEN_MODE_ID,
 } from "./ScreenManager";
 
-let enablingFlow = false;
-let enabledFlow = false;
+export let enablingFlow = false;
+export let enabledFlow = false;
 let useSlackSettings = true;
-
-export const flowModeEnabled = enabledFlow;
 
 /**
  * Screen Mode: full screen

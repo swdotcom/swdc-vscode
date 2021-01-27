@@ -1,17 +1,13 @@
-import { enableFlow } from "../managers/FlowManager";
+import { enableFlow, enabledFlow, enablingFlow } from "../managers/FlowManager";
 import { window } from "vscode";
 import { getConfigSettings } from "../managers/ConfigManager";
 import ConfigSettings from "../model/ConfigSettings"
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus } from "../managers/SlackManager";
 
 export async function handleFlowScoreMessage(message: any) {
   console.debug("[CodeTime] Received flow score message", message);
   const configSettings: ConfigSettings = getConfigSettings()
 
-  const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
-
-
-  if (configSettings.flowModeReminders && ) {
+  if (configSettings.flowModeReminders && !enablingFlow && !enabledFlow) {
     try {
 
       const { notificationText, cta } = message.body;

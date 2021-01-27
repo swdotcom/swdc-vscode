@@ -2,7 +2,6 @@ import { ConfigurationTarget, ViewColumn, WebviewPanel, window, workspace, Works
 import path = require("path");
 import fs = require("fs");
 import ConfigSettings from "../model/ConfigSettings";
-import { config } from "process";
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentColorKind: number = undefined;
