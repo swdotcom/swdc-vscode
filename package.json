@@ -119,6 +119,11 @@
             "default": true,
             "description": "Automatically pause Slack notifications when I'm in flow"
           },
+          "flowModeReminders": {
+            "type": "boolean",
+            "default": true,
+            "description": "Remind me to enable Flow Mode when I'm in flow"
+          },
           "screenMode": {
             "type": "string",
             "enum": [
