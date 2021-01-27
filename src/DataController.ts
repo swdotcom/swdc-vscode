@@ -26,6 +26,7 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { SummaryManager } from "./managers/SummaryManager";
+import { initializeWebsockets } from "./websockets";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -230,6 +231,12 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
     const message = "Successfully logged on to Code Time";
     window.showInformationMessage(message);
+
+    try {
+      initializeWebsockets();
+    } catch (e) {
+      console.error("Failed to initialize codetime websockets", e);
+    }
 
     commands.executeCommand("codetime.refreshTreeViews");
 
