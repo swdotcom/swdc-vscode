@@ -27,6 +27,7 @@ import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./r
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { SummaryManager } from "./managers/SummaryManager";
 import { initializeWebsockets } from "./websockets";
+import { disconectAllSlackIntegrations } from "./managers/SlackManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -223,8 +224,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
-    // clear the integrations
-    syncIntegrations([] /*empty array*/);
+    // clear the slack integrations
+    await disconectAllSlackIntegrations();
 
     // update this users integrations
     await foundNewSlackIntegrations(state.user);

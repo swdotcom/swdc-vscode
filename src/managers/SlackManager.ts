@@ -78,6 +78,15 @@ export async function connectSlackWorkspace() {
   }, 10000);
 }
 
+export async function disconectAllSlackIntegrations() {
+  const workspaces = getSlackWorkspaces();
+  if (workspaces?.length) {
+    for await (const workspace of workspaces) {
+      await disconnectSlackAuth(workspace.authId);
+    }
+  }
+}
+
 export async function disconnectSlackWorkspace() {
   const registered = await checkRegistration();
   if (!registered) {

@@ -4,6 +4,7 @@ import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_
 import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
+import { softwarePost } from "./http/HttpClient";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
@@ -463,8 +464,14 @@ export function getLocalREADMEFile() {
 }
 
 export function displayReadmeIfNotExists(override = false) {
-  const displayedReadme = getItem("vscode_CtReadme");
-  if (!displayedReadme || override) {
+  const codetime_vs_code_activated = getItem("vscode_CtReadme");
+
+  if (!codetime_vs_code_activated) {
+    // activate the plugin
+    softwarePost("/plugins/activate", {}, getItem("jwt"));
+  }
+
+  if (!codetime_vs_code_activated || override) {
     const readmeUri = Uri.file(getLocalREADMEFile());
 
     commands.executeCommand("markdown.showPreview", readmeUri, ViewColumn.One);
