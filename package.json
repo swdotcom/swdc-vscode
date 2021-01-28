@@ -213,7 +213,7 @@
     "@types/ws": "^7.4.0",
     "axios": "^0.21.1",
     "clipboardy": "^2.1.0",
-    "file-it": "^1.0.24",
+    "file-it": "^1.1.0",
     "jwt-decode": "^2.2.0",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",
