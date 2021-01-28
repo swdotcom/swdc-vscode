@@ -28,6 +28,7 @@ export function getConfigSettings(): ConfigSettings {
   settings.slackAwayStatus = workspace.getConfiguration().get("slackAwayStatus");
   settings.slackAwayStatusText = workspace.getConfiguration().get("slackAwayStatusText");
   settings.screenMode = workspace.getConfiguration().get("screenMode");
+  settings.flowModeReminders = workspace.getConfiguration().get("flowModeReminders");
   return settings;
 }
 
@@ -92,6 +93,7 @@ export function getEditSettingsHtml(): string {
     noneSelected,
     pauseSlackNotifications: configSettings.pauseSlackNotifications ? "checked" : "",
     slackAwayStatus: configSettings.slackAwayStatus ? "checked" : "",
+    flowModeReminders: configSettings.flowModeReminders ? "checked" : "",
   };
 
   const templateString = fs.readFileSync(getEditSettingsTemplate()).toString();
@@ -126,6 +128,7 @@ async function updateConfigSettings(settings) {
     configuration.update("slackAwayStatus", settings.slackAwayStatus, ConfigurationTarget.Global),
     configuration.update("slackAwayStatusText", settings.slackAwayStatusText, ConfigurationTarget.Global),
     configuration.update("screenMode", settings.screenMode, ConfigurationTarget.Global),
+    configuration.update("flowModeReminders", settings.flowModeReminders, ConfigurationTarget.Global)
   ]).catch((e) => {
     console.error("error updating global code time settings: ", e.message);
   });

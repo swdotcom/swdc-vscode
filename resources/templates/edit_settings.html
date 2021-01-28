@@ -1,154 +1,227 @@
 <html>
-    <style>
-        body{
-            font-family: sans-serif;
-            color: ${this.cardTextColor}
-        }
-        #modal {
-            padding: 16px;
-            position: absolute;
-            width: 450px;
-            top: 30px;
-            left: 50%;
-            margin-left: -225px;
-            background: ${this.cardBackgroundColor};
-            border-radius: 2px;
-        }
-        /* Headings */
-        .titleHeader {
-            font-size: 18px;
-            line-height: 20px;
-            font-weight: 600;
-        }
-        .inputHeader {
-            margin-top: 10px;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: ${this.cardInputHeaderColor};
-            font-weight: 500;
-        }
-        .inputStyle {
-            font-size: 12px;
-            color: #919eab;
-            font-weight: 500;
-        }
-        /* text input */
-        .text {
-            margin-right: 8px;
-            margin-top: 5px;
-            width: 435px;
-            font-size: 16px;
-            border-radius: 2px;
-            padding-left: 5px;
-            padding-right: 5px;
-            border-color: rgba(0, 0, 0, 0);
-            background-color: ${this.cardBackgroundColor};
-            color: ${this.cardTextColor};
-            resize: none;
-        }
-        /* checkbox input */
-        .checkbox {
-            margin-right: 8px;
-            border-radius: 2px;
-            border-color: rgba(0, 0, 0, 0);
-            background-color: ${this.cardBackgroundColor};
-            color: ${this.cardTextColor};
-        }
-        /* select input */
-        .select {
-            padding: 2px 5px;
-            margin-right: 8px;
-            border-radius: 2px;
-            border-color: rgba(0, 0, 0, 0);
-            background-color: ${this.cardBackgroundColor};
-            color: ${this.cardTextColor};
-        }
-        /* Buttons */
-        .buttons {
-            margin-top: 20px;
-        }
-        #cancel {
-            font-size: 16px;
-            line-height: 25px;
-            color: ${this.cardTextColor};
-            background-color: rgba(0, 0, 0, 0);
-            border-color: rgba(0, 0, 0, 0);
-            border-radius: 2px;
-            cursor: pointer;
-        }
-        #submit {
-            font-size: 16px;
-            line-height: 25px;
-            color: ${this.cardTextColor};
-            background: #00b4ee;
-            border: 3px solid #00b4ee;
-            box-sizing: border-box;
-            border-radius: 2px;
-            cursor: pointer;
-        }
-    </style>
-    <body>
-        <div id="modal">
-            <div class="titleHeader">Code Time Settings</div>
-            <div class="inputHeader">Slack away status</div>
-            <div class="inputStyle">
-                <input type="checkbox" class="checkbox" id="slackAwayStatus" ${this.slackAwayStatus}>
-                <label for="slackAwayStatus">Automatically set my status away when I'm in flow</label>
-            </div>
+<style>
+    body {
+        font-family: sans-serif;
 
-            <div class="inputHeader">Slack away status text</div>
-            <div class="inputStyle">
-                <input type="text" id="slackAwayStatusText" class="text" placeholder="${this.slackAwayStatusPlaceholder}" value="${this.slackAwayStatusText}"/>
-            </div>
+        color: $ {
+            this.cardTextColor
+        }
+    }
 
-            <div class="inputHeader">Pause Slack notifications</div>
-            <div class="inputStyle">
-                <input type="checkbox" class="checkbox" id="pauseSlackNotifications" ${this.pauseSlackNotifications}>
-                <label for="pauseSlackNotifications">Automatically pause Slack notifications when I'm in flow</label>
-            </div>
+    #modal {
+        padding: 16px;
+        position: absolute;
+        width: 450px;
+        top: 30px;
+        left: 50%;
+        margin-left: -225px;
 
-            <div class="inputHeader">Screen mode</div>
-            <div class="inputStyle">
-                <select name="screenMode" id="screenMode" class="select">
-                    <option value="Zen" ${this.zenSelected}>Zen</option>
-                    <option value="Full Screen" ${this.fullScreenSelected}>Full Screen</option>
-                    <option value="None" ${this.noneSelected}>None</option>
-                </select>
-                <label for="screenMode">Automatically toggle a selected screen mode when I'm in flow</label>
-             </div>
+        background: $ {
+            this.cardBackgroundColor
+        }
 
-            <div class="buttons">
-                <button id="submit">Save</button>
-                <button id="cancel">Cancel</button>
-            </div>
+        ;
+        border-radius: 2px;
+    }
+
+    /* Headings */
+    .titleHeader {
+        font-size: 18px;
+        line-height: 20px;
+        font-weight: 600;
+    }
+
+    .inputHeader {
+        margin-top: 10px;
+        margin-bottom: 5px;
+        font-size: 14px;
+
+        color: $ {
+            this.cardInputHeaderColor
+        }
+
+        ;
+        font-weight: 500;
+    }
+
+    .inputStyle {
+        font-size: 12px;
+        color: #919eab;
+        font-weight: 500;
+    }
+
+    /* text input */
+    .text {
+        margin-right: 8px;
+        margin-top: 5px;
+        width: 435px;
+        font-size: 16px;
+        border-radius: 2px;
+        padding-left: 5px;
+        padding-right: 5px;
+        border-color: rgba(0, 0, 0, 0);
+
+        background-color: $ {
+            this.cardBackgroundColor
+        }
+
+        ;
+
+        color: $ {
+            this.cardTextColor
+        }
+
+        ;
+        resize: none;
+    }
+
+    /* checkbox input */
+    .checkbox {
+        margin-right: 8px;
+        border-radius: 2px;
+        border-color: rgba(0, 0, 0, 0);
+
+        background-color: $ {
+            this.cardBackgroundColor
+        }
+
+        ;
+
+        color: $ {
+            this.cardTextColor
+        }
+
+        ;
+    }
+
+    /* select input */
+    .select {
+        padding: 2px 5px;
+        margin-right: 8px;
+        border-radius: 2px;
+        border-color: rgba(0, 0, 0, 0);
+
+        background-color: $ {
+            this.cardBackgroundColor
+        }
+
+        ;
+
+        color: $ {
+            this.cardTextColor
+        }
+
+        ;
+    }
+
+    /* Buttons */
+    .buttons {
+        margin-top: 20px;
+    }
+
+    #cancel {
+        font-size: 16px;
+        line-height: 25px;
+
+        color: $ {
+            this.cardTextColor
+        }
+
+        ;
+        background-color: rgba(0, 0, 0, 0);
+        border-color: rgba(0, 0, 0, 0);
+        border-radius: 2px;
+        cursor: pointer;
+    }
+
+    #submit {
+        font-size: 16px;
+        line-height: 25px;
+
+        color: $ {
+            this.cardTextColor
+        }
+
+        ;
+        background: #00b4ee;
+        border: 3px solid #00b4ee;
+        box-sizing: border-box;
+        border-radius: 2px;
+        cursor: pointer;
+    }
+</style>
+
+<body>
+    <div id="modal">
+        <div class="titleHeader">Code Time Settings</div>
+        <div class="inputHeader">Slack away status</div>
+        <div class="inputStyle">
+            <input type="checkbox" class="checkbox" id="slackAwayStatus" ${this.slackAwayStatus}>
+            <label for="slackAwayStatus">Automatically set my status away when I'm in flow</label>
         </div>
-    </body>
-    <script>
-        let vscode;
-        let submit;
-        let cancel;
-        window.addEventListener("load", () => {
-            vscode = acquireVsCodeApi();
 
-            cancel = document.getElementById("cancel");
-            submit = document.getElementById("submit");
+        <div class="inputHeader">Slack away status text</div>
+        <div class="inputStyle">
+            <input type="text" id="slackAwayStatusText" class="text" placeholder="${this.slackAwayStatusPlaceholder}"
+                value="${this.slackAwayStatusText}" />
+        </div>
 
-            cancel.addEventListener("click", cancelConfig);
-            submit.addEventListener("click", submitConfig);
-        });
+        <div class="inputHeader">Pause Slack notifications</div>
+        <div class="inputStyle">
+            <input type="checkbox" class="checkbox" id="pauseSlackNotifications" ${this.pauseSlackNotifications}>
+            <label for="pauseSlackNotifications">Automatically pause Slack notifications when I'm in flow</label>
+        </div>
 
-        function cancelConfig() {
-            vscode.postMessage({ command: "cancel" });
-        }
+        <div class="inputHeader">Receive Flow Mode reminders</div>
+        <div class="inputStyle">
+            <input type="checkbox" class="checkbox" id="flowModeReminders" ${this.flowModeReminders}>
+            <label for="flowModeReminders">Remind me to enable Flow Mode when I'm in flow</label>
+        </div>
 
-        function submitConfig() {
-            const settingsUpdate = {
-                slackAwayStatus: document.getElementById("slackAwayStatus").checked,
-                slackAwayStatusText: document.getElementById("slackAwayStatusText").value,
-                pauseSlackNotifications: document.getElementById("pauseSlackNotifications").checked,
-                screenMode: document.getElementById("screenMode").value
-            };
-            vscode.postMessage({ command: "editSettings", value: settingsUpdate });
-        }
-    </script>
+        <div class="inputHeader">Screen mode</div>
+        <div class="inputStyle">
+            <select name="screenMode" id="screenMode" class="select">
+                <option value="Zen" ${this.zenSelected}>Zen</option>
+                <option value="Full Screen" ${this.fullScreenSelected}>Full Screen</option>
+                <option value="None" ${this.noneSelected}>None</option>
+            </select>
+            <label for="screenMode">Automatically toggle a selected screen mode when I'm in flow</label>
+        </div>
+
+        <div class="buttons">
+            <button id="submit">Save</button>
+            <button id="cancel">Cancel</button>
+        </div>
+    </div>
+</body>
+<script>
+    let vscode;
+    let submit;
+    let cancel;
+    window.addEventListener("load", () => {
+        vscode = acquireVsCodeApi();
+
+        cancel = document.getElementById("cancel");
+        submit = document.getElementById("submit");
+
+        cancel.addEventListener("click", cancelConfig);
+        submit.addEventListener("click", submitConfig);
+    });
+
+    function cancelConfig() {
+        vscode.postMessage({ command: "cancel" });
+    }
+
+    function submitConfig() {
+        const settingsUpdate = {
+            slackAwayStatus: document.getElementById("slackAwayStatus").checked,
+            slackAwayStatusText: document.getElementById("slackAwayStatusText").value,
+            pauseSlackNotifications: document.getElementById("pauseSlackNotifications").checked,
+            screenMode: document.getElementById("screenMode").value,
+            flowModeReminders: document.getElementById("flowModeReminders").checked
+        };
+        vscode.postMessage({ command: "editSettings", value: settingsUpdate });
+    }
+</script>
+
 </html>

@@ -3,4 +3,5 @@ export default class ConfigSettings {
   public slackAwayStatusText: string;
   public pauseSlackNotifications: boolean;
   public screenMode: string;
+  public flowModeReminders: boolean;
 }

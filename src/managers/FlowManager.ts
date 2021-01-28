@@ -23,8 +23,8 @@ import {
   ZEN_MODE_ID,
 } from "./ScreenManager";
 
-let enablingFlow = false;
-let enabledFlow = false;
+export let enablingFlow = false;
+export let enabledFlow = false;
 let useSlackSettings = true;
 
 /**
@@ -42,6 +42,9 @@ export function getConfigSettingsTooltip() {
 
   const slackAwayStatusMsg = configSettings.slackAwayStatusText ?? "";
   preferences.push(`**Slack Away Msg**: *${slackAwayStatusMsg}*`);
+
+  const flowModeReminders = configSettings.flowModeReminders ? "on" : "off";
+  preferences.push(`**Flow Mode reminders**: *${flowModeReminders}*`);
 
   // 2 spaces followed by a newline will create newlines in markdown
   return preferences.length ? preferences.join("  \n") : "";
@@ -74,7 +77,7 @@ export async function enableFlow() {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow().catch((e) => {});
+        initiateFlow().catch((e) => { });
         resolve(true);
       });
     }
@@ -147,7 +150,7 @@ export async function pauseFlow() {
     },
     (progress) => {
       return new Promise((resolve, reject) => {
-        pauseFlowInitiate().catch((e) => {});
+        pauseFlowInitiate().catch((e) => { });
         resolve(true);
       });
     }
