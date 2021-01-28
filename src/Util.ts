@@ -464,14 +464,14 @@ export function getLocalREADMEFile() {
 }
 
 export function displayReadmeIfNotExists(override = false) {
-  const displayedReadme = getItem("vscode_CtReadme");
+  const codetime_vs_code_activated = getItem("vscode_CtReadme");
 
-  if (!displayedReadme) {
+  if (!codetime_vs_code_activated) {
     // activate the plugin
     softwarePost("/plugins/activate", {}, getItem("jwt"));
   }
 
-  if (!displayedReadme || override) {
+  if (!codetime_vs_code_activated || override) {
     const readmeUri = Uri.file(getLocalREADMEFile());
 
     commands.executeCommand("markdown.showPreview", readmeUri, ViewColumn.One);
