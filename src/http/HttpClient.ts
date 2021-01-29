@@ -2,12 +2,12 @@ import axios from "axios";
 
 import { api_endpoint } from "../Constants";
 
-import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds } from "../Util";
+import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid } from "../Util";
 
 // build the axios api base url
 const beApi = axios.create({
   baseURL: `${api_endpoint}`,
-  timeout: 30000
+  timeout: 30000,
 });
 
 beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();
@@ -16,6 +16,7 @@ beApi.defaults.headers.common["X-SWDC-Plugin-Version"] = getVersion();
 beApi.defaults.headers.common["X-SWDC-Plugin-OS"] = getOs();
 beApi.defaults.headers.common["X-SWDC-Plugin-TZ"] = Intl.DateTimeFormat().resolvedOptions().timeZone;
 beApi.defaults.headers.common["X-SWDC-Plugin-Offset"] = getOffsetSeconds() / 60;
+beApi.defaults.headers.common["X-SWDC-Plugin-UUID"] = getPluginUuid();
 
 const spotifyApi = axios.create({});
 
