@@ -26,6 +26,7 @@ import { setSessionSummaryLiveshareMinutes, updateStatusBarWithSummaryData } fro
 import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryInterval } from "./websockets";
+import { softwarePost } from "./http/HttpClient";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -134,9 +135,9 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   initializeLiveshare();
 
   try {
-    initializeWebsockets()
+    initializeWebsockets();
   } catch (e) {
-    console.error("Failed to initialize websockets", e)
+    console.error("Failed to initialize websockets", e);
   }
 
   const initializedVscodePlugin = getItem("vscode_CtInit");
@@ -146,6 +147,9 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     setTimeout(() => {
       commands.executeCommand("codetime.displayTree");
     }, 1000);
+
+    // activate the plugin
+    softwarePost("/plugins/activate", {}, getItem("jwt"));
   }
 
   // show the readme if it doesn't exist
