@@ -84,28 +84,30 @@ export async function foundNewSlackIntegrations(user) {
     // find the slack auth
     for (const integration of user.integrations) {
       // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
-      if (integration.name.toLowerCase() === "slack" && integration.status.toLowerCase() === "active") {
-        // check if it exists
-        const foundIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
-        if (!foundIntegration) {
-          // get the workspace domain using the authId
-          const web = new WebClient(integration.access_token);
-          const usersIdentify = await web.users.identity().catch((e) => {
-            console.log("Error fetching slack team info: ", e.message);
-            return null;
-          });
-          if (usersIdentify) {
-            // usersIdentity returns
-            // {team: {id, name, domain, image_102, image_132, ....}...}
-            // set the domain
-            integration["team_domain"] = usersIdentify.team?.domain;
-            integration["team_name"] = usersIdentify.team?.name;
-            integration["integration_id"] = usersIdentify.user?.id;
-            // add it
-            currentIntegrations.push(integration);
+      const isSlackIntegration = !!(
+        integration.name.toLowerCase() === "slack" &&
+        integration.status.toLowerCase() === "active" &&
+        integration.access_token
+      );
+      const foundInCurrentIntegrations = currentIntegrations.find((n) => n.authId === integration.authId);
+      if (isSlackIntegration && !foundInCurrentIntegrations) {
+        // get the workspace domain using the authId
+        const web = new WebClient(integration.access_token);
+        const usersIdentify = await web.users.identity().catch((e) => {
+          console.log("Error fetching slack team info: ", e.message);
+          return null;
+        });
+        if (usersIdentify) {
+          // usersIdentity returns
+          // {team: {id, name, domain, image_102, image_132, ....}...}
+          // set the domain
+          integration["team_domain"] = usersIdentify.team?.domain;
+          integration["team_name"] = usersIdentify.team?.name;
+          integration["integration_id"] = usersIdentify.user?.id;
+          // add it
+          currentIntegrations.push(integration);
 
-            foundNewIntegration = true;
-          }
+          foundNewIntegration = true;
         }
       }
     }
