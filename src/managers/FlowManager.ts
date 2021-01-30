@@ -1,5 +1,6 @@
 import { commands, ProgressLocation, window } from "vscode";
 import ConfigSettings from "../model/ConfigSettings";
+import { getPreference } from "../DataController";
 import { getConfigSettings } from "./ConfigManager";
 import { softwarePost, softwareDelete } from "../http/HttpClient";
 import { getItem } from "../Util";
@@ -104,6 +105,7 @@ async function initiateFlow() {
     return;
   }
 
+<<<<<<< HEAD
   enablingFlow = true;
 
   const configSettings: ConfigSettings = getConfigSettings();
@@ -123,26 +125,19 @@ async function initiateFlow() {
   if (configSettings.setSlackToAway) {
     updateSlackPresence("away");
   }
+=======
+  const flowModeSettings = getPreference("flowMode");
+>>>>>>> updating configs and slack handlers to use backend
 
-  // set the status text to what the user set in the settings
-  const status = {
-    status_text: configSettings.slackStatusText,
-    status_emoji: ":large_purple_circle:",
-    status_expiration: new Date((new Date).getTime() + Number(configSettings.durationMinutes)*60*1000),
-  };
+  // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
+  softwarePost("/v1/flow_sessions", { automated: false }, getItem("jwt"));
 
-  await setSlackStatus(status);
-
-  // pause slack notifications
-  if (configSettings.pauseSlackNotifications) {
-    setDnD(configSettings.durationMinutes);
-  }
-
-  // set to zen mode
+  // update screen mode
   let screenChanged = false;
-  if (configSettings.screenMode.includes("Full Screen")) {
+  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  if (screenMode?.includes("Full Screen")) {
     screenChanged = showFullScreenMode();
-  } else if (configSettings.screenMode.includes("Zen")) {
+  } else if (screenMode.includes("Zen")) {
     screenChanged = showZenMode();
   } else {
     screenChanged = showNormalScreenMode();
@@ -174,24 +169,7 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  const configSettings: ConfigSettings = getConfigSettings();
-
   softwareDelete("/v1/flow_sessions", getItem("jwt"));
-  // set slack status to auto
-  updateSlackPresence("away");
-
-  // clear the status
-  const status = {
-    status_text: "",
-    status_emoji: "",
-  };
-  await setSlackStatus(status);
-
-  // pause slack notifications
-  if (configSettings.pauseSlackNotifications) {
-    endDnD();
-  }
-
   const screenChanged = showNormalScreenMode();
 
   if (!screenChanged) {
@@ -204,6 +182,7 @@ async function pauseFlowInitiate() {
 
 
 export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
+<<<<<<< HEAD
   if (enablingFlow) {
     return true;
   } else if (!enabledFlow) {
@@ -253,6 +232,22 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
 
   // otherwise check the exact settings
   return screenInFlowState && pauseSlackNotificationsInFlowState && slackStatusTextInFlowState && slackAwayPresenceInFlowState;
+=======
+  const flowModeSettings = getPreference("flowMode");
+  const currentScreenMode = getScreenMode();
+  const flowScreenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  // determine if this editor should be in flow mode
+  let screenInFlowState = false;
+  if (flowScreenMode.includes("Full Screen") && currentScreenMode === FULL_SCREEN_MODE_ID) {
+    screenInFlowState = true;
+  } else if (flowScreenMode.includes("Zen") && currentScreenMode === ZEN_MODE_ID) {
+    screenInFlowState = true;
+  } else if (flowScreenMode.includes("None") && currentScreenMode === NORMAL_SCREEN_MODE) {
+    screenInFlowState = true;
+  }
+
+  return screenInFlowState;
+>>>>>>> updating configs and slack handlers to use backend
 }
 
 function isScreenStateInFlow() {

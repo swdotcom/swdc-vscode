@@ -1,4 +1,5 @@
 import { ConfigurationTarget, ViewColumn, WebviewPanel, window, workspace, WorkspaceConfiguration } from "vscode";
+import { initializePreferences } from "../DataController";
 import path = require("path");
 import fs = require("fs");
 import { softwareGet, isResponseOk } from "../http/HttpClient";
@@ -54,11 +55,8 @@ export async function configureSettings() {
       currentPanel = undefined;
     });
     currentPanel.webview.onDidReceiveMessage(async (message) => {
-      switch (message.command) {
-        case "editSettings":
-          updateConfigSettings(message.value);
-          break;
-      }
+      await initializePreferences();
+
       if (currentPanel) {
         // dipose it
         currentPanel.dispose();
@@ -116,7 +114,8 @@ export async function getEditSettingsHtml(): Promise<string> {
     `/users/me/edit_preferences`,
     getItem("jwt"),
     {
-      isLightMode: window.activeColorTheme.kind == 1
+      isLightMode: window.activeColorTheme.kind == 1,
+      editor: "vscode"
     }
   );
 >>>>>>> moving config page to be server side and updating names of variables

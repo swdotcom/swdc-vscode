@@ -15,7 +15,6 @@ import {
   enableSlackNotifications,
   connectSlackWorkspace,
   disconnectSlackAuth,
-  shareSlackMessage,
   updateSlackProfileStatus,
   toggleSlackPresence,
   disconnectSlackWorkspace,
@@ -438,19 +437,6 @@ export function createCommands(
     })
   );
 
-  // SELECT TEXT command
-  cmds.push(
-    commands.registerCommand("codetime.shareTextToSlack", () => {
-      const editor = window.activeTextEditor;
-      const text = editor && editor.selection ? editor.document.getText(editor.selection) : null;
-      if (text) {
-        shareSlackMessage(text);
-      } else {
-        window.showInformationMessage("Highlight and select text to share via Slack to continue.");
-      }
-    })
-  );
-
   cmds.push(
     commands.registerCommand("codetime.connectSlackWorkspace", () => {
       connectSlackWorkspace();
@@ -546,7 +532,7 @@ export function createCommands(
     })
   );
 
-  cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
+  // cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 
   return Disposable.from(...cmds);
 }

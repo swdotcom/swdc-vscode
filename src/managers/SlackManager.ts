@@ -188,19 +188,6 @@ export async function enableSlackNotifications(showSuccessNotification = true, i
   }
 }
 
-export async function shareSlackMessage(message) {
-  if (!checkRegistration(true) || !checkSlackConnection(true)) {
-    return;
-  }
-
-  const { selectedChannel, access_token } = await showSlackChannelMenu();
-  if (!selectedChannel) {
-    return;
-  }
-
-  postMessage(selectedChannel, access_token, message);
-}
-
 /**
  * check if snooze is enabled for a slack workspace
  * @param domain
@@ -463,32 +450,7 @@ async function showMessageInputPrompt(maxChars = 0) {
   });
 }
 
-/**
- * Show the list of channels in the command palette
- */
-export async function showSlackChannelMenu() {
-  let menuOptions = {
-    items: [],
-    placeholder: "Select a channel",
-  };
 
-  // get the available channels
-  let { channels, access_token } = await getChannels();
-  channels.sort(compareLabels);
-
-  // make sure the object array has labels
-  channels = channels.map((n) => {
-    return { ...n, label: n.name };
-  });
-
-  menuOptions.items = channels;
-
-  const pick = await showQuickPick(menuOptions);
-  if (pick && pick.label) {
-    return { selectedChannel: pick.id, access_token };
-  }
-  return { selectedChannel: null, access_token };
-}
 
 function getWorkspaceAccessToken(team_domain) {
   const integration = getSlackWorkspaces().find((n) => n.team_domain === team_domain);
@@ -496,42 +458,6 @@ function getWorkspaceAccessToken(team_domain) {
     return integration.access_token;
   }
   return null;
-}
-
-async function getChannels() {
-  const access_token = await getSlackAccessToken();
-  if (!access_token) {
-    return;
-  }
-  const web = new WebClient(access_token);
-  const result = await web.conversations.list({ exclude_archived: true }).catch((err) => {
-    console.log("Unable to retrieve slack channels: ", err.message);
-    return [];
-  });
-  if (result && result.ok) {
-    /**
-    created:1493157509
-    creator:'U54G1N6LC'
-    id:'C53QCUUKS'
-    is_archived:false
-    is_channel:true
-    is_ext_shared:false
-    is_general:true
-    is_group:false
-    is_im:false
-    is_member:true
-    is_mpim:false
-    is_org_shared:false
-    is_pending_ext_shared:false
-    is_private:false
-    is_shared:false
-    name:'company-announcements'
-    name_normalized:'company-announcements'
-    num_members:20
-    */
-    return { channels: result.channels, access_token };
-  }
-  return { channels: [], access_token: null };
 }
 
 /**
@@ -566,27 +492,6 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
 async function getSlackAuth() {
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
   return await foundNewSlackIntegrations(user);
-}
-
-/**
- * Post the message to the slack channel
- * @param selectedChannel
- * @param message
- */
-async function postMessage(selectedChannel: any, access_token, message: string) {
-  message = "```" + message + "```";
-  const web = new WebClient(access_token);
-  web.chat
-    .postMessage({
-      text: message,
-      channel: selectedChannel,
-      as_user: true,
-    })
-    .catch((err) => {
-      if (err.message) {
-        console.log("error posting slack message: ", err.message);
-      }
-    });
 }
 
 /**
@@ -668,7 +573,7 @@ export async function checkSlackConnectionForFlowMode() {
 }
 
 /**
- * Show the list of channels in the command palette
+ * Show status update options in the  command palette
  */
 async function showStatusUpdateOptions() {
   let menuOptions = {

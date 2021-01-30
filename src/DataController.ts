@@ -142,18 +142,20 @@ export async function initializePreferences() {
   // enable Git by default
   let disableGitData = false;
 
+  let flowMode = {};
+
   if (jwt) {
     let user = await getUser();
-    if (user && user.preferences) {
-      // obtain the session threshold in seconds "sessionThresholdInSec"
-      sessionThresholdInSec = user.preferences.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
-      disableGitData = !!user.preferences.disableGitData;
-    }
+    // obtain the session threshold in seconds "sessionThresholdInSec"
+    sessionThresholdInSec = user?.preferences?.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
+    disableGitData = !!user?.preferences?.disableGitData;
+    flowMode = user?.preferences?.flowMode;
   }
 
   // update values config
   setPreference("sessionThresholdInSec", sessionThresholdInSec);
   setPreference("disableGitData", disableGitData);
+  setPreference("flowMode", flowMode);
 }
 
 export function setPreference(preference: string, value) {
