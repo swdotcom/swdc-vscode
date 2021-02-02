@@ -952,16 +952,12 @@ export function noSpacesProjectDir(projectDir: string): string {
  */
 export function shouldFetchSessionSummaryData() {
   const now: Date = new Date();
+  const nowDay = format(now, "MM/dd/yyyy");
   const currentDay: string = getItem("updatedTreeDate");
-  if (currentDay) {
-    const nowDay = format(now, "MM/dd/yyyy");
-    if (currentDay == nowDay) {
-      // only initialize once during a day for a specific user
-      return false;
-    } else {
-      // update the updatedTreeDate
-      setItem("updatedTreeDate", nowDay);
-    }
+  if (currentDay == nowDay) {
+    // only initialize once during a day for a specific user
+    return false;
   }
+  setItem("updatedTreeDate", nowDay);
   return true;
 }
