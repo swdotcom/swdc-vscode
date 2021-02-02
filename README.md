@@ -12,19 +12,19 @@
   </a>
 </p>
 
-<p><a href="https://www.software.com"><img alt="Software" src="https://d3tr3dh09dp329.cloudfront.net/readme/software-logo-light.png" width="100px"></a></p>
+<p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
 
-<p><a href="https://www.software.com/code-time">Code Time</a> is an open source plugin for automatic programming metrics and time tracking. Get the most advanced time tracker for Visual Studio Code that will save you time, so you can focus more on what matters.</p>
+[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking. Get the most advanced time tracker for Visual Studio Code that will save you time, so you can focus more on what matters.
 
 <p align="center">
   <a href="https://app.software.com/signup?ref=readme">
-    <img width="220px" alt="Sign up" src="https://d3tr3dh09dp329.cloudfront.net/readme/code-time/signup-button.png">
+    <img width="220px" alt="Sign up" src="https://assets.software.com/readme/code-time/signup-button.png">
   </a>
 </p>
 
-<p>Join a community of over 100,000 data-informed developers. Discover best code times, defend code time, see the impact of meetings, and improve work-life balance. Track and visualize all of your projects, or export your data to connect to your billing and timesheet tools.</p>
+Join a community of over 100,000 data-informed developers. Discover best code times, defend code time, see the impact of meetings, and improve work-life balance. Track and visualize all of your projects, or export your data to connect to your billing and timesheet tools.
 
-![Code Time features for VS Code](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/features-2.4.0.png)
+![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.4.0.png)
 
 ## Getting started
 
@@ -42,17 +42,17 @@ Your status bar shows you in real-time how many hours and minutes you code each 
 
 ## Boost productivity
 
-![Code Time for VS Code flow automations](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/stay-in-flow-2.4.0.png)
+![Code Time for VS Code Flow Mode](https://assets.software.com/readme/code-time/vscode/stay-in-flow-2.4.0.png)
 
 Flow automations make it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. 
 
-You can quickly toggle Zen mode, enter full screen, and hide your Dock. If you connect a Slack workspace, you can also pause notifications, update your profile status, and set your presence to *away*. 
+You can quickly toggle Zen mode, enter full screen, and hide your Dock. If you connect a Slack workspace, you can also pause notifications, update your profile status, and set your presence to *away*. Clicking an active flow automation again will reverse the original action, so you can resume receiving notifications or reset your Slack status without leaving Visual Studio Code. 
 
-Clicking an active flow automation again will reverse the original action, so you can resume receiving notifications or reset your Slack status without leaving Visual Studio Code.  
+Enabling **Flow Mode** will activate all your flow automations simultaneously. 
 
 ## Track development metrics
 
-![Code Time programming metrics](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/measure-progress-2.4.0.png)
+![Code Time programming metrics](https://assets.software.com/readme/code-time/vscode/measure-progress-2.4.0.png)
 
 Your coding stats can help you understand how you are improving over time. You can also see how you stack up against the Software community. 
 
@@ -66,7 +66,7 @@ To view additional coding stats, you can generate a Code Time summary and dashbo
 
 ## Data visualizations
 
-![Code Time web app](https://d3tr3dh09dp329.cloudfront.net/readme/code-time/vscode/visualize-everything.png)
+![Code Time web app](https://assets.software.com/readme/code-time/vscode/visualize-everything.png)
 
 Click **More data at software.com** in the Code Time side bar or visit [app.software.com](https://app.software.com) to see more advanced data visualizations. You will need to create a free Software account to use the web app. In the Code Time dashboard, you will be able to track: 
 
