@@ -27,7 +27,6 @@ import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryInterval } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
-import { initializeLocalStorageContext } from "./managers/LocalStorageManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
@@ -93,8 +92,6 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-  initializeLocalStorageContext(ctx);
-
   // add the code time commands
   ctx.subscriptions.push(createCommands(kpmController));
 

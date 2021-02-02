@@ -1,9 +1,10 @@
-import { getItem, isGlobalSessionNewDay } from "../Util";
+import { getItem, setItem } from "../Util";
 import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
 import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { commands } from "vscode";
+import { format } from "date-fns";
 
 export class SummaryManager {
   private static instance: SummaryManager;
@@ -26,13 +27,9 @@ export class SummaryManager {
   async updateSessionSummaryFromServer() {
     const jwt = getItem("jwt");
 
-    // only fetch the sessions/summary if it's a new day for the user
-    const sessionSummaryKey = `sessionsummary_${jwt}`;
-    if (!isGlobalSessionNewDay(sessionSummaryKey)) {
-      return;
-    }
-
     const result = await softwareGet(`/sessions/summary`, jwt);
+    const nowDay = format(new Date(), "MM/dd/yyyy");
+    setItem("updatedTreeDate", nowDay);
     if (isResponseOk(result) && result.data) {
       const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
       const summary: SessionSummary = result.data;

@@ -5,7 +5,6 @@ import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
-import { getGlobalState, updateGlobalState } from "./managers/LocalStorageManager";
 import { format } from "date-fns";
 
 const queryString = require("query-string");
@@ -949,22 +948,20 @@ export function noSpacesProjectDir(projectDir: string): string {
 }
 
 /**
- * Return whether it's a new day for all windows using the global cache
- * @param globalSessionKey
+ * Checks whether we need to fetch the sessions/summary or not
  */
-export function isGlobalSessionNewDay(globalSessionKey: string) {
+export function shouldFetchSessionSummaryData() {
   const now: Date = new Date();
-  const d: any = getGlobalState(globalSessionKey);
-  if (d) {
-    const lastFetchDay = format(new Date(d), "MM/dd/yyyy");
+  const currentDay: string = getItem("updatedTreeDate");
+  if (currentDay) {
     const nowDay = format(now, "MM/dd/yyyy");
-    if (lastFetchDay == nowDay) {
+    if (currentDay == nowDay) {
       // only initialize once during a day for a specific user
       return false;
+    } else {
+      // update the updatedTreeDate
+      setItem("updatedTreeDate", nowDay);
     }
   }
-
-  // update the global state
-  updateGlobalState(globalSessionKey, now);
   return true;
 }

@@ -3,6 +3,8 @@ import { KpmItem } from "../model/models";
 import { getStatsTreeItems, KpmTreeItem } from "./KpmProviderManager";
 import { TrackerManager } from "../managers/TrackerManager";
 import { handleChangeSelection, setKpmTreeOpen } from "./TreeUtil";
+import { shouldFetchSessionSummaryData } from "../Util";
+import { SummaryManager } from "../managers/SummaryManager";
 
 const kpmCollapsedStateMap = {};
 
@@ -32,6 +34,9 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
     }),
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
+        if (shouldFetchSessionSummaryData()) {
+          SummaryManager.getInstance().updateSessionSummaryFromServer();
+        }
         setKpmTreeOpen(true);
       } else {
         setKpmTreeOpen(false);
