@@ -2,6 +2,7 @@ import { window, ExtensionContext } from "vscode";
 import { showOfflinePrompt, getItem } from "../Util";
 import { serverIsAvailable } from "../http/HttpClient";
 import { createAnonymousUser } from "../menu/AccountManager";
+import { SummaryManager } from "../managers/SummaryManager";
 
 let retry_counter = 0;
 const one_min_millis = 1000 * 60;
@@ -12,6 +13,7 @@ export function onboardInit(ctx: ExtensionContext, callback: any) {
   const windowState = window.state;
 
   if (jwt) {
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
     // we have the jwt, call the callback that anon was not created
     return callback(ctx, false /*anonCreated*/);
   }

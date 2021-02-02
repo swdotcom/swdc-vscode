@@ -15,7 +15,7 @@ import { clearSessionSummaryData, getTimeBetweenLastPayload, incrementSessionSum
 import { clearFileChangeInfoSummaryData, getFileChangeSummaryAsJson, saveFileChangeInfoToDisk } from "../storage/FileChangeInfoSummaryData";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
-import { WorkspaceFolder } from "vscode";
+import { window, WorkspaceFolder } from "vscode";
 import { getResourceInfo, getRepoContributorInfo, getRepoFileCount, getFileContributorCount } from "../repo/KpmRepoManager";
 import Project from "../model/Project";
 import RepoContributorInfo from "../model/RepoContributorInfo";
@@ -24,6 +24,7 @@ import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
 import { clearTimeDataSummary, incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import { TrackerManager } from "./TrackerManager";
+import { SummaryManager } from "./SummaryManager";
 
 const moment = require("moment-timezone");
 const path = require("path");
@@ -199,6 +200,9 @@ export class PluginDataManager {
       // update the current day
       const nowTimes = getNowTimes();
       setItem("currentDay", nowTimes.day);
+
+      // initialize the session summary day using the primary window activation path
+      SummaryManager.getInstance().updateSessionSummaryFromServer();
     }
   }
 

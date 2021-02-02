@@ -5,6 +5,9 @@ import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
+import { getGlobalState, updateGlobalState } from "./managers/LocalStorageManager";
+import { format } from "date-fns";
+
 const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -943,4 +946,25 @@ export function getPercentOfReferenceAvg(currentValue, referenceValue, reference
 
 export function noSpacesProjectDir(projectDir: string): string {
   return projectDir.replace(/^\s+/g, "");
+}
+
+/**
+ * Return whether it's a new day for all windows using the global cache
+ * @param globalSessionKey
+ */
+export function isGlobalSessionNewDay(globalSessionKey: string) {
+  const now: Date = new Date();
+  const d: any = getGlobalState(globalSessionKey);
+  if (d) {
+    const lastFetchDay = format(new Date(d), "MM/dd/yyyy");
+    const nowDay = format(now, "MM/dd/yyyy");
+    if (lastFetchDay == nowDay) {
+      // only initialize once during a day for a specific user
+      return false;
+    }
+  }
+
+  // update the global state
+  updateGlobalState(globalSessionKey, now);
+  return true;
 }

@@ -278,13 +278,3 @@ function getTreeItemContextValue(treeItem: KpmItem): string {
   }
   return "child";
 }
-
-export const treeDataUpdateCheck = () => {
-  const { day } = getNowTimes();
-  const currentDay = getItem("updatedTreeDate");
-  const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
-  if (currentDay !== day || existingSummary.globalAverageDailyMinutes === 0) {
-    SummaryManager.getInstance().updateSessionSummaryFromServer();
-    setItem("updatedTreeDate", day);
-  }
-};
