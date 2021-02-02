@@ -21,7 +21,7 @@ export const api_endpoint = "https://api.software.com";
 // DASHBOARD URL
 export const launch_url = "https://app.software.com";
 
-export const websockets_url = "wss://api.software.com/websockets";
+export const websockets_url = "ws://api.software.com/websockets";
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
 
