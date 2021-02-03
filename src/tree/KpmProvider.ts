@@ -1,8 +1,10 @@
 import { TreeDataProvider, TreeItemCollapsibleState, EventEmitter, Event, Disposable, TreeView } from "vscode";
 import { KpmItem } from "../model/models";
-import { getStatsTreeItems, KpmTreeItem, treeDataUpdateCheck } from "./KpmProviderManager";
+import { getStatsTreeItems, KpmTreeItem } from "./KpmProviderManager";
 import { TrackerManager } from "../managers/TrackerManager";
 import { handleChangeSelection, setKpmTreeOpen } from "./TreeUtil";
+import { shouldFetchSessionSummaryData } from "../Util";
+import { SummaryManager } from "../managers/SummaryManager";
 
 const kpmCollapsedStateMap = {};
 
@@ -32,8 +34,9 @@ export const connectKpmTreeView = (view: TreeView<KpmItem>) => {
     }),
     view.onDidChangeVisibility((e) => {
       if (e.visible) {
-        // check if its a new day, if so fetch the averages
-        treeDataUpdateCheck();
+        if (shouldFetchSessionSummaryData()) {
+          SummaryManager.getInstance().updateSessionSummaryFromServer();
+        }
         setKpmTreeOpen(true);
       } else {
         setKpmTreeOpen(false);

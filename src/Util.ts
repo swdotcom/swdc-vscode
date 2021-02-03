@@ -5,6 +5,8 @@ import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
+import { format } from "date-fns";
+
 const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -943,4 +945,19 @@ export function getPercentOfReferenceAvg(currentValue, referenceValue, reference
 
 export function noSpacesProjectDir(projectDir: string): string {
   return projectDir.replace(/^\s+/g, "");
+}
+
+/**
+ * Checks whether we need to fetch the sessions/summary or not
+ */
+export function shouldFetchSessionSummaryData() {
+  const now: Date = new Date();
+  const nowDay = format(now, "MM/dd/yyyy");
+  const currentDay: string = getItem("updatedTreeDate");
+  if (currentDay == nowDay) {
+    // only initialize once during a day for a specific user
+    return false;
+  }
+  setItem("updatedTreeDate", nowDay);
+  return true;
 }
