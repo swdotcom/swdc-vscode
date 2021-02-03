@@ -102,44 +102,7 @@
     "configuration": [
       {
         "type": "object",
-        "title": "Code Time",
-        "properties": {
-          "setSlackToAway": {
-            "type": "boolean",
-            "default": true,
-            "description": "Automatically set my status away when I'm in flow"
-          },
-          "slackStatusText": {
-            "type": "string",
-            "default": "CodeTime!",
-            "description": "Customize your away status in Slack"
-          },
-          "durationMinutes": {
-            "type": "number",
-            "default": "120",
-            "description": "How long Flow Mode will be enabled for"
-          },
-          "pauseSlackNotifications": {
-            "type": "boolean",
-            "default": true,
-            "description": "Automatically pause Slack notifications when I'm in flow"
-          },
-          "flowModeReminders": {
-            "type": "boolean",
-            "default": true,
-            "description": "Remind me to enable Flow Mode when I'm in flow"
-          },
-          "screenMode": {
-            "type": "string",
-            "enum": [
-              "Zen",
-              "Full Screen",
-              "None"
-            ],
-            "default": "Full Screen",
-            "description": "Automatically toggle a selected screen mode when I'm in flow"
-          }
-        }
+        "title": "Code Time"
       }
     ],
     "viewsContainers": {

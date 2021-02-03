@@ -1,5 +1,5 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import { launchWebDashboard, updatePreferences } from "./DataController";
+import { launchWebDashboard } from "./DataController";
 import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -503,8 +503,6 @@ export function createCommands(
       configureSettings();
     })
   );
-
-  // cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 
   return Disposable.from(...cmds);
 }

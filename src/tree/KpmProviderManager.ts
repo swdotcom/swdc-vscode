@@ -4,12 +4,8 @@ import { TreeItem, TreeItemCollapsibleState, Command, MarkdownString } from "vsc
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
-<<<<<<< HEAD
-import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
-=======
 import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackWorkspaces } from "../managers/SlackManager";
->>>>>>> removing functions that were moved to the backend
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { getConfigSettingsTooltip } from "../managers/FlowManager";
 import { FULL_SCREEN_MODE_ID, getScreenMode, ZEN_MODE_ID } from "../managers/ScreenManager";
@@ -138,9 +134,9 @@ export async function getFlowTreeParents(): Promise<KpmItem[]> {
   const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
   let flowModeButton: KpmItem = null;
   if (openFlowSessions?.length > 0) {
-    flowModeButton = getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "dot.svg");
+    flowModeButton = getActionButton("Exit Flow Mode", mdstr, "codetime.pauseFlow", "dot.svg");
   } else {
-    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "dot-outlined.svg");
+    flowModeButton = getActionButton("Enter Flow Mode", mdstr, "codetime.enableFlow", "dot-outlined.svg");
   }
   flowModeButton.location = location;
   treeItems.push(flowModeButton);

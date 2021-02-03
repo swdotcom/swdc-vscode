@@ -13,19 +13,15 @@ export const SIGN_UP_LABEL = "Sign up";
 export const DISCONNECT_LABEL = "Disconnect";
 
 // Directory where software data is stored
-export const SOFTWARE_DIRECTORY = ".software_local";
+export const SOFTWARE_DIRECTORY = ".software";
 
 // API ENDPOINT
-export const api_endpoint = "http://localhost:5000";
+export const api_endpoint = "https://api.software.com";
 
 // DASHBOARD URL
-export const launch_url = "http://localhost:3000";
+export const launch_url = "https://app.software.com";
 
-<<<<<<< HEAD
 export const websockets_url = "wss://api.software.com/websockets";
-=======
-export const websockets_url = "wss://localhost:5000/websockets";
->>>>>>> removing functions that were moved to the backend
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
 

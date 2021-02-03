@@ -1,6 +1,5 @@
 import { window, commands } from "vscode";
 import { softwareGet, softwarePut, isResponseOk, softwarePost } from "./http/HttpClient";
-import { getConfigSettings } from "./managers/ConfigManager";
 import {
   getItem,
   setItem,
@@ -164,22 +163,6 @@ export function setPreference(preference: string, value) {
 
 export function getPreference(preference: string) {
   return getItem(preference);
-}
-
-export async function updatePreferences() {
-  // get the user's preferences and update them if they don't match what we have
-  let user = await getUser();
-  if (!user) return;
-
-  let updatedPrefs = {...user.preferences, ...getConfigSettings() };
-  let api = `/users/${user.id}`;
-  // update the preferences
-  // /:id/preferences
-  api = `/users/${user.id}/preferences`;
-  let resp = await softwarePut(api, updatedPrefs, getItem("jwt"));
-  if (isResponseOk(resp)) {
-    logIt("update user code time preferences");
-  }
 }
 
 export function refetchUserStatusLazily(tryCountUntilFoundUser = 50, interval = 10000) {
