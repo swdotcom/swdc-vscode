@@ -2,31 +2,31 @@ import { websockets_url } from "./Constants";
 import { getItem } from "./Util";
 import { handleFlowScoreMessage } from "./message_handlers/flow_score";
 
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 
 let intervalId = undefined;
 
 export function initializeWebsockets() {
   const options = {
     headers: {
-      "Authorization": getItem("jwt")
-    }
-  }
+      Authorization: getItem("jwt"),
+    },
+  };
 
   const ws = new WebSocket(websockets_url, options);
 
-  ws.on('open', function open() {
+  ws.on("open", function open() {
     clearInterval(intervalId);
     console.debug("[CodeTime] websockets connection open");
   });
 
-  ws.on('message', function incoming(data) {
+  ws.on("message", function incoming(data) {
     console.debug("[CodeTime] received websocket message: ", data);
 
     handleIncomingMessage(data);
   });
 
-  ws.on('close', function close() {
+  ws.on("close", function close() {
     console.debug("[CodeTime] websockets connection closed - will retry connecting in 10 seconds");
 
     clearWebsocketConnectionRetryInterval();
@@ -36,8 +36,8 @@ export function initializeWebsockets() {
     }, 10000);
   });
 
-  ws.on('error', function error(e) {
-    console.error('[CodeTime] error connecting to websockets', e);
+  ws.on("error", function error(e) {
+    console.error("[CodeTime] error connecting to websockets", e.message);
   });
 }
 
@@ -62,4 +62,4 @@ const handleIncomingMessage = (data: any) => {
   } catch (e) {
     console.error("[CodeTime] Unable to handle incoming message", data);
   }
-}
+};
