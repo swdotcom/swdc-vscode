@@ -21,7 +21,11 @@ export const api_endpoint = "http://localhost:5000";
 // DASHBOARD URL
 export const launch_url = "http://localhost:3000";
 
+<<<<<<< HEAD
 export const websockets_url = "wss://api.software.com/websockets";
+=======
+export const websockets_url = "wss://localhost:5000/websockets";
+>>>>>>> removing functions that were moved to the backend
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
 

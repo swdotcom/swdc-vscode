@@ -11,12 +11,8 @@ import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu 
 import { TrackerManager } from "./managers/TrackerManager";
 import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
 import {
-  pauseSlackNotifications,
-  enableSlackNotifications,
   connectSlackWorkspace,
   disconnectSlackAuth,
-  updateSlackProfileStatus,
-  toggleSlackPresence,
   disconnectSlackWorkspace,
   clearSlackInfoCache,
 } from "./managers/SlackManager";
@@ -454,24 +450,6 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.updateProfileStatus", () => {
-      updateSlackProfileStatus();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.pauseSlackNotifications", () => {
-      pauseSlackNotifications();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.enableSlackNotifications", () => {
-      enableSlackNotifications();
-    })
-  );
-
-  cmds.push(
     commands.registerCommand("codetime.showZenMode", () => {
       showZenMode();
     })
@@ -505,12 +483,6 @@ export function createCommands(
     commands.registerCommand("codetime.switchAverageComparison", () => {
       // launch the options command palette
       switchAverageComparison();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.toggleSlackPresence", () => {
-      toggleSlackPresence();
     })
   );
 

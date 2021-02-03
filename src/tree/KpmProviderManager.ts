@@ -4,9 +4,14 @@ import { TreeItem, TreeItemCollapsibleState, Command, MarkdownString } from "vsc
 import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
+<<<<<<< HEAD
 import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
+=======
+import { SummaryManager } from "../managers/SummaryManager";
+import { getSlackWorkspaces } from "../managers/SlackManager";
+>>>>>>> removing functions that were moved to the backend
 import { isDarkMode } from "../managers/OsaScriptManager";
-import { getConfigSettingsTooltip, isInFlowMode } from "../managers/FlowManager";
+import { getConfigSettingsTooltip } from "../managers/FlowManager";
 import { FULL_SCREEN_MODE_ID, getScreenMode, ZEN_MODE_ID } from "../managers/ScreenManager";
 import {
   buildEmptyButton,
@@ -24,6 +29,7 @@ import {
   getViewProjectSummaryButton,
   getWebViewDashboardButton,
 } from "./TreeButtonProvider";
+import { softwareGet } from "../http/HttpClient";
 
 const numeral = require("numeral");
 const moment = require("moment-timezone");
@@ -125,23 +131,21 @@ export async function getStatsTreeItems(): Promise<KpmItem[]> {
 export async function getFlowTreeParents(): Promise<KpmItem[]> {
   const treeItems: KpmItem[] = [];
   const location = "ct-flow-tree";
-
-  const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
+  const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
+  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
 
   const inFlowSettingsTooltip = getConfigSettingsTooltip();
   const mdstr: MarkdownString = new MarkdownString(inFlowSettingsTooltip);
   let flowModeButton: KpmItem = null;
-  if (!isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
-    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "dot-outlined.svg");
-  } else {
+  if (openFlowSessions?.length > 0) {
     flowModeButton = getActionButton("Pause Flow Mode", mdstr, "codetime.pauseFlow", "dot.svg");
+  } else {
+    flowModeButton = getActionButton("Enable Flow Mode", mdstr, "codetime.enableFlow", "dot-outlined.svg");
   }
   flowModeButton.location = location;
   treeItems.push(flowModeButton);
 
   treeItems.push(getActionButton("Configure settings", "", "codetime.configureSettings", "profile.svg"));
-
-  treeItems.push(await getAutomationsTree(slackStatus, slackPresence, slackDnDInfo));
 
   treeItems.push(buildEmptyButton("empty-flow-button"));
 

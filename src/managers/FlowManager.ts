@@ -1,21 +1,11 @@
 import { commands, ProgressLocation, window } from "vscode";
-import ConfigSettings from "../model/ConfigSettings";
 import { getPreference } from "../DataController";
-import { getConfigSettings } from "./ConfigManager";
 import { softwarePost, softwareDelete } from "../http/HttpClient";
 import { getItem } from "../Util";
+import { softwareGet } from "../http/HttpClient";
 
 import {
   checkRegistration,
-  pauseSlackNotifications,
-  setSlackStatus,
-  setDnD,
-  endDnD,
-  updateSlackPresence,
-  enableSlackNotifications,
-  getSlackStatus,
-  getSlackPresence,
-  getSlackDnDInfo,
   showModalSignupPrompt,
   checkSlackConnectionForFlowMode,
 } from "./SlackManager";
@@ -40,13 +30,14 @@ let useSlackSettings = true;
  */
 export function getConfigSettingsTooltip() {
   const preferences = [];
-  const configSettings: ConfigSettings = getConfigSettings();
-  preferences.push(`**Screen Mode**: *${configSettings.screenMode.toLowerCase()}*`);
+  const flowModeSettings = getPreference("flowMode");
+  // move this to the backend
+  preferences.push(`**Screen Mode**: *${flowModeSettings?.editor?.vscode?.screenMode?.toLowerCase()}*`);
 
-  const notificationState = configSettings.pauseSlackNotifications ? "on" : "off";
+  const notificationState = flowModeSettings?.slack?.pauseSlackNotifications ? "on" : "off";
   preferences.push(`**Pause Notifications**: *${notificationState}*`);
 
-  const slackStatusText = configSettings.slackStatusText ?? "";
+  const slackStatusText = flowModeSettings?.slack?.slackStatusText ?? "";
   preferences.push(`**Slack Away Msg**: *${slackStatusText}*`);
 
   const flowModeReminders = configSettings.flowModeReminders ? "on" : "off";
@@ -65,9 +56,13 @@ export async function checkToDisableFlow() {
     return;
   }
 
+<<<<<<< HEAD
   // slack is connected, check
   const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
   if (enabledFlow && !isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
+=======
+  if (enabledFlow && !(await isInFlowMode())) {
+>>>>>>> removing functions that were moved to the backend
     // disable it
     pauseFlow();
   }
@@ -181,6 +176,7 @@ async function pauseFlowInitiate() {
 }
 
 
+<<<<<<< HEAD
 export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
 <<<<<<< HEAD
   if (enablingFlow) {
@@ -233,6 +229,12 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
   // otherwise check the exact settings
   return screenInFlowState && pauseSlackNotificationsInFlowState && slackStatusTextInFlowState && slackAwayPresenceInFlowState;
 =======
+=======
+export async function isInFlowMode() {
+  const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
+  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
+
+>>>>>>> removing functions that were moved to the backend
   const flowModeSettings = getPreference("flowMode");
   const currentScreenMode = getScreenMode();
   const flowScreenMode = flowModeSettings?.editor?.vscode?.screenMode;
@@ -246,6 +248,7 @@ export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
     screenInFlowState = true;
   }
 
+<<<<<<< HEAD
   return screenInFlowState;
 >>>>>>> updating configs and slack handlers to use backend
 }
@@ -264,4 +267,7 @@ function isScreenStateInFlow() {
   }
 
   return screenInFlowState;
+=======
+  return screenInFlowState ?? openFlowSessions?.length > 0;
+>>>>>>> removing functions that were moved to the backend
 }
