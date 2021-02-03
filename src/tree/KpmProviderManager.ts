@@ -1,10 +1,9 @@
 import { KpmItem, SessionSummary } from "../model/models";
-import { humanizeMinutes, getItem, getNowTimes, setItem, isMac, getPercentOfReferenceAvg } from "../Util";
+import { humanizeMinutes, getItem, isMac, getPercentOfReferenceAvg } from "../Util";
 import { TreeItem, TreeItemCollapsibleState, Command, MarkdownString } from "vscode";
-import { getSessionSummaryData, getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
+import { getSessionSummaryData } from "../storage/SessionSummaryData";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import { getCodeTimeSummary } from "../storage/TimeSummaryData";
-import { SummaryManager } from "../managers/SummaryManager";
 import { getSlackDnDInfo, getSlackPresence, getSlackStatus, getSlackWorkspaces } from "../managers/SlackManager";
 import { isDarkMode } from "../managers/OsaScriptManager";
 import { getConfigSettingsTooltip, isInFlowMode } from "../managers/FlowManager";
