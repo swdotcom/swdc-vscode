@@ -952,7 +952,8 @@ export function noSpacesProjectDir(projectDir: string): string {
  */
 export function shouldFetchSessionSummaryData() {
   const now: Date = new Date();
-  const nowDay = format(now, "MM/dd/yyyy");
+  // this is the format used across other plugins
+  const nowDay = format(now, "yyyy-MM-dd");
   const currentDay: string = getItem("updatedTreeDate");
   if (currentDay == nowDay) {
     // only initialize once during a day for a specific user
