@@ -41,15 +41,13 @@
   "scripts": {
     "lint": "tslint -p ./",
     "build": "vsce package --yarn",
-    "compile": "yarn-run-all compile:*",
-    "watch": "yarn-run-all -p watch:*",
+    "webpack": "yarn-run-all compile:*",
+    "webpack-dev": "npm-run-all -p watch:*",
     "compile:extension": "tsc -p ./",
     "compile:views": "webpack --mode development",
     "watch:extension": "tsc -watch -p ./",
     "watch:views": "webpack --watch --mode development",
     "vscode:prepublish": "webpack --mode production",
-    "webpack": "webpack --mode development",
-    "webpack-dev": "webpack --mode development --watch",
     "test-compile": "tsc -p ./"
   },
   "contributes": {
@@ -95,11 +93,11 @@
         "title": "Code Time: View Dashboard"
       },
       {
-        "command": "codetime.enterFlowMode",
+        "command": "codetime.enableFlow",
         "title": "Code Time: Enable Flow Mode"
       },
       {
-        "command": "codetime.exitFlowMode",
+        "command": "codetime.pauseFlow",
         "title": "Code Time: Pause Flow Mode"
       }
     ],
@@ -166,8 +164,7 @@
     "typescript-tslint-plugin": "^1.0.1",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
-    "yarn-check-webpack-plugin": "^1.2.0",
-    "yarn-run-all": "^3.1.1"
+    "yarn-check-webpack-plugin": "^1.2.0"
   },
   "dependencies": {
     "@slack/web-api": "^5.14.0",
@@ -180,6 +177,7 @@
     "jwt-decode": "^2.2.0",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",
+    "npm-run-all": "^4.1.5",
     "numeral": "^2.0.6",
     "open": "^6.4.0",
     "query-string": "^6.13.7",
