@@ -35,14 +35,18 @@
     "workspace"
   ],
   "engines": {
-    "vscode": "^1.35.0"
+    "vscode": "^1.52.0"
   },
   "main": "./dist/extension",
   "scripts": {
-    "compile": "tsc -p ./",
     "lint": "tslint -p ./",
-    "watch": "tsc -watch -p ./",
     "build": "vsce package --yarn",
+    "compile": "yarn-run-all compile:*",
+    "watch": "yarn-run-all -p watch:*",
+    "compile:extension": "tsc -p ./",
+    "compile:views": "webpack --mode development",
+    "watch:extension": "tsc -watch -p ./",
+    "watch:views": "webpack --watch --mode development",
     "vscode:prepublish": "webpack --mode production",
     "webpack": "webpack --mode development",
     "webpack-dev": "webpack --mode development --watch",
@@ -91,11 +95,11 @@
         "title": "Code Time: View Dashboard"
       },
       {
-        "command": "codetime.enableFlow",
+        "command": "codetime.enterFlowMode",
         "title": "Code Time: Enable Flow Mode"
       },
       {
-        "command": "codetime.pauseFlow",
+        "command": "codetime.exitFlowMode",
         "title": "Code Time: Pause Flow Mode"
       }
     ],
@@ -140,36 +144,19 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "code-time",
+          "id": "code-time-sidebar",
           "title": "Code Time",
           "icon": "resources/dark/paw-outlined.svg"
         }
       ]
     },
     "views": {
-      "code-time": [
+      "code-time-sidebar": [
         {
-          "id": "ct-menu-tree",
-          "name": "ACCOUNT"
-        },
-        {
-          "id": "ct-flow-tree",
-          "name": "FLOW",
-          "when": "isFullscreen == false && inZenMode == false"
-        },
-        {
-          "id": "ct-fullscreen-flow-tree",
-          "name": "FLOW",
-          "when": "isFullscreen == true"
-        },
-        {
-          "id": "ct-zenmode-flow-tree",
-          "name": "FLOW",
-          "when": "inZenMode == true"
-        },
-        {
-          "id": "ct-metrics-tree",
-          "name": "STATS"
+          "id": "codetime.webView",
+          "type": "webview",
+          "name": "",
+          "icon": "resources/dark/paw-outlined.svg"
         }
       ]
     },
@@ -185,27 +172,34 @@
           "when": "viewItem =~ /.*slack_connection_parent.*/",
           "group": "inline@1"
         }
-      ],
-      "view/title": [
-        {
-          "command": "codetime.refreshFlowTree",
-          "group": "navigation@1",
-          "when": "view =~ /ct-.*flow-tree/"
-        }
       ]
     }
   },
   "devDependencies": {
+    "@babel/core": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
     "@types/mocha": "^7.0.2",
     "@types/node": "12.0.4",
+    "@types/react": "^17.0.1",
+    "@types/react-dom": "^17.0.0",
     "@types/vscode": "^1.35.0",
+    "@types/webpack": "^4.41.26",
+    "babel-loader": "^8.2.2",
     "copy-webpack-plugin": "^6.0.1",
+    "css-loader": "^5.0.1",
     "file-loader": "^6.0.0",
-    "ts-loader": "^6.2.1",
+    "loader-utils": "^2.0.0",
+    "node-sass": "^5.0.0",
+    "style-loader": "^2.0.0",
+    "ts-loader": "^8.0.15",
+    "tslint": "^6.1.3",
+    "tslint-react": "^5.0.0",
     "typescript": "^3.5.1",
+    "typescript-tslint-plugin": "^1.0.1",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
-    "yarn-check-webpack-plugin": "^1.2.0"
+    "yarn-check-webpack-plugin": "^1.2.0",
+    "yarn-run-all": "^3.1.1"
   },
   "dependencies": {
     "@slack/web-api": "^5.14.0",
@@ -221,6 +215,8 @@
     "numeral": "^2.0.6",
     "open": "^6.4.0",
     "query-string": "^6.13.7",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
     "swdc-tracker": "^1.4.3",
     "uuid": "^8.3.1",
     "vsls": "0.3.1291",

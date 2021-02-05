@@ -93,7 +93,7 @@ export function deactivate(ctx: ExtensionContext) {
 
 export async function activate(ctx: ExtensionContext) {
   // add the code time commands
-  ctx.subscriptions.push(createCommands(kpmController));
+  ctx.subscriptions.push(createCommands(ctx, kpmController));
 
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {

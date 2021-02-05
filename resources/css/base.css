@@ -1,0 +1,46 @@
+body {
+  font-family: sans-serif;
+  line-height: 1.2;
+}
+button {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.42857143;
+  font-weight: 500;
+  color: #fff;
+  width: 100%;
+  margin-right: 16px;
+  padding: 6px 12px;
+  outline: none;
+  text-align: center;
+  vertical-align: middle;
+  touch-action: manipulation;
+  background: #337ab7;
+  border: 1px solid #2e6da4;
+  box-sizing: border-box;
+  border-radius: 2px;
+  cursor: pointer;
+  overflow: visible;
+}
+a {
+  text-decoration: none;
+  outline: none;
+}
+button:hover {
+  background: #3e80b9;
+}
+.row {
+  position: relative;
+  padding: 6px 4px;
+}
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.linebreak {
+  border: 1px solid #2e6da4;
+  width: 100%;
+  margin: 5px auto 2px auto;
+}

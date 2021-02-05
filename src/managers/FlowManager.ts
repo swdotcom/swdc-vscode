@@ -27,6 +27,10 @@ export let enablingFlow = false;
 export let enabledFlow = false;
 let useSlackSettings = true;
 
+export function isFlowModEnabled() {
+  return enabledFlow;
+}
+
 /**
  * Screen Mode: full screen
  * Pause Notifications: on
@@ -77,7 +81,7 @@ export async function enableFlow() {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow().catch((e) => { });
+        initiateFlow().catch((e) => {});
         resolve(true);
       });
     }
@@ -150,7 +154,7 @@ export async function pauseFlow() {
     },
     (progress) => {
       return new Promise((resolve, reject) => {
-        pauseFlowInitiate().catch((e) => { });
+        pauseFlowInitiate().catch((e) => {});
         resolve(true);
       });
     }

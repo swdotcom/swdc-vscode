@@ -1,0 +1,52 @@
+"watch": "tsc -watch -p ./",
+"compile": "tsc -p ./",
+
+
+"views": {
+      "code-time": [
+        {
+          "id": "ct-menu-tree",
+          "name": "ACCOUNT"
+        },
+        {
+          "id": "ct-flow-tree",
+          "name": "FLOW",
+          "when": "isFullscreen == false && inZenMode == false"
+        },
+        {
+          "id": "ct-fullscreen-flow-tree",
+          "name": "FLOW",
+          "when": "isFullscreen == true"
+        },
+        {
+          "id": "ct-zenmode-flow-tree",
+          "name": "FLOW",
+          "when": "inZenMode == true"
+        },
+        {
+          "id": "ct-metrics-tree",
+          "name": "STATS"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "codetime.disconnectSlackWorkspace",
+          "when": "viewItem =~ /.*slack_connection_node.*/",
+          "group": "inline@1"
+        },
+        {
+          "command": "codetime.connectSlackWorkspace",
+          "when": "viewItem =~ /.*slack_connection_parent.*/",
+          "group": "inline@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "codetime.refreshFlowTree",
+          "group": "navigation@1",
+          "when": "view =~ /ct-.*flow-tree/"
+        }
+      ]
+    }
