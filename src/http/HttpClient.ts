@@ -49,12 +49,12 @@ export async function spotifyApiPut(api, payload, accessToken) {
  * @param jwt
  */
 
-export async function softwareGet(api, jwt) {
+export async function softwareGet(api, jwt, queryParams={}) {
   if (jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
   }
 
-  return await beApi.get(api).catch((err) => {
+  return await beApi.get(api, {params: queryParams}).catch((err) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
@@ -132,7 +132,7 @@ export function hasTokenExpired(resp) {
  * axios always sends the following
  * status:200
  * statusText:"OK"
- * 
+ *
     code:"ENOTFOUND"
     config:Object {adapter: , transformRequest: Object, transformResponse: Object, …}
     errno:"ENOTFOUND"

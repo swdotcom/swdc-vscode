@@ -1,5 +1,5 @@
-import { commands, Disposable, workspace, window, TreeView, ExtensionContext } from "vscode";
-import { launchWebDashboard, updatePreferences } from "./DataController";
+import { commands, Disposable, window, ExtensionContext } from "vscode";
+import { launchWebDashboard } from "./DataController";
 import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmItem, UIInteractionType } from "./model/models";
@@ -7,17 +7,7 @@ import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import {
-  pauseSlackNotifications,
-  enableSlackNotifications,
-  connectSlackWorkspace,
-  disconnectSlackAuth,
-  shareSlackMessage,
-  updateSlackProfileStatus,
-  toggleSlackPresence,
-  disconnectSlackWorkspace,
-  clearSlackInfoCache,
-} from "./managers/SlackManager";
+import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace, clearSlackInfoCache } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
@@ -369,19 +359,6 @@ export function createCommands(
     })
   );
 
-  // SELECT TEXT command
-  cmds.push(
-    commands.registerCommand("codetime.shareTextToSlack", () => {
-      const editor = window.activeTextEditor;
-      const text = editor && editor.selection ? editor.document.getText(editor.selection) : null;
-      if (text) {
-        shareSlackMessage(text);
-      } else {
-        window.showInformationMessage("Highlight and select text to share via Slack to continue.");
-      }
-    })
-  );
-
   cmds.push(
     commands.registerCommand("codetime.connectSlackWorkspace", () => {
       connectSlackWorkspace();
@@ -395,24 +372,6 @@ export function createCommands(
       } else {
         disconnectSlackWorkspace();
       }
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.updateProfileStatus", () => {
-      updateSlackProfileStatus();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.pauseSlackNotifications", () => {
-      pauseSlackNotifications();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.enableSlackNotifications", () => {
-      enableSlackNotifications();
     })
   );
 
@@ -454,14 +413,8 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleSlackPresence", () => {
-      toggleSlackPresence();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.enterFlowMode", () => {
-      enableFlow();
+    commands.registerCommand("codetime.enableFlow", () => {
+      enableFlow({ automated: false });
     })
   );
 
@@ -476,8 +429,6 @@ export function createCommands(
       configureSettings();
     })
   );
-
-  cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 
   return Disposable.from(...cmds);
 }
