@@ -1,15 +1,11 @@
 import { commands, ProgressLocation, window } from "vscode";
-import ConfigSettings from "../model/ConfigSettings";
-import { getConfigSettings } from "./ConfigManager";
+import { getPreference } from "../DataController";
+import { softwarePost, softwareDelete } from "../http/HttpClient";
+import { getItem } from "../Util";
+import { softwareGet } from "../http/HttpClient";
+
 import {
   checkRegistration,
-  pauseSlackNotifications,
-  setSlackStatus,
-  updateSlackPresence,
-  enableSlackNotifications,
-  getSlackStatus,
-  getSlackPresence,
-  getSlackDnDInfo,
   showModalSignupPrompt,
   checkSlackConnectionForFlowMode,
 } from "./SlackManager";
@@ -34,16 +30,17 @@ let useSlackSettings = true;
  */
 export function getConfigSettingsTooltip() {
   const preferences = [];
-  const configSettings: ConfigSettings = getConfigSettings();
-  preferences.push(`**Screen Mode**: *${configSettings.screenMode.toLowerCase()}*`);
+  const flowModeSettings = getPreference("flowMode");
+  // move this to the backend
+  preferences.push(`**Screen Mode**: *${flowModeSettings?.editor?.vscode?.screenMode?.toLowerCase()}*`);
 
-  const notificationState = configSettings.pauseSlackNotifications ? "on" : "off";
+  const notificationState = flowModeSettings?.slack?.pauseSlackNotifications ? "on" : "off";
   preferences.push(`**Pause Notifications**: *${notificationState}*`);
 
-  const slackAwayStatusMsg = configSettings.slackAwayStatusText ?? "";
-  preferences.push(`**Slack Away Msg**: *${slackAwayStatusMsg}*`);
+  const slackStatusText = flowModeSettings?.slack?.slackStatusText ?? "";
+  preferences.push(`**Slack Away Msg**: *${slackStatusText}*`);
 
-  const flowModeReminders = configSettings.flowModeReminders ? "on" : "off";
+  const flowModeReminders = flowModeSettings?.editor?.flowModeReminders ? "on" : "off";
   preferences.push(`**Flow Mode reminders**: *${flowModeReminders}*`);
 
   // 2 spaces followed by a newline will create newlines in markdown
@@ -51,23 +48,12 @@ export function getConfigSettingsTooltip() {
 }
 
 export async function checkToDisableFlow() {
-  if (!enabledFlow || enablingFlow) {
-    return;
-  } else if (!useSlackSettings && !isScreenStateInFlow()) {
-    // slack isn't connected but the screen state changed out of flow
-    pauseFlow();
-    return;
-  }
+  if (!enabledFlow || enablingFlow) { return; }
 
-  // slack is connected, check
-  const [slackStatus, slackPresence, slackDnDInfo] = await Promise.all([getSlackStatus(), getSlackPresence(), getSlackDnDInfo()]);
-  if (enabledFlow && !isInFlowMode(slackStatus, slackPresence, slackDnDInfo)) {
-    // disable it
-    pauseFlow();
-  }
+  if (enabledFlow && !(await isInFlowMode())) { pauseFlow(); }
 }
 
-export async function enableFlow() {
+export async function enableFlow({automated = false}) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -77,14 +63,14 @@ export async function enableFlow() {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow().catch((e) => { });
+        initiateFlow({automated: automated}).catch((e) => { });
         resolve(true);
       });
     }
   );
 }
 
-async function initiateFlow() {
+async function initiateFlow({automated=false}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
@@ -99,34 +85,17 @@ async function initiateFlow() {
     return;
   }
 
-  enablingFlow = true;
+  const flowModeSettings = getPreference("flowMode");
 
-  const configSettings: ConfigSettings = getConfigSettings();
+  // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
+  softwarePost("/v1/flow_sessions", { automated: automated }, getItem("jwt"));
 
-  // set slack status to away
-  if (configSettings.slackAwayStatus) {
-    await updateSlackPresence("away");
-  }
-
-  // set the status text to what the user set in the settings
-  const status = {
-    status_text: configSettings.slackAwayStatusText,
-    status_emoji: ":large_purple_circle:",
-    status_expiration: 0,
-  };
-
-  await setSlackStatus(status);
-
-  // pause slack notifications
-  if (configSettings.pauseSlackNotifications) {
-    await pauseSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
-  }
-
-  // set to zen mode
+  // update screen mode
   let screenChanged = false;
-  if (configSettings.screenMode.includes("Full Screen")) {
+  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  if (screenMode?.includes("Full Screen")) {
     screenChanged = showFullScreenMode();
-  } else if (configSettings.screenMode.includes("Zen")) {
+  } else if (screenMode.includes("Zen")) {
     screenChanged = showZenMode();
   } else {
     screenChanged = showNormalScreenMode();
@@ -158,23 +127,7 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  const configSettings: ConfigSettings = getConfigSettings();
-
-  // set slack status to away
-  await updateSlackPresence("auto");
-
-  // clear the status
-  const status = {
-    status_text: "",
-    status_emoji: "",
-  };
-  await setSlackStatus(status);
-
-  // pause slack notifications
-  if (configSettings.pauseSlackNotifications) {
-    await enableSlackNotifications(false /*showNotification*/, false /*refreshFlowTree*/, true /*isFlowRequest*/);
-  }
-
+  softwareDelete("/v1/flow_sessions", getItem("jwt"));
   const screenChanged = showNormalScreenMode();
 
   if (!screenChanged) {
@@ -185,60 +138,28 @@ async function pauseFlowInitiate() {
   enabledFlow = false;
 }
 
-export function isInFlowMode(slackStatus, slackPresence, slackDnDInfo) {
+export async function isInFlowMode() {
   if (enablingFlow) {
     return true;
   } else if (!enabledFlow) {
     return false;
   }
-  const configSettings: ConfigSettings = getConfigSettings();
 
-  // determine if this editor should be in flow mode
-  let screenInFlowState = isScreenStateInFlow();
+  const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
+  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
 
-  // determine if the pause slack notification is in flow
-  let pauseSlackNotificationsInFlowState = false;
-  if (!useSlackSettings) {
-    pauseSlackNotificationsInFlowState = true;
-  } else if (configSettings.pauseSlackNotifications && slackDnDInfo?.snooze_enabled) {
-    pauseSlackNotificationsInFlowState = true;
-  } else if (!configSettings.pauseSlackNotifications && !slackDnDInfo?.snooze_enabled) {
-    pauseSlackNotificationsInFlowState = true;
-  }
-
-  // determine if the slack away status text is in flow
-  let slackAwayStatusMsgInFlowState = false;
-  if (!useSlackSettings) {
-    slackAwayStatusMsgInFlowState = true;
-  } else if (configSettings.slackAwayStatusText === slackStatus) {
-    slackAwayStatusMsgInFlowState = true;
-  }
-
-  let slackAwayPresenceInFlowState = false;
-  if (!useSlackSettings) {
-    slackAwayPresenceInFlowState = true;
-  } else if (configSettings.slackAwayStatus && slackPresence === "away") {
-    slackAwayPresenceInFlowState = true;
-  } else if (!configSettings.slackAwayStatus && slackPresence === "active") {
-    slackAwayPresenceInFlowState = true;
-  }
-
-  // otherwise check the exact settings
-  return screenInFlowState && pauseSlackNotificationsInFlowState && slackAwayStatusMsgInFlowState && slackAwayPresenceInFlowState;
-}
-
-function isScreenStateInFlow() {
-  const configSettings: ConfigSettings = getConfigSettings();
-  const screen_mode = getScreenMode();
+  const flowModeSettings = getPreference("flowMode");
+  const currentScreenMode = getScreenMode();
+  const flowScreenMode = flowModeSettings?.editor?.vscode?.screenMode;
   // determine if this editor should be in flow mode
   let screenInFlowState = false;
-  if (configSettings.screenMode.includes("Full Screen") && screen_mode === FULL_SCREEN_MODE_ID) {
+  if (flowScreenMode.includes("Full Screen") && currentScreenMode === FULL_SCREEN_MODE_ID) {
     screenInFlowState = true;
-  } else if (configSettings.screenMode.includes("Zen") && screen_mode === ZEN_MODE_ID) {
+  } else if (flowScreenMode.includes("Zen") && currentScreenMode === ZEN_MODE_ID) {
     screenInFlowState = true;
-  } else if (configSettings.screenMode.includes("None") && screen_mode === NORMAL_SCREEN_MODE) {
+  } else if (flowScreenMode.includes("None") && currentScreenMode === NORMAL_SCREEN_MODE) {
     screenInFlowState = true;
   }
 
-  return screenInFlowState;
+  return screenInFlowState ?? openFlowSessions?.length > 0;
 }

@@ -1,5 +1,5 @@
 import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import { launchWebDashboard, updatePreferences } from "./DataController";
+import { launchWebDashboard } from "./DataController";
 import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
@@ -11,13 +11,8 @@ import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu 
 import { TrackerManager } from "./managers/TrackerManager";
 import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
 import {
-  pauseSlackNotifications,
-  enableSlackNotifications,
   connectSlackWorkspace,
   disconnectSlackAuth,
-  shareSlackMessage,
-  updateSlackProfileStatus,
-  toggleSlackPresence,
   disconnectSlackWorkspace,
   clearSlackInfoCache,
 } from "./managers/SlackManager";
@@ -438,19 +433,6 @@ export function createCommands(
     })
   );
 
-  // SELECT TEXT command
-  cmds.push(
-    commands.registerCommand("codetime.shareTextToSlack", () => {
-      const editor = window.activeTextEditor;
-      const text = editor && editor.selection ? editor.document.getText(editor.selection) : null;
-      if (text) {
-        shareSlackMessage(text);
-      } else {
-        window.showInformationMessage("Highlight and select text to share via Slack to continue.");
-      }
-    })
-  );
-
   cmds.push(
     commands.registerCommand("codetime.connectSlackWorkspace", () => {
       connectSlackWorkspace();
@@ -464,24 +446,6 @@ export function createCommands(
       } else {
         disconnectSlackWorkspace();
       }
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.updateProfileStatus", () => {
-      updateSlackProfileStatus();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.pauseSlackNotifications", () => {
-      pauseSlackNotifications();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.enableSlackNotifications", () => {
-      enableSlackNotifications();
     })
   );
 
@@ -523,14 +487,8 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleSlackPresence", () => {
-      toggleSlackPresence();
-    })
-  );
-
-  cmds.push(
     commands.registerCommand("codetime.enableFlow", () => {
-      enableFlow();
+      enableFlow({automated: false});
     })
   );
 
@@ -545,8 +503,6 @@ export function createCommands(
       configureSettings();
     })
   );
-
-  cmds.push(workspace.onDidChangeConfiguration((e) => updatePreferences()));
 
   return Disposable.from(...cmds);
 }
