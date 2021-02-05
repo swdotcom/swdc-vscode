@@ -40,8 +40,8 @@ export function getConfigSettingsTooltip() {
   const slackStatusText = flowModeSettings?.slack?.slackStatusText ?? "";
   preferences.push(`**Slack Away Msg**: *${slackStatusText}*`);
 
-  const flowModeReminders = flowModeSettings?.editor?.flowModeReminders ? "on" : "off";
-  preferences.push(`**Flow Mode reminders**: *${flowModeReminders}*`);
+  const autoEnableFlowMode = flowModeSettings?.editor?.autoEnableFlowMode ? "on" : "off";
+  preferences.push(`**Automatically Enable Flow Mode**: *${autoEnableFlowMode}*`);
 
   // 2 spaces followed by a newline will create newlines in markdown
   return preferences.length ? preferences.join("  \n") : "";
@@ -53,7 +53,7 @@ export async function checkToDisableFlow() {
   if (enabledFlow && !(await isInFlowMode())) { pauseFlow(); }
 }
 
-export async function enableFlow({automated = false}) {
+export async function enableFlow({ automated = false }) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -63,14 +63,14 @@ export async function enableFlow({automated = false}) {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow({automated: automated}).catch((e) => { });
+        initiateFlow({ automated: automated }).catch((e) => { });
         resolve(true);
       });
     }
   );
 }
 
-async function initiateFlow({automated=false}) {
+async function initiateFlow({ automated = false }) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
