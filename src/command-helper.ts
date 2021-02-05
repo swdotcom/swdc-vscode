@@ -488,7 +488,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.enableFlow", () => {
-      enableFlow();
+      enableFlow({automated: false});
     })
   );
 
