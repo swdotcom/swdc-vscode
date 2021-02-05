@@ -57,9 +57,7 @@ const extConfig = {
 
 const webviewSidebar = {
   target: "web",
-  entry: {
-    codetimeViewer: "./src/app/index.tsx",
-  },
+  entry: "./src/app/index.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "webviewSidebar.js",

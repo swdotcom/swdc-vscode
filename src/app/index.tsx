@@ -1,9 +1,17 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import "./index.css";
+import Config from "./Config";
 
-import './index.css';
+declare global {
+  interface Window {
+    acquireVsCodeApi(): any;
+  }
+}
+
+const vscode = window.acquireVsCodeApi();
 
 ReactDOM.render(
-    <h1>Hello</h1>,
-    document.getElementById('root')
+    <Config vscode={vscode} />,
+    document.getElementById("root")
 );
