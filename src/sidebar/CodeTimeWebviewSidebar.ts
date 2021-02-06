@@ -9,13 +9,13 @@ import {
   WebviewView,
   WebviewViewProvider,
   WebviewViewResolveContext,
-  WindowState,
 } from "vscode";
 import path = require("path");
 import fs = require("fs");
 import { getItem } from "../Util";
 import { hasSlackWorkspaces } from "../managers/SlackManager";
 import { isFlowModEnabled } from "../managers/FlowManager";
+import { getReactData } from "./ReactData";
 
 export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -52,27 +52,30 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
 
     this._webview.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
-        case "showDashboard":
-          commands.executeCommand("codetime.viewDashboard");
+        case "command_execute":
+          commands.executeCommand(message.action);
           break;
-        case "showProjectSummary":
-          commands.executeCommand("codetime.generateProjectSummary");
-          break;
-        case "accountLogIn":
-          commands.executeCommand("codetime.codeTimeExisting");
-          break;
-        case "accountSignUp":
-          commands.executeCommand("codetime.signUpAccount");
-          break;
-        case "enterFlowMode":
-          commands.executeCommand("codetime.enterFlowMode");
-          break;
-        case "exitFlowMode":
-          commands.executeCommand("codetime.exitFlowMode");
-          break;
-        case "connectSlackWorkspace":
-          commands.executeCommand("codetime.connectSlackWorkspace");
-          break;
+        // case "showDashboard":
+        //   commands.executeCommand("codetime.viewDashboard");
+        //   break;
+        // case "showProjectSummary":
+        //   commands.executeCommand("codetime.generateProjectSummary");
+        //   break;
+        // case "accountLogIn":
+        //   commands.executeCommand("codetime.codeTimeExisting");
+        //   break;
+        // case "accountSignUp":
+        //   commands.executeCommand("codetime.signUpAccount");
+        //   break;
+        // case "enterFlowMode":
+        //   commands.executeCommand("codetime.enterFlowMode");
+        //   break;
+        // case "exitFlowMode":
+        //   commands.executeCommand("codetime.exitFlowMode");
+        //   break;
+        // case "connectSlackWorkspace":
+        //   commands.executeCommand("codetime.connectSlackWorkspace");
+        //   break;
       }
     });
 
@@ -82,6 +85,7 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   private getReactHtml(): string {
     const reactAppPathOnDisk = Uri.file(path.join(__dirname, "webviewSidebar.js"));
     const reactAppUri = reactAppPathOnDisk.with({ scheme: "vscode-resource" });
+    const stateData = JSON.stringify(getReactData());
 
     return `<!DOCTYPE html>
       <html lang="en">
@@ -96,6 +100,7 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
                               style-src vscode-resource: 'unsafe-inline';">
           <script>
             window.acquireVsCodeApi = acquireVsCodeApi;
+            window.stateData = ${stateData}
           </script>
       </head>
       <body>

@@ -41,8 +41,8 @@
   "scripts": {
     "lint": "tslint -p ./",
     "build": "vsce package --yarn",
-    "webpack": "yarn-run-all compile:*",
-    "webpack-dev": "npm-run-all -p watch:*",
+    "webpack": "yarn compile:extension & yarn compile:views",
+    "webpack-dev": "yarn watch:extension & yarn watch:views",
     "compile:extension": "tsc -p ./",
     "compile:views": "webpack --mode development",
     "watch:extension": "tsc -watch -p ./",
@@ -167,6 +167,7 @@
     "yarn-check-webpack-plugin": "^1.2.0"
   },
   "dependencies": {
+    "@material-ui/core": "^4.11.3",
     "@slack/web-api": "^5.14.0",
     "@types/jwt-decode": "^2.2.1",
     "@types/ws": "^7.4.0",
@@ -177,7 +178,6 @@
     "jwt-decode": "^2.2.0",
     "moment-timezone": "^0.5.25",
     "node-cache": "^5.1.0",
-    "npm-run-all": "^4.1.5",
     "numeral": "^2.0.6",
     "open": "^6.4.0",
     "query-string": "^6.13.7",

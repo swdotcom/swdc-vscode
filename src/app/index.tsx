@@ -1,17 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "./index.css";
-import Config from "./Config";
+import SideBar from "./views/sidebar";
 
 declare global {
   interface Window {
     acquireVsCodeApi(): any;
+    stateData: any
   }
 }
 
 const vscode = window.acquireVsCodeApi();
 
 ReactDOM.render(
-    <Config vscode={vscode} />,
+    <SideBar vscode={vscode} stateData={window.stateData}/>,
     document.getElementById("root")
 );
