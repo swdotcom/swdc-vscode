@@ -1,6 +1,7 @@
 import React from 'react';
 import Setup from "./components/setup";
-import Grid, { GridSpacing } from '@material-ui/core/Grid';
+import FlowMode from "./components/flowmode";
+import Grid from '@material-ui/core/Grid';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -21,6 +22,10 @@ export default function SideBar(props) {
   const theme = React.useMemo(
     () =>
       createMuiTheme({
+        typography: {
+          fontFamily: "Roboto, sans-serif",
+          fontSize: 12,
+        },
         palette: {
           type: prefersDarkMode ? 'dark' : 'light',
           primary: blue,
@@ -65,6 +70,9 @@ export default function SideBar(props) {
         <Grid container xs={12}>
           <Setup stateData={props.stateData} vscode={props.vscode}/>
         </Grid>)}
+        <Grid container xs={12}>
+          <FlowMode stateData={props.stateData} vscode={props.vscode}/>
+        </Grid>
       </Grid>
     </ThemeProvider>
   );
