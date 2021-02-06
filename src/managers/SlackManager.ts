@@ -14,7 +14,7 @@ import {
   syncIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
-import { softwarePut } from "../http/HttpClient";
+import { softwareDelete, softwarePut } from "../http/HttpClient";
 
 const queryString = require("query-string");
 const { WebClient } = require("@slack/web-api");
@@ -116,7 +116,8 @@ export async function disconnectSlackAuth(authId) {
   );
 
   if (selection === DISCONNECT_LABEL) {
-    await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
+    // await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
+    await softwareDelete(`/integrations/${integration.id}`, getItem("jwt"));
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
 
