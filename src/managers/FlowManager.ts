@@ -40,8 +40,8 @@ export function getConfigSettingsTooltip() {
   const slackStatusText = flowModeSettings?.slack?.slackStatusText ?? "";
   preferences.push(`**Slack Away Msg**: *${slackStatusText}*`);
 
-  const flowModeReminders = flowModeSettings?.editor?.flowModeReminders ? "on" : "off";
-  preferences.push(`**Flow Mode reminders**: *${flowModeReminders}*`);
+  const autoEnableFlowMode = flowModeSettings?.editor?.autoEnableFlowMode ? "on" : "off";
+  preferences.push(`**Automatically Enable Flow Mode**: *${autoEnableFlowMode}*`);
 
   // 2 spaces followed by a newline will create newlines in markdown
   return preferences.length ? preferences.join("  \n") : "";
