@@ -245,7 +245,7 @@ export function createCommands(
 
   // SUBMIT AN ISSUE
   cmds.push(
-    commands.registerCommand("codetime.submitOnIssue", (item: KpmItem) => {
+    commands.registerCommand("codetime.submitAnIssue", (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager

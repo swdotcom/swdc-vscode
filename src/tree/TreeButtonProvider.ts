@@ -309,7 +309,7 @@ export function getFeedbackButton(): KpmItem {
   const feedbackButton: KpmItem = getActionButton(
     "Submit an issue",
     "Send us an email at cody@software.com",
-    "codetime.submitOnIssue",
+    "codetime.submitAnIssue",
     "message.svg",
     "",
     "green"

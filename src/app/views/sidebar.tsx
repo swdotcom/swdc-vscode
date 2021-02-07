@@ -1,23 +1,41 @@
 import React from 'react';
 import Setup from "./components/setup";
+import Account from "./components/account";
 import FlowMode from "./components/flowmode";
-import Grid from '@material-ui/core/Grid';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
+import Divider from '@material-ui/core/Divider';
+import Stats from "./components/stats";
+import { makeStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+
+const useStyles = makeStyles((theme) => ({
+	root: {
+		flexGrow: 1,
+		width: "100%",
+		margin: 0
+	},
+  gridItem: {
+    marginTop: 10,
+    marginButtom: 10
+  }
+}));
 
 export default function SideBar(props) {
 
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
+  const classes = useStyles();
+
   /**
+   * window.activeColorTheme.kind
    * export enum ColorThemeKind {
       Light = 1,
       Dark = 2,
       HighContrast = 3
    }
-   window.activeColorTheme.kind
    */
   const theme = React.useMemo(
     () =>
@@ -31,6 +49,16 @@ export default function SideBar(props) {
           primary: blue,
         },
         overrides: {
+          MuiList: {
+            root: {
+              width: "100%"
+            }
+          },
+          MuiListItem: {
+            root: {
+              disableGutters: true
+            }
+          },
           MuiButton: {
             root: {
               fontSize: 10
@@ -55,6 +83,13 @@ export default function SideBar(props) {
               }
             },
           },
+          MuiDivider: {
+            root: {
+              width: "100%",
+              marginTop: 8,
+              marginBottom: 8
+            }
+          }
         },
       }),
     [prefersDarkMode],
@@ -65,13 +100,21 @@ export default function SideBar(props) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
-      <Grid container spacing={1} direction="column" justify="flex-start" alignItems="center">
+      <Grid container className={classes.root}>
         {(!stateData.registered || !stateData.slackConnected) && (
-        <Grid container xs={12}>
+        <Grid item xs={12} className={classes.gridItem}>
           <Setup stateData={props.stateData} vscode={props.vscode}/>
         </Grid>)}
-        <Grid container xs={12}>
+        <Grid item xs={12} className={classes.gridItem}>
           <FlowMode stateData={props.stateData} vscode={props.vscode}/>
+        </Grid>
+        <Divider/>
+        <Grid item xs={12} className={classes.gridItem}>
+          <Stats vscode={props.vscode}/>
+        </Grid>
+        <Divider/>
+        <Grid item xs={12} className={classes.gridItem}>
+          <Account vscode={props.vscode} stateData={props.stateData}/>
         </Grid>
       </Grid>
     </ThemeProvider>
