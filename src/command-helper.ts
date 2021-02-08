@@ -347,9 +347,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.disconnectSlackWorkspace", (kptmItem: any) => {
-      if (kptmItem && kptmItem.value) {
-        disconnectSlackAuth(kptmItem.value);
+    commands.registerCommand("codetime.disconnectSlackWorkspace", (authId: any) => {
+      if (authId) {
+        disconnectSlackAuth(authId);
       } else {
         disconnectSlackWorkspace();
       }

@@ -50,7 +50,7 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
     this._webview.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
         case "command_execute":
-          commands.executeCommand(message.action);
+          commands.executeCommand(message.action, ...message.arguments);
           break;
       }
     });

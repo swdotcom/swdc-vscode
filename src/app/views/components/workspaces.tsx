@@ -10,6 +10,8 @@ import ControlPointTwoToneIcon from "@material-ui/icons/ControlPointTwoTone";
 import IconButton from "@material-ui/core/IconButton";
 import RemoveCircleTwoToneIcon from "@material-ui/icons/RemoveCircleTwoTone";
 
+let vscode = null;
+
 declare module "csstype" {
   interface Properties {
     "--tree-view-color"?: string;
@@ -24,6 +26,7 @@ type StyledTreeItemProps = TreeItemProps & {
   labelInfo?: string;
   labelText: string;
   isWorkspace?: boolean;
+  authId?: string;
 };
 
 const useTreeItemStyles = makeStyles((theme: Theme) =>
@@ -88,9 +91,18 @@ function SlackIcon(props: SvgIconProps) {
   );
 }
 
+function removeWorkspaceClickHandler(authId: string) {
+  const command = {
+    action: "codetime.disconnectSlackWorkspace",
+    command: "command_execute",
+    arguments: [authId],
+  };
+  vscode.postMessage(command);
+}
+
 function StyledTreeItem(props: StyledTreeItemProps) {
   const classes = useTreeItemStyles();
-  const { labelText, labelIcon: LabelIcon, labelInfo, color, bgColor, isWorkspace, ...other } = props;
+  const { labelText, labelIcon: LabelIcon, labelInfo, color, bgColor, isWorkspace, authId, ...other } = props;
 
   return (
     <TreeItem
@@ -105,7 +117,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
           </Typography>
           {isWorkspace && (
             <IconButton aria-label="Disconnect workspace" style={{ width: 32, height: 32 }}>
-              <RemoveCircleTwoToneIcon />
+              <RemoveCircleTwoToneIcon onClick={() => removeWorkspaceClickHandler(authId)} />
             </IconButton>
           )}
         </div>
@@ -138,6 +150,7 @@ const useStyles = makeStyles(
 export default function Workspaces(props) {
   const classes = useStyles();
 
+  vscode = props.vscode;
   const workspaces = props.stateData?.slackWorkspaces ?? [];
 
   function addWorkspaceClickHandler() {
@@ -145,7 +158,7 @@ export default function Workspaces(props) {
       action: "codetime.connectSlackWorkspace",
       command: "command_execute",
     };
-    props.vscode.postMessage(command);
+    vscode.postMessage(command);
   }
 
   return (
@@ -159,6 +172,7 @@ export default function Workspaces(props) {
               labelText={value.team_domain}
               labelIcon={SlackIcon}
               isWorkspace={true}
+              authId={value.authId}
             />
           );
         })}
