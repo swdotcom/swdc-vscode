@@ -1,10 +1,8 @@
 import { window, commands } from "vscode";
-import { softwareGet, softwarePut, isResponseOk, softwarePost } from "./http/HttpClient";
+import { softwareGet, isResponseOk, softwarePost } from "./http/HttpClient";
 import {
   getItem,
   setItem,
-  launchWebUrl,
-  logIt,
   getProjectCodeSummaryFile,
   getProjectContributorCodeSummaryFile,
   formatNumber,
@@ -19,8 +17,7 @@ import {
   syncIntegrations,
   getIntegrations,
 } from "./Util";
-import { buildWebDashboardUrl } from "./menu/MenuManager";
-import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
+import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
@@ -219,34 +216,6 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
   }
 }
 
-export async function launchWebDashboard() {
-  if (!getItem("name")) {
-    window
-      .showInformationMessage(
-        "Sign up or log in to see more data visualizations.",
-        {
-          modal: true,
-        },
-        SIGN_UP_LABEL
-      )
-      .then(async (selection) => {
-        if (selection === SIGN_UP_LABEL) {
-          commands.executeCommand("codetime.signUpAccount");
-        }
-      });
-    return;
-  }
-
-  let webUrl = await buildWebDashboardUrl();
-
-  // add the token=jwt
-  const jwt = getItem("jwt");
-  const encodedJwt = encodeURIComponent(jwt);
-  webUrl = `${webUrl}?token=${encodedJwt}`;
-
-  launchWebUrl(webUrl);
-}
-
 export async function writeDailyReportDashboard(type = "yesterday", projectIds = []) {
   let dashboardContent = "";
 
@@ -406,21 +375,6 @@ export async function writeProjectContributorCommitDashboard(identifier) {
       }
       dashboardContent += getRightAlignedTableHeader(projectDate);
       dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-
-      // show the metrics now
-      // const userHours = summary.activity.session_seconds
-      //     ? humanizeMinutes(summary.activity.session_seconds / 60)
-      //     : humanizeMinutes(0);
-      // const contribHours = summary.contributorActivity.session_seconds
-      //     ? humanizeMinutes(
-      //           summary.contributorActivity.session_seconds / 60
-      //       )
-      //     : humanizeMinutes(0);
-      // dashboardContent += getRowLabels([
-      //     "Code time",
-      //     userHours,
-      //     contribHours
-      // ]);
 
       // commits
       dashboardContent += getRowNumberData(summary, "Commits", "commits");

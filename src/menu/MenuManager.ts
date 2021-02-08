@@ -1,14 +1,5 @@
-import {
-  window,
-  QuickPickOptions,
-  commands,
-} from "vscode";
-import {
-  launchWebUrl,
-  launchLogin,
-  isStatusBarTextVisible,
-  getItem,
-} from "../Util";
+import { window, QuickPickOptions, commands } from "vscode";
+import { launchWebUrl, launchLogin, isStatusBarTextVisible, getItem } from "../Util";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { showDashboard } from "../managers/WebViewManager";
 
@@ -45,12 +36,7 @@ export function showQuickPick(pickOptions): any {
   });
 }
 
-export async function buildWebDashboardUrl() {
-  return launch_url;
-}
-
 export async function showMenuOptions() {
-
   const email = getItem("name");
 
   // {placeholder, items: [{label, description, url, details, tooltip},...]}
@@ -117,6 +103,5 @@ export async function showMenuOptions() {
 }
 
 export async function launchWebDashboardView() {
-  let webUrl = await buildWebDashboardUrl();
-  launchWebUrl(`${webUrl}/login`);
+  launchWebUrl(`${launch_url}/login`);
 }

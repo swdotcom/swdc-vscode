@@ -30,7 +30,11 @@ export default function Teams(props) {
   const classes = useStyles();
 
   function teamCreateClickHandler() {
-    //
+    const command = {
+      action: "codetime.createTeam",
+      command: "command_execute",
+    };
+    props.vscode.postMessage(command);
   }
 
   return (

@@ -1,6 +1,15 @@
 import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS } from "./Constants";
+import {
+  CODE_TIME_EXT_ID,
+  launch_url,
+  CODE_TIME_PLUGIN_ID,
+  CODE_TIME_TYPE,
+  api_endpoint,
+  SOFTWARE_DIRECTORY,
+  LOG_FILE_EVENTS,
+  SIGN_UP_LABEL,
+} from "./Constants";
 import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
@@ -660,8 +669,44 @@ export async function wrapExecPromise(cmd, projectDir) {
   return result;
 }
 
+export async function launchWebDashboard() {
+  if (!checkRegistration()) {
+    return;
+  }
+
+  // add the token=jwt
+  const jwt = getItem("jwt");
+  const encodedJwt = encodeURIComponent(jwt);
+  const webUrl = `${launch_url}?token=${encodedJwt}`;
+
+  launchWebUrl(webUrl);
+}
+
 export function launchWebUrl(url) {
+  if (!checkRegistration()) {
+    return;
+  }
   open(url);
+}
+
+function checkRegistration() {
+  if (!getItem("name")) {
+    window
+      .showInformationMessage(
+        "Sign up or log in to see more data visualizations.",
+        {
+          modal: true,
+        },
+        SIGN_UP_LABEL
+      )
+      .then(async (selection) => {
+        if (selection === SIGN_UP_LABEL) {
+          commands.executeCommand("codetime.signUpAccount");
+        }
+      });
+    return false;
+  }
+  return true;
 }
 
 /**

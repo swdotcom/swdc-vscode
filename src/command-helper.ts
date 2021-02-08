@@ -1,6 +1,13 @@
 import { commands, Disposable, window, ExtensionContext } from "vscode";
-import { launchWebDashboard } from "./DataController";
-import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
+import {
+  launchWebUrl,
+  launchLogin,
+  openFileInEditor,
+  displayReadmeIfNotExists,
+  toggleStatusBar,
+  launchEmailSignup,
+  launchWebDashboard,
+} from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmItem, UIInteractionType } from "./model/models";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
@@ -8,7 +15,7 @@ import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager"
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
-import { vscode_issues_url } from "./Constants";
+import { organizations_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
@@ -85,6 +92,12 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       launchWebDashboard();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.createTeam", () => {
+      launchWebUrl(organizations_url);
     })
   );
 
