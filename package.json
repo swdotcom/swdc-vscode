@@ -41,6 +41,7 @@
   "scripts": {
     "lint": "tslint -p ./",
     "build": "vsce package --yarn",
+    "watch": "tsc -watch -p ./",
     "webpack": "yarn compile:extension & yarn compile:views",
     "webpack-dev": "yarn watch:extension & yarn watch:views",
     "compile:extension": "tsc -p ./",
