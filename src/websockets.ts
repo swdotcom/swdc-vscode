@@ -4,7 +4,7 @@ import { handleFlowScoreMessage } from "./message_handlers/flow_score";
 
 const WebSocket = require('ws');
 
-let intervalId = undefined;
+let retryTimeout = undefined;
 
 export function initializeWebsockets() {
   const options = {
@@ -16,7 +16,6 @@ export function initializeWebsockets() {
   const ws = new WebSocket(websockets_url, options);
 
   ws.on('open', function open() {
-    clearInterval(intervalId);
     console.debug("[CodeTime] websockets connection open");
   });
 
@@ -26,23 +25,38 @@ export function initializeWebsockets() {
     handleIncomingMessage(data);
   });
 
-  ws.on('close', function close() {
-    console.debug("[CodeTime] websockets connection closed - will retry connecting in 10 seconds");
+  ws.on('close', function close(code, reason) {
+    console.debug("[CodeTime] websockets connection closed");
 
-    clearWebsocketConnectionRetryInterval();
-    intervalId = setInterval(() => {
-      console.log("[CodeTime] attempting to reinitialize websockets connection");
-      initializeWebsockets();
-    }, 10000);
+    retryConnection();
   });
+
+  ws.on('unexpected-response', function unexpectedResponse(request, response) {
+    console.debug("[CodeTime] unexpected websockets response:", response.statusCode);
+
+    if (response.statusCode === 426) {
+      console.error("[CodeTime] websockets request had invalid headers. Are you behind a proxy?");
+    } else {
+      retryConnection();
+    }
+  })
 
   ws.on('error', function error(e) {
     console.error('[CodeTime] error connecting to websockets', e);
   });
 }
 
-export function clearWebsocketConnectionRetryInterval() {
-  clearInterval(intervalId);
+function retryConnection() {
+  console.debug("[CodeTime] retrying websockets connecting in 10 seconds")
+
+  retryTimeout = setTimeout(() => {
+    console.log("[CodeTime] attempting to reinitialize websockets connection");
+    initializeWebsockets();
+  }, 10000);
+}
+
+export function clearWebsocketConnectionRetryTimeout() {
+  clearTimeout(retryTimeout);
 }
 
 const handleIncomingMessage = (data: any) => {
