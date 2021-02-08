@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "@material-ui/core/Button";
 import ListItemText from "@material-ui/core/ListItemText";
 import Grid from "@material-ui/core/Grid";
@@ -25,12 +25,16 @@ export default function Account(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
 
-  const classes = useStyles();
-
   const stateData = props.stateData;
 
+  const [state, setState] = useState({
+    statusBarTextVisible: stateData.statusBarTextVisible,
+  });
+
+  const classes = useStyles();
+
   let toggleStatusBarTextLabel = "Hide status bar metrics";
-  if (!stateData.statusBarTextVisible) {
+  if (state.statusBarTextVisible) {
     toggleStatusBarTextLabel = "Show status bar metrics";
   }
 
@@ -64,6 +68,8 @@ export default function Account(props) {
       command: "command_execute",
     };
     props.vscode.postMessage(command);
+    // update the state
+    setState({ statusBarTextVisible: !state.statusBarTextVisible });
   }
 
   return (
