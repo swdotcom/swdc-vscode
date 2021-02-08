@@ -25,7 +25,7 @@ import { PluginDataManager } from "./managers/PluginDataManager";
 import { setSessionSummaryLiveshareMinutes, updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import { initializeWebsockets, clearWebsocketConnectionRetryInterval } from "./websockets";
+import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
 
@@ -77,7 +77,8 @@ export function deactivate(ctx: ExtensionContext) {
   WallClockManager.getInstance().dispose();
 
   clearInterval(liveshare_update_interval);
-  clearWebsocketConnectionRetryInterval();
+
+  clearWebsocketConnectionRetryTimeout();
 }
 
 export async function activate(ctx: ExtensionContext) {
