@@ -81,14 +81,6 @@
         }
       },
       {
-        "command": "codetime.refreshFlowTree",
-        "title": "Code Time: Refresh flow info",
-        "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
-        }
-      },
-      {
         "command": "codetime.viewDashboard",
         "title": "Code Time: View Dashboard"
       },
@@ -168,6 +160,8 @@
   },
   "dependencies": {
     "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "@slack/web-api": "^5.14.0",
     "@types/jwt-decode": "^2.2.1",
     "@types/ws": "^7.4.0",

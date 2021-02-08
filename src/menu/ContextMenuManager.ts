@@ -21,7 +21,7 @@ export async function showAverageComparisonOptions() {
   if (pick && pick.value) {
     setItem("reference-class", pick.value);
     // refresh the stats tree
-    commands.executeCommand("codetime.refreshKpmTree");
+    commands.executeCommand("codetime.refreshCodeTimeView");
   }
   return null;
 }
@@ -35,5 +35,5 @@ export async function switchAverageComparison() {
   }
   setItem("reference-class", currentReferenceClass);
   // refresh the stats tree
-  commands.executeCommand("codetime.refreshKpmTree");
+  commands.executeCommand("codetime.refreshCodeTimeView");
 }

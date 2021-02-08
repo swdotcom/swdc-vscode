@@ -105,11 +105,7 @@ async function initiateFlow({ automated = false }) {
     screenChanged = showNormalScreenMode();
   }
 
-  if (!screenChanged) {
-    commands.executeCommand("codetime.refreshFlowTree");
-  } else {
-    commands.executeCommand("codetime.scheduleFlowRefresh");
-  }
+  commands.executeCommand("codetime.refreshCodeTimeView");
   enabledFlow = true;
   enablingFlow = false;
 }
@@ -134,11 +130,7 @@ async function pauseFlowInitiate() {
   softwareDelete("/v1/flow_sessions", getItem("jwt"));
   const screenChanged = showNormalScreenMode();
 
-  if (!screenChanged) {
-    commands.executeCommand("codetime.refreshFlowTree");
-  } else {
-    commands.executeCommand("codetime.scheduleFlowRefresh");
-  }
+  commands.executeCommand("codetime.refreshCodeTimeView");
   enabledFlow = false;
 }
 

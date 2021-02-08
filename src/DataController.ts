@@ -213,7 +213,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
       console.error("Failed to initialize codetime websockets", e);
     }
 
-    commands.executeCommand("codetime.refreshTreeViews");
+    commands.executeCommand("codetime.refreshCodeTimeView");
 
     initializePreferences();
   }

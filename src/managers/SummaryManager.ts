@@ -46,6 +46,6 @@ export class SummaryManager {
     }
 
     // update the code time metrics tree views
-    commands.executeCommand("codetime.refreshKpmTree");
+    commands.executeCommand("codetime.refreshCodeTimeView");
   }
 }

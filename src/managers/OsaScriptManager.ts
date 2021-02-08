@@ -13,7 +13,7 @@ export async function toggleDarkMode() {
         end tell \'`;
 
   await cp.exec(darkModeCmd);
-  commands.executeCommand("codetime.refreshFlowTree");
+  commands.executeCommand("codetime.refreshCodeTimeView");
 }
 
 export async function isDarkMode() {

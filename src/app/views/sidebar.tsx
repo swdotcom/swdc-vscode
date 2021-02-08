@@ -1,33 +1,35 @@
-import React from 'react';
+import React from "react";
 import Setup from "./components/setup";
 import Account from "./components/account";
 import FlowMode from "./components/flowmode";
-import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import blue from '@material-ui/core/colors/blue';
-import Divider from '@material-ui/core/Divider';
+import Teams from "./components/teams";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import blue from "@material-ui/core/colors/blue";
+import Divider from "@material-ui/core/Divider";
 import Stats from "./components/stats";
-import { makeStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
+import { makeStyles } from "@material-ui/core/styles";
+import Grid from "@material-ui/core/Grid";
 
 const useStyles = makeStyles((theme) => ({
-	root: {
-		flexGrow: 1,
-		width: "100%",
-		margin: 0
-	},
+  root: {
+    flexGrow: 1,
+    width: "100%",
+    margin: 0,
+  },
   gridItem: {
     marginTop: 10,
-    marginButtom: 10
-  }
+    marginButtom: 10,
+  },
 }));
 
 export default function SideBar(props) {
-
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  // const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
   const classes = useStyles();
+
+  const currentColorKind = props.stateData.currentColorKind;
+  const prefersDarkMode = !!(currentColorKind === 2);
 
   /**
    * window.activeColorTheme.kind
@@ -45,31 +47,34 @@ export default function SideBar(props) {
           fontSize: 12,
         },
         palette: {
-          type: prefersDarkMode ? 'dark' : 'light',
+          type: prefersDarkMode ? "dark" : "light",
           primary: blue,
         },
         overrides: {
           MuiList: {
             root: {
-              width: "100%"
-            }
+              width: "100%",
+            },
           },
           MuiListItem: {
             root: {
-              disableGutters: true
-            }
+              disableGutters: true,
+            },
           },
           MuiButton: {
             root: {
-              fontSize: 10
-            }
+              width: "100%",
+              margin: 2,
+              fontSize: 10,
+              textTransform: "none",
+            },
           },
           MuiCard: {
             root: {
               padding: 4,
               margin: 2,
-              width: "100%"
-            }
+              width: "100%",
+            },
           },
           MuiCardContent: {
             root: {
@@ -78,43 +83,47 @@ export default function SideBar(props) {
               paddingBottom: 8,
               paddingLeft: 16,
               paddingRight: 16,
-              '&:last-child': {
+              "&:last-child": {
                 paddingBottom: 24,
-              }
+              },
             },
           },
           MuiDivider: {
             root: {
               width: "100%",
               marginTop: 8,
-              marginBottom: 8
-            }
-          }
+              marginBottom: 8,
+            },
+          },
         },
       }),
-    [prefersDarkMode],
+    [prefersDarkMode]
   );
 
   const stateData = props.stateData;
 
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline/>
+      <CssBaseline />
       <Grid container className={classes.root}>
         {(!stateData.registered || !stateData.slackConnected) && (
+          <Grid item xs={12} className={classes.gridItem}>
+            <Setup stateData={props.stateData} vscode={props.vscode} />
+          </Grid>
+        )}
         <Grid item xs={12} className={classes.gridItem}>
-          <Setup stateData={props.stateData} vscode={props.vscode}/>
-        </Grid>)}
-        <Grid item xs={12} className={classes.gridItem}>
-          <FlowMode stateData={props.stateData} vscode={props.vscode}/>
+          <FlowMode stateData={props.stateData} vscode={props.vscode} />
         </Grid>
-        <Divider/>
+        <Divider />
         <Grid item xs={12} className={classes.gridItem}>
-          <Stats vscode={props.vscode}/>
+          <Stats vscode={props.vscode} stateData={props.stateData} />
         </Grid>
-        <Divider/>
+        <Divider />
         <Grid item xs={12} className={classes.gridItem}>
-          <Account vscode={props.vscode} stateData={props.stateData}/>
+          <Account vscode={props.vscode} stateData={props.stateData} />
+        </Grid>
+        <Grid item xs={12} className={classes.gridItem}>
+          <Teams vscode={props.vscode} stateData={props.stateData} />
         </Grid>
       </Grid>
     </ThemeProvider>

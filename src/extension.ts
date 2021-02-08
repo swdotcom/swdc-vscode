@@ -27,11 +27,12 @@ import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryInterval } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
+import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
 let _ls = null;
-
+let currentColorKind: number = undefined;
 let liveshare_update_interval = null;
 
 const one_min_millis = 1000 * 60;
@@ -77,18 +78,6 @@ export function deactivate(ctx: ExtensionContext) {
 
   clearInterval(liveshare_update_interval);
   clearWebsocketConnectionRetryInterval();
-
-  // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
-  //     if (isResponseOk(resp)) {
-  //         if (resp.data) {
-  //             console.log(`Uninstalled plugin`);
-  //         } else {
-  //             console.log(
-  //                 "Failed to update Code Time about the uninstall event"
-  //             );
-  //         }
-  //     }
-  // });
 }
 
 export async function activate(ctx: ExtensionContext) {
@@ -119,6 +108,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // store the activate event
   tracker.trackEditorAction("editor", "activate");
+
+  activateColorKindChangeListener();
 
   // INIT the plugin data manager
   PluginDataManager.getInstance();
@@ -184,6 +175,42 @@ function initializeIntervalJobs() {
       updateLiveshareTime();
     }
   }, one_min_millis);
+}
+
+export function getCurrentColorKind() {
+  if (!currentColorKind) {
+    currentColorKind = window.activeColorTheme.kind;
+  }
+  return currentColorKind;
+}
+
+/**
+ * Active color theme listener
+ */
+function activateColorKindChangeListener() {
+  currentColorKind = window.activeColorTheme.kind;
+
+  window.onDidChangeActiveColorTheme((event) => {
+    let kindChanged = false;
+    if (event.kind !== currentColorKind) {
+      kindChanged = true;
+    }
+
+    currentColorKind = event.kind;
+    if (kindChanged) {
+      // check if the config panel is showing, update it if so
+      if (showingConfigureSettingsPanel()) {
+        setTimeout(() => {
+          configureSettings();
+        }, 500);
+      }
+    }
+
+    // let the sidebar know the new current color kind
+    setTimeout(() => {
+      commands.executeCommand("codetime.refreshCodeTimeView");
+    }, 250);
+  });
 }
 
 function updateLiveshareTime() {

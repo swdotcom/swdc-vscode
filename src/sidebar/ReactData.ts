@@ -1,5 +1,6 @@
+import { getCurrentColorKind } from "../extension";
 import { isFlowModEnabled, isInFlowMode } from "../managers/FlowManager";
-import { hasSlackWorkspaces } from "../managers/SlackManager";
+import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { getItem, isStatusBarTextVisible } from "../Util";
 
 export function getReactData() {
@@ -8,5 +9,7 @@ export function getReactData() {
     slackConnected: !!hasSlackWorkspaces(),
     inFlowMode: isFlowModEnabled(),
     statusBarTextVisible: isStatusBarTextVisible(),
+    slackWorkspaces: getSlackWorkspaces(),
+    currentColorKind: getCurrentColorKind(),
   };
 }

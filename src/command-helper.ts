@@ -7,7 +7,7 @@ import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace, clearSlackInfoCache } from "./managers/SlackManager";
+import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
 import { vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
@@ -49,41 +49,9 @@ export function createCommands(
     })
   );
 
-  // WEB VIEW REFRESH
   cmds.push(
-    commands.registerCommand("codetime.refreshFlowTree", () => {
-      commands.executeCommand("codetime.refreshCodeTimeViews");
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.scheduleFlowRefresh", () => {
-      commands.executeCommand("codetime.refreshCodeTimeViews");
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.refreshTreeViews", () => {
-      commands.executeCommand("codetime.refreshCodeTimeViews");
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.refreshCodeTimeViews", () => {
-      clearSlackInfoCache();
+    commands.registerCommand("codetime.refreshCodeTimeView", () => {
       ctWebviewSidebar.refresh();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
-      //
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand("codetime.refreshKpmTree", () => {
-      //
     })
   );
 
@@ -143,7 +111,7 @@ export function createCommands(
       tracker.trackUIInteraction(item);
       toggleStatusBar();
       setTimeout(() => {
-        commands.executeCommand("codetime.refreshCodetimeMenuTree");
+        commands.executeCommand("codetime.refreshCodeTimeView");
       }, 500);
     })
   );
