@@ -49,7 +49,7 @@ export default function Teams(props) {
           </CardContent>
           <CardContent>
             <Button variant="contained" color="primary" onClick={teamCreateClickHandler}>
-              Crate a team
+              Create a team
             </Button>
           </CardContent>
           <CardContent>
