@@ -27,12 +27,10 @@ const useStyles = makeStyles((theme) => ({
 export default function Setup(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
-
+  const classes = useStyles();
   const stateData = props.stateData;
 
   const progress = !stateData.registered ? 40 : 75;
-
-  const classes = useStyles();
 
   function setupClickHandler() {
     const command = {

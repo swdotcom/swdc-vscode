@@ -13,6 +13,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     margin: 0,
     padding: 0,
+    marginBottom: 10,
   },
   setup: {
     width: "100%",
@@ -26,7 +27,6 @@ const useStyles = makeStyles((theme) => ({
 export default function Teams(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
-
   const classes = useStyles();
 
   function teamCreateClickHandler() {

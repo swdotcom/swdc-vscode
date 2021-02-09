@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
 export default function FlowMode(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
-
+  const classes = useStyles();
   const stateData = props.stateData;
 
   const [state, setState] = useState({
@@ -65,8 +65,6 @@ export default function FlowMode(props) {
 
     window.addEventListener("resize", handleResize);
   });
-
-  const classes = useStyles();
 
   function flowModeClickHandler() {
     const command = {

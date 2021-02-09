@@ -24,14 +24,12 @@ const useStyles = makeStyles((theme) => ({
 export default function Account(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
-
+  const classes = useStyles();
   const stateData = props.stateData;
 
   const [state, setState] = useState({
     statusBarTextVisible: stateData.statusBarTextVisible,
   });
-
-  const classes = useStyles();
 
   let toggleStatusBarTextLabel = "Hide status bar metrics";
   if (state.statusBarTextVisible) {

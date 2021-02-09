@@ -23,7 +23,6 @@ const useStyles = makeStyles((theme) => ({
 export default function Stats(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
-
   const classes = useStyles();
 
   function dashboardClickHandler() {

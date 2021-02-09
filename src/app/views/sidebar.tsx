@@ -24,10 +24,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SideBar(props) {
-  // const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-
   const classes = useStyles();
-
   const stateData = props.stateData;
 
   const currentColorKind = props.stateData.currentColorKind;
@@ -122,6 +119,7 @@ export default function SideBar(props) {
         <Grid item xs={12} className={classes.gridItem}>
           <Account vscode={props.vscode} stateData={props.stateData} />
         </Grid>
+        <Divider />
         <Grid item xs={12} className={classes.gridItem}>
           <Teams vscode={props.vscode} stateData={props.stateData} />
         </Grid>
