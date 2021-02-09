@@ -163,9 +163,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     // update the status bar
     updateStatusBarWithSummaryData();
   }, 0);
-
-  // delete the data.json if it exists
-  deleteFile(getSoftwareDataStoreFile());
 }
 
 // add the interval jobs

@@ -1,15 +1,7 @@
 import { workspace, Disposable, RelativePattern, window, commands, Uri } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
-import {
-  getRootPathForFile,
-  getNowTimes,
-  logEvent,
-  getFileAgeInDays,
-  isFileActive,
-  getFirstWorkspaceFolder,
-  logIt
-} from "../Util";
+import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt } from "../Util";
 import { FileChangeInfo } from "../model/models";
 import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
@@ -48,12 +40,8 @@ export class KpmManager {
     if (workspaceFolder) {
       // Watch .git directory changes
       // Only works if the git directory is in the workspace
-      const localGitWatcher = workspace.createFileSystemWatcher(
-        new RelativePattern(workspaceFolder, '{**/.git/refs/heads/**}')
-      );
-      const remoteGitWatcher = workspace.createFileSystemWatcher(
-        new RelativePattern(workspaceFolder, '{**/.git/refs/remotes/**}')
-      );
+      const localGitWatcher = workspace.createFileSystemWatcher(new RelativePattern(workspaceFolder, "{**/.git/refs/heads/**}"));
+      const remoteGitWatcher = workspace.createFileSystemWatcher(new RelativePattern(workspaceFolder, "{**/.git/refs/remotes/**}"));
       subscriptions.push(localGitWatcher);
       subscriptions.push(remoteGitWatcher);
       subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
@@ -131,7 +119,6 @@ export class KpmManager {
     this.tracker.trackEditorAction("file", "close", event);
   }
 
-
   /**
    * File Open Handler
    * @param event
@@ -180,17 +167,17 @@ export class KpmManager {
 
     if (event.path.includes("/.git/refs/heads/")) {
       // /.git/refs/heads/<branch_name>
-      const branch = event.path.split(".git/")[1]
+      const branch = event.path.split(".git/")[1];
       let commit;
       try {
-        commit = fs.readFileSync(event.path, 'utf8').trimEnd()
+        commit = fs.readFileSync(event.path, "utf8").trimEnd();
       } catch (err) {
         logIt(`Error reading ${event.path}: ${err.message}`);
       }
       this.tracker.trackGitLocalEvent("local_commit", branch, commit);
     } else if (event.path.includes("/.git/refs/remotes/")) {
       // /.git/refs/remotes/<branch_name>
-      this.tracker.trackGitRemoteEvent(event)
+      this.tracker.trackGitRemoteEvent(event);
     }
   }
 

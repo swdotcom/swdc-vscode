@@ -118,20 +118,6 @@
           "icon": "resources/dark/paw-outlined.svg"
         }
       ]
-    },
-    "menus": {
-      "view/item/context": [
-        {
-          "command": "codetime.disconnectSlackWorkspace",
-          "when": "viewItem =~ /.*slack_connection_node.*/",
-          "group": "inline@1"
-        },
-        {
-          "command": "codetime.connectSlackWorkspace",
-          "when": "viewItem =~ /.*slack_connection_parent.*/",
-          "group": "inline@1"
-        }
-      ]
     }
   },
   "devDependencies": {

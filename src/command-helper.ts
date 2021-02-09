@@ -123,9 +123,6 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       toggleStatusBar();
-      // setTimeout(() => {
-      //   commands.executeCommand("codetime.refreshCodeTimeView");
-      // }, 500);
     })
   );
 

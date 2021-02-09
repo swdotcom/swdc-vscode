@@ -28,6 +28,8 @@ export default function SideBar(props) {
 
   const classes = useStyles();
 
+  const stateData = props.stateData;
+
   const currentColorKind = props.stateData.currentColorKind;
   const prefersDarkMode = !!(currentColorKind === 2);
 
@@ -44,7 +46,7 @@ export default function SideBar(props) {
       createMuiTheme({
         typography: {
           fontFamily: "Roboto, sans-serif",
-          fontSize: 12,
+          fontSize: 13,
         },
         palette: {
           type: prefersDarkMode ? "dark" : "light",
@@ -99,8 +101,6 @@ export default function SideBar(props) {
       }),
     [prefersDarkMode]
   );
-
-  const stateData = props.stateData;
 
   return (
     <ThemeProvider theme={theme}>

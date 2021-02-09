@@ -62,10 +62,10 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
     this._webview.webview.html = await this.getReactHtml();
   }
 
-  private getReactHtml(): string {
+  private async getReactHtml(): Promise<string> {
     const reactAppPathOnDisk = Uri.file(path.join(__dirname, "webviewSidebar.js"));
     const reactAppUri = reactAppPathOnDisk.with({ scheme: "vscode-resource" });
-    const stateData = JSON.stringify(getReactData());
+    const stateData = JSON.stringify(await getReactData());
 
     return `<!DOCTYPE html>
       <html lang="en">

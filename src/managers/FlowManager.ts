@@ -17,7 +17,6 @@ import {
 
 export let enablingFlow = false;
 export let enabledFlow = false;
-let useSlackSettings = true;
 
 export function isFlowModEnabled() {
   return enabledFlow;
@@ -74,6 +73,15 @@ export async function enableFlow({ automated = false }) {
   );
 }
 
+export async function getConfiguredScreenMode() {
+  const flowModeSettings = getPreference("flowMode");
+  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  if (screenMode?.includes("Full Screen") || screenMode.includes("Zen")) {
+    return FULL_SCREEN_MODE_ID;
+  }
+  return NORMAL_SCREEN_MODE;
+}
+
 async function initiateFlow({ automated = false }) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
@@ -84,7 +92,6 @@ async function initiateFlow({ automated = false }) {
 
   // { connected, usingAllSettingsForFlow }
   const connectInfo = await checkSlackConnectionForFlowMode();
-  useSlackSettings = connectInfo.useSlackSettings;
   if (!connectInfo.continue) {
     return;
   }
@@ -95,17 +102,15 @@ async function initiateFlow({ automated = false }) {
   softwarePost("/v1/flow_sessions", { automated: automated }, getItem("jwt"));
 
   // update screen mode
-  let screenChanged = false;
   const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
   if (screenMode?.includes("Full Screen")) {
-    screenChanged = showFullScreenMode();
+    showFullScreenMode();
   } else if (screenMode.includes("Zen")) {
-    screenChanged = showZenMode();
+    showZenMode();
   } else {
-    screenChanged = showNormalScreenMode();
+    showNormalScreenMode();
   }
 
-  commands.executeCommand("codetime.refreshCodeTimeView");
   enabledFlow = true;
   enablingFlow = false;
 }
@@ -128,10 +133,10 @@ export async function pauseFlow() {
 
 async function pauseFlowInitiate() {
   softwareDelete("/v1/flow_sessions", getItem("jwt"));
-  const screenChanged = showNormalScreenMode();
+  showNormalScreenMode();
 
-  commands.executeCommand("codetime.refreshCodeTimeView");
   enabledFlow = false;
+  commands.executeCommand("codetime.refreshCodeTimeView");
 }
 
 export async function isInFlowMode() {

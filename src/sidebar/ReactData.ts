@@ -1,9 +1,10 @@
 import { getCurrentColorKind } from "../extension";
-import { isFlowModEnabled, isInFlowMode } from "../managers/FlowManager";
+import { getConfiguredScreenMode, isFlowModEnabled, isInFlowMode } from "../managers/FlowManager";
+import { getScreenMode } from "../managers/ScreenManager";
 import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { getItem, isStatusBarTextVisible } from "../Util";
 
-export function getReactData() {
+export async function getReactData() {
   return {
     registered: !!getItem("name"),
     slackConnected: !!hasSlackWorkspaces(),
@@ -11,5 +12,6 @@ export function getReactData() {
     statusBarTextVisible: isStatusBarTextVisible(),
     slackWorkspaces: getSlackWorkspaces(),
     currentColorKind: getCurrentColorKind(),
+    flowModeScreenState: await getConfiguredScreenMode(),
   };
 }
