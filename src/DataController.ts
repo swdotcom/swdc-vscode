@@ -28,6 +28,7 @@ import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { disconectAllSlackIntegrations } from "./managers/SlackManager";
 import { SummaryManager } from "./managers/SummaryManager";
+import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
@@ -145,6 +146,7 @@ export async function initializePreferences() {
 
   if (jwt) {
     let user = await getUser();
+    userEventEmitter.emit('user_object_updated', user);
     // obtain the session threshold in seconds "sessionThresholdInSec"
     sessionThresholdInSec = user?.preferences?.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
     disableGitData = !!user?.preferences?.disableGitData;
