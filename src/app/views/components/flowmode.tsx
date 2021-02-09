@@ -12,7 +12,13 @@ const useStyles = makeStyles((theme) => ({
     padding: 0,
   },
   button: {
-    marginTop: 10,
+    marginTop: 6,
+  },
+  listItemPrimary: {
+    fontWeight: 500,
+  },
+  listItem: {
+    marginTop: 0,
   },
 }));
 
@@ -74,7 +80,12 @@ export default function FlowMode(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <ListItemText primary="Flow Mode" secondary="Block out distractions" />
+        <ListItemText
+          primary="Flow Mode"
+          secondary="Block out distractions"
+          className={classes.listItem}
+          classes={{ primary: classes.listItemPrimary }}
+        />
       </Grid>
       <Grid item xs={12}>
         <Button variant="contained" color="primary" onClick={flowModeClickHandler} className={classes.button}>

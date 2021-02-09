@@ -76,6 +76,13 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Config View</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+            }
+          </style>
           <meta http-equiv="Content-Security-Policy"
                       content="default-src 'none';
                               img-src https:;

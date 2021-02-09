@@ -16,9 +16,14 @@ const useStyles = makeStyles((theme) => ({
   textbutton: {
     width: "100%",
     justifyContent: "flex-start",
-    paddingLeft: 2,
-    paddingTop: 4,
-    paddingBottom: 4,
+    margin: 0,
+    padding: 0,
+  },
+  listItemPrimary: {
+    fontWeight: 500,
+  },
+  listItem: {
+    marginTop: 0,
   },
 }));
 
@@ -74,7 +79,7 @@ export default function Account(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <ListItemText primary="Account" secondary="Manage your account" />
+        <ListItemText primary="Account" secondary="Manage your account" className={classes.listItem} classes={{ primary: classes.listItemPrimary }} />
       </Grid>
       <Grid item xs={12}>
         <Button onClick={configureSettingsClickHandler} className={classes.textbutton} startIcon={<SettingsIcon />}>

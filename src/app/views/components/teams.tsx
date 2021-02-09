@@ -17,10 +17,11 @@ const useStyles = makeStyles((theme) => ({
   },
   setup: {
     width: "100%",
+    flexGrow: 1,
   },
   subinfo: {
     marginRight: 4,
-    fontSize: 11,
+    fontSize: 12,
   },
 }));
 
@@ -39,7 +40,7 @@ export default function Teams(props) {
 
   return (
     <Grid container className={classes.root}>
-      <Grid item xs={12}>
+      <Grid item xs={12} style={{ width: "100%" }}>
         <Card className={classes.setup} variant="outlined">
           <CardContent>
             <ListItemText

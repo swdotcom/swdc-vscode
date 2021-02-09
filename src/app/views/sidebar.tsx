@@ -19,11 +19,10 @@ const useStyles = makeStyles((theme) => ({
     padding: 0,
   },
   gridItem: {
-    marginTop: 10,
-    marginButtom: 10,
+    margin: 10,
   },
   gridItemSetup: {
-    marginTop: 10,
+    marginTop: 1,
     marginButtom: 10,
     backgroundColor: blue[500],
   },
@@ -36,19 +35,11 @@ export default function SideBar(props) {
   const currentColorKind = props.stateData.currentColorKind;
   const prefersDarkMode = !!(currentColorKind === 2);
 
-  /**
-   * window.activeColorTheme.kind
-   * export enum ColorThemeKind {
-      Light = 1,
-      Dark = 2,
-      HighContrast = 3
-   }
-   */
   const theme = React.useMemo(
     () =>
       createMuiTheme({
         typography: {
-          fontFamily: "Arial, Roboto, sans-serif",
+          fontFamily: "Roboto, Helvetica, Arial, sans-serif",
           fontSize: 12,
           fontWeightLight: 400,
           fontWeightRegular: 500,
@@ -64,17 +55,13 @@ export default function SideBar(props) {
               width: "100%",
             },
           },
-          MuiListItem: {
-            root: {
-              disableGutters: true,
-            },
-          },
           MuiButton: {
             root: {
               width: "100%",
-              margin: 2,
+              padding: 4,
               fontSize: 12,
               textTransform: "none",
+              whiteSpace: "nowrap",
             },
           },
           MuiCard: {
@@ -99,8 +86,8 @@ export default function SideBar(props) {
           MuiDivider: {
             root: {
               width: "100%",
-              marginTop: 8,
-              marginBottom: 8,
+              marginTop: 4,
+              marginBottom: 4,
             },
           },
         },
