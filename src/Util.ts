@@ -683,9 +683,6 @@ export async function launchWebDashboard() {
 }
 
 export function launchWebUrl(url) {
-  if (!checkRegistration()) {
-    return;
-  }
   open(url);
 }
 

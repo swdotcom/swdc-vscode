@@ -3,6 +3,13 @@ import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
 import ListItemText from "@material-ui/core/ListItemText";
+import RadioButtonUncheckedIcon from "@material-ui/icons/RadioButtonUnchecked";
+import FiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import IconButton from "@material-ui/core/IconButton";
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
+import HelpIcon from "@material-ui/icons/Help";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,22 +80,41 @@ export default function FlowMode(props) {
       command: "command_execute",
     };
     props.vscode.postMessage(command);
-    // update the state
-    setState({ inFlowMode: !state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState });
+
+    // only update to in flow if the user is already registered, otherwise we'll prompt
+    if (stateData.registered) {
+      // update the state
+      setState({ inFlowMode: !state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState });
+    }
   }
 
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <ListItemText
-          primary="Flow Mode"
-          secondary="Block out distractions"
-          className={classes.listItem}
-          classes={{ primary: classes.listItemPrimary }}
-        />
+        <List style={{ padding: 0, margin: 0 }}>
+          <ListItem style={{ padding: 0, margin: 0 }}>
+            <ListItemText
+              primary="Flow Mode"
+              secondary="Block out distractions"
+              className={classes.listItem}
+              classes={{ primary: classes.listItemPrimary }}
+            />
+            <ListItemSecondaryAction>
+              <IconButton edge="end" aria-label="delete">
+                <HelpIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        </List>
       </Grid>
       <Grid item xs={12}>
-        <Button variant="contained" color="primary" onClick={flowModeClickHandler} className={classes.button}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={flowModeClickHandler}
+          className={classes.button}
+          startIcon={!state.inFlowMode ? <RadioButtonUncheckedIcon fontSize="small" /> : <FiberManualRecordIcon fontSize="small" />}
+        >
           {!state.inFlowMode ? "Enter Flow Mode" : "Exit Flow Mode"}
         </Button>
       </Grid>
