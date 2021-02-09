@@ -1,12 +1,14 @@
 import React, { useEffect } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles, createStyles, withStyles, Theme } from "@material-ui/core/styles";
 import LinearProgress from "@material-ui/core/LinearProgress";
-import Card from "@material-ui/core/Card";
+import Paper from "@material-ui/core/Paper";
 import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Link from "@material-ui/core/Link";
 import Grid from "@material-ui/core/Grid";
+import blue from "@material-ui/core/colors/blue";
+import grey from "@material-ui/core/colors/grey";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -14,15 +16,49 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     margin: 0,
     padding: 0,
+    backgroundColor: "transparent",
   },
   setup: {
     width: "100%",
+    backgroundColor: "transparent",
+  },
+  setupButton: {
+    backgroundColor: "#ffffff",
+    color: blue[500],
   },
   subinfo: {
     marginRight: 4,
-    fontSize: 11,
+    fontSize: 12,
+    color: grey[200],
+  },
+  link: {
+    fontSize: 14,
+    color: "#ffffff",
+    background: "transparent",
+    textDecoration: "none",
+    "&:hover": {
+      fontSize: 14,
+      color: "rgb(255, 255, 255, 0.8)",
+      textDecoration: "none",
+    },
   },
 }));
+
+const BorderLinearProgress = withStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      height: 5,
+      borderRadius: 4,
+    },
+    colorPrimary: {
+      backgroundColor: blue[200],
+    },
+    bar: {
+      borderRadius: 4,
+      backgroundColor: "#ffffff",
+    },
+  })
+)(LinearProgress);
 
 export default function Setup(props) {
   // Similar to componentDidMount and componentDidUpdate:
@@ -51,15 +87,15 @@ export default function Setup(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <Card className={classes.setup} variant="outlined">
+        <Paper className={classes.setup} elevation={0}>
           <CardContent>
             <Typography>Getting started</Typography>
           </CardContent>
           <CardContent>
-            <LinearProgress variant="determinate" value={progress} />
+            <BorderLinearProgress variant="determinate" value={progress} />
           </CardContent>
           <CardContent>
-            <Button variant="contained" color="primary" onClick={setupClickHandler}>
+            <Button variant="contained" onClick={setupClickHandler} className={classes.setupButton}>
               {!stateData.registered ? "Register your account" : "Connect a Slack Workspace"}
             </Button>
           </CardContent>
@@ -68,12 +104,12 @@ export default function Setup(props) {
               <Typography className={classes.subinfo} display="inline">
                 Already have an account?
               </Typography>
-              <Link href="#" onClick={loginClickHandler} display="inline">
+              <Link href="#" onClick={loginClickHandler} display="inline" className={classes.link}>
                 Log in
               </Link>
             </CardContent>
           )}
-        </Card>
+        </Paper>
       </Grid>
     </Grid>
   );

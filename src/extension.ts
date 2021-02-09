@@ -5,18 +5,7 @@
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
-import {
-  nowInSecs,
-  getOffsetSeconds,
-  getVersion,
-  logIt,
-  getPluginName,
-  getItem,
-  displayReadmeIfNotExists,
-  setItem,
-  deleteFile,
-  getSoftwareDataStoreFile,
-} from "./Util";
+import { nowInSecs, getOffsetSeconds, getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
 import { manageLiveshareSession } from "./LiveshareManager";
 import { getApi } from "vsls";
 import { createCommands } from "./command-helper";
@@ -127,7 +116,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   initializeLiveshare();
 
   try {
-    initializeWebsockets();
+    // initializeWebsockets();
   } catch (e) {
     console.error("Failed to initialize websockets", e);
   }

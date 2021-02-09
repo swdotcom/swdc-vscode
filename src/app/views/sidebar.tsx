@@ -16,10 +16,16 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     width: "100%",
     margin: 0,
+    padding: 0,
   },
   gridItem: {
     marginTop: 10,
     marginButtom: 10,
+  },
+  gridItemSetup: {
+    marginTop: 10,
+    marginButtom: 10,
+    backgroundColor: blue[500],
   },
 }));
 
@@ -42,8 +48,11 @@ export default function SideBar(props) {
     () =>
       createMuiTheme({
         typography: {
-          fontFamily: "Roboto, sans-serif",
+          fontFamily: "Arial, Roboto, sans-serif",
           fontSize: 12,
+          fontWeightLight: 400,
+          fontWeightRegular: 500,
+          fontWeightMedium: 600,
         },
         palette: {
           type: prefersDarkMode ? "dark" : "light",
@@ -104,7 +113,7 @@ export default function SideBar(props) {
       <CssBaseline />
       <Grid container className={classes.root}>
         {(!stateData.registered || !stateData.slackConnected) && (
-          <Grid item xs={12} className={classes.gridItem}>
+          <Grid item xs={12} className={classes.gridItemSetup}>
             <Setup stateData={props.stateData} vscode={props.vscode} />
           </Grid>
         )}

@@ -4,6 +4,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspaces from "./workspaces";
+import { VisibilityIcon, SettingsIcon, MessageIcon, DocumentIcon } from "../icons";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -76,7 +77,7 @@ export default function Account(props) {
         <ListItemText primary="Account" secondary="Manage your account" />
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={configureSettingsClickHandler} className={classes.textbutton}>
+        <Button onClick={configureSettingsClickHandler} className={classes.textbutton} startIcon={<SettingsIcon />}>
           Configure settings
         </Button>
       </Grid>
@@ -84,17 +85,17 @@ export default function Account(props) {
         <Workspaces vscode={props.vscode} stateData={props.stateData} />
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={documentationClickHandler} className={classes.textbutton}>
+        <Button onClick={documentationClickHandler} className={classes.textbutton} startIcon={<DocumentIcon />}>
           Documentation
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={submitIssueClickHandler} className={classes.textbutton}>
+        <Button onClick={submitIssueClickHandler} className={classes.textbutton} startIcon={<MessageIcon />}>
           Submit an issue
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={toggleStatusVisibilityClickHandler} className={classes.textbutton}>
+        <Button onClick={toggleStatusVisibilityClickHandler} className={classes.textbutton} startIcon={<VisibilityIcon />}>
           {toggleStatusBarTextLabel}
         </Button>
       </Grid>

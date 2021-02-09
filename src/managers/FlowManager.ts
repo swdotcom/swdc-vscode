@@ -12,7 +12,6 @@ import {
   showFullScreenMode,
   showNormalScreenMode,
   showZenMode,
-  updateScreenMode,
   ZEN_MODE_ID,
 } from "./ScreenManager";
 
@@ -74,11 +73,13 @@ export async function enableFlow({ automated = false }) {
   );
 }
 
-export async function getConfiguredScreenMode() {
+export function getConfiguredScreenMode() {
   const flowModeSettings = getPreference("flowMode");
   const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
-  if (screenMode?.includes("Full Screen") || screenMode.includes("Zen")) {
+  if (screenMode?.includes("Full Screen")) {
     return FULL_SCREEN_MODE_ID;
+  } else if (screenMode?.includes("Zen")) {
+    return ZEN_MODE_ID;
   }
   return NORMAL_SCREEN_MODE;
 }
@@ -97,16 +98,15 @@ async function initiateFlow({ automated = false }) {
     return;
   }
 
-  const flowModeSettings = getPreference("flowMode");
+  const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   softwarePost("/v1/flow_sessions", { automated: automated }, getItem("jwt"));
 
   // update screen mode
-  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
-  if (screenMode?.includes("Full Screen")) {
+  if (preferredScreenMode === FULL_SCREEN_MODE_ID) {
     showFullScreenMode();
-  } else if (screenMode.includes("Zen")) {
+  } else if (preferredScreenMode === ZEN_MODE_ID) {
     showZenMode();
   } else {
     showNormalScreenMode();

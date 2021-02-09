@@ -3,6 +3,7 @@ import Button from "@material-ui/core/Button";
 import ListItemText from "@material-ui/core/ListItemText";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
+import { DashboardIcon, PawIcon, ProjectSummaryIcon } from "../icons";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,17 +56,17 @@ export default function Stats(props) {
         <ListItemText primary="Stats" secondary="Data in your editor" />
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={dashboardClickHandler} className={classes.textbutton}>
+        <Button onClick={dashboardClickHandler} className={classes.textbutton} startIcon={<DashboardIcon />}>
           Dashboard
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={projectSummaryClickHandler} className={classes.textbutton}>
+        <Button onClick={projectSummaryClickHandler} className={classes.textbutton} startIcon={<ProjectSummaryIcon />}>
           Project summary
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={softwareDashboardClickHandler} className={classes.textbutton}>
+        <Button onClick={softwareDashboardClickHandler} className={classes.textbutton} startIcon={<PawIcon />}>
           More data at Software.com
         </Button>
       </Grid>

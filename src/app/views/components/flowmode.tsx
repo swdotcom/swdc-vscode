@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
+import ListItemText from "@material-ui/core/ListItemText";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -10,11 +10,6 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     margin: 0,
     padding: 0,
-  },
-  subtitle: {
-    color: "#999999",
-    fontSize: 10,
-    fontWeight: 400,
   },
   button: {
     marginTop: 10,
@@ -79,8 +74,7 @@ export default function FlowMode(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <Typography>Flow Mode</Typography>
-        <Typography className={classes.subtitle}>Block out distractions</Typography>
+        <ListItemText primary="Flow Mode" secondary="Block out distractions" />
       </Grid>
       <Grid item xs={12}>
         <Button variant="contained" color="primary" onClick={flowModeClickHandler} className={classes.button}>
