@@ -62,6 +62,12 @@ export function createCommands(
     })
   );
 
+  cmds.push(
+    commands.registerCommand("codetime.displaySidebar", () => {
+      // logic to open the sidebar
+    })
+  );
+
   // SWITCH ACCOUNT BUTTON
   cmds.push(
     commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {

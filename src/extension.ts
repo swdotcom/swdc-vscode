@@ -137,7 +137,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     setItem("vscode_CtInit", true);
 
     setTimeout(() => {
-      commands.executeCommand("codetime.displayTree");
+      commands.executeCommand("codetime.displaySidebar");
     }, 1000);
 
     // activate the plugin
@@ -157,7 +157,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
       tooltip = `${tooltip} (${name})`;
     }
     statusBarItem.tooltip = tooltip;
-    statusBarItem.command = "codetime.displayTree";
+    statusBarItem.command = "codetime.displaySidebar";
     statusBarItem.show();
 
     // update the status bar
