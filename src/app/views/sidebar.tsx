@@ -46,7 +46,7 @@ export default function SideBar(props) {
       createMuiTheme({
         typography: {
           fontFamily: "Roboto, sans-serif",
-          fontSize: 13,
+          fontSize: 12,
         },
         palette: {
           type: prefersDarkMode ? "dark" : "light",
@@ -67,7 +67,7 @@ export default function SideBar(props) {
             root: {
               width: "100%",
               margin: 2,
-              fontSize: 10,
+              fontSize: 12,
               textTransform: "none",
             },
           },

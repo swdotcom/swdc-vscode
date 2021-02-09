@@ -16,6 +16,7 @@ export function getScreenMode() {
 
 export function showZenMode() {
   if (screenMode !== ZEN_MODE_ID) {
+    screenMode = ZEN_MODE_ID;
     commands.executeCommand("workbench.action.toggleZenMode");
     return true;
   }
@@ -25,6 +26,7 @@ export function showZenMode() {
 export function showFullScreenMode() {
   if (screenMode !== FULL_SCREEN_MODE_ID) {
     commands.executeCommand("workbench.action.toggleFullScreen");
+    screenMode = FULL_SCREEN_MODE_ID;
     return true;
   }
   return false;
@@ -32,10 +34,12 @@ export function showFullScreenMode() {
 
 export function showNormalScreenMode() {
   if (screenMode !== NORMAL_SCREEN_MODE) {
-    if (screenMode == FULL_SCREEN_MODE_ID) {
+    if (screenMode === FULL_SCREEN_MODE_ID) {
+      screenMode = NORMAL_SCREEN_MODE;
       commands.executeCommand("workbench.action.toggleFullScreen");
       return true;
-    } else if (screenMode == ZEN_MODE_ID) {
+    } else if (screenMode === ZEN_MODE_ID) {
+      screenMode = NORMAL_SCREEN_MODE;
       commands.executeCommand("workbench.action.toggleZenMode");
       return true;
     }

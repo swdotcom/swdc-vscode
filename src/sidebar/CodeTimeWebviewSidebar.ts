@@ -13,6 +13,7 @@ import {
 import path = require("path");
 import fs = require("fs");
 import { getReactData } from "./ReactData";
+import { updateScreenMode } from "../managers/ScreenManager";
 
 export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -56,6 +57,8 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
             commands.executeCommand(message.action);
           }
           break;
+        case "update_screen_mode":
+          updateScreenMode(message.value);
       }
     });
 

@@ -12,6 +12,7 @@ import {
   showFullScreenMode,
   showNormalScreenMode,
   showZenMode,
+  updateScreenMode,
   ZEN_MODE_ID,
 } from "./ScreenManager";
 
@@ -116,19 +117,21 @@ async function initiateFlow({ automated = false }) {
 }
 
 export async function pauseFlow() {
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: "Turning off flow...",
-      cancellable: false,
-    },
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        pauseFlowInitiate().catch((e) => {});
-        resolve(true);
-      });
-    }
-  );
+  if (enabledFlow) {
+    window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: "Turning off flow...",
+        cancellable: false,
+      },
+      (progress) => {
+        return new Promise((resolve, reject) => {
+          pauseFlowInitiate().catch((e) => {});
+          resolve(true);
+        });
+      }
+    );
+  }
 }
 
 async function pauseFlowInitiate() {
