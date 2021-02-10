@@ -22,12 +22,6 @@ const useStyles = makeStyles((theme) => ({
   button: {
     marginTop: 6,
   },
-  listItemPrimary: {
-    fontWeight: 500,
-  },
-  listItem: {
-    marginTop: 0,
-  },
 }));
 
 export default function FlowMode(props) {
@@ -130,12 +124,7 @@ export default function FlowMode(props) {
       <Grid item xs={12}>
         <List style={{ padding: 0, margin: 0 }}>
           <ListItem style={{ padding: 0, margin: 0 }}>
-            <ListItemText
-              primary="Flow Mode"
-              secondary="Block out distractions"
-              className={classes.listItem}
-              classes={{ primary: classes.listItemPrimary }}
-            />
+            <ListItemText primary="Flow Mode" secondary="Block out distractions" />
             <ListItemSecondaryAction>
               <IconButton edge="end" aria-label="delete">
                 <HelpIcon />

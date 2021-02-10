@@ -29,12 +29,6 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     justifyContent: "flex-start",
   },
-  listItemPrimary: {
-    fontWeight: 500,
-  },
-  listItem: {
-    marginTop: 0,
-  },
 }));
 
 export default function Teams(props) {
@@ -84,12 +78,7 @@ export default function Teams(props) {
         {stateData.teams.length && (
           <Grid container className={classes.root}>
             <Grid item xs={12}>
-              <ListItemText
-                primary="Teams"
-                secondary="View your team dashboard"
-                className={classes.listItem}
-                classes={{ primary: classes.listItemPrimary }}
-              />
+              <ListItemText primary="Teams" secondary="View your team dashboard" />
             </Grid>
             {stateData.teams.map((team, index) => (
               <Grid item xs={12}>

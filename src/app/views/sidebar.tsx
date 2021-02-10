@@ -10,6 +10,7 @@ import Divider from "@material-ui/core/Divider";
 import Stats from "./components/stats";
 import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
+import grey from "@material-ui/core/colors/grey";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -61,9 +62,11 @@ export default function SideBar(props) {
               paddingTop: 6,
               paddingBottom: 6,
               paddingLeft: 4,
-              fontSize: 12,
               textTransform: "none",
               whiteSpace: "nowrap",
+            },
+            text: {
+              fontSize: 12,
             },
           },
           MuiCard: {
@@ -90,6 +93,18 @@ export default function SideBar(props) {
               width: "100%",
               marginTop: 4,
               marginBottom: 4,
+            },
+          },
+          MuiListItemText: {
+            root: {
+              marginTop: 0,
+            },
+            primary: {
+              fontWeight: 500,
+              fontSize: 14,
+            },
+            secondary: {
+              color: grey[500],
             },
           },
         },

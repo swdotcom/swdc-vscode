@@ -9,7 +9,8 @@ import { SvgIconProps } from "@material-ui/core/SvgIcon";
 import ControlPointTwoToneIcon from "@material-ui/icons/ControlPointTwoTone";
 import IconButton from "@material-ui/core/IconButton";
 import RemoveCircleTwoToneIcon from "@material-ui/icons/RemoveCircleTwoTone";
-import { SlackIcon, SlackFolderIcon } from "../icons";
+import { SlackWorkspaceIcon, SlackFolderIcon } from "../icons";
+import blue from "@material-ui/core/colors/blue";
 
 let vscode = null;
 
@@ -53,8 +54,6 @@ const useTreeItemStyles = makeStyles((theme: Theme) =>
         fontWeight: theme.typography.fontWeightRegular,
       },
     },
-    expanded: {},
-    selected: {},
     label: {
       fontWeight: "inherit",
       color: "inherit",
@@ -91,7 +90,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
     <TreeItem
       label={
         <div className={classes.labelRoot}>
-          {LabelIcon && <LabelIcon color="inherit" className={classes.labelIcon} />}
+          {LabelIcon && <LabelIcon color="inherit" className={classes.labelIcon} style={{ color: blue[500] }} />}
           <Typography variant="body2" className={classes.labelText}>
             {labelText}
           </Typography>
@@ -99,7 +98,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
             {labelInfo}
           </Typography>
           {isWorkspace && (
-            <IconButton aria-label="Disconnect workspace" style={{ width: 32, height: 32 }}>
+            <IconButton aria-label="Disconnect workspace" style={{ color: blue[500], width: 32, height: 32 }}>
               <RemoveCircleTwoToneIcon onClick={() => removeWorkspaceClickHandler(authId)} />
             </IconButton>
           )}
@@ -112,8 +111,6 @@ function StyledTreeItem(props: StyledTreeItemProps) {
       classes={{
         root: classes.root,
         content: classes.content,
-        expanded: classes.expanded,
-        selected: classes.selected,
         label: classes.label,
       }}
       {...other}
@@ -153,7 +150,7 @@ export default function Workspaces(props) {
               nodeId={value.team_domain}
               key={value.team_domain}
               labelText={value.team_domain}
-              labelIcon={SlackIcon}
+              labelIcon={SlackWorkspaceIcon}
               isWorkspace={true}
               authId={value.authId}
             />
