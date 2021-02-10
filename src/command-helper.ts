@@ -397,8 +397,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.enableFlow", () => {
-      enableFlow({ automated: false });
+    commands.registerCommand("codetime.enableFlow", (options: any) => {
+      const skipSlackCheck: boolean = !!(options?.skipSlackCheck === true);
+      enableFlow({ automated: false, skipSlackCheck });
     })
   );
 

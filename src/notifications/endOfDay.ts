@@ -28,8 +28,8 @@ export const setEndOfDayNotification = async (user: any) => {
         });
 
         // get milliseconds until the end of the day
-        const now = moment().tz(user.timezone);
-        const todaysWorkHours = workHours.find(wh => wh.day === now.format("dddd"));
+        const now = moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone);
+        const todaysWorkHours = workHours.find((wh) => wh.day === now.format("dddd"));
         const { end } = todaysWorkHours;
         const msUntilEndOfTheDay = end.valueOf() - now.valueOf();
 
@@ -43,18 +43,20 @@ export const setEndOfDayNotification = async (user: any) => {
       }
     }
   }
-}
+};
 
 export const showEndOfDayNotification = async () => {
-  const selection = await window.showInformationMessage("It's the end of your work day! Would you like to see your code time stats for today?", ...["Yes", "Configure Settings"]);
+  const selection = await window.showInformationMessage(
+    "It's the end of your work day! Would you like to see your code time stats for today?",
+    ...["Yes", "Configure Settings"]
+  );
 
   if (selection === "Yes") {
     showDashboard();
   } else if (selection === "Configure Settings") {
     configureSettings();
   }
-}
-
+};
 
 const buildStartEndFormatsOfUnixTuple = (tuple: any, startOfUnit = "week") => {
   if (!tuple || tuple.length !== 2) {
@@ -76,6 +78,6 @@ const buildStartEndFormatsOfUnixTuple = (tuple: any, startOfUnit = "week") => {
   return {
     start: momentStart,
     end: momentEnd,
-    day: momentStart.format("dddd")
+    day: momentStart.format("dddd"),
   };
 };

@@ -32,8 +32,8 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
     return this._onDidClose.event;
   }
 
-  // this is called when a view first becomes visible. This may happen when teh view is first loaded
-  // or when teh user hides and then shows a view again
+  // this is called when a view first becomes visible. This may happen when the view is first loaded
+  // or when the user hides and then shows a view again
   public async resolveWebviewView(webviewView: WebviewView, context: WebviewViewResolveContext<unknown>, token: CancellationToken) {
     if (!this._webview) {
       this._webview = webviewView;

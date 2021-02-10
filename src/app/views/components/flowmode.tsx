@@ -10,6 +10,7 @@ import ListItem from "@material-ui/core/ListItem";
 import IconButton from "@material-ui/core/IconButton";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import HelpIcon from "@material-ui/icons/Help";
+import FlowConfirm from "./flowconfirm";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -38,6 +39,7 @@ export default function FlowMode(props) {
   const [state, setState] = useState({
     inFlowMode: stateData.inFlowMode,
     flowModeScreenState: stateData.flowModeScreenState,
+    slackCheckOpen: false,
   });
 
   useEffect(() => {
@@ -51,14 +53,14 @@ export default function FlowMode(props) {
         if (state.inFlowMode && state.flowModeScreenState !== 2) {
           exitFlowMode = true;
           // deactivate flow mode
-          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState });
+          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState, slackCheckOpen: false });
         }
       } else {
         // normal screen mode
         if (state.inFlowMode && state.flowModeScreenState !== 0) {
           exitFlowMode = true;
           // deactivate flow mode
-          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState });
+          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState, slackCheckOpen: false });
         }
       }
 
@@ -75,18 +77,53 @@ export default function FlowMode(props) {
   });
 
   function flowModeClickHandler() {
+    if (!state.inFlowMode) {
+      if (!stateData.registered) {
+        // this will just show the sign up prompt
+        toggleFlow(false /*updateState*/);
+        return;
+      } else if (!stateData.slackConnected) {
+        // this will show the continue or continue anyway
+        setState({ inFlowMode: state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: true });
+        return;
+      }
+    }
+
+    toggleFlow();
+  }
+
+  const toggleFlow = (updateState: boolean = true) => {
     const command = {
       action: !state.inFlowMode ? "codetime.enableFlow" : "codetime.exitFlowMode",
       command: "command_execute",
+      arguments: [{ skipSlackCheck: true }],
     };
+
     props.vscode.postMessage(command);
 
-    // only update to in flow if the user is already registered, otherwise we'll prompt
-    if (stateData.registered) {
+    if (updateState) {
       // update the state
-      setState({ inFlowMode: !state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState });
+      setState({ inFlowMode: !state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: false });
     }
-  }
+  };
+
+  const handleSlackCheckClick = (value) => {
+    let updateState = true;
+    if (value === "continue") {
+      updateState = false;
+      toggleFlow();
+    } else if (value === "connect") {
+      const command = {
+        action: "codetime.connectSlackWorkspace",
+        command: "command_execute",
+      };
+      props.vscode.postMessage(command);
+    }
+
+    if (updateState) {
+      setState({ inFlowMode: state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: false });
+    }
+  };
 
   return (
     <Grid container className={classes.root}>
@@ -107,17 +144,20 @@ export default function FlowMode(props) {
           </ListItem>
         </List>
       </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={flowModeClickHandler}
-          className={classes.button}
-          startIcon={!state.inFlowMode ? <RadioButtonUncheckedIcon fontSize="small" /> : <FiberManualRecordIcon fontSize="small" />}
-        >
-          {!state.inFlowMode ? "Enter Flow Mode" : "Exit Flow Mode"}
-        </Button>
-      </Grid>
+      {!state.slackCheckOpen && (
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={flowModeClickHandler}
+            className={classes.button}
+            startIcon={!state.inFlowMode ? <RadioButtonUncheckedIcon fontSize="small" /> : <FiberManualRecordIcon fontSize="small" />}
+          >
+            {!state.inFlowMode ? "Enter Flow Mode" : "Exit Flow Mode"}
+          </Button>
+        </Grid>
+      )}
+      {state.slackCheckOpen && <FlowConfirm onClick={handleSlackCheckClick} />}
     </Grid>
   );
 }

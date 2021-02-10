@@ -116,7 +116,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   initializeLiveshare();
 
   try {
-    // initializeWebsockets();
+    initializeWebsockets();
   } catch (e) {
     console.error("Failed to initialize websockets", e);
   }

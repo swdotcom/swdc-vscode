@@ -56,7 +56,7 @@ export async function checkToDisableFlow() {
   }
 }
 
-export async function enableFlow({ automated = false }) {
+export async function enableFlow({ automated = false, skipSlackCheck = false }) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -66,7 +66,7 @@ export async function enableFlow({ automated = false }) {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow({ automated: automated }).catch((e) => {});
+        initiateFlow({ automated, skipSlackCheck }).catch((e) => {});
         resolve(true);
       });
     }
@@ -84,7 +84,7 @@ export function getConfiguredScreenMode() {
   return NORMAL_SCREEN_MODE;
 }
 
-async function initiateFlow({ automated = false }) {
+async function initiateFlow({ automated = false, skipSlackCheck = false }) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
@@ -93,15 +93,17 @@ async function initiateFlow({ automated = false }) {
   }
 
   // { connected, usingAllSettingsForFlow }
-  const connectInfo = await checkSlackConnectionForFlowMode();
-  if (!connectInfo.continue) {
-    return;
+  if (!skipSlackCheck) {
+    const connectInfo = await checkSlackConnectionForFlowMode();
+    if (!connectInfo.continue) {
+      return;
+    }
   }
 
   const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  softwarePost("/v1/flow_sessions", { automated: automated }, getItem("jwt"));
+  softwarePost("/v1/flow_sessions", { automated }, getItem("jwt"));
 
   // update screen mode
   if (preferredScreenMode === FULL_SCREEN_MODE_ID) {
