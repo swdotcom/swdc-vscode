@@ -10,7 +10,9 @@ import ListItem from "@material-ui/core/ListItem";
 import IconButton from "@material-ui/core/IconButton";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import HelpIcon from "@material-ui/icons/Help";
+import Typography from "@material-ui/core/Typography";
 import FlowConfirm from "./flowconfirm";
+import Popover from "@material-ui/core/Popover";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -21,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     marginTop: 6,
+  },
+  typography: {
+    padding: theme.spacing(2),
   },
 }));
 
@@ -119,6 +124,19 @@ export default function FlowMode(props) {
     }
   };
 
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+
+  const showFlowModeInfo = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
+
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
@@ -126,9 +144,28 @@ export default function FlowMode(props) {
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Flow Mode" secondary="Block out distractions" />
             <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="delete">
+              <IconButton edge="end" aria-label="Flow Mode Info" onClick={showFlowModeInfo}>
                 <HelpIcon />
               </IconButton>
+              <Popover
+                id={id}
+                open={open}
+                anchorEl={anchorEl}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "center",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "center",
+                }}
+              >
+                <Typography className={classes.typography}>
+                  Flow automations that you can use to toggle Zen mode, enter full screen, and hide your Dock. If you connect a Slack workspace, you
+                  can also pause notifications, update your profile status, and set your presence to away.
+                </Typography>
+              </Popover>
             </ListItemSecondaryAction>
           </ListItem>
         </List>
