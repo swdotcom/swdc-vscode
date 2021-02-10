@@ -15,7 +15,7 @@ import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager"
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
-import { organizations_url, vscode_issues_url } from "./Constants";
+import { launch_url, organizations_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
@@ -412,6 +412,12 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.configureSettings", () => {
       configureSettings();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.showTeamDashboard", (teamId) => {
+      launchWebUrl(`${launch_url}/team-dashboard/${teamId}`);
     })
   );
 

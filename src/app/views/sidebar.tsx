@@ -58,7 +58,9 @@ export default function SideBar(props) {
           MuiButton: {
             root: {
               width: "100%",
-              padding: 4,
+              paddingTop: 6,
+              paddingBottom: 6,
+              paddingLeft: 4,
               fontSize: 12,
               textTransform: "none",
               whiteSpace: "nowrap",
