@@ -11,7 +11,6 @@ import {
   WebviewViewResolveContext,
 } from "vscode";
 import path = require("path");
-import fs = require("fs");
 import { getReactData } from "./ReactData";
 import { updateScreenMode } from "../managers/ScreenManager";
 

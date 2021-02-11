@@ -15,8 +15,6 @@ const useStyles = makeStyles((theme) => ({
   textbutton: {
     width: "100%",
     justifyContent: "flex-start",
-    margin: 0,
-    padding: 0,
   },
 }));
 

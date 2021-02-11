@@ -16,10 +16,10 @@ export const DISCONNECT_LABEL = "Disconnect";
 export const SOFTWARE_DIRECTORY = ".software";
 
 // API ENDPOINT
-export const api_endpoint = "https://api.software.com";
+export const api_endpoint = "http://localhost:5000"; //"https://api.software.com";
 
 // DASHBOARD URL
-export const launch_url = "https://app.software.com";
+export const launch_url = "http://localhost:3000"; //"https://app.software.com";
 
 export const websockets_url = "wss://api.software.com/websockets";
 

@@ -151,7 +151,7 @@ export async function isInFlowMode() {
     return false;
   }
 
-  // we've made it, check the api and screen state
+  // we've made it here, check the api and screen state
   return await determineFlowModeFromApi();
 }
 
