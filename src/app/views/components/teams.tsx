@@ -57,7 +57,7 @@ export default function Teams(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12} style={{ width: "100%" }}>
-        {!stateData.teams.length && (
+        {!stateData.teams.length ? (
           <Card className={classes.setup} variant="outlined">
             <CardContent>
               <ListItemText
@@ -74,8 +74,7 @@ export default function Teams(props) {
               <Typography className={classes.subinfo}>Trust and data privacy matters. Your data is always only for you.</Typography>
             </CardContent>
           </Card>
-        )}
-        {stateData.teams.length && (
+        ) : (
           <Grid container className={classes.root}>
             <Grid item xs={12}>
               <ListItemText primary="Teams" secondary="View your team dashboard" />
