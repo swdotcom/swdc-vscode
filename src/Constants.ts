@@ -13,13 +13,13 @@ export const SIGN_UP_LABEL = "Sign up";
 export const DISCONNECT_LABEL = "Disconnect";
 
 // Directory where software data is stored
-export const SOFTWARE_DIRECTORY = ".software";
+export const SOFTWARE_DIRECTORY = ".software_staging"; //".software";
 
 // API ENDPOINT
-export const api_endpoint = "https://api.software.com";
+export const api_endpoint = "https://stagingapi.software.com"; //"https://api.software.com";
 
 // DASHBOARD URL
-export const launch_url = "https://app.software.com";
+export const launch_url = "https://staging.software.com"; //"https://app.software.com";
 
 export const websockets_url = "wss://api.software.com/websockets";
 
