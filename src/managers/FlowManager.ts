@@ -172,5 +172,8 @@ export async function determineFlowModeFromApi() {
     screenInFlowState = true;
   }
 
-  return screenInFlowState ?? openFlowSessions?.length > 0;
+  // make sure "enabledFlow" is set as it's used as a getter outside this export
+  enabledFlow = screenInFlowState ?? openFlowSessions?.length > 0;
+
+  return enabledFlow;
 }
