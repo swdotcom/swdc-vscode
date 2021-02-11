@@ -25,10 +25,10 @@ export async function getReactData() {
 
   let inFlowMode;
   if (!initialized) {
-    inFlowMode = determineFlowModeFromApi();
+    inFlowMode = await determineFlowModeFromApi();
     initialized = true;
   } else {
-    inFlowMode = isFlowModEnabled();
+    inFlowMode = await isFlowModEnabled();
   }
   return {
     authType,
