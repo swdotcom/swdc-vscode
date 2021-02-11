@@ -151,6 +151,11 @@ export async function isInFlowMode() {
     return false;
   }
 
+  // we've made it, check the api and screen state
+  return await determineFlowModeFromApi();
+}
+
+export async function determineFlowModeFromApi() {
   const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
 

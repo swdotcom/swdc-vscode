@@ -89,9 +89,9 @@ export default function Account(props) {
             <ListItemText primary="Account" secondary={!stateData.registered ? "Manage your account" : stateData.email} />
             <ListItemSecondaryAction>
               <IconButton edge="end" aria-label="Authentication type" style={{ width: 32, height: 32 }}>
-                {!stateData.registered ? null : stateData.authType.toLowerCase() === "github" ? (
+                {!stateData.registered ? null : stateData.authType === "github" ? (
                   <GithubIcon />
-                ) : stateData.authType.toLowerCase() === "google" ? (
+                ) : stateData.authType === "google" ? (
                   <GoogleIcon />
                 ) : (
                   <EmailIcon />
