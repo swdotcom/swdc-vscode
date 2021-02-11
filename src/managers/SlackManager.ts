@@ -68,11 +68,11 @@ export async function connectSlackWorkspace() {
   }, 10000);
 }
 
-export async function disconectAllSlackIntegrations() {
+export async function disconectAllSlackIntegrations(showPrompt = true) {
   const workspaces = getSlackWorkspaces();
   if (workspaces?.length) {
     for await (const workspace of workspaces) {
-      await disconnectSlackAuth(workspace.authId);
+      await disconnectSlackAuth(workspace.authId, showPrompt);
     }
   }
 }
@@ -91,7 +91,7 @@ export async function disconnectSlackWorkspace() {
 }
 
 // disconnect slack flow
-export async function disconnectSlackAuth(authId) {
+export async function disconnectSlackAuth(authId, showPrompt = true) {
   // get the domain
   const integration = getSlackWorkspaces().find((n) => n.authId === authId);
   if (!integration) {
@@ -100,10 +100,13 @@ export async function disconnectSlackAuth(authId) {
     return;
   }
   // ask before disconnecting
-  const selection = await window.showInformationMessage(
-    `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
-    ...[DISCONNECT_LABEL]
-  );
+  let selection = DISCONNECT_LABEL;
+  if (showPrompt) {
+    selection = await window.showInformationMessage(
+      `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
+      ...[DISCONNECT_LABEL]
+    );
+  }
 
   if (selection === DISCONNECT_LABEL) {
     // await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));

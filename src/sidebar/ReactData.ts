@@ -5,8 +5,12 @@ import { getTeams } from "../managers/TeamManager";
 import { getItem, isStatusBarTextVisible } from "../Util";
 
 export async function getReactData() {
+  const name = getItem("name");
+  const authType = getItem("authType");
   return {
-    registered: !!getItem("name"),
+    authType,
+    registered: !!name,
+    email: name,
     slackConnected: !!hasSlackWorkspaces(),
     inFlowMode: isFlowModEnabled(),
     statusBarTextVisible: isStatusBarTextVisible(),

@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import Button from "@material-ui/core/Button";
+import List from "@material-ui/core/List";
 import ListItemText from "@material-ui/core/ListItemText";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
+import IconButton from "@material-ui/core/IconButton";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspaces from "./workspaces";
-import { VisibilityIcon, SettingsIcon, MessageIcon, DocumentIcon } from "../icons";
+import { GoogleIcon, GithubIcon, EmailIcon } from "../icons";
+import { VisibilityIcon, SettingsIcon, MessageIcon, DocumentIcon, PawIcon } from "../icons";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -58,6 +63,14 @@ export default function Account(props) {
     props.vscode.postMessage(command);
   }
 
+  function switchAccountClickHandler() {
+    const command = {
+      action: "codetime.switchAccounts",
+      command: "command_execute",
+    };
+    props.vscode.postMessage(command);
+  }
+
   function toggleStatusVisibilityClickHandler() {
     const command = {
       action: "codetime.toggleStatusBar",
@@ -71,7 +84,27 @@ export default function Account(props) {
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
-        <ListItemText primary="Account" secondary="Manage your account" />
+        <List style={{ padding: 0, margin: 0 }}>
+          <ListItem style={{ padding: 0, margin: 0 }}>
+            <ListItemText primary="Account" secondary={!stateData.registered ? "Manage your account" : stateData.email} />
+            <ListItemSecondaryAction>
+              <IconButton edge="end" aria-label="Authentication type" style={{ width: 32, height: 32 }}>
+                {!stateData.registered ? null : stateData.authType.toLowerCase() === "github" ? (
+                  <GithubIcon />
+                ) : stateData.authType.toLowerCase() === "google" ? (
+                  <GoogleIcon />
+                ) : (
+                  <EmailIcon />
+                )}
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        </List>
+      </Grid>
+      <Grid item xs={12}>
+        <Button onClick={switchAccountClickHandler} className={classes.textbutton} startIcon={<PawIcon />}>
+          Switch account
+        </Button>
       </Grid>
       <Grid item xs={12}>
         <Button onClick={configureSettingsClickHandler} className={classes.textbutton} startIcon={<SettingsIcon />}>

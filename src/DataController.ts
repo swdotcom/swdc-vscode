@@ -38,15 +38,18 @@ export async function getUserRegistrationState(isIntegration = false) {
 
   const token = auth_callback_state ? auth_callback_state : jwt;
 
-  const resp = await softwareGet("/users/plugin/state", token);
+  let resp = await softwareGet("/users/plugin/state", token);
+  let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
-  const foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
-  const state = foundUser ? resp.data.state : "UNKNOWN";
+  // if no user and it's an integration check, try using the jwt if
+  // we tried with the auth callback state
+  if (!user && isIntegration && auth_callback_state) {
+    // try using the jwt
+    resp = await softwareGet("/users/plugin/state", token);
+    user = isResponseOk(resp) && resp.data ? resp.data.user : null;
+  }
 
-  if (foundUser) {
-    // set the jwt, name (email), and use the registration flag
-    // to determine if they're logged in or not
-    const user = resp.data.user;
+  if (user) {
     const registered = user.registered;
 
     // update the name and jwt if we're authenticating
@@ -68,11 +71,11 @@ export async function getUserRegistrationState(isIntegration = false) {
     setAuthCallbackState(null);
 
     // if we need the user it's "resp.data.user"
-    return { loggedOn: registered === 1, state, user };
+    return { loggedOn: registered === 1, state: "OK", user };
   }
 
   // all else fails, set false and UNKNOWN
-  return { loggedOn: false, state, user: null };
+  return { loggedOn: false, state: "UNKNOWN", user: null };
 }
 
 export async function foundNewSlackIntegrations(user) {
@@ -143,7 +146,7 @@ export async function initializePreferences() {
 
   if (jwt) {
     let user = await getUser();
-    userEventEmitter.emit('user_object_updated', user);
+    userEventEmitter.emit("user_object_updated", user);
     // obtain the session threshold in seconds "sessionThresholdInSec"
     sessionThresholdInSec = user?.preferences?.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
     disableGitData = !!user?.preferences?.disableGitData;
@@ -198,7 +201,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
     // clear the slack integrations
-    await disconectAllSlackIntegrations();
+    await disconectAllSlackIntegrations(false /*showPrompt*/);
 
     // update this users integrations
     await foundNewSlackIntegrations(state.user);
