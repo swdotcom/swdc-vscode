@@ -7,6 +7,7 @@ import {
   toggleStatusBar,
   launchEmailSignup,
   launchWebDashboard,
+  setItem,
 } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmItem, UIInteractionType } from "./model/models";
@@ -419,6 +420,14 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.showTeamDashboard", (teamId) => {
       launchWebUrl(`${launch_url}/team-dashboard/${teamId}`);
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.skipSlackConnect", () => {
+      setItem("vscode_CtskipSlackConnect", true);
+      // refresh the view
+      commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );
 

@@ -88,6 +88,14 @@ export default function Setup(props) {
     props.vscode.postMessage(command);
   }
 
+  function skipSlackConnectHandler() {
+    const command = {
+      action: "codetime.skipSlackConnect",
+      command: "command_execute",
+    };
+    props.vscode.postMessage(command);
+  }
+
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12}>
@@ -103,13 +111,22 @@ export default function Setup(props) {
               {!stateData.registered ? "Register your account" : "Connect a Slack Workspace"}
             </Button>
           </CardContent>
-          {!stateData.registered && (
+          {!stateData.registered ? (
             <CardContent>
               <Typography className={classes.subinfo} display="inline">
                 Already have an account?
               </Typography>
               <Link href="#" onClick={loginClickHandler} display="inline" className={classes.link}>
                 Log in
+              </Link>
+            </CardContent>
+          ) : (
+            <CardContent>
+              <Typography className={classes.subinfo} display="inline">
+                Not using slack?
+              </Typography>
+              <Link href="#" onClick={skipSlackConnectHandler} display="inline" className={classes.link}>
+                Skip this step.
               </Link>
             </CardContent>
           )}

@@ -156,7 +156,7 @@ export async function isInFlowMode() {
 }
 
 export async function determineFlowModeFromApi() {
-  const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
+  const flowSessionsReponse = getItem("jwt") ? await softwareGet("/v1/flow_sessions", getItem("jwt")) : { data: { flow_sessions: [] } };
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;

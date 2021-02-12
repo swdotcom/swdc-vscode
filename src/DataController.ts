@@ -193,6 +193,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
   } else {
     // clear the auth callback state
     setItem("switching_account", false);
+    setItem("vscode_CtskipSlackConnect", false);
     setAuthCallbackState(null);
 
     clearSessionSummaryData();

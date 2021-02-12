@@ -9,10 +9,9 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import IconButton from "@material-ui/core/IconButton";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import InfoIcon from "@material-ui/icons/Info";
-import Typography from "@material-ui/core/Typography";
+import blue from "@material-ui/core/colors/blue";
+import SettingsIcon from "@material-ui/icons/Settings";
 import FlowConfirm from "./flowconfirm";
-import Popover from "@material-ui/core/Popover";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -38,7 +37,6 @@ export default function FlowMode(props) {
 
   const [state, setState] = useState({
     inFlowMode: stateData.inFlowMode,
-    flowModeScreenState: stateData.flowModeScreenState,
     slackCheckOpen: false,
   });
 
@@ -50,7 +48,7 @@ export default function FlowMode(props) {
         return;
       } else if (!stateData.slackConnected) {
         // this will show the continue or continue anyway
-        setState({ inFlowMode: state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: true });
+        setState({ inFlowMode: state.inFlowMode, slackCheckOpen: true });
         return;
       }
     }
@@ -69,7 +67,7 @@ export default function FlowMode(props) {
 
     if (updateState) {
       // update the state
-      setState({ inFlowMode: !state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: false });
+      setState({ inFlowMode: !state.inFlowMode, slackCheckOpen: false });
     }
   };
 
@@ -87,22 +85,17 @@ export default function FlowMode(props) {
     }
 
     if (updateState) {
-      setState({ inFlowMode: state.inFlowMode, flowModeScreenState: stateData.flowModeScreenState, slackCheckOpen: false });
+      setState({ inFlowMode: state.inFlowMode, slackCheckOpen: false });
     }
   };
 
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
-
-  const showFlowModeInfo = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const configureSettingsClick = () => {
+    const command = {
+      action: "codetime.configureSettings",
+      command: "command_execute",
+    };
+    props.vscode.postMessage(command);
   };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const open = Boolean(anchorEl);
-  const id = open ? "simple-popover" : undefined;
 
   return (
     <Grid container className={classes.root}>
@@ -111,27 +104,15 @@ export default function FlowMode(props) {
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Flow Mode" secondary="Block out distractions" />
             <ListItemSecondaryAction>
-              <IconButton size="small" classes={{ root: classes.iconBtnRoot }} edge="end" aria-label="Flow Mode Info" onClick={showFlowModeInfo}>
-                <InfoIcon />
-              </IconButton>
-              <Popover
-                id={id}
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "center",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "center",
-                }}
+              <IconButton
+                size="small"
+                classes={{ root: classes.iconBtnRoot }}
+                edge="end"
+                aria-label="Flow Mode Info"
+                onClick={configureSettingsClick}
               >
-                <Typography className={classes.typography}>
-                  Automatically set your Slack status to away and turn off notifications when you’re in flow for fully focused, uninterrupted coding.
-                </Typography>
-              </Popover>
+                <SettingsIcon style={{ color: blue[500] }} />
+              </IconButton>
             </ListItemSecondaryAction>
           </ListItem>
         </List>
