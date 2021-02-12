@@ -5,8 +5,7 @@
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
-import { nowInSecs, getOffsetSeconds, getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
-import { getApi } from "vsls";
+import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
@@ -19,11 +18,8 @@ import { configureSettings, showingConfigureSettingsPanel } from "./managers/Con
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
-let _ls = null;
 let currentColorKind: number = undefined;
 let liveshare_update_interval = null;
-
-const one_min_millis = 1000 * 60;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
