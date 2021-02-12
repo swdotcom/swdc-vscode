@@ -54,6 +54,9 @@ export async function getUserRegistrationState(isIntegration = false) {
 
     // update the name and jwt if we're authenticating
     if (!isIntegration) {
+      // clear the slack integrations
+      await disconectAllSlackIntegrations(false /*showPrompt*/);
+
       if (user.plugin_jwt) {
         setItem("jwt", user.plugin_jwt);
       }
@@ -78,7 +81,7 @@ export async function getUserRegistrationState(isIntegration = false) {
   return { loggedOn: false, state: "UNKNOWN", user: null };
 }
 
-export async function foundNewSlackIntegrations(user) {
+export async function fetchSlackIntegrations(user) {
   let foundNewIntegration = false;
   if (user && user.integrations) {
     const currentIntegrations = getIntegrations();
@@ -200,11 +203,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     // fetch after logging on
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
-    // clear the slack integrations
-    await disconectAllSlackIntegrations(false /*showPrompt*/);
-
     // update this users integrations
-    await foundNewSlackIntegrations(state.user);
+    await fetchSlackIntegrations(state.user);
 
     const message = "Successfully logged on to Code Time";
     window.showInformationMessage(message);

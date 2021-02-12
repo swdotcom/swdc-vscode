@@ -1,6 +1,6 @@
 import { commands, ProgressLocation, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { foundNewSlackIntegrations, getUserRegistrationState } from "../DataController";
+import { fetchSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -193,7 +193,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  */
 async function getSlackAuth() {
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  return await foundNewSlackIntegrations(user);
+  return await fetchSlackIntegrations(user);
 }
 
 /**
