@@ -782,7 +782,7 @@ export async function launchLogin(loginType: string = "software", switching_acco
  */
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
-  const switching_account = getItem("switching_account");
+  const name = getItem("name");
   let url = launch_url;
 
   let obj = {
@@ -793,7 +793,8 @@ export async function buildLoginUrl(loginType: string) {
     login: true,
   };
 
-  if (!switching_account) {
+  // send plugin token and plugin uuid when the user is not registered yet
+  if (!name) {
     obj["plugin_token"] = getItem("jwt");
     obj["plugin_uuid"] = getPluginUuid();
   }
