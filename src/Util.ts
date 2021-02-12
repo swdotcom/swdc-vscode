@@ -782,7 +782,7 @@ export async function launchLogin(loginType: string = "software", switching_acco
  */
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
-
+  const switching_account = getItem("switching_account");
   let url = launch_url;
 
   let obj = {
@@ -793,6 +793,10 @@ export async function buildLoginUrl(loginType: string) {
     auth_callback_state,
     login: true,
   };
+
+  if (!switching_account) {
+    obj["plugin_token"] = getItem("jwt");
+  }
 
   if (loginType === "github") {
     // github signup/login flow
