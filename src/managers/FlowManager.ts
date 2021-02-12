@@ -158,20 +158,6 @@ export async function isInFlowMode() {
 export async function determineFlowModeFromApi() {
   const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
-
-  const flowModeSettings = getPreference("flowMode");
-  const currentScreenMode = getScreenMode();
-  const flowScreenMode = flowModeSettings?.editor?.vscode?.screenMode;
-  // determine if this editor should be in flow mode
-  let screenInFlowState = false;
-  if (flowScreenMode.includes("Full Screen") && currentScreenMode === FULL_SCREEN_MODE_ID) {
-    screenInFlowState = true;
-  } else if (flowScreenMode.includes("Zen") && currentScreenMode === ZEN_MODE_ID) {
-    screenInFlowState = true;
-  } else if (flowScreenMode.includes("None") && currentScreenMode === NORMAL_SCREEN_MODE) {
-    screenInFlowState = true;
-  }
-
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
 
