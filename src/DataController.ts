@@ -23,7 +23,6 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
-import { disconectAllSlackIntegrations } from "./managers/SlackManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
@@ -54,8 +53,8 @@ export async function getUserRegistrationState(isIntegration = false) {
 
     // update the name and jwt if we're authenticating
     if (!isIntegration) {
-      // clear the slack integrations
-      await disconectAllSlackIntegrations(false /*showPrompt*/);
+      // clear the integrations
+      syncIntegrations([]);
 
       if (user.plugin_jwt) {
         setItem("jwt", user.plugin_jwt);
@@ -130,6 +129,8 @@ export async function getUser() {
       if (user.registered === 1) {
         // update jwt to what the jwt is for this spotify user
         setItem("name", user.email);
+
+        await fetchSlackIntegrations(user);
       }
       return user;
     }
