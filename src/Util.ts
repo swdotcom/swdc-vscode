@@ -740,17 +740,23 @@ export async function launchLogin(loginType: string = "software", switching_acco
  */
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
+  const name = getItem("name");
 
   let url = launch_url;
 
   let obj = {
     plugin: getPluginType(),
-    plugin_uuid: getPluginUuid(),
     pluginVersion: getVersion(),
     plugin_id: getPluginId(),
     auth_callback_state,
     login: true,
   };
+
+  // only send the plugin_uuid and plugin_token when registering for the 1st time
+  if (!name) {
+    obj["plugin_uuid"] = getPluginUuid();
+    obj["plugin_token"] = getItem("jwt");
+  }
 
   if (loginType === "github") {
     // github signup/login flow
