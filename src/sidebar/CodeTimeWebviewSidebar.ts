@@ -13,6 +13,8 @@ import {
 import path = require("path");
 import { getReactData } from "./ReactData";
 import { updateScreenMode } from "../managers/ScreenManager";
+import { getItem } from "../Util";
+import { createAnonymousUser } from "../menu/AccountManager";
 
 export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -61,7 +63,23 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
       }
     });
 
-    this._webview.webview.html = await this.getReactHtml();
+    this.loadWebview();
+  }
+
+  private async loadWebview(tries = 10) {
+    // make sure the jwt is available. The session info may have
+    // been removed while this view was open.
+    if (getItem("jwt")) {
+      this._webview.webview.html = await this.getReactHtml();
+    } else if (tries > 0) {
+      if (tries === 5) {
+        await createAnonymousUser();
+      }
+      tries--;
+      setTimeout(() => {
+        this.loadWebview(tries);
+      }, 4000);
+    }
   }
 
   private async getReactHtml(): Promise<string> {

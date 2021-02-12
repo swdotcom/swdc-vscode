@@ -70,7 +70,7 @@ export default function Setup(props) {
   const classes = useStyles();
   const stateData = props.stateData;
 
-  const progress = !stateData.registered ? 40 : 75;
+  const progress = !stateData.registered ? 35 : 70;
 
   function setupClickHandler() {
     const command = {

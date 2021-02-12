@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
@@ -33,8 +33,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function FlowMode(props) {
-  // Similar to componentDidMount and componentDidUpdate:
-  useEffect(() => {});
   const classes = useStyles();
   const stateData = props.stateData;
 
@@ -42,40 +40,6 @@ export default function FlowMode(props) {
     inFlowMode: stateData.inFlowMode,
     flowModeScreenState: stateData.flowModeScreenState,
     slackCheckOpen: false,
-  });
-
-  useEffect(() => {
-    function handleResize() {
-      let exitFlowMode = false;
-      if (
-        (window.outerHeight === screen.height && window.outerWidth === screen.width) ||
-        (window.screenLeft === 0 && window.outerWidth === screen.width)
-      ) {
-        // ful screen mode
-        if (state.inFlowMode && state.flowModeScreenState !== 2) {
-          exitFlowMode = true;
-          // deactivate flow mode
-          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState, slackCheckOpen: false });
-        }
-      } else {
-        // normal screen mode
-        if (state.inFlowMode && state.flowModeScreenState !== 0) {
-          exitFlowMode = true;
-          // deactivate flow mode
-          setState({ inFlowMode: false, flowModeScreenState: state.flowModeScreenState, slackCheckOpen: false });
-        }
-      }
-
-      if (exitFlowMode) {
-        const command = {
-          action: "codetime.exitFlowMode",
-          command: "command_execute",
-        };
-        props.vscode.postMessage(command);
-      }
-    }
-
-    window.addEventListener("resize", handleResize);
   });
 
   function flowModeClickHandler() {
