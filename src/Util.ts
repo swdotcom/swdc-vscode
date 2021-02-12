@@ -787,7 +787,6 @@ export async function buildLoginUrl(loginType: string) {
 
   let obj = {
     plugin: getPluginType(),
-    plugin_uuid: getPluginUuid(),
     pluginVersion: getVersion(),
     plugin_id: getPluginId(),
     auth_callback_state,
@@ -796,6 +795,7 @@ export async function buildLoginUrl(loginType: string) {
 
   if (!switching_account) {
     obj["plugin_token"] = getItem("jwt");
+    obj["plugin_uuid"] = getPluginUuid();
   }
 
   if (loginType === "github") {
