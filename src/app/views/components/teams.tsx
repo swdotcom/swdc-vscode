@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Teams(props) {
   // Similar to componentDidMount and componentDidUpdate:
-  useEffect(() => {});
+  useEffect(() => { });
   const classes = useStyles();
   const stateData = props.stateData;
 
@@ -61,10 +61,9 @@ export default function Teams(props) {
         {!stateData.teams.length ? (
           <Card className={classes.setup} variant="outlined">
             <CardContent>
-              <Typography gutterBottom>Facebook is right about No Meeting Wednesdays</Typography>
+              <Typography gutterBottom>🚀 Software Teams</Typography>
               <Typography color="textSecondary" variant="subtitle2">
-                Based on data from our global community, Wednesday is the best day for coding. But every team is different. Discover and protect your
-                team’s best day.
+                Discover your team's best day for coding, and more.
               </Typography>
             </CardContent>
             <CardContent>
@@ -73,27 +72,27 @@ export default function Teams(props) {
               </Button>
             </CardContent>
             <CardContent>
-              <Typography className={classes.subinfo}>Trust and data privacy matters. Your data is always only for you.</Typography>
+              <Typography className={classes.subinfo}>Trust and data privacy matter. Your individual data is always private.</Typography>
             </CardContent>
           </Card>
         ) : (
-          <Grid container className={classes.root}>
-            <Grid item xs={12}>
-              <ListItemText primary="Teams" secondary="View your team dashboard" />
-            </Grid>
-            {stateData.teams.map((team, index) => (
+            <Grid container className={classes.root}>
               <Grid item xs={12}>
-                <Button
-                  onClick={() => teamClickHandler(team)}
-                  className={classes.textbutton}
-                  startIcon={<GroupIcon fontSize="small" style={{ color: blue[500] }} />}
-                >
-                  {team.name}
-                </Button>
+                <ListItemText primary="Teams" secondary="View your team dashboard" />
               </Grid>
-            ))}
-          </Grid>
-        )}
+              {stateData.teams.map((team, index) => (
+                <Grid item xs={12}>
+                  <Button
+                    onClick={() => teamClickHandler(team)}
+                    className={classes.textbutton}
+                    startIcon={<GroupIcon fontSize="small" style={{ color: blue[500] }} />}
+                  >
+                    {team.name}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          )}
       </Grid>
     </Grid>
   );
