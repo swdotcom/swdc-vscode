@@ -53,9 +53,6 @@ export async function getUserRegistrationState(isIntegration = false) {
 
     // update the name and jwt if we're authenticating
     if (!isIntegration) {
-      // clear the integrations
-      syncIntegrations([]);
-
       if (user.plugin_jwt) {
         setItem("jwt", user.plugin_jwt);
       }
@@ -204,6 +201,8 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     // fetch after logging on
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
+    // clear out the previous ones locally
+    removeAllSlackIntegrations();
     // update this users integrations
     await fetchSlackIntegrations(state.user);
 
@@ -220,6 +219,13 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
 
     initializePreferences();
   }
+}
+
+export function removeAllSlackIntegrations() {
+  const currentIntegrations = getIntegrations();
+
+  const newIntegrations = currentIntegrations.filter((n) => n.name.toLowerCase() !== "slack");
+  syncIntegrations(newIntegrations);
 }
 
 export async function writeDailyReportDashboard(type = "yesterday", projectIds = []) {

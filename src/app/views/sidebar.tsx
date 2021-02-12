@@ -71,12 +71,16 @@ export default function SideBar(props) {
           MuiButton: {
             root: {
               width: "100%",
-              padding: 4,
               textTransform: "none",
               whiteSpace: "nowrap",
-            },
-            text: {
               fontSize: 12,
+            },
+            contained: {
+              padding: 5,
+            },
+            label: {
+              padding: 1,
+              margin: 1,
             },
           },
           MuiCard: {
