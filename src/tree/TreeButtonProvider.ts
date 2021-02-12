@@ -224,11 +224,6 @@ export function getWebViewDashboardButton(): KpmItem {
   return item;
 }
 
-export function getDividerButton(): KpmItem {
-  const dividerButton: KpmItem = getActionButton("", "", "", "blue-line-96.png");
-  return dividerButton;
-}
-
 export function getSignUpButton(signUpAuthName: string, iconColor?: string): KpmItem {
   const authType = getItem("authType");
   const signupText = authType ? LOGIN_LABEL : SIGN_UP_LABEL;
