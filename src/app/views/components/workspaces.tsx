@@ -52,7 +52,7 @@ const useTreeItemStyles = makeStyles((theme: Theme) =>
     labelRoot: {
       display: "flex",
       alignItems: "center",
-      padding: theme.spacing(0.5, 0),
+      padding: theme.spacing(0.25, 0.5),
     },
     labelIcon: {
       marginRight: theme.spacing(1),
@@ -89,7 +89,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
             {labelInfo}
           </Typography>
           {isWorkspace && (
-            <IconButton aria-label="Disconnect workspace" style={{ color: blue[500], width: 32, height: 32 }}>
+            <IconButton aria-label="Disconnect workspace" style={{ color: blue[500], width: 24, height: 24 }}>
               <RemoveCircleTwoToneIcon onClick={() => removeWorkspaceClickHandler(authId)} />
             </IconButton>
           )}

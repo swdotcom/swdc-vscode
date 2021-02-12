@@ -70,6 +70,8 @@ export default function SideBar(props) {
           },
           MuiButton: {
             root: {
+              minHeight: 0,
+              minWidth: 0,
               width: "100%",
               textTransform: "none",
               whiteSpace: "nowrap",

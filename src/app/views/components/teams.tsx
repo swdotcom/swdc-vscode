@@ -28,6 +28,7 @@ const useStyles = makeStyles((theme) => ({
   textbutton: {
     width: "100%",
     justifyContent: "flex-start",
+    padding: theme.spacing(0.25, 0.5),
   },
 }));
 
