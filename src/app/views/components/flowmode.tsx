@@ -72,7 +72,9 @@ export default function FlowMode(props) {
       }
     }
 
-    window.addEventListener("resize", handleResize);
+    // we're not going to disable flow based on screen state changes for now,
+    // buf if we need to it would be great to keep this code to determine screen size
+    // window.addEventListener("resize", handleResize);
   });
 
   function flowModeClickHandler() {

@@ -137,7 +137,7 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  softwareDelete("/v1/flow_sessions", getItem("jwt"));
+  await softwareDelete("/v1/flow_sessions", getItem("jwt"));
   showNormalScreenMode();
 
   enabledFlow = false;
@@ -173,7 +173,7 @@ export async function determineFlowModeFromApi() {
   }
 
   // make sure "enabledFlow" is set as it's used as a getter outside this export
-  enabledFlow = screenInFlowState ?? openFlowSessions?.length > 0;
+  enabledFlow = openFlowSessions?.length > 0;
 
   return enabledFlow;
 }
