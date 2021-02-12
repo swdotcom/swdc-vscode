@@ -4,7 +4,6 @@ import List from "@material-ui/core/List";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import IconButton from "@material-ui/core/IconButton";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspaces from "./workspaces";
@@ -21,6 +20,7 @@ const useStyles = makeStyles((theme) => ({
   textbutton: {
     width: "100%",
     justifyContent: "flex-start",
+    padding: theme.spacing(0, 0.5),
   },
 }));
 
@@ -88,7 +88,7 @@ export default function Account(props) {
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Account" secondary={!stateData.registered ? "Manage your account" : stateData.email} />
             <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="Authentication type" style={{ width: 32, height: 32 }}>
+              <div aria-label="Authentication type">
                 {!stateData.registered ? null : stateData.authType === "github" ? (
                   <GithubIcon />
                 ) : stateData.authType === "google" ? (
@@ -96,18 +96,18 @@ export default function Account(props) {
                 ) : (
                   <EmailIcon />
                 )}
-              </IconButton>
+              </div>
             </ListItemSecondaryAction>
           </ListItem>
         </List>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={switchAccountClickHandler} className={classes.textbutton} startIcon={<PawIcon />}>
+        <Button onClick={switchAccountClickHandler} classes={{ root: classes.textbutton }} startIcon={<PawIcon />}>
           Switch account
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={configureSettingsClickHandler} className={classes.textbutton} startIcon={<SettingsIcon />}>
+        <Button onClick={configureSettingsClickHandler} classes={{ root: classes.textbutton }} startIcon={<SettingsIcon />}>
           Configure settings
         </Button>
       </Grid>
@@ -115,17 +115,17 @@ export default function Account(props) {
         <Workspaces vscode={props.vscode} stateData={props.stateData} />
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={documentationClickHandler} className={classes.textbutton} startIcon={<DocumentIcon />}>
+        <Button onClick={documentationClickHandler} classes={{ root: classes.textbutton }} startIcon={<DocumentIcon />}>
           Documentation
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={submitIssueClickHandler} className={classes.textbutton} startIcon={<MessageIcon />}>
+        <Button onClick={submitIssueClickHandler} classes={{ root: classes.textbutton }} startIcon={<MessageIcon />}>
           Submit an issue
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={toggleStatusVisibilityClickHandler} className={classes.textbutton} startIcon={<VisibilityIcon />}>
+        <Button onClick={toggleStatusVisibilityClickHandler} classes={{ root: classes.textbutton }} startIcon={<VisibilityIcon />}>
           {toggleStatusBarTextLabel}
         </Button>
       </Grid>

@@ -15,6 +15,7 @@ const useStyles = makeStyles((theme) => ({
   textbutton: {
     width: "100%",
     justifyContent: "flex-start",
+    padding: theme.spacing(0, 0.5),
   },
 }));
 
@@ -53,17 +54,17 @@ export default function Stats(props) {
         <ListItemText primary="Stats" secondary="Data in your editor" />
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={dashboardClickHandler} className={classes.textbutton} startIcon={<DashboardIcon />}>
+        <Button onClick={dashboardClickHandler} classes={{ root: classes.textbutton }} startIcon={<DashboardIcon />}>
           Dashboard
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={projectSummaryClickHandler} className={classes.textbutton} startIcon={<ProjectSummaryIcon />}>
+        <Button onClick={projectSummaryClickHandler} classes={{ root: classes.textbutton }} startIcon={<ProjectSummaryIcon />}>
           Project summary
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Button onClick={softwareDashboardClickHandler} className={classes.textbutton} startIcon={<PawIcon />}>
+        <Button onClick={softwareDashboardClickHandler} classes={{ root: classes.textbutton }} startIcon={<PawIcon />}>
           More data at Software.com
         </Button>
       </Grid>

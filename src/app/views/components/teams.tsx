@@ -60,10 +60,11 @@ export default function Teams(props) {
         {!stateData.teams.length ? (
           <Card className={classes.setup} variant="outlined">
             <CardContent>
-              <ListItemText
-                primary="Is Facebook right about no meeting Wednesdays?"
-                secondary="Get the data for your team and designate the best day for coding."
-              />
+              <Typography gutterBottom>Facebook is right about No Meeting Wednesdays</Typography>
+              <Typography color="textSecondary" variant="subtitle2">
+                Based on data from our global community, Wednesday is the best day for coding. But every team is different. Discover and protect your
+                team’s best day.
+              </Typography>
             </CardContent>
             <CardContent>
               <Button variant="contained" color="primary" onClick={teamCreateClickHandler}>

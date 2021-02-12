@@ -9,7 +9,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import IconButton from "@material-ui/core/IconButton";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import HelpIcon from "@material-ui/icons/Help";
+import InfoIcon from "@material-ui/icons/Info";
 import Typography from "@material-ui/core/Typography";
 import FlowConfirm from "./flowconfirm";
 import Popover from "@material-ui/core/Popover";
@@ -23,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     marginTop: 6,
+  },
+  iconBtnRoot: {
+    color: "rgba(222,222,222,0.75)",
   },
   typography: {
     padding: theme.spacing(2),
@@ -144,8 +147,8 @@ export default function FlowMode(props) {
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Flow Mode" secondary="Block out distractions" />
             <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="Flow Mode Info" onClick={showFlowModeInfo}>
-                <HelpIcon />
+              <IconButton size="small" classes={{ root: classes.iconBtnRoot }} edge="end" aria-label="Flow Mode Info" onClick={showFlowModeInfo}>
+                <InfoIcon />
               </IconButton>
               <Popover
                 id={id}
@@ -162,8 +165,7 @@ export default function FlowMode(props) {
                 }}
               >
                 <Typography className={classes.typography}>
-                  Flow automations that you can use to toggle Zen mode, enter full screen, and hide your Dock. If you connect a Slack workspace, you
-                  can also pause notifications, update your profile status, and set your presence to away.
+                  Automatically set your Slack status to away and turn off notifications when you’re in flow for fully focused, uninterrupted coding.
                 </Typography>
               </Popover>
             </ListItemSecondaryAction>

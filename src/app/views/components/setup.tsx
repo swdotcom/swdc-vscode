@@ -25,6 +25,7 @@ const useStyles = makeStyles((theme) => ({
   setupButton: {
     backgroundColor: "#ffffff",
     color: blue[500],
+    maxWidth: 200,
   },
   subinfo: {
     marginRight: 4,
@@ -41,6 +42,9 @@ const useStyles = makeStyles((theme) => ({
       color: "rgb(255, 255, 255, 0.8)",
       textDecoration: "none",
     },
+  },
+  typography: {
+    color: "#FFF",
   },
 }));
 
@@ -89,7 +93,7 @@ export default function Setup(props) {
       <Grid item xs={12}>
         <Paper className={classes.setup} elevation={0}>
           <CardContent>
-            <Typography>Getting started</Typography>
+            <Typography className={classes.typography}>Getting Started</Typography>
           </CardContent>
           <CardContent>
             <BorderLinearProgress variant="determinate" value={progress} />

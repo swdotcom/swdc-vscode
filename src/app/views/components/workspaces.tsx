@@ -38,21 +38,12 @@ const useTreeItemStyles = makeStyles((theme: Theme) =>
       "&:hover > $content": {
         backgroundColor: theme.palette.action.hover,
       },
-      "&:focus > $content, &$selected > $content": {
-        backgroundColor: "transparent",
-      },
-      "&:focus > $content $label, &:hover > $content $label, &$selected > $content $label": {
-        backgroundColor: "transparent",
-      },
       margin: 0,
     },
     content: {
       width: "100%",
-      color: theme.palette.text.secondary,
+      color: theme.palette.text.primary,
       fontWeight: theme.typography.fontWeightMedium,
-      "$expanded > &": {
-        fontWeight: theme.typography.fontWeightRegular,
-      },
     },
     label: {
       fontWeight: "inherit",
