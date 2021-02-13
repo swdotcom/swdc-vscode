@@ -793,10 +793,10 @@ export async function buildLoginUrl(loginType: string) {
     login: true,
   };
 
-  // send plugin token and plugin uuid when the user is not registered yet
+  // only send the plugin_uuid and plugin_token when registering for the 1st time
   if (!name) {
-    obj["plugin_token"] = getItem("jwt");
     obj["plugin_uuid"] = getPluginUuid();
+    obj["plugin_token"] = getItem("jwt");
   }
 
   if (loginType === "github") {
