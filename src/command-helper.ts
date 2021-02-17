@@ -12,7 +12,6 @@ import {
 import { KpmManager } from "./managers/KpmManager";
 import { KpmItem, UIInteractionType } from "./model/models";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
@@ -25,7 +24,6 @@ import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
 import {
   getCodeTimeDashboardButton,
-  getContributorReportButton,
   getFeedbackButton,
   getHideStatusBarMetricsButton,
   getLearnMoreButton,
@@ -295,24 +293,6 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       showDashboard();
-    })
-  );
-
-  // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
-  cmds.push(
-    commands.registerCommand("codetime.generateContributorSummary", (item: KpmItem) => {
-      if (!item) {
-        // it's from the command palette, create a kpm item so
-        // it can build the ui_element in the tracker manager
-        item = getContributorReportButton(item.value);
-        item.location = "ct_command_palette";
-        item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_contributor_repo_identifier_cmd";
-        item.interactionIcon = null;
-        item.color = null;
-      }
-      tracker.trackUIInteraction(item);
-      displayProjectContributorCommitsDashboard(item.value);
     })
   );
 
