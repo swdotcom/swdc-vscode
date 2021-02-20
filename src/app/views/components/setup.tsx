@@ -22,6 +22,9 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     backgroundColor: "transparent",
   },
+  setupButtonContent: {
+    textAlign: "center",
+  },
   setupButton: {
     backgroundColor: "#ffffff",
     color: blue[500],
@@ -106,7 +109,7 @@ export default function Setup(props) {
           <CardContent>
             <BorderLinearProgress variant="determinate" value={progress} />
           </CardContent>
-          <CardContent>
+          <CardContent className={classes.setupButtonContent}>
             <Button variant="contained" onClick={setupClickHandler} className={classes.setupButton}>
               {!stateData.registered ? "Register your account" : "Connect a Slack Workspace"}
             </Button>
