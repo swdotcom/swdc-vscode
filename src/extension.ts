@@ -5,36 +5,21 @@
 import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
-import {
-  nowInSecs,
-  getOffsetSeconds,
-  getVersion,
-  logIt,
-  getPluginName,
-  getItem,
-  displayReadmeIfNotExists,
-  setItem,
-  deleteFile,
-  getSoftwareDataStoreFile,
-} from "./Util";
-import { manageLiveshareSession } from "./LiveshareManager";
-import { getApi } from "vsls";
+import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
-import { setSessionSummaryLiveshareMinutes, updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
+import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
+import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
 
 let TELEMETRY_ON = true;
 let statusBarItem = null;
-let _ls = null;
-
+let currentColorKind: number = undefined;
 let liveshare_update_interval = null;
-
-const one_min_millis = 1000 * 60;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -59,41 +44,18 @@ export function deactivate(ctx: ExtensionContext) {
   // store the deactivate event
   tracker.trackEditorAction("editor", "deactivate");
 
-  if (_ls && _ls.id) {
-    // the IDE is closing, send this off
-    let nowSec = nowInSecs();
-    let offsetSec = getOffsetSeconds();
-    let localNow = nowSec - offsetSec;
-    // close the session on our end
-    _ls["end"] = nowSec;
-    _ls["local_end"] = localNow;
-    manageLiveshareSession(_ls);
-    _ls = null;
-  }
-
   // dispose the new day timer
   PluginDataManager.getInstance().dispose();
   WallClockManager.getInstance().dispose();
 
   clearInterval(liveshare_update_interval);
-  clearWebsocketConnectionRetryTimeout();
 
-  // softwareDelete(`/integrations/${PLUGIN_ID}`, getItem("jwt")).then(resp => {
-  //     if (isResponseOk(resp)) {
-  //         if (resp.data) {
-  //             console.log(`Uninstalled plugin`);
-  //         } else {
-  //             console.log(
-  //                 "Failed to update Code Time about the uninstall event"
-  //             );
-  //         }
-  //     }
-  // });
+  clearWebsocketConnectionRetryTimeout();
 }
 
 export async function activate(ctx: ExtensionContext) {
   // add the code time commands
-  ctx.subscriptions.push(createCommands(kpmController));
+  ctx.subscriptions.push(createCommands(ctx, kpmController));
 
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
@@ -120,19 +82,16 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // store the activate event
   tracker.trackEditorAction("editor", "activate");
 
+  activateColorKindChangeListener();
+
   // INIT the plugin data manager
   PluginDataManager.getInstance();
 
   // initialize the wall clock timer
   WallClockManager.getInstance();
 
-  // add the interval jobs
-  initializeIntervalJobs();
-
   // initialize preferences
   await initializePreferences();
-
-  initializeLiveshare();
 
   try {
     initializeWebsockets();
@@ -145,7 +104,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     setItem("vscode_CtInit", true);
 
     setTimeout(() => {
-      commands.executeCommand("codetime.displayTree");
+      commands.executeCommand("codetime.displaySidebar");
     }, 1000);
 
     // activate the plugin
@@ -165,62 +124,46 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
       tooltip = `${tooltip} (${name})`;
     }
     statusBarItem.tooltip = tooltip;
-    statusBarItem.command = "codetime.displayTree";
+    statusBarItem.command = "codetime.displaySidebar";
     statusBarItem.show();
 
     // update the status bar
     updateStatusBarWithSummaryData();
   }, 0);
-
-  // delete the data.json if it exists
-  deleteFile(getSoftwareDataStoreFile());
 }
 
-// add the interval jobs
-function initializeIntervalJobs() {
-  // update liveshare in the offline kpm data if it has been initiated
-  liveshare_update_interval = setInterval(async () => {
-    if (window.state.focused) {
-      updateLiveshareTime();
+export function getCurrentColorKind() {
+  if (!currentColorKind) {
+    currentColorKind = window.activeColorTheme.kind;
+  }
+  return currentColorKind;
+}
+
+/**
+ * Active color theme listener
+ */
+function activateColorKindChangeListener() {
+  currentColorKind = window.activeColorTheme.kind;
+
+  window.onDidChangeActiveColorTheme((event) => {
+    let kindChanged = false;
+    if (event.kind !== currentColorKind) {
+      kindChanged = true;
     }
-  }, one_min_millis);
-}
 
-function updateLiveshareTime() {
-  if (_ls) {
-    let nowSec = nowInSecs();
-    let diffSeconds = nowSec - parseInt(_ls["start"], 10);
-    setSessionSummaryLiveshareMinutes(diffSeconds * 60);
-  }
-}
-
-async function initializeLiveshare() {
-  const liveshare = await getApi();
-  if (liveshare) {
-    // {access: number, id: string, peerNumber: number, role: number, user: json}
-    logIt(`liveshare version - ${liveshare["apiVersion"]}`);
-    liveshare.onDidChangeSession(async (event) => {
-      let nowSec = nowInSecs();
-      let offsetSec = getOffsetSeconds();
-      let localNow = nowSec - offsetSec;
-      if (!_ls) {
-        _ls = {
-          ...event.session,
-        };
-        _ls["apiVesion"] = liveshare["apiVersion"];
-        _ls["start"] = nowSec;
-        _ls["local_start"] = localNow;
-        _ls["end"] = 0;
-
-        await manageLiveshareSession(_ls);
-      } else if (_ls && (!event || !event["id"])) {
-        updateLiveshareTime();
-        // close the session on our end
-        _ls["end"] = nowSec;
-        _ls["local_end"] = localNow;
-        await manageLiveshareSession(_ls);
-        _ls = null;
+    currentColorKind = event.kind;
+    if (kindChanged) {
+      // check if the config panel is showing, update it if so
+      if (showingConfigureSettingsPanel()) {
+        setTimeout(() => {
+          configureSettings();
+        }, 500);
       }
-    });
-  }
+    }
+
+    // let the sidebar know the new current color kind
+    setTimeout(() => {
+      commands.executeCommand("codetime.refreshCodeTimeView");
+    }, 250);
+  });
 }

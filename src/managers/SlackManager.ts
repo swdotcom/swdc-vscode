@@ -1,6 +1,6 @@
 import { commands, ProgressLocation, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { foundNewSlackIntegrations, getUserRegistrationState } from "../DataController";
+import { fetchSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -14,24 +14,13 @@ import {
   syncIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
-import { softwareDelete, softwarePut } from "../http/HttpClient";
+import { softwareDelete } from "../http/HttpClient";
 
 const queryString = require("query-string");
-const { WebClient } = require("@slack/web-api");
-
-let slackDndInfo: any = undefined;
-let slackPresence: string = undefined;
-let slackStatusMessage: any = undefined;
 
 // -------------------------------------------
 // - public methods
 // -------------------------------------------
-
-export function clearSlackInfoCache() {
-  slackDndInfo = null;
-  slackPresence = null;
-  slackStatusMessage = null;
-}
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
@@ -66,6 +55,7 @@ export async function connectSlackWorkspace() {
     plugin_id: getPluginId(),
     auth_callback_state: getAuthCallbackState(),
     integrate: "slack",
+    plugin_token: getItem("jwt"),
   });
 
   const url = `${api_endpoint}/auth/slack?${qryStr}`;
@@ -78,11 +68,11 @@ export async function connectSlackWorkspace() {
   }, 10000);
 }
 
-export async function disconectAllSlackIntegrations() {
+export async function disconectAllSlackIntegrations(showPrompt = true) {
   const workspaces = getSlackWorkspaces();
   if (workspaces?.length) {
     for await (const workspace of workspaces) {
-      await disconnectSlackAuth(workspace.authId);
+      await disconnectSlackAuth(workspace.authId, showPrompt);
     }
   }
 }
@@ -101,19 +91,22 @@ export async function disconnectSlackWorkspace() {
 }
 
 // disconnect slack flow
-export async function disconnectSlackAuth(authId) {
+export async function disconnectSlackAuth(authId, showPrompt = true) {
   // get the domain
   const integration = getSlackWorkspaces().find((n) => n.authId === authId);
   if (!integration) {
     window.showErrorMessage("Unable to find selected integration to disconnect");
-    commands.executeCommand("codetime.refreshCodetimeMenuTree");
+    commands.executeCommand("codetime.refreshCodeTimeView");
     return;
   }
   // ask before disconnecting
-  const selection = await window.showInformationMessage(
-    `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
-    ...[DISCONNECT_LABEL]
-  );
+  let selection = DISCONNECT_LABEL;
+  if (showPrompt) {
+    selection = await window.showInformationMessage(
+      `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
+      ...[DISCONNECT_LABEL]
+    );
+  }
 
   if (selection === DISCONNECT_LABEL) {
     // await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
@@ -121,36 +114,8 @@ export async function disconnectSlackAuth(authId) {
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
 
-    commands.executeCommand("codetime.refreshTreeViews");
+    commands.executeCommand("codetime.refreshCodeTimeView");
   }
-}
-
-// Get the users slack status
-export async function getSlackStatus() {
-  const registered = await checkRegistration(false);
-  if (!registered) {
-    return null;
-  }
-
-  // use the cached value if its available
-  if (slackStatusMessage) {
-    return slackStatusMessage;
-  }
-
-  const integrations = getSlackWorkspaces();
-  for await (const integration of integrations) {
-    const web = new WebClient(integration.access_token);
-    // {profile: {avatar_hash, display_name, display_name_normalized, email, first_name,
-    //  image_1024, image_192, etc., last_name, is_custom_image, phone, real_name, real_name_normalized,
-    //  status_text, status_emoji, skype, status_expireation, status_text_canonical, title } }
-    const data = await web.users.profile.get().catch((e) => {
-      console.error("error fetching slack profile: ", e.message);
-    });
-    // set the cached var and return it
-    slackStatusMessage = data?.profile?.status_text ?? "";
-    return slackStatusMessage;
-  }
-  return null;
 }
 
 // -------------------------------------------
@@ -219,7 +184,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
     setAuthCallbackState(null);
     showSuccessMessage("Successfully connected to Slack");
 
-    commands.executeCommand("codetime.refreshTreeViews");
+    commands.executeCommand("codetime.refreshCodeTimeView");
   }
 }
 
@@ -228,7 +193,7 @@ async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
  */
 async function getSlackAuth() {
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  return await foundNewSlackIntegrations(user);
+  return await fetchSlackIntegrations(user);
 }
 
 /**

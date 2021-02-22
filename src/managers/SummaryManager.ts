@@ -1,5 +1,5 @@
 import { getItem, setItem } from "../Util";
-import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
+import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk, updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
 import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
@@ -45,7 +45,9 @@ export class SummaryManager {
       saveSessionSummaryToDisk(summary);
     }
 
+    updateStatusBarWithSummaryData();
+
     // update the code time metrics tree views
-    commands.executeCommand("codetime.refreshKpmTree");
+    commands.executeCommand("codetime.refreshCodeTimeView");
   }
 }

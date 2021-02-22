@@ -1,40 +1,29 @@
-import { commands, Disposable, workspace, window, TreeView } from "vscode";
-import { launchWebDashboard } from "./DataController";
-import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, toggleStatusBar, launchEmailSignup } from "./Util";
+import { commands, Disposable, window, ExtensionContext } from "vscode";
+import {
+  launchWebUrl,
+  launchLogin,
+  openFileInEditor,
+  displayReadmeIfNotExists,
+  toggleStatusBar,
+  launchEmailSignup,
+  launchWebDashboard,
+  setItem,
+} from "./Util";
 import { KpmManager } from "./managers/KpmManager";
-import { KpmProvider, connectKpmTreeView } from "./tree/KpmProvider";
-import { CodeTimeMenuProvider, connectCodeTimeMenuTreeView } from "./tree/CodeTimeMenuProvider";
 import { KpmItem, UIInteractionType } from "./model/models";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { displayProjectContributorCommitsDashboard } from "./menu/ReportManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
-import { getStatusBarKpmItem } from "./storage/SessionSummaryData";
-import {
-  connectSlackWorkspace,
-  disconnectSlackAuth,
-  disconnectSlackWorkspace,
-  clearSlackInfoCache,
-} from "./managers/SlackManager";
-import { vscode_issues_url } from "./Constants";
-import { CodeTimeFlowProvider, connectCodeTimeFlowTreeView } from "./tree/CodeTimeFlowProvider";
+import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
+import { launch_url, organizations_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow } from "./managers/FlowManager";
-import {
-  FULL_SCREEN_MODE_ID,
-  getScreenMode,
-  NORMAL_SCREEN_MODE,
-  showFullScreenMode,
-  showNormalScreenMode,
-  showZenMode,
-  ZEN_MODE_ID,
-} from "./managers/ScreenManager";
+import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
 import {
   getCodeTimeDashboardButton,
-  getContributorReportButton,
   getFeedbackButton,
   getHideStatusBarMetricsButton,
   getLearnMoreButton,
@@ -42,8 +31,10 @@ import {
   getViewProjectSummaryButton,
   getWebViewDashboardButton,
 } from "./tree/TreeButtonProvider";
+import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
 
 export function createCommands(
+  ctx: ExtensionContext,
   kpmController: KpmManager
 ): {
   dispose: () => void;
@@ -54,48 +45,26 @@ export function createCommands(
 
   cmds.push(kpmController);
 
-  // MENU TREE: INIT
-  const codetimeMenuTreeProvider = new CodeTimeMenuProvider();
-  const codetimeMenuTreeView: TreeView<KpmItem> = window.createTreeView("ct-menu-tree", {
-    treeDataProvider: codetimeMenuTreeProvider,
-    showCollapseAll: false,
-  });
-  codetimeMenuTreeProvider.bindView(codetimeMenuTreeView);
-  cmds.push(connectCodeTimeMenuTreeView(codetimeMenuTreeView));
-
-  // FLOW TREE: INIT
-  const codetimeNormalModeFlowTreeProvider = new CodeTimeFlowProvider(NORMAL_SCREEN_MODE);
-  const codetimeNormalModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-flow-tree", {
-    treeDataProvider: codetimeNormalModeFlowTreeProvider,
-    showCollapseAll: false,
-  });
-  codetimeNormalModeFlowTreeProvider.bindView(codetimeNormalModeFlowTreeView);
-  cmds.push(connectCodeTimeFlowTreeView(codetimeNormalModeFlowTreeProvider, codetimeNormalModeFlowTreeView, NORMAL_SCREEN_MODE));
-
-  // FULL SCREEN FLOW TREE: INIT
-  const codetimeFullScreenFlowTreeProvider = new CodeTimeFlowProvider(FULL_SCREEN_MODE_ID);
-  const codetimeFullScreenFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-fullscreen-flow-tree", {
-    treeDataProvider: codetimeFullScreenFlowTreeProvider,
-    showCollapseAll: false,
-  });
-  codetimeFullScreenFlowTreeProvider.bindView(codetimeFullScreenFlowTreeView);
-  cmds.push(connectCodeTimeFlowTreeView(codetimeFullScreenFlowTreeProvider, codetimeFullScreenFlowTreeView, FULL_SCREEN_MODE_ID));
-
-  // ZEN SCREEN FLOW TREE: INIT
-  const codetimeZenModeFlowTreeProvider = new CodeTimeFlowProvider(ZEN_MODE_ID);
-  const codetimeZenModeFlowTreeView: TreeView<KpmItem> = window.createTreeView("ct-zenmode-flow-tree", {
-    treeDataProvider: codetimeZenModeFlowTreeProvider,
-    showCollapseAll: false,
-  });
-  codetimeZenModeFlowTreeProvider.bindView(codetimeZenModeFlowTreeView);
-  cmds.push(connectCodeTimeFlowTreeView(codetimeZenModeFlowTreeProvider, codetimeZenModeFlowTreeView, ZEN_MODE_ID));
-
-  // STATUS BAR CLICK - MENU TREE REVEAL
+  // WEB VIEW PROVIDER
+  const ctWebviewSidebar: CodeTimeWebviewSidebar = new CodeTimeWebviewSidebar(ctx.extensionUri);
   cmds.push(
-    commands.registerCommand("codetime.displayTree", () => {
-      const item: KpmItem = getStatusBarKpmItem();
-      tracker.trackUIInteraction(item);
-      codetimeMenuTreeProvider.revealTree();
+    window.registerWebviewViewProvider("codetime.webView", ctWebviewSidebar, {
+      webviewOptions: {
+        retainContextWhenHidden: true,
+      },
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.refreshCodeTimeView", () => {
+      ctWebviewSidebar.refresh();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.displaySidebar", () => {
+      // logic to open the sidebar (need to figure out how to reveal the sidebar webview)
+      commands.executeCommand("workbench.view.extension.code-time-sidebar");
     })
   );
 
@@ -114,15 +83,6 @@ export function createCommands(
     })
   );
 
-  // DAILY METRICS TREE: INIT
-  const kpmTreeProvider = new KpmProvider();
-  const kpmTreeView: TreeView<KpmItem> = window.createTreeView("ct-metrics-tree", {
-    treeDataProvider: kpmTreeProvider,
-    showCollapseAll: false,
-  });
-  kpmTreeProvider.bindView(kpmTreeView);
-  cmds.push(connectKpmTreeView(kpmTreeView));
-
   // SHOW WEB ANALYTICS
   cmds.push(
     commands.registerCommand("codetime.softwareKpmDashboard", (item: KpmItem) => {
@@ -138,6 +98,12 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       launchWebDashboard();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.createTeam", () => {
+      launchWebUrl(organizations_url);
     })
   );
 
@@ -163,9 +129,6 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       toggleStatusBar();
-      setTimeout(() => {
-        commands.executeCommand("codetime.refreshCodetimeMenuTree");
-      }, 500);
     })
   );
 
@@ -264,62 +227,9 @@ export function createCommands(
     })
   );
 
-  // REFRESH ALL TREE VIEWS
-  cmds.push(
-    commands.registerCommand("codetime.refreshTreeViews", () => {
-      // run the specific commands as each command may have its own specific logic to perform
-      commands.executeCommand("codetime.refreshCodetimeMenuTree");
-      // commands.executeCommand("codetime.refreshFlowTree");
-      commands.executeCommand("codetime.refreshKpmTree");
-    })
-  );
-
-  // REFRESH DAILY METRICS
-  cmds.push(
-    commands.registerCommand("codetime.refreshKpmTree", () => {
-      kpmTreeProvider.refresh();
-    })
-  );
-
-  // MENU TREE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshCodetimeMenuTree", () => {
-      codetimeMenuTreeProvider.refresh();
-    })
-  );
-
-  // FLOW TREE: REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.refreshFlowTree", () => {
-      // clear the cache items to force a fetch from the Slack API
-      clearSlackInfoCache();
-      const screenMode = getScreenMode();
-
-      if (screenMode === NORMAL_SCREEN_MODE) {
-        // refresh the flow tree provider
-        codetimeNormalModeFlowTreeProvider.refresh();
-      } else if (screenMode === FULL_SCREEN_MODE_ID) {
-        codetimeFullScreenFlowTreeProvider.refresh();
-      } else {
-        codetimeZenModeFlowTreeProvider.refresh();
-      }
-    })
-  );
-
-  // FLOW TREE: SCHEDULE REFRESH
-  cmds.push(
-    commands.registerCommand("codetime.scheduleFlowRefresh", () => {
-      // clear the cache items to force a fetch from the Slack API
-      clearSlackInfoCache();
-      codetimeNormalModeFlowTreeProvider.scheduleRefresh();
-      codetimeFullScreenFlowTreeProvider.scheduleRefresh();
-      codetimeZenModeFlowTreeProvider.scheduleRefresh();
-    })
-  );
-
   // SUBMIT AN ISSUE
   cmds.push(
-    commands.registerCommand("codetime.submitOnIssue", (item: KpmItem) => {
+    commands.registerCommand("codetime.submitAnIssue", (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
@@ -386,24 +296,6 @@ export function createCommands(
     })
   );
 
-  // DISPLAY REPO COMMIT CONTRIBUTOR REPORT
-  cmds.push(
-    commands.registerCommand("codetime.generateContributorSummary", (item: KpmItem) => {
-      if (!item) {
-        // it's from the command palette, create a kpm item so
-        // it can build the ui_element in the tracker manager
-        item = getContributorReportButton(item.value);
-        item.location = "ct_command_palette";
-        item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_contributor_repo_identifier_cmd";
-        item.interactionIcon = null;
-        item.color = null;
-      }
-      tracker.trackUIInteraction(item);
-      displayProjectContributorCommitsDashboard(item.value);
-    })
-  );
-
   // LAUNCH COMMIT URL
   cmds.push(
     commands.registerCommand("codetime.launchCommitUrl", (item: KpmItem, commitLink: string) => {
@@ -440,9 +332,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.disconnectSlackWorkspace", (kptmItem: any) => {
-      if (kptmItem && kptmItem.value) {
-        disconnectSlackAuth(kptmItem.value);
+    commands.registerCommand("codetime.disconnectSlackWorkspace", (authId: any) => {
+      if (authId) {
+        disconnectSlackAuth(authId);
       } else {
         disconnectSlackWorkspace();
       }
@@ -487,13 +379,14 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.enableFlow", () => {
-      enableFlow({automated: false});
+    commands.registerCommand("codetime.enableFlow", (options: any) => {
+      const skipSlackCheck: boolean = !!(options?.skipSlackCheck === true);
+      enableFlow({ automated: false, skipSlackCheck });
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.pauseFlow", () => {
+    commands.registerCommand("codetime.exitFlowMode", () => {
       pauseFlow();
     })
   );
@@ -501,6 +394,20 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.configureSettings", () => {
       configureSettings();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.showTeamDashboard", (teamId) => {
+      launchWebUrl(`${launch_url}/team-dashboard/${teamId}`);
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.skipSlackConnect", () => {
+      setItem("vscode_CtskipSlackConnect", true);
+      // refresh the view
+      commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );
 

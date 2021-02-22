@@ -1,10 +1,8 @@
 import { window, commands } from "vscode";
-import { softwareGet, softwarePut, isResponseOk, softwarePost } from "./http/HttpClient";
+import { softwareGet, isResponseOk, softwarePost } from "./http/HttpClient";
 import {
   getItem,
   setItem,
-  launchWebUrl,
-  logIt,
   getProjectCodeSummaryFile,
   getProjectContributorCodeSummaryFile,
   formatNumber,
@@ -19,14 +17,12 @@ import {
   syncIntegrations,
   getIntegrations,
 } from "./Util";
-import { buildWebDashboardUrl } from "./menu/MenuManager";
-import { DEFAULT_SESSION_THRESHOLD_SECONDS, SIGN_UP_LABEL } from "./Constants";
+import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
-import { disconectAllSlackIntegrations } from "./managers/SlackManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
@@ -41,15 +37,18 @@ export async function getUserRegistrationState(isIntegration = false) {
 
   const token = auth_callback_state ? auth_callback_state : jwt;
 
-  const resp = await softwareGet("/users/plugin/state", token);
+  let resp = await softwareGet("/users/plugin/state", token);
+  let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
-  const foundUser = !!(isResponseOk(resp) && resp.data && resp.data.user);
-  const state = foundUser ? resp.data.state : "UNKNOWN";
+  // if no user and it's an integration check, try using the jwt if
+  // we tried with the auth callback state
+  if (!user && isIntegration && auth_callback_state) {
+    // try using the jwt
+    resp = await softwareGet("/users/plugin/state", token);
+    user = isResponseOk(resp) && resp.data ? resp.data.user : null;
+  }
 
-  if (foundUser) {
-    // set the jwt, name (email), and use the registration flag
-    // to determine if they're logged in or not
-    const user = resp.data.user;
+  if (user) {
     const registered = user.registered;
 
     // update the name and jwt if we're authenticating
@@ -71,14 +70,14 @@ export async function getUserRegistrationState(isIntegration = false) {
     setAuthCallbackState(null);
 
     // if we need the user it's "resp.data.user"
-    return { loggedOn: registered === 1, state, user };
+    return { loggedOn: registered === 1, state: "OK", user };
   }
 
   // all else fails, set false and UNKNOWN
-  return { loggedOn: false, state, user: null };
+  return { loggedOn: false, state: "UNKNOWN", user: null };
 }
 
-export async function foundNewSlackIntegrations(user) {
+export async function fetchSlackIntegrations(user) {
   let foundNewIntegration = false;
   if (user && user.integrations) {
     const currentIntegrations = getIntegrations();
@@ -127,6 +126,8 @@ export async function getUser() {
       if (user.registered === 1) {
         // update jwt to what the jwt is for this spotify user
         setItem("name", user.email);
+
+        await fetchSlackIntegrations(user);
       }
       return user;
     }
@@ -146,7 +147,7 @@ export async function initializePreferences() {
 
   if (jwt) {
     let user = await getUser();
-    userEventEmitter.emit('user_object_updated', user);
+    userEventEmitter.emit("user_object_updated", user);
     // obtain the session threshold in seconds "sessionThresholdInSec"
     sessionThresholdInSec = user?.preferences?.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
     disableGitData = !!user?.preferences?.disableGitData;
@@ -192,6 +193,7 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
   } else {
     // clear the auth callback state
     setItem("switching_account", false);
+    setItem("vscode_CtskipSlackConnect", false);
     setAuthCallbackState(null);
 
     clearSessionSummaryData();
@@ -200,11 +202,10 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
     // fetch after logging on
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
-    // clear the slack integrations
-    await disconectAllSlackIntegrations();
-
+    // clear out the previous ones locally
+    removeAllSlackIntegrations();
     // update this users integrations
-    await foundNewSlackIntegrations(state.user);
+    await fetchSlackIntegrations(state.user);
 
     const message = "Successfully logged on to Code Time";
     window.showInformationMessage(message);
@@ -215,38 +216,17 @@ async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
       console.error("Failed to initialize codetime websockets", e);
     }
 
-    commands.executeCommand("codetime.refreshTreeViews");
+    commands.executeCommand("codetime.refreshCodeTimeView");
 
     initializePreferences();
   }
 }
 
-export async function launchWebDashboard() {
-  if (!getItem("name")) {
-    window
-      .showInformationMessage(
-        "Sign up or log in to see more data visualizations.",
-        {
-          modal: true,
-        },
-        SIGN_UP_LABEL
-      )
-      .then(async (selection) => {
-        if (selection === SIGN_UP_LABEL) {
-          commands.executeCommand("codetime.signUpAccount");
-        }
-      });
-    return;
-  }
+export function removeAllSlackIntegrations() {
+  const currentIntegrations = getIntegrations();
 
-  let webUrl = await buildWebDashboardUrl();
-
-  // add the token=jwt
-  const jwt = getItem("jwt");
-  const encodedJwt = encodeURIComponent(jwt);
-  webUrl = `${webUrl}?token=${encodedJwt}`;
-
-  launchWebUrl(webUrl);
+  const newIntegrations = currentIntegrations.filter((n) => n.name.toLowerCase() !== "slack");
+  syncIntegrations(newIntegrations);
 }
 
 export async function writeDailyReportDashboard(type = "yesterday", projectIds = []) {
@@ -408,21 +388,6 @@ export async function writeProjectContributorCommitDashboard(identifier) {
       }
       dashboardContent += getRightAlignedTableHeader(projectDate);
       dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-
-      // show the metrics now
-      // const userHours = summary.activity.session_seconds
-      //     ? humanizeMinutes(summary.activity.session_seconds / 60)
-      //     : humanizeMinutes(0);
-      // const contribHours = summary.contributorActivity.session_seconds
-      //     ? humanizeMinutes(
-      //           summary.contributorActivity.session_seconds / 60
-      //       )
-      //     : humanizeMinutes(0);
-      // dashboardContent += getRowLabels([
-      //     "Code time",
-      //     userHours,
-      //     contribHours
-      // ]);
 
       // commits
       dashboardContent += getRowNumberData(summary, "Commits", "commits");

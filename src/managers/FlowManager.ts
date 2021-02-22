@@ -4,11 +4,7 @@ import { softwarePost, softwareDelete } from "../http/HttpClient";
 import { getItem } from "../Util";
 import { softwareGet } from "../http/HttpClient";
 
-import {
-  checkRegistration,
-  showModalSignupPrompt,
-  checkSlackConnectionForFlowMode,
-} from "./SlackManager";
+import { checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode } from "./SlackManager";
 import {
   FULL_SCREEN_MODE_ID,
   getScreenMode,
@@ -21,7 +17,10 @@ import {
 
 export let enablingFlow = false;
 export let enabledFlow = false;
-let useSlackSettings = true;
+
+export function isFlowModEnabled() {
+  return enabledFlow;
+}
 
 /**
  * Screen Mode: full screen
@@ -48,12 +47,16 @@ export function getConfigSettingsTooltip() {
 }
 
 export async function checkToDisableFlow() {
-  if (!enabledFlow || enablingFlow) { return; }
+  if (!enabledFlow || enablingFlow) {
+    return;
+  }
 
-  if (enabledFlow && !(await isInFlowMode())) { pauseFlow(); }
+  if (enabledFlow && !(await isInFlowMode())) {
+    pauseFlow();
+  }
 }
 
-export async function enableFlow({ automated = false }) {
+export async function enableFlow({ automated = false, skipSlackCheck = false }) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -63,14 +66,25 @@ export async function enableFlow({ automated = false }) {
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow({ automated: automated }).catch((e) => { });
+        initiateFlow({ automated, skipSlackCheck }).catch((e) => {});
         resolve(true);
       });
     }
   );
 }
 
-async function initiateFlow({ automated = false }) {
+export function getConfiguredScreenMode() {
+  const flowModeSettings = getPreference("flowMode");
+  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  if (screenMode?.includes("Full Screen")) {
+    return FULL_SCREEN_MODE_ID;
+  } else if (screenMode?.includes("Zen")) {
+    return ZEN_MODE_ID;
+  }
+  return NORMAL_SCREEN_MODE;
+}
+
+async function initiateFlow({ automated = false, skipSlackCheck = false }) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
@@ -79,63 +93,55 @@ async function initiateFlow({ automated = false }) {
   }
 
   // { connected, usingAllSettingsForFlow }
-  const connectInfo = await checkSlackConnectionForFlowMode();
-  useSlackSettings = connectInfo.useSlackSettings;
-  if (!connectInfo.continue) {
-    return;
+  if (!skipSlackCheck) {
+    const connectInfo = await checkSlackConnectionForFlowMode();
+    if (!connectInfo.continue) {
+      return;
+    }
   }
 
-  const flowModeSettings = getPreference("flowMode");
+  const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  softwarePost("/v1/flow_sessions", { automated: automated }, getItem("jwt"));
+  softwarePost("/v1/flow_sessions", { automated }, getItem("jwt"));
 
   // update screen mode
-  let screenChanged = false;
-  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
-  if (screenMode?.includes("Full Screen")) {
-    screenChanged = showFullScreenMode();
-  } else if (screenMode.includes("Zen")) {
-    screenChanged = showZenMode();
+  if (preferredScreenMode === FULL_SCREEN_MODE_ID) {
+    showFullScreenMode();
+  } else if (preferredScreenMode === ZEN_MODE_ID) {
+    showZenMode();
   } else {
-    screenChanged = showNormalScreenMode();
+    showNormalScreenMode();
   }
 
-  if (!screenChanged) {
-    commands.executeCommand("codetime.refreshFlowTree");
-  } else {
-    commands.executeCommand("codetime.scheduleFlowRefresh");
-  }
   enabledFlow = true;
   enablingFlow = false;
 }
 
 export async function pauseFlow() {
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: "Turning off flow...",
-      cancellable: false,
-    },
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        pauseFlowInitiate().catch((e) => { });
-        resolve(true);
-      });
-    }
-  );
+  if (enabledFlow) {
+    window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: "Turning off flow...",
+        cancellable: false,
+      },
+      (progress) => {
+        return new Promise((resolve, reject) => {
+          pauseFlowInitiate().catch((e) => {});
+          resolve(true);
+        });
+      }
+    );
+  }
 }
 
 async function pauseFlowInitiate() {
-  softwareDelete("/v1/flow_sessions", getItem("jwt"));
-  const screenChanged = showNormalScreenMode();
+  await softwareDelete("/v1/flow_sessions", getItem("jwt"));
+  showNormalScreenMode();
 
-  if (!screenChanged) {
-    commands.executeCommand("codetime.refreshFlowTree");
-  } else {
-    commands.executeCommand("codetime.scheduleFlowRefresh");
-  }
   enabledFlow = false;
+  commands.executeCommand("codetime.refreshCodeTimeView");
 }
 
 export async function isInFlowMode() {
@@ -145,21 +151,15 @@ export async function isInFlowMode() {
     return false;
   }
 
-  const flowSessionsReponse = await softwareGet("/v1/flow_sessions", getItem("jwt"));
+  // we've made it here, check the api and screen state
+  return await determineFlowModeFromApi();
+}
+
+export async function determineFlowModeFromApi() {
+  const flowSessionsReponse = getItem("jwt") ? await softwareGet("/v1/flow_sessions", getItem("jwt")) : { data: { flow_sessions: [] } };
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
+  // make sure "enabledFlow" is set as it's used as a getter outside this export
+  enabledFlow = openFlowSessions?.length > 0;
 
-  const flowModeSettings = getPreference("flowMode");
-  const currentScreenMode = getScreenMode();
-  const flowScreenMode = flowModeSettings?.editor?.vscode?.screenMode;
-  // determine if this editor should be in flow mode
-  let screenInFlowState = false;
-  if (flowScreenMode.includes("Full Screen") && currentScreenMode === FULL_SCREEN_MODE_ID) {
-    screenInFlowState = true;
-  } else if (flowScreenMode.includes("Zen") && currentScreenMode === ZEN_MODE_ID) {
-    screenInFlowState = true;
-  } else if (flowScreenMode.includes("None") && currentScreenMode === NORMAL_SCREEN_MODE) {
-    screenInFlowState = true;
-  }
-
-  return screenInFlowState ?? openFlowSessions?.length > 0;
+  return enabledFlow;
 }

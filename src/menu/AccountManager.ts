@@ -4,20 +4,25 @@ import { showQuickPick } from "./MenuManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 import jwt_decode = require("jwt-decode");
 
+let switching_account = false;
+
 const switchAccountItem = {
   label: "Switch to a different account?",
   detail: "Click to link to a different account.",
 };
 
 export async function showSwitchAccountsMenu() {
+  switching_account = true;
   accountMenuSelection(switchAccountItem);
 }
 
 export async function showExistingAccountMenu() {
+  switching_account = true;
   showLogInMenuOptions();
 }
 
 export async function showSignUpAccountMenu() {
+  switching_account = false;
   showSignUpMenuOptions();
 }
 
@@ -67,24 +72,24 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
   items.push({
     label: `${authText} with Google`,
     command: "codetime.googleLogin",
-    commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+    commandArgs: [null /*KpmItem*/, switching_account],
   });
   items.push({
     label: `${authText} with GitHub`,
     command: "codetime.githubLogin",
-    commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+    commandArgs: [null /*KpmItem*/, switching_account],
   });
   if (isSignup) {
     items.push({
       label: `${authText} with Email`,
       command: "codetime.codeTimeSignup",
-      commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+      commandArgs: [null /*KpmItem*/, false /*switching_account*/],
     });
   } else {
     items.push({
       label: `${authText} with Email`,
       command: "codetime.codeTimeLogin",
-      commandArgs: [null /*KpmItem*/, true /*switching_account*/],
+      commandArgs: [null /*KpmItem*/, switching_account],
     });
   }
   const menuOptions = {

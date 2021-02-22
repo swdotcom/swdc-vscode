@@ -1,11 +1,21 @@
 import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, api_endpoint, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS } from "./Constants";
+import {
+  CODE_TIME_EXT_ID,
+  launch_url,
+  CODE_TIME_PLUGIN_ID,
+  CODE_TIME_TYPE,
+  api_endpoint,
+  SOFTWARE_DIRECTORY,
+  LOG_FILE_EVENTS,
+  SIGN_UP_LABEL,
+} from "./Constants";
 import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
 import { format } from "date-fns";
+import { showModalSignupPrompt } from "./managers/SlackManager";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
@@ -660,8 +670,41 @@ export async function wrapExecPromise(cmd, projectDir) {
   return result;
 }
 
+export async function launchWebDashboard() {
+  if (!checkRegistration()) {
+    return;
+  }
+
+  // add the token=jwt
+  const jwt = getItem("jwt");
+  const encodedJwt = encodeURIComponent(jwt);
+  const webUrl = `${launch_url}?token=${encodedJwt}`;
+
+  launchWebUrl(webUrl);
+}
+
 export function launchWebUrl(url) {
   open(url);
+}
+
+function checkRegistration() {
+  if (!getItem("name")) {
+    window
+      .showInformationMessage(
+        "Sign up or log in to see more data visualizations.",
+        {
+          modal: true,
+        },
+        SIGN_UP_LABEL
+      )
+      .then(async (selection) => {
+        if (selection === SIGN_UP_LABEL) {
+          commands.executeCommand("codetime.signUpAccount");
+        }
+      });
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -695,13 +738,14 @@ export function humanizeMinutes(min) {
   if (min === 60) {
     str = "1h";
   } else if (min > 60) {
-    let hrs = parseFloat(min) / 60;
-    const hoursStr = hrs.toFixed(0) + "h";
-    if (hrs % 1 === 0) {
+    const hours = Math.floor(min / 60);
+    const minutes = min % 60;
+
+    const hoursStr = Math.floor(hours).toFixed(0) + "h";
+    if ((parseFloat(min) / 60) % 1 === 0) {
       str = hoursStr;
     } else {
-      const minutesStr = (60 * (hrs % 1)).toFixed(0) + "m";
-      str = `${hoursStr} ${minutesStr}`;
+      str = `${hoursStr} ${minutes}m`;
     }
   } else if (min === 1) {
     str = "1m";
@@ -741,7 +785,6 @@ export async function launchLogin(loginType: string = "software", switching_acco
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
   const name = getItem("name");
-
   let url = launch_url;
 
   let obj = {
@@ -966,5 +1009,15 @@ export function shouldFetchSessionSummaryData() {
     return false;
   }
   setItem("updatedTreeDate", nowDay);
+  return true;
+}
+
+export function checkRegistrationForReport(showSignup = true) {
+  if (!getItem("name")) {
+    if (showSignup) {
+      showModalSignupPrompt("Unlock your personalized dashboard and visualize your coding activity. Create an account to get started.");
+    }
+    return false;
+  }
   return true;
 }
