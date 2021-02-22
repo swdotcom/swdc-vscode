@@ -15,6 +15,7 @@ import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
 import { format } from "date-fns";
+import { showModalSignupPrompt } from "./managers/SlackManager";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
@@ -737,13 +738,14 @@ export function humanizeMinutes(min) {
   if (min === 60) {
     str = "1h";
   } else if (min > 60) {
-    let hrs = parseFloat(min) / 60;
-    const hoursStr = hrs.toFixed(0) + "h";
-    if (hrs % 1 === 0) {
+    const hours = Math.floor(min / 60);
+    const minutes = min % 60;
+
+    const hoursStr = Math.floor(hours).toFixed(0) + "h";
+    if ((parseFloat(min) / 60) % 1 === 0) {
       str = hoursStr;
     } else {
-      const minutesStr = (60 * (hrs % 1)).toFixed(0) + "m";
-      str = `${hoursStr} ${minutesStr}`;
+      str = `${hoursStr} ${minutes}m`;
     }
   } else if (min === 1) {
     str = "1m";
@@ -1007,5 +1009,15 @@ export function shouldFetchSessionSummaryData() {
     return false;
   }
   setItem("updatedTreeDate", nowDay);
+  return true;
+}
+
+export function checkRegistrationForReport(showSignup = true) {
+  if (!getItem("name")) {
+    if (showSignup) {
+      showModalSignupPrompt("Unlock your personalized dashboard and visualize your coding activity. Create an account to get started.");
+    }
+    return false;
+  }
   return true;
 }
