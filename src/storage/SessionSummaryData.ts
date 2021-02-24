@@ -113,6 +113,9 @@ export async function incrementSessionSummaryData(aggregates: KeystrokeAggregate
   sessionSummaryData.currentDayLinesRemoved += aggregates.linesRemoved;
 
   saveSessionSummaryToDisk(sessionSummaryData);
+
+  // we've updated the current day minutes, update the status bar
+  updateStatusBarWithSummaryData();
 }
 
 /**
