@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Teams(props) {
   // Similar to componentDidMount and componentDidUpdate:
-  useEffect(() => { });
+  useEffect(() => {});
   const classes = useStyles();
   const stateData = props.stateData;
 
@@ -76,23 +76,23 @@ export default function Teams(props) {
             </CardContent>
           </Card>
         ) : (
-            <Grid container className={classes.root}>
-              <Grid item xs={12}>
-                <ListItemText primary="Teams" secondary="View your team dashboard" />
-              </Grid>
-              {stateData.teams.map((team, index) => (
-                <Grid item xs={12}>
-                  <Button
-                    onClick={() => teamClickHandler(team)}
-                    className={classes.textbutton}
-                    startIcon={<GroupIcon fontSize="small" style={{ color: blue[500] }} />}
-                  >
-                    {team.name}
-                  </Button>
-                </Grid>
-              ))}
+          <Grid container className={classes.root}>
+            <Grid item xs={12}>
+              <ListItemText primary="Teams" secondary="View your team dashboard" />
             </Grid>
-          )}
+            {stateData.teams.map((team, index) => (
+              <Grid item xs={12} key={index}>
+                <Button
+                  onClick={() => teamClickHandler(team)}
+                  className={classes.textbutton}
+                  startIcon={<GroupIcon fontSize="small" style={{ color: blue[500] }} />}
+                >
+                  {team.name}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Grid>
     </Grid>
   );
