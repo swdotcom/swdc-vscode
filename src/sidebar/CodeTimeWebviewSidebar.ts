@@ -25,6 +25,10 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   }
 
   public async refresh() {
+    if (!this._webview) {
+      // its not available to refresh yet
+      return;
+    }
     this._webview.webview.html = await this.getReactHtml();
   }
 
