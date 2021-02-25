@@ -12,13 +12,13 @@
   </a>
 </p>
 
-<p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
+<p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.svg" ></a></p>
 
 [Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking. Get the most advanced time tracker for Visual Studio Code that will save you time, so you can focus more on what matters.
 
 <p align="center">
   <a href="https://app.software.com/signup?ref=readme">
-    <img width="220px" alt="Sign up" src="https://assets.software.com/readme/code-time/signup-button.png">
+    <img alt="Sign up" src="https://assets.software.com/readme/code-time/signup-button.svg">
   </a>
 </p>
 
