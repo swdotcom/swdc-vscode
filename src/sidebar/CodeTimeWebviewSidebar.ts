@@ -106,7 +106,9 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
             body {
               margin: 0;
               padding: 0;
-              font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+              font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
+              Droid Sans, Helvetica Neue, sans-serif;
+              background-color: transparent !important;
             }
           </style>
           <meta http-equiv="Content-Security-Policy"

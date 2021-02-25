@@ -39,6 +39,7 @@ const useTreeItemStyles = makeStyles((theme: Theme) =>
         backgroundColor: theme.palette.action.hover,
       },
       margin: 0,
+      padding: theme.spacing(0.25, 0.5),
     },
     content: {
       width: "100%",

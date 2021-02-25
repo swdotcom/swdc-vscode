@@ -21,6 +21,10 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     justifyContent: "flex-start",
     padding: theme.spacing(0.25, 0.5),
+    fontWeight: 500,
+  },
+  secondaryAction: {
+    right: 0,
   },
 }));
 
@@ -87,7 +91,7 @@ export default function Account(props) {
         <List style={{ padding: 0, margin: 0 }}>
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Account" secondary={!stateData.registered ? "Manage your account" : stateData.email} />
-            <ListItemSecondaryAction>
+            <ListItemSecondaryAction classes={{ root: classes.secondaryAction }}>
               <div aria-label="Authentication type">
                 {!stateData.registered ? null : stateData.authType === "github" ? (
                   <GithubIcon />
@@ -112,9 +116,6 @@ export default function Account(props) {
         </Button>
       </Grid>
       <Grid item xs={12}>
-        <Workspaces vscode={props.vscode} stateData={props.stateData} />
-      </Grid>
-      <Grid item xs={12}>
         <Button onClick={documentationClickHandler} classes={{ root: classes.textbutton }} startIcon={<DocumentIcon />}>
           Documentation
         </Button>
@@ -128,6 +129,9 @@ export default function Account(props) {
         <Button onClick={toggleStatusVisibilityClickHandler} classes={{ root: classes.textbutton }} startIcon={<VisibilityIcon />}>
           {toggleStatusBarTextLabel}
         </Button>
+      </Grid>
+      <Grid item xs={12}>
+        <Workspaces vscode={props.vscode} stateData={props.stateData} />
       </Grid>
     </Grid>
   );
