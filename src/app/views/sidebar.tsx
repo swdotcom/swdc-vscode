@@ -40,7 +40,20 @@ export default function SideBar(props) {
     () =>
       createMuiTheme({
         typography: {
-          fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+          fontFamily: [
+            "Inter",
+            "-apple-system",
+            "BlinkMacSystemFont",
+            '"Segoe UI"',
+            "Roboto",
+            "Oxygen",
+            "Ubuntu",
+            "Cantarell",
+            "Fira Sans",
+            "Droid Sans",
+            '"Helvetica Neue"',
+            "sans-serif",
+          ].join(","),
           fontSize: 12,
           fontWeightLight: 400,
           fontWeightRegular: 500,

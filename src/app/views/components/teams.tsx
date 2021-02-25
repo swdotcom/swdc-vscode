@@ -29,6 +29,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     justifyContent: "flex-start",
     padding: theme.spacing(0.25, 0.5),
+    fontWeight: 500,
   },
 }));
 

@@ -26,6 +26,9 @@ const useStyles = makeStyles((theme) => ({
   iconBtnRoot: {
     color: "rgba(222,222,222,0.75)",
   },
+  secondaryAction: {
+    right: 0,
+  },
   typography: {
     padding: theme.spacing(2),
   },
@@ -103,7 +106,7 @@ export default function FlowMode(props) {
         <List style={{ padding: 0, margin: 0 }}>
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Flow Mode" secondary="Block out distractions" />
-            <ListItemSecondaryAction>
+            <ListItemSecondaryAction classes={{ root: classes.secondaryAction }}>
               <IconButton
                 size="small"
                 classes={{ root: classes.iconBtnRoot }}
