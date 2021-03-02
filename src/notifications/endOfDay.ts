@@ -3,6 +3,8 @@ import { showDashboard } from "../managers/WebViewManager";
 import { getItem } from "../Util";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { configureSettings } from "../managers/ConfigManager";
+import { TrackerManager } from "../managers/TrackerManager";
+import { KpmItem, UIInteractionType } from "../model/models";
 
 const moment = require("moment-timezone");
 
@@ -31,7 +33,7 @@ export const setEndOfDayNotification = async (user: any) => {
         const now = moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone);
         const todaysWorkHours = workHours.find((wh) => wh.day === now.format("dddd"));
         const { end } = todaysWorkHours;
-        const msUntilEndOfTheDay = end.valueOf() - now.valueOf();
+        const msUntilEndOfTheDay = 1000 // end.valueOf() - now.valueOf();
 
         // if the end of the day is in the future...
         if (msUntilEndOfTheDay > 0) {
@@ -46,17 +48,44 @@ export const setEndOfDayNotification = async (user: any) => {
 };
 
 export const showEndOfDayNotification = async () => {
-  const selection = await window.showInformationMessage(
-    "It's the end of your work day! Would you like to see your code time stats for today?",
-    ...["Yes", "Configure Settings"]
-  );
+  const tracker: TrackerManager = TrackerManager.getInstance();
+  const selection = await window.showInformationMessage("It's the end of your work day! Would you like to see your code time stats for today?", ...["Settings", "Show me the data"]);
 
-  if (selection === "Yes") {
+  if (selection === "Show me the data") {
+    let item = showMeTheDataKpmItem();
+    tracker.trackUIInteraction(item);
     showDashboard();
-  } else if (selection === "Configure Settings") {
+  } else if (selection === "Settings") {
+    let item = configureSettingsKpmItem();
+    tracker.trackUIInteraction(item);
     configureSettings();
   }
-};
+}
+
+export function configureSettingsKpmItem(): KpmItem {
+  const item: KpmItem = new KpmItem();
+  item.name = "ct_configure_settings_btn";
+  item.description = "End of day notification - configure settings";
+  item.location = "ct_notification";
+  item.label = "Settings"
+  item.interactionType = UIInteractionType.Click
+  item.interactionIcon = null;
+  item.color = null;
+  return item;
+}
+
+
+export function showMeTheDataKpmItem(): KpmItem {
+  const item: KpmItem = new KpmItem();
+  item.name = "ct_show_me_the_data_btn";
+  item.description = "End of day notification - Show me the data";
+  item.location = "ct_notification";
+  item.label = "Show me the data"
+  item.interactionType = UIInteractionType.Click
+  item.interactionIcon = null;
+  item.color = null;
+  return item;
+}
 
 const buildStartEndFormatsOfUnixTuple = (tuple: any, startOfUnit = "week") => {
   if (!tuple || tuple.length !== 2) {
