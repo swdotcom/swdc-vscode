@@ -33,7 +33,7 @@ export const setEndOfDayNotification = async (user: any) => {
         const now = moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone);
         const todaysWorkHours = workHours.find((wh) => wh.day === now.format("dddd"));
         const { end } = todaysWorkHours;
-        const msUntilEndOfTheDay = 1000 // end.valueOf() - now.valueOf();
+        const msUntilEndOfTheDay = end.valueOf() - now.valueOf();
 
         // if the end of the day is in the future...
         if (msUntilEndOfTheDay > 0) {
@@ -67,8 +67,8 @@ export function configureSettingsKpmItem(): KpmItem {
   item.name = "ct_configure_settings_btn";
   item.description = "End of day notification - configure settings";
   item.location = "ct_notification";
-  item.label = "Settings"
-  item.interactionType = UIInteractionType.Click
+  item.label = "Settings";
+  item.interactionType = UIInteractionType.Click;
   item.interactionIcon = null;
   item.color = null;
   return item;
