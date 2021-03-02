@@ -168,3 +168,10 @@ export function getFeedbackButton(): KpmItem {
   feedbackButton.interactionIcon = "text-bubble";
   return feedbackButton;
 }
+
+export function getStatusBarButtonItem() {
+  const item: KpmItem = getActionButton("status bar metrics button", "Code Time", "codetime.displaySidebar");
+  item.location = "ct_status_bar";
+  item.name = `ct_status_bar_metrics_btn`;
+  return item;
+}
