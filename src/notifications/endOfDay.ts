@@ -3,6 +3,8 @@ import { showDashboard } from "../managers/WebViewManager";
 import { getItem } from "../Util";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { configureSettings } from "../managers/ConfigManager";
+import { TrackerManager } from "../managers/TrackerManager";
+import { configureSettingsKpmItem, showMeTheDataKpmItem } from "../tree/TreeButtonProvider";
 
 const moment = require("moment-timezone");
 
@@ -46,17 +48,19 @@ export const setEndOfDayNotification = async (user: any) => {
 };
 
 export const showEndOfDayNotification = async () => {
-  const selection = await window.showInformationMessage(
-    "It's the end of your work day! Would you like to see your code time stats for today?",
-    ...["Yes", "Configure Settings"]
-  );
+  const tracker: TrackerManager = TrackerManager.getInstance();
+  const selection = await window.showInformationMessage("It's the end of your work day! Would you like to see your code time stats for today?", ...["Settings", "Show me the data"]);
 
-  if (selection === "Yes") {
+  if (selection === "Show me the data") {
+    let item = showMeTheDataKpmItem();
+    tracker.trackUIInteraction(item);
     showDashboard();
-  } else if (selection === "Configure Settings") {
+  } else if (selection === "Settings") {
+    let item = configureSettingsKpmItem();
+    tracker.trackUIInteraction(item);
     configureSettings();
   }
-};
+}
 
 const buildStartEndFormatsOfUnixTuple = (tuple: any, startOfUnit = "week") => {
   if (!tuple || tuple.length !== 2) {

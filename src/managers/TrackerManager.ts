@@ -25,8 +25,6 @@ import {
   isMergeCommit
 } from '../repo/GitUtil';
 import { getPreference } from "../DataController";
-import { CacheManager } from "../cache/CacheManager";
-import { StatusBarAlignment } from "vscode";
 
 const fileIt = require("file-it");
 const moment = require("moment-timezone");

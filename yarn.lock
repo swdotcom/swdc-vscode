@@ -4631,10 +4631,10 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-swdc-tracker@^1.4.3:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.3.tgz#5f79540dbb0b711489ce2fdfaf8ccf098d750e2d"
-  integrity sha512-I4Uby3NHWzLOFqKSGmITgWmE3HLRvf9XrUy5oWERE3BL3WolOreAgfV8wxQL0hLoYYglciKLGKDjNLdq+Uo6ig==
+swdc-tracker@^1.4.4:
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.4.tgz#1f022a1fa9f8a919469bf6a99280a7d43efb3f26"
+  integrity sha512-cQBMmJoAEQtYw9dkeKrTg8GAv3bOWyjJQmtt8Js1LITk45asIMmosJg0WkF4XtCOU7szH2qXd23UQFeDJ7fgkQ==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.21.1"
