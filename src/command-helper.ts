@@ -24,6 +24,7 @@ import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
 import {
   getCodeTimeDashboardButton,
+  getStatusBarButtonItem,
   getFeedbackButton,
   getHideStatusBarMetricsButton,
   getLearnMoreButton,
@@ -65,6 +66,7 @@ export function createCommands(
     commands.registerCommand("codetime.displaySidebar", () => {
       // logic to open the sidebar (need to figure out how to reveal the sidebar webview)
       commands.executeCommand("workbench.view.extension.code-time-sidebar");
+      tracker.trackUIInteraction(getStatusBarButtonItem());
     })
   );
 
