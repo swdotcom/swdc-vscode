@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { format } from "date-fns";
 import { showModalSignupPrompt } from "./managers/SlackManager";
+import { File } from "swdc-tracker/dist";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
@@ -236,11 +237,19 @@ export function getProjectFolder(fileName): WorkspaceFolder {
 }
 
 export function setItem(key, value) {
-  fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
+  if (key === "jwt" || key === "name") {
+    fileIt.setJsonValue(getAuthFile(), key, value);
+  } else {
+    fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
+  }
 }
 
 export function getItem(key) {
-  return fileIt.getJsonValue(getSoftwareSessionFile(), key);
+  if (key === "jwt" || key === "name") {
+    return fileIt.getJsonValue(getAuthFile(), key);
+  } else {
+    return fileIt.getJsonValue(getSoftwareSessionFile(), key);
+  }
 }
 
 export function getIntegrations() {
@@ -406,6 +415,10 @@ export function getDeviceFile() {
 
 export function getSoftwareSessionFile() {
   return getFile("session.json");
+}
+
+export function getAuthFile() {
+  return getFile("auth.json");
 }
 
 export function getSoftwareDataStoreFile() {
