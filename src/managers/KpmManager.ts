@@ -1,6 +1,6 @@
 import { workspace, Disposable, RelativePattern, window, commands, Uri } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
-import { UNTITLED, NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
+import { NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt } from "../Util";
 import { FileChangeInfo } from "../model/models";
 import { storeCurrentPayload } from "./FileManager";

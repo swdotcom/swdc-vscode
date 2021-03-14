@@ -16,13 +16,12 @@ import { v4 as uuidv4 } from "uuid";
 
 import { format } from "date-fns";
 import { showModalSignupPrompt } from "./managers/SlackManager";
-import { File } from "swdc-tracker/dist";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
-const { exec } = require("child_process");
+const { execSync } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
@@ -344,7 +343,7 @@ export function isMac() {
 }
 
 export async function getHostname() {
-  let hostname = await getCommandResultLine("hostname");
+  let hostname = getCommandResultString("hostname");
   return hostname;
 }
 
@@ -368,35 +367,35 @@ export function getOs() {
   return "";
 }
 
-export async function getCommandResultLine(cmd, projectDir = null) {
-  const resultList = await getCommandResultList(cmd, projectDir);
+/**
+ * This function is synchronous as it uses "execSync" to perform shell commands
+ * @param cmd
+ * @param projectDir
+ * @returns
+ */
+export function getCommandResultString(cmd, projectDir = null): string {
+  const opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
 
-  let resultLine = "";
-  if (resultList && resultList.length) {
-    for (let i = 0; i < resultList.length; i++) {
-      let line = resultList[i];
-      if (line && line.trim().length > 0) {
-        resultLine = line.trim();
-        break;
-      }
-    }
-  }
-  return resultLine;
+  return execCmd(cmd, opts);
 }
 
-export async function getCommandResultList(cmd, projectDir = null) {
-  let result = await wrapExecPromise(`${cmd}`, projectDir);
-  if (!result) {
-    return [];
+function execCmd(cmd, opts) {
+  try {
+    const data = execSync(cmd, opts);
+    const lines = data ? data.toString().trim().split(/\r?\n/) : null;
+    if (lines && lines.length) {
+      return lines[0];
+    }
+  } catch (e) {
+    console.error("command error: ", e);
   }
-  const contentList = result.replace(/\r\n/g, "\r").replace(/\n/g, "\r").split(/\r/);
-  return contentList;
+  return null;
 }
 
 export async function getOsUsername() {
   let username = os.userInfo().username;
   if (!username || username.trim() === "") {
-    username = await getCommandResultLine("whoami");
+    username = getCommandResultString("whoami");
   }
   return username;
 }
@@ -560,10 +559,6 @@ export async function showOfflinePrompt(addReconnectMsg = false) {
   window.showInformationMessage(infoMsg, ...["OK"]);
 }
 
-export function nowInSecs() {
-  return Math.round(Date.now() / 1000);
-}
-
 export function getOffsetSeconds() {
   let d = new Date();
   return d.getTimezoneOffset() * 60;
@@ -627,26 +622,6 @@ export function randomCode() {
     .toString();
 }
 
-export function deleteFile(file) {
-  // if the file exists, get it
-  if (fs.existsSync(file)) {
-    fs.unlinkSync(file);
-  }
-}
-
-function execPromise(command, opts) {
-  return new Promise(function (resolve, reject) {
-    exec(command, opts, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      resolve(stdout.trim());
-    });
-  });
-}
-
 export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   if (email) {
     if (filterOutNonEmails && (email.endsWith("github.com") || email.includes("users.noreply"))) {
@@ -664,21 +639,13 @@ export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   return email;
 }
 
-export async function wrapExecPromise(cmd, projectDir) {
+export function wrapExecCmd(cmd, projectDir) {
   let result = null;
   try {
     let opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
-    result = await execPromise(cmd, opts).catch((e) => {
-      if (e.message) {
-        console.log(e.message);
-      }
-      return null;
-    });
+    return execCmd(cmd, opts);
   } catch (e) {
-    if (e.message) {
-      console.log(e.message);
-    }
-    result = null;
+    console.error(e.message);
   }
   return result;
 }
@@ -718,15 +685,6 @@ function checkRegistration() {
     return false;
   }
   return true;
-}
-
-/**
- * @param num The number to round
- * @param precision The number of decimal places to preserve
- */
-function roundUp(num, precision) {
-  precision = Math.pow(10, precision);
-  return Math.ceil(num * precision) / precision;
 }
 
 export function formatNumber(num) {
@@ -867,44 +825,9 @@ export function showWarningMessage(message: string) {
   return window.showWarningMessage(`${message}`);
 }
 
-function formatRightAlignedTableLabel(label, col_width) {
-  const spacesRequired = col_width - label.length;
-  let spaces = "";
-  if (spacesRequired > 0) {
-    for (let i = 0; i < spacesRequired; i++) {
-      spaces += " ";
-    }
-  }
-  return `${spaces}${label}`;
-}
-
-export function getTableHeader(leftLabel, rightLabel, isFullTable = true) {
-  // get the space between the two labels
-  const fullLen = !isFullTable ? TABLE_WIDTH - DASHBOARD_COL_WIDTH : TABLE_WIDTH;
-  const spacesRequired = fullLen - leftLabel.length - rightLabel.length;
-  let spaces = "";
-  if (spacesRequired > 0) {
-    let str = "";
-    for (let i = 0; i < spacesRequired; i++) {
-      spaces += " ";
-    }
-  }
-  return `${leftLabel}${spaces}${rightLabel}`;
-}
-
-export function getRightAlignedTableHeader(label) {
-  let content = `${formatRightAlignedTableLabel(label, TABLE_WIDTH)}\n`;
-  for (let i = 0; i < TABLE_WIDTH; i++) {
-    content += "-";
-  }
-  content += "\n";
-  return content;
-}
-
 function getSpaces(spacesRequired) {
   let spaces = "";
   if (spacesRequired > 0) {
-    let str = "";
     for (let i = 0; i < spacesRequired; i++) {
       spaces += " ";
     }
@@ -941,35 +864,6 @@ export function getRowLabels(labels) {
   return content;
 }
 
-export function getColumnHeaders(labels) {
-  // for now 3 columns
-  let content = "";
-  let spacesRequired = 0;
-  for (let i = 0; i < labels.length; i++) {
-    const label = labels[i];
-    if (i === 0) {
-      content += label;
-    } else if (i === 1) {
-      // middle column
-      spacesRequired = DASHBOARD_LRG_COL_WIDTH + DASHBOARD_COL_WIDTH - content.length - label.length - 1;
-      content += getSpaces(spacesRequired);
-      content += `${label} `;
-    } else {
-      // last column, get spaces until the end
-      spacesRequired = DASHBOARD_COL_WIDTH - label.length - 2;
-      content += `| `;
-      content += getSpaces(spacesRequired);
-      content += label;
-    }
-  }
-  content += "\n";
-  for (let i = 0; i < TABLE_WIDTH; i++) {
-    content += "-";
-  }
-  content += "\n";
-  return content;
-}
-
 export function getFileType(fileName: string) {
   let fileType = "";
   const lastDotIdx = fileName.lastIndexOf(".");
@@ -989,40 +883,8 @@ export function getFileDataArray(file) {
   return payloads;
 }
 
-// get the percent string dividing the reference value by the current value
-// this is meant to show the progressing percent of the daily average stats
-export function getPercentOfReferenceAvg(currentValue, referenceValue, referenceValueDisplay) {
-  currentValue = currentValue ?? 0;
-  let quotient = 1;
-  if (referenceValue) {
-    quotient = currentValue / referenceValue;
-    // at least show 1% if the current value is not zero and
-    // the quotient is less than 1 percent
-    if (currentValue && quotient < 0.01) {
-      quotient = 0.01;
-    }
-  }
-  return `${(quotient * 100).toFixed(0)}% of ${referenceValueDisplay}`;
-}
-
 export function noSpacesProjectDir(projectDir: string): string {
   return projectDir.replace(/^\s+/g, "");
-}
-
-/**
- * Checks whether we need to fetch the sessions/summary or not
- */
-export function shouldFetchSessionSummaryData() {
-  const now: Date = new Date();
-  // this is the format used across other plugins
-  const nowDay = format(now, "yyyy-MM-dd");
-  const currentDay: string = getItem("updatedTreeDate");
-  if (currentDay == nowDay) {
-    // only initialize once during a day for a specific user
-    return false;
-  }
-  setItem("updatedTreeDate", nowDay);
-  return true;
 }
 
 export function checkRegistrationForReport(showSignup = true) {

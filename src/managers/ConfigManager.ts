@@ -1,7 +1,5 @@
 import { ViewColumn, WebviewPanel, window } from "vscode";
 import { initializePreferences } from "../DataController";
-import path = require("path");
-import fs = require("fs");
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { getItem } from "../Util";
 

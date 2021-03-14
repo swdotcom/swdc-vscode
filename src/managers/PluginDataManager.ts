@@ -393,7 +393,7 @@ export class PluginDataManager {
     p.directory = directory;
     p.name = projName;
     p.resource = resourceInfo;
-    p.identifier = resourceInfo && resourceInfo.identifier ? resourceInfo.identifier : "";
+    p.identifier = resourceInfo?.identifier ?? "";
     payload.project = p;
 
     await this.populateRepoMetrics(payload);
