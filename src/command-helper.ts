@@ -33,6 +33,7 @@ import {
   getWebViewDashboardButton,
 } from "./tree/TreeButtonProvider";
 import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
+import { getTeams } from "./managers/TeamManager";
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -409,6 +410,13 @@ export function createCommands(
     commands.registerCommand("codetime.skipSlackConnect", () => {
       setItem("vscode_CtskipSlackConnect", true);
       // refresh the view
+      commands.executeCommand("codetime.refreshCodeTimeView");
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand("codetime.reloadTeams", async () => {
+      await getTeams(true);
       commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );

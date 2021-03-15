@@ -1,26 +1,28 @@
 import { isResponseOk, softwareGet } from "../http/HttpClient";
 import { getItem } from "../Util";
 
-let cachedTeams = [];
 let lastUpdateTime = 0;
-let TWO_HOURS_MILLIS = 1000 * 60 * 60 * 2;
+let cachedTeams = [];
+let SIX_HOURS_MILLIS = 1000 * 60 * 60 * 6;
 
-export async function getTeams() {
-  if (refreshTeamCache()) {
-    cachedTeams = [];
-  }
-  if (cachedTeams.length) {
+export async function getTeams(hardRefresh = false) {
+  if (!getItem("name")) {
+    // not registered yet
     return cachedTeams;
   }
-  const resp = await softwareGet("/teams", getItem("jwt"));
-  if (isResponseOk(resp)) {
-    // id and name
-    cachedTeams = resp.data;
+  const now = new Date().getTime();
+
+  // fetch if its over 6 hours or its a hard refresh
+  if (now - lastUpdateTime > SIX_HOURS_MILLIS || hardRefresh) {
+    if (!hardRefresh) {
+      // don't update the last udpate time if its a hard refresh so the
+      // webview can pickup on the cached data
+      lastUpdateTime = now;
+    }
+    const resp = await softwareGet("/teams", getItem("jwt"));
+    if (isResponseOk(resp)) {
+      cachedTeams = resp.data;
+    }
   }
   return cachedTeams;
-}
-
-function refreshTeamCache() {
-  const now = new Date().getTime();
-  return !!(now - lastUpdateTime > TWO_HOURS_MILLIS);
 }

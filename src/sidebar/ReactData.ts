@@ -1,5 +1,5 @@
 import { getCurrentColorKind } from "../extension";
-import { determineFlowModeFromApi, getConfiguredScreenMode, isFlowModEnabled } from "../managers/FlowManager";
+import { determineFlowModeFromApi, isFlowModEnabled } from "../managers/FlowManager";
 import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { getTeams } from "../managers/TeamManager";
 import { getItem, isStatusBarTextVisible } from "../Util";
