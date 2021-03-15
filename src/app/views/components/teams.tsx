@@ -50,6 +50,8 @@ export default function Teams(props) {
   const classes = useStyles();
   const stateData = props.stateData;
 
+  const [state, setState] = useState({ loading: false });
+
   function teamCreateClickHandler() {
     const command = {
       action: "codetime.createTeam",
@@ -68,11 +70,15 @@ export default function Teams(props) {
   }
 
   const refreshTeamsClick = () => {
+    setState({ loading: true });
     const command = {
       action: "codetime.reloadTeams",
       command: "command_execute",
     };
     props.vscode.postMessage(command);
+    setTimeout(() => {
+      setState({ loading: false });
+    }, 3000);
   };
 
   return (
@@ -102,16 +108,17 @@ export default function Teams(props) {
                 <ListItem style={{ padding: 0, margin: 0 }}>
                   <ListItemText primary="Teams" secondary="View your team dashboard" />
                   <ListItemSecondaryAction classes={{ root: classes.secondaryAction }}>
-                    <IconButton
-                      size="small"
-                      classes={{ root: classes.iconBtnRoot }}
-                      edge="end"
-                      aria-label="Flow Mode Info"
-                      onClick={refreshTeamsClick}
-                      disabled={state.loading}
-                    >
-                      <RefreshIcon style={{ color: blue[500] }} />
-                    </IconButton>
+                    {!state.loading && (
+                      <IconButton
+                        size="small"
+                        classes={{ root: classes.iconBtnRoot }}
+                        edge="end"
+                        aria-label="Flow Mode Info"
+                        onClick={refreshTeamsClick}
+                      >
+                        <RefreshIcon style={{ color: blue[500] }} />
+                      </IconButton>
+                    )}
                   </ListItemSecondaryAction>
                 </ListItem>
               </List>
