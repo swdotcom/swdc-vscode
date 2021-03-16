@@ -21,7 +21,7 @@ const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
-const { execSync } = require("child_process");
+const { spawnSync } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
@@ -245,10 +245,12 @@ export function setItem(key, value) {
 
 export function getItem(key) {
   if (key === "jwt" || key === "name") {
-    return fileIt.getJsonValue(getAuthFile(), key);
-  } else {
-    return fileIt.getJsonValue(getSoftwareSessionFile(), key);
+    const val = fileIt.getJsonValue(getAuthFile(), key);
+    if (val) {
+      return val;
+    }
   }
+  return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
 export function getIntegrations() {
@@ -368,7 +370,7 @@ export function getOs() {
 }
 
 /**
- * This function is synchronous as it uses "execSync" to perform shell commands
+ * This function is synchronous as it uses "spawnSync" to perform shell commands
  * @param cmd
  * @param projectDir
  * @returns
@@ -379,17 +381,45 @@ export function getCommandResultString(cmd, projectDir = null): string {
   return execCmd(cmd, opts);
 }
 
-function execCmd(cmd, opts) {
+function execCmd(cmd = "", opts = {}) {
+  let resultStr = "";
   try {
-    const data = execSync(cmd, opts);
-    const lines = data ? data.toString().trim().split(/\r?\n/) : null;
-    if (lines && lines.length) {
-      return lines[0];
+    // add utf 8 to the options
+    opts = {
+      ...opts,
+      encoding: "utf8",
+    };
+
+    // get the command and options
+    let cmdOpts = cmd.trim().split(" ");
+    if (cmdOpts.length) {
+      // get the command
+      cmd = cmdOpts[0];
+      if (cmdOpts.length > 1) {
+        // splice out the options
+        cmdOpts = cmdOpts.slice(1, cmdOpts.length);
+      } else {
+        // no options, set the array to empty
+        cmdOpts = [];
+      }
+    }
+    const data = spawnSync(cmd, cmdOpts, opts);
+    if (data) {
+      const errorText = data?.stderr.toString().trim() ?? null;
+      if (errorText) {
+        console.error("command error: ", errorText);
+        return null;
+      }
+      resultStr = data?.stdout.toString().trim() ?? "";
+      const lines = resultStr ? resultStr.split(/\r?\n/) : null;
+      if (lines && lines.length) {
+        resultStr = lines[0];
+      }
     }
   } catch (e) {
     console.error("command error: ", e);
   }
-  return null;
+  return resultStr;
 }
 
 export async function getOsUsername() {
