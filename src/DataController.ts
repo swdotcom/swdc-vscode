@@ -4,8 +4,6 @@ import {
   getItem,
   setItem,
   getProjectCodeSummaryFile,
-  formatNumber,
-  getRowLabels,
   getDailyReportSummaryFile,
   getAuthCallbackState,
   setAuthCallbackState,
@@ -20,12 +18,12 @@ import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
-const moment = require("moment-timezone");
 
 let userFetchTimeout = null;
 
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
+  const name = getItem("name");
   const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
 
   const token = auth_callback_state ? auth_callback_state : jwt;
@@ -33,12 +31,12 @@ export async function getUserRegistrationState(isIntegration = false) {
   let resp = await softwareGet("/users/plugin/state", token);
   let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
-  // if no user and it's an integration check, try using the jwt if
-  // we tried with the auth callback state
-  if (!user && isIntegration && auth_callback_state) {
-    // try using the jwt
-    resp = await softwareGet("/users/plugin/state", token);
-    user = isResponseOk(resp) && resp.data ? resp.data.user : null;
+  const integrationOrNoUser = isIntegration || !name ? true : false;
+
+  // try with the jwt if no user is found
+  if (!user && integrationOrNoUser && auth_callback_state) {
+    resp = await softwareGet("/users/plugin/state", jwt);
+    user = resp.data ? resp.data.user : null;
   }
 
   if (user) {
@@ -254,41 +252,4 @@ export async function writeProjectCommitDashboard(apiResult) {
 
   const file = getProjectCodeSummaryFile();
   fileIt.writeContentFileSync(file, dashboardContent);
-}
-
-function getRowNumberData(summary, title, attribute) {
-  // files changed
-  const userFilesChanged = summary.activity[attribute] ? formatNumber(summary.activity[attribute]) : formatNumber(0);
-  const contribFilesChanged = summary.contributorActivity[attribute] ? formatNumber(summary.contributorActivity[attribute]) : formatNumber(0);
-  return getRowLabels([title, userFilesChanged, contribFilesChanged]);
-}
-
-// start and end should be local_start and local_end
-function createStartEndRangeByTimestamps(start, end) {
-  return {
-    rangeStart: moment.unix(start).utc().format("MMM Do, YYYY"),
-    rangeEnd: moment.unix(end).utc().format("MMM Do, YYYY"),
-  };
-}
-
-function createStartEndRangeByType(type = "lastWeek") {
-  // default to "lastWeek"
-  let startOf = moment().startOf("week").subtract(1, "week");
-  let endOf = moment().startOf("week").subtract(1, "week").endOf("week");
-
-  if (type === "yesterday") {
-    startOf = moment().subtract(1, "day").startOf("day");
-    endOf = moment().subtract(1, "day").endOf("day");
-  } else if (type === "currentWeek") {
-    startOf = moment().startOf("week");
-    endOf = moment();
-  } else if (type === "lastMonth") {
-    startOf = moment().subtract(1, "month").startOf("month");
-    endOf = moment().subtract(1, "month").endOf("month");
-  }
-
-  return {
-    rangeStart: startOf.format("MMM Do, YYYY"),
-    rangeEnd: endOf.format("MMM Do, YYYY"),
-  };
 }

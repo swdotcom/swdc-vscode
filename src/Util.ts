@@ -855,45 +855,6 @@ export function showWarningMessage(message: string) {
   return window.showWarningMessage(`${message}`);
 }
 
-function getSpaces(spacesRequired) {
-  let spaces = "";
-  if (spacesRequired > 0) {
-    for (let i = 0; i < spacesRequired; i++) {
-      spaces += " ";
-    }
-  }
-  return spaces;
-}
-
-export function getRowLabels(labels) {
-  // for now 3 columns
-  let content = "";
-  let spacesRequired = 0;
-  for (let i = 0; i < labels.length; i++) {
-    const label = labels[i];
-    if (i === 0) {
-      content += label;
-      // show a colon at the end of this column
-      spacesRequired = DASHBOARD_COL_WIDTH - content.length - 1;
-      content += getSpaces(spacesRequired);
-      content += ":";
-    } else if (i === 1) {
-      // middle column
-      spacesRequired = DASHBOARD_LRG_COL_WIDTH + DASHBOARD_COL_WIDTH - content.length - label.length - 1;
-      content += getSpaces(spacesRequired);
-      content += `${label} `;
-    } else {
-      // last column, get spaces until the end
-      spacesRequired = DASHBOARD_COL_WIDTH - label.length - 2;
-      content += `| `;
-      content += getSpaces(spacesRequired);
-      content += label;
-    }
-  }
-  content += "\n";
-  return content;
-}
-
 export function getFileType(fileName: string) {
   let fileType = "";
   const lastDotIdx = fileName.lastIndexOf(".");
