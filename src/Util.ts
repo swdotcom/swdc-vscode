@@ -10,11 +10,9 @@ import {
   LOG_FILE_EVENTS,
   SIGN_UP_LABEL,
 } from "./Constants";
-import { refetchUserStatusLazily } from "./DataController";
 import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
-import { format } from "date-fns";
 import { showModalSignupPrompt } from "./managers/SlackManager";
 
 const queryString = require("query-string");
@@ -765,7 +763,6 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   const url = await buildEmailSignup();
 
   launchWebUrl(url);
-  refetchUserStatusLazily();
 }
 
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
@@ -776,8 +773,6 @@ export async function launchLogin(loginType: string = "software", switching_acco
   const url = await buildLoginUrl(loginType);
 
   launchWebUrl(url);
-  // use the defaults
-  refetchUserStatusLazily();
 }
 
 /**
@@ -793,12 +788,12 @@ export async function buildLoginUrl(loginType: string) {
     pluginVersion: getVersion(),
     plugin_id: getPluginId(),
     auth_callback_state,
+    plugin_uuid: getPluginUuid(),
     login: true,
   };
 
-  // only send the plugin_uuid and plugin_token when registering for the 1st time
+  // only send the plugin_token when registering for the 1st time
   if (!name) {
-    obj["plugin_uuid"] = getPluginUuid();
     obj["plugin_token"] = getItem("jwt");
   }
 

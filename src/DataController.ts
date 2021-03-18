@@ -19,8 +19,6 @@ import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
-let userFetchTimeout = null;
-
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
   const name = getItem("name");
@@ -41,16 +39,6 @@ export async function getUserRegistrationState(isIntegration = false) {
 
   if (user) {
     const registered = user.registered;
-
-    // update the name and jwt if we're authenticating
-    if (!isIntegration) {
-      if (user.plugin_jwt) {
-        setItem("jwt", user.plugin_jwt);
-      }
-      if (registered === 1) {
-        setItem("name", user.email);
-      }
-    }
 
     const currentAuthType = getItem("authType");
     if (!currentAuthType) {
@@ -159,58 +147,49 @@ export function getPreference(preference: string) {
   return getItem(preference);
 }
 
-export function refetchUserStatusLazily(tryCountUntilFoundUser = 50, interval = 10000) {
-  if (userFetchTimeout) {
-    return;
+export async function authenticationCompleteHandler(user) {
+  // clear the auth callback state
+  setItem("switching_account", false);
+  setItem("vscode_CtskipSlackConnect", false);
+  setAuthCallbackState(null);
+
+  setItem("jwt", user.plugin_jwt);
+
+  if (user.registered === 1) {
+    setItem("name", user.email);
   }
-  userFetchTimeout = setTimeout(() => {
-    userFetchTimeout = null;
-    userStatusFetchHandler(tryCountUntilFoundUser, interval);
-  }, interval);
-}
 
-async function userStatusFetchHandler(tryCountUntilFoundUser, interval) {
-  const state = await getUserRegistrationState();
-  if (!state.loggedOn) {
-    // try again if the count is not zero
-    if (tryCountUntilFoundUser > 0) {
-      tryCountUntilFoundUser -= 1;
-      refetchUserStatusLazily(tryCountUntilFoundUser, interval);
-    } else {
-      // clear the auth callback state
-      setItem("switching_account", false);
-      setAuthCallbackState(null);
-    }
-  } else {
-    // clear the auth callback state
-    setItem("switching_account", false);
-    setItem("vscode_CtskipSlackConnect", false);
-    setAuthCallbackState(null);
-
-    clearSessionSummaryData();
-    clearTimeDataSummary();
-
-    // fetch after logging on
-    SummaryManager.getInstance().updateSessionSummaryFromServer();
-
-    // clear out the previous ones locally
-    removeAllSlackIntegrations();
-    // update this users integrations
-    await fetchSlackIntegrations(state.user);
-
-    const message = "Successfully logged on to Code Time";
-    window.showInformationMessage(message);
-
-    try {
-      initializeWebsockets();
-    } catch (e) {
-      console.error("Failed to initialize codetime websockets", e);
-    }
-
-    commands.executeCommand("codetime.refreshCodeTimeView");
-
-    initializePreferences();
+  const currentAuthType = getItem("authType");
+  if (!currentAuthType) {
+    setItem("authType", "software");
   }
+
+  setItem("switching_account", false);
+  setAuthCallbackState(null);
+
+  clearSessionSummaryData();
+  clearTimeDataSummary();
+
+  // fetch after logging on
+  SummaryManager.getInstance().updateSessionSummaryFromServer();
+
+  // clear out the previous ones locally
+  removeAllSlackIntegrations();
+  // update this users integrations
+  await fetchSlackIntegrations(user);
+
+  const message = "Successfully logged on to Code Time";
+  window.showInformationMessage(message);
+
+  try {
+    initializeWebsockets();
+  } catch (e) {
+    console.error("Failed to initialize codetime websockets", e);
+  }
+
+  commands.executeCommand("codetime.refreshCodeTimeView");
+
+  initializePreferences();
 }
 
 export function removeAllSlackIntegrations() {
