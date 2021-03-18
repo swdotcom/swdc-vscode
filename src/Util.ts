@@ -380,7 +380,11 @@ export function getCommandResultString(cmd, projectDir = null): string {
 }
 
 function execCmd(cmd = "", opts = {}) {
-  let resultStr = "";
+  if (!cmd) {
+    // no command to run, return default
+    return null;
+  }
+
   try {
     // add utf 8 to the options
     opts = {
@@ -390,34 +394,30 @@ function execCmd(cmd = "", opts = {}) {
 
     // get the command and options
     let cmdOpts = cmd.trim().split(" ");
-    if (cmdOpts.length) {
-      // get the command
-      cmd = cmdOpts[0];
-      if (cmdOpts.length > 1) {
-        // splice out the options
-        cmdOpts = cmdOpts.slice(1, cmdOpts.length);
-      } else {
-        // no options, set the array to empty
-        cmdOpts = [];
-      }
+    cmd = cmdOpts[0];
+    if (cmdOpts.length > 1) {
+      cmdOpts = cmdOpts.slice(1, cmdOpts.length);
+    } else {
+      // no options, set the array to empty
+      cmdOpts = [];
     }
+
     const data = spawnSync(cmd, cmdOpts, opts);
     if (data) {
-      const errorText = data?.stderr.toString().trim() ?? null;
-      if (errorText) {
-        console.error("command error: ", errorText);
+      if (data.stderr) {
+        console.error("command error: ", data.stderr);
         return null;
       }
-      resultStr = data?.stdout.toString().trim() ?? "";
-      const lines = resultStr ? resultStr.split(/\r?\n/) : null;
-      if (lines && lines.length) {
-        resultStr = lines[0];
+
+      const lines = data?.stdout?.toString().trim().split(/\r?\n/) ?? null;
+      if (lines?.length) {
+        return lines[0];
       }
     }
   } catch (e) {
     console.error("command error: ", e);
   }
-  return resultStr;
+  return null;
 }
 
 export async function getOsUsername() {
@@ -668,14 +668,13 @@ export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
 }
 
 export function wrapExecCmd(cmd, projectDir) {
-  let result = null;
   try {
     let opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
     return execCmd(cmd, opts);
   } catch (e) {
     console.error(e.message);
   }
-  return result;
+  return null;
 }
 
 export async function launchWebDashboard() {

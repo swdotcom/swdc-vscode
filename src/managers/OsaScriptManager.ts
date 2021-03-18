@@ -35,7 +35,7 @@ export async function isDarkMode() {
       end try\'`;
     const isDarkModeStr = getCommandResultString(getDarkModeFlag);
     // convert it to a string
-    if (isDarkModeStr !== undefined && isDarkModeStr !== null) {
+    if (isDarkModeStr !== undefined && isDarkModeStr !== null && isDarkModeStr !== "") {
       try {
         isDarkMode = JSON.parse(`${isDarkModeStr}`);
       } catch (e) {}

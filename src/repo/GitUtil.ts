@@ -1,4 +1,4 @@
-import { CommitChangeStats, DiffNumStats } from "../model/models";
+import { DiffNumStats } from "../model/models";
 import { wrapExecCmd, isGitProject, noSpacesProjectDir } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
 
