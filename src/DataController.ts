@@ -4,13 +4,6 @@ import {
   getItem,
   setItem,
   getProjectCodeSummaryFile,
-  getProjectContributorCodeSummaryFile,
-  formatNumber,
-  getRightAlignedTableHeader,
-  getRowLabels,
-  getTableHeader,
-  getColumnHeaders,
-  findFirstActiveDirectoryOrWorkspaceDirectory,
   getDailyReportSummaryFile,
   getAuthCallbackState,
   setAuthCallbackState,
@@ -18,21 +11,19 @@ import {
   getIntegrations,
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
-import { CommitChangeStats } from "./model/models";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
-import { getTodaysCommits, getThisWeeksCommits, getYesterdaysCommits } from "./repo/GitUtil";
 import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
-const moment = require("moment-timezone");
 
 let userFetchTimeout = null;
 
 export async function getUserRegistrationState(isIntegration = false) {
   const jwt = getItem("jwt");
+  const name = getItem("name");
   const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
 
   const token = auth_callback_state ? auth_callback_state : jwt;
@@ -40,12 +31,12 @@ export async function getUserRegistrationState(isIntegration = false) {
   let resp = await softwareGet("/users/plugin/state", token);
   let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
-  // if no user and it's an integration check, try using the jwt if
-  // we tried with the auth callback state
-  if (!user && isIntegration && auth_callback_state) {
-    // try using the jwt
-    resp = await softwareGet("/users/plugin/state", token);
-    user = isResponseOk(resp) && resp.data ? resp.data.user : null;
+  const integrationOrNoUser = isIntegration || !name ? true : false;
+
+  // try with the jwt if no user is found
+  if (!user && integrationOrNoUser && auth_callback_state) {
+    resp = await softwareGet("/users/plugin/state", jwt);
+    user = resp.data ? resp.data.user : null;
   }
 
   if (user) {
@@ -261,188 +252,4 @@ export async function writeProjectCommitDashboard(apiResult) {
 
   const file = getProjectCodeSummaryFile();
   fileIt.writeContentFileSync(file, dashboardContent);
-}
-
-export async function writeProjectContributorCommitDashboardFromGitLogs(identifier) {
-  const activeRootPath = findFirstActiveDirectoryOrWorkspaceDirectory();
-
-  const userTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(activeRootPath);
-  const userYesterdaysChangeStatsP: Promise<CommitChangeStats> = getYesterdaysCommits(activeRootPath);
-  const userWeeksChangeStatsP: Promise<CommitChangeStats> = getThisWeeksCommits(activeRootPath);
-  const contributorsTodaysChangeStatsP: Promise<CommitChangeStats> = getTodaysCommits(activeRootPath, false);
-  const contributorsYesterdaysChangeStatsP: Promise<CommitChangeStats> = getYesterdaysCommits(activeRootPath, false);
-  const contributorsWeeksChangeStatsP: Promise<CommitChangeStats> = getThisWeeksCommits(activeRootPath, false);
-
-  let dashboardContent = "";
-
-  const now = moment().unix();
-  const formattedDate = moment.unix(now).format("ddd, MMM Do h:mma");
-  dashboardContent = getTableHeader("PROJECT SUMMARY", ` (Last updated on ${formattedDate})`);
-  dashboardContent += "\n\n";
-  dashboardContent += `Project: ${identifier}`;
-  dashboardContent += "\n\n";
-
-  // TODAY
-  let projectDate = moment.unix(now).format("MMM Do, YYYY");
-  dashboardContent += getRightAlignedTableHeader(`Today (${projectDate})`);
-  dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-
-  let summary = {
-    activity: await userTodaysChangeStatsP,
-    contributorActivity: await contributorsTodaysChangeStatsP,
-  };
-  dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
-
-  // files changed
-  dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
-
-  // insertions
-  dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
-
-  // deletions
-  dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
-
-  dashboardContent += "\n";
-
-  // YESTERDAY
-  projectDate = moment.unix(now).format("MMM Do, YYYY");
-  let startDate = moment.unix(now).subtract(1, "day").startOf("day").format("MMM Do, YYYY");
-  dashboardContent += getRightAlignedTableHeader(`Yesterday (${startDate})`);
-  dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-  summary = {
-    activity: await userYesterdaysChangeStatsP,
-    contributorActivity: await contributorsYesterdaysChangeStatsP,
-  };
-  dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
-
-  // files changed
-  dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
-
-  // insertions
-  dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
-
-  // deletions
-  dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
-
-  dashboardContent += "\n";
-
-  // THIS WEEK
-  projectDate = moment.unix(now).format("MMM Do, YYYY");
-  startDate = moment.unix(now).startOf("week").format("MMM Do, YYYY");
-  dashboardContent += getRightAlignedTableHeader(`This week (${startDate} to ${projectDate})`);
-  dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-
-  summary = {
-    activity: await userWeeksChangeStatsP,
-    contributorActivity: await contributorsWeeksChangeStatsP,
-  };
-  dashboardContent += getRowNumberData(summary, "Commits", "commitCount");
-
-  // files changed
-  dashboardContent += getRowNumberData(summary, "Files changed", "fileCount");
-
-  // insertions
-  dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
-
-  // deletions
-  dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
-
-  dashboardContent += "\n";
-
-  const file = getProjectContributorCodeSummaryFile();
-  fileIt.writeContentFileSync(file, dashboardContent);
-}
-
-export async function writeProjectContributorCommitDashboard(identifier) {
-  const qryStr = `?identifier=${encodeURIComponent(identifier)}`;
-  const api = `/projects/contributorSummary${qryStr}`;
-  const result = await softwareGet(api, getItem("jwt"));
-
-  let dashboardContent = "";
-
-  // [{timestamp, activity, contributorActivity},...]
-  // the activity and contributorActivity will have the following structure
-  // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
-  //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
-  if (isResponseOk(result)) {
-    const data = result.data;
-    // create the title
-    const now = moment().unix();
-    const formattedDate = moment.unix(now).format("ddd, MMM Do h:mma");
-    dashboardContent = getTableHeader("PROJECT SUMMARY", ` (Last updated on ${formattedDate})`);
-    dashboardContent += "\n\n";
-    dashboardContent += `Project: ${identifier}`;
-    dashboardContent += "\n\n";
-
-    for (let i = 0; i < data.length; i++) {
-      const summary = data[i];
-      let projectDate = moment.unix(now).format("MMM Do, YYYY");
-      if (i === 0) {
-        projectDate = `Today (${projectDate})`;
-      } else if (i === 1) {
-        let startDate = moment.unix(now).startOf("week").format("MMM Do, YYYY");
-        projectDate = `This week (${startDate} to ${projectDate})`;
-      } else {
-        let startDate = moment.unix(now).startOf("month").format("MMM Do, YYYY");
-        projectDate = `This month (${startDate} to ${projectDate})`;
-      }
-      dashboardContent += getRightAlignedTableHeader(projectDate);
-      dashboardContent += getColumnHeaders(["Metric", "You", "All Contributors"]);
-
-      // commits
-      dashboardContent += getRowNumberData(summary, "Commits", "commits");
-
-      // files changed
-      dashboardContent += getRowNumberData(summary, "Files changed", "files_changed");
-
-      // insertions
-      dashboardContent += getRowNumberData(summary, "Insertions", "insertions");
-
-      // deletions
-      dashboardContent += getRowNumberData(summary, "Deletions", "deletions");
-      dashboardContent += "\n";
-    }
-
-    dashboardContent += "\n";
-  }
-
-  const file = getProjectContributorCodeSummaryFile();
-  fileIt.writeContentFileSync(file, dashboardContent);
-}
-
-function getRowNumberData(summary, title, attribute) {
-  // files changed
-  const userFilesChanged = summary.activity[attribute] ? formatNumber(summary.activity[attribute]) : formatNumber(0);
-  const contribFilesChanged = summary.contributorActivity[attribute] ? formatNumber(summary.contributorActivity[attribute]) : formatNumber(0);
-  return getRowLabels([title, userFilesChanged, contribFilesChanged]);
-}
-
-// start and end should be local_start and local_end
-function createStartEndRangeByTimestamps(start, end) {
-  return {
-    rangeStart: moment.unix(start).utc().format("MMM Do, YYYY"),
-    rangeEnd: moment.unix(end).utc().format("MMM Do, YYYY"),
-  };
-}
-
-function createStartEndRangeByType(type = "lastWeek") {
-  // default to "lastWeek"
-  let startOf = moment().startOf("week").subtract(1, "week");
-  let endOf = moment().startOf("week").subtract(1, "week").endOf("week");
-
-  if (type === "yesterday") {
-    startOf = moment().subtract(1, "day").startOf("day");
-    endOf = moment().subtract(1, "day").endOf("day");
-  } else if (type === "currentWeek") {
-    startOf = moment().startOf("week");
-    endOf = moment();
-  } else if (type === "lastMonth") {
-    startOf = moment().subtract(1, "month").startOf("month");
-    endOf = moment().subtract(1, "month").endOf("month");
-  }
-
-  return {
-    rangeStart: startOf.format("MMM Do, YYYY"),
-    rangeEnd: endOf.format("MMM Do, YYYY"),
-  };
 }
