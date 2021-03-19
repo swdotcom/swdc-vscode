@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
@@ -8,11 +8,6 @@ import Grid from "@material-ui/core/Grid";
 import ListItemText from "@material-ui/core/ListItemText";
 import GroupIcon from "@material-ui/icons/Group";
 import blue from "@material-ui/core/colors/blue";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import IconButton from "@material-ui/core/IconButton";
-import RefreshIcon from "@material-ui/icons/Refresh";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -39,9 +34,6 @@ const useStyles = makeStyles((theme) => ({
   iconBtnRoot: {
     color: "rgba(222,222,222,0.75)",
   },
-  secondaryAction: {
-    right: 0,
-  },
 }));
 
 export default function Teams(props) {
@@ -49,8 +41,6 @@ export default function Teams(props) {
   useEffect(() => {});
   const classes = useStyles();
   const stateData = props.stateData;
-
-  const [state, setState] = useState({ loading: false });
 
   function teamCreateClickHandler() {
     const command = {
@@ -68,18 +58,6 @@ export default function Teams(props) {
     };
     props.vscode.postMessage(command);
   }
-
-  const refreshTeamsClick = () => {
-    setState({ loading: true });
-    const command = {
-      action: "codetime.reloadTeams",
-      command: "command_execute",
-    };
-    props.vscode.postMessage(command);
-    setTimeout(() => {
-      setState({ loading: false });
-    }, 3000);
-  };
 
   return (
     <Grid container className={classes.root}>
@@ -104,24 +82,7 @@ export default function Teams(props) {
         ) : (
           <Grid container className={classes.root}>
             <Grid item xs={12}>
-              <List style={{ padding: 0, margin: 0 }}>
-                <ListItem style={{ padding: 0, margin: 0 }}>
-                  <ListItemText primary="Teams" secondary="View your team dashboard" />
-                  <ListItemSecondaryAction classes={{ root: classes.secondaryAction }}>
-                    {!state.loading && (
-                      <IconButton
-                        size="small"
-                        classes={{ root: classes.iconBtnRoot }}
-                        edge="end"
-                        aria-label="Flow Mode Info"
-                        onClick={refreshTeamsClick}
-                      >
-                        <RefreshIcon style={{ color: blue[500] }} />
-                      </IconButton>
-                    )}
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
+              <ListItemText primary="Teams" secondary="View your team dashboard" />
             </Grid>
             {stateData.teams.map((team, index) => (
               <Grid item xs={12} key={index}>

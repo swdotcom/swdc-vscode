@@ -16,6 +16,7 @@ import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
+import { getTeams } from "./managers/TeamManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
@@ -186,6 +187,9 @@ export async function authenticationCompleteHandler(user) {
   } catch (e) {
     console.error("Failed to initialize codetime websockets", e);
   }
+
+  // fetch any teams for this user
+  await getTeams();
 
   commands.executeCommand("codetime.refreshCodeTimeView");
 

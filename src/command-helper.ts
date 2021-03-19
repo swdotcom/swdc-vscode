@@ -416,7 +416,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.reloadTeams", async () => {
-      await getTeams(true);
+      await getTeams();
       commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );

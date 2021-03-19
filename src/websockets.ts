@@ -2,6 +2,7 @@ import { websockets_url } from "./Constants";
 import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid } from "./Util";
 import { handleFlowScoreMessage } from "./message_handlers/flow_score";
 import { handleAuthenticatedPluginUser } from "./message_handlers/authenticated_plugin_user";
+import { handleTeamMemberSocketEvent } from "./message_handlers/team_member";
 
 const WebSocket = require("ws");
 
@@ -80,6 +81,9 @@ const handleIncomingMessage = (data: any) => {
         break;
       case "authenticated_plugin_user":
         handleAuthenticatedPluginUser(message.body);
+        break;
+      case "team_member":
+        handleTeamMemberSocketEvent(message.body);
         break;
       default:
         console.warn("[CodeTime] received unhandled websocket message type", data);
