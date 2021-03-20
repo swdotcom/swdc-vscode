@@ -1,4 +1,4 @@
-const { spawnSync } = require("child_process");
+const { execSync } = require("child_process");
 
 export function execCmd(cmd = "", projectDir = null, returnLines = false) {
   let result = returnLines ? [] : null;
@@ -7,19 +7,14 @@ export function execCmd(cmd = "", projectDir = null, returnLines = false) {
     return result;
   }
 
-  const opts = projectDir ? { cwd: projectDir, encoding: "utf8" } : { encoding: "utf8" };
-
   try {
-    const data = spawnSync("cmd", ["/c", cmd], opts);
-    if (data) {
-      if (data.stderr) {
-        console.error("command error: ", data.stderr);
-        return result;
-      }
+    const opts = projectDir ? { cwd: projectDir, encoding: "utf8", timeout: 5000 } : { encoding: "utf8", timeout: 5000 };
 
-      const lines = data?.stdout?.toString().trim().replace(/^\s+/g, " ").replace(/</g, "").replace(/>/g, "").split(/\r?\n/) ?? [];
-      if (lines?.length) {
-        return returnLines ? lines : lines[0];
+    const cmdResult = execSync(cmd, opts);
+    if (cmdResult && cmdResult.length) {
+      const lines = cmdResult.trim().replace(/^\s+/g, " ").replace(/</g, "").replace(/>/g, "").split(/\r?\n/);
+      if (lines.length) {
+        result = returnLines ? lines : lines[0];
       }
     }
   } catch (e) {
