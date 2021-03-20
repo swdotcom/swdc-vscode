@@ -1,8 +1,8 @@
-import { getWorkspaceFolders, normalizeGithubEmail, getFileType, isGitProject, wrapExecCmd } from "../Util";
-import { getExecResultList } from "./GitUtil";
+import { getWorkspaceFolders, normalizeGithubEmail, getFileType, isGitProject } from "../Util";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
 import { CacheManager } from "../cache/CacheManager";
+import { execCmd } from "../managers/ExecManager";
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 const cacheTimeoutSeconds = 60 * 10;
@@ -47,7 +47,7 @@ export async function getFileContributorCount(fileName) {
   const cmd = `git log --pretty="%an" ${fileName}`;
 
   // get the list of users that modified this file
-  let resultList = getExecResultList(cmd, directory);
+  let resultList = execCmd(cmd, directory, true);
 
   if (resultList?.length) {
     let map = {};
@@ -74,7 +74,7 @@ export async function getRepoFileCount(directory) {
   // windows doesn't support the wc -l so we'll just count the list
   let cmd = `git ls-files`;
   // get the author name and email
-  let resultList = getExecResultList(cmd, directory);
+  let resultList = execCmd(cmd, directory, true);
   if (!resultList) {
     // something went wrong, but don't try to parse a null or undefined str
     return 0;
@@ -110,7 +110,7 @@ export async function getRepoContributorInfo(fileName: string, filterOutNonEmail
     // username, email
     let cmd = `git log --format='%an,%ae' | sort -u`;
     // get the author name and email
-    let resultList = getExecResultList(cmd, directory);
+    let resultList = execCmd(cmd, directory, true);
     if (!resultList) {
       // something went wrong, but don't try to parse a null or undefined str
       return repoContributorInfo;

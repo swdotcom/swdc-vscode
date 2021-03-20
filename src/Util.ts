@@ -14,12 +14,13 @@ import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
 import { showModalSignupPrompt } from "./managers/SlackManager";
+import { execCmd } from "./managers/ExecManager";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
-const { spawnSync } = require("child_process");
+
 const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
@@ -343,7 +344,7 @@ export function isMac() {
 }
 
 export async function getHostname() {
-  let hostname = getCommandResultString("hostname");
+  let hostname = execCmd("hostname");
   return hostname;
 }
 
@@ -367,63 +368,10 @@ export function getOs() {
   return "";
 }
 
-/**
- * This function is synchronous as it uses "spawnSync" to perform shell commands
- * @param cmd
- * @param projectDir
- * @returns
- */
-export function getCommandResultString(cmd, projectDir = null): string {
-  const opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
-
-  return execCmd(cmd, opts);
-}
-
-function execCmd(cmd = "", opts = {}) {
-  if (!cmd) {
-    // no command to run, return default
-    return null;
-  }
-
-  try {
-    // add utf 8 to the options
-    opts = {
-      ...opts,
-      encoding: "utf8",
-    };
-
-    // get the command and options
-    let cmdOpts = cmd.trim().split(" ");
-    cmd = cmdOpts[0];
-    if (cmdOpts.length > 1) {
-      cmdOpts = cmdOpts.slice(1, cmdOpts.length);
-    } else {
-      // no options, set the array to empty
-      cmdOpts = [];
-    }
-
-    const data = spawnSync(cmd, cmdOpts, opts);
-    if (data) {
-      if (data.stderr) {
-        console.error("command error: ", data.stderr);
-        return null;
-      }
-
-      const lines = data?.stdout?.toString().trim().split(/\r?\n/) ?? null;
-      if (lines?.length) {
-        return lines[0];
-      }
-    }
-  } catch (e) {
-    console.error("command error: ", e);
-  }
-  return null;
-}
-
 export async function getOsUsername() {
   let username = os.userInfo().username;
   if (!username || username.trim() === "") {
-    username = getCommandResultString("whoami");
+    username = execCmd("whoami");
   }
   return username;
 }
@@ -665,16 +613,6 @@ export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   }
 
   return email;
-}
-
-export function wrapExecCmd(cmd, projectDir) {
-  try {
-    let opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
-    return execCmd(cmd, opts);
-  } catch (e) {
-    console.error(e.message);
-  }
-  return null;
 }
 
 export async function launchWebDashboard() {

@@ -1,21 +1,11 @@
 import { DiffNumStats } from "../model/models";
-import { wrapExecCmd, isGitProject, noSpacesProjectDir } from "../Util";
+import { isGitProject, noSpacesProjectDir } from "../Util";
 import { CacheManager } from "../cache/CacheManager";
+import { execCmd } from "../managers/ExecManager";
 
 const ONE_HOUR_IN_SEC = 60 * 60;
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
-
-export function getExecResultList(cmd, projectDir): string[] {
-  let result = wrapExecCmd(cmd, projectDir);
-  if (!result) {
-    // something went wrong, return an empty list
-    return [];
-  }
-  result = result.trim();
-  let resultList = result.replace(/\r\n/g, "\r").replace(/\n/g, "\r").replace(/^\s+/g, " ").replace(/</g, "").replace(/>/g, "").split(/\r/);
-  return resultList;
-}
 
 export function accumulateNumStatChanges(results): DiffNumStats[] {
   /*
@@ -44,15 +34,15 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
     return "";
   }
 
-  const remotes = getExecResultList("git remote", projectDir) || [];
+  const remotes = execCmd("git remote", projectDir, true) || [];
   const remoteName = remotes.sort((a, b) => b.length - a.length).find((r) => remoteBranch.includes(r));
 
   if (remoteName) {
     // Check if the remote has a HEAD symbolic-ref defined
-    const headBranchList = getExecResultList(`git symbolic-ref refs/remotes/${remoteName}/HEAD`, projectDir);
+    const headBranchList = execCmd(`git symbolic-ref refs/remotes/${remoteName}/HEAD`, projectDir, true);
     if (headBranchList.length) {
       // Make sure it's not a broken HEAD ref
-      const verify = getExecResultList(`git show-ref --verify '${headBranchList[0]}'`, projectDir);
+      const verify = execCmd(`git show-ref --verify '${headBranchList[0]}'`, projectDir, true);
 
       if (verify?.length) return headBranchList[0];
     }
@@ -62,7 +52,7 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
   }
 
   // Check if any HEAD branch is defined on any remote
-  const remoteBranchesResult = getExecResultList("git branch -r -l '*/HEAD'", projectDir);
+  const remoteBranchesResult = execCmd("git branch -r -l '*/HEAD'", projectDir, true);
   if (remoteBranchesResult?.length) {
     // ['origin/HEAD - origin/main']
     const remoteBranches = remoteBranchesResult[0].split(" ");
@@ -88,7 +78,7 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
 
 async function guessDefaultBranchForRemote(projectDir, remoteName: string): Promise<string | undefined> {
   // Get list of branches for the remote
-  const remoteBranchesList = getExecResultList(`git branch -r -l '${remoteName}/*'`, projectDir) || [];
+  const remoteBranchesList = execCmd(`git branch -r -l '${remoteName}/*'`, projectDir, true) || [];
   const possibleDefaultBranchNames = ["main", "master"];
   let assumedDefault;
 
@@ -108,12 +98,12 @@ export async function getLatestCommitForBranch(projectDir, branch: string): Prom
     return "";
   }
 
-  const resultList = getExecResultList(cmd, projectDir);
+  const resultList = execCmd(cmd, projectDir, true);
   return resultList?.length ? resultList[0] : "";
 }
 
 export async function commitAlreadyOnRemote(projectDir: string, commit: string): Promise<boolean> {
-  const resultList = getExecResultList(`git branch -r --contains ${commit}`, projectDir);
+  const resultList = execCmd(`git branch -r --contains ${commit}`, projectDir, true);
 
   // If results returned, then that means the commit exists on
   // at least 1 remote branch, so return true.
@@ -121,7 +111,7 @@ export async function commitAlreadyOnRemote(projectDir: string, commit: string):
 }
 
 export async function isMergeCommit(projectDir: string, commit: string): Promise<boolean> {
-  const resultList = getExecResultList(`git rev-list --parents -n 1 ${commit}`, projectDir);
+  const resultList = execCmd(`git rev-list --parents -n 1 ${commit}`, projectDir, true);
 
   const parents = resultList?.[0]?.split(" ");
 
@@ -131,7 +121,7 @@ export async function isMergeCommit(projectDir: string, commit: string): Promise
 }
 
 export async function getInfoForCommit(projectDir, commit: string) {
-  const resultList = getExecResultList(`git show ${commit} --pretty=format:"%aI" -s`, projectDir);
+  const resultList = execCmd(`git show ${commit} --pretty=format:"%aI" -s`, projectDir, true);
 
   return { authoredTimestamp: resultList?.length ? resultList[0] : "" };
 }
@@ -148,7 +138,7 @@ export async function authors(projectDir: string): Promise<string[]> {
   if (authors) {
     return authors;
   }
-  const configUsers = getExecResultList(`git config --get-regex "^user\\."`, projectDir);
+  const configUsers = execCmd(`git config --get-regex "^user\\."`, projectDir, true);
 
   authors = configUsers?.length
     ? configUsers.map((configUser) => {
@@ -177,7 +167,7 @@ export async function getCommitsForAuthors(projectDir, branch: string, startRef:
     cmd += ` --author="${author}"`;
   }
 
-  const resultList = getExecResultList(cmd, projectDir);
+  const resultList = execCmd(cmd, projectDir, true);
 
   if (resultList?.length) {
     return resultList.map((result) => {
@@ -196,7 +186,7 @@ export async function getChangesForCommit(projectDir, commit: string): Promise<D
   }
 
   const cmd = `git diff --numstat ${commit}~ ${commit}`;
-  const resultList = getExecResultList(cmd, projectDir);
+  const resultList = execCmd(cmd, projectDir, true);
 
   if (resultList?.length) {
     // just look for the line with "insertions" and "deletions"
@@ -214,7 +204,7 @@ export async function getLocalChanges(projectDir): Promise<DiffNumStats[]> {
   }
 
   const cmd = `git diff --numstat`;
-  const resultList = getExecResultList(cmd, projectDir);
+  const resultList = execCmd(cmd, projectDir, true);
 
   if (resultList?.length) {
     // just look for the line with "insertions" and "deletions"
