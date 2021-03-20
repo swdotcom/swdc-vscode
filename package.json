@@ -164,7 +164,7 @@
     "query-string": "^6.13.7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "swdc-tracker": "^1.4.4",
+    "swdc-tracker": "^1.4.5",
     "uuid": "^8.3.1",
     "vsls": "0.3.1291",
     "ws": "^7.4.2"
