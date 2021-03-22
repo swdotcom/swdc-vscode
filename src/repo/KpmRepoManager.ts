@@ -162,10 +162,10 @@ export async function getResourceInfo(projectDir) {
 
   resourceInfo = {};
 
-  const branch = wrapExecCmd("git symbolic-ref --short HEAD", projectDir);
-  const identifier = wrapExecCmd("git config --get remote.origin.url", projectDir);
-  let email = wrapExecCmd("git config user.email", projectDir);
-  const tag = wrapExecCmd("git describe --all", projectDir);
+  const branch = execCmd("git symbolic-ref --short HEAD", projectDir);
+  const identifier = execCmd("git config --get remote.origin.url", projectDir);
+  let email = execCmd("git config user.email", projectDir);
+  const tag = execCmd("git describe --all", projectDir);
 
   // both should be valid to return the resource info
   if (branch && identifier) {

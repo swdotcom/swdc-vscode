@@ -333,7 +333,7 @@ export function isMac() {
   return process.platform.indexOf("darwin") !== -1;
 }
 
-export async function getHostname() {
+export function getHostname(): any {
   let hostname = execCmd("hostname");
   return hostname;
 }

@@ -1,5 +1,6 @@
 import { commands, window } from "vscode";
-import { getItem, setItem, getCommandResultString } from "../Util";
+import { getItem, setItem } from "../Util";
+import { execCmd } from "./ExecManager";
 
 const cp = require("child_process");
 
@@ -33,7 +34,7 @@ export async function isDarkMode() {
       on error
         return false
       end try\'`;
-    const isDarkModeStr = getCommandResultString(getDarkModeFlag);
+    const isDarkModeStr = execCmd(getDarkModeFlag);
     // convert it to a string
     if (isDarkModeStr !== undefined && isDarkModeStr !== null && isDarkModeStr !== "") {
       try {

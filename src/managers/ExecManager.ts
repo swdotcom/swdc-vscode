@@ -1,6 +1,6 @@
 const { execSync } = require("child_process");
 
-export function execCmd(cmd = "", projectDir = null, returnLines = false) {
+export function execCmd(cmd = "", projectDir = null, returnLines = false): any {
   let result = returnLines ? [] : null;
   if (!cmd) {
     // no command to run, return default
