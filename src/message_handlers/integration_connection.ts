@@ -6,7 +6,6 @@ export async function handleIntegrationConnectionSocketEvent(body: any) {
   // integration_type_id = 14 (slack)
   // action = add, update, remove
   const { integration_type_id, integration_type, action } = body;
-  console.debug("[CodeTime] Received team member event", integration_type_id, integration_type, action);
 
   if (integration_type_id === 14) {
     await getSlackAuth();
