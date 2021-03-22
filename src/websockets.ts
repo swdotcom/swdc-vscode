@@ -30,8 +30,6 @@ export function initializeWebsockets() {
   });
 
   ws.on("message", function incoming(data) {
-    console.debug("[CodeTime] received websocket message: ", data);
-
     handleIncomingMessage(data);
   });
 
