@@ -235,20 +235,10 @@ export function getProjectFolder(fileName): WorkspaceFolder {
 }
 
 export function setItem(key, value) {
-  if (key === "jwt" || key === "name") {
-    fileIt.setJsonValue(getAuthFile(), key, value);
-  } else {
-    fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
-  }
+  fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
 }
 
 export function getItem(key) {
-  if (key === "jwt" || key === "name") {
-    const val = fileIt.getJsonValue(getAuthFile(), key);
-    if (val) {
-      return val;
-    }
-  }
   return fileIt.getJsonValue(getSoftwareSessionFile(), key);
 }
 
@@ -390,10 +380,6 @@ export function getDeviceFile() {
 
 export function getSoftwareSessionFile() {
   return getFile("session.json");
-}
-
-export function getAuthFile() {
-  return getFile("auth.json");
 }
 
 export function getSoftwareDataStoreFile() {
