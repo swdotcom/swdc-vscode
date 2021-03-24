@@ -17,7 +17,7 @@ export const setEndOfDayNotification = async (user: any) => {
   }
 
   // If the end of day notification setting is turned on (if undefined or null, will default to true)
-  if (user.preferences?.notifications?.endOfDayNotification !== false) {
+  if (user?.preferences?.notifications?.endOfDayNotification !== false) {
     const jwt = getItem("jwt");
 
     if (jwt) {
