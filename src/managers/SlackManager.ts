@@ -55,7 +55,7 @@ export async function connectSlackWorkspace() {
     plugin_id: getPluginId(),
     auth_callback_state: getAuthCallbackState(),
     integrate: "slack",
-    upgradeFeatures: "dnd",
+    upgrade_features: "dnd",
     plugin_token: getItem("jwt"),
   });
 
