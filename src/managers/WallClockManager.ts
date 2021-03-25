@@ -1,6 +1,6 @@
 import { getItem, humanizeMinutes, setItem } from "../Util";
 import { commands, window } from "vscode";
-import { updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
+import { updateStatusBarWithSummaryData } from "./StatusBarManager";
 import { incrementEditorSeconds } from "../storage/TimeSummaryData";
 import { KpmManager } from "./KpmManager";
 

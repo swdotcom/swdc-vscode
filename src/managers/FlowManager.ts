@@ -6,11 +6,18 @@ import { softwareGet } from "../http/HttpClient";
 
 import { checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode } from "./SlackManager";
 import { FULL_SCREEN_MODE_ID, NORMAL_SCREEN_MODE, showFullScreenMode, showNormalScreenMode, showZenMode, ZEN_MODE_ID } from "./ScreenManager";
+import { updateFlowModeStatus } from "./StatusBarManager";
 
 export let enablingFlow = false;
 export let enabledFlow = false;
 
-export function isFlowModEnabled() {
+let initialized = false;
+
+export async function isFlowModEnabled() {
+  if (!initialized && getItem("jwt")) {
+    enabledFlow = await determineFlowModeFromApi();
+    initialized = true;
+  }
   return enabledFlow;
 }
 
@@ -98,6 +105,10 @@ async function initiateFlow({ automated = false, skipSlackCheck = false }) {
 
   enabledFlow = true;
   enablingFlow = false;
+
+  commands.executeCommand("codetime.refreshCodeTimeView");
+
+  updateFlowModeStatus();
 }
 
 export async function pauseFlow() {
@@ -124,6 +135,8 @@ async function pauseFlowInitiate() {
 
   enabledFlow = false;
   commands.executeCommand("codetime.refreshCodeTimeView");
+
+  updateFlowModeStatus();
 }
 
 export async function isInFlowMode() {

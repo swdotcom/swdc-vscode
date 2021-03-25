@@ -1,5 +1,6 @@
 import { getItem, setItem } from "../Util";
-import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk, updateStatusBarWithSummaryData } from "../storage/SessionSummaryData";
+import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
+import { updateStatusBarWithSummaryData } from "./StatusBarManager";
 import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";

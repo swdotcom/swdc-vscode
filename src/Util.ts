@@ -1,4 +1,3 @@
-import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
 import {
   CODE_TIME_EXT_ID,
@@ -10,7 +9,6 @@ import {
   LOG_FILE_EVENTS,
   SIGN_UP_LABEL,
 } from "./Constants";
-import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
 import { showModalSignupPrompt } from "./managers/SlackManager";
@@ -38,7 +36,6 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
-let showStatusBarText = true;
 let extensionName = null;
 let workspace_name = null;
 
@@ -278,47 +275,6 @@ export function setAuthCallbackState(value: string) {
   fileIt.setJsonValue(getDeviceFile(), "auth_callback_state", value);
 }
 
-export function showStatus(fullMsg, tooltip) {
-  if (!tooltip) {
-    tooltip = "Active code time today. Click to see more from Code Time.";
-  }
-  updateStatusBar(fullMsg, tooltip);
-}
-
-function updateStatusBar(msg, tooltip) {
-  let loggedInName = getItem("name");
-  let userInfo = "";
-  if (loggedInName && loggedInName !== "") {
-    userInfo = ` Connected as ${loggedInName}`;
-  }
-  if (!tooltip) {
-    tooltip = `Click to see more from Code Time`;
-  }
-
-  if (!showStatusBarText) {
-    // add the message to the tooltip
-    tooltip = msg + " | " + tooltip;
-  }
-  if (!getStatusBarItem()) {
-    return;
-  }
-  getStatusBarItem().tooltip = `${tooltip}${userInfo}`;
-  if (!showStatusBarText) {
-    getStatusBarItem().text = "$(clock)";
-  } else {
-    getStatusBarItem().text = msg;
-  }
-}
-
-export function toggleStatusBar() {
-  showStatusBarText = !showStatusBarText;
-  updateStatusBarWithSummaryData();
-}
-
-export function isStatusBarTextVisible() {
-  return showStatusBarText;
-}
-
 export function isLinux() {
   return isWindows() || isMac() ? false : true;
 }
@@ -424,6 +380,10 @@ export function getDailyReportSummaryFile() {
 
 export function getIntegrationsFile() {
   return getFile("integrations.json");
+}
+
+export function getSessionSummaryFile() {
+  return getFile("sessionSummary.json");
 }
 
 export function getSoftwareDir(autoCreate = true) {
