@@ -20,14 +20,17 @@ export async function initializeStatusBar() {
   ctMetricStatusBarItem.show();
 
   let flowModeCommand = "codetime.enableFlow";
-  let flowModeText = "$(circle-large-outline) Enter Flow Mode";
+  let flowModeText = "$(circle-large-outline) Flow";
+  let flowModeTooltip = "Enter Flow Mode";
   if (await isFlowModEnabled()) {
     flowModeCommand = "codetime.exitFlowMode";
-    flowModeText = "$(circle-large-filled) Exit Flow Mode";
+    flowModeText = "$(circle-large-filled) Flow";
+    flowModeTooltip = "Exit Flow Mode";
   }
   ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 499);
   ctFlowModeStatusBarItem.command = flowModeCommand;
   ctFlowModeStatusBarItem.text = flowModeText;
+  ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
   ctFlowModeStatusBarItem.show();
 }
 
