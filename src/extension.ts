@@ -2,22 +2,21 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, StatusBarAlignment, commands } from "vscode";
+import { window, ExtensionContext, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
 import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
-import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
+import { initializeStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
 
 let TELEMETRY_ON = true;
-let statusBarItem = null;
 let currentColorKind: number = undefined;
 let liveshare_update_interval = null;
 
@@ -31,10 +30,6 @@ const kpmController: KpmManager = KpmManager.getInstance();
 
 export function isTelemetryOn() {
   return TELEMETRY_ON;
-}
-
-export function getStatusBarItem() {
-  return statusBarItem;
 }
 
 export function deactivate(ctx: ExtensionContext) {
@@ -116,18 +111,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // show the status bar text info
   setTimeout(() => {
-    statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
-    // add the name to the tooltip if we have it
-    const name = getItem("name");
-    let tooltip = "Click to see more from Code Time";
-    if (name) {
-      tooltip = `${tooltip} (${name})`;
-    }
-    statusBarItem.tooltip = tooltip;
-    statusBarItem.command = "codetime.displaySidebar";
-    statusBarItem.show();
+    initializeStatusBar();
 
-    // update the status bar
     updateStatusBarWithSummaryData();
   }, 0);
 }

@@ -90,8 +90,12 @@ function StyledTreeItem(props: StyledTreeItemProps) {
             {labelInfo}
           </Typography>
           {isWorkspace && (
-            <IconButton aria-label="Disconnect workspace" style={{ color: blue[500], width: 24, height: 24 }}>
-              <RemoveCircleTwoToneIcon onClick={() => removeWorkspaceClickHandler(authId)} />
+            <IconButton
+              aria-label="Disconnect workspace"
+              style={{ color: blue[500], width: 24, height: 24 }}
+              onClick={() => removeWorkspaceClickHandler(authId)}
+            >
+              <RemoveCircleTwoToneIcon />
             </IconButton>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { commands, ProgressLocation, window } from "vscode";
+import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
 import { fetchSlackIntegrations, getUserRegistrationState } from "../DataController";
 import {
@@ -10,7 +10,6 @@ import {
   getPluginUuid,
   getVersion,
   launchWebUrl,
-  setAuthCallbackState,
   syncIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
@@ -63,10 +62,6 @@ export async function connectSlackWorkspace() {
 
   // authorize the user for slack
   launchWebUrl(url);
-  // lazily check if the user has completed the slack authentication
-  setTimeout(() => {
-    refetchSlackConnectStatusLazily(40);
-  }, 10000);
 }
 
 export async function disconectAllSlackIntegrations(showPrompt = true) {
@@ -164,35 +159,9 @@ function getWorkspaceAccessToken(team_domain) {
 }
 
 /**
- * Recursive function to determine slack connection
- * @param tryCountUntilFoundUser
- */
-async function refetchSlackConnectStatusLazily(tryCountUntilFoundUser) {
-  const slackAuth = await getSlackAuth();
-  if (!slackAuth) {
-    // try again if the count is not zero
-    if (tryCountUntilFoundUser > 0) {
-      tryCountUntilFoundUser -= 1;
-      setTimeout(() => {
-        refetchSlackConnectStatusLazily(tryCountUntilFoundUser);
-      }, 10000);
-    } else {
-      // clear the auth callback state
-      setAuthCallbackState(null);
-    }
-  } else {
-    // clear the auth callback state
-    setAuthCallbackState(null);
-    showSuccessMessage("Successfully connected to Slack");
-
-    commands.executeCommand("codetime.refreshCodeTimeView");
-  }
-}
-
-/**
  * Get the slack Oauth from the registered user
  */
-async function getSlackAuth() {
+export async function getSlackAuth() {
   const { user } = await getUserRegistrationState(true /*isIntegration*/);
   return await fetchSlackIntegrations(user);
 }
@@ -273,21 +242,4 @@ export async function checkSlackConnectionForFlowMode() {
     }
   }
   return { continue: true, useSlackSettings: true };
-}
-
-function showSuccessMessage(message: string) {
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: message,
-      cancellable: false,
-    },
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve(true);
-        }, 1000);
-      });
-    }
-  );
 }

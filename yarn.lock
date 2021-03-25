@@ -1930,10 +1930,10 @@ figgy-pudding@^3.5.1:
   resolved "https://registry.yarnpkg.com/figgy-pudding/-/figgy-pudding-3.5.2.tgz#b4eee8148abb01dcf1d1ac34367d59e12fa61d6e"
   integrity sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==
 
-file-it@^1.0.24, file-it@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/file-it/-/file-it-1.1.0.tgz#ada9541ea368739e8d25144fd7a3d81ea54c19a2"
-  integrity sha512-U5D6LmYVUiWGlWd9GiLcIRq413Hzb59HGP6H2ggw48qM168VaQErNmaTw/I4UC+pxHMsT8E3pz0vTaogV2E03Q==
+file-it@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/file-it/-/file-it-1.1.1.tgz#35260f9da20a39575df5549ffa683e91f771f49e"
+  integrity sha512-MeeuXiYLk3A1Mk4mJshy3+r/dpAZGu6THxADrXqKzVphbH4ZZmJwZh/vNVuYRmMsSoKTsVUNG0+HaPMplqtsgg==
   dependencies:
     "@types/universalify" "^1.0.0"
     universalify "^2.0.0"
@@ -4631,14 +4631,14 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-swdc-tracker@^1.4.4:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.4.tgz#1f022a1fa9f8a919469bf6a99280a7d43efb3f26"
-  integrity sha512-cQBMmJoAEQtYw9dkeKrTg8GAv3bOWyjJQmtt8Js1LITk45asIMmosJg0WkF4XtCOU7szH2qXd23UQFeDJ7fgkQ==
+swdc-tracker@^1.4.5:
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.5.tgz#cab5ea45646959b1c0d22d508e1fb40e7b04e849"
+  integrity sha512-QfQcRP+DqcvBcJlw59XTUg9kxyZWlq1AkRCh9DY1NqS236uqO8V6J5C2holY+kgXhe4nkspachPcuSTriJprwQ==
   dependencies:
     "@types/node" "^14.0.13"
     axios "^0.21.1"
-    file-it "^1.0.24"
+    file-it "^1.1.1"
     libsodium "^0.7.6"
     libsodium-wrappers "^0.7.6"
     lodash "^4.17.19"

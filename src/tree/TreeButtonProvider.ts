@@ -1,6 +1,7 @@
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
+import { isStatusBarTextVisible } from "../managers/StatusBarManager";
 import { KpmItem, UIInteractionType } from "../model/models";
-import { getItem, isStatusBarTextVisible } from "../Util";
+import { getItem } from "../Util";
 
 export function getViewProjectSummaryButton(): KpmItem {
   const commitSummitLabel = `Project summary`;
@@ -188,14 +189,13 @@ export function configureSettingsKpmItem(): KpmItem {
   return item;
 }
 
-
 export function showMeTheDataKpmItem(): KpmItem {
   const item: KpmItem = new KpmItem();
   item.name = "ct_show_me_the_data_btn";
   item.description = "End of day notification - Show me the data";
   item.location = "ct_notification";
-  item.label = "Show me the data"
-  item.interactionType = UIInteractionType.Click
+  item.label = "Show me the data";
+  item.interactionType = UIInteractionType.Click;
   item.interactionIcon = null;
   item.color = null;
   return item;

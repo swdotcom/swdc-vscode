@@ -1,8 +1,7 @@
 import { SessionSummary, KeystrokeAggregate, KpmItem } from "../model/models";
-import { isWindows, getSoftwareDir, getNowTimes, getItem, showStatus, getFileDataAsJson, humanizeMinutes, coalesceNumber } from "../Util";
+import { isWindows, getSoftwareDir, getNowTimes, getItem, getFileDataAsJson, coalesceNumber, getSessionSummaryFile } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
-import CodeTimeSummary from "../model/CodeTimeSummary";
-import { getCodeTimeSummary } from "./TimeSummaryData";
+import { updateStatusBarWithSummaryData } from "../managers/StatusBarManager";
 
 const fileIt = require("file-it");
 
@@ -14,16 +13,6 @@ export function getSessionThresholdSeconds() {
 export function clearSessionSummaryData() {
   const sessionSummaryData = new SessionSummary();
   saveSessionSummaryToDisk(sessionSummaryData);
-}
-
-export function getSessionSummaryFile() {
-  let file = getSoftwareDir();
-  if (isWindows()) {
-    file += "\\sessionSummary.json";
-  } else {
-    file += "/sessionSummary.json";
-  }
-  return file;
 }
 
 export function getSessionSummaryData(): SessionSummary {
@@ -116,19 +105,6 @@ export async function incrementSessionSummaryData(aggregates: KeystrokeAggregate
 
   // we've updated the current day minutes, update the status bar
   updateStatusBarWithSummaryData();
-}
-
-/**
- * Updates the status bar text with the current day minutes (session minutes)
- */
-export function updateStatusBarWithSummaryData() {
-  const data = getSessionSummaryData();
-
-  const inFlowIcon = data.currentDayMinutes > data.averageDailyMinutes ? "$(rocket)" : "$(clock)";
-  const minutesStr = humanizeMinutes(data.currentDayMinutes);
-
-  const msg = `${inFlowIcon} ${minutesStr}`;
-  showStatus(msg, null);
 }
 
 export function getStatusBarKpmItem(): KpmItem {

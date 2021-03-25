@@ -1,5 +1,6 @@
 import { commands, window } from "vscode";
 import { getItem, setItem } from "../Util";
+import { execCmd } from "./ExecManager";
 
 const cp = require("child_process");
 
@@ -33,9 +34,9 @@ export async function isDarkMode() {
       on error
         return false
       end try\'`;
-    const isDarkModeStr = await execPromise(getDarkModeFlag);
+    const isDarkModeStr = execCmd(getDarkModeFlag);
     // convert it to a string
-    if (isDarkModeStr !== undefined && isDarkModeStr !== null) {
+    if (isDarkModeStr !== undefined && isDarkModeStr !== null && isDarkModeStr !== "") {
       try {
         isDarkMode = JSON.parse(`${isDarkModeStr}`);
       } catch (e) {}
@@ -75,7 +76,7 @@ export async function toggleDock() {
         set x to autohide
         if x is false then
           set properties to {autohide:true}
-        else 
+        else
           set properties to {autohide:false}
         end if
       end tell

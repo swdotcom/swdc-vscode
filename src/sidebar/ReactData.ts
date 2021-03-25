@@ -1,10 +1,9 @@
 import { getCurrentColorKind } from "../extension";
-import { determineFlowModeFromApi, getConfiguredScreenMode, isFlowModEnabled } from "../managers/FlowManager";
+import { isFlowModEnabled } from "../managers/FlowManager";
 import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
-import { getTeams } from "../managers/TeamManager";
-import { getItem, isStatusBarTextVisible } from "../Util";
-
-let initialized = false;
+import { isStatusBarTextVisible } from "../managers/StatusBarManager";
+import { getCachedTeams } from "../managers/TeamManager";
+import { getItem } from "../Util";
 
 /**
  * Returns:
@@ -21,25 +20,17 @@ let initialized = false;
 export async function getReactData() {
   const name = getItem("name");
   const authType = getItem("authType");
-  const jwt = getItem("jwt");
 
-  let inFlowMode;
-  if (!initialized && jwt) {
-    inFlowMode = await determineFlowModeFromApi();
-    initialized = true;
-  } else {
-    inFlowMode = await isFlowModEnabled();
-  }
   return {
     authType,
     registered: !!name,
     email: name,
-    inFlowMode,
+    inFlowMode: await isFlowModEnabled(),
     slackConnected: !!hasSlackWorkspaces(),
     statusBarTextVisible: isStatusBarTextVisible(),
     slackWorkspaces: getSlackWorkspaces(),
     currentColorKind: getCurrentColorKind(),
-    teams: await getTeams(),
+    teams: await getCachedTeams(),
     skipSlackConnect: getItem("vscode_CtskipSlackConnect"),
   };
 }

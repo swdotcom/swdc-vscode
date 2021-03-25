@@ -83,7 +83,7 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
         tries--;
         setTimeout(() => {
           this.loadWebview(tries);
-        }, 4000);
+        }, 3000);
       }
     } else {
       // show the view and end the timeout tries

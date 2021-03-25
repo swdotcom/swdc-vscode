@@ -1,4 +1,3 @@
-import { getStatusBarItem } from "./extension";
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
 import {
   CODE_TIME_EXT_ID,
@@ -10,18 +9,16 @@ import {
   LOG_FILE_EVENTS,
   SIGN_UP_LABEL,
 } from "./Constants";
-import { refetchUserStatusLazily } from "./DataController";
-import { updateStatusBarWithSummaryData } from "./storage/SessionSummaryData";
 import { v4 as uuidv4 } from "uuid";
 
-import { format } from "date-fns";
 import { showModalSignupPrompt } from "./managers/SlackManager";
+import { execCmd } from "./managers/ExecManager";
 
 const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
-const { exec } = require("child_process");
+
 const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
@@ -39,7 +36,6 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
-let showStatusBarText = true;
 let extensionName = null;
 let workspace_name = null;
 
@@ -279,47 +275,6 @@ export function setAuthCallbackState(value: string) {
   fileIt.setJsonValue(getDeviceFile(), "auth_callback_state", value);
 }
 
-export function showStatus(fullMsg, tooltip) {
-  if (!tooltip) {
-    tooltip = "Active code time today. Click to see more from Code Time.";
-  }
-  updateStatusBar(fullMsg, tooltip);
-}
-
-function updateStatusBar(msg, tooltip) {
-  let loggedInName = getItem("name");
-  let userInfo = "";
-  if (loggedInName && loggedInName !== "") {
-    userInfo = ` Connected as ${loggedInName}`;
-  }
-  if (!tooltip) {
-    tooltip = `Click to see more from Code Time`;
-  }
-
-  if (!showStatusBarText) {
-    // add the message to the tooltip
-    tooltip = msg + " | " + tooltip;
-  }
-  if (!getStatusBarItem()) {
-    return;
-  }
-  getStatusBarItem().tooltip = `${tooltip}${userInfo}`;
-  if (!showStatusBarText) {
-    getStatusBarItem().text = "$(clock)";
-  } else {
-    getStatusBarItem().text = msg;
-  }
-}
-
-export function toggleStatusBar() {
-  showStatusBarText = !showStatusBarText;
-  updateStatusBarWithSummaryData();
-}
-
-export function isStatusBarTextVisible() {
-  return showStatusBarText;
-}
-
 export function isLinux() {
   return isWindows() || isMac() ? false : true;
 }
@@ -334,8 +289,8 @@ export function isMac() {
   return process.platform.indexOf("darwin") !== -1;
 }
 
-export async function getHostname() {
-  let hostname = await getCommandResultLine("hostname");
+export function getHostname(): any {
+  let hostname = execCmd("hostname");
   return hostname;
 }
 
@@ -359,35 +314,10 @@ export function getOs() {
   return "";
 }
 
-export async function getCommandResultLine(cmd, projectDir = null) {
-  const resultList = await getCommandResultList(cmd, projectDir);
-
-  let resultLine = "";
-  if (resultList && resultList.length) {
-    for (let i = 0; i < resultList.length; i++) {
-      let line = resultList[i];
-      if (line && line.trim().length > 0) {
-        resultLine = line.trim();
-        break;
-      }
-    }
-  }
-  return resultLine;
-}
-
-export async function getCommandResultList(cmd, projectDir = null) {
-  let result = await wrapExecPromise(`${cmd}`, projectDir);
-  if (!result) {
-    return [];
-  }
-  const contentList = result.replace(/\r\n/g, "\r").replace(/\n/g, "\r").split(/\r/);
-  return contentList;
-}
-
 export async function getOsUsername() {
   let username = os.userInfo().username;
   if (!username || username.trim() === "") {
-    username = await getCommandResultLine("whoami");
+    username = execCmd("whoami");
   }
   return username;
 }
@@ -450,6 +380,10 @@ export function getDailyReportSummaryFile() {
 
 export function getIntegrationsFile() {
   return getFile("integrations.json");
+}
+
+export function getSessionSummaryFile() {
+  return getFile("sessionSummary.json");
 }
 
 export function getSoftwareDir(autoCreate = true) {
@@ -547,10 +481,6 @@ export async function showOfflinePrompt(addReconnectMsg = false) {
   window.showInformationMessage(infoMsg, ...["OK"]);
 }
 
-export function nowInSecs() {
-  return Math.round(Date.now() / 1000);
-}
-
 export function getOffsetSeconds() {
   let d = new Date();
   return d.getTimezoneOffset() * 60;
@@ -614,19 +544,6 @@ export function randomCode() {
     .toString();
 }
 
-function execPromise(command, opts) {
-  return new Promise(function (resolve, reject) {
-    exec(command, opts, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      resolve(stdout.trim());
-    });
-  });
-}
-
 export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   if (email) {
     if (filterOutNonEmails && (email.endsWith("github.com") || email.includes("users.noreply"))) {
@@ -642,25 +559,6 @@ export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   }
 
   return email;
-}
-
-export async function wrapExecPromise(cmd, projectDir) {
-  let result = null;
-  try {
-    let opts = projectDir !== undefined && projectDir !== null ? { cwd: projectDir } : {};
-    result = await execPromise(cmd, opts).catch((e) => {
-      if (e.message) {
-        console.log(e.message);
-      }
-      return null;
-    });
-  } catch (e) {
-    if (e.message) {
-      console.log(e.message);
-    }
-    result = null;
-  }
-  return result;
 }
 
 export async function launchWebDashboard() {
@@ -748,7 +646,6 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   const url = await buildEmailSignup();
 
   launchWebUrl(url);
-  refetchUserStatusLazily();
 }
 
 export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
@@ -759,8 +656,6 @@ export async function launchLogin(loginType: string = "software", switching_acco
   const url = await buildLoginUrl(loginType);
 
   launchWebUrl(url);
-  // use the defaults
-  refetchUserStatusLazily();
 }
 
 /**
@@ -776,12 +671,12 @@ export async function buildLoginUrl(loginType: string) {
     pluginVersion: getVersion(),
     plugin_id: getPluginId(),
     auth_callback_state,
+    plugin_uuid: getPluginUuid(),
     login: true,
   };
 
-  // only send the plugin_uuid and plugin_token when registering for the 1st time
+  // only send the plugin_token when registering for the 1st time
   if (!name) {
-    obj["plugin_uuid"] = getPluginUuid();
     obj["plugin_token"] = getItem("jwt");
   }
 
@@ -857,40 +752,8 @@ export function getFileDataArray(file) {
   return payloads;
 }
 
-// get the percent string dividing the reference value by the current value
-// this is meant to show the progressing percent of the daily average stats
-export function getPercentOfReferenceAvg(currentValue, referenceValue, referenceValueDisplay) {
-  currentValue = currentValue ?? 0;
-  let quotient = 1;
-  if (referenceValue) {
-    quotient = currentValue / referenceValue;
-    // at least show 1% if the current value is not zero and
-    // the quotient is less than 1 percent
-    if (currentValue && quotient < 0.01) {
-      quotient = 0.01;
-    }
-  }
-  return `${(quotient * 100).toFixed(0)}% of ${referenceValueDisplay}`;
-}
-
 export function noSpacesProjectDir(projectDir: string): string {
   return projectDir.replace(/^\s+/g, "");
-}
-
-/**
- * Checks whether we need to fetch the sessions/summary or not
- */
-export function shouldFetchSessionSummaryData() {
-  const now: Date = new Date();
-  // this is the format used across other plugins
-  const nowDay = format(now, "yyyy-MM-dd");
-  const currentDay: string = getItem("updatedTreeDate");
-  if (currentDay == nowDay) {
-    // only initialize once during a day for a specific user
-    return false;
-  }
-  setItem("updatedTreeDate", nowDay);
-  return true;
 }
 
 export function checkRegistrationForReport(showSignup = true) {
