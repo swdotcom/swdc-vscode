@@ -31,9 +31,6 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(0.25, 0.5),
     fontWeight: 500,
   },
-  iconBtnRoot: {
-    color: "rgba(222,222,222,0.75)",
-  },
 }));
 
 export default function Teams(props) {
