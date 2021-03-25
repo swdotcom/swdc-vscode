@@ -17,6 +17,7 @@ import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 import { getTeams } from "./managers/TeamManager";
+import { enableFlowModeStatusBarItem } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
@@ -170,6 +171,8 @@ export async function authenticationCompleteHandler(user) {
 
   clearSessionSummaryData();
   clearTimeDataSummary();
+
+  enableFlowModeStatusBarItem();
 
   // fetch after logging on
   SummaryManager.getInstance().updateSessionSummaryFromServer();

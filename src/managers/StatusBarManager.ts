@@ -2,6 +2,7 @@ import { StatusBarAlignment, StatusBarItem, window } from "vscode";
 import { SessionSummary } from "../model/models";
 import { getFileDataAsJson, getItem, getSessionSummaryFile, humanizeMinutes } from "../Util";
 import { isFlowModEnabled } from "./FlowManager";
+import { hasSlackWorkspaces } from "./SlackManager";
 
 let showStatusBarText = true;
 let ctMetricStatusBarItem: StatusBarItem = undefined;
@@ -19,6 +20,27 @@ export async function initializeStatusBar() {
   ctMetricStatusBarItem.command = "codetime.displaySidebar";
   ctMetricStatusBarItem.show();
 
+  const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
+
+  ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 499);
+  ctFlowModeStatusBarItem.command = flowModeCommand;
+  ctFlowModeStatusBarItem.text = flowModeText;
+  ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
+  if (showFlowModeStatusBarItem()) {
+    ctFlowModeStatusBarItem.show();
+  } else {
+    ctFlowModeStatusBarItem.hide();
+  }
+}
+
+export async function updateFlowModeStatus() {
+  const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
+  ctFlowModeStatusBarItem.command = flowModeCommand;
+  ctFlowModeStatusBarItem.text = flowModeText;
+  ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
+}
+
+async function getFlowModeStatusBarInfo() {
   let flowModeCommand = "codetime.enableFlow";
   let flowModeText = "$(circle-large-outline) Flow";
   let flowModeTooltip = "Enter Flow Mode";
@@ -27,22 +49,7 @@ export async function initializeStatusBar() {
     flowModeText = "$(circle-large-filled) Flow";
     flowModeTooltip = "Exit Flow Mode";
   }
-  ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 499);
-  ctFlowModeStatusBarItem.command = flowModeCommand;
-  ctFlowModeStatusBarItem.text = flowModeText;
-  ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
-  ctFlowModeStatusBarItem.show();
-}
-
-export async function updateFlowModeStatus() {
-  let flowModeCommand = "codetime.enableFlow";
-  let flowModeText = "$(circle-large-outline) Enter Flow Mode";
-  if (await isFlowModEnabled()) {
-    flowModeCommand = "codetime.exitFlowMode";
-    flowModeText = "$(circle-large-filled) Exit Flow Mode";
-  }
-  ctFlowModeStatusBarItem.command = flowModeCommand;
-  ctFlowModeStatusBarItem.text = flowModeText;
+  return { flowModeCommand, flowModeText, flowModeTooltip };
 }
 
 export function toggleStatusBar() {
@@ -52,6 +59,18 @@ export function toggleStatusBar() {
 
 export function isStatusBarTextVisible() {
   return showStatusBarText;
+}
+
+export function enableFlowModeStatusBarItem() {
+  if (showFlowModeStatusBarItem()) {
+    ctFlowModeStatusBarItem.show();
+  } else {
+    ctFlowModeStatusBarItem.hide();
+  }
+}
+
+function showFlowModeStatusBarItem() {
+  return !!(getItem("name") && hasSlackWorkspaces());
 }
 
 /**
