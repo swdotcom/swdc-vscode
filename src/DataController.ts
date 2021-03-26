@@ -5,7 +5,6 @@ import {
   setItem,
   getProjectCodeSummaryFile,
   getDailyReportSummaryFile,
-  getAuthCallbackState,
   setAuthCallbackState,
   getIntegrations,
   syncSlackIntegrations,
@@ -20,43 +19,6 @@ import { getTeams } from "./managers/TeamManager";
 import { enableFlowModeStatusBarItem } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
-
-export async function getUserRegistrationState(isIntegration = false) {
-  const jwt = getItem("jwt");
-  const name = getItem("name");
-  const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
-
-  const token = auth_callback_state ? auth_callback_state : jwt;
-
-  let resp = await softwareGet("/users/plugin/state", token);
-  let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
-
-  const integrationOrNoUser = isIntegration || !name ? true : false;
-
-  // try with the jwt if no user is found
-  if (!user && integrationOrNoUser && auth_callback_state) {
-    resp = await softwareGet("/users/plugin/state", jwt);
-    user = resp.data ? resp.data.user : null;
-  }
-
-  if (user) {
-    const registered = user.registered;
-
-    const currentAuthType = getItem("authType");
-    if (!currentAuthType) {
-      setItem("authType", "software");
-    }
-
-    setItem("switching_account", false);
-    setAuthCallbackState(null);
-
-    // if we need the user it's "resp.data.user"
-    return { loggedOn: registered === 1, state: "OK", user };
-  }
-
-  // all else fails, set false and UNKNOWN
-  return { loggedOn: false, state: "UNKNOWN", user: null };
-}
 
 export async function fetchSlackIntegrations(user) {
   let foundNewIntegration = false;
@@ -73,8 +35,8 @@ export async function fetchSlackIntegrations(user) {
       );
 
       if (isSlackIntegration) {
-        const foundInCurrentIntegrations = currentIntegrations.find((n) => n.authId === integration.authId);
-        if (!foundInCurrentIntegrations) {
+        const currentIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
+        if (!currentIntegration || !currentIntegration.team_domain) {
           // get the workspace domain using the authId
           const web = new WebClient(integration.access_token);
           const usersIdentify = await web.users.identity().catch((e) => {
@@ -96,7 +58,7 @@ export async function fetchSlackIntegrations(user) {
           }
         } else {
           // add the existing one back
-          slackIntegrations.push(integration);
+          slackIntegrations.push(currentIntegration);
         }
       }
     }

@@ -1,6 +1,6 @@
 import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { fetchSlackIntegrations, getUserRegistrationState } from "../DataController";
+import { fetchSlackIntegrations, getUser } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -156,14 +156,6 @@ function getWorkspaceAccessToken(team_domain) {
     return integration.access_token;
   }
   return null;
-}
-
-/**
- * Get the slack Oauth from the registered user
- */
-export async function getSlackAuth() {
-  const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  return await fetchSlackIntegrations(user);
 }
 
 /**
