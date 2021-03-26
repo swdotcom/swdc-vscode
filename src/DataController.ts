@@ -16,7 +16,7 @@ import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 import { getTeams } from "./managers/TeamManager";
-import { enableFlowModeStatusBarItem } from "./managers/StatusBarManager";
+import { updateFlowModeStatus } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
@@ -63,7 +63,9 @@ export async function fetchSlackIntegrations(user) {
       }
     }
   }
+
   syncSlackIntegrations(slackIntegrations);
+
   return foundNewIntegration;
 }
 
@@ -133,6 +135,14 @@ export async function authenticationCompleteHandler(user) {
       setItem("name", user.email);
       // update the login status
       window.showInformationMessage(`Successfully logged on to Code Time`);
+
+      updateFlowModeStatus();
+
+      try {
+        initializeWebsockets();
+      } catch (e) {
+        console.error("Failed to initialize codetime websockets", e);
+      }
     }
   }
 
@@ -144,8 +154,6 @@ export async function authenticationCompleteHandler(user) {
   clearSessionSummaryData();
   clearTimeDataSummary();
 
-  enableFlowModeStatusBarItem();
-
   // fetch after logging on
   SummaryManager.getInstance().updateSessionSummaryFromServer();
 
@@ -153,12 +161,6 @@ export async function authenticationCompleteHandler(user) {
   removeAllSlackIntegrations();
   // update this users integrations
   await fetchSlackIntegrations(user);
-
-  try {
-    initializeWebsockets();
-  } catch (e) {
-    console.error("Failed to initialize codetime websockets", e);
-  }
 
   // fetch any teams for this user
   await getTeams();
