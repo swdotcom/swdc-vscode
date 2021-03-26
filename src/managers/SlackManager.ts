@@ -1,6 +1,6 @@
 import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { fetchSlackIntegrations, getUserRegistrationState } from "../DataController";
+import { fetchSlackIntegrations, getUser } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -10,7 +10,7 @@ import {
   getPluginUuid,
   getVersion,
   launchWebUrl,
-  syncIntegrations,
+  syncSlackIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
 import { softwareDelete } from "../http/HttpClient";
@@ -54,7 +54,7 @@ export async function connectSlackWorkspace() {
     plugin_id: getPluginId(),
     auth_callback_state: getAuthCallbackState(),
     integrate: "slack",
-    upgrade_features: "dnd",
+    upgrade_features: "flow",
     plugin_token: getItem("jwt"),
   });
 
@@ -159,14 +159,6 @@ function getWorkspaceAccessToken(team_domain) {
 }
 
 /**
- * Get the slack Oauth from the registered user
- */
-export async function getSlackAuth() {
-  const { user } = await getUserRegistrationState(true /*isIntegration*/);
-  return await fetchSlackIntegrations(user);
-}
-
-/**
  * Remove an integration from the local copy
  * @param authId
  */
@@ -174,7 +166,7 @@ function removeSlackIntegration(authId) {
   const currentIntegrations = getIntegrations();
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
-  syncIntegrations(newIntegrations);
+  syncSlackIntegrations(newIntegrations);
 }
 
 export function checkRegistration(showSignup = true) {

@@ -20,9 +20,12 @@ export async function initializeStatusBar() {
   ctMetricStatusBarItem.command = "codetime.displaySidebar";
   ctMetricStatusBarItem.show();
 
-  const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
-
   ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 499);
+  await updateFlowModeStatus();
+}
+
+export async function updateFlowModeStatus() {
+  const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
   ctFlowModeStatusBarItem.command = flowModeCommand;
   ctFlowModeStatusBarItem.text = flowModeText;
   ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
@@ -31,13 +34,6 @@ export async function initializeStatusBar() {
   } else {
     ctFlowModeStatusBarItem.hide();
   }
-}
-
-export async function updateFlowModeStatus() {
-  const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
-  ctFlowModeStatusBarItem.command = flowModeCommand;
-  ctFlowModeStatusBarItem.text = flowModeText;
-  ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
 }
 
 async function getFlowModeStatusBarInfo() {
@@ -61,16 +57,8 @@ export function isStatusBarTextVisible() {
   return showStatusBarText;
 }
 
-export function enableFlowModeStatusBarItem() {
-  if (showFlowModeStatusBarItem()) {
-    ctFlowModeStatusBarItem.show();
-  } else {
-    ctFlowModeStatusBarItem.hide();
-  }
-}
-
 function showFlowModeStatusBarItem() {
-  return !!(getItem("name") && hasSlackWorkspaces());
+  return !!getItem("name");
 }
 
 /**

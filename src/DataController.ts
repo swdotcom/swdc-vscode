@@ -5,10 +5,9 @@ import {
   setItem,
   getProjectCodeSummaryFile,
   getDailyReportSummaryFile,
-  getAuthCallbackState,
   setAuthCallbackState,
-  syncIntegrations,
   getIntegrations,
+  syncSlackIntegrations,
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
@@ -17,49 +16,13 @@ import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 import { getTeams } from "./managers/TeamManager";
-import { enableFlowModeStatusBarItem } from "./managers/StatusBarManager";
+import { updateFlowModeStatus } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
-export async function getUserRegistrationState(isIntegration = false) {
-  const jwt = getItem("jwt");
-  const name = getItem("name");
-  const auth_callback_state = getAuthCallbackState(false /*autoCreate*/);
-
-  const token = auth_callback_state ? auth_callback_state : jwt;
-
-  let resp = await softwareGet("/users/plugin/state", token);
-  let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
-
-  const integrationOrNoUser = isIntegration || !name ? true : false;
-
-  // try with the jwt if no user is found
-  if (!user && integrationOrNoUser && auth_callback_state) {
-    resp = await softwareGet("/users/plugin/state", jwt);
-    user = resp.data ? resp.data.user : null;
-  }
-
-  if (user) {
-    const registered = user.registered;
-
-    const currentAuthType = getItem("authType");
-    if (!currentAuthType) {
-      setItem("authType", "software");
-    }
-
-    setItem("switching_account", false);
-    setAuthCallbackState(null);
-
-    // if we need the user it's "resp.data.user"
-    return { loggedOn: registered === 1, state: "OK", user };
-  }
-
-  // all else fails, set false and UNKNOWN
-  return { loggedOn: false, state: "UNKNOWN", user: null };
-}
-
 export async function fetchSlackIntegrations(user) {
   let foundNewIntegration = false;
+  const slackIntegrations = [];
   if (user && user.integrations) {
     const currentIntegrations = getIntegrations();
     // find the slack auth
@@ -70,31 +33,39 @@ export async function fetchSlackIntegrations(user) {
         integration.status.toLowerCase() === "active" &&
         integration.access_token
       );
-      const foundInCurrentIntegrations = currentIntegrations.find((n) => n.authId === integration.authId);
-      if (isSlackIntegration && !foundInCurrentIntegrations) {
-        // get the workspace domain using the authId
-        const web = new WebClient(integration.access_token);
-        const usersIdentify = await web.users.identity().catch((e) => {
-          console.log("Error fetching slack team info: ", e.message);
-          return null;
-        });
-        if (usersIdentify) {
-          // usersIdentity returns
-          // {team: {id, name, domain, image_102, image_132, ....}...}
-          // set the domain
-          integration["team_domain"] = usersIdentify.team?.domain;
-          integration["team_name"] = usersIdentify.team?.name;
-          integration["integration_id"] = usersIdentify.user?.id;
-          // add it
-          currentIntegrations.push(integration);
 
-          foundNewIntegration = true;
+      if (isSlackIntegration) {
+        const currentIntegration = currentIntegrations.find((n) => n.authId === integration.authId);
+        if (!currentIntegration || !currentIntegration.team_domain) {
+          // get the workspace domain using the authId
+          const web = new WebClient(integration.access_token);
+          const usersIdentify = await web.users.identity().catch((e) => {
+            console.log("Error fetching slack team info: ", e.message);
+            return null;
+          });
+          if (usersIdentify) {
+            // usersIdentity returns
+            // {team: {id, name, domain, image_102, image_132, ....}...}
+            // set the domain
+            integration["team_domain"] = usersIdentify.team?.domain;
+            integration["team_name"] = usersIdentify.team?.name;
+            integration["integration_id"] = usersIdentify.user?.id;
+            // add it
+            currentIntegrations.push(integration);
+
+            foundNewIntegration = true;
+            slackIntegrations.push(integration);
+          }
+        } else {
+          // add the existing one back
+          slackIntegrations.push(currentIntegration);
         }
       }
     }
-
-    syncIntegrations(currentIntegrations);
   }
+
+  syncSlackIntegrations(slackIntegrations);
+
   return foundNewIntegration;
 }
 
@@ -155,10 +126,24 @@ export async function authenticationCompleteHandler(user) {
   setItem("vscode_CtskipSlackConnect", false);
   setAuthCallbackState(null);
 
-  setItem("jwt", user.plugin_jwt);
+  if (user?.registered === 1) {
+    const currName = getItem("name");
+    if (currName != user.email) {
+      if (user.plugin_jwt) {
+        setItem("jwt", user.plugin_jwt);
+      }
+      setItem("name", user.email);
+      // update the login status
+      window.showInformationMessage(`Successfully logged on to Code Time`);
 
-  if (user.registered === 1) {
-    setItem("name", user.email);
+      updateFlowModeStatus();
+
+      try {
+        initializeWebsockets();
+      } catch (e) {
+        console.error("Failed to initialize codetime websockets", e);
+      }
+    }
   }
 
   const currentAuthType = getItem("authType");
@@ -166,13 +151,8 @@ export async function authenticationCompleteHandler(user) {
     setItem("authType", "software");
   }
 
-  setItem("switching_account", false);
-  setAuthCallbackState(null);
-
   clearSessionSummaryData();
   clearTimeDataSummary();
-
-  enableFlowModeStatusBarItem();
 
   // fetch after logging on
   SummaryManager.getInstance().updateSessionSummaryFromServer();
@@ -181,15 +161,6 @@ export async function authenticationCompleteHandler(user) {
   removeAllSlackIntegrations();
   // update this users integrations
   await fetchSlackIntegrations(user);
-
-  const message = "Successfully logged on to Code Time";
-  window.showInformationMessage(message);
-
-  try {
-    initializeWebsockets();
-  } catch (e) {
-    console.error("Failed to initialize codetime websockets", e);
-  }
 
   // fetch any teams for this user
   await getTeams();
@@ -203,7 +174,7 @@ export function removeAllSlackIntegrations() {
   const currentIntegrations = getIntegrations();
 
   const newIntegrations = currentIntegrations.filter((n) => n.name.toLowerCase() !== "slack");
-  syncIntegrations(newIntegrations);
+  syncSlackIntegrations(newIntegrations);
 }
 
 export async function writeDailyReportDashboard(type = "yesterday", projectIds = []) {
