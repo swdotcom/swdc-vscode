@@ -9,7 +9,7 @@ let ctMetricStatusBarItem: StatusBarItem = undefined;
 let ctFlowModeStatusBarItem: StatusBarItem = undefined;
 
 export async function initializeStatusBar() {
-  ctMetricStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 500);
+  ctMetricStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 10);
   // add the name to the tooltip if we have it
   const name = getItem("name");
   let tooltip = "Click to see more from Code Time";
@@ -20,7 +20,7 @@ export async function initializeStatusBar() {
   ctMetricStatusBarItem.command = "codetime.displaySidebar";
   ctMetricStatusBarItem.show();
 
-  ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 499);
+  ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 9);
   await updateFlowModeStatus();
 }
 
