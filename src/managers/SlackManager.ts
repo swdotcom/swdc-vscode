@@ -10,7 +10,7 @@ import {
   getPluginUuid,
   getVersion,
   launchWebUrl,
-  syncIntegrations,
+  syncSlackIntegrations,
 } from "../Util";
 import { showQuickPick } from "../menu/MenuManager";
 import { softwareDelete } from "../http/HttpClient";
@@ -54,7 +54,7 @@ export async function connectSlackWorkspace() {
     plugin_id: getPluginId(),
     auth_callback_state: getAuthCallbackState(),
     integrate: "slack",
-    upgrade_features: "dnd",
+    upgrade_features: "flow",
     plugin_token: getItem("jwt"),
   });
 
@@ -174,7 +174,7 @@ function removeSlackIntegration(authId) {
   const currentIntegrations = getIntegrations();
 
   const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
-  syncIntegrations(newIntegrations);
+  syncSlackIntegrations(newIntegrations);
 }
 
 export function checkRegistration(showSignup = true) {
