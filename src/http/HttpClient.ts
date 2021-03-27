@@ -49,12 +49,12 @@ export async function spotifyApiPut(api, payload, accessToken) {
  * @param jwt
  */
 
-export async function softwareGet(api, jwt, queryParams={}) {
+export async function softwareGet(api, jwt, queryParams = {}) {
   if (jwt) {
     beApi.defaults.headers.common["Authorization"] = jwt;
   }
 
-  return await beApi.get(api, {params: queryParams}).catch((err) => {
+  return await beApi.get(api, { params: queryParams }).catch((err) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
