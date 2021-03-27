@@ -50,8 +50,6 @@ export async function fetchSlackIntegrations(user) {
             integration["team_domain"] = usersIdentify.team?.domain;
             integration["team_name"] = usersIdentify.team?.name;
             integration["integration_id"] = usersIdentify.user?.id;
-            // add it
-            currentIntegrations.push(integration);
 
             foundNewIntegration = true;
             slackIntegrations.push(integration);
