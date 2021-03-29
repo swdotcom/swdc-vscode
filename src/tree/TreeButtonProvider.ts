@@ -172,8 +172,15 @@ export function getFeedbackButton(): KpmItem {
 
 export function getStatusBarButtonItem() {
   const item: KpmItem = getActionButton("status bar metrics button", "Code Time", "codetime.displaySidebar");
-  item.location = "ct_status_bar";
+  item.location = "ct_menu_tree";
   item.name = `ct_status_bar_metrics_btn`;
+  return item;
+}
+
+export function getSwitchAccountButtonItem() {
+  const item: KpmItem = getActionButton("switch account button", "Code Time", "codetime.switchAccounts");
+  item.location = "ct_status_bar";
+  item.name = `ct_switch_accounts_btn`;
   return item;
 }
 

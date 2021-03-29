@@ -72,6 +72,13 @@ function getRandomArbitrary(min, max) {
 
 export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: boolean) {
   logIt(`Loaded ${getPluginName()} v${getVersion()}`);
+
+  try {
+    initializeWebsockets();
+  } catch (e) {
+    console.error("Failed to initialize websockets", e);
+  }
+
   await tracker.init();
 
   // store the activate event
@@ -87,12 +94,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // initialize preferences
   await initializePreferences();
-
-  try {
-    initializeWebsockets();
-  } catch (e) {
-    console.error("Failed to initialize websockets", e);
-  }
 
   const initializedVscodePlugin = getItem("vscode_CtInit");
   if (!initializedVscodePlugin) {

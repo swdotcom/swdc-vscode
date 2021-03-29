@@ -16,6 +16,7 @@ import { configureSettings } from "./managers/ConfigManager";
 import {
   getCodeTimeDashboardButton,
   getStatusBarButtonItem,
+  getSwitchAccountButtonItem,
   getFeedbackButton,
   getHideStatusBarMetricsButton,
   getLearnMoreButton,
@@ -66,7 +67,7 @@ export function createCommands(
   // SWITCH ACCOUNT BUTTON
   cmds.push(
     commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {
-      tracker.trackUIInteraction(item);
+      tracker.trackUIInteraction(getSwitchAccountButtonItem());
       showSwitchAccountsMenu();
     })
   );
@@ -288,15 +289,6 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       showDashboard();
-    })
-  );
-
-  // LAUNCH COMMIT URL
-  cmds.push(
-    commands.registerCommand("codetime.launchCommitUrl", (item: KpmItem, commitLink: string) => {
-      // this only comes from the tree view so item will be available
-      tracker.trackUIInteraction(item);
-      launchWebUrl(commitLink);
     })
   );
 
