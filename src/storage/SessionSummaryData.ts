@@ -1,5 +1,5 @@
 import { SessionSummary, KeystrokeAggregate, KpmItem } from "../model/models";
-import { isWindows, getSoftwareDir, getNowTimes, getItem, getFileDataAsJson, coalesceNumber, getSessionSummaryFile } from "../Util";
+import { getNowTimes, getItem, getFileDataAsJson, coalesceNumber, getSessionSummaryFile } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
 import { updateStatusBarWithSummaryData } from "../managers/StatusBarManager";
 

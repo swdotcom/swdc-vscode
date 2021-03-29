@@ -2,7 +2,6 @@ import { StatusBarAlignment, StatusBarItem, window } from "vscode";
 import { SessionSummary } from "../model/models";
 import { getFileDataAsJson, getItem, getSessionSummaryFile, humanizeMinutes } from "../Util";
 import { isFlowModEnabled } from "./FlowManager";
-import { hasSlackWorkspaces } from "./SlackManager";
 
 let showStatusBarText = true;
 let ctMetricStatusBarItem: StatusBarItem = undefined;

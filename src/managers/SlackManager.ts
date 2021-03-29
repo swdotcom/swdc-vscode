@@ -1,6 +1,5 @@
 import { commands, window } from "vscode";
 import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
-import { fetchSlackIntegrations, getUser } from "../DataController";
 import {
   getAuthCallbackState,
   getIntegrations,

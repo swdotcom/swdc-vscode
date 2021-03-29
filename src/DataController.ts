@@ -20,7 +20,7 @@ import { updateFlowModeStatus } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
 
-export async function fetchSlackIntegrations(user) {
+export async function reconcileSlackIntegrations(user) {
   let foundNewIntegration = false;
   const slackIntegrations = [];
   if (user && user.integrations) {
@@ -77,7 +77,7 @@ export async function getUser() {
         // update jwt to what the jwt is for this spotify user
         setItem("name", user.email);
 
-        await fetchSlackIntegrations(user);
+        await reconcileSlackIntegrations(user);
       }
       return user;
     }
@@ -121,16 +121,22 @@ export function getPreference(preference: string) {
 export async function authenticationCompleteHandler(user) {
   // clear the auth callback state
   setItem("switching_account", false);
-  setItem("vscode_CtskipSlackConnect", false);
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {
     const currName = getItem("name");
     if (currName != user.email) {
+      // new user
       if (user.plugin_jwt) {
         setItem("jwt", user.plugin_jwt);
       }
       setItem("name", user.email);
+
+      const currentAuthType = getItem("authType");
+      if (!currentAuthType) {
+        setItem("authType", "software");
+      }
+
       // update the login status
       window.showInformationMessage(`Successfully logged on to Code Time`);
 
@@ -141,24 +147,17 @@ export async function authenticationCompleteHandler(user) {
       } catch (e) {
         console.error("Failed to initialize codetime websockets", e);
       }
+
+      clearSessionSummaryData();
+      clearTimeDataSummary();
+      // fetch after logging on
+      SummaryManager.getInstance().updateSessionSummaryFromServer();
     }
+    setItem("vscode_CtskipSlackConnect", false);
   }
 
-  const currentAuthType = getItem("authType");
-  if (!currentAuthType) {
-    setItem("authType", "software");
-  }
-
-  clearSessionSummaryData();
-  clearTimeDataSummary();
-
-  // fetch after logging on
-  SummaryManager.getInstance().updateSessionSummaryFromServer();
-
-  // clear out the previous ones locally
-  removeAllSlackIntegrations();
   // update this users integrations
-  await fetchSlackIntegrations(user);
+  await reconcileSlackIntegrations(user);
 
   // fetch any teams for this user
   await getTeams();

@@ -31,7 +31,6 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SideBar(props) {
   const classes = useStyles();
-  const stateData = props.stateData;
 
   const currentColorKind = props.stateData.currentColorKind;
   const prefersDarkMode = !!(currentColorKind === 2);
@@ -133,7 +132,7 @@ export default function SideBar(props) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Grid container className={classes.root}>
-        {(!stateData.registered || (!stateData.slackConnected && !stateData.skipSlackConnect)) && (
+        {(!props.stateData.registered || (!props.stateData.slackConnected && !props.stateData.skipSlackConnect)) && (
           <Grid item xs={12} className={classes.gridItemSetup}>
             <Setup stateData={props.stateData} vscode={props.vscode} />
           </Grid>
