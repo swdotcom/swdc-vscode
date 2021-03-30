@@ -4,7 +4,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import { window, ExtensionContext, commands } from "vscode";
 import { initializePreferences } from "./DataController";
-import { onboardInit } from "./user/OnboardManager";
+import { onboardInit, handleIncompleteAuth } from "./user/OnboardManager";
 import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";

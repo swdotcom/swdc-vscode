@@ -1,20 +1,10 @@
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import {
-  CODE_TIME_EXT_ID,
-  launch_url,
-  CODE_TIME_PLUGIN_ID,
-  CODE_TIME_TYPE,
-  api_endpoint,
-  SOFTWARE_DIRECTORY,
-  LOG_FILE_EVENTS,
-  SIGN_UP_LABEL,
-} from "./Constants";
+import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS, SIGN_UP_LABEL } from "./Constants";
 import { v4 as uuidv4 } from "uuid";
 
 import { showModalSignupPrompt } from "./managers/SlackManager";
 import { execCmd } from "./managers/ExecManager";
 
-const queryString = require("query-string");
 const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
@@ -645,93 +635,6 @@ export function humanizeMinutes(min) {
     str = min.toFixed(0) + "m";
   }
   return str;
-}
-
-export async function launchEmailSignup(switching_account: boolean = false) {
-  setItem("authType", "software");
-  setItem("switching_account", switching_account);
-
-  // continue with onboaring
-  const url = await buildEmailSignup();
-
-  launchWebUrl(url);
-}
-
-export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
-  setItem("authType", loginType);
-  setItem("switching_account", switching_account);
-
-  // continue with onboaring
-  const url = await buildLoginUrl(loginType);
-
-  launchWebUrl(url);
-}
-
-/**
- * @param loginType "software" | "existing" | "google" | "github"
- */
-export async function buildLoginUrl(loginType: string) {
-  const auth_callback_state = getAuthCallbackState(true);
-  const name = getItem("name");
-  let url = launch_url;
-
-  let obj = {
-    plugin: getPluginType(),
-    pluginVersion: getVersion(),
-    plugin_id: getPluginId(),
-    auth_callback_state,
-    plugin_uuid: getPluginUuid(),
-    login: true,
-  };
-
-  // only send the plugin_token when registering for the 1st time
-  if (!name) {
-    obj["plugin_token"] = getItem("jwt");
-  }
-
-  if (loginType === "github") {
-    // github signup/login flow
-    obj["redirect"] = launch_url;
-    url = `${api_endpoint}/auth/github`;
-  } else if (loginType === "google") {
-    // google signup/login flow
-    obj["redirect"] = launch_url;
-    url = `${api_endpoint}/auth/google`;
-  } else {
-    // email login
-    obj["token"] = getItem("jwt");
-    obj["auth"] = "software";
-    url = `${launch_url}/onboarding`;
-  }
-
-  const qryStr = queryString.stringify(obj);
-
-  return `${url}?${qryStr}`;
-}
-
-/**
- * @param loginType "software" | "existing" | "google" | "github"
- */
-export async function buildEmailSignup() {
-  const auth_callback_state = getAuthCallbackState(true);
-
-  let loginUrl = launch_url;
-
-  let obj = {
-    token: getItem("jwt"),
-    auth: "software",
-    plugin: getPluginType(),
-    plugin_uuid: getPluginUuid(),
-    pluginVersion: getVersion(),
-    plugin_id: getPluginId(),
-    auth_callback_state,
-  };
-
-  loginUrl = `${launch_url}/email-signup`;
-
-  const qryStr = queryString.stringify(obj);
-
-  return `${loginUrl}?${qryStr}`;
 }
 
 export function showInformationMessage(message: string) {

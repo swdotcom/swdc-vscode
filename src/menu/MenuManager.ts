@@ -1,8 +1,9 @@
 import { window, QuickPickOptions, commands } from "vscode";
-import { launchWebUrl, launchLogin, getItem } from "../Util";
+import { launchWebUrl, getItem } from "../Util";
 import { launch_url, LOGIN_LABEL } from "../Constants";
 import { showDashboard } from "../managers/WebViewManager";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
+import { launchLogin } from "../user/OnboardManager";
 
 /**
  * Pass in the following array of objects

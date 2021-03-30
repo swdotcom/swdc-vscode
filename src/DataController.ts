@@ -119,6 +119,7 @@ export function getPreference(preference: string) {
 }
 
 export async function authenticationCompleteHandler(user) {
+  let updatedUserInfo = false;
   // clear the auth callback state
   setItem("switching_account", false);
   setAuthCallbackState(null);
@@ -126,6 +127,7 @@ export async function authenticationCompleteHandler(user) {
   if (user?.registered === 1) {
     const currName = getItem("name");
     if (currName != user.email) {
+      updatedUserInfo = true;
       // new user
       if (user.plugin_jwt) {
         setItem("jwt", user.plugin_jwt);
@@ -148,10 +150,15 @@ export async function authenticationCompleteHandler(user) {
         console.error("Failed to initialize codetime websockets", e);
       }
 
+      // fetch any teams for this user
+      await getTeams();
+
       clearSessionSummaryData();
       clearTimeDataSummary();
       // fetch after logging on
       SummaryManager.getInstance().updateSessionSummaryFromServer();
+
+      initializePreferences();
     }
     setItem("vscode_CtskipSlackConnect", false);
   }
@@ -159,12 +166,9 @@ export async function authenticationCompleteHandler(user) {
   // update this users integrations
   await reconcileSlackIntegrations(user);
 
-  // fetch any teams for this user
-  await getTeams();
-
   commands.executeCommand("codetime.refreshCodeTimeView");
 
-  initializePreferences();
+  return updatedUserInfo;
 }
 
 export function removeAllSlackIntegrations() {

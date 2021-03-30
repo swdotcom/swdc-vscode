@@ -1,5 +1,5 @@
 import { commands, Disposable, window, ExtensionContext } from "vscode";
-import { launchWebUrl, launchLogin, openFileInEditor, displayReadmeIfNotExists, launchEmailSignup, launchWebDashboard, setItem } from "./Util";
+import { launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashboard, setItem } from "./Util";
 import { KpmManager } from "./managers/KpmManager";
 import { KpmItem, UIInteractionType } from "./model/models";
 import { ProjectCommitManager } from "./menu/ProjectCommitManager";
@@ -27,6 +27,7 @@ import {
 import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
 import { getTeams } from "./managers/TeamManager";
 import { toggleStatusBar } from "./managers/StatusBarManager";
+import { launchEmailSignup, launchLogin } from "./user/OnboardManager";
 
 export function createCommands(
   ctx: ExtensionContext,
