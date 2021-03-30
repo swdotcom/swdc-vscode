@@ -4,6 +4,7 @@ import { CacheManager } from "../cache/CacheManager";
 import { execCmd } from "../managers/ExecManager";
 
 const ONE_HOUR_IN_SEC = 60 * 60;
+const ONE_DAY_IN_SEC = ONE_HOUR_IN_SEC * 24;
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 
@@ -34,6 +35,15 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
     return "";
   }
 
+  const cacheId = `getDefaultBranchFromRemoteBranch-${noSpacesProjectDir(projectDir)}`;
+
+  let defaultBranchFromRemoteBranch = cacheMgr.get(cacheId);
+  if (defaultBranchFromRemoteBranch) {
+    return defaultBranchFromRemoteBranch;
+  }
+
+  defaultBranchFromRemoteBranch = "";
+
   const remotes = execCmd("git remote", projectDir, true) || [];
   const remoteName = remotes.sort((a, b) => b.length - a.length).find((r) => remoteBranch.includes(r));
 
@@ -44,36 +54,53 @@ export async function getDefaultBranchFromRemoteBranch(projectDir, remoteBranch:
       // Make sure it's not a broken HEAD ref
       const verify = execCmd(`git show-ref --verify '${headBranchList[0]}'`, projectDir, true);
 
-      if (verify?.length) return headBranchList[0];
+      if (verify?.length) {
+        defaultBranchFromRemoteBranch = headBranchList[0];
+      }
     }
 
-    const assumedDefaultBranch = await guessDefaultBranchForRemote(projectDir, remoteName);
-    if (assumedDefaultBranch) return assumedDefaultBranch;
+    if (!defaultBranchFromRemoteBranch) {
+      const assumedDefaultBranch = await guessDefaultBranchForRemote(projectDir, remoteName);
+      if (assumedDefaultBranch) {
+        defaultBranchFromRemoteBranch = assumedDefaultBranch;
+      }
+    }
   }
 
-  // Check if any HEAD branch is defined on any remote
-  const remoteBranchesResult = execCmd("git branch -r -l '*/HEAD'", projectDir, true);
-  if (remoteBranchesResult?.length) {
-    // ['origin/HEAD - origin/main']
-    const remoteBranches = remoteBranchesResult[0].split(" ");
-    return remoteBranches[remoteBranches.length - 1];
+  if (!defaultBranchFromRemoteBranch) {
+    // Check if any HEAD branch is defined on any remote
+    const remoteBranchesResult = execCmd("git branch -r -l '*/HEAD'", projectDir, true);
+    if (remoteBranchesResult?.length) {
+      // ['origin/HEAD - origin/main']
+      const remoteBranches = remoteBranchesResult[0].split(" ");
+      defaultBranchFromRemoteBranch = remoteBranches[remoteBranches.length - 1];
+    }
   }
 
-  const originIndex = remotes.indexOf("origin");
-  if (originIndex > 0) {
-    // Move origin to the beginning
-    remotes.unshift(remotes.splice(originIndex, 1)[0]);
+  if (!defaultBranchFromRemoteBranch) {
+    const originIndex = remotes.indexOf("origin");
+    if (originIndex > 0) {
+      // Move origin to the beginning
+      remotes.unshift(remotes.splice(originIndex, 1)[0]);
+    }
+
+    // Check each remote for a possible default branch
+    for (const remote of remotes) {
+      const assumedRemoteDefaultBranch = await guessDefaultBranchForRemote(projectDir, remote);
+
+      if (assumedRemoteDefaultBranch) {
+        defaultBranchFromRemoteBranch = assumedRemoteDefaultBranch;
+      }
+    }
   }
 
-  // Check each remote for a possible default branch
-  for (const remote of remotes) {
-    const assumedRemoteDefaultBranch = await guessDefaultBranchForRemote(projectDir, remote);
-
-    if (assumedRemoteDefaultBranch) return assumedRemoteDefaultBranch;
+  if (defaultBranchFromRemoteBranch) {
+    // cache for a day
+    cacheMgr.set(cacheId, defaultBranchFromRemoteBranch, ONE_DAY_IN_SEC);
   }
 
   // We have no clue, return something
-  return "";
+  return defaultBranchFromRemoteBranch || "";
 }
 
 async function guessDefaultBranchForRemote(projectDir, remoteName: string): Promise<string | undefined> {

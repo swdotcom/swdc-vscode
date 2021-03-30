@@ -16,9 +16,8 @@ import { clearFileChangeInfoSummaryData, getFileChangeSummaryAsJson, saveFileCha
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
 import { WorkspaceFolder } from "vscode";
-import { getResourceInfo, getRepoContributorInfo, getRepoFileCount, getFileContributorCount } from "../repo/KpmRepoManager";
+import { getResourceInfo } from "../repo/KpmRepoManager";
 import Project from "../model/Project";
-import RepoContributorInfo from "../model/RepoContributorInfo";
 import { FileChangeInfo, KeystrokeAggregate } from "../model/models";
 import { WallClockManager } from "./WallClockManager";
 import TimeData from "../model/TimeData";
@@ -350,21 +349,6 @@ export class PluginDataManager {
     saveFileChangeInfoToDisk(fileChangeInfoMap);
   }
 
-  async populateRepoMetrics(payload: KeystrokeStats) {
-    if (payload.project && payload.project.identifier && payload.project.directory) {
-      // REPO contributor count
-      const repoContributorInfo: RepoContributorInfo = await getRepoContributorInfo(payload.project.directory, true);
-      payload.repoContributorCount = repoContributorInfo ? repoContributorInfo.count || 0 : 0;
-
-      // REPO file count
-      const repoFileCount = await getRepoFileCount(payload.project.directory);
-      payload.repoFileCount = repoFileCount || 0;
-    } else {
-      payload.repoContributorCount = 0;
-      payload.repoFileCount = 0;
-    }
-  }
-
   /**
    * Populate the project information for this specific payload
    * @param payload
@@ -395,8 +379,6 @@ export class PluginDataManager {
     p.resource = resourceInfo;
     p.identifier = resourceInfo?.identifier ?? "";
     payload.project = p;
-
-    await this.populateRepoMetrics(payload);
   }
 
   /**
@@ -416,12 +398,6 @@ export class PluginDataManager {
           fileInfo.local_end = nowTimes.local_now_in_sec;
         }
 
-        // only get the contributor info if we have a repo identifier
-        if (payload.project && payload.project.identifier) {
-          // set the contributor count per file
-          const repoFileContributorCount = await getFileContributorCount(key);
-          fileInfo.repoFileContributorCount = repoFileContributorCount || 0;
-        }
         payload.source[key] = fileInfo;
       }
     }

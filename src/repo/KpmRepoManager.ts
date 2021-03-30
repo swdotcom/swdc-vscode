@@ -32,57 +32,6 @@ function getProjectDir(fileName = null) {
   return null;
 }
 
-export async function getFileContributorCount(fileName) {
-  let fileType = getFileType(fileName);
-
-  if (fileType === "git") {
-    return 0;
-  }
-
-  const directory = getProjectDir(fileName);
-  if (!directory || !isGitProject(directory)) {
-    return 0;
-  }
-
-  const cmd = `git log --pretty="%an" ${fileName}`;
-
-  // get the list of users that modified this file
-  let resultList = execCmd(cmd, directory, true);
-
-  if (resultList?.length) {
-    let map = {};
-    for (let i = 0; i < resultList.length; i++) {
-      const name = resultList[i];
-      if (!map[name]) {
-        map[name] = name;
-      }
-    }
-    return Object.keys(map).length;
-  }
-  return 0;
-}
-
-/**
- * Returns the number of files in this directory
- * @param directory
- */
-export async function getRepoFileCount(directory) {
-  if (!directory || !isGitProject(directory)) {
-    return 0;
-  }
-
-  // windows doesn't support the wc -l so we'll just count the list
-  let cmd = `git ls-files`;
-  // get the author name and email
-  let resultList = execCmd(cmd, directory, true);
-  if (!resultList) {
-    // something went wrong, but don't try to parse a null or undefined str
-    return 0;
-  }
-
-  return resultList.length;
-}
-
 export async function getRepoContributorInfo(fileName: string, filterOutNonEmails: boolean = true): Promise<RepoContributorInfo> {
   const directory = getProjectDir(fileName);
   if (!directory || !isGitProject(directory)) {
