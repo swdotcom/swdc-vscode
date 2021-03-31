@@ -18,7 +18,7 @@ export function execCmd(cmd = "", projectDir = null, returnLines = false): any {
       }
     }
   } catch (e) {
-    console.error("command error: ", e);
+    console.log("Error processing command: ", e.message);
   }
   return result;
 }
