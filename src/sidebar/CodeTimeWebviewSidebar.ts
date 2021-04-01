@@ -71,23 +71,13 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   }
 
   private async loadWebview(tries = 10) {
-    // make sure the jwt is available. The session info may have
-    // been removed while this view was open.
-    if (getItem("jwt")) {
+    if (getItem("jwt") || tries <= 0) {
       this._webview.webview.html = await this.getReactHtml();
-    } else if (tries > 0) {
-      await createAnonymousUser();
-      if (getItem("jwt")) {
-        this.loadWebview(tries);
-      } else {
-        tries--;
-        setTimeout(() => {
-          this.loadWebview(tries);
-        }, 3000);
-      }
     } else {
-      // show the view and end the timeout tries
-      this._webview.webview.html = await this.getReactHtml();
+      tries--;
+      setTimeout(() => {
+        this.loadWebview(tries);
+      }, 2000);
     }
   }
 

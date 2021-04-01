@@ -58,7 +58,8 @@ export function isGitProject(projectDir) {
     return false;
   }
 
-  if (!fs.existsSync(path.join(projectDir, ".git"))) {
+  const gitRemotesDir = path.join(projectDir, ".git", "refs", "remotes");
+  if (!fs.existsSync(gitRemotesDir)) {
     return false;
   }
   return true;
