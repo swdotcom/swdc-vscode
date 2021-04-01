@@ -28,6 +28,7 @@ type StyledTreeItemProps = TreeItemProps & {
   labelInfo?: string;
   labelText: string;
   isWorkspace?: boolean;
+  isLeaf?: boolean;
   authId?: string;
 };
 
@@ -76,13 +77,14 @@ function removeWorkspaceClickHandler(authId: string) {
 
 function StyledTreeItem(props: StyledTreeItemProps) {
   const classes = useTreeItemStyles();
-  const { labelText, labelIcon: LabelIcon, labelInfo, color, bgColor, isWorkspace, authId, ...other } = props;
+  const { labelText, labelIcon: LabelIcon, labelInfo, color, bgColor, isWorkspace, isLeaf, authId, ...other } = props;
 
   return (
     <TreeItem
+      icon={isLeaf && LabelIcon && <LabelIcon color="inherit" className={classes.labelIcon} style={{ color: blue[500] }} />}
       label={
         <div className={classes.labelRoot}>
-          {LabelIcon && <LabelIcon color="inherit" className={classes.labelIcon} style={{ color: blue[500] }} />}
+          {!isLeaf && LabelIcon && <LabelIcon color="inherit" className={classes.labelIcon} style={{ color: blue[500] }} />}
           <Typography variant="body2" className={classes.labelText}>
             {labelText}
           </Typography>
@@ -148,6 +150,7 @@ export default function Workspaces(props) {
               labelText={value.team_domain}
               labelIcon={SlackWorkspaceIcon}
               isWorkspace={true}
+              isLeaf={true}
               authId={value.authId}
             />
           );
@@ -157,6 +160,7 @@ export default function Workspaces(props) {
           nodeId="add_workspace"
           key="add_workspace"
           labelText="Add workspace"
+          isLeaf={true}
           labelIcon={ControlPointTwoToneIcon}
         />
       </StyledTreeItem>
