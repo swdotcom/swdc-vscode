@@ -442,21 +442,7 @@ export function openFileInEditor(file) {
 }
 
 export function getExtensionName() {
-  if (extensionName) {
-    return extensionName;
-  }
-
-  const resourcePath: string = path.join(__dirname, "resources");
-  const extInfoFile = path.join(resourcePath, "extensioninfo.json");
-
-  const extensionJson = fileIt.readJsonFileSync(extInfoFile);
-  if (extensionJson) {
-    extensionName = extensionJson.name;
-  }
-  if (!extensionName) {
-    extensionName = "swdc-vscode";
-  }
-  return extensionName;
+  return "swdc-vscode";
 }
 
 export function logEvent(message) {
