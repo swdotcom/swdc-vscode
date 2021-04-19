@@ -121,17 +121,12 @@ export function getSignUpButton(signUpAuthName: string, iconColor?: string): Kpm
 }
 
 export function getHideStatusBarMetricsButton(): KpmItem {
-  let toggleStatusBarTextLabel = "Hide status bar metrics";
+  let toggleStatusBarTextLabel = "Hide Code Time status";
   if (!isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = "Show status bar metrics";
+    toggleStatusBarTextLabel = "Show Code Time status";
   }
 
-  const item: KpmItem = getActionButton(
-    toggleStatusBarTextLabel,
-    "Toggle the Code Time status bar metrics text",
-    "codetime.toggleStatusBar",
-    "visible.svg"
-  );
+  const item: KpmItem = getActionButton(toggleStatusBarTextLabel, "Toggle the Code Time status", "codetime.toggleStatusBar", "visible.svg");
   item.location = "ct_menu_tree";
   item.name = "ct_toggle_status_bar_metrics_btn";
   item.color = "blue";

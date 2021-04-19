@@ -38,9 +38,9 @@ export default function Account(props) {
     statusBarTextVisible: stateData.statusBarTextVisible,
   });
 
-  let toggleStatusBarTextLabel = "Hide status bar metrics";
+  let toggleStatusBarTextLabel = "Hide Code Time status";
   if (state.statusBarTextVisible) {
-    toggleStatusBarTextLabel = "Show status bar metrics";
+    toggleStatusBarTextLabel = "Show Code Time status";
   }
 
   function configureSettingsClickHandler() {

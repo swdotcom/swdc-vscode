@@ -65,13 +65,13 @@ export async function showMenuOptions() {
     });
   }
 
-  let toggleStatusBarTextLabel = "Hide status bar metrics";
+  let toggleStatusBarTextLabel = "Hide Code Time status";
   if (!isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = "Show status bar metrics";
+    toggleStatusBarTextLabel = "Show Code Time status";
   }
   kpmMenuOptions.items.push({
     label: toggleStatusBarTextLabel,
-    detail: "Toggle the Code Time status bar metrics text",
+    detail: "Toggle the Code Time status",
     url: null,
     cb: null,
     command: "codetime.toggleStatusBar",
