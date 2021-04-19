@@ -66,9 +66,9 @@ export async function showMenuOptions() {
     });
   }
 
-  let toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
-  if (!isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
+  let toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
+  if (isStatusBarTextVisible()) {
+    toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
   }
   kpmMenuOptions.items.push({
     label: toggleStatusBarTextLabel,
