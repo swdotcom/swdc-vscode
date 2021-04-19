@@ -28,7 +28,7 @@ export async function updateFlowModeStatus() {
   ctFlowModeStatusBarItem.command = flowModeCommand;
   ctFlowModeStatusBarItem.text = flowModeText;
   ctFlowModeStatusBarItem.tooltip = flowModeTooltip;
-  if (showFlowModeStatusBarItem()) {
+  if (isRegistered()) {
     ctFlowModeStatusBarItem.show();
   } else {
     ctFlowModeStatusBarItem.hide();
@@ -49,6 +49,15 @@ async function getFlowModeStatusBarInfo() {
 
 export function toggleStatusBar() {
   showStatusBarText = !showStatusBarText;
+
+  // toggle the flow mode
+  if (showStatusBarText && isRegistered()) {
+    ctFlowModeStatusBarItem.show();
+  } else if (!showStatusBarText) {
+    ctFlowModeStatusBarItem.hide();
+  }
+
+  // toggle the metrics value
   updateStatusBarWithSummaryData();
 }
 
@@ -56,7 +65,7 @@ export function isStatusBarTextVisible() {
   return showStatusBarText;
 }
 
-function showFlowModeStatusBarItem() {
+function isRegistered() {
   return !!getItem("name");
 }
 

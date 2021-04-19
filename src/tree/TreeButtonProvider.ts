@@ -2,6 +2,7 @@ import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
 import { KpmItem, UIInteractionType } from "../model/models";
 import { getItem } from "../Util";
+import { HIDE_CODE_TIME_STATUS_LABEL, SHOW_CODE_TIME_STATUS_LABEL } from "../app/contants";
 
 export function getViewProjectSummaryButton(): KpmItem {
   const commitSummitLabel = `Project summary`;
@@ -121,17 +122,12 @@ export function getSignUpButton(signUpAuthName: string, iconColor?: string): Kpm
 }
 
 export function getHideStatusBarMetricsButton(): KpmItem {
-  let toggleStatusBarTextLabel = "Hide status bar metrics";
+  let toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
   if (!isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = "Show status bar metrics";
+    toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
   }
 
-  const item: KpmItem = getActionButton(
-    toggleStatusBarTextLabel,
-    "Toggle the Code Time status bar metrics text",
-    "codetime.toggleStatusBar",
-    "visible.svg"
-  );
+  const item: KpmItem = getActionButton(toggleStatusBarTextLabel, "Toggle the Code Time status", "codetime.toggleStatusBar", "visible.svg");
   item.location = "ct_menu_tree";
   item.name = "ct_toggle_status_bar_metrics_btn";
   item.color = "blue";
