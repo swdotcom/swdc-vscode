@@ -9,6 +9,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Workspaces from "./workspaces";
 import { GoogleIcon, GithubIcon, EmailIcon } from "../icons";
 import { VisibilityIcon, SettingsIcon, MessageIcon, DocumentIcon, PawIcon } from "../icons";
+import { HIDE_CODE_TIME_STATUS_LABEL, SHOW_CODE_TIME_STATUS_LABEL } from "../../contants";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -38,9 +39,9 @@ export default function Account(props) {
     statusBarTextVisible: stateData.statusBarTextVisible,
   });
 
-  let toggleStatusBarTextLabel = "Hide Code Time status";
+  let toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
   if (state.statusBarTextVisible) {
-    toggleStatusBarTextLabel = "Show Code Time status";
+    toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
   }
 
   function configureSettingsClickHandler() {

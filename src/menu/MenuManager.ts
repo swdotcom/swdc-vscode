@@ -4,6 +4,7 @@ import { launch_url, LOGIN_LABEL } from "../Constants";
 import { showDashboard } from "../managers/WebViewManager";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
 import { launchLogin } from "../user/OnboardManager";
+import { HIDE_CODE_TIME_STATUS_LABEL, SHOW_CODE_TIME_STATUS_LABEL } from "../app/contants";
 
 /**
  * Pass in the following array of objects
@@ -65,9 +66,9 @@ export async function showMenuOptions() {
     });
   }
 
-  let toggleStatusBarTextLabel = "Hide Code Time status";
+  let toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
   if (!isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = "Show Code Time status";
+    toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
   }
   kpmMenuOptions.items.push({
     label: toggleStatusBarTextLabel,
