@@ -15,7 +15,7 @@ import { getItem } from "../Util";
  * statusBarTextVisible: boolean,
  * slackWorkspaces: [slack integrations],
  * currentColorKind: number (2=dark, anything else is non-dark),
- * teams: [teams]
+ * teams: [team]
  */
 export async function getReactData() {
   const name = getItem("name");

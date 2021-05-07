@@ -51,7 +51,7 @@ export default function Teams(props) {
     const command = {
       action: "codetime.showTeamDashboard",
       command: "command_execute",
-      arguments: [team.id],
+      arguments: [team.org_name, team.id],
     };
     props.vscode.postMessage(command);
   }
