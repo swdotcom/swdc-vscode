@@ -14,15 +14,7 @@
 
 <p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
 
-[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Track your productivity, protect valuable code time, and stay in flow.  
-
-<p align="center">
-  <a href="https://app.software.com/signup?ref=readme">
-    <img width="220px" height="66px" alt="Sign up for Software.com" src="https://assets.software.com/readme/code-time/signup-button.png">
-  </a>
-</p>
-
-Join our community of over 150,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. 
+[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 150,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
 
 ![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.5.0.png)
 
@@ -76,7 +68,7 @@ With Teams, you can defend code time, see the impact of meetings, and improve wo
 
 Remember, your data is for you, no one else. Your team data is for your team. When you create a team, you will only see aggregated and anonymized summary data at the team level—available to everyone on that team. In addition, to protect individual privacy, the minimum team size is five members. 
 
-To create a team, open the Code Time sidebar and select **Create a team** at the bottom of the panel. You can also visit the [team dashboard](https://app.software.com/team-dashboard) in the web app to get started. It's free to create a team, but you can upgrade to a premium plan to unlock additional features. 
+To create a team, open the Code Time sidebar and select **Create a team** at the bottom of the panel. You can also visit the [web app](https://app.software.com/organizations) to get started. It's free to create a team, but you can upgrade to a premium plan to unlock additional features. 
 
 ## It’s Safe, Secure, and Free
 
