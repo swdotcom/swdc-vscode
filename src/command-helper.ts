@@ -294,12 +294,6 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.viewSoftwareTop40", () => {
-      launchWebUrl("https://api.software.com/music/top40");
-    })
-  );
-
-  cmds.push(
     commands.registerCommand("codetime.sendFeedback", (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so

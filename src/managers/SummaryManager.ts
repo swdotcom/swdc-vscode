@@ -32,23 +32,26 @@ export class SummaryManager {
     const nowDay = format(new Date(), "MM/dd/yyyy");
     setItem("updatedTreeDate", nowDay);
     if (isResponseOk(result) && result.data) {
-      const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
       const summary: SessionSummary = result.data;
-
-      // update summary current day values with the existing current day values
-      summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
-      summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
-      summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
-      summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
-      summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
-
-      updateSessionAndEditorTime(summary.currentDayMinutes);
-      saveSessionSummaryToDisk(summary);
+      this.updateCurrentDayStats(summary);
     }
 
     updateStatusBarWithSummaryData();
 
     // update the code time metrics tree views
     commands.executeCommand("codetime.refreshCodeTimeView");
+  }
+
+  updateCurrentDayStats(summary: SessionSummary) {
+    const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
+    // update summary current day values with the existing current day values
+    summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
+    summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
+    summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
+    summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
+    summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
+
+    updateSessionAndEditorTime(summary.currentDayMinutes);
+    saveSessionSummaryToDisk(summary);
   }
 }
