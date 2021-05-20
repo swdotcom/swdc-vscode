@@ -9,7 +9,6 @@ import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, se
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
-import { WallClockManager } from "./managers/WallClockManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
@@ -41,7 +40,6 @@ export function deactivate(ctx: ExtensionContext) {
 
   // dispose the new day timer
   PluginDataManager.getInstance().dispose();
-  WallClockManager.getInstance().dispose();
 
   clearInterval(liveshare_update_interval);
 
@@ -88,9 +86,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // INIT the plugin data manager
   PluginDataManager.getInstance();
-
-  // initialize the wall clock timer
-  WallClockManager.getInstance();
 
   // initialize preferences
   await initializePreferences();

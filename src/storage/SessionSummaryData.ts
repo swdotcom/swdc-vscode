@@ -1,7 +1,6 @@
-import { SessionSummary, KeystrokeAggregate, KpmItem } from "../model/models";
+import { SessionSummary, KpmItem } from "../model/models";
 import { getNowTimes, getItem, getFileDataAsJson, coalesceNumber, getSessionSummaryFile } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
-import { updateStatusBarWithSummaryData } from "../managers/StatusBarManager";
 
 const fileIt = require("file-it");
 
@@ -86,25 +85,6 @@ export function getTimeBetweenLastPayload() {
   }
 
   return { sessionSeconds, elapsedSeconds };
-}
-
-export async function incrementSessionSummaryData(aggregates: KeystrokeAggregate, sessionSeconds: number) {
-  let sessionSummaryData = getSessionSummaryData();
-  // fill in missing attributes
-  sessionSummaryData = coalesceMissingAttributes(sessionSummaryData);
-  // convert to minutes
-  const sessionMinutes = sessionSeconds ? sessionSeconds / 60 : 0;
-  sessionSummaryData.currentDayMinutes += sessionMinutes;
-
-  // increment the current day attributes except for the current day minutes
-  sessionSummaryData.currentDayKeystrokes += aggregates.keystrokes;
-  sessionSummaryData.currentDayLinesAdded += aggregates.linesAdded;
-  sessionSummaryData.currentDayLinesRemoved += aggregates.linesRemoved;
-
-  saveSessionSummaryToDisk(sessionSummaryData);
-
-  // we've updated the current day minutes, update the status bar
-  updateStatusBarWithSummaryData();
 }
 
 export function getStatusBarKpmItem(): KpmItem {
