@@ -36,8 +36,6 @@ export class SummaryManager {
       this.updateCurrentDayStats(summary);
     }
 
-    updateStatusBarWithSummaryData();
-
     // update the code time metrics tree views
     commands.executeCommand("codetime.refreshCodeTimeView");
   }
@@ -53,5 +51,7 @@ export class SummaryManager {
 
     updateSessionAndEditorTime(summary.currentDayMinutes);
     saveSessionSummaryToDisk(summary);
+
+    updateStatusBarWithSummaryData();
   }
 }

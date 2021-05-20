@@ -11,15 +11,14 @@ import {
 } from "../Util";
 import { storeJsonData, clearLastSavedKeystrokeStats } from "./FileManager";
 import TimeCounterStats from "../model/TimeCounterStats";
-import { clearSessionSummaryData, getTimeBetweenLastPayload, incrementSessionSummaryData } from "../storage/SessionSummaryData";
-import { clearFileChangeInfoSummaryData, getFileChangeSummaryAsJson, saveFileChangeInfoToDisk } from "../storage/FileChangeInfoSummaryData";
+import { clearSessionSummaryData, getTimeBetweenLastPayload } from "../storage/SessionSummaryData";
+import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { UNTITLED, NO_PROJ_NAME } from "../Constants";
 import { WorkspaceFolder } from "vscode";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import Project from "../model/Project";
-import { FileChangeInfo, KeystrokeAggregate } from "../model/models";
-import { WallClockManager } from "./WallClockManager";
+import { FileChangeInfo } from "../model/models";
 import TimeData from "../model/TimeData";
 import { clearTimeDataSummary, incrementSessionAndFileSecondsAndFetch } from "../storage/TimeSummaryData";
 import { TrackerManager } from "./TrackerManager";
@@ -304,15 +303,9 @@ export class PluginDataManager {
     const { sessionSeconds } = getTimeBetweenLastPayload();
     await this.updateCumulativeSessionTime(payload, sessionSeconds);
 
-    // update the aggregation data for the tree info
-    this.aggregateFileMetrics(payload, sessionSeconds);
-
     // Update the latestPayloadTimestampEndUtc. It's used to determine session time and elapsed_seconds
     const latestPayloadTimestampEndUtc = getNowTimes().now_in_sec;
     setItem("latestPayloadTimestampEndUtc", latestPayloadTimestampEndUtc);
-
-    // update the status and tree
-    WallClockManager.getInstance().dispatchStatusViewUpdate();
 
     // Set the unfocused timestamp only if the isUnfocus flag is true.
     // When the user is typing more than a minute or if this is the bootstrap
@@ -339,15 +332,6 @@ export class PluginDataManager {
   }
 
   //// Everything after this line is for time counter v1 ////
-
-  async aggregateFileMetrics(payload, sessionSeconds) {
-    // get a mapping of the current files
-    const fileChangeInfoMap = getFileChangeSummaryAsJson();
-    await this.updateAggregateInfo(fileChangeInfoMap, payload, sessionSeconds);
-
-    // write the fileChangeInfoMap
-    saveFileChangeInfoToDisk(fileChangeInfoMap);
-  }
 
   /**
    * Populate the project information for this specific payload
@@ -452,60 +436,5 @@ export class PluginDataManager {
     // update the cumulative editor seconds
     payload.cumulative_editor_seconds = cumulative_editor_seconds;
     payload.cumulative_session_seconds = cumulative_session_seconds;
-  }
-
-  async updateAggregateInfo(fileChangeInfoMap, payload, sessionSeconds) {
-    const aggregate: KeystrokeAggregate = new KeystrokeAggregate();
-    aggregate.directory = payload.project ? payload.project.directory || NO_PROJ_NAME : NO_PROJ_NAME;
-    Object.keys(payload.source).forEach((key) => {
-      const fileInfo: FileChangeInfo = payload.source[key];
-      /**
-       * update the project info
-       * project has {directory, name}
-       */
-      const baseName = path.basename(key);
-      fileInfo.name = baseName;
-      fileInfo.fsPath = key;
-      fileInfo.projectDir = payload.project.directory;
-      fileInfo.duration_seconds = fileInfo.end - fileInfo.start;
-
-      // update the aggregate info
-      aggregate.add += fileInfo.add;
-      aggregate.close += fileInfo.close;
-      aggregate.delete += fileInfo.delete;
-      aggregate.keystrokes += fileInfo.keystrokes;
-      aggregate.linesAdded += fileInfo.linesAdded;
-      aggregate.linesRemoved += fileInfo.linesRemoved;
-      aggregate.open += fileInfo.open;
-      aggregate.paste += fileInfo.paste;
-
-      const existingFileInfo: FileChangeInfo = fileChangeInfoMap[key];
-      if (!existingFileInfo) {
-        fileInfo.update_count = 1;
-        fileInfo.kpm = aggregate.keystrokes;
-        fileChangeInfoMap[key] = fileInfo;
-      } else {
-        // aggregate
-        existingFileInfo.update_count += 1;
-        existingFileInfo.keystrokes += fileInfo.keystrokes;
-        existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
-        existingFileInfo.add += fileInfo.add;
-        existingFileInfo.close += fileInfo.close;
-        existingFileInfo.delete += fileInfo.delete;
-        existingFileInfo.keystrokes += fileInfo.keystrokes;
-        existingFileInfo.linesAdded += fileInfo.linesAdded;
-        existingFileInfo.linesRemoved += fileInfo.linesRemoved;
-        existingFileInfo.open += fileInfo.open;
-        existingFileInfo.paste += fileInfo.paste;
-        existingFileInfo.duration_seconds += fileInfo.duration_seconds;
-
-        // non aggregates, just set
-        existingFileInfo.lines = fileInfo.lines;
-        existingFileInfo.length = fileInfo.length;
-      }
-    });
-
-    // this will increment and store it offline
-    await incrementSessionSummaryData(aggregate, sessionSeconds);
   }
 }
