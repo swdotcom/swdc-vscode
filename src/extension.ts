@@ -13,7 +13,8 @@ import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
-import { initializeStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
+import { initializeStatusBar } from "./managers/StatusBarManager";
+import { SummaryManager } from "./managers/SummaryManager";
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
@@ -109,7 +110,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   setTimeout(() => {
     initializeStatusBar();
 
-    updateStatusBarWithSummaryData();
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
   }, 0);
 }
 
