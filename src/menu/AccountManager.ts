@@ -2,7 +2,6 @@ import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCal
 import { softwarePost, isResponseOk } from "../http/HttpClient";
 import { showQuickPick } from "./MenuManager";
 import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
-import jwt_decode = require("jwt-decode");
 
 let switching_account = false;
 
@@ -132,13 +131,4 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
   }
 
   return null;
-}
-
-export function getDecodedUserIdFromJwt(jwt) {
-  try {
-    if (jwt && jwt.includes("JWT")) {
-      return jwt_decode(jwt.split("JWT")[1])["id"];
-    }
-  } catch (e) {}
-  return -1;
 }
