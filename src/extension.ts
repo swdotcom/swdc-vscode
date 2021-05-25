@@ -13,12 +13,12 @@ import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
-import { initializeStatusBar } from "./managers/StatusBarManager";
+import { initializeStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
-let liveshare_update_interval = null;
+let current_status_update_interval = null;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -42,7 +42,7 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the new day timer
   PluginDataManager.getInstance().dispose();
 
-  clearInterval(liveshare_update_interval);
+  clearInterval(current_status_update_interval);
 
   clearWebsocketConnectionRetryTimeout();
 }
@@ -112,6 +112,15 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
     SummaryManager.getInstance().updateSessionSummaryFromServer();
   }, 0);
+
+  if (current_status_update_interval) {
+    clearInterval(current_status_update_interval);
+  }
+
+  current_status_update_interval = setInterval(() => {
+    // update with local data to keep secondary windows in sync
+    updateStatusBarWithSummaryData();
+  }, 1000 * 60 * 10);
 }
 
 export function getCurrentColorKind() {
