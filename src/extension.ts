@@ -120,7 +120,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   current_status_update_interval = setInterval(() => {
     // update with local data to keep secondary windows in sync
     updateStatusBarWithSummaryData();
-  }, 1000 * 60 * 10);
+  }, 1000 * 60 * 2);
 }
 
 export function getCurrentColorKind() {
