@@ -1,7 +1,6 @@
-import { SessionSummary } from "../model/models";
-import { getFileDataAsJson, getSessionSummaryFile } from "../Util";
+import { getSessionSummaryFile } from "../Util";
 import { updateStatusBarWithSummaryData } from "./StatusBarManager";
-import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
+import { getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
 const fs = require("fs");
 
 export class SyncManager {
