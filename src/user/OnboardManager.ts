@@ -127,7 +127,8 @@ async function getUserRegistrationInfo() {
   let resp = await softwareGet("/users/plugin/state", token);
   let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
-  if (user) {
+  // only update if its a registered, not anon user
+  if (user && user.registered === 1) {
     await authenticationCompleteHandler(user);
     return true;
   }
