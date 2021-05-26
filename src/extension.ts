@@ -15,10 +15,10 @@ import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
 import { initializeStatusBar } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
+import { SyncManager } from "./managers/SyncManger";
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
-let liveshare_update_interval = null;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -27,6 +27,7 @@ const tracker: TrackerManager = TrackerManager.getInstance();
 // will then listen for text document changes.
 //
 const kpmController: KpmManager = KpmManager.getInstance();
+const syncManager: SyncManager = SyncManager.getInstance();
 
 export function isTelemetryOn() {
   return TELEMETRY_ON;
@@ -42,7 +43,8 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the new day timer
   PluginDataManager.getInstance().dispose();
 
-  clearInterval(liveshare_update_interval);
+  // dispose the file watchers
+  kpmController.dispose();
 
   clearWebsocketConnectionRetryTimeout();
 }
