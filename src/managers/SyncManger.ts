@@ -1,7 +1,7 @@
 import { SessionSummary } from "../model/models";
 import { getFileDataAsJson, getSessionSummaryFile } from "../Util";
 import { updateStatusBarWithSummaryData } from "./StatusBarManager";
-import { saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
+import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
 const fs = require("fs");
 
 export class SyncManager {
@@ -16,16 +16,11 @@ export class SyncManager {
   }
 
   constructor() {
-    const file = getSessionSummaryFile();
+    // make sure the file exists
+    getSessionSummaryFileAsJson();
 
-    // make sure the file exists before we start listening to it
-    let sessionSummary = getFileDataAsJson(file);
-    if (!sessionSummary) {
-      sessionSummary = new SessionSummary();
-      saveSessionSummaryToDisk(sessionSummary);
-    }
     // fs.watch replaces fs.watchFile and fs.unwatchFile
-    fs.watch(file, (curr, prev) => {
+    fs.watch(getSessionSummaryFile(), (curr, prev) => {
       if (curr === "change") {
         updateStatusBarWithSummaryData();
       }
