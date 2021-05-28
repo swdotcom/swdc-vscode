@@ -125,41 +125,39 @@ export async function authenticationCompleteHandler(user) {
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {
-    const currName = getItem("name");
-    if (currName != user.email) {
-      updatedUserInfo = true;
-      // new user
-      if (user.plugin_jwt) {
-        setItem("jwt", user.plugin_jwt);
-      }
-      setItem("name", user.email);
-
-      const currentAuthType = getItem("authType");
-      if (!currentAuthType) {
-        setItem("authType", "software");
-      }
-
-      // update the login status
-      window.showInformationMessage(`Successfully logged on to Code Time`);
-
-      updateFlowModeStatus();
-
-      try {
-        initializeWebsockets();
-      } catch (e) {
-        console.error("Failed to initialize codetime websockets", e);
-      }
-
-      // fetch any teams for this user
-      await getTeams();
-
-      clearSessionSummaryData();
-      clearTimeDataSummary();
-      // fetch after logging on
-      SummaryManager.getInstance().updateSessionSummaryFromServer();
-
-      initializePreferences();
+    updatedUserInfo = true;
+    // new user
+    if (user.plugin_jwt) {
+      setItem("jwt", user.plugin_jwt);
     }
+    setItem("name", user.email);
+
+    const currentAuthType = getItem("authType");
+    if (!currentAuthType) {
+      setItem("authType", "software");
+    }
+
+    // update the login status
+    window.showInformationMessage(`Successfully logged on to Code Time`);
+
+    updateFlowModeStatus();
+
+    try {
+      initializeWebsockets();
+    } catch (e) {
+      console.error("Failed to initialize codetime websockets", e);
+    }
+
+    // fetch any teams for this user
+    await getTeams();
+
+    clearSessionSummaryData();
+    clearTimeDataSummary();
+    // fetch after logging on
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
+
+    initializePreferences();
+
     setItem("vscode_CtskipSlackConnect", false);
   }
 

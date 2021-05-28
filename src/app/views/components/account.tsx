@@ -92,17 +92,6 @@ export default function Account(props) {
         <List style={{ padding: 0, margin: 0 }}>
           <ListItem style={{ padding: 0, margin: 0 }}>
             <ListItemText primary="Account" secondary={!stateData.registered ? "Manage your account" : stateData.email} />
-            <ListItemSecondaryAction classes={{ root: classes.secondaryAction }}>
-              <div aria-label="Authentication type">
-                {!stateData.registered ? null : stateData.authType === "github" ? (
-                  <GithubIcon />
-                ) : stateData.authType === "google" ? (
-                  <GoogleIcon />
-                ) : (
-                  <EmailIcon />
-                )}
-              </div>
-            </ListItemSecondaryAction>
           </ListItem>
         </List>
       </Grid>
