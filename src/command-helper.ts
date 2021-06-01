@@ -25,7 +25,7 @@ import {
   getWebViewDashboardButton,
 } from "./tree/TreeButtonProvider";
 import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
-import { getTeams } from "./managers/TeamManager";
+import { buildTeams } from "./managers/TeamManager";
 import { toggleStatusBar } from "./managers/StatusBarManager";
 import { launchEmailSignup, launchLogin } from "./user/OnboardManager";
 
@@ -396,7 +396,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.reloadTeams", async () => {
-      await getTeams();
+      await buildTeams();
       commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );
