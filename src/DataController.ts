@@ -15,7 +15,7 @@ import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
-import { getTeams } from "./managers/TeamManager";
+import { buildTeams } from "./managers/TeamManager";
 import { updateFlowModeStatus } from "./managers/StatusBarManager";
 const { WebClient } = require("@slack/web-api");
 const fileIt = require("file-it");
@@ -149,7 +149,7 @@ export async function authenticationCompleteHandler(user) {
     }
 
     // fetch any teams for this user
-    await getTeams();
+    await buildTeams();
 
     clearSessionSummaryData();
     clearTimeDataSummary();
