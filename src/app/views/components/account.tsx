@@ -3,11 +3,9 @@ import Button from "@material-ui/core/Button";
 import List from "@material-ui/core/List";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspaces from "./workspaces";
-import { GoogleIcon, GithubIcon, EmailIcon } from "../icons";
 import { VisibilityIcon, SettingsIcon, MessageIcon, DocumentIcon, PawIcon } from "../icons";
 import { HIDE_CODE_TIME_STATUS_LABEL, SHOW_CODE_TIME_STATUS_LABEL } from "../../contants";
 
