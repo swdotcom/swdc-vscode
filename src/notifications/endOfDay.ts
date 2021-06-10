@@ -31,7 +31,7 @@ export const setEndOfDayNotification = async (user: any) => {
         // check if this day is active
         const day = format(d, "EEE").toLowerCase();
         const work_hours_today = response.data.work_hours[day];
-        if (work_hours_today.active) {
+        if (work_hours_today?.active) {
           // it's active, get the largest end range
           const endTimes = work_hours_today.ranges.map((n) => {
             // convert "end" to total seconds in a day
@@ -51,6 +51,11 @@ export const setEndOfDayNotification = async (user: any) => {
         }
       } else {
         console.error("[CodeTime] error response from /users/profile", response);
+        // the work hours may come in this format as well
+        // [[118800,147600],[205200,234000],[291600,320400],[378000,406800],[464400,493200]]
+        // just give a default of 5pm
+        const msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, HOUR_IN_MILLIS * 17);
+        timer = setTimeout(showEndOfDayNotification, msUntilEndOfTheDay);
       }
     }
   }
