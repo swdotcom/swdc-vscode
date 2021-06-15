@@ -5,8 +5,10 @@ import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { configureSettings } from "../managers/ConfigManager";
 import { TrackerManager } from "../managers/TrackerManager";
 import { configureSettingsKpmItem, showMeTheDataKpmItem } from "../tree/TreeButtonProvider";
+import { format, startOfDay, differenceInMilliseconds } from "date-fns";
 
-const moment = require("moment-timezone");
+const MIN_IN_MILLIS = 60 * 1000;
+const HOUR_IN_MILLIS = 60 * 60 * 1000;
 
 let timer = undefined;
 
@@ -20,37 +22,39 @@ export const setEndOfDayNotification = async (user: any) => {
   if (user?.preferences?.notifications?.endOfDayNotification !== false) {
     const jwt = getItem("jwt");
 
-    if (jwt) {
-      // get the user's work hours from their profile
-      const response = await softwareGet("/users/profile", jwt);
-      if (isResponseOk(response) && response.data?.work_hours) {
-        // get the m-f work hours
-        const workHours = response.data.work_hours.map((workHours: any) => {
-          return buildStartEndFormatsOfUnixTuple(workHours);
+    const d = new Date();
+    const day = format(d, "EEE").toLowerCase();
+    let msUntilEndOfTheDay = 0;
+
+    // [[118800,147600],[205200,234000],[291600,320400],[378000,406800],[464400,493200]]
+    // default of 5pm if the response or work_hours format doesn't have the {dow:...}
+    if (day !== "sun" && day !== "sat") {
+      msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, HOUR_IN_MILLIS * 17);
+    }
+
+    const response = await softwareGet("/users/profile", jwt);
+    if (isResponseOk(response)) {
+      // get the day of the week that matches today
+      const work_hours_today = response.data.work_hours[day] || undefined;
+      if (work_hours_today?.active) {
+        // it's active, get the largest end range
+        const endTimes = work_hours_today.ranges.map((n) => {
+          // convert "end" to total seconds in a day
+          return getEndTimeSeconds(n.end);
         });
 
-        // get milliseconds until the end of the day
-        const now = moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone);
-        const todaysWorkHours = workHours.find((wh) => wh.day === now.format("dddd"));
-        let msUntilEndOfTheDay = 0;
+        // sort milliseconds in descending order
+        endTimes.sort(function (a, b) {
+          return b - a;
+        });
 
-        // check if todays work hours are set since its not set on weekends
-        if (!todaysWorkHours || !todaysWorkHours.end) {
-          const nowHour = now.hour();
-          msUntilEndOfTheDay = (17 - nowHour) * 60 * 60 * 1000;
-        } else {
-          const { end } = todaysWorkHours;
-          msUntilEndOfTheDay = end.valueOf() - now.valueOf();
-        }
-
-        // if the end of the day is in the future...
-        if (msUntilEndOfTheDay > 0) {
-          // set a timer to show the end of day notification at the end of the day
-          timer = setTimeout(showEndOfDayNotification, msUntilEndOfTheDay);
-        }
-      } else {
-        console.error("[CodeTime] error response from /users/profile", response);
+        msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, endTimes[0]);
       }
+    }
+
+    if (msUntilEndOfTheDay > 0) {
+      // set the timer to fire in "n" milliseconds
+      timer = setTimeout(showEndOfDayNotification, msUntilEndOfTheDay);
     }
   }
 };
@@ -73,26 +77,13 @@ export const showEndOfDayNotification = async () => {
   }
 };
 
-const buildStartEndFormatsOfUnixTuple = (tuple: any, startOfUnit = "week") => {
-  if (!tuple || tuple.length !== 2) {
-    return {};
-  }
+function getEndTimeSeconds(end) {
+  const hourMin = end.split(":");
+  return parseInt(hourMin[0], 10) * HOUR_IN_MILLIS + parseInt(hourMin[1], 10) * MIN_IN_MILLIS;
+}
 
-  // get the 1st timestamp as the start
-  let start = tuple[0];
-  // get the 2nd one as the end of the time range
-  let end = tuple[1];
-
-  // create the moment start and end starting from
-  // the beginning of the week as the unix timestamp
-  // is the number of seconds since the beginning of the week.
-  let momentStart = moment().startOf(startOfUnit).add(start, "seconds");
-  let momentEnd = moment().startOf(startOfUnit).add(end, "seconds");
-
-  // return as an example: {"9:00am", "6:00pm", "Friday"}
-  return {
-    start: momentStart,
-    end: momentEnd,
-    day: momentStart.format("dddd"),
-  };
-};
+function getMillisUntilEndOfTheDay(date, endMillis) {
+  var startD = startOfDay(date);
+  var millisDiff = differenceInMilliseconds(date, startD);
+  return endMillis - millisDiff;
+}
