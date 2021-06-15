@@ -15,7 +15,6 @@ import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
 import { initializeStatusBar } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
-import { SyncManager } from "./managers/SyncManger";
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
@@ -27,7 +26,6 @@ const tracker: TrackerManager = TrackerManager.getInstance();
 // will then listen for text document changes.
 //
 const kpmController: KpmManager = KpmManager.getInstance();
-const syncManager: SyncManager = SyncManager.getInstance();
 
 export function isTelemetryOn() {
   return TELEMETRY_ON;

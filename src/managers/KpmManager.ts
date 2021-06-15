@@ -8,6 +8,7 @@ import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
 import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
+import { updateStatusBarWithSummaryData } from "./StatusBarManager";
 const fs = require("fs");
 
 let _keystrokeMap = {};
@@ -95,6 +96,9 @@ export class KpmManager {
     if (event.focused) {
       PluginDataManager.getInstance().editorFocusHandler();
       this.tracker.trackEditorAction("editor", "focus");
+      // update the status bar only as this is now the primary window and the
+      // previous primary window may have updated the session summary data.
+      updateStatusBarWithSummaryData();
     } else {
       // Process this window's keystroke data since the window has become unfocused
       commands.executeCommand("codetime.processKeystrokeData");
