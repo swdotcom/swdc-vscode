@@ -27,7 +27,6 @@ const tracker: TrackerManager = TrackerManager.getInstance();
 // will then listen for text document changes.
 //
 const kpmController: KpmManager = KpmManager.getInstance();
-const syncManager: SyncManager = SyncManager.getInstance();
 
 export function isTelemetryOn() {
   return TELEMETRY_ON;
@@ -81,6 +80,9 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   }
 
   await tracker.init();
+
+  // initialize the sync manager
+  SyncManager.getInstance();
 
   // store the activate event
   tracker.trackEditorAction("editor", "activate");
