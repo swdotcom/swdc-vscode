@@ -9,6 +9,12 @@ import { handleCurrentDayStatsUpdate } from "./message_handlers/current_day_stat
 const WebSocket = require("ws");
 
 let retryTimeout = undefined;
+let retryConnectionInterval = undefined;
+// 30 minutes
+let retryConnectionIntervalTimeout = 1000 * 60 * 30;
+let lastCurrentDayStatsUpdate = 0;
+// 15 minutes
+let currentDayStatsTimeDelayThreshold = 1000 * 60 * 15;
 
 export function initializeWebsockets() {
   const options = {
@@ -24,10 +30,14 @@ export function initializeWebsockets() {
     },
   };
 
+  lastCurrentDayStatsUpdate = new Date().getTime();
+
+  clearWebsocketConnectionRetryTimeout();
+
   const ws = new WebSocket(websockets_url, options);
 
   ws.on("open", function open() {
-    console.debug("[CodeTime] websockets connection open");
+    console.debug("[CodeTime] websockets connection open: ", ws);
   });
 
   ws.on("message", function incoming(data) {
@@ -36,7 +46,6 @@ export function initializeWebsockets() {
 
   ws.on("close", function close(code, reason) {
     console.debug("[CodeTime] websockets connection closed");
-
     retryConnection();
   });
 
@@ -52,25 +61,41 @@ export function initializeWebsockets() {
 
   ws.on("error", function error(e) {
     console.error("[CodeTime] error connecting to websockets", e);
+    // try later in 5 minutes based
+    retryConnection(1000 * 60 * 5);
   });
+
+  retryConnectionInterval = setInterval(() => {
+    checkCurrentDayStatsUpdateTime();
+  }, retryConnectionIntervalTimeout);
 }
 
-function retryConnection() {
+function checkCurrentDayStatsUpdateTime() {
+  if (new Date().getTime() - lastCurrentDayStatsUpdate > currentDayStatsTimeDelayThreshold) {
+    retryConnection();
+  }
+}
+
+function retryConnection(timeout = 10000) {
   console.debug("[CodeTime] retrying websockets connecting in 10 seconds");
 
   retryTimeout = setTimeout(() => {
     console.log("[CodeTime] attempting to reinitialize websockets connection");
+    clearWebsocketConnectionRetryTimeout();
     initializeWebsockets();
-  }, 10000);
+  }, timeout);
 }
 
 export function clearWebsocketConnectionRetryTimeout() {
   clearTimeout(retryTimeout);
+  clearInterval(retryConnectionInterval);
 }
 
 const handleIncomingMessage = (data: any) => {
   try {
     const message = JSON.parse(data);
+
+    const time = new Date().getTime();
 
     switch (message.type) {
       case "info":
@@ -89,6 +114,7 @@ const handleIncomingMessage = (data: any) => {
         handleIntegrationConnectionSocketEvent(message.body);
         break;
       case "current_day_stats_update":
+        lastCurrentDayStatsUpdate = time;
         handleCurrentDayStatsUpdate(message.body);
         break;
       default:
