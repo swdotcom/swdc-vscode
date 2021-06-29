@@ -8,6 +8,10 @@ import { handleCurrentDayStatsUpdate } from "./message_handlers/current_day_stat
 
 const WebSocket = require("ws");
 
+// This is the server interval to ping this client. If the server
+// interval changes, this interval should change with it to match.
+const SERVER_PING_INTERVAL_MILLIS = 1000 * 60 * 2;
+
 let retryTimeout = undefined;
 
 export function initializeWebsockets() {
@@ -24,11 +28,30 @@ export function initializeWebsockets() {
     },
   };
 
+  function heartbeat() {
+    if (this.pingTimeout) {
+      // Received a ping from the server. Clear the timeout so
+      // our client doesn't terminate the connection
+      clearTimeout(this.pingTimeout);
+    }
+
+    // Use `WebSocket#terminate()`, which immediately destroys the connection,
+    // instead of `WebSocket#close()`, which waits for the close timer.
+    // Delay should be equal to the interval at which your server
+    // sends out pings plus a conservative assumption of the latency.
+    this.pingTimeout = setTimeout(() => {
+      this.terminate();
+    }, SERVER_PING_INTERVAL_MILLIS + 5000);
+  }
+
   const ws = new WebSocket(websockets_url, options);
 
   ws.on("open", function open() {
     console.debug("[CodeTime] websockets connection open");
+    heartbeat();
   });
+
+  ws.on("ping", heartbeat);
 
   ws.on("message", function incoming(data) {
     handleIncomingMessage(data);
@@ -36,7 +59,8 @@ export function initializeWebsockets() {
 
   ws.on("close", function close(code, reason) {
     console.debug("[CodeTime] websockets connection closed");
-
+    // clear this client side timeout
+    clearTimeout(this.pingTimeout);
     retryConnection();
   });
 
