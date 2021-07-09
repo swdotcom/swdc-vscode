@@ -3,7 +3,7 @@ import Setup from "./components/setup";
 import Account from "./components/account";
 import FlowMode from "./components/flowmode";
 import Teams from "./components/teams";
-import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import blue from "@material-ui/core/colors/blue";
 import Divider from "@material-ui/core/Divider";
@@ -37,7 +37,7 @@ export default function SideBar(props) {
 
   const theme = React.useMemo(
     () =>
-      createMuiTheme({
+      createTheme({
         typography: {
           fontFamily: [
             "Inter",
