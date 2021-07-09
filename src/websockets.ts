@@ -90,6 +90,7 @@ function retryConnection() {
 
 export function clearWebsocketConnectionRetryTimeout() {
   clearTimeout(retryTimeout);
+  clearTimeout(this.pingTimeout);
 }
 
 const handleIncomingMessage = (data: any) => {
