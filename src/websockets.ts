@@ -28,6 +28,8 @@ export function initializeWebsockets() {
     },
   };
 
+  const ws = new WebSocket(websockets_url, options);
+
   function heartbeat() {
     if (pingTimeout) {
       // Received a ping from the server. Clear the timeout so
@@ -40,11 +42,11 @@ export function initializeWebsockets() {
     // Delay should be equal to the interval at which your server
     // sends out pings plus a conservative assumption of the latency.
     pingTimeout = setTimeout(() => {
-      this.terminate();
+      if (ws) {
+        ws.terminate();
+      }
     }, SERVER_PING_INTERVAL_MILLIS + 5000);
   }
-
-  const ws = new WebSocket(websockets_url, options);
 
   ws.on("open", function open() {
     console.debug("[CodeTime] websockets connection open");
