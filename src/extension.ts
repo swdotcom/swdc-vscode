@@ -33,9 +33,6 @@ export function isTelemetryOn() {
 }
 
 export function deactivate(ctx: ExtensionContext) {
-  // Process this window's keystroke data since the window has become unfocused/deactivated
-  commands.executeCommand("codetime.processKeystrokeData");
-
   // store the deactivate event
   tracker.trackEditorAction("editor", "deactivate");
 
