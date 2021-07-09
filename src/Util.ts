@@ -643,7 +643,11 @@ export function getFileType(fileName: string) {
 }
 
 export function getFileDataAsJson(file) {
-  return fileIt.readJsonFileSync(file);
+  try {
+    return fileIt.readJsonFileSync(file);
+  } catch (e) {
+    return null;
+  }
 }
 
 export function getFileDataArray(file) {
