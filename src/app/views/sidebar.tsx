@@ -33,7 +33,7 @@ export default function SideBar(props) {
   const classes = useStyles();
 
   const currentColorKind = props.stateData.currentColorKind;
-  const prefersDarkMode = !!(currentColorKind === 2);
+  const prefersDarkMode = !!(currentColorKind === 2 || currentColorKind === 3);
 
   const theme = React.useMemo(
     () =>
