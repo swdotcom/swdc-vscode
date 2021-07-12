@@ -21,15 +21,19 @@ export async function getCachedTeams() {
 async function gatherTeamsFromOrgs(orgs) {
   let org_teams = [];
 
+  const email = getItem("name");
   if (orgs?.length) {
     orgs.forEach((org) => {
       // add every team from each org
       org.teams?.forEach((team) => {
-        org_teams.push({
-          ...team,
-          org_name: org.name,
-          org_id: org.id,
-        });
+        const inTeam = team.team_members?.find((member) => member.email === email);
+        if (inTeam) {
+          org_teams.push({
+            ...team,
+            org_name: org.name,
+            org_id: org.id,
+          });
+        }
       });
     });
   }
