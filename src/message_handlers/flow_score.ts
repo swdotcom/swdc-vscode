@@ -6,7 +6,7 @@ export async function handleFlowScoreMessage(message: any) {
   console.debug("[CodeTime] Received flow score message", message);
   const flowModeSettings = getPreference("flowMode");
 
-  if (flowModeSettings.editor.autoEnableFlowMode && hasSlackWorkspaces() && !enablingFlow && !enabledFlow) {
+  if (flowModeSettings.editor.autoEnterFlowMode && !(enabledFlow || enablingFlow)) {
     try {
       enableFlow({ automated: true });
     } catch (e) {
