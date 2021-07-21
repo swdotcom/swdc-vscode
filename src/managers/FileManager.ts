@@ -1,28 +1,35 @@
-import { getSoftwareDir, isWindows } from "../Util";
-import KeystrokeStats from "../model/KeystrokeStats";
-
 const fileIt = require("file-it");
 
-let latestPayload: KeystrokeStats = null;
+// Synchronous file handling methods via "file-it"
 
-export function clearLastSavedKeystrokeStats() {
-  latestPayload = null;
+export function storeJsonData(file, data) {
+  fileIt.writeJsonFileSync(file, data);
 }
 
-export function getCurrentPayloadFile() {
-  let file = getSoftwareDir();
-  if (isWindows()) {
-    file += "\\latestKeystrokes.json";
-  } else {
-    file += "/latestKeystrokes.json";
+export function storeContentData(file, content) {
+  fileIt.writeContentFileSync(file, content);
+}
+
+export function setJsonItem(file, key, value) {
+  fileIt.setJsonValue(file, key, value);
+}
+
+export function getJsonItem(file, key) {
+  return fileIt.getJsonValue(file, key);
+}
+
+export function getFileDataAsJson(file) {
+  try {
+    return fileIt.readJsonFileSync(file);
+  } catch (e) {
+    return null;
   }
-  return file;
 }
 
-export async function storeCurrentPayload(payload) {
-  storeJsonData(this.getCurrentPayloadFile(), payload);
+export function getFileDataArray(file) {
+  return fileIt.readJsonArraySync(file);
 }
 
-export async function storeJsonData(fileName, data) {
-  fileIt.writeJsonFileSync(fileName, data);
+export function appendJsonData(file, data) {
+  fileIt.appendJsonFileSync(file, data);
 }

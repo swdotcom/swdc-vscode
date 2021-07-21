@@ -1,15 +1,5 @@
-import {
-  getNowTimes,
-  getTimeCounterFile,
-  getFileDataAsJson,
-  isNewDay,
-  setItem,
-  getProjectFolder,
-  getWorkspaceName,
-  getHostname,
-  coalesceNumber,
-} from "../Util";
-import { storeJsonData, clearLastSavedKeystrokeStats } from "./FileManager";
+import { getNowTimes, getTimeCounterFile, isNewDay, setItem, getProjectFolder, getWorkspaceName, getHostname, coalesceNumber } from "../Util";
+import { getFileDataAsJson, storeJsonData } from "./FileManager";
 import TimeCounterStats from "../model/TimeCounterStats";
 import { clearSessionSummaryData, getTimeBetweenLastPayload } from "../storage/SessionSummaryData";
 import { clearFileChangeInfoSummaryData } from "../storage/FileChangeInfoSummaryData";
@@ -184,9 +174,6 @@ export class PluginDataManager {
 
       // Clear the session summary data (report and status bar info)
       clearSessionSummaryData();
-
-      // clear the last save payload
-      clearLastSavedKeystrokeStats();
 
       // send the offline TimeData payloads
       await clearTimeDataSummary();

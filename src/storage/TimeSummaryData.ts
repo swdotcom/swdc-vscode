@@ -1,12 +1,11 @@
-import { getSoftwareDir, isWindows, getFileDataArray, getNowTimes, getActiveProjectWorkspace } from "../Util";
+import { getSoftwareDir, isWindows, getNowTimes, getActiveProjectWorkspace } from "../Util";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import { WorkspaceFolder } from "vscode";
 import { NO_PROJ_NAME, UNTITLED } from "../Constants";
 import CodeTimeSummary from "../model/CodeTimeSummary";
 import Project from "../model/Project";
 import TimeData from "../model/TimeData";
-
-const fileIt = require("file-it");
+import { getFileDataArray, storeJsonData } from "../managers/FileManager";
 
 export function getTimeDataSummaryFile() {
   let file = getSoftwareDir();
@@ -46,7 +45,7 @@ async function getNewTimeDataSummary(project: Project): Promise<TimeData> {
 export async function clearTimeDataSummary() {
   const file = getTimeDataSummaryFile();
   let payloads: TimeData[] = [];
-  fileIt.writeJsonFileSync(file, payloads, { spaces: 4 });
+  storeJsonData(file, payloads);
 }
 
 export async function getCurrentTimeSummaryProject(workspaceFolder: WorkspaceFolder): Promise<Project> {
@@ -241,6 +240,5 @@ function saveTimeDataSummaryToDisk(data: TimeData) {
   } else {
     payloads = [data];
   }
-
-  fileIt.writeJsonFileSync(file, payloads, { spaces: 4 });
+  storeJsonData(file, payloads);
 }

@@ -3,7 +3,6 @@ import KeystrokeStats from "../model/KeystrokeStats";
 import { NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt } from "../Util";
 import { FileChangeInfo } from "../model/models";
-import { storeCurrentPayload } from "./FileManager";
 import Project from "../model/Project";
 import { PluginDataManager } from "./PluginDataManager";
 import { getPreference } from "../DataController";
@@ -17,8 +16,6 @@ export class KpmManager {
   private static instance: KpmManager;
 
   private _disposable: Disposable;
-
-  private _currentPayloadTimeout;
 
   private _keystrokeTriggerTimeout;
 
@@ -293,23 +290,6 @@ export class KpmManager {
         sourceObj.linesAdded += textChangeInfo.linesAdded;
       }
     }
-
-    this.updateLatestPayloadLazily(rootObj);
-  }
-
-  private updateLatestPayloadLazily(payload) {
-    if (this._currentPayloadTimeout) {
-      // cancel the current one
-      clearTimeout(this._currentPayloadTimeout);
-      this._currentPayloadTimeout = null;
-    }
-    this._currentPayloadTimeout = setTimeout(() => {
-      this.updateLatestPayload(payload);
-    }, 2000);
-  }
-
-  private updateLatestPayload(payload) {
-    storeCurrentPayload(payload);
   }
 
   /**

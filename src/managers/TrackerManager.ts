@@ -1,5 +1,5 @@
 import swdcTracker from "swdc-tracker";
-import { api_endpoint } from "../Constants";
+import { api_endpoint, ONE_HOUR_MILLIS } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders, getGitEventFile, isGitProject } from "../Util";
 import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
@@ -17,8 +17,8 @@ import {
   isMergeCommit,
 } from "../repo/GitUtil";
 import { getPreference } from "../DataController";
+import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./FileManager";
 
-const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
 export class TrackerManager {
@@ -27,8 +27,11 @@ export class TrackerManager {
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
   private eventVersions: Map<string, number> = new Map();
+  private pendingCodetimeEventTimer: any = null;
 
   private constructor() {}
+
+  private outgoingCodetimeEvents: any[] = [];
 
   static getInstance(): TrackerManager {
     if (!TrackerManager.instance) {
@@ -38,11 +41,58 @@ export class TrackerManager {
     return TrackerManager.instance;
   }
 
+  public dispose() {
+    if (this.pendingCodetimeEventTimer) {
+      clearInterval(this.pendingCodetimeEventTimer);
+    }
+  }
+
+  public getOutgoingCodeTimeEvents() {
+    return this.outgoingCodetimeEvents;
+  }
+
+  public updateOutgoingCodeTimeEvents(events) {
+    this.outgoingCodetimeEvents = events;
+  }
+
   public async init() {
     // initialize tracker with swdc api host, namespace, and appId
-    const result = await swdcTracker.initialize(api_endpoint, "CodeTime", "swdc-vscode");
+    const result = await swdcTracker.initialize(api_endpoint, "CodeTime", "swdc-vscode", this.callbackHandler);
     if (result.status === 200) {
       this.trackerReady = true;
+
+      this.pendingCodetimeEventTimer = setInterval(() => {
+        TrackerManager.getInstance().sendPendingCodeTimeEvents();
+      }, ONE_HOUR_MILLIS);
+    }
+  }
+
+  private async sendPendingCodeTimeEvents() {
+    const events = TrackerManager.getInstance().getOutgoingCodeTimeEvents();
+    for await (const event of events) {
+      swdcTracker.trackCodeTimeEvent(event);
+    }
+  }
+
+  private callbackHandler(resp) {
+    if (!resp.body) {
+      // it's an error, skip the payload find logic
+      return;
+    }
+
+    const trackerMgr = TrackerManager.getInstance();
+    try {
+      const payload = JSON.parse(resp.body.request.body);
+      // find the codetime schema
+      const ctPayload = payload?.data.find((n) => n.ue_pr.includes("com.software/codetime"));
+      if (ctPayload) {
+        const pendingEvents = trackerMgr.getOutgoingCodeTimeEvents();
+        pendingEvents.pop();
+        // this is the codetime event success callback, update the pending events
+        trackerMgr.updateOutgoingCodeTimeEvents(pendingEvents);
+      }
+    } catch (e) {
+      console.error("Error parsing tracker result. ", e.message);
     }
   }
 
@@ -96,6 +146,8 @@ export class TrackerManager {
         ...this.getJwtParams(),
         ...repoParams,
       };
+
+      this.outgoingCodetimeEvents.push(codetime_event);
 
       swdcTracker.trackCodeTimeEvent(codetime_event);
     }
@@ -360,21 +412,20 @@ export class TrackerManager {
 
   setLatestTrackedCommit(dotGitFilePath: string, commit: string) {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    fileIt.setJsonValue(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit }, { spaces: 2 });
+    setJsonItem(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit });
   }
 
   getLatestTrackedCommit(dotGitFilePath: string): string {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    const data = fileIt.getJsonValue(getGitEventFile(), dotGitFilePath);
+    const data = getJsonItem(getGitEventFile(), dotGitFilePath);
 
     return data?.latestTrackedCommit || "";
   }
 
   removeBranchFromTrackingHistory(dotGitFilePath: string) {
-    let data = fileIt.readJsonFileSync(getGitEventFile());
+    let data = getFileDataAsJson(getGitEventFile());
 
     delete data[dotGitFilePath];
-
-    fileIt.writeJsonFileSync(getGitEventFile(), data, { spaces: 2 });
+    storeJsonData(getGitEventFile(), data);
   }
 }

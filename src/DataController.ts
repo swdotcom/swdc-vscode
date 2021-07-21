@@ -17,8 +17,8 @@ import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 import { buildTeams } from "./managers/TeamManager";
 import { updateFlowModeStatus } from "./managers/StatusBarManager";
+import { storeContentData } from "./managers/FileManager";
 const { WebClient } = require("@slack/web-api");
-const fileIt = require("file-it");
 
 export async function reconcileSlackIntegrations(user) {
   let foundNewIntegration = false;
@@ -178,9 +178,7 @@ export function removeAllSlackIntegrations() {
 
 export async function writeDailyReportDashboard(type = "yesterday", projectIds = []) {
   let dashboardContent = "";
-
-  const file = getDailyReportSummaryFile();
-  fileIt.writeContentFileSync(file, dashboardContent);
+  storeContentData(getDailyReportSummaryFile(), dashboardContent);
 }
 
 export async function writeProjectCommitDashboardByStartEnd(start, end, project_ids) {
@@ -206,6 +204,5 @@ export async function writeProjectCommitDashboard(apiResult) {
     dashboardContent += "No data available\n";
   }
 
-  const file = getProjectCodeSummaryFile();
-  fileIt.writeContentFileSync(file, dashboardContent);
+  storeContentData(getProjectCodeSummaryFile(), dashboardContent);
 }
