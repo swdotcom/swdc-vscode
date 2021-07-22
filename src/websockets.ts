@@ -10,9 +10,9 @@ const WebSocket = require("ws");
 
 // The server should send its timeout to allow the client to adjust.
 const ONE_MIN_MILLIS = 1000 * 60;
-// Default of 31 minutes
-const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 31;
-let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
+// Default of 30 minutes
+const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
+let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
 let pingTimeout = undefined;
 let retryTimeout = undefined;
 
@@ -38,16 +38,16 @@ export function initializeWebsockets() {
       const data = JSON.parse(buf.toString());
       if (data?.timeout) {
         // add a 1 minute buffer to the millisconds timeout the server provides
-        const interval = data.timeout + ONE_MIN_MILLIS;
+        const interval = data.timeout;
         if (interval > DEFAULT_PING_INTERVAL_MILLIS) {
-          SERVER_PING_INTERVAL_MILLIS = interval;
+          SERVER_PING_INTERVAL_MILLIS = interval + ONE_MIN_MILLIS;
         } else {
-          SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
+          SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
         }
       }
     } catch (e) {
       // defaults to the DEFAULT_PING_INTERVAL_MILLIS
-      SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
+      SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
     }
 
     if (pingTimeout) {
