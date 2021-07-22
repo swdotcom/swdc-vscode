@@ -8,10 +8,11 @@ import { handleCurrentDayStatsUpdate } from "./message_handlers/current_day_stat
 
 const WebSocket = require("ws");
 
-// Default to 6 minutes.
 // The server should send its timeout to allow the client to adjust.
 const ONE_MIN_MILLIS = 1000 * 60;
-let SERVER_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 6;
+// Default of 31 minutes
+const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 31;
+let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
 let pingTimeout = undefined;
 let retryTimeout = undefined;
 
@@ -36,11 +37,17 @@ export function initializeWebsockets() {
       // convert the buffer to the json payload containing the server timeout
       const data = JSON.parse(buf.toString());
       if (data?.timeout) {
-        // add a 1 minute buffer
-        SERVER_PING_INTERVAL_MILLIS = data.timeout + ONE_MIN_MILLIS;
+        // add a 1 minute buffer to the millisconds timeout the server provides
+        const interval = data.timeout + ONE_MIN_MILLIS;
+        if (interval > DEFAULT_PING_INTERVAL_MILLIS) {
+          SERVER_PING_INTERVAL_MILLIS = interval;
+        } else {
+          SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
+        }
       }
     } catch (e) {
-      // defaults to the 6 minutes interval
+      // defaults to the DEFAULT_PING_INTERVAL_MILLIS
+      SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS;
     }
 
     if (pingTimeout) {
