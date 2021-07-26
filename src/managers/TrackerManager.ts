@@ -1,5 +1,5 @@
 import swdcTracker from "swdc-tracker";
-import { api_endpoint, ONE_HOUR_MILLIS } from "../Constants";
+import { api_endpoint } from "../Constants";
 import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders, getGitEventFile, isGitProject } from "../Util";
 import { KpmItem, FileChangeInfo } from "../model/models";
 import { getResourceInfo } from "../repo/KpmRepoManager";
