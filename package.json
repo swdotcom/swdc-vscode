@@ -150,21 +150,18 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
     "@slack/web-api": "^6.2.3",
-    "@types/ws": "^7.4.4",
+    "@types/ws": "^7.4.7",
     "axios": "^0.21.1",
-    "clipboardy": "^2.1.0",
     "date-fns": "^2.21.3",
     "file-it": "^1.1.2",
     "moment-timezone": "^0.5.33",
     "node-cache": "^5.1.0",
-    "numeral": "^2.0.6",
     "open": "^8.2.0",
     "query-string": "^7.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "swdc-tracker": "^1.4.5",
+    "swdc-tracker": "^1.4.7",
     "uuid": "^8.3.2",
-    "vsls": "0.3.1291",
-    "ws": "^7.5.2"
+    "ws": "^8.0.0"
   }
 }
