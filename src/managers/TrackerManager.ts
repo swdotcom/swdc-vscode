@@ -17,8 +17,8 @@ import {
   isMergeCommit,
 } from "../repo/GitUtil";
 import { getPreference } from "../DataController";
+import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./FileManager";
 
-const fileIt = require("file-it");
 const moment = require("moment-timezone");
 
 export class TrackerManager {
@@ -36,6 +36,10 @@ export class TrackerManager {
     }
 
     return TrackerManager.instance;
+  }
+
+  public dispose() {
+    swdcTracker.dispose();
   }
 
   public async init() {
@@ -360,21 +364,20 @@ export class TrackerManager {
 
   setLatestTrackedCommit(dotGitFilePath: string, commit: string) {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    fileIt.setJsonValue(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit }, { spaces: 2 });
+    setJsonItem(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit });
   }
 
   getLatestTrackedCommit(dotGitFilePath: string): string {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    const data = fileIt.getJsonValue(getGitEventFile(), dotGitFilePath);
+    const data = getJsonItem(getGitEventFile(), dotGitFilePath);
 
     return data?.latestTrackedCommit || "";
   }
 
   removeBranchFromTrackingHistory(dotGitFilePath: string) {
-    let data = fileIt.readJsonFileSync(getGitEventFile());
+    let data = getFileDataAsJson(getGitEventFile());
 
     delete data[dotGitFilePath];
-
-    fileIt.writeJsonFileSync(getGitEventFile(), data, { spaces: 2 });
+    storeJsonData(getGitEventFile(), data);
   }
 }

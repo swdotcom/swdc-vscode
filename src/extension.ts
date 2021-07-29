@@ -39,6 +39,8 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the new day timer
   PluginDataManager.getInstance().dispose();
 
+  TrackerManager.getInstance().dispose();
+
   // dispose the file watchers
   kpmController.dispose();
 

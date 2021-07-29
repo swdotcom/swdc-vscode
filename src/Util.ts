@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { showModalSignupPrompt } from "./managers/SlackManager";
 import { execCmd } from "./managers/ExecManager";
+import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./managers/FileManager";
 
-const fileIt = require("file-it");
 const moment = require("moment-timezone");
 const open = require("open");
 
@@ -223,25 +223,25 @@ export function getProjectFolder(fileName): WorkspaceFolder {
 }
 
 export function setItem(key, value) {
-  fileIt.setJsonValue(getSoftwareSessionFile(), key, value);
+  setJsonItem(getSoftwareSessionFile(), key, value);
 }
 
 export function getItem(key) {
-  return fileIt.getJsonValue(getSoftwareSessionFile(), key);
+  return getJsonItem(getSoftwareSessionFile(), key);
 }
 
 export function getIntegrations() {
   let integrations = getFileDataAsJson(getIntegrationsFile());
   if (!integrations) {
     integrations = [];
-    fileIt.writeJsonFileSync(getIntegrationsFile(), integrations);
+    storeJsonData(getIntegrationsFile(), integrations);
   }
   const integrationsLen = integrations.length;
   // check to see if there are any [] values and remove them
   integrations = integrations.filter((n) => n && n.authId);
   if (integrations.length !== integrationsLen) {
     // update the file with the latest
-    fileIt.writeJsonFileSync(getIntegrationsFile(), integrations);
+    storeJsonData(getIntegrationsFile(), integrations);
   }
   return integrations;
 }
@@ -249,21 +249,21 @@ export function getIntegrations() {
 export function syncSlackIntegrations(integrations) {
   const nonSlackIntegrations = getIntegrations().filter((integration) => integration.name.toLowerCase() != "slack");
   integrations = integrations?.length ? [...integrations, ...nonSlackIntegrations] : nonSlackIntegrations;
-  fileIt.writeJsonFileSync(getIntegrationsFile(), integrations);
+  storeJsonData(getIntegrationsFile(), integrations);
 }
 
 export function getPluginUuid() {
-  let plugin_uuid = fileIt.getJsonValue(getDeviceFile(), "plugin_uuid");
+  let plugin_uuid = getJsonItem(getDeviceFile(), "plugin_uuid");
   if (!plugin_uuid) {
     // set it for the 1st and only time
     plugin_uuid = uuidv4();
-    fileIt.setJsonValue(getDeviceFile(), "plugin_uuid", plugin_uuid);
+    setJsonItem(getDeviceFile(), "plugin_uuid", plugin_uuid);
   }
   return plugin_uuid;
 }
 
 export function getAuthCallbackState(autoCreate = true) {
-  let auth_callback_state = fileIt.getJsonValue(getDeviceFile(), "auth_callback_state");
+  let auth_callback_state = getJsonItem(getDeviceFile(), "auth_callback_state");
   if (!auth_callback_state && autoCreate) {
     auth_callback_state = uuidv4();
     setAuthCallbackState(auth_callback_state);
@@ -272,7 +272,7 @@ export function getAuthCallbackState(autoCreate = true) {
 }
 
 export function setAuthCallbackState(value: string) {
-  fileIt.setJsonValue(getDeviceFile(), "auth_callback_state", value);
+  setJsonItem(getDeviceFile(), "auth_callback_state", value);
 }
 
 export function isLinux() {
@@ -640,19 +640,6 @@ export function getFileType(fileName: string) {
     fileType = fileName.substring(lastDotIdx + 1);
   }
   return fileType;
-}
-
-export function getFileDataAsJson(file) {
-  try {
-    return fileIt.readJsonFileSync(file);
-  } catch (e) {
-    return null;
-  }
-}
-
-export function getFileDataArray(file) {
-  let payloads: any[] = fileIt.readJsonArraySync(file);
-  return payloads;
 }
 
 export function noSpacesProjectDir(projectDir: string): string {

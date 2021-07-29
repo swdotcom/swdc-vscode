@@ -1,8 +1,7 @@
 import { SessionSummary, KpmItem } from "../model/models";
-import { getNowTimes, getItem, getFileDataAsJson, coalesceNumber, getSessionSummaryFile } from "../Util";
+import { getNowTimes, getItem, coalesceNumber, getSessionSummaryFile } from "../Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
-
-const fileIt = require("file-it");
+import { getFileDataAsJson, storeJsonData } from "../managers/FileManager";
 
 export function getSessionThresholdSeconds() {
   const thresholdSeconds = getItem("sessionThresholdInSec") || DEFAULT_SESSION_THRESHOLD_SECONDS;
@@ -49,7 +48,7 @@ export function getSessionSummaryFileAsJson(): SessionSummary {
 
 export function saveSessionSummaryToDisk(sessionSummaryData) {
   const file = getSessionSummaryFile();
-  fileIt.writeJsonFileSync(file, sessionSummaryData, { spaces: 4 });
+  storeJsonData(file, sessionSummaryData);
 }
 
 export function setSessionSummaryLiveshareMinutes(minutes) {

@@ -1,6 +1,7 @@
 import { StatusBarAlignment, StatusBarItem, window } from "vscode";
 import { SessionSummary } from "../model/models";
-import { getFileDataAsJson, getItem, getSessionSummaryFile, humanizeMinutes } from "../Util";
+import { getItem, getSessionSummaryFile, humanizeMinutes } from "../Util";
+import { getFileDataAsJson } from "./FileManager";
 import { isFlowModEnabled } from "./FlowManager";
 
 let showStatusBarText = true;
