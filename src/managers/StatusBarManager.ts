@@ -2,7 +2,7 @@ import { StatusBarAlignment, StatusBarItem, window } from "vscode";
 import { SessionSummary } from "../model/models";
 import { getItem, getSessionSummaryFile, humanizeMinutes } from "../Util";
 import { getFileDataAsJson } from "./FileManager";
-import { isFlowModEnabled } from "./FlowManager";
+import { isFlowModeEnabled } from "./FlowManager";
 
 let showStatusBarText = true;
 let ctMetricStatusBarItem: StatusBarItem = undefined;
@@ -40,7 +40,7 @@ async function getFlowModeStatusBarInfo() {
   let flowModeCommand = "codetime.enableFlow";
   let flowModeText = "$(circle-large-outline) Flow";
   let flowModeTooltip = "Enter Flow Mode";
-  if (await isFlowModEnabled()) {
+  if (await isFlowModeEnabled()) {
     flowModeCommand = "codetime.exitFlowMode";
     flowModeText = "$(circle-large-filled) Flow";
     flowModeTooltip = "Exit Flow Mode";

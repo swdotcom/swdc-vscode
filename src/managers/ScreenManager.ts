@@ -1,56 +1,56 @@
 import { commands } from "vscode";
+import { getPreference } from "../DataController";
 
 export const NORMAL_SCREEN_MODE = 0;
 export const ZEN_MODE_ID = 1;
 export const FULL_SCREEN_MODE_ID = 2;
 
-let screenMode: number = 0;
+let preferredScreenMode: number = 0;
+let currentModeId: number = 0;
 
-export function updateScreenMode(screen_mode: number) {
-  screenMode = screen_mode;
-}
-
-export function getScreenMode() {
-  return screenMode;
+export function getConfiguredScreenMode() {
+  const flowModeSettings = getPreference("flowMode");
+  const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
+  if (screenMode?.includes("Full Screen")) {
+    preferredScreenMode = FULL_SCREEN_MODE_ID;
+  } else if (screenMode?.includes("Zen")) {
+    preferredScreenMode = ZEN_MODE_ID;
+  } else {
+    preferredScreenMode = NORMAL_SCREEN_MODE;
+  }
+  return preferredScreenMode;
 }
 
 export function showZenMode() {
-  if (screenMode !== ZEN_MODE_ID) {
-    screenMode = ZEN_MODE_ID;
+  if (currentModeId !== ZEN_MODE_ID) {
+    currentModeId = ZEN_MODE_ID;
     commands.executeCommand("workbench.action.toggleZenMode");
-    return true;
   }
-  return false;
 }
 
 export function showFullScreenMode() {
-  if (screenMode !== FULL_SCREEN_MODE_ID) {
+  if (currentModeId !== FULL_SCREEN_MODE_ID) {
     commands.executeCommand("workbench.action.toggleFullScreen");
-    screenMode = FULL_SCREEN_MODE_ID;
-    return true;
+    currentModeId = FULL_SCREEN_MODE_ID;
   }
-  return false;
 }
 
 export function showNormalScreenMode() {
-  if (screenMode !== NORMAL_SCREEN_MODE) {
-    if (screenMode === FULL_SCREEN_MODE_ID) {
-      screenMode = NORMAL_SCREEN_MODE;
+  if (currentModeId !== NORMAL_SCREEN_MODE) {
+    if (currentModeId === FULL_SCREEN_MODE_ID) {
+      currentModeId = NORMAL_SCREEN_MODE;
       commands.executeCommand("workbench.action.toggleFullScreen");
-      return true;
-    } else if (screenMode === ZEN_MODE_ID) {
-      screenMode = NORMAL_SCREEN_MODE;
+    } else if (currentModeId === ZEN_MODE_ID) {
+      currentModeId = NORMAL_SCREEN_MODE;
       commands.executeCommand("workbench.action.toggleZenMode");
-      return true;
     }
   }
-  return false;
 }
 
 export function isInZenMode() {
-  return !!(screenMode === ZEN_MODE_ID);
+  return !!(currentModeId === ZEN_MODE_ID);
 }
 
 export function isInFullScreenMode() {
-  return !!(screenMode === FULL_SCREEN_MODE_ID);
+  return !!(currentModeId === FULL_SCREEN_MODE_ID);
 }
