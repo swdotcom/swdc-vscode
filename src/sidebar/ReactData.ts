@@ -1,5 +1,5 @@
 import { getCurrentColorKind } from "../extension";
-import { isFlowModEnabled } from "../managers/FlowManager";
+import { isFlowModeEnabled } from "../managers/FlowManager";
 import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
 import { getCachedTeams } from "../managers/TeamManager";
@@ -25,7 +25,7 @@ export async function getReactData() {
     authType,
     registered: !!name,
     email: name,
-    inFlowMode: await isFlowModEnabled(),
+    inFlowMode: await isFlowModeEnabled(),
     slackConnected: !!hasSlackWorkspaces(),
     statusBarTextVisible: isStatusBarTextVisible(),
     slackWorkspaces: getSlackWorkspaces(),

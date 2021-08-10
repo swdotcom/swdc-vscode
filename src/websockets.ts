@@ -5,6 +5,7 @@ import { handleAuthenticatedPluginUser } from "./message_handlers/authenticated_
 import { handleTeamMemberSocketEvent } from "./message_handlers/team_member";
 import { handleIntegrationConnectionSocketEvent } from "./message_handlers/integration_connection";
 import { handleCurrentDayStatsUpdate } from "./message_handlers/current_day_stats_update";
+import { handleFlowStateMessage } from "./message_handlers/flow_state";
 
 const WebSocket = require("ws");
 
@@ -123,6 +124,9 @@ const handleIncomingMessage = (data: any) => {
         break;
       case "flow_score":
         handleFlowScoreMessage(message);
+        break;
+      case "flow_state":
+        handleFlowStateMessage(message.body);
         break;
       case "authenticated_plugin_user":
         handleAuthenticatedPluginUser(message.body);

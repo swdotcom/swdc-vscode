@@ -12,9 +12,7 @@ import {
 } from "vscode";
 import path = require("path");
 import { getReactData } from "./ReactData";
-import { updateScreenMode } from "../managers/ScreenManager";
 import { getItem } from "../Util";
-import { createAnonymousUser } from "../menu/AccountManager";
 
 export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -62,8 +60,6 @@ export class CodeTimeWebviewSidebar implements Disposable, WebviewViewProvider {
             commands.executeCommand(message.action);
           }
           break;
-        case "update_screen_mode":
-          updateScreenMode(message.value);
       }
     });
 
