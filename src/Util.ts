@@ -26,7 +26,6 @@ const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
 const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
-let extensionName = null;
 let workspace_name = null;
 
 export function getWorkspaceName() {

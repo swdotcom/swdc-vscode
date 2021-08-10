@@ -1,4 +1,4 @@
-import { getWorkspaceFolders, normalizeGithubEmail, getFileType, isGitProject } from "../Util";
+import { getWorkspaceFolders, normalizeGithubEmail, isGitProject } from "../Util";
 import RepoContributorInfo from "../model/RepoContributorInfo";
 import TeamMember from "../model/TeamMember";
 import { CacheManager } from "../cache/CacheManager";

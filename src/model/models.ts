@@ -1,4 +1,4 @@
-import { getVersion, getPluginId, getHostname, getOs } from "../Util";
+import { getVersion, getPluginId, getOs } from "../Util";
 import { NO_PROJ_NAME } from "../Constants";
 import { TreeItemCollapsibleState } from "vscode";
 
