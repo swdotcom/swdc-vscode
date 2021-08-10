@@ -2,7 +2,7 @@ import { enableFlow, isFlowModeEnabled, pauseFlow } from "../managers/FlowManage
 
 export async function handleFlowStateMessage(body: any) {
   // body contains {enable_flow: true | false}
-  const {enable_flow} = body;
+  const { enable_flow } = body;
   const flowModeEnabled = await isFlowModeEnabled();
 
   if (enable_flow && !flowModeEnabled) {

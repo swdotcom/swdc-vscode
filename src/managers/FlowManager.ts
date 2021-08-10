@@ -28,7 +28,9 @@ export async function enableFlow({ automated = false, skipSlackCheck = false, pr
 
     (progress) => {
       return new Promise((resolve, reject) => {
-        initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {});
+        initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {
+          console.error("[CodeTime] Unable to initiate flow. ", e.message);
+        });
         resolve(true);
       });
     }
