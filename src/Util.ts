@@ -319,7 +319,13 @@ export function getOs() {
 
 export async function getOsUsername() {
   if (!osUsername) {
-    osUsername = os.userInfo().username;
+    try {
+      // Throws a SystemError if a user has no username or homedir
+      osUsername = os.userInfo().username;
+    } catch (e) {
+      console.error('Username not available.', e.message)
+    }
+
     if (!osUsername) {
       osUsername = execCmd("whoami");
     }
