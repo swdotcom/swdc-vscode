@@ -27,6 +27,8 @@ const dayFormat = "YYYY-MM-DD";
 const dayTimeFormat = "LLLL";
 
 let workspace_name = null;
+let hostname = null;
+let osUsername = null;
 
 export function getWorkspaceName() {
   if (!workspace_name) {
@@ -289,7 +291,9 @@ export function isMac() {
 }
 
 export function getHostname(): any {
-  let hostname = execCmd("hostname");
+  if (!hostname) {
+    hostname = execCmd("hostname");
+  }
   return hostname;
 }
 
@@ -314,11 +318,19 @@ export function getOs() {
 }
 
 export async function getOsUsername() {
-  let username = os.userInfo().username;
-  if (!username || username.trim() === "") {
-    username = execCmd("whoami");
+  if (!osUsername) {
+    try {
+      // Throws a SystemError if a user has no username or homedir
+      osUsername = os.userInfo().username;
+    } catch (e) {
+      console.error('Username not available.', e.message)
+    }
+
+    if (!osUsername) {
+      osUsername = execCmd("whoami");
+    }
   }
-  return username;
+  return osUsername;
 }
 
 function getFile(name) {
