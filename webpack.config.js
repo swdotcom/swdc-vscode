@@ -2,6 +2,7 @@
 
 "use strict";
 
+const webpack = require("webpack");
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 
@@ -31,6 +32,7 @@ const extConfig = {
     extensions: [".ts", ".js"],
   },
   plugins: [
+    new webpack.ContextReplacementPlugin(/keyv/),
     new CopyPlugin({
       patterns: [
         { from: "./resources", to: "resources" },

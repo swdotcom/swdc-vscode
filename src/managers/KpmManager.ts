@@ -4,14 +4,13 @@ import { NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
 import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt } from "../Util";
 import { FileChangeInfo } from "../model/models";
 import Project from "../model/Project";
-import { PluginDataManager } from "./PluginDataManager";
 import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
+import { updateFlowModeOnWindowFocus } from "./FlowManager";
 const fs = require("fs");
 
 let _keystrokeMap = {};
 let _staticInfoMap = {};
-
 export class KpmManager {
   private static instance: KpmManager;
 
@@ -90,8 +89,9 @@ export class KpmManager {
 
   private async _windowStateChanged(event) {
     if (event.focused) {
-      PluginDataManager.getInstance().editorFocusHandler();
       this.tracker.trackEditorAction("editor", "focus");
+      // check flow mode state
+      await updateFlowModeOnWindowFocus();
     } else {
       // Process this window's keystroke data since the window has become unfocused
       commands.executeCommand("codetime.processKeystrokeData");

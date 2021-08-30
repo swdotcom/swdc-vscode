@@ -16,11 +16,13 @@ import { configureSettings, showingConfigureSettingsPanel } from "./managers/Con
 import { initializeStatusBar } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { SyncManager } from "./managers/SyncManger";
+import { LocalStorageManager } from "./managers/LocalStorageManager";
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
+let localStorage: LocalStorageManager;
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -51,6 +53,8 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
 
+  localStorage = LocalStorageManager.getInstance(ctx);
+
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
@@ -62,6 +66,14 @@ export async function activate(ctx: ExtensionContext) {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
   }
+}
+
+export function getLocalStorageValue(key : string) {
+  return localStorage.getValue(key);
+}
+
+export function setLocalStorageValue(key: string, value: any) {
+  localStorage.setValue(key, value);
 }
 
 function getRandomArbitrary(min, max) {

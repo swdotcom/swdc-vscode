@@ -6,6 +6,7 @@ import { softwareGet } from "../http/HttpClient";
 import { checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode } from "./SlackManager";
 import { FULL_SCREEN_MODE_ID, getConfiguredScreenMode, showFullScreenMode, showNormalScreenMode, showZenMode, ZEN_MODE_ID } from "./ScreenManager";
 import { updateFlowModeStatus } from "./StatusBarManager";
+import { getLocalStorageValue, setLocalStorageValue } from "../extension";
 
 let enabledFlow = false;
 let initialized = false;
@@ -15,7 +16,18 @@ export async function isFlowModeEnabled() {
     enabledFlow = await determineFlowModeFromApi();
     initialized = true;
   }
+  setLocalStorageValue("enabledFlow", enabledFlow);
   return enabledFlow;
+}
+
+export async function updateFlowModeOnWindowFocus() {
+  const state = getLocalStorageValue("enabledFlow");
+  if (state === null || state === undefined) {
+    await isFlowModeEnabled();
+  } else {
+    enabledFlow = state;
+  }
+  updateFlowModeStatus();
 }
 
 export async function enableFlow({ automated = false, skipSlackCheck = false, process_flow_session = true }) {
@@ -73,6 +85,8 @@ async function initiateFlow({ automated = false, skipSlackCheck = false, process
 
   commands.executeCommand("codetime.refreshCodeTimeView");
 
+  setLocalStorageValue("enabledFlow", enabledFlow);
+
   updateFlowModeStatus();
 }
 
@@ -100,6 +114,8 @@ async function pauseFlowInitiate() {
 
   enabledFlow = false;
   commands.executeCommand("codetime.refreshCodeTimeView");
+
+  setLocalStorageValue("enabledFlow", enabledFlow);
 
   updateFlowModeStatus();
 }
