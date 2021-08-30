@@ -11,7 +11,6 @@ import {
 } from "./Util";
 import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "./Constants";
 import { clearSessionSummaryData } from "./storage/SessionSummaryData";
-import { clearTimeDataSummary } from "./storage/TimeSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
@@ -152,7 +151,7 @@ export async function authenticationCompleteHandler(user) {
     await buildTeams();
 
     clearSessionSummaryData();
-    clearTimeDataSummary();
+
     // fetch after logging on
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 

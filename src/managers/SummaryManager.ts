@@ -1,7 +1,6 @@
 import { getItem, setItem } from "../Util";
 import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
 import { updateStatusBarWithSummaryData } from "./StatusBarManager";
-import { updateSessionAndEditorTime } from "../storage/TimeSummaryData";
 import { softwareGet, isResponseOk } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { commands } from "vscode";
@@ -49,7 +48,6 @@ export class SummaryManager {
     summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
     summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
 
-    updateSessionAndEditorTime(summary.currentDayMinutes);
     saveSessionSummaryToDisk(summary);
 
     updateStatusBarWithSummaryData();

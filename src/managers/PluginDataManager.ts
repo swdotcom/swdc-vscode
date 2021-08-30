@@ -7,7 +7,6 @@ import { WorkspaceFolder } from "vscode";
 import { getResourceInfo } from "../repo/KpmRepoManager";
 import Project from "../model/Project";
 import { FileChangeInfo } from "../model/models";
-import { clearTimeDataSummary } from "../storage/TimeSummaryData";
 import { TrackerManager } from "./TrackerManager";
 
 const TWO_MIN_INTERVAL: number = 1000 * 60 * 2;
@@ -66,9 +65,6 @@ export class PluginDataManager {
 
       // Clear the session summary data (report and status bar info)
       clearSessionSummaryData();
-
-      // send the offline TimeData payloads
-      await clearTimeDataSummary();
 
       // clear the file change info (metrics shown in the tree)
       clearFileChangeInfoSummaryData();
