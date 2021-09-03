@@ -9,7 +9,7 @@ import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } 
 import { launch_url, create_team_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
-import { enableFlow, pauseFlow } from "./managers/FlowManager";
+import { enableFlow, pauseFlow, updateFlowModeOnWindowFocus } from "./managers/FlowManager";
 import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
@@ -26,7 +26,7 @@ import {
 } from "./tree/TreeButtonProvider";
 import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
 import { buildTeams } from "./managers/TeamManager";
-import { toggleStatusBar } from "./managers/StatusBarManager";
+import { toggleStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
 import { launchEmailSignup, launchLogin } from "./user/OnboardManager";
 
 export function createCommands(
@@ -400,6 +400,13 @@ export function createCommands(
       commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );
+
+  cmds.push(
+    commands.registerCommand("codetime.updateViewMetrics", async () => {
+      updateFlowModeOnWindowFocus();
+      updateStatusBarWithSummaryData();
+    })
+  )
 
   return Disposable.from(...cmds);
 }

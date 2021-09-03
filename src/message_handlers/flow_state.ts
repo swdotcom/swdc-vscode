@@ -1,3 +1,4 @@
+import { commands } from 'vscode';
 import { enableFlow, isFlowModeEnabled, pauseFlow } from "../managers/FlowManager";
 
 export async function handleFlowStateMessage(body: any) {
@@ -12,4 +13,8 @@ export async function handleFlowStateMessage(body: any) {
 	  // disable it
 	  pauseFlow();
   }
+
+  setTimeout(() => {
+    commands.executeCommand('codetime.updateViewMetrics');
+  }, 1500);
 }
