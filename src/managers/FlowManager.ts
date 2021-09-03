@@ -20,7 +20,7 @@ export async function isFlowModeEnabled() {
   return enabledFlow;
 }
 
-export async function updateFlowModeOnWindowFocus() {
+export async function updateFlowModeStatusView() {
   const state = getLocalStorageValue("enabledFlow");
   if (state === null || state === undefined) {
     await isFlowModeEnabled();

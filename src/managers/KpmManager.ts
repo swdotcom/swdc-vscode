@@ -6,8 +6,7 @@ import { FileChangeInfo } from "../model/models";
 import Project from "../model/Project";
 import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
-import { updateFlowModeOnWindowFocus } from "./FlowManager";
-import { updateStatusBarWithSummaryData } from './StatusBarManager';
+
 const fs = require("fs");
 
 let _keystrokeMap = {};
