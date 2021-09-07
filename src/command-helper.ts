@@ -9,7 +9,7 @@ import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } 
 import { launch_url, create_team_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
-import { enableFlow, pauseFlow, updateFlowModeStatusView } from "./managers/FlowManager";
+import { enableFlow, pauseFlow, updateFlowModeStatus } from "./managers/FlowManager";
 import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./managers/ScreenManager";
 import { showDashboard } from "./managers/WebViewManager";
 import { configureSettings } from "./managers/ConfigManager";
@@ -403,7 +403,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.updateViewMetrics", async () => {
-      updateFlowModeStatusView();
+      updateFlowModeStatus();
       updateStatusBarWithSummaryData();
     })
   )
