@@ -21,10 +21,10 @@ export async function initializeStatusBar() {
   ctMetricStatusBarItem.show();
 
   ctFlowModeStatusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 9);
-  await updateFlowModeStatus();
+  await updateFlowModeStatusBar();
 }
 
-export async function updateFlowModeStatus() {
+export async function updateFlowModeStatusBar() {
   const { flowModeCommand, flowModeText, flowModeTooltip } = await getFlowModeStatusBarInfo();
   ctFlowModeStatusBarItem.command = flowModeCommand;
   ctFlowModeStatusBarItem.text = flowModeText;

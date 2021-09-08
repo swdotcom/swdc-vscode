@@ -6,7 +6,7 @@ import { FileChangeInfo } from "../model/models";
 import Project from "../model/Project";
 import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
-import { updateFlowModeOnWindowFocus } from "./FlowManager";
+
 const fs = require("fs");
 
 let _keystrokeMap = {};
@@ -90,8 +90,6 @@ export class KpmManager {
   private async _windowStateChanged(event) {
     if (event.focused) {
       this.tracker.trackEditorAction("editor", "focus");
-      // check flow mode state
-      await updateFlowModeOnWindowFocus();
     } else {
       // Process this window's keystroke data since the window has become unfocused
       commands.executeCommand("codetime.processKeystrokeData");

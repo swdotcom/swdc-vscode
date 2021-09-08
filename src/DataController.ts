@@ -15,7 +15,7 @@ import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
 import { buildTeams } from "./managers/TeamManager";
-import { updateFlowModeStatus } from "./managers/StatusBarManager";
+import { updateFlowModeStatusBar } from "./managers/StatusBarManager";
 import { storeContentData } from "./managers/FileManager";
 const { WebClient } = require("@slack/web-api");
 
@@ -139,7 +139,7 @@ export async function authenticationCompleteHandler(user) {
     // update the login status
     window.showInformationMessage(`Successfully logged on to Code Time`);
 
-    updateFlowModeStatus();
+    updateFlowModeStatusBar();
 
     try {
       initializeWebsockets();
