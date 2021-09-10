@@ -2,7 +2,7 @@ import { getCurrentColorKind } from "../extension";
 import { isFlowModeEnabled } from "../managers/FlowManager";
 import { getSlackWorkspaces, hasSlackWorkspaces } from "../managers/SlackManager";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
-import { getCachedTeams } from "../managers/TeamManager";
+import { getCachedOrgs } from "../managers/TeamManager";
 import { getItem } from "../Util";
 
 /**
@@ -15,7 +15,7 @@ import { getItem } from "../Util";
  * statusBarTextVisible: boolean,
  * slackWorkspaces: [slack integrations],
  * currentColorKind: number (2=dark, anything else is non-dark),
- * teams: [team]
+ * orgs: [org]
  */
 export async function getReactData() {
   const name = getItem("name");
@@ -30,7 +30,7 @@ export async function getReactData() {
     statusBarTextVisible: isStatusBarTextVisible(),
     slackWorkspaces: getSlackWorkspaces(),
     currentColorKind: getCurrentColorKind(),
-    teams: await getCachedTeams(),
+    orgs: await getCachedOrgs(),
     skipSlackConnect: getItem("vscode_CtskipSlackConnect"),
   };
 }

@@ -14,7 +14,7 @@ import { clearSessionSummaryData } from "./storage/SessionSummaryData";
 import { initializeWebsockets } from "./websockets";
 import { SummaryManager } from "./managers/SummaryManager";
 import { userEventEmitter } from "./events/userEventEmitter";
-import { buildTeams } from "./managers/TeamManager";
+import { getCachedOrgs } from "./managers/TeamManager";
 import { updateFlowModeStatusBar } from "./managers/StatusBarManager";
 import { storeContentData } from "./managers/FileManager";
 const { WebClient } = require("@slack/web-api");
@@ -147,8 +147,8 @@ export async function authenticationCompleteHandler(user) {
       console.error("Failed to initialize codetime websockets", e);
     }
 
-    // fetch any teams for this user
-    await buildTeams();
+    // fetch any orgs for this user
+    await getCachedOrgs();
 
     clearSessionSummaryData();
 
