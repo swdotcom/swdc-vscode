@@ -82,7 +82,7 @@ export default function Orgs(props) {
             <CardContent>
               <Typography className={classes.subinfo}>
                 Trust and data privacy matter. Learn about{" "}
-                <a className={classes.link} href="https://sftw.webflow.io/data-privacy">
+                <a className={classes.link} href="https://www.software.com/data-privacy">
                   how we secure data for over 150,000 developers
                 </a>
                 .
