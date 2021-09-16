@@ -25,6 +25,6 @@ export const websockets_url = "wss://api.software.com/websockets";
 
 export const vscode_issues_url = "https://github.com/swdotcom/swdc-vscode/issues";
 
-export const create_team_url = "https://app.software.com/organizations/new";
+export const create_org_url = "https://app.software.com/github_onboard";
 
 export const LOG_FILE_EVENTS = false;

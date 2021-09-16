@@ -31,64 +31,77 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(0.25, 0.5),
     fontWeight: 500,
   },
+  link: {
+    color: "#FFF",
+  },
 }));
 
-export default function Teams(props) {
+export default function Orgs(props) {
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {});
   const classes = useStyles();
   const stateData = props.stateData;
 
-  function teamCreateClickHandler() {
+  function orgCreateClickHandler() {
     const command = {
-      action: "codetime.createTeam",
+      action: "codetime.createOrg",
       command: "command_execute",
     };
     props.vscode.postMessage(command);
   }
 
-  function teamClickHandler(team) {
+  function orgClickHandler(org) {
     const command = {
-      action: "codetime.showTeamDashboard",
+      action: "codetime.showOrgDashboard",
       command: "command_execute",
-      arguments: [team.org_name, team.id],
+      arguments: [org.name],
     };
     props.vscode.postMessage(command);
+  }
+
+  if (!stateData.registered) {
+    return <></>;
   }
 
   return (
     <Grid container className={classes.root}>
       <Grid item xs={12} style={{ width: "100%" }}>
-        {!stateData.teams.length ? (
+        {!stateData.orgs.length ? (
           <Card className={classes.setup} variant="outlined">
             <CardContent>
-              <Typography gutterBottom>🚀 Software Teams</Typography>
+              <Typography gutterBottom>🚀 Release faster with delivery insights</Typography>
               <Typography color="textSecondary" variant="subtitle2">
-                Discover your team's best day for coding, and more.
+                Measure and improve your organization’s DevOps performance with real-time insights.
               </Typography>
             </CardContent>
             <CardContent>
-              <Button variant="contained" color="primary" onClick={teamCreateClickHandler}>
-                Create a team
+              <Button variant="contained" color="primary" onClick={orgCreateClickHandler}>
+                Get your free GitHub report
               </Button>
             </CardContent>
             <CardContent>
-              <Typography className={classes.subinfo}>Trust and data privacy matter. Your individual data is always private.</Typography>
+              <Typography className={classes.subinfo}>
+                Trust and data privacy matter. Learn about{" "}
+                <a className={classes.link} href="https://sftw.webflow.io/data-privacy">
+                  how we secure data for over 150,000 developers
+                </a>
+                .
+              </Typography>
             </CardContent>
           </Card>
         ) : (
           <Grid container className={classes.root}>
             <Grid item xs={12}>
-              <ListItemText primary="Teams" secondary="View your team dashboard" />
+              <ListItemText primary="Organizations" secondary="View your DevOps metrics" />
             </Grid>
-            {stateData.teams.map((team, index) => (
+            {stateData.orgs.map((org, index) => (
               <Grid item xs={12} key={index}>
                 <Button
-                  onClick={() => teamClickHandler(team)}
+                  onClick={() => orgClickHandler(org)}
                   className={classes.textbutton}
                   startIcon={<GroupIcon fontSize="small" style={{ color: blue[500] }} />}
                 >
-                  {team.name}
+                  {org.display_name}
                 </Button>
               </Grid>
             ))}

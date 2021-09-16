@@ -6,7 +6,7 @@ import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
-import { launch_url, create_team_url, vscode_issues_url } from "./Constants";
+import { launch_url, create_org_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow, updateFlowModeStatus } from "./managers/FlowManager";
@@ -25,7 +25,7 @@ import {
   getWebViewDashboardButton,
 } from "./tree/TreeButtonProvider";
 import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
-import { buildTeams } from "./managers/TeamManager";
+import { getCachedOrgs } from "./managers/TeamManager";
 import { toggleStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
 import { launchEmailSignup, launchLogin } from "./user/OnboardManager";
 
@@ -99,8 +99,8 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.createTeam", () => {
-      launchWebUrl(create_team_url);
+    commands.registerCommand("codetime.createOrg", () => {
+      launchWebUrl(create_org_url);
     })
   );
 
@@ -380,9 +380,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.showTeamDashboard", (org_name, team_id) => {
-      // i.e. https://app.software.com/dashboard?org_name=swdotcom&team_id=11
-      launchWebUrl(`${launch_url}/dashboard?org_name=${org_name}&team_id=${team_id}`);
+    commands.registerCommand("codetime.showOrgDashboard", (org_name) => {
+      // i.e. https://app.software.com/dashboard?org_name=swdotcom
+      launchWebUrl(`${launch_url}/dashboard?org_name=${org_name}`);
     })
   );
 
@@ -396,7 +396,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand("codetime.reloadTeams", async () => {
-      await buildTeams();
+      await getCachedOrgs();
       commands.executeCommand("codetime.refreshCodeTimeView");
     })
   );
@@ -406,7 +406,7 @@ export function createCommands(
       updateFlowModeStatus();
       updateStatusBarWithSummaryData();
     })
-  )
+  );
 
   return Disposable.from(...cmds);
 }

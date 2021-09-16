@@ -2,7 +2,7 @@ import React from "react";
 import Setup from "./components/setup";
 import Account from "./components/account";
 import FlowMode from "./components/flowmode";
-import Teams from "./components/teams";
+import Orgs from "./components/orgs";
 import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import blue from "@material-ui/core/colors/blue";
@@ -150,7 +150,7 @@ export default function SideBar(props) {
         </Grid>
         <Divider />
         <Grid item xs={12} className={classes.gridItem}>
-          <Teams vscode={props.vscode} stateData={props.stateData} />
+          <Orgs vscode={props.vscode} stateData={props.stateData} />
         </Grid>
       </Grid>
     </ThemeProvider>
