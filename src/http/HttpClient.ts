@@ -1,24 +1,43 @@
 import axios from "axios";
 
-import { api_endpoint } from "../Constants";
+import { api_endpoint, app_endpoint } from "../Constants";
 
-import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid } from "../Util";
+import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, getItem } from "../Util";
 
-// build the axios api base url
+// api.software.com
 const beApi = axios.create({
   baseURL: `${api_endpoint}`,
   timeout: 30000,
 });
 
-beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();
-beApi.defaults.headers.common["X-SWDC-Plugin-Name"] = getPluginName();
-beApi.defaults.headers.common["X-SWDC-Plugin-Version"] = getVersion();
-beApi.defaults.headers.common["X-SWDC-Plugin-OS"] = getOs();
-beApi.defaults.headers.common["X-SWDC-Plugin-TZ"] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-beApi.defaults.headers.common["X-SWDC-Plugin-Offset"] = getOffsetSeconds() / 60;
-beApi.defaults.headers.common["X-SWDC-Plugin-UUID"] = getPluginUuid();
+// app.software.com
+const appApi = axios.create({
+  baseURL: `${app_endpoint}`,
+  timeout: 30000
+});
+
+const headers = {
+  'X-SWDC-Plugin-Id': getPluginId(),
+  'X-SWDC-Plugin-Name': getPluginName(),
+  'X-SWDC-Plugin-Version': getVersion(),
+  'X-SWDC-Plugin-OS': getOs(),
+  'X-SWDC-Plugin-TZ': Intl.DateTimeFormat().resolvedOptions().timeZone,
+  'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
+  'X-SWDC-Plugin-UUID': getPluginUuid()
+}
+
+beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
+appApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
 
 const spotifyApi = axios.create({});
+
+export async function appGet(api, queryParams: any = {}) {
+  updateAppAPIAuthorization();
+  return await appApi.get(api, { params: queryParams }).catch((err: any) => {
+    logIt(`error for GET ${api}, message: ${err.message}`);
+    return err;
+  });
+}
 
 export async function serverIsAvailable() {
   const isAvail = await softwareGet("/ping", null)
@@ -165,4 +184,19 @@ function getResponseStatus(resp) {
     status = 500;
   }
   return status;
+}
+
+function updateAppAPIAuthorization() {
+  const token = getBearerAuthorization();
+  if (token) {
+    appApi.defaults.headers.common['Authorization'] = token;
+  }
+}
+
+function getBearerAuthorization() {
+  let token = getItem("jwt");
+  if (token.includes('JWT ')) {
+    token = `Bearer ${token.substring('JWT '.length)}`;
+  }
+  return token;
 }

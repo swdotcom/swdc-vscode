@@ -1,6 +1,6 @@
 import { window, QuickPickOptions, commands } from "vscode";
 import { launchWebUrl, getItem } from "../Util";
-import { launch_url, LOGIN_LABEL } from "../Constants";
+import { app_endpoint, LOGIN_LABEL } from "../Constants";
 import { showDashboard } from "../managers/WebViewManager";
 import { isStatusBarTextVisible } from "../managers/StatusBarManager";
 import { launchLogin } from "../user/OnboardManager";
@@ -106,5 +106,5 @@ export async function showMenuOptions() {
 }
 
 export async function launchWebDashboardView() {
-  launchWebUrl(`${launch_url}/login`);
+  launchWebUrl(`${app_endpoint}/login`);
 }

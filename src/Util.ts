@@ -1,5 +1,5 @@
 import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS, SIGN_UP_LABEL } from "./Constants";
+import { CODE_TIME_EXT_ID, app_endpoint, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS, SIGN_UP_LABEL } from "./Constants";
 import { v4 as uuidv4 } from "uuid";
 
 import { showModalSignupPrompt } from "./managers/SlackManager";
@@ -566,7 +566,7 @@ export async function launchWebDashboard() {
   // add the token=jwt
   const jwt = getItem("jwt");
   const encodedJwt = encodeURIComponent(jwt);
-  const webUrl = `${launch_url}?token=${encodedJwt}`;
+  const webUrl = `${app_endpoint}?token=${encodedJwt}`;
 
   launchWebUrl(webUrl);
 }

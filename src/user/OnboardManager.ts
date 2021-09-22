@@ -13,7 +13,7 @@ import {
 import { isResponseOk, serverIsAvailable, softwareGet } from "../http/HttpClient";
 import { createAnonymousUser } from "../menu/AccountManager";
 import { authenticationCompleteHandler } from "../DataController";
-import { api_endpoint, launch_url } from "../Constants";
+import { api_endpoint, app_endpoint } from "../Constants";
 const queryString = require("query-string");
 
 let retry_counter = 0;
@@ -161,7 +161,7 @@ export async function launchLogin(loginType: string = "software", switching_acco
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
   const name = getItem("name");
-  let url = launch_url;
+  let url = app_endpoint;
 
   let obj = getAuthQueryObject();
 
@@ -172,17 +172,17 @@ export async function buildLoginUrl(loginType: string) {
 
   if (loginType === "github") {
     // github signup/login flow
-    obj["redirect"] = launch_url;
+    obj["redirect"] = app_endpoint;
     url = `${api_endpoint}/auth/github`;
   } else if (loginType === "google") {
     // google signup/login flow
-    obj["redirect"] = launch_url;
+    obj["redirect"] = app_endpoint;
     url = `${api_endpoint}/auth/google`;
   } else {
     // email login
     obj["token"] = getItem("jwt");
     obj["auth"] = "software";
-    url = `${launch_url}/onboarding`;
+    url = `${app_endpoint}/onboarding`;
   }
 
   const qryStr = queryString.stringify(obj);
@@ -198,13 +198,12 @@ export async function buildLoginUrl(loginType: string) {
  * @param loginType "software" | "existing" | "google" | "github"
  */
 export async function buildEmailSignup() {
-  let loginUrl = launch_url;
 
   let obj = getAuthQueryObject();
   obj["token"] = getItem("jwt");
   obj["auth"] = "software";
 
-  loginUrl = `${launch_url}/email-signup`;
+  let loginUrl = `${app_endpoint}/email-signup`;
 
   const qryStr = queryString.stringify(obj);
 

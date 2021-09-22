@@ -1,7 +1,7 @@
 import { getItem, setItem } from "../Util";
 import { getSessionSummaryFileAsJson, saveSessionSummaryToDisk } from "../storage/SessionSummaryData";
 import { updateStatusBarWithSummaryData } from "./StatusBarManager";
-import { softwareGet, isResponseOk } from "../http/HttpClient";
+import { softwareGet, isResponseOk, appGet } from "../http/HttpClient";
 import { SessionSummary } from "../model/models";
 import { commands } from "vscode";
 import { format } from "date-fns";
@@ -25,9 +25,9 @@ export class SummaryManager {
    * This is only called from the new day checker
    */
   async updateSessionSummaryFromServer() {
-    const jwt = getItem("jwt");
 
-    const result = await softwareGet(`/sessions/summary`, jwt);
+    // const result = await softwareGet(`/sessions/summary`, jwt);
+    const result = await appGet('/api/v1/user/session_summary');
     const nowDay = format(new Date(), "MM/dd/yyyy");
     setItem("updatedTreeDate", nowDay);
     if (isResponseOk(result) && result.data) {
@@ -41,11 +41,6 @@ export class SummaryManager {
 
   updateCurrentDayStats(summary: SessionSummary) {
     const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
-    // update summary current day values with the existing current day values
-    summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
-    summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
-    summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
-    summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
     summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
 
     saveSessionSummaryToDisk(summary);

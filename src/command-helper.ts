@@ -6,7 +6,7 @@ import { ProjectCommitManager } from "./menu/ProjectCommitManager";
 import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
 import { TrackerManager } from "./managers/TrackerManager";
 import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
-import { launch_url, create_org_url, vscode_issues_url } from "./Constants";
+import { app_endpoint, create_org_url, vscode_issues_url } from "./Constants";
 import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
 import { switchAverageComparison } from "./menu/ContextMenuManager";
 import { enableFlow, pauseFlow, updateFlowModeStatus } from "./managers/FlowManager";
@@ -382,7 +382,7 @@ export function createCommands(
   cmds.push(
     commands.registerCommand("codetime.showOrgDashboard", (org_name) => {
       // i.e. https://app.software.com/dashboard?org_name=swdotcom
-      launchWebUrl(`${launch_url}/dashboard?org_name=${org_name}`);
+      launchWebUrl(`${app_endpoint}/dashboard?org_name=${org_name}`);
     })
   );
 

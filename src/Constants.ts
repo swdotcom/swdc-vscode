@@ -15,11 +15,11 @@ export const DISCONNECT_LABEL = "Disconnect";
 // Directory where software data is stored
 export const SOFTWARE_DIRECTORY = ".software";
 
-// API ENDPOINT
+// API ENDPOINT (codemetrics)
 export const api_endpoint = "https://api.software.com";
 
-// DASHBOARD URL
-export const launch_url = "https://app.software.com";
+// APP ENDPOINT
+export const app_endpoint = "https://app.software.com";
 
 export const websockets_url = "wss://api.software.com/websockets";
 
