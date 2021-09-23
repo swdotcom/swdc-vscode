@@ -40,14 +40,6 @@ export class SummaryManager {
   }
 
   updateCurrentDayStats(summary: SessionSummary) {
-    const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
-    // update summary current day values with the existing current day values
-    summary.currentDayKeystrokes = Math.max(summary.currentDayKeystrokes, existingSummary.currentDayKeystrokes);
-    summary.currentDayKpm = Math.max(summary.currentDayKpm, existingSummary.currentDayKpm);
-    summary.currentDayLinesAdded = Math.max(summary.currentDayLinesAdded, existingSummary.currentDayLinesAdded);
-    summary.currentDayLinesRemoved = Math.max(summary.currentDayLinesRemoved, existingSummary.currentDayLinesRemoved);
-    summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
-
     saveSessionSummaryToDisk(summary);
 
     updateStatusBarWithSummaryData();
