@@ -40,6 +40,8 @@ export class SummaryManager {
   }
 
   updateCurrentDayStats(summary: SessionSummary) {
+    const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
+    summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
     saveSessionSummaryToDisk(summary);
 
     updateStatusBarWithSummaryData();
