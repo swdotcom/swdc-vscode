@@ -51,13 +51,6 @@ export function saveSessionSummaryToDisk(sessionSummaryData) {
   storeJsonData(file, sessionSummaryData);
 }
 
-export function setSessionSummaryLiveshareMinutes(minutes) {
-  let sessionSummaryData = getSessionSummaryData();
-  sessionSummaryData.liveshareMinutes = minutes;
-
-  saveSessionSummaryToDisk(sessionSummaryData);
-}
-
 /**
  * Return {elapsedSeconds, sessionSeconds}
  * The session minutes is based on a threshold of 15 minutes
