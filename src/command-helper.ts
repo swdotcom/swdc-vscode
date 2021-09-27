@@ -123,6 +123,7 @@ export function createCommands(
       }
       tracker.trackUIInteraction(item);
       toggleStatusBar();
+      commands.executeCommand('codetime.refreshCodeTimeView');
     })
   );
 

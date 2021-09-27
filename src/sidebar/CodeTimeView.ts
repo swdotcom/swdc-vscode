@@ -12,10 +12,10 @@ import {
   window,
 } from 'vscode';
 import {appGet, isResponseOk} from '../http/HttpClient';
-import {isFlowModeEnabled} from '../managers/FlowManager';
 import {getConnectionErrorHtml} from '../local/404';
 import {getItem} from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
+import {isStatusBarTextVisible} from '../managers/StatusBarManager';
 
 export class CodeTimeView implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -101,7 +101,7 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
   private async getHtml(): Promise<string> {
     const params = {
       is_light_mode: !!(window.activeColorTheme.kind === 1),
-      in_flow: await isFlowModeEnabled(),
+      showing_statusbar: isStatusBarTextVisible(),
       skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
     };
     const resp = await appGet('/plugin/sidebar', params);
