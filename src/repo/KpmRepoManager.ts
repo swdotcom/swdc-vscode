@@ -1,44 +1,19 @@
-import { getWorkspaceFolders, normalizeGithubEmail, isGitProject } from "../Util";
-import { CacheManager } from "../cache/CacheManager";
-import { execCmd } from "../managers/ExecManager";
+import {isGitProject} from '../Util';
+import {CacheManager} from '../cache/CacheManager';
+import {execCmd} from '../managers/ExecManager';
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 const cacheTimeoutSeconds = 60 * 15;
 
-function getProjectDir(fileName = null) {
-  let workspaceFolders = getWorkspaceFolders();
-
-  if (!workspaceFolders || workspaceFolders.length === 0) {
-    return null;
-  }
-
-  // VSCode allows having multiple workspaces.
-  // for now we only support using the 1st project directory
-  // in a given set of workspaces if the provided fileName is null.
-  if (workspaceFolders && workspaceFolders.length > 0) {
-    if (!fileName) {
-      return workspaceFolders[0].uri.fsPath;
-    }
-
-    for (let i = 0; i < workspaceFolders.length; i++) {
-      const dir = workspaceFolders[i].uri.fsPath;
-      if (fileName.includes(dir)) {
-        return dir;
-      }
-    }
-  }
-  return null;
-}
-
 //
 // use "git symbolic-ref --short HEAD" to get the git branch
 // use "git config --get remote.origin.url" to get the remote url
-export async function getResourceInfo(projectDir) {
+export async function getResourceInfo(projectDir: string) {
   if (!projectDir || !isGitProject(projectDir)) {
     return null;
   }
 
-  const noSpacesProjDir = projectDir.replace(/^\s+/g, "");
+  const noSpacesProjDir = projectDir.replace(/^\s+/g, '');
   const cacheId = `resource-info-${noSpacesProjDir}`;
 
   let resourceInfo = cacheMgr.get(cacheId);
@@ -49,14 +24,14 @@ export async function getResourceInfo(projectDir) {
 
   resourceInfo = {};
 
-  const branch = execCmd("git symbolic-ref --short HEAD", projectDir);
-  const identifier = execCmd("git config --get remote.origin.url", projectDir);
-  let email = execCmd("git config user.email", projectDir);
-  const tag = execCmd("git describe --all", projectDir);
+  const branch = execCmd('git symbolic-ref --short HEAD', projectDir);
+  const identifier = execCmd('git config --get remote.origin.url', projectDir);
+  let email = execCmd('git config user.email', projectDir);
+  const tag = execCmd('git describe --all', projectDir);
 
   // both should be valid to return the resource info
   if (branch && identifier) {
-    resourceInfo = { branch, identifier, email, tag };
+    resourceInfo = {branch, identifier, email, tag};
     cacheMgr.set(cacheId, resourceInfo, cacheTimeoutSeconds);
   }
   return resourceInfo;

@@ -1,50 +1,50 @@
-import { window, QuickPickItem } from "vscode";
-import { softwareGet, isResponseOk } from "../http/HttpClient";
-import { checkRegistrationForReport, getItem } from "../Util";
-import Checkbox from "../model/checkbox";
-import { displayProjectCommitsDashboardByRangeType, displayProjectCommitsDashboardByStartEnd } from "./ReportManager";
+import {window, QuickPickItem} from 'vscode';
+import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {checkRegistrationForReport, getItem} from '../Util';
+import Checkbox from '../model/checkbox';
+import {displayProjectCommitsDashboardByRangeType, displayProjectCommitsDashboardByStartEnd} from './ReportManager';
 
-const moment = require("moment-timezone");
+const moment = require('moment-timezone');
 
-const dateFormat = "YYYY-MM-DD";
+const dateFormat = 'YYYY-MM-DD';
 
 export class ProjectCommitManager {
   private static instance: ProjectCommitManager;
 
   private selectedStartTime: number = 0;
   private selectedEndTime: number = 0;
-  private selectedRangeType: string = "";
+  private selectedRangeType: string = '';
   private local_start: number = 0;
   private local_end: number = 0;
 
   private items: any[] = [
     {
-      label: "Custom",
-      value: "custom",
+      label: 'Custom',
+      value: 'custom',
     },
     {
-      label: "Yesterday",
-      value: "yesterday",
+      label: 'Yesterday',
+      value: 'yesterday',
     },
     {
-      label: "This week",
-      value: "currentWeek",
+      label: 'This week',
+      value: 'currentWeek',
     },
     {
-      label: "Last week",
-      value: "lastWeek",
+      label: 'Last week',
+      value: 'lastWeek',
     },
     {
-      label: "This month",
-      value: "thisMonth",
+      label: 'This month',
+      value: 'thisMonth',
     },
     {
-      label: "Last month",
-      value: "lastMonth",
+      label: 'Last month',
+      value: 'lastMonth',
     },
     {
-      label: "Last 90 days",
-      value: "lastNinetyDays",
+      label: 'Last 90 days',
+      value: 'lastNinetyDays',
     },
   ];
 
@@ -63,7 +63,7 @@ export class ProjectCommitManager {
   resetDateRange() {
     this.selectedStartTime = 0;
     this.selectedEndTime = 0;
-    this.selectedRangeType = "";
+    this.selectedRangeType = '';
     this.local_start = 0;
     this.local_end = 0;
   }
@@ -82,12 +82,12 @@ export class ProjectCommitManager {
       } as QuickPickItem;
     });
 
-    const pick = await window.showQuickPick(pickItems, {
-      placeHolder: "Select a date range",
+    const pick: any = await window.showQuickPick(pickItems, {
+      placeHolder: 'Select a date range',
     });
 
     if (pick && pick.label) {
-      return this.launchProjectSelectionMenu(pick["value"]);
+      return this.launchProjectSelectionMenu(pick['value']);
     }
     return null;
   }
@@ -122,27 +122,27 @@ export class ProjectCommitManager {
       } as QuickPickItem;
     });
 
-    const pick = await window.showQuickPick(pickItems, {
-      placeHolder: "Select a date range",
+    const pick: any = await window.showQuickPick(pickItems, {
+      placeHolder: 'Select a date range',
     });
     const local = moment().local();
     const offset_in_sec = moment.parseZone(local).utcOffset() * 60;
 
     if (pick && pick.label) {
-      const val = pick["value"];
-      if (val === "custom") {
+      const val = pick['value'];
+      if (val === 'custom') {
         // show custom date range input
-        const initialStartVal = moment().startOf("day").subtract(1, "day").format(dateFormat);
-        const startDateText = await this.showDateInputBox(initialStartVal, dateFormat, "starting");
+        const initialStartVal = moment().startOf('day').subtract(1, 'day').format(dateFormat);
+        const startDateText = await this.showDateInputBox(initialStartVal, dateFormat, 'starting');
         if (startDateText) {
           // START DATE (begin of day)
-          this.selectedStartTime = moment(startDateText, dateFormat).startOf("day").unix();
+          this.selectedStartTime = moment(startDateText, dateFormat).startOf('day').unix();
 
-          const endVal = moment.unix(this.selectedStartTime).add(1, "day").format(dateFormat);
-          const endDateText = await this.showDateInputBox(endVal, dateFormat, "ending");
+          const endVal = moment.unix(this.selectedStartTime).add(1, 'day').format(dateFormat);
+          const endDateText = await this.showDateInputBox(endVal, dateFormat, 'ending');
           if (endDateText) {
             // END DATE (the end of the day)
-            this.selectedEndTime = moment(endDateText, dateFormat).endOf("day").unix();
+            this.selectedEndTime = moment(endDateText, dateFormat).endOf('day').unix();
 
             // create the local start and end
             this.local_start = this.selectedStartTime + offset_in_sec;
@@ -150,10 +150,10 @@ export class ProjectCommitManager {
           }
         }
       } else {
-        if (val === "lastNinetyDays") {
+        if (val === 'lastNinetyDays') {
           // create the local_start and local_end
-          this.local_start = moment().startOf("day").subtract(90, "days").unix() + offset_in_sec;
-          this.local_end = moment().startOf("day").unix() + offset_in_sec;
+          this.local_start = moment().startOf('day').subtract(90, 'days').unix() + offset_in_sec;
+          this.local_end = moment().startOf('day').unix() + offset_in_sec;
         } else {
           // fetch the project checkboxes by range type (i.e. "yesterday")
           this.selectedRangeType = val;
@@ -172,7 +172,7 @@ export class ProjectCommitManager {
       } as QuickPickItem;
     });
     const picks = await window.showQuickPick(pickItems, {
-      placeHolder: "Select one or more projects",
+      placeHolder: 'Select one or more projects',
       ignoreFocusOut: false,
       matchOnDescription: true,
       canPickMany: true,
@@ -196,9 +196,9 @@ export class ProjectCommitManager {
         }
       }
       // go through the array and get the project IDs
-      const projectIds = [];
-      picks.forEach((item) => {
-        projectIds.push(...item["value"]);
+      const projectIds: any[] = [];
+      picks.forEach((item: any) => {
+        projectIds.push(...item['value']);
       });
 
       if (this.selectedRangeType) {
@@ -216,8 +216,8 @@ export class ProjectCommitManager {
 
   async getProjectCheckboxes(): Promise<Checkbox[]> {
     // fetch the projects from the backend
-    const api = "/v1/user_metrics/projects";
-    const resp = await softwareGet(api, getItem("jwt"));
+    const api = '/v1/user_metrics/projects';
+    const resp = await softwareGet(api, getItem('jwt'));
     let checkboxes: Checkbox[] = [];
     if (isResponseOk(resp)) {
       const projects = resp.data;
@@ -226,7 +226,7 @@ export class ProjectCommitManager {
         let lineNumber = 0;
         for (let i = 0; i < projects.length; i++) {
           const p = projects[i];
-          const name = p.name ? p.name : "";
+          const name = p.name ? p.name : '';
           const projectIds = p.id ? [p.id] : [];
           if (name && projectIds.length) {
             // name: "swdc-sublime-music-time", id: "52747d64cc45643e8eab8732bd4..."

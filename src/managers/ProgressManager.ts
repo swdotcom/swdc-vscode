@@ -1,3 +1,5 @@
+import {ProgressLocation, window} from 'vscode';
+
 export class ProgressManager {
   private static instance: ProgressManager;
 
@@ -15,7 +17,7 @@ export class ProgressManager {
     return ProgressManager.instance;
   }
 
-  reportProgress(progress, increment) {
+  reportProgress(progress: any, increment: number): void {
     if (this.doneWriting) {
       return;
     }
@@ -29,8 +31,28 @@ export class ProgressManager {
     increment = Math.min(90, increment);
 
     setTimeout(() => {
-      progress.report({ increment });
+      progress.report({increment});
       this.reportProgress(progress, increment);
     }, 450);
   }
+}
+
+export function progressIt(msg: string, asyncFunc: any, args: any[] = []) {
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: msg,
+      cancellable: false,
+    },
+    (progress) => {
+      return new Promise(async (resolve, reject) => {
+        if (args?.length) {
+          await asyncFunc(...args).catch((e: any) => {});
+        } else {
+          await asyncFunc().catch((e: any) => {});
+        }
+        resolve(true);
+      });
+    }
+  );
 }

@@ -1,7 +1,7 @@
-import { getSessionSummaryFile } from "../Util";
-import { updateStatusBarWithSummaryData } from "./StatusBarManager";
-import { getSessionSummaryFileAsJson } from "../storage/SessionSummaryData";
-const fs = require("fs");
+import {getSessionSummaryFile} from '../Util';
+import {updateStatusBarWithSummaryData} from './StatusBarManager';
+import {getSessionSummaryFileAsJson} from '../storage/SessionSummaryData';
+const fs = require('fs');
 
 export class SyncManager {
   private static _instance: SyncManager;
@@ -19,8 +19,8 @@ export class SyncManager {
     getSessionSummaryFileAsJson();
 
     // fs.watch replaces fs.watchFile and fs.unwatchFile
-    fs.watch(getSessionSummaryFile(), (curr, prev) => {
-      if (curr === "change") {
+    fs.watch(getSessionSummaryFile(), (curr: any, prev: any) => {
+      if (curr === 'change') {
         updateStatusBarWithSummaryData();
       }
     });

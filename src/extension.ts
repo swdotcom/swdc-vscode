@@ -2,24 +2,24 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { window, ExtensionContext, commands } from "vscode";
-import { initializePreferences } from "./DataController";
-import { onboardInit } from "./user/OnboardManager";
-import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
-import { createCommands } from "./command-helper";
-import { KpmManager } from "./managers/KpmManager";
-import { PluginDataManager } from "./managers/PluginDataManager";
-import { TrackerManager } from "./managers/TrackerManager";
-import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
-import { softwarePost } from "./http/HttpClient";
-import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
-import { initializeStatusBar } from "./managers/StatusBarManager";
-import { SummaryManager } from "./managers/SummaryManager";
-import { SyncManager } from "./managers/SyncManger";
-import { LocalStorageManager } from "./managers/LocalStorageManager";
+import {window, ExtensionContext, commands} from 'vscode';
+import {initializePreferences} from './DataController';
+import {onboardInit} from './user/OnboardManager';
+import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem} from './Util';
+import {createCommands} from './command-helper';
+import {KpmManager} from './managers/KpmManager';
+import {TrackerManager} from './managers/TrackerManager';
+import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
+import {softwarePost} from './http/HttpClient';
+import {configureSettings, showingConfigureSettingsPanel} from './managers/ConfigManager';
+import {initializeStatusBar} from './managers/StatusBarManager';
+import {SummaryManager} from './managers/SummaryManager';
+import {SyncManager} from './managers/SyncManger';
+import {LocalStorageManager} from './managers/LocalStorageManager';
+import {ChangeStateManager} from './managers/ChangeStateManager';
 
 let TELEMETRY_ON = true;
-let currentColorKind: number = undefined;
+let currentColorKind: number | undefined = undefined;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 let localStorage: LocalStorageManager;
@@ -36,12 +36,10 @@ export function isTelemetryOn() {
 
 export function deactivate(ctx: ExtensionContext) {
   // store the deactivate event
-  tracker.trackEditorAction("editor", "deactivate");
-
-  // dispose the new day timer
-  PluginDataManager.getInstance().dispose();
+  tracker.trackEditorAction('editor', 'deactivate');
 
   TrackerManager.getInstance().dispose();
+  ChangeStateManager.getInstance().dispose();
 
   // dispose the file watchers
   kpmController.dispose();
@@ -68,7 +66,7 @@ export async function activate(ctx: ExtensionContext) {
   }
 }
 
-export function getLocalStorageValue(key : string) {
+export function getLocalStorageValue(key: string) {
   return localStorage.getValue(key);
 }
 
@@ -76,7 +74,7 @@ export function setLocalStorageValue(key: string, value: any) {
   localStorage.setValue(key, value);
 }
 
-function getRandomArbitrary(min, max) {
+function getRandomArbitrary(min: any, max: any) {
   max = max + 0.1;
   return parseInt(Math.random() * (max - min) + min, 10);
 }
@@ -87,7 +85,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   try {
     initializeWebsockets();
   } catch (e) {
-    console.error("Failed to initialize websockets", e);
+    console.error('Failed to initialize websockets', e);
   }
 
   await tracker.init();
@@ -96,26 +94,25 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   SyncManager.getInstance();
 
   // store the activate event
-  tracker.trackEditorAction("editor", "activate");
+  tracker.trackEditorAction('editor', 'activate');
 
   activateColorKindChangeListener();
 
-  // INIT the plugin data manager
-  PluginDataManager.getInstance();
+  ChangeStateManager.getInstance();
 
   // initialize preferences
   await initializePreferences();
 
-  const initializedVscodePlugin = getItem("vscode_CtInit");
+  const initializedVscodePlugin = getItem('vscode_CtInit');
   if (!initializedVscodePlugin) {
-    setItem("vscode_CtInit", true);
+    setItem('vscode_CtInit', true);
 
     setTimeout(() => {
-      commands.executeCommand("codetime.displaySidebar");
+      commands.executeCommand('codetime.displaySidebar');
     }, 1000);
 
     // activate the plugin
-    softwarePost("/plugins/activate", {}, getItem("jwt"));
+    softwarePost('/plugins/activate', {}, getItem('jwt'));
   }
 
   // show the readme if it doesn't exist
@@ -160,7 +157,7 @@ function activateColorKindChangeListener() {
 
     // let the sidebar know the new current color kind
     setTimeout(() => {
-      commands.executeCommand("codetime.refreshCodeTimeView");
+      commands.executeCommand('codetime.refreshCodeTimeView');
     }, 250);
   });
 }

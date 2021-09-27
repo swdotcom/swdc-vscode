@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
 
-import { api_endpoint } from "../Constants";
+import {api_endpoint, app_url} from '../Constants';
 
-import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid } from "../Util";
+import {logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, getItem} from '../Util';
 
 // build the axios api base url
 const beApi = axios.create({
@@ -10,18 +10,48 @@ const beApi = axios.create({
   timeout: 30000,
 });
 
-beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();
-beApi.defaults.headers.common["X-SWDC-Plugin-Name"] = getPluginName();
-beApi.defaults.headers.common["X-SWDC-Plugin-Version"] = getVersion();
-beApi.defaults.headers.common["X-SWDC-Plugin-OS"] = getOs();
-beApi.defaults.headers.common["X-SWDC-Plugin-TZ"] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-beApi.defaults.headers.common["X-SWDC-Plugin-Offset"] = getOffsetSeconds() / 60;
-beApi.defaults.headers.common["X-SWDC-Plugin-UUID"] = getPluginUuid();
+const appApi = axios.create({
+  baseURL: `${app_url}`,
+  timeout: 30000,
+});
+
+const headers = {
+  'X-SWDC-Plugin-Id': getPluginId(),
+  'X-SWDC-Plugin-Name': getPluginName(),
+  'X-SWDC-Plugin-Version': getVersion(),
+  'X-SWDC-Plugin-OS': getOs(),
+  'X-SWDC-Plugin-TZ': Intl.DateTimeFormat().resolvedOptions().timeZone,
+  'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
+  'X-SWDC-Plugin-UUID': getPluginUuid(),
+  'X-SWDC-Plugin-Type': 'codetime',
+  'X-SWDC-Plugin-Editor': 'vscode',
+};
+
+beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
+appApi.defaults.headers.common = {...appApi.defaults.headers.common, ...headers};
 
 const spotifyApi = axios.create({});
 
+export async function appGet(api: string, queryParams: any = {}) {
+  updateAppAPIAuthorization();
+
+  return await appApi.get(api, {params: queryParams}).catch((err: any) => {
+    logIt(`error for GET ${api}, message: ${err.message}`);
+    return err;
+  });
+}
+
+export async function appDelete(api: string, payload: any = {}) {
+  updateAppAPIAuthorization();
+
+  return await appApi.delete(api, payload).catch((err: any) => {
+    logIt(`error for DELETE ${api}, message: ${err.message}`);
+    return err;
+  });
+}
+
 export async function serverIsAvailable() {
-  const isAvail = await softwareGet("/ping", null)
+  const isAvail = await softwareGet('/ping', null)
     .then((result) => {
       return isResponseOk(result);
     })
@@ -31,11 +61,11 @@ export async function serverIsAvailable() {
   return isAvail;
 }
 
-export async function spotifyApiPut(api, payload, accessToken) {
-  if (api.indexOf("https://api.spotify.com") === -1) {
-    api = "https://api.spotify.com" + api;
+export async function spotifyApiPut(api: string, payload: any, accessToken: string) {
+  if (api.indexOf('https://api.spotify.com') === -1) {
+    api = 'https://api.spotify.com' + api;
   }
-  spotifyApi.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+  spotifyApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
   return await spotifyApi.put(api, payload).catch((err) => {
     logIt(`error posting data for ${api}, message: ${err.message}`);
     return err;
@@ -49,12 +79,12 @@ export async function spotifyApiPut(api, payload, accessToken) {
  * @param jwt
  */
 
-export async function softwareGet(api, jwt, queryParams = {}) {
+export async function softwareGet(api: string, jwt: string | null, queryParams = {}) {
   if (jwt) {
-    beApi.defaults.headers.common["Authorization"] = jwt;
+    beApi.defaults.headers.common['Authorization'] = jwt;
   }
 
-  return await beApi.get(api, { params: queryParams }).catch((err) => {
+  return await beApi.get(api, {params: queryParams}).catch((err) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
@@ -63,9 +93,9 @@ export async function softwareGet(api, jwt, queryParams = {}) {
 /**
  * perform a put request
  */
-export async function softwarePut(api, payload, jwt) {
+export async function softwarePut(api: string, payload: any, jwt: string) {
   // PUT the kpm to the PluginManager
-  beApi.defaults.headers.common["Authorization"] = jwt;
+  beApi.defaults.headers.common['Authorization'] = jwt;
 
   return await beApi
     .put(api, payload)
@@ -81,10 +111,10 @@ export async function softwarePut(api, payload, jwt) {
 /**
  * perform a post request
  */
-export async function softwarePost(api, payload, jwt = null) {
+export async function softwarePost(api: string, payload: any, jwt = null) {
   // POST the kpm to the PluginManager
   if (jwt) {
-    beApi.defaults.headers.common["Authorization"] = jwt;
+    beApi.defaults.headers.common['Authorization'] = jwt;
   }
   return beApi
     .post(api, payload)
@@ -100,8 +130,8 @@ export async function softwarePost(api, payload, jwt = null) {
 /**
  * perform a delete request
  */
-export async function softwareDelete(api, jwt) {
-  beApi.defaults.headers.common["Authorization"] = jwt;
+export async function softwareDelete(api: string, jwt: string) {
+  beApi.defaults.headers.common['Authorization'] = jwt;
   return beApi
     .delete(api)
     .then((resp) => {
@@ -117,7 +147,7 @@ export async function softwareDelete(api, jwt) {
  * Check if the spotify response has an expired token
  * {"error": {"status": 401, "message": "The access token expired"}}
  */
-export function hasTokenExpired(resp) {
+export function hasTokenExpired(resp: any) {
   // when a token expires, we'll get the following error data
   // err.response.status === 401
   // err.response.statusText = "Unauthorized"
@@ -141,7 +171,7 @@ export function hasTokenExpired(resp) {
     message:"getaddrinfo ENOTFOUND api.spotify.com api.spotify.com:443"
     port:443
  */
-export function isResponseOk(resp) {
+export function isResponseOk(resp: any) {
   let status = getResponseStatus(resp);
   if (status && resp && status < 300) {
     return true;
@@ -149,20 +179,31 @@ export function isResponseOk(resp) {
   return false;
 }
 
-/**
- * get the response http status code
- * axios always sends the following
- * status:200
- * statusText:"OK"
- */
-function getResponseStatus(resp) {
+function updateAppAPIAuthorization() {
+  const token = getAuthorization();
+  if (token) {
+    appApi.defaults.headers.common['Authorization'] = token;
+  }
+}
+
+function getResponseStatus(resp: any) {
   let status = null;
-  if (resp && resp.status) {
+  if (resp?.status) {
     status = resp.status;
-  } else if (resp && resp.response && resp.response.status) {
+  } else if (resp?.response && resp.response.status) {
     status = resp.response.status;
-  } else if (resp && resp.code && resp.code === "ECONNABORTED") {
+  } else if (resp?.code === 'ECONNABORTED') {
     status = 500;
+  } else if (resp?.code === 'ECONNREFUSED') {
+    status = 503;
   }
   return status;
+}
+
+function getAuthorization() {
+  let token = getItem('jwt');
+  if (token.includes('JWT ')) {
+    token = `Bearer ${token.substring('JWT '.length)}`;
+  }
+  return token;
 }

@@ -1,9 +1,16 @@
-import swdcTracker from "swdc-tracker";
-import { api_endpoint } from "../Constants";
-import { getPluginName, getItem, getPluginId, getVersion, getWorkspaceFolders, getGitEventFile, isGitProject } from "../Util";
-import { KpmItem, FileChangeInfo } from "../model/models";
-import { getResourceInfo } from "../repo/KpmRepoManager";
-import KeystrokeStats from "../model/KeystrokeStats";
+import swdcTracker from 'swdc-tracker';
+import {api_endpoint} from '../Constants';
+import {
+  getPluginName,
+  getItem,
+  getPluginId,
+  getVersion,
+  getWorkspaceFolders,
+  getGitEventFile,
+  isGitProject,
+} from '../Util';
+import {KpmItem} from '../model/models';
+import {getResourceInfo} from '../repo/KpmRepoManager';
 import {
   getDefaultBranchFromRemoteBranch,
   getRepoIdentifierInfo,
@@ -15,11 +22,12 @@ import {
   getInfoForCommit,
   commitAlreadyOnRemote,
   isMergeCommit,
-} from "../repo/GitUtil";
-import { getPreference } from "../DataController";
-import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./FileManager";
+} from '../repo/GitUtil';
+import {getPreference} from '../DataController';
+import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
+import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
 
-const moment = require("moment-timezone");
+const moment = require('moment-timezone');
 
 export class TrackerManager {
   private static instance: TrackerManager;
@@ -44,53 +52,57 @@ export class TrackerManager {
 
   public async init() {
     // initialize tracker with swdc api host, namespace, and appId
-    const result = await swdcTracker.initialize(api_endpoint, "CodeTime", "swdc-vscode");
+    const result = await swdcTracker.initialize(api_endpoint, 'CodeTime', 'swdc-vscode');
     if (result.status === 200) {
       this.trackerReady = true;
     }
   }
 
-  public async trackCodeTimeEvent(keystrokeStats: KeystrokeStats) {
+  public async trackCodeTimeEvent(projectChangeInfo: ProjectChangeInfo) {
     if (!this.trackerReady) {
       return;
     }
 
     // extract the project info from the keystroke stats
     const projectInfo = {
-      project_directory: keystrokeStats.project.directory,
-      project_name: keystrokeStats.project.name,
+      project_directory: projectChangeInfo.project_directory,
+      project_name: projectChangeInfo.project_name,
     };
 
     // loop through the files in the keystroke stats "source"
-    const fileKeys = Object.keys(keystrokeStats.source);
-    for await (let file of fileKeys) {
-      const fileData: FileChangeInfo = keystrokeStats.source[file];
+    const fileKeys = Object.keys(projectChangeInfo.docs_changed);
+    for await (const file of fileKeys) {
+      const docChangeInfo: DocChangeInfo = projectChangeInfo.docs_changed[file];
+
+      // start and end are UTC seconds
+      const fileStartDate: Date = new Date(docChangeInfo.start * 1000);
+      const fileEndDate: Date = new Date(docChangeInfo.end * 1000);
 
       const codetime_entity = {
-        keystrokes: fileData.keystrokes,
-        lines_added: fileData.documentChangeInfo.linesAdded,
-        lines_deleted: fileData.documentChangeInfo.linesDeleted,
-        characters_added: fileData.documentChangeInfo.charactersAdded,
-        characters_deleted: fileData.documentChangeInfo.charactersDeleted,
-        single_deletes: fileData.documentChangeInfo.singleDeletes,
-        multi_deletes: fileData.documentChangeInfo.multiDeletes,
-        single_adds: fileData.documentChangeInfo.singleAdds,
-        multi_adds: fileData.documentChangeInfo.multiAdds,
-        auto_indents: fileData.documentChangeInfo.autoIndents,
-        replacements: fileData.documentChangeInfo.replacements,
-        start_time: moment.unix(fileData.start).utc().format(),
-        end_time: moment.unix(fileData.end).utc().format(),
+        keystrokes: docChangeInfo.keystrokes,
+        lines_added: docChangeInfo.linesAdded,
+        lines_deleted: docChangeInfo.linesDeleted,
+        characters_added: docChangeInfo.charactersAdded,
+        characters_deleted: docChangeInfo.charactersDeleted,
+        single_deletes: docChangeInfo.singleDeletes,
+        multi_deletes: docChangeInfo.multiDeletes,
+        single_adds: docChangeInfo.singleAdds,
+        multi_adds: docChangeInfo.multiAdds,
+        auto_indents: docChangeInfo.autoIndents,
+        replacements: docChangeInfo.replacements,
+        start_time: fileStartDate.toISOString(),
+        end_time: fileEndDate.toISOString(),
       };
 
       const file_entity = {
-        file_name: fileData.fsPath?.split(fileData.projectDir)?.[1],
-        file_path: fileData.fsPath,
-        syntax: fileData.syntax,
-        line_count: fileData.lines,
-        character_count: fileData.length,
+        file_name: docChangeInfo.file_name,
+        file_path: docChangeInfo.file_path,
+        syntax: docChangeInfo.syntax,
+        line_count: docChangeInfo.line_count,
+        character_count: docChangeInfo.character_count,
       };
 
-      const repoParams = await this.getRepoParams(keystrokeStats.project.directory);
+      const repoParams = await this.getRepoParams(projectChangeInfo.project_directory);
 
       const codetime_event = {
         ...codetime_entity,
@@ -120,7 +132,7 @@ export class TrackerManager {
       element_location: item.location,
       color: item.color ? item.color : null,
       icon_name: item.interactionIcon ? item.interactionIcon : null,
-      cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : "redacted",
+      cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : 'redacted',
     };
 
     const ui_event = {
@@ -139,36 +151,36 @@ export class TrackerManager {
     }
     const projectParams = this.getProjectParams();
 
-    if (gitEventName === "uncommitted_change") {
+    if (gitEventName === 'uncommitted_change') {
       this.trackUncommittedChangeGitEvent(projectParams);
-    } else if (gitEventName === "local_commit" && branch) {
+    } else if (gitEventName === 'local_commit' && branch) {
       this.trackLocalCommitGitEvent(projectParams, branch, commit);
     } else {
       return;
     }
   }
 
-  public async trackGitRemoteEvent(event) {
+  public async trackGitRemoteEvent(event: any) {
     if (!this.trackerReady) {
       return;
     }
     const projectParams = this.getProjectParams();
-    const remoteBranch = event.path.split(".git/")[1];
+    const remoteBranch = event.path.split('.git/')[1];
 
     this.trackBranchCommitGitEvent(projectParams, remoteBranch, event.path);
   }
 
-  public async trackGitDeleteEvent(event) {
+  public async trackGitDeleteEvent(event: any) {
     this.removeBranchFromTrackingHistory(event.path);
   }
 
-  private async trackUncommittedChangeGitEvent(projectParams) {
+  private async trackUncommittedChangeGitEvent(projectParams: any) {
     const uncommittedChanges = await this.getUncommittedChangesParams(projectParams.project_directory);
 
-    this.sendGitEvent("uncommitted_change", projectParams, uncommittedChanges);
+    this.sendGitEvent('uncommitted_change', projectParams, uncommittedChanges);
   }
 
-  private async trackLocalCommitGitEvent(projectParams, branch: string, commit?: string) {
+  private async trackLocalCommitGitEvent(projectParams: any, branch: string, commit?: string) {
     if (!commit) {
       commit = await getLatestCommitForBranch(projectParams.project_directory, branch);
     }
@@ -180,35 +192,40 @@ export class TrackerManager {
     }
     const commitInfo = await getInfoForCommit(projectParams.project_directory, commit);
     const file_changes = await getChangesForCommit(projectParams.project_directory, commit);
-    const eventData = { commit_id: commit, git_event_timestamp: commitInfo.authoredTimestamp, file_changes };
+    const eventData = {commit_id: commit, git_event_timestamp: commitInfo.authoredTimestamp, file_changes};
 
-    this.sendGitEvent("local_commit", projectParams, eventData);
+    this.sendGitEvent('local_commit', projectParams, eventData);
   }
 
-  private async trackBranchCommitGitEvent(projectParams, remoteBranch: string, event_path: string) {
+  private async trackBranchCommitGitEvent(projectParams: any, remoteBranch: string, event_path: string) {
     const defaultBranch = await getDefaultBranchFromRemoteBranch(projectParams.project_directory, remoteBranch);
     const gitAuthors = await authors(projectParams.project_directory);
     let lastTrackedRef = this.getLatestTrackedCommit(event_path);
     let gitEventName;
 
     if (remoteBranch === defaultBranch) {
-      gitEventName = "default_branch_commit";
+      gitEventName = 'default_branch_commit';
     } else {
-      gitEventName = "branch_commit";
+      gitEventName = 'branch_commit';
       // If we have not tracked this branch before, then pull all commits
       // based on the default branch being the parent. This may not be true
       // but it will prevent us from pulling the entire commit history of
       // the author.
-      if (lastTrackedRef === "") {
+      if (lastTrackedRef === '') {
         lastTrackedRef = defaultBranch;
       }
     }
 
-    const commits = await getCommitsForAuthors(projectParams.project_directory, remoteBranch, lastTrackedRef, gitAuthors);
+    const commits = await getCommitsForAuthors(
+      projectParams.project_directory,
+      remoteBranch,
+      lastTrackedRef,
+      gitAuthors
+    );
 
     for (const commit of commits) {
       const file_changes = await getChangesForCommit(projectParams.project_directory, commit.commit);
-      const eventData = { commit_id: commit.commit, git_event_timestamp: commit.authoredTimestamp, file_changes };
+      const eventData = {commit_id: commit.commit, git_event_timestamp: commit.authoredTimestamp, file_changes};
 
       this.sendGitEvent(gitEventName, projectParams, eventData);
     }
@@ -219,8 +236,8 @@ export class TrackerManager {
     }
   }
 
-  private async sendGitEvent(gitEventName: string, projectParams, eventData?: any) {
-    if (getPreference("disableGitData") === true) return;
+  private async sendGitEvent(gitEventName: string, projectParams: any, eventData?: any) {
+    if (getPreference('disableGitData') === true) return;
 
     const repoParams = await this.getRepoParams(projectParams.project_directory);
     const gitEvent = {
@@ -242,10 +259,10 @@ export class TrackerManager {
 
     const projectParams = this.getProjectParams();
 
-    if (type == "save") {
+    if (type == 'save') {
       if (this.eventVersionIsTheSame(event)) return;
       if (isGitProject(projectParams.project_directory)) {
-        this.trackGitLocalEvent("uncommitted_change", event);
+        this.trackGitLocalEvent('uncommitted_change', event);
       }
     }
 
@@ -276,28 +293,28 @@ export class TrackerManager {
   // Dynamic attributes
 
   getJwtParams(): any {
-    return { jwt: getItem("jwt")?.split("JWT ")[1] };
+    return {jwt: getItem('jwt')?.split('JWT ')[1]};
   }
 
   getProjectParams() {
     const workspaceFolders = getWorkspaceFolders();
-    const project_directory = workspaceFolders.length ? workspaceFolders[0].uri.fsPath : "";
-    const project_name = workspaceFolders.length ? workspaceFolders[0].name : "";
+    const project_directory = workspaceFolders.length ? workspaceFolders[0].uri.fsPath : '';
+    const project_name = workspaceFolders.length ? workspaceFolders[0].name : '';
 
-    return { project_directory, project_name };
+    return {project_directory, project_name};
   }
 
-  async getRepoParams(projectRootPath) {
+  async getRepoParams(projectRootPath: string) {
     const resourceInfo = await getResourceInfo(projectRootPath);
     if (!resourceInfo || !resourceInfo.identifier) {
       // return empty data, no need to parse further
       return {
-        identifier: "",
-        org_name: "",
-        repo_name: "",
-        repo_identifier: "",
-        git_branch: "",
-        git_tag: "",
+        identifier: '',
+        org_name: '',
+        repo_name: '',
+        repo_identifier: '',
+        git_branch: '',
+        git_tag: '',
       };
     }
 
@@ -312,13 +329,13 @@ export class TrackerManager {
     };
   }
 
-  async getUncommittedChangesParams(projectRootPath) {
+  async getUncommittedChangesParams(projectRootPath: string) {
     const stats = await getLocalChanges(projectRootPath);
 
-    return { file_changes: stats };
+    return {file_changes: stats};
   }
 
-  eventVersionIsTheSame(event) {
+  eventVersionIsTheSame(event: any) {
     const isSame = this.eventVersions.get(event.fileName) == event.version;
     if (isSame) {
       return true;
@@ -333,30 +350,30 @@ export class TrackerManager {
     }
   }
 
-  getFileParams(event, projectRootPath) {
+  getFileParams(event: any, projectRootPath: string) {
     if (!event) return {};
     // File Open and Close have document attributes on the event.
     // File Change has it on a `document` attribute
     const textDoc = event.document || event;
     if (!textDoc) {
       return {
-        file_name: "",
-        file_path: "",
-        syntax: "",
+        file_name: '',
+        file_path: '',
+        syntax: '',
         line_count: 0,
         character_count: 0,
       };
     }
 
     let character_count = 0;
-    if (typeof textDoc.getText === "function") {
+    if (typeof textDoc.getText === 'function') {
       character_count = textDoc.getText().length;
     }
 
     return {
       file_name: textDoc.fileName?.split(projectRootPath)?.[1],
       file_path: textDoc.fileName,
-      syntax: textDoc.languageId || textDoc.fileName?.split(".")?.slice(-1)?.[0],
+      syntax: textDoc.languageId || textDoc.fileName?.split('.')?.slice(-1)?.[0],
       line_count: textDoc.lineCount || 0,
       character_count,
     };
@@ -364,14 +381,14 @@ export class TrackerManager {
 
   setLatestTrackedCommit(dotGitFilePath: string, commit: string) {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    setJsonItem(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit });
+    setJsonItem(getGitEventFile(), dotGitFilePath, {latestTrackedCommit: commit});
   }
 
   getLatestTrackedCommit(dotGitFilePath: string): string {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
     const data = getJsonItem(getGitEventFile(), dotGitFilePath);
 
-    return data?.latestTrackedCommit || "";
+    return data?.latestTrackedCommit || '';
   }
 
   removeBranchFromTrackingHistory(dotGitFilePath: string) {

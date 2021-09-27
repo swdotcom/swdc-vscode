@@ -1,4 +1,4 @@
-import { window, ExtensionContext } from "vscode";
+import {window, ExtensionContext} from 'vscode';
 import {
   showOfflinePrompt,
   getItem,
@@ -9,12 +9,12 @@ import {
   getPluginId,
   getPluginUuid,
   launchWebUrl,
-} from "../Util";
-import { isResponseOk, serverIsAvailable, softwareGet } from "../http/HttpClient";
-import { createAnonymousUser } from "../menu/AccountManager";
-import { authenticationCompleteHandler } from "../DataController";
-import { api_endpoint, launch_url } from "../Constants";
-const queryString = require("query-string");
+} from '../Util';
+import {isResponseOk, serverIsAvailable, softwareGet} from '../http/HttpClient';
+import {createAnonymousUser} from '../menu/AccountManager';
+import {authenticationCompleteHandler} from '../DataController';
+import {api_endpoint, app_url} from '../Constants';
+const queryString = require('query-string');
 
 let retry_counter = 0;
 let authAdded = false;
@@ -25,7 +25,7 @@ export function updatedAuthAdded(val: boolean) {
 }
 
 export async function onboardInit(ctx: ExtensionContext, callback: any) {
-  let jwt = getItem("jwt");
+  let jwt = getItem('jwt');
 
   const windowState = window.state;
 
@@ -114,7 +114,7 @@ export async function lazilyPollForAuth(tries: number = 20) {
 }
 
 export async function handleIncompleteAuth() {
-  const name = getItem("name");
+  const name = getItem('name');
   if (!name) {
     // fetch the user
     getUserRegistrationInfo();
@@ -122,9 +122,9 @@ export async function handleIncompleteAuth() {
 }
 
 async function getUserRegistrationInfo() {
-  const token = getAuthCallbackState(false) || getItem("jwt");
+  const token = getAuthCallbackState(false) || getItem('jwt');
   // fetch the user
-  let resp = await softwareGet("/users/plugin/state", token);
+  let resp = await softwareGet('/users/plugin/state', token);
   let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
 
   // only update if its a registered, not anon user
@@ -136,8 +136,8 @@ async function getUserRegistrationInfo() {
 }
 
 export async function launchEmailSignup(switching_account: boolean = false) {
-  setItem("authType", "software");
-  setItem("switching_account", switching_account);
+  setItem('authType', 'software');
+  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildEmailSignup();
@@ -145,9 +145,9 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   launchWebUrl(url);
 }
 
-export async function launchLogin(loginType: string = "software", switching_account: boolean = false) {
-  setItem("authType", loginType);
-  setItem("switching_account", switching_account);
+export async function launchLogin(loginType: string = 'software', switching_account: boolean = false) {
+  setItem('authType', loginType);
+  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildLoginUrl(loginType);
@@ -160,29 +160,29 @@ export async function launchLogin(loginType: string = "software", switching_acco
  */
 export async function buildLoginUrl(loginType: string) {
   const auth_callback_state = getAuthCallbackState(true);
-  const name = getItem("name");
-  let url = launch_url;
+  const name = getItem('name');
+  let url = app_url;
 
-  let obj = getAuthQueryObject();
+  let obj: any = getAuthQueryObject();
 
   // only send the plugin_token when registering for the 1st time
   if (!name) {
-    obj["plugin_token"] = getItem("jwt");
+    obj['plugin_token'] = getItem('jwt');
   }
 
-  if (loginType === "github") {
+  if (loginType === 'github') {
     // github signup/login flow
-    obj["redirect"] = launch_url;
+    obj['redirect'] = app_url;
     url = `${api_endpoint}/auth/github`;
-  } else if (loginType === "google") {
+  } else if (loginType === 'google') {
     // google signup/login flow
-    obj["redirect"] = launch_url;
+    obj['redirect'] = app_url;
     url = `${api_endpoint}/auth/google`;
   } else {
     // email login
-    obj["token"] = getItem("jwt");
-    obj["auth"] = "software";
-    url = `${launch_url}/onboarding`;
+    obj['token'] = getItem('jwt');
+    obj['auth'] = 'software';
+    url = `${app_url}/onboarding`;
   }
 
   const qryStr = queryString.stringify(obj);
@@ -198,13 +198,13 @@ export async function buildLoginUrl(loginType: string) {
  * @param loginType "software" | "existing" | "google" | "github"
  */
 export async function buildEmailSignup() {
-  let loginUrl = launch_url;
+  let loginUrl = app_url;
 
-  let obj = getAuthQueryObject();
-  obj["token"] = getItem("jwt");
-  obj["auth"] = "software";
+  let obj: any = getAuthQueryObject();
+  obj['token'] = getItem('jwt');
+  obj['auth'] = 'software';
 
-  loginUrl = `${launch_url}/email-signup`;
+  loginUrl = `${app_url}/email-signup`;
 
   const qryStr = queryString.stringify(obj);
 

@@ -1,10 +1,10 @@
-import { SessionSummary, KpmItem } from "../model/models";
-import { getNowTimes, getItem, coalesceNumber, getSessionSummaryFile } from "../Util";
-import { DEFAULT_SESSION_THRESHOLD_SECONDS } from "../Constants";
-import { getFileDataAsJson, storeJsonData } from "../managers/FileManager";
+import {SessionSummary, KpmItem} from '../model/models';
+import {getNowTimes, getItem, coalesceNumber, getSessionSummaryFile} from '../Util';
+import {DEFAULT_SESSION_THRESHOLD_SECONDS} from '../Constants';
+import {getFileDataAsJson, storeJsonData} from '../managers/FileManager';
 
 export function getSessionThresholdSeconds() {
-  const thresholdSeconds = getItem("sessionThresholdInSec") || DEFAULT_SESSION_THRESHOLD_SECONDS;
+  const thresholdSeconds = getItem('sessionThresholdInSec') || DEFAULT_SESSION_THRESHOLD_SECONDS;
   return thresholdSeconds;
 }
 
@@ -25,7 +25,7 @@ export function getSessionSummaryData(): SessionSummary {
   return sessionSummaryData;
 }
 
-function coalesceMissingAttributes(data): SessionSummary {
+function coalesceMissingAttributes(data: any): SessionSummary {
   // ensure all attributes are defined
   const template: SessionSummary = new SessionSummary();
   Object.keys(template).forEach((key) => {
@@ -46,7 +46,7 @@ export function getSessionSummaryFileAsJson(): SessionSummary {
   return sessionSummary;
 }
 
-export function saveSessionSummaryToDisk(sessionSummaryData) {
+export function saveSessionSummaryToDisk(sessionSummaryData: any) {
   const file = getSessionSummaryFile();
   storeJsonData(file, sessionSummaryData);
 }
@@ -61,7 +61,7 @@ export function getTimeBetweenLastPayload() {
   let elapsedSeconds = 60;
 
   // will be zero if its a new day
-  const lastPayloadEnd = getItem("latestPayloadTimestampEndUtc");
+  const lastPayloadEnd = getItem('latestPayloadTimestampEndUtc');
 
   // the last payload end time is reset within the new day checker
   if (lastPayloadEnd && lastPayloadEnd > 0) {
@@ -76,15 +76,15 @@ export function getTimeBetweenLastPayload() {
     sessionSeconds = coalesceNumber(sessionSeconds);
   }
 
-  return { sessionSeconds, elapsedSeconds };
+  return {sessionSeconds, elapsedSeconds};
 }
 
 export function getStatusBarKpmItem(): KpmItem {
   const item: KpmItem = new KpmItem();
-  item.name = "ct_status_bar_metrics_btn";
-  item.description = "status bar metrics";
-  item.location = "ct_status_bar";
+  item.name = 'ct_status_bar_metrics_btn';
+  item.description = 'status bar metrics';
+  item.location = 'ct_status_bar';
   item.color = null;
-  item.interactionIcon = "clock";
+  item.interactionIcon = 'clock';
   return item;
 }

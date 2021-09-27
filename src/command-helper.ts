@@ -1,21 +1,20 @@
-import { commands, Disposable, window, ExtensionContext } from "vscode";
-import { launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashboard, setItem } from "./Util";
-import { KpmManager } from "./managers/KpmManager";
-import { KpmItem, UIInteractionType } from "./model/models";
-import { ProjectCommitManager } from "./menu/ProjectCommitManager";
-import { showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu } from "./menu/AccountManager";
-import { TrackerManager } from "./managers/TrackerManager";
-import { connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace } from "./managers/SlackManager";
-import { launch_url, create_org_url, vscode_issues_url } from "./Constants";
-import { toggleDarkMode, toggleDock } from "./managers/OsaScriptManager";
-import { switchAverageComparison } from "./menu/ContextMenuManager";
-import { enableFlow, pauseFlow, updateFlowModeStatus } from "./managers/FlowManager";
-import { showFullScreenMode, showNormalScreenMode, showZenMode } from "./managers/ScreenManager";
-import { showDashboard } from "./managers/WebViewManager";
-import { configureSettings } from "./managers/ConfigManager";
+import {commands, Disposable, window, ExtensionContext} from 'vscode';
+import {launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashboard, setItem} from './Util';
+import {KpmManager} from './managers/KpmManager';
+import {KpmItem, UIInteractionType} from './model/models';
+import {ProjectCommitManager} from './menu/ProjectCommitManager';
+import {showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu} from './menu/AccountManager';
+import {TrackerManager} from './managers/TrackerManager';
+import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} from './managers/SlackManager';
+import {app_url, create_org_url, vscode_issues_url} from './Constants';
+import {toggleDarkMode, toggleDock} from './managers/OsaScriptManager';
+import {switchAverageComparison} from './menu/ContextMenuManager';
+import {enableFlow, pauseFlow, updateFlowModeStatus} from './managers/FlowManager';
+import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
+import {showDashboard} from './managers/WebViewManager';
+import {configureSettings} from './managers/ConfigManager';
 import {
   getCodeTimeDashboardButton,
-  getStatusBarButtonItem,
   getSwitchAccountButtonItem,
   getFeedbackButton,
   getHideStatusBarMetricsButton,
@@ -23,11 +22,15 @@ import {
   getSignUpButton,
   getViewProjectSummaryButton,
   getWebViewDashboardButton,
-} from "./tree/TreeButtonProvider";
-import { CodeTimeWebviewSidebar } from "./sidebar/CodeTimeWebviewSidebar";
-import { getCachedOrgs } from "./managers/TeamManager";
-import { toggleStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
-import { launchEmailSignup, launchLogin } from "./user/OnboardManager";
+} from './tree/TreeButtonProvider';
+import {getCachedOrgs} from './managers/TeamManager';
+import {toggleStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
+import {launchEmailSignup, launchLogin} from './user/OnboardManager';
+import {CodeTimeView} from './sidebar/CodeTimeView';
+import {showSlackManageOptions} from './managers/PromptManager';
+import {appDelete} from './http/HttpClient';
+import {progressIt} from './managers/ProgressManager';
+import {diconnectIntegration} from './DataController';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -41,55 +44,49 @@ export function createCommands(
 
   cmds.push(kpmController);
 
-  // WEB VIEW PROVIDER
-  const ctWebviewSidebar: CodeTimeWebviewSidebar = new CodeTimeWebviewSidebar(ctx.extensionUri);
+  // INITALIZE SIDEBAR WEB VIEW PROVIDER
+  const sidebar: CodeTimeView = new CodeTimeView(ctx.extensionUri);
   cmds.push(
-    window.registerWebviewViewProvider("codetime.webView", ctWebviewSidebar, {
+    window.registerWebviewViewProvider('codetime.webView', sidebar, {
       webviewOptions: {
         retainContextWhenHidden: true,
       },
     })
   );
 
+  // REFRESH EDITOR OPS SIDEBAR
   cmds.push(
-    commands.registerCommand("codetime.refreshCodeTimeView", () => {
-      ctWebviewSidebar.refresh();
+    commands.registerCommand('codetime.refreshCodeTimeView', () => {
+      sidebar.refresh();
     })
   );
 
+  // DISPLAY EDITOR OPS SIDEBAR
   cmds.push(
-    commands.registerCommand("codetime.displaySidebar", () => {
-      // logic to open the sidebar (need to figure out how to reveal the sidebar webview)
-      commands.executeCommand("workbench.view.extension.code-time-sidebar");
-      tracker.trackUIInteraction(getStatusBarButtonItem());
+    commands.registerCommand('codetime.displaySidebar', () => {
+      // opens the sidebar manually from a the above command
+      commands.executeCommand('workbench.view.extension.extension.code-time-sidebar');
     })
   );
 
-  // SWITCH ACCOUNT BUTTON
+  // SWITCH ACCOUNT
   cmds.push(
-    commands.registerCommand("codetime.switchAccounts", (item: KpmItem) => {
+    commands.registerCommand('codetime.switchAccount', () => {
       tracker.trackUIInteraction(getSwitchAccountButtonItem());
-      showSwitchAccountsMenu();
-    })
-  );
-
-  // PROCESS KEYSTROKES NOW
-  cmds.push(
-    commands.registerCommand("codetime.processKeystrokeData", () => {
-      kpmController.processKeystrokeData(true /*isUnfocus*/);
+      showExistingAccountMenu();
     })
   );
 
   // SHOW WEB ANALYTICS
   cmds.push(
-    commands.registerCommand("codetime.softwareKpmDashboard", (item: KpmItem) => {
+    commands.registerCommand('codetime.softwareKpmDashboard', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getWebViewDashboardButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_web_metrics_cmd";
+        item.name = 'ct_web_metrics_cmd';
         item.interactionIcon = null;
         item.color = null;
       }
@@ -99,28 +96,28 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.createOrg", () => {
+    commands.registerCommand('codetime.createOrg', () => {
       launchWebUrl(create_org_url);
     })
   );
 
   // OPEN SPECIFIED FILE IN EDITOR
   cmds.push(
-    commands.registerCommand("codetime.openFileInEditor", (file) => {
+    commands.registerCommand('codetime.openFileInEditor', (file) => {
       openFileInEditor(file);
     })
   );
 
   // TOGGLE STATUS BAR METRIC VISIBILITY
   cmds.push(
-    commands.registerCommand("codetime.toggleStatusBar", (item: KpmItem) => {
+    commands.registerCommand('codetime.toggleStatusBar', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getHideStatusBarMetricsButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_toggle_status_bar_metrics_cmd";
+        item.name = 'ct_toggle_status_bar_metrics_cmd';
         item.interactionIcon = null;
         item.color = null;
       }
@@ -131,29 +128,29 @@ export function createCommands(
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand("codetime.codeTimeLogin", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = getSignUpButton("email", "grey");
-        item.location = "ct_command_palette";
+        item = getSignUpButton('email', 'grey');
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      launchLogin("software", switching_account);
+      launchLogin('software', switching_account);
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand("codetime.codeTimeSignup", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = getSignUpButton("email", "grey");
-        item.location = "ct_command_palette";
+        item = getSignUpButton('email', 'grey');
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
         item.color = null;
@@ -165,12 +162,12 @@ export function createCommands(
 
   // LAUNCH EXISTING ACCOUNT LOGIN
   cmds.push(
-    commands.registerCommand("codetime.codeTimeExisting", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.codeTimeExisting', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = getSignUpButton("existing", "blue");
-        item.location = "ct_command_palette";
+        item = getSignUpButton('existing', 'blue');
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
         item.color = null;
@@ -183,7 +180,7 @@ export function createCommands(
 
   // LAUNCH SIGN UP FLOW
   cmds.push(
-    commands.registerCommand("codetime.signUpAccount", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.signUpAccount', (item: KpmItem, switching_account: boolean) => {
       // launch the auth selection flow
       showSignUpAccountMenu();
     })
@@ -191,47 +188,47 @@ export function createCommands(
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
-    commands.registerCommand("codetime.googleLogin", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.googleLogin', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = getSignUpButton("Google", null);
-        item.location = "ct_command_palette";
+        item = getSignUpButton('Google', null);
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
         item.color = null;
       }
-      item.interactionIcon = "google";
+      item.interactionIcon = 'google';
       tracker.trackUIInteraction(item);
-      launchLogin("google", switching_account);
+      launchLogin('google', switching_account);
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
-    commands.registerCommand("codetime.githubLogin", (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.githubLogin', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
-        item = getSignUpButton("GitHub", "white");
-        item.location = "ct_command_palette";
+        item = getSignUpButton('GitHub', 'white');
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
         item.interactionIcon = null;
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      launchLogin("github", switching_account);
+      launchLogin('github', switching_account);
     })
   );
 
   // SUBMIT AN ISSUE
   cmds.push(
-    commands.registerCommand("codetime.submitAnIssue", (item: KpmItem) => {
+    commands.registerCommand('codetime.submitAnIssue', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getFeedbackButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
       }
       tracker.trackUIInteraction(item);
@@ -241,14 +238,14 @@ export function createCommands(
 
   // DISPLAY README MD
   cmds.push(
-    commands.registerCommand("codetime.displayReadme", (item: KpmItem) => {
+    commands.registerCommand('codetime.displayReadme', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getLearnMoreButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_learn_more_cmd";
+        item.name = 'ct_learn_more_cmd';
         item.interactionIcon = null;
         item.color = null;
       }
@@ -259,14 +256,15 @@ export function createCommands(
 
   // DISPLAY PROJECT METRICS REPORT
   cmds.push(
-    commands.registerCommand("codetime.generateProjectSummary", (item: KpmItem) => {
+    commands.registerCommand('codetime.generateProjectSummary', (item: KpmItem) => {
+      console.log('generating project summary');
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getViewProjectSummaryButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_project_summary_cmd";
+        item.name = 'ct_project_summary_cmd';
         item.interactionIcon = null;
         item.color = null;
       }
@@ -277,14 +275,14 @@ export function createCommands(
 
   // DISPLAY CODETIME DASHBOARD WEBVIEW
   cmds.push(
-    commands.registerCommand("codetime.viewDashboard", (item: KpmItem) => {
+    commands.registerCommand('codetime.viewDashboard', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getCodeTimeDashboardButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
-        item.name = "ct_dashboard_cmd";
+        item.name = 'ct_dashboard_cmd';
         item.interactionIcon = null;
         item.color = null;
       }
@@ -294,27 +292,27 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand("codetime.sendFeedback", (item: KpmItem) => {
+    commands.registerCommand('codetime.sendFeedback', (item: KpmItem) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
         item = getFeedbackButton();
-        item.location = "ct_command_palette";
+        item.location = 'ct_command_palette';
         item.interactionType = UIInteractionType.Keyboard;
       }
       tracker.trackUIInteraction(item);
-      launchWebUrl("mailto:cody@software.com");
+      launchWebUrl('mailto:cody@software.com');
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.connectSlackWorkspace", () => {
+    commands.registerCommand('codetime.connectSlack', () => {
       connectSlackWorkspace();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.disconnectSlackWorkspace", (authId: any) => {
+    commands.registerCommand('codetime.disconnectSlackWorkspace', (authId: any) => {
       if (authId) {
         disconnectSlackAuth(authId);
       } else {
@@ -323,88 +321,105 @@ export function createCommands(
     })
   );
 
+  // INTEGRATION DISCONECT
   cmds.push(
-    commands.registerCommand("codetime.showZenMode", () => {
+    commands.registerCommand('codetime.disconnectIntegration', (payload) => {
+      appDelete(`/data_sources/integration_connections/${payload.id}`).then((resp: any) => {
+        progressIt('Disconnecting integration...', diconnectIntegration, [payload.id]);
+      });
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand('codetime.showZenMode', () => {
       showZenMode();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.showFullScreen", () => {
+    commands.registerCommand('codetime.showFullScreen', () => {
       showFullScreenMode();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.exitFullScreen", () => {
+    commands.registerCommand('codetime.exitFullScreen', () => {
       showNormalScreenMode();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleDarkMode", () => {
+    commands.registerCommand('codetime.toggleDarkMode', () => {
       toggleDarkMode();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.toggleDocPosition", () => {
+    commands.registerCommand('codetime.toggleDocPosition', () => {
       toggleDock();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.switchAverageComparison", () => {
+    commands.registerCommand('codetime.switchAverageComparison', () => {
       // launch the options command palette
       switchAverageComparison();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.enableFlow", (options: any) => {
+    commands.registerCommand('codetime.enableFlowMode', (options: any) => {
       const skipSlackCheck: boolean = !!(options?.skipSlackCheck === true);
-      enableFlow({ automated: false, skipSlackCheck });
+      enableFlow({automated: false, skipSlackCheck});
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.exitFlowMode", () => {
+    commands.registerCommand('codetime.exitFlowMode', () => {
       pauseFlow();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.configureSettings", () => {
+    commands.registerCommand('codetime.configureSettings', () => {
       configureSettings();
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.showOrgDashboard", (org_name) => {
+    commands.registerCommand('codetime.showOrgDashboard', (org_name) => {
+      console.log('showing org: ', org_name);
       // i.e. https://app.software.com/dashboard?org_name=swdotcom
-      launchWebUrl(`${launch_url}/dashboard?org_name=${org_name}`);
+      launchWebUrl(`${app_url}/dashboard?org_name=${org_name}`);
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.skipSlackConnect", () => {
-      setItem("vscode_CtskipSlackConnect", true);
+    commands.registerCommand('codetime.skipSlackConnect', () => {
+      setItem('vscode_CtskipSlackConnect', true);
       // refresh the view
-      commands.executeCommand("codetime.refreshCodeTimeView");
+      commands.executeCommand('codetime.refreshCodeTimeView');
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.reloadTeams", async () => {
+    commands.registerCommand('codetime.reloadOrgs', async () => {
       await getCachedOrgs();
-      commands.executeCommand("codetime.refreshCodeTimeView");
+      commands.executeCommand('codetime.refreshCodeTimeView');
     })
   );
 
   cmds.push(
-    commands.registerCommand("codetime.updateViewMetrics", async () => {
+    commands.registerCommand('codetime.updateViewMetrics', async () => {
       updateFlowModeStatus();
       updateStatusBarWithSummaryData();
+    })
+  );
+
+  // MANAGE SLACK CONNECTION
+  cmds.push(
+    commands.registerCommand('codetime.manageSlackConnection', () => {
+      showSlackManageOptions();
     })
   );
 

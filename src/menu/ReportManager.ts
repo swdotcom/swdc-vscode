@@ -1,13 +1,13 @@
-import { writeProjectCommitDashboardByRangeType, writeProjectCommitDashboardByStartEnd } from "../DataController";
-import { getProjectCodeSummaryFile } from "../Util";
-import { workspace, window, ViewColumn, ProgressLocation } from "vscode";
-import { ProgressManager } from "../managers/ProgressManager";
+import {writeProjectCommitDashboardByRangeType, writeProjectCommitDashboardByStartEnd} from '../DataController';
+import {getProjectCodeSummaryFile} from '../Util';
+import {workspace, window, ViewColumn, ProgressLocation} from 'vscode';
+import {ProgressManager} from '../managers/ProgressManager';
 
-export async function displayProjectCommitsDashboardByStartEnd(start, end, projectIds = []) {
+export async function displayProjectCommitsDashboardByStartEnd(start: any, end: any, projectIds: any[] = []) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading project summary...",
+      title: 'Loading project summary...',
       cancellable: false,
     },
     async (progress, token) => {
@@ -18,16 +18,16 @@ export async function displayProjectCommitsDashboardByStartEnd(start, end, proje
       await writeProjectCommitDashboardByStartEnd(start, end, projectIds);
       progressMgr.doneWriting = true;
       openProjectCommitDocument();
-      progress.report({ increment: 100 });
+      progress.report({increment: 100});
     }
   );
 }
 
-export async function displayProjectCommitsDashboardByRangeType(type = "lastWeek", projectIds = []) {
+export async function displayProjectCommitsDashboardByRangeType(type: string = 'lastWeek', projectIds: any[] = []) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading project summary...",
+      title: 'Loading project summary...',
       cancellable: false,
     },
     async (progress, token) => {
@@ -38,7 +38,7 @@ export async function displayProjectCommitsDashboardByRangeType(type = "lastWeek
       await writeProjectCommitDashboardByRangeType(type, projectIds);
       progressMgr.doneWriting = true;
       openProjectCommitDocument();
-      progress.report({ increment: 100 });
+      progress.report({increment: 100});
     }
   );
 }

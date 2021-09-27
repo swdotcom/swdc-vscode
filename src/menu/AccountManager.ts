@@ -1,13 +1,21 @@
-import { getItem, getOsUsername, getHostname, setItem, getPluginUuid, getAuthCallbackState, setAuthCallbackState, getNowTimes } from "../Util";
-import { softwarePost, isResponseOk } from "../http/HttpClient";
-import { showQuickPick } from "./MenuManager";
-import { LOGIN_LABEL, SIGN_UP_LABEL } from "../Constants";
+import {
+  getItem,
+  getOsUsername,
+  getHostname,
+  setItem,
+  getPluginUuid,
+  getAuthCallbackState,
+  setAuthCallbackState,
+} from '../Util';
+import {softwarePost, isResponseOk} from '../http/HttpClient';
+import {showQuickPick} from './MenuManager';
+import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
 
 let switching_account = false;
 
 const switchAccountItem = {
-  label: "Switch to a different account?",
-  detail: "Click to link to a different account.",
+  label: 'Switch to a different account?',
+  detail: 'Click to link to a different account.',
 };
 
 export async function showSwitchAccountsMenu() {
@@ -28,19 +36,19 @@ export async function showSignUpAccountMenu() {
 async function accountMenuSelection(placeholderItem: any) {
   const items = [];
 
-  let placeholder = "";
-  const name = getItem("name");
+  let placeholder = '';
+  const name = getItem('name');
   if (name) {
-    const authType = getItem("authType");
-    let type = "email";
-    if (authType === "google") {
-      type = "Google";
-    } else if (authType === "github") {
-      type = "GitHub";
+    const authType = getItem('authType');
+    let type = 'email';
+    if (authType === 'google') {
+      type = 'Google';
+    } else if (authType === 'github') {
+      type = 'GitHub';
     }
     placeholder = `Connected using ${type} (${name})`;
   } else {
-    placeholder = "Connect using one of the following";
+    placeholder = 'Connect using one of the following';
   }
 
   if (placeholderItem) {
@@ -70,24 +78,24 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
   const placeholder = `${authText} using...`;
   items.push({
     label: `${authText} with Google`,
-    command: "codetime.googleLogin",
+    command: 'codetime.googleLogin',
     commandArgs: [null /*KpmItem*/, switching_account],
   });
   items.push({
     label: `${authText} with GitHub`,
-    command: "codetime.githubLogin",
+    command: 'codetime.githubLogin',
     commandArgs: [null /*KpmItem*/, switching_account],
   });
   if (isSignup) {
     items.push({
       label: `${authText} with Email`,
-      command: "codetime.codeTimeSignup",
+      command: 'codetime.codeTimeSignup',
       commandArgs: [null /*KpmItem*/, false /*switching_account*/],
     });
   } else {
     items.push({
       label: `${authText} with Email`,
-      command: "codetime.codeTimeLogin",
+      command: 'codetime.codeTimeLogin',
       commandArgs: [null /*KpmItem*/, switching_account],
     });
   }
@@ -101,8 +109,8 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<string> {
-  const jwt = getItem("jwt");
+export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<string | null> {
+  const jwt = getItem('jwt');
   // check one more time before creating the anon user
   if (!jwt || ignoreJwt) {
     // this should not be undefined if its an account reset
@@ -112,7 +120,7 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const hostname = await getHostname();
 
-    const resp = await softwarePost("/plugins/onboard", {
+    const resp = await softwarePost('/plugins/onboard', {
       timezone,
       username,
       plugin_uuid,
@@ -120,11 +128,11 @@ export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<s
       auth_callback_state,
     });
     if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-      setItem("jwt", resp.data.jwt);
+      setItem('jwt', resp.data.jwt);
       if (!resp.data.user.registered) {
-        setItem("name", null);
+        setItem('name', null);
       }
-      setItem("switching_account", false);
+      setItem('switching_account', false);
       setAuthCallbackState(null);
       return resp.data.jwt;
     }

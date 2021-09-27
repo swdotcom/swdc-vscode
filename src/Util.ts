@@ -1,20 +1,28 @@
-import { workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument } from "vscode";
-import { CODE_TIME_EXT_ID, launch_url, CODE_TIME_PLUGIN_ID, CODE_TIME_TYPE, SOFTWARE_DIRECTORY, LOG_FILE_EVENTS, SIGN_UP_LABEL } from "./Constants";
-import { v4 as uuidv4 } from "uuid";
+import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument} from 'vscode';
+import {
+  CODE_TIME_EXT_ID,
+  app_url,
+  CODE_TIME_PLUGIN_ID,
+  CODE_TIME_TYPE,
+  SOFTWARE_DIRECTORY,
+  LOG_FILE_EVENTS,
+  SIGN_UP_LABEL,
+} from './Constants';
+import {v4 as uuidv4} from 'uuid';
 
-import { showModalSignupPrompt } from "./managers/SlackManager";
-import { execCmd } from "./managers/ExecManager";
-import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./managers/FileManager";
+import {showModalSignupPrompt} from './managers/SlackManager';
+import {execCmd} from './managers/ExecManager';
+import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 
-const moment = require("moment-timezone");
-const open = require("open");
+const moment = require('moment-timezone');
+const open = require('open');
 
-const fs = require("fs");
-const os = require("os");
-const crypto = require("crypto");
-const path = require("path");
+const fs = require('fs');
+const os = require('os');
+const crypto = require('crypto');
+const path = require('path');
 
-export const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const DASHBOARD_LABEL_WIDTH = 28;
 export const DASHBOARD_VALUE_WIDTH = 36;
 export const DASHBOARD_COL_WIDTH = 21;
@@ -22,13 +30,13 @@ export const DASHBOARD_LRG_COL_WIDTH = 38;
 export const TABLE_WIDTH = 80;
 export const MARKER_WIDTH = 4;
 
-const NUMBER_IN_EMAIL_REGEX = new RegExp("^\\d+\\+");
-const dayFormat = "YYYY-MM-DD";
-const dayTimeFormat = "LLLL";
+const NUMBER_IN_EMAIL_REGEX = new RegExp('^\\d+\\+');
+const dayFormat = 'YYYY-MM-DD';
+const dayTimeFormat = 'LLLL';
 
-let workspace_name = null;
-let hostname = null;
-let osUsername = null;
+let workspace_name: string | null = null;
+let hostname: string | null = null;
+let osUsername: string | null = null;
 
 export function getWorkspaceName() {
   if (!workspace_name) {
@@ -51,15 +59,15 @@ export function getPluginType() {
 
 export function getVersion() {
   const extension = extensions.getExtension(CODE_TIME_EXT_ID);
-  return extension.packageJSON.version;
+  return extension ? extension.packageJSON.version : '2.5.27';
 }
 
-export function isGitProject(projectDir) {
+export function isGitProject(projectDir: string) {
   if (!projectDir) {
     return false;
   }
 
-  const gitRemotesDir = path.join(projectDir, ".git", "refs", "remotes");
+  const gitRemotesDir = path.join(projectDir, '.git', 'refs', 'remotes');
   if (!fs.existsSync(gitRemotesDir)) {
     return false;
   }
@@ -70,7 +78,7 @@ export function isGitProject(projectDir) {
  * This method is sync, no need to await on it.
  * @param file
  */
-export function getFileAgeInDays(file) {
+export function getFileAgeInDays(file: string) {
   if (!fs.existsSync(file)) {
     return 0;
   }
@@ -85,7 +93,7 @@ export function getFileAgeInDays(file) {
   return daysDiff > 1 ? parseInt(daysDiff, 10) : 1;
 }
 
-export function getActiveProjectWorkspace(): WorkspaceFolder {
+export function getActiveProjectWorkspace(): WorkspaceFolder | null {
   const activeDocPath = findFirstActiveDirectoryOrWorkspaceDirectory();
   if (activeDocPath) {
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
@@ -128,11 +136,11 @@ export function findFirstActiveDirectoryOrWorkspaceDirectory(): string {
       }
     }
   }
-  const folder: WorkspaceFolder = getFirstWorkspaceFolder();
+  const folder: WorkspaceFolder | null = getFirstWorkspaceFolder();
   if (folder) {
     return folder.uri.fsPath;
   }
-  return "";
+  return '';
 }
 
 /**
@@ -154,7 +162,7 @@ export function getWorkspaceFolders(): WorkspaceFolder[] {
   return folders;
 }
 
-export function getFirstWorkspaceFolder(): WorkspaceFolder {
+export function getFirstWorkspaceFolder(): WorkspaceFolder | null {
   const workspaceFolders: WorkspaceFolder[] = getWorkspaceFolders();
   if (workspaceFolders && workspaceFolders.length) {
     return workspaceFolders[0];
@@ -166,7 +174,7 @@ export function getNumberOfTextDocumentsOpen() {
   return workspace.textDocuments ? workspace.textDocuments.length : 0;
 }
 
-export function isFileOpen(fileName) {
+export function isFileOpen(fileName: string) {
   if (getNumberOfTextDocumentsOpen() > 0) {
     // check if the .software/CodeTime has already been opened
     for (let i = 0; i < workspace.textDocuments.length; i++) {
@@ -179,7 +187,7 @@ export function isFileOpen(fileName) {
   return false;
 }
 
-export function getRootPathForFile(fileName) {
+export function getRootPathForFile(fileName: string) {
   let folder = getProjectFolder(fileName);
   if (folder) {
     return folder.uri.fsPath;
@@ -187,7 +195,7 @@ export function getRootPathForFile(fileName) {
   return null;
 }
 
-export function getWorkspaceFolderByPath(path): WorkspaceFolder {
+export function getWorkspaceFolderByPath(path: string): WorkspaceFolder | null {
   if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
     for (let i = 0; i < workspace.workspaceFolders.length; i++) {
       let workspaceFolder: WorkspaceFolder = workspace.workspaceFolders[i];
@@ -199,13 +207,13 @@ export function getWorkspaceFolderByPath(path): WorkspaceFolder {
   return null;
 }
 
-export function getProjectFolder(fileName): WorkspaceFolder {
+export function getProjectFolder(fileName: string): WorkspaceFolder | null {
   let liveshareFolder = null;
   if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
     for (let i = 0; i < workspace.workspaceFolders.length; i++) {
       let workspaceFolder = workspace.workspaceFolders[i];
       if (workspaceFolder.uri) {
-        let isVslsScheme = workspaceFolder.uri.scheme === "vsls" ? true : false;
+        let isVslsScheme = workspaceFolder.uri.scheme === 'vsls' ? true : false;
         if (isVslsScheme) {
           liveshareFolder = workspaceFolder;
         }
@@ -223,11 +231,11 @@ export function getProjectFolder(fileName): WorkspaceFolder {
   return null;
 }
 
-export function setItem(key, value) {
+export function setItem(key: string, value: any) {
   setJsonItem(getSoftwareSessionFile(), key, value);
 }
 
-export function getItem(key) {
+export function getItem(key: string) {
   return getJsonItem(getSoftwareSessionFile(), key);
 }
 
@@ -239,7 +247,7 @@ export function getIntegrations() {
   }
   const integrationsLen = integrations.length;
   // check to see if there are any [] values and remove them
-  integrations = integrations.filter((n) => n && n.authId);
+  integrations = integrations.filter((n: any) => n && n.authId);
   if (integrations.length !== integrationsLen) {
     // update the file with the latest
     storeJsonData(getIntegrationsFile(), integrations);
@@ -247,24 +255,26 @@ export function getIntegrations() {
   return integrations;
 }
 
-export function syncSlackIntegrations(integrations) {
-  const nonSlackIntegrations = getIntegrations().filter((integration) => integration.name.toLowerCase() != "slack");
+export function syncSlackIntegrations(integrations: any[]) {
+  const nonSlackIntegrations = getIntegrations().filter(
+    (integration: any) => integration.name.toLowerCase() != 'slack'
+  );
   integrations = integrations?.length ? [...integrations, ...nonSlackIntegrations] : nonSlackIntegrations;
   storeJsonData(getIntegrationsFile(), integrations);
 }
 
 export function getPluginUuid() {
-  let plugin_uuid = getJsonItem(getDeviceFile(), "plugin_uuid");
+  let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
   if (!plugin_uuid) {
     // set it for the 1st and only time
     plugin_uuid = uuidv4();
-    setJsonItem(getDeviceFile(), "plugin_uuid", plugin_uuid);
+    setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
 }
 
 export function getAuthCallbackState(autoCreate = true) {
-  let auth_callback_state = getJsonItem(getDeviceFile(), "auth_callback_state");
+  let auth_callback_state = getJsonItem(getDeviceFile(), 'auth_callback_state');
   if (!auth_callback_state && autoCreate) {
     auth_callback_state = uuidv4();
     setAuthCallbackState(auth_callback_state);
@@ -272,8 +282,8 @@ export function getAuthCallbackState(autoCreate = true) {
   return auth_callback_state;
 }
 
-export function setAuthCallbackState(value: string) {
-  setJsonItem(getDeviceFile(), "auth_callback_state", value);
+export function setAuthCallbackState(value: string | null) {
+  setJsonItem(getDeviceFile(), 'auth_callback_state', value);
 }
 
 export function isLinux() {
@@ -283,16 +293,16 @@ export function isLinux() {
 // process.platform return the following...
 //   -> 'darwin', 'freebsd', 'linux', 'sunos' or 'win32'
 export function isWindows() {
-  return process.platform.indexOf("win32") !== -1;
+  return process.platform.indexOf('win32') !== -1;
 }
 
 export function isMac() {
-  return process.platform.indexOf("darwin") !== -1;
+  return process.platform.indexOf('darwin') !== -1;
 }
 
 export function getHostname(): any {
   if (!hostname) {
-    hostname = execCmd("hostname");
+    hostname = execCmd('hostname');
   }
   return hostname;
 }
@@ -312,9 +322,9 @@ export function getOs() {
     parts.push(platform);
   }
   if (parts.length > 0) {
-    return parts.join("_");
+    return parts.join('_');
   }
-  return "";
+  return '';
 }
 
 export async function getOsUsername() {
@@ -322,18 +332,18 @@ export async function getOsUsername() {
     try {
       // Throws a SystemError if a user has no username or homedir
       osUsername = os.userInfo().username;
-    } catch (e) {
-      console.error('Username not available.', e.message)
+    } catch (e: any) {
+      console.error('Username not available.', e.message);
     }
 
     if (!osUsername) {
-      osUsername = execCmd("whoami");
+      osUsername = execCmd('whoami');
     }
   }
   return osUsername;
 }
 
-function getFile(name) {
+function getFile(name: string) {
   let file_path = getSoftwareDir();
   if (isWindows()) {
     return `${file_path}\\${name}`;
@@ -342,59 +352,59 @@ function getFile(name) {
 }
 
 export function getDeviceFile() {
-  return getFile("device.json");
+  return getFile('device.json');
 }
 
 export function getSoftwareSessionFile() {
-  return getFile("session.json");
+  return getFile('session.json');
 }
 
 export function getSoftwareDataStoreFile() {
-  return getFile("data.json");
+  return getFile('data.json');
 }
 
 export function getPluginEventsFile() {
-  return getFile("events.json");
+  return getFile('events.json');
 }
 
 export function getTimeCounterFile() {
-  return getFile("timeCounter.json");
+  return getFile('timeCounter.json');
 }
 
 export function getDashboardFile() {
-  return getFile("CodeTime.txt");
+  return getFile('CodeTime.txt');
 }
 
 export function getCommitSummaryFile() {
-  return getFile("CommitSummary.txt");
+  return getFile('CommitSummary.txt');
 }
 
 export function getGitEventFile() {
-  return getFile("gitEvents.json");
+  return getFile('gitEvents.json');
 }
 
 export function getSummaryInfoFile() {
-  return getFile("SummaryInfo.txt");
+  return getFile('SummaryInfo.txt');
 }
 
 export function getProjectCodeSummaryFile() {
-  return getFile("ProjectCodeSummary.txt");
+  return getFile('ProjectCodeSummary.txt');
 }
 
 export function getProjectContributorCodeSummaryFile() {
-  return getFile("ProjectContributorCodeSummary.txt");
+  return getFile('ProjectContributorCodeSummary.txt');
 }
 
 export function getDailyReportSummaryFile() {
-  return getFile("DailyReportSummary.txt");
+  return getFile('DailyReportSummary.txt');
 }
 
 export function getIntegrationsFile() {
-  return getFile("integrations.json");
+  return getFile('integrations.json');
 }
 
 export function getSessionSummaryFile() {
-  return getFile("sessionSummary.json");
+  return getFile('sessionSummary.json');
 }
 
 export function getSoftwareDir(autoCreate = true) {
@@ -414,23 +424,23 @@ export function getSoftwareDir(autoCreate = true) {
 }
 
 export function getLocalREADMEFile() {
-  const resourcePath: string = path.join(__dirname, "resources");
-  const file = path.join(resourcePath, "README.md");
+  const resourcePath: string = path.join(__dirname, 'resources');
+  const file = path.join(resourcePath, 'README.md');
   return file;
 }
 
 export function displayReadmeIfNotExists(override = false) {
-  const initialized_readme = getItem("vscode_CtReadme");
+  const initialized_readme = getItem('vscode_CtReadme');
 
   if (!initialized_readme || override) {
     const readmeUri = Uri.file(getLocalREADMEFile());
 
-    commands.executeCommand("markdown.showPreview", readmeUri, ViewColumn.One);
-    setItem("vscode_CtReadme", true);
+    commands.executeCommand('markdown.showPreview', readmeUri, ViewColumn.One);
+    setItem('vscode_CtReadme', true);
   }
 }
 
-export function openFileInEditor(file) {
+export function openFileInEditor(file: string) {
   workspace.openTextDocument(file).then(
     (doc) => {
       // Show open document and set focus
@@ -443,7 +453,7 @@ export function openFileInEditor(file) {
       });
     },
     (error: any) => {
-      if (error.message && error.message.toLowerCase().includes("file not found")) {
+      if (error.message && error.message.toLowerCase().includes('file not found')) {
         window.showErrorMessage(`Cannot open ${file}.  File not found.`);
       } else {
         logIt(error);
@@ -453,29 +463,29 @@ export function openFileInEditor(file) {
 }
 
 export function getExtensionName() {
-  return "swdc-vscode";
+  return 'swdc-vscode';
 }
 
-export function logEvent(message) {
+export function logEvent(message: string) {
   if (LOG_FILE_EVENTS) {
     console.log(`${getExtensionName()}: ${message}`);
   }
 }
 
-export function logIt(message) {
+export function logIt(message: string) {
   console.log(`${getExtensionName()}: ${message}`);
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {
   // shows a prompt that we're not able to communicate with the app server
-  let infoMsg = "Our service is temporarily unavailable. ";
+  let infoMsg = 'Our service is temporarily unavailable. ';
   if (addReconnectMsg) {
-    infoMsg += "We will try to reconnect again in a minute. Your status bar will not update at this time.";
+    infoMsg += 'We will try to reconnect again in a minute. Your status bar will not update at this time.';
   } else {
-    infoMsg += "Please try again later.";
+    infoMsg += 'Please try again later.';
   }
   // set the last update time so we don't try to ask too frequently
-  window.showInformationMessage(infoMsg, ...["OK"]);
+  window.showInformationMessage(infoMsg, ...['OK']);
 }
 
 export function getOffsetSeconds() {
@@ -483,17 +493,17 @@ export function getOffsetSeconds() {
   return d.getTimezoneOffset() * 60;
 }
 
-export function getFormattedDay(unixSeconds) {
+export function getFormattedDay(unixSeconds: number) {
   return moment.unix(unixSeconds).format(dayFormat);
 }
 
 export function isNewDay() {
-  const { day } = getNowTimes();
-  const currentDay = getItem("currentDay");
+  const {day} = getNowTimes();
+  const currentDay = getItem('currentDay');
   return currentDay !== day ? true : false;
 }
 
-export function coalesceNumber(val, defaultVal = 0) {
+export function coalesceNumber(val: any, defaultVal = 0) {
   if (val === null || val === undefined || isNaN(val)) {
     return defaultVal;
   }
@@ -537,17 +547,17 @@ export function getNowTimes() {
 export function randomCode() {
   return crypto
     .randomBytes(16)
-    .map((value) => alpha.charCodeAt(Math.floor((value * alpha.length) / 256)))
+    .map((value: any) => alpha.charCodeAt(Math.floor((value * alpha.length) / 256)))
     .toString();
 }
 
 export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
   if (email) {
-    if (filterOutNonEmails && (email.endsWith("github.com") || email.includes("users.noreply"))) {
+    if (filterOutNonEmails && (email.endsWith('github.com') || email.includes('users.noreply'))) {
       return null;
     } else {
       const found = email.match(NUMBER_IN_EMAIL_REGEX);
-      if (found && email.includes("users.noreply")) {
+      if (found && email.includes('users.noreply')) {
         // filter out the ones that look like
         // 2342353345+username@users.noreply.github.com"
         return null;
@@ -564,22 +574,22 @@ export async function launchWebDashboard() {
   }
 
   // add the token=jwt
-  const jwt = getItem("jwt");
+  const jwt = getItem('jwt');
   const encodedJwt = encodeURIComponent(jwt);
-  const webUrl = `${launch_url}?token=${encodedJwt}`;
+  const webUrl = `${app_url}?token=${encodedJwt}`;
 
   launchWebUrl(webUrl);
 }
 
-export function launchWebUrl(url) {
+export function launchWebUrl(url: string) {
   open(url);
 }
 
 function checkRegistration() {
-  if (!getItem("name")) {
+  if (!getItem('name')) {
     window
       .showInformationMessage(
-        "Sign up or log in to see more data visualizations.",
+        'Sign up or log in to see more data visualizations.',
         {
           modal: true,
         },
@@ -587,7 +597,7 @@ function checkRegistration() {
       )
       .then(async (selection) => {
         if (selection === SIGN_UP_LABEL) {
-          commands.executeCommand("codetime.signUpAccount");
+          commands.executeCommand('codetime.signUpAccount');
         }
       });
     return false;
@@ -595,42 +605,29 @@ function checkRegistration() {
   return true;
 }
 
-export function formatNumber(num) {
-  let str = "";
-  num = num ? parseFloat(num) : 0;
-  if (num >= 1000) {
-    str = num.toLocaleString();
-  } else if (num % 1 === 0) {
-    str = num.toFixed(0);
-  } else {
-    str = num.toFixed(2);
-  }
-  return str;
-}
-
 /**
  * humanize the minutes
  */
-export function humanizeMinutes(min) {
+export function humanizeMinutes(min: any) {
   min = parseInt(min, 0) || 0;
-  let str = "";
+  let str = '';
   if (min === 60) {
-    str = "1h";
+    str = '1h';
   } else if (min > 60) {
     const hours = Math.floor(min / 60);
     const minutes = min % 60;
 
-    const hoursStr = Math.floor(hours).toFixed(0) + "h";
+    const hoursStr = Math.floor(hours).toFixed(0) + 'h';
     if ((parseFloat(min) / 60) % 1 === 0) {
       str = hoursStr;
     } else {
       str = `${hoursStr} ${minutes}m`;
     }
   } else if (min === 1) {
-    str = "1m";
+    str = '1m';
   } else {
     // less than 60 seconds
-    str = min.toFixed(0) + "m";
+    str = min.toFixed(0) + 'm';
   }
   return str;
 }
@@ -644,8 +641,8 @@ export function showWarningMessage(message: string) {
 }
 
 export function getFileType(fileName: string) {
-  let fileType = "";
-  const lastDotIdx = fileName.lastIndexOf(".");
+  let fileType = '';
+  const lastDotIdx = fileName.lastIndexOf('.');
   const len = fileName.length;
   if (lastDotIdx !== -1 && lastDotIdx < len - 1) {
     fileType = fileName.substring(lastDotIdx + 1);
@@ -654,15 +651,23 @@ export function getFileType(fileName: string) {
 }
 
 export function noSpacesProjectDir(projectDir: string): string {
-  return projectDir.replace(/^\s+/g, "");
+  return projectDir.replace(/^\s+/g, '');
 }
 
 export function checkRegistrationForReport(showSignup = true) {
-  if (!getItem("name")) {
+  if (!getItem('name')) {
     if (showSignup) {
-      showModalSignupPrompt("Unlock your personalized dashboard and visualize your coding activity. Create an account to get started.");
+      showModalSignupPrompt(
+        'Unlock your personalized dashboard and visualize your coding activity. Create an account to get started.'
+      );
     }
     return false;
   }
   return true;
+}
+
+export function getImage(name: string) {
+  const resourcePath: string = path.join(__dirname, 'images');
+  const file = path.join(resourcePath, name);
+  return file;
 }

@@ -1,12 +1,12 @@
-import { isResponseOk, softwareGet } from "../http/HttpClient";
-import { getItem } from "../Util";
+import {isResponseOk, softwareGet} from '../http/HttpClient';
+import {getItem} from '../Util';
 
 let initializedCache = false;
-let orgs = [];
+let orgs: any[] = [];
 
 async function buildOrgs() {
   initializedCache = true;
-  const resp = await softwareGet("/v1/organizations", getItem("jwt"));
+  const resp = await softwareGet('/v1/organizations', getItem('jwt'));
   orgs = isResponseOk(resp) ? await resp.data : [];
 }
 
