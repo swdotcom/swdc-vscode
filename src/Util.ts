@@ -21,6 +21,7 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const path = require('path');
+const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const DASHBOARD_LABEL_WIDTH = 28;
@@ -466,14 +467,12 @@ export function getExtensionName() {
   return 'swdc-vscode';
 }
 
-export function logEvent(message: string) {
-  if (LOG_FILE_EVENTS) {
-    console.log(`${getExtensionName()}: ${message}`);
-  }
+export function getLogId() {
+  return 'CodeTime';
 }
 
 export function logIt(message: string) {
-  console.log(`${getExtensionName()}: ${message}`);
+  outputChannel.appendLine(`${getLogId()}: ${message}`);
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {

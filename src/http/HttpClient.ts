@@ -7,12 +7,12 @@ import {logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, 
 // build the axios api base url
 const beApi = axios.create({
   baseURL: `${api_endpoint}`,
-  timeout: 30000,
+  timeout: 15000,
 });
 
 const appApi = axios.create({
   baseURL: `${app_url}`,
-  timeout: 30000,
+  timeout: 15000,
 });
 
 const headers = {

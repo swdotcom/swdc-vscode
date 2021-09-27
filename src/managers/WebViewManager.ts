@@ -1,5 +1,6 @@
 import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {getConnectionErrorHtml} from '../local/404';
 import {checkRegistrationForReport, getItem} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
@@ -67,5 +68,6 @@ async function getDashboardHtml() {
     return resp.data.html;
   } else {
     window.showErrorMessage('Unable to generate dashboard. Please try again later.');
+    return await getConnectionErrorHtml();
   }
 }

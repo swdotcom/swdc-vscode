@@ -270,7 +270,11 @@ export function createCommands(
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
+      const projInstance: ProjectCommitManager = ProjectCommitManager.getInstance();
+
+      progressIt('Loading project information...', async () => {
+        await projInstance.launchViewProjectSummaryMenuFlow();
+      });
     })
   );
 
@@ -389,7 +393,6 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.showOrgDashboard', (org_name) => {
-      console.log('showing org: ', org_name);
       // i.e. https://app.software.com/dashboard?org_name=swdotcom
       launchWebUrl(`${app_url}/dashboard?org_name=${org_name}`);
     })

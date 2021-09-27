@@ -221,7 +221,6 @@ export class ProjectCommitManager {
     let checkboxes: Checkbox[] = [];
     if (isResponseOk(resp)) {
       const projects = resp.data;
-      let total_records = 0;
       if (projects && projects.length) {
         let lineNumber = 0;
         for (let i = 0; i < projects.length; i++) {

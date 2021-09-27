@@ -49,6 +49,8 @@ export async function getConnectionErrorHtml() {
               flex-direction: column;
               justify-content: center;
               align-items: center;
+              padding-top: 8px;
+              padding-bottom: 8px;
             }
 
             .header {
@@ -85,12 +87,12 @@ export async function getConnectionErrorHtml() {
           <h4 class="header">Oops! Something went wrong.</h4>
           <div class="dialog">
             <img src="${dancePartyImg}" alt="DJ-Cody">
-            <p class="body-text" style="padding-top: 20px">
+            <p class="body-text" style="margin-top: 10px">
               Please check your connection and try again later.
             </p>
           </div>
-          <div>
-          <a href="#" class="link" onclick="onCmdClick('refreshCodeTimeView')">Refresh</a>
+          <div style="margin-bottom: 10px">
+            <a href="#" class="link" onclick="onCmdClick('refreshCodeTimeView')">Refresh</a>
           </div>
         </div>
       </body>
