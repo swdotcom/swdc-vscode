@@ -3,6 +3,7 @@ import {softwareGet, isResponseOk} from '../http/HttpClient';
 import {checkRegistrationForReport, getItem} from '../Util';
 import Checkbox from '../model/checkbox';
 import {displayProjectCommitsDashboardByRangeType, displayProjectCommitsDashboardByStartEnd} from './ReportManager';
+import { progressIt } from '../managers/ProgressManager';
 
 const moment = require('moment-timezone');
 
@@ -98,8 +99,11 @@ export class ProjectCommitManager {
     }
     this.resetDateRange();
 
-    const projectCheckboxes: Checkbox[] = await this.getAllProjects();
-    return this.launchProjectSelectionMenu(projectCheckboxes);
+    let projectCheckboxes: Checkbox[] = [];
+    progressIt('Loading project information...', async () => {
+      projectCheckboxes = await this.getAllProjects();
+    });
+    this.launchProjectSelectionMenu(projectCheckboxes);
   }
 
   // old date to project menu selection flow

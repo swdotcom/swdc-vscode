@@ -189,7 +189,7 @@ export function showModalSignupPrompt(msg: string) {
     )
     .then(async (selection) => {
       if (selection === SIGN_UP_LABEL) {
-        commands.executeCommand('codetime.signUpAccount');
+        commands.executeCommand('codetime.registerAccount');
       }
     });
 }

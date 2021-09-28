@@ -3,7 +3,7 @@ import {launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashb
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem, UIInteractionType} from './model/models';
 import {ProjectCommitManager} from './menu/ProjectCommitManager';
-import {showExistingAccountMenu, showSwitchAccountsMenu, showSignUpAccountMenu} from './menu/AccountManager';
+import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} from './managers/SlackManager';
 import {app_url, create_org_url, vscode_issues_url} from './Constants';
@@ -163,7 +163,7 @@ export function createCommands(
 
   // LAUNCH EXISTING ACCOUNT LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeExisting', (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.login', (item: KpmItem, switching_account: boolean) => {
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
@@ -181,7 +181,7 @@ export function createCommands(
 
   // LAUNCH SIGN UP FLOW
   cmds.push(
-    commands.registerCommand('codetime.signUpAccount', (item: KpmItem, switching_account: boolean) => {
+    commands.registerCommand('codetime.registerAccount', (item: KpmItem, switching_account: boolean) => {
       // launch the auth selection flow
       showSignUpAccountMenu();
     })
@@ -270,11 +270,7 @@ export function createCommands(
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      const projInstance: ProjectCommitManager = ProjectCommitManager.getInstance();
-
-      progressIt('Loading project information...', async () => {
-        await projInstance.launchViewProjectSummaryMenuFlow();
-      });
+      ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
     })
   );
 

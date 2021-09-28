@@ -117,7 +117,7 @@ export function getSignUpButton(signUpAuthName: string, iconColor?: string | nul
   } else if (lcType === 'existing') {
     label = `${LOGIN_LABEL} with existing account`;
     icon = 'paw.svg';
-    command = 'codetime.codeTimeExisting';
+    command = 'codetime.login';
     iconName = 'paw';
   }
   const item: KpmItem = getActionButton(label, '', command, icon, '', iconColor);
