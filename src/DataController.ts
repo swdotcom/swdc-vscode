@@ -156,8 +156,6 @@ export async function authenticationCompleteHandler(user: any) {
     SummaryManager.getInstance().updateSessionSummaryFromServer();
 
     initializePreferences();
-
-    setItem('vscode_CtskipSlackConnect', false);
   }
 
   // update this users integrations
