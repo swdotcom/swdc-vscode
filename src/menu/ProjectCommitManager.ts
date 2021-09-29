@@ -1,9 +1,8 @@
-import {window, QuickPickItem} from 'vscode';
+import {window, QuickPickItem, ProgressLocation} from 'vscode';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
 import {checkRegistrationForReport, getItem} from '../Util';
 import Checkbox from '../model/checkbox';
 import {displayProjectCommitsDashboardByRangeType, displayProjectCommitsDashboardByStartEnd} from './ReportManager';
-import { progressIt } from '../managers/ProgressManager';
 
 const moment = require('moment-timezone');
 
@@ -99,11 +98,21 @@ export class ProjectCommitManager {
     }
     this.resetDateRange();
 
-    let projectCheckboxes: Checkbox[] = [];
-    progressIt('Loading project information...', async () => {
-      projectCheckboxes = await this.getAllProjects();
-    });
-    this.launchProjectSelectionMenu(projectCheckboxes);
+    window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: 'Loading project information...',
+        cancellable: false,
+      },
+      (progress) => {
+        return new Promise(async (resolve, reject) => {
+          const projectCheckboxes: Checkbox[] = await this.getAllProjects();
+          this.launchProjectSelectionMenu(projectCheckboxes);
+          resolve(true);
+        });
+      }
+    );
+
   }
 
   // old date to project menu selection flow
