@@ -1,22 +1,7 @@
 import axios from "axios";
 
-import { api_endpoint } from "../Constants";
-
-import { logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid } from "../Util";
-
-// build the axios api base url
-const beApi = axios.create({
-  baseURL: `${api_endpoint}`,
-  timeout: 30000,
-});
-
-beApi.defaults.headers.common["X-SWDC-Plugin-Id"] = getPluginId();
-beApi.defaults.headers.common["X-SWDC-Plugin-Name"] = getPluginName();
-beApi.defaults.headers.common["X-SWDC-Plugin-Version"] = getVersion();
-beApi.defaults.headers.common["X-SWDC-Plugin-OS"] = getOs();
-beApi.defaults.headers.common["X-SWDC-Plugin-TZ"] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-beApi.defaults.headers.common["X-SWDC-Plugin-Offset"] = getOffsetSeconds() / 60;
-beApi.defaults.headers.common["X-SWDC-Plugin-UUID"] = getPluginUuid();
+import { logIt } from "../Util";
+import { metricsDelete, metricsGet, metricsPost, metricsPut } from './HttpGotClient';
 
 const spotifyApi = axios.create({});
 
@@ -50,67 +35,28 @@ export async function spotifyApiPut(api, payload, accessToken) {
  */
 
 export async function softwareGet(api, jwt, queryParams = {}) {
-  if (jwt) {
-    beApi.defaults.headers.common["Authorization"] = jwt;
-  }
-
-  return await beApi.get(api, { params: queryParams }).catch((err) => {
-    logIt(`error fetching data for ${api}, message: ${err.message}`);
-    return err;
-  });
+  return await metricsGet(api, queryParams);
 }
 
 /**
  * perform a put request
  */
 export async function softwarePut(api, payload, jwt) {
-  // PUT the kpm to the PluginManager
-  beApi.defaults.headers.common["Authorization"] = jwt;
-
-  return await beApi
-    .put(api, payload)
-    .then((resp) => {
-      return resp;
-    })
-    .catch((err) => {
-      logIt(`error posting data for ${api}, message: ${err.message}`);
-      return err;
-    });
+  return await metricsPut(api, payload);
 }
 
 /**
  * perform a post request
  */
 export async function softwarePost(api, payload, jwt = null) {
-  // POST the kpm to the PluginManager
-  if (jwt) {
-    beApi.defaults.headers.common["Authorization"] = jwt;
-  }
-  return beApi
-    .post(api, payload)
-    .then((resp) => {
-      return resp;
-    })
-    .catch((err) => {
-      logIt(`error posting data for ${api}, message: ${err.message}`);
-      return err;
-    });
+  return await metricsPost(api, payload);
 }
 
 /**
  * perform a delete request
  */
 export async function softwareDelete(api, jwt) {
-  beApi.defaults.headers.common["Authorization"] = jwt;
-  return beApi
-    .delete(api)
-    .then((resp) => {
-      return resp;
-    })
-    .catch((err) => {
-      logIt(`error with delete request for ${api}, message: ${err.message}`);
-      return err;
-    });
+  return await metricsDelete(api);
 }
 
 /**

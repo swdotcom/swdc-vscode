@@ -29,6 +29,7 @@ export function initializeWebsockets() {
       "X-SWDC-Plugin-Offset": getOffsetSeconds() / 60,
       "X-SWDC-Plugin-UUID": getPluginUuid(),
     },
+    rejectUnauthorized: false
   };
 
   const ws = new WebSocket(websockets_url, options);

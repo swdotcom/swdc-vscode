@@ -154,6 +154,7 @@
     "axios": "^0.21.1",
     "date-fns": "^2.21.3",
     "file-it": "^1.1.2",
+    "got": "^11.8.2",
     "moment-timezone": "^0.5.33",
     "node-cache": "^5.1.0",
     "open": "^8.2.0",
