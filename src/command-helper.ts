@@ -389,8 +389,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.showOrgDashboard', (org_name) => {
-      // i.e. https://app.software.com/dashboard?org_name=swdotcom
-      launchWebUrl(`${app_url}/dashboard?org_name=${org_name}`);
+      launchWebUrl(`${app_url}/dashboard/code_time?organization_slug=${org_name}`);
     })
   );
 
