@@ -232,7 +232,7 @@ export async function checkSlackConnectionForFlowMode() {
       return {continue: true, useSlackSettings: false};
     } else {
       // connect was selected
-      commands.executeCommand('codetime.connectSlackWorkspace');
+      commands.executeCommand('codetime.manageSlackConnection');
       return {continue: false, useSlackSettings: true};
     }
   }

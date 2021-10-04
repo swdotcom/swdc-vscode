@@ -4,7 +4,7 @@ import {getItem} from '../Util';
 let initializedCache = false;
 let orgs: any[] = [];
 
-async function buildOrgs() {
+export async function rebuildOrgs() {
   initializedCache = true;
   const resp = await softwareGet('/v1/organizations', getItem('jwt'));
   orgs = isResponseOk(resp) ? await resp.data : [];
@@ -12,7 +12,7 @@ async function buildOrgs() {
 
 export async function getCachedOrgs() {
   if (!initializedCache) {
-    await buildOrgs();
+    await rebuildOrgs();
   }
   return orgs;
 }

@@ -14,7 +14,7 @@ import {clearSessionSummaryData} from './storage/SessionSummaryData';
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import {userEventEmitter} from './events/userEventEmitter';
-import {getCachedOrgs} from './managers/TeamManager';
+import {getCachedOrgs} from './managers/OrgManager';
 import {updateFlowModeStatusBar} from './managers/StatusBarManager';
 import {storeContentData} from './managers/FileManager';
 const {WebClient} = require('@slack/web-api');

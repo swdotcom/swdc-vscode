@@ -23,7 +23,7 @@ import {
   getViewProjectSummaryButton,
   getWebViewDashboardButton,
 } from './tree/TreeButtonProvider';
-import {getCachedOrgs} from './managers/TeamManager';
+import {rebuildOrgs} from './managers/OrgManager';
 import {toggleStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
@@ -403,7 +403,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.reloadOrgs', async () => {
-      await getCachedOrgs();
+      await rebuildOrgs();
       commands.executeCommand('codetime.refreshCodeTimeView');
     })
   );

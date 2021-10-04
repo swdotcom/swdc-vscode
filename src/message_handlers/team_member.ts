@@ -5,6 +5,6 @@ export async function handleTeamMemberSocketEvent(body: any) {
   // action = add, update, remove
   const { status, action } = body;
   if (status === "active" || status === "inactive") {
-    commands.executeCommand("codetime.reloadTeams");
+    commands.executeCommand("codetime.reloadOrgs");
   }
 }
