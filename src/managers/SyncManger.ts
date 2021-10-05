@@ -1,5 +1,5 @@
 import {getSessionSummaryFile} from '../Util';
-import {updateStatusBarWithSummaryData} from './StatusBarManager';
+import {updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './StatusBarManager';
 import {getSessionSummaryFileAsJson} from '../storage/SessionSummaryData';
 const fs = require('fs');
 
@@ -22,6 +22,7 @@ export class SyncManager {
     fs.watch(getSessionSummaryFile(), (curr: any, prev: any) => {
       if (curr === 'change') {
         updateStatusBarWithSummaryData();
+        updateFlowModeStatusBar();
       }
     });
   }

@@ -9,7 +9,7 @@ import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} fr
 import {app_url, create_org_url, vscode_issues_url} from './Constants';
 import {toggleDarkMode, toggleDock} from './managers/OsaScriptManager';
 import {switchAverageComparison} from './menu/ContextMenuManager';
-import {enableFlow, pauseFlow, updateFlowModeStatus} from './managers/FlowManager';
+import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
 import {showDashboard} from './managers/WebViewManager';
 import {configureSettings} from './managers/ConfigManager';
@@ -24,7 +24,7 @@ import {
   getWebViewDashboardButton,
 } from './tree/TreeButtonProvider';
 import {rebuildOrgs} from './managers/OrgManager';
-import {toggleStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
+import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import {showSlackManageOptions} from './managers/PromptManager';
@@ -410,7 +410,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.updateViewMetrics', async () => {
-      updateFlowModeStatus();
+      updateFlowModeStatusBar();
       updateStatusBarWithSummaryData();
     })
   );

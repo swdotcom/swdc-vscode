@@ -13,15 +13,21 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
+import { getLocalStorageValue, setLocalStorageValue } from '../extension';
 
 let enabledFlow = false;
 
 export async function initializeFlowModeState() {
-  enabledFlow = await determineFlowModeFromApi();
+  await determineFlowModeFromApi();
+  setLocalStorageValue('enabledFlow', enabledFlow);
 }
 
 export async function isFlowModeEnabled() {
-  return enabledFlow;
+  const enabledFlowFlag = getLocalStorageValue('enabledFlow');
+  if (enabledFlowFlag === undefined || enabledFlowFlag === null) {
+    return await determineFlowModeFromApi();
+  }
+  return enabledFlowFlag;
 }
 
 export async function updateFlowModeStatus() {
@@ -31,7 +37,7 @@ export async function updateFlowModeStatus() {
 
 export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
   if (enabledFlow) {
-    // but update the status bar just in case
+    // already enabled locally, but update the status bar just in case
     updateFlowStatus();
     return;
   }
@@ -87,6 +93,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
   }
 
   enabledFlow = true;
+  setLocalStorageValue('enabledFlow', enabledFlow);
   updateFlowStatus();
 }
 
@@ -113,6 +120,7 @@ async function pauseFlowInitiate() {
   showNormalScreenMode();
 
   enabledFlow = false;
+  setLocalStorageValue('enabledFlow', enabledFlow);
 
   updateFlowStatus();
 }
@@ -130,6 +138,8 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
+
+  setLocalStorageValue('enabledFlow', enabledFlow);
 
   return enabledFlow;
 }
