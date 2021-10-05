@@ -6,7 +6,9 @@ import { triggerChangeEvent } from '../storage/SessionSummaryData';
 export async function handleFlowScoreMessage(message: any) {
   const flowModeSettings = getPreference("flowMode");
 
-  if (flowModeSettings.editor.autoEnterFlowMode && !await isFlowModeEnabled()) {
+  const alreadyEnabled = await isFlowModeEnabled();
+
+  if (flowModeSettings.editor.autoEnterFlowMode && !alreadyEnabled) {
     try {
       enableFlow({ automated: true });
     } catch (e) {

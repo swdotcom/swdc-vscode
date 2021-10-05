@@ -48,13 +48,9 @@ export async function enableFlow({automated = false, skipSlackCheck = false, pro
       title: 'Enabling flow...',
       cancellable: false,
     },
-
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
-          console.error('[CodeTime] Unable to initiate flow. ', e.message);
-        });
-        resolve(true);
+    async (progress) => {
+      initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
+        console.error('[CodeTime] Unable to initiate flow. ', e.message);
       });
     }
   );
@@ -105,11 +101,8 @@ export async function pauseFlow() {
         title: 'Turning off flow...',
         cancellable: false,
       },
-      (progress) => {
-        return new Promise((resolve, reject) => {
-          pauseFlowInitiate().catch((e) => {});
-          resolve(true);
-        });
+      async (progress) => {
+        pauseFlowInitiate().catch((e) => {});
       }
     );
   }

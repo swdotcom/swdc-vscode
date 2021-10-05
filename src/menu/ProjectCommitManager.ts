@@ -104,12 +104,9 @@ export class ProjectCommitManager {
         title: 'Loading project information...',
         cancellable: false,
       },
-      (progress) => {
-        return new Promise(async (resolve, reject) => {
-          const projectCheckboxes: Checkbox[] = await this.getAllProjects();
-          this.launchProjectSelectionMenu(projectCheckboxes);
-          resolve(true);
-        });
+      async (progress) => {
+        const projectCheckboxes: Checkbox[] = await this.getAllProjects();
+        this.launchProjectSelectionMenu(projectCheckboxes);
       }
     );
 

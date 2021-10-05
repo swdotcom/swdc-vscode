@@ -44,15 +44,12 @@ export function progressIt(msg: string, asyncFunc: any, args: any[] = []) {
       title: msg,
       cancellable: false,
     },
-    (progress) => {
-      return new Promise(async (resolve, reject) => {
-        if (args?.length) {
-          await asyncFunc(...args).catch((e: any) => {});
-        } else {
-          await asyncFunc().catch((e: any) => {});
-        }
-        resolve(true);
-      });
+    async (progress) => {
+      if (args?.length) {
+        await asyncFunc(...args).catch((e: any) => {});
+      } else {
+        await asyncFunc().catch((e: any) => {});
+      }
     }
   );
 }

@@ -2,7 +2,6 @@ import {api_endpoint} from './Constants';
 import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid} from './Util';
 import {handleFlowScoreMessage} from './message_handlers/flow_score';
 import {handleAuthenticatedPluginUser} from './message_handlers/authenticated_plugin_user';
-import {handleTeamMemberSocketEvent} from './message_handlers/team_member';
 import {handleIntegrationConnectionSocketEvent} from './message_handlers/integration_connection';
 import {handleCurrentDayStatsUpdate} from './message_handlers/current_day_stats_update';
 import {handleFlowStateMessage} from './message_handlers/flow_state';
@@ -140,9 +139,6 @@ const handleIncomingMessage = (data: any) => {
         break;
       case 'authenticated_plugin_user':
         handleAuthenticatedPluginUser(message.body);
-        break;
-      case 'team_member':
-        handleTeamMemberSocketEvent(message.body);
         break;
       case 'user_integration_connection':
         handleIntegrationConnectionSocketEvent(message.body);
