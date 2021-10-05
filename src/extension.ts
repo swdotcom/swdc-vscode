@@ -17,6 +17,7 @@ import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {LocalStorageManager} from './managers/LocalStorageManager';
 import {ChangeStateManager} from './managers/ChangeStateManager';
+import { initializeFlowModeState } from './managers/FlowManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -92,6 +93,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // initialize the sync manager
   SyncManager.getInstance();
+
+  initializeFlowModeState();
 
   // store the activate event
   tracker.trackEditorAction('editor', 'activate');

@@ -16,17 +16,26 @@ import {updateFlowModeStatusBar} from './StatusBarManager';
 
 let enabledFlow = false;
 
-export async function isFlowModeEnabled() {
+export async function initializeFlowModeState() {
   enabledFlow = await determineFlowModeFromApi();
+}
+
+export async function isFlowModeEnabled() {
   return enabledFlow;
 }
 
 export async function updateFlowModeStatus() {
-  await isFlowModeEnabled();
-  updateFlowModeStatusBar();
+  await initializeFlowModeState();
+  updateFlowStatus();
 }
 
 export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
+  if (enabledFlow) {
+    // but update the status bar just in case
+    updateFlowStatus();
+    return;
+  }
+
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -78,9 +87,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
   }
 
   enabledFlow = true;
-  commands.executeCommand('codetime.refreshCodeTimeView');
-
-  updateFlowModeStatusBar();
+  updateFlowStatus();
 }
 
 export async function pauseFlow() {
@@ -106,6 +113,11 @@ async function pauseFlowInitiate() {
   showNormalScreenMode();
 
   enabledFlow = false;
+
+  updateFlowStatus();
+}
+
+function updateFlowStatus() {
   commands.executeCommand('codetime.refreshCodeTimeView');
 
   updateFlowModeStatusBar();

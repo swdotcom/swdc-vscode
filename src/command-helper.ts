@@ -65,7 +65,7 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.displaySidebar', () => {
       // opens the sidebar manually from a the above command
-      commands.executeCommand('workbench.view.extension.extension.code-time-sidebar');
+      commands.executeCommand('workbench.view.extension.code-time-sidebar');
     })
   );
 

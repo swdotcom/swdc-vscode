@@ -15,8 +15,8 @@ import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import {userEventEmitter} from './events/userEventEmitter';
 import {getCachedOrgs} from './managers/OrgManager';
-import {updateFlowModeStatusBar} from './managers/StatusBarManager';
 import {storeContentData} from './managers/FileManager';
+import { updateFlowModeStatus } from './managers/FlowManager';
 const {WebClient} = require('@slack/web-api');
 
 export async function reconcileSlackIntegrations(user: any) {
@@ -139,7 +139,7 @@ export async function authenticationCompleteHandler(user: any) {
     // update the login status
     window.showInformationMessage(`Successfully logged on to Code Time`);
 
-    updateFlowModeStatusBar();
+    updateFlowModeStatus();
 
     try {
       initializeWebsockets();
