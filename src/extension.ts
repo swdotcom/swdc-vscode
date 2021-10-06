@@ -83,29 +83,26 @@ function getRandomArbitrary(min: any, max: any) {
 export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: boolean) {
   logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
+  // INIT websockets
   try {
     initializeWebsockets();
   } catch (e) {
     console.error('Failed to initialize websockets', e);
   }
 
+  // INIT keystroke analysis tracker
   await tracker.init();
 
-  // initialize the sync manager
+  // INIT session summary sync manager
   SyncManager.getInstance();
 
-  initializeFlowModeState();
-
-  // store the activate event
-  tracker.trackEditorAction('editor', 'activate');
-
-  activateColorKindChangeListener();
-
+  // INIT doc change events
   ChangeStateManager.getInstance();
 
-  // initialize preferences
+  // INIT preferences
   await initializePreferences();
 
+  // show the sidebar if this is the 1st
   const initializedVscodePlugin = getItem('vscode_CtInit');
   if (!initializedVscodePlugin) {
     setItem('vscode_CtInit', true);
@@ -122,11 +119,18 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   displayReadmeIfNotExists();
 
   // show the status bar text info
-  setTimeout(() => {
-    initializeStatusBar();
+  setTimeout(async () => {
+    // INIT the status bar
+    await initializeStatusBar();
+
+    // INIT flow mode state
+    initializeFlowModeState();
 
     SummaryManager.getInstance().updateSessionSummaryFromServer();
   }, 0);
+
+  // store the activate event
+  tracker.trackEditorAction('editor', 'activate');
 }
 
 export function getCurrentColorKind() {
@@ -134,33 +138,4 @@ export function getCurrentColorKind() {
     currentColorKind = window.activeColorTheme.kind;
   }
   return currentColorKind;
-}
-
-/**
- * Active color theme listener
- */
-function activateColorKindChangeListener() {
-  currentColorKind = window.activeColorTheme.kind;
-
-  window.onDidChangeActiveColorTheme((event) => {
-    let kindChanged = false;
-    if (event.kind !== currentColorKind) {
-      kindChanged = true;
-    }
-
-    currentColorKind = event.kind;
-    if (kindChanged) {
-      // check if the config panel is showing, update it if so
-      if (showingConfigureSettingsPanel()) {
-        setTimeout(() => {
-          configureSettings();
-        }, 500);
-      }
-    }
-
-    // let the sidebar know the new current color kind
-    setTimeout(() => {
-      commands.executeCommand('codetime.refreshCodeTimeView');
-    }, 250);
-  });
 }

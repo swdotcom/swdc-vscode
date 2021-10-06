@@ -1,6 +1,8 @@
 import { commands, Disposable, window, workspace } from "vscode";
 import { TrackerManager } from "./TrackerManager";
 import { EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface } from "@swdotcom/editor-flow";
+import { configureSettings, showingConfigureSettingsPanel } from './ConfigManager';
+import { logIt } from '../Util';
 
 export class ChangeStateManager {
   private static instance: ChangeStateManager;
@@ -61,30 +63,27 @@ export class ChangeStateManager {
   }
 
   private kpmHandler(projectChangeInfo: ProjectChangeInfo) {
-    if (!this.codetimeInstalled) {
-      this.tracker.trackCodeTimeEvent(projectChangeInfo);
-    }
+    logIt(`kpm-change: ${JSON.stringify(projectChangeInfo)}`);
+    this.tracker.trackCodeTimeEvent(projectChangeInfo);
   }
 
   private fileCloseHandler(event: any) {
-    if (!this.codetimeInstalled) {
-      this.tracker.trackEditorAction("file", "close", event);
-    }
+    logIt(`file-close: ${JSON.stringify(event)}`);
+    this.tracker.trackEditorAction("file", "close", event);
   }
 
   private fileOpenHandler(event: any) {
-    if (!this.codetimeInstalled) {
-      this.tracker.trackEditorAction("file", "open", event);
-    }
+    logIt(`file-open: ${JSON.stringify(event)}`);
+    this.tracker.trackEditorAction("file", "open", event);
   }
 
   private fileSaveHandler(event: any) {
-    if (!this.codetimeInstalled) {
-      this.tracker.trackEditorAction("file", "save", event);
-    }
+    logIt(`file-save: ${JSON.stringify(event)}`);
+    this.tracker.trackEditorAction("file", "save", event);
   }
 
   private windowStateChangeHandler(event: any) {
+    logIt(`window-change: ${JSON.stringify(event)}`);
     if (event.focused) {
       this.tracker.trackEditorAction("editor", "focus");
     } else {
@@ -96,6 +95,11 @@ export class ChangeStateManager {
     // let the sidebar know the new current color kind
     setTimeout(() => {
       commands.executeCommand("codetime.refreshCodeTimeView");
+      if (showingConfigureSettingsPanel()) {
+        setTimeout(() => {
+          configureSettings();
+        }, 500);
+      }
     }, 150);
   }
 

@@ -123,6 +123,7 @@ export function clearWebsocketConnectionRetryTimeout() {
   }
 }
 
+//.
 const handleIncomingMessage = (data: any) => {
   try {
     const message = JSON.parse(data);
