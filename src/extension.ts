@@ -5,13 +5,12 @@
 import {window, ExtensionContext, commands} from 'vscode';
 import {initializePreferences} from './DataController';
 import {onboardInit} from './user/OnboardManager';
-import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem} from './Util';
+import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName} from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
 import {softwarePost} from './http/HttpClient';
-import {configureSettings, showingConfigureSettingsPanel} from './managers/ConfigManager';
 import {initializeStatusBar} from './managers/StatusBarManager';
 import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
@@ -57,6 +56,7 @@ export async function activate(ctx: ExtensionContext) {
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
+    setLocalStorageValue('primary_window', getWorkspaceName());
   } else {
     // 9 to 20 second delay
     const secondDelay = getRandomArbitrary(9, 20);

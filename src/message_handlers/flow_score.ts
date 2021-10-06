@@ -2,6 +2,7 @@ import { enableFlow, isFlowModeEnabled } from "../managers/FlowManager";
 import { getPreference } from "../DataController";
 import { commands } from 'vscode';
 import { triggerChangeEvent } from '../storage/SessionSummaryData';
+import { logIt } from '../Util';
 
 export async function handleFlowScoreMessage(message: any) {
   const flowModeSettings = getPreference("flowMode");
@@ -11,8 +12,8 @@ export async function handleFlowScoreMessage(message: any) {
   if (flowModeSettings.editor.autoEnterFlowMode && !alreadyEnabled) {
     try {
       enableFlow({ automated: true });
-    } catch (e) {
-      console.error("[CodeTime] handling flow score message", e);
+    } catch (e: any) {
+      logIt("Error handling flow score message: " + e.message);
     }
   }
   setTimeout(() => {

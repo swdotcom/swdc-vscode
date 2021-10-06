@@ -5,7 +5,6 @@ import {
   CODE_TIME_PLUGIN_ID,
   CODE_TIME_TYPE,
   SOFTWARE_DIRECTORY,
-  LOG_FILE_EVENTS,
   SIGN_UP_LABEL,
 } from './Constants';
 import {v4 as uuidv4} from 'uuid';
@@ -13,6 +12,7 @@ import {v4 as uuidv4} from 'uuid';
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
+import { getLocalStorageValue, setLocalStorageValue } from './extension';
 
 const moment = require('moment-timezone');
 const open = require('open');
@@ -41,7 +41,7 @@ let osUsername: string | null = null;
 
 export function getWorkspaceName() {
   if (!workspace_name) {
-    workspace_name = randomCode();
+    workspace_name = uuidv4();
   }
   return workspace_name;
 }
@@ -669,4 +669,14 @@ export function getImage(name: string) {
   const resourcePath: string = path.join(__dirname, 'images');
   const file = path.join(resourcePath, name);
   return file;
+}
+
+export function isPrimaryWindow() {
+  let workspaceWindow = getLocalStorageValue('primary_window');
+  if (!workspaceWindow) {
+    // its not set yet, update it to this window
+    workspaceWindow = getWorkspaceName();
+    setLocalStorageValue('primary_window', workspaceWindow);
+  }
+  return !!(workspaceWindow === getWorkspaceName())
 }

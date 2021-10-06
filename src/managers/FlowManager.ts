@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getItem} from '../Util';
+import {getItem, isPrimaryWindow} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -13,21 +13,19 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
-import { getLocalStorageValue, setLocalStorageValue } from '../extension';
 
 let enabledFlow = false;
 
 export async function initializeFlowModeState() {
+  const initialFlag = enabledFlow;
   await determineFlowModeFromApi();
-  setLocalStorageValue('enabledFlow', enabledFlow);
+  if (initialFlag !== enabledFlow) {
+    updateFlowStatus();
+  }
 }
 
 export async function isFlowModeEnabled() {
-  const enabledFlowFlag = getLocalStorageValue('enabledFlow');
-  if (enabledFlowFlag === undefined || enabledFlowFlag === null) {
-    return await determineFlowModeFromApi();
-  }
-  return enabledFlowFlag;
+  return enabledFlow;
 }
 
 export async function updateFlowModeStatus() {
@@ -75,7 +73,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
   const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  if (process_flow_session) {
+  if (process_flow_session && isPrimaryWindow()) {
     softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
   }
 
@@ -89,7 +87,6 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
   }
 
   enabledFlow = true;
-  setLocalStorageValue('enabledFlow', enabledFlow);
   updateFlowStatus();
 }
 
@@ -113,13 +110,14 @@ async function pauseFlowInitiate() {
   showNormalScreenMode();
 
   enabledFlow = false;
-  setLocalStorageValue('enabledFlow', enabledFlow);
 
   updateFlowStatus();
 }
 
 function updateFlowStatus() {
-  commands.executeCommand('codetime.refreshCodeTimeView');
+  setTimeout(() => {
+    commands.executeCommand('codetime.refreshCodeTimeView');
+  }, 2000)
 
   updateFlowModeStatusBar();
 }
@@ -131,8 +129,4 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
-
-  setLocalStorageValue('enabledFlow', enabledFlow);
-
-  return enabledFlow;
 }
