@@ -13,6 +13,8 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
+import { triggerChangeEvent } from '../storage/SessionSummaryData';
+import { getPreference } from '../DataController';
 
 let enabledFlow = false;
 
@@ -92,6 +94,8 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
 export async function pauseFlow() {
   if (enabledFlow) {
+    // set it to false to ensure it doesn't try to update continually based on any other websocket event
+    enabledFlow = false;
     window.withProgress(
       {
         location: ProgressLocation.Notification,
@@ -117,6 +121,7 @@ async function pauseFlowInitiate() {
 function updateFlowStatus() {
   setTimeout(() => {
     commands.executeCommand('codetime.refreshCodeTimeView');
+    triggerChangeEvent();
   }, 2000)
 
   updateFlowModeStatusBar();
@@ -129,4 +134,12 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
+}
+
+export function isAutoFlowModeEnabled() {
+  const flowModeSettings: any = getPreference("flowMode");
+  if (flowModeSettings?.editor.autoEnterFlowMode !== undefined) {
+    return flowModeSettings.editor.autoEnterFlowMode;
+  }
+  return false;
 }
