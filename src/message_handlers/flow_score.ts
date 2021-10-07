@@ -7,9 +7,7 @@ import { logIt } from '../Util';
 export async function handleFlowScoreMessage(message: any) {
   const flowModeSettings = getPreference("flowMode");
 
-  const alreadyEnabled = await isFlowModeEnabled();
-
-  if (flowModeSettings.editor.autoEnterFlowMode && !alreadyEnabled) {
+  if (flowModeSettings.editor.autoEnterFlowMode && !isFlowModeEnabled()) {
     try {
       enableFlow({ automated: true });
     } catch (e: any) {

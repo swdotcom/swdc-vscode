@@ -42,7 +42,7 @@ async function getFlowModeStatusBarInfo() {
   let flowModeCommand = 'codetime.enableFlowMode';
   let flowModeText = '$(circle-large-outline) Flow';
   let flowModeTooltip = 'Enter Flow Mode';
-  if (await isFlowModeEnabled()) {
+  if (isFlowModeEnabled()) {
     flowModeCommand = 'codetime.exitFlowMode';
     flowModeText = '$(circle-large-filled) Flow';
     flowModeTooltip = 'Exit Flow Mode';

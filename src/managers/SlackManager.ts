@@ -13,8 +13,7 @@ import {
 } from '../Util';
 import {showQuickPick} from '../menu/MenuManager';
 import {softwareDelete} from '../http/HttpClient';
-
-const queryString = require('query-string');
+import { URLSearchParams } from 'url';
 
 // -------------------------------------------
 // - public methods
@@ -46,18 +45,17 @@ export async function connectSlackWorkspace() {
     return;
   }
 
-  const qryStr = queryString.stringify({
-    plugin: getPluginType(),
-    plugin_uuid: getPluginUuid(),
-    pluginVersion: getVersion(),
-    plugin_id: getPluginId(),
-    auth_callback_state: getAuthCallbackState(),
-    integrate: 'slack',
-    upgrade_features: 'flow',
-    plugin_token: getItem('jwt'),
-  });
+  const params = new URLSearchParams();
+  params.append('plugin', getPluginType());
+  params.append('plugin_uuid', getPluginUuid());
+  params.append('pluginVersion', getVersion());
+  params.append('plugin_id', `${getPluginId()}`);
+  params.append('auth_callback_state', getAuthCallbackState());
+  params.append('integrate', 'slack');
+  params.append('upgrade_features', 'flow');
+  params.append('plugin_token', getItem('jwt'))
 
-  const url = `${api_endpoint}/auth/slack?${qryStr}`;
+  const url = `${api_endpoint}/auth/slack?${params.toString()}`;
 
   // authorize the user for slack
   launchWebUrl(url);

@@ -449,7 +449,7 @@ export function openFileInEditor(file: string) {
         if (error.message) {
           window.showErrorMessage(error.message);
         } else {
-          logIt(error);
+          logIt(`Error opening document: ${error}`);
         }
       });
     },
@@ -457,7 +457,7 @@ export function openFileInEditor(file: string) {
       if (error.message && error.message.toLowerCase().includes('file not found')) {
         window.showErrorMessage(`Cannot open ${file}.  File not found.`);
       } else {
-        logIt(error);
+        logIt(`Cannot open ${file}: ${error}`);
       }
     }
   );

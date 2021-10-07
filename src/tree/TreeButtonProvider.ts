@@ -34,30 +34,6 @@ export function getCodeTimeDashboardButton(): KpmItem {
   return item;
 }
 
-export function getAuthTypeIconAndLabel() {
-  const authType = getItem('authType');
-  const name = getItem('name');
-  let tooltip = name ? `Connected as ${name}` : '';
-  if (authType === 'google') {
-    return {
-      icon: 'google.svg',
-      label: name,
-      tooltip,
-    };
-  } else if (authType === 'github') {
-    return {
-      icon: 'github.svg',
-      label: name,
-      tooltip,
-    };
-  }
-  return {
-    icon: 'email.svg',
-    label: name,
-    tooltip,
-  };
-}
-
 export function getActionButton(
   label: string,
   tooltip: string,

@@ -9,7 +9,6 @@ export class ChangeStateManager {
   private static instance: ChangeStateManager;
   private disposable: Disposable;
   private tracker: TrackerManager;
-  private codetimeInstalled: boolean = false;
 
   constructor() {
     let subscriptions: Disposable[] = [];
@@ -64,27 +63,23 @@ export class ChangeStateManager {
   }
 
   private kpmHandler(projectChangeInfo: ProjectChangeInfo) {
-    logIt(`kpm-change: ${JSON.stringify(projectChangeInfo)}`);
+    logIt(`CodeTimeEvent: ${JSON.stringify(projectChangeInfo)}`);
     this.tracker.trackCodeTimeEvent(projectChangeInfo);
   }
 
   private fileCloseHandler(event: any) {
-    logIt(`file-close: ${JSON.stringify(event)}`);
     this.tracker.trackEditorAction("file", "close", event);
   }
 
   private fileOpenHandler(event: any) {
-    logIt(`file-open: ${JSON.stringify(event)}`);
     this.tracker.trackEditorAction("file", "open", event);
   }
 
   private fileSaveHandler(event: any) {
-    logIt(`file-save: ${JSON.stringify(event)}`);
     this.tracker.trackEditorAction("file", "save", event);
   }
 
   private windowStateChangeHandler(event: any) {
-    logIt(`window-change: ${JSON.stringify(event)}`);
     if (event.focused) {
       this.tracker.trackEditorAction("editor", "focus");
       setLocalStorageValue('primary_window', getWorkspaceName());

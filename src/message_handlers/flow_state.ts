@@ -6,10 +6,10 @@ export async function handleFlowStateMessage(body: any) {
   // body contains {enable_flow: true | false}
   const { enable_flow } = body;
 
-  if (enable_flow && !await isFlowModeEnabled()) {
+  if (enable_flow && !isFlowModeEnabled()) {
 	  // enable flow (but don't resend the flow_session POST)
 	  enableFlow({ automated: true, skipSlackCheck: true, process_flow_session: false });
-  } else if (!enable_flow && await isFlowModeEnabled()) {
+  } else if (!enable_flow && isFlowModeEnabled()) {
 	  // disable it
 	  pauseFlow();
   }

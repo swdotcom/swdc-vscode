@@ -5,12 +5,12 @@ import {api_endpoint, app_url} from '../Constants';
 import {logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, getItem} from '../Util';
 
 // build the axios api base url
-const beApi = axios.create({
+const beApi: any = axios.create({
   baseURL: `${api_endpoint}`,
   timeout: 15000,
 });
 
-const appApi = axios.create({
+const appApi: any = axios.create({
   baseURL: `${app_url}`,
   timeout: 15000,
 });
@@ -29,8 +29,6 @@ const headers = {
 
 beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
 appApi.defaults.headers.common = {...appApi.defaults.headers.common, ...headers};
-
-const spotifyApi = axios.create({});
 
 export async function appGet(api: string, queryParams: any = {}) {
   updateAppAPIAuthorization();
@@ -61,17 +59,6 @@ export async function serverIsAvailable() {
   return isAvail;
 }
 
-export async function spotifyApiPut(api: string, payload: any, accessToken: string) {
-  if (api.indexOf('https://api.spotify.com') === -1) {
-    api = 'https://api.spotify.com' + api;
-  }
-  spotifyApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-  return await spotifyApi.put(api, payload).catch((err) => {
-    logIt(`error posting data for ${api}, message: ${err.message}`);
-    return err;
-  });
-}
-
 /**
  * Response returns a paylod with the following...
  * data: <payload>, status: 200, statusText: "OK", config: Object
@@ -84,7 +71,7 @@ export async function softwareGet(api: string, jwt: string | null, queryParams =
     beApi.defaults.headers.common['Authorization'] = jwt;
   }
 
-  return await beApi.get(api, {params: queryParams}).catch((err) => {
+  return await beApi.get(api, {params: queryParams}).catch((err: any) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
@@ -99,11 +86,11 @@ export async function softwarePut(api: string, payload: any, jwt: string) {
 
   return await beApi
     .put(api, payload)
-    .then((resp) => {
+    .then((resp: any) => {
       return resp;
     })
-    .catch((err) => {
-      logIt(`error posting data for ${api}, message: ${err.message}`);
+    .catch((err: any) => {
+      logIt(`error updating data for ${api}, message: ${err.message}`);
       return err;
     });
 }
@@ -118,10 +105,10 @@ export async function softwarePost(api: string, payload: any, jwt = null) {
   }
   return beApi
     .post(api, payload)
-    .then((resp) => {
+    .then((resp: any) => {
       return resp;
     })
-    .catch((err) => {
+    .catch((err: any) => {
       logIt(`error posting data for ${api}, message: ${err.message}`);
       return err;
     });
@@ -134,10 +121,10 @@ export async function softwareDelete(api: string, jwt: string) {
   beApi.defaults.headers.common['Authorization'] = jwt;
   return beApi
     .delete(api)
-    .then((resp) => {
+    .then((resp: any) => {
       return resp;
     })
-    .catch((err) => {
+    .catch((err: any) => {
       logIt(`error with delete request for ${api}, message: ${err.message}`);
       return err;
     });

@@ -14,7 +14,7 @@ import {isResponseOk, serverIsAvailable, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {authenticationCompleteHandler} from '../DataController';
 import {api_endpoint, app_url} from '../Constants';
-const queryString = require('query-string');
+import { URLSearchParams } from 'url';
 
 let retry_counter = 0;
 let authAdded = false;
@@ -163,35 +163,33 @@ export async function buildLoginUrl(loginType: string) {
   const name = getItem('name');
   let url = app_url;
 
-  let obj: any = getAuthQueryObject();
+  let params: any = getAuthQueryObject();
 
   // only send the plugin_token when registering for the 1st time
   if (!name) {
-    obj['plugin_token'] = getItem('jwt');
+    params.append('plugin_token', getItem('jwt'));
   }
 
   if (loginType === 'github') {
     // github signup/login flow
-    obj['redirect'] = app_url;
+    params.append('redirect', app_url);
     url = `${api_endpoint}/auth/github`;
   } else if (loginType === 'google') {
     // google signup/login flow
-    obj['redirect'] = app_url;
+    params.append('redirect', app_url);
     url = `${api_endpoint}/auth/google`;
   } else {
     // email login
-    obj['token'] = getItem('jwt');
-    obj['auth'] = 'software';
+    params.append('token', getItem('jwt'));
+    params.append('auth', 'software');
     url = `${app_url}/onboarding`;
   }
-
-  const qryStr = queryString.stringify(obj);
 
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
   }, 16000);
-  return `${url}?${qryStr}`;
+  return `${url}?${params.toString()}`;
 }
 
 /**
@@ -200,29 +198,26 @@ export async function buildLoginUrl(loginType: string) {
 export async function buildEmailSignup() {
   let loginUrl = app_url;
 
-  let obj: any = getAuthQueryObject();
-  obj['token'] = getItem('jwt');
-  obj['auth'] = 'software';
+  let params: any = getAuthQueryObject();
+  params.append('auth', 'software');
+  params.append('token', getItem('jwt'));
 
   loginUrl = `${app_url}/email-signup`;
-
-  const qryStr = queryString.stringify(obj);
 
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
   }, 16000);
-  return `${loginUrl}?${qryStr}`;
+  return `${loginUrl}?${params.toString()}`;
 }
 
 function getAuthQueryObject() {
-  let obj = {
-    plugin: getPluginType(),
-    pluginVersion: getVersion(),
-    plugin_id: getPluginId(),
-    auth_callback_state: getAuthCallbackState(true),
-    plugin_uuid: getPluginUuid(),
-    login: true,
-  };
-  return obj;
+  const params = new URLSearchParams();
+  params.append('plugin', getPluginType());
+  params.append('plugin_uuid', getPluginUuid());
+  params.append('pluginVersion', getVersion());
+  params.append('plugin_id', `${getPluginId()}`);
+  params.append('auth_callback_state', getAuthCallbackState());
+  params.append('login', 'true');
+  return params;
 }

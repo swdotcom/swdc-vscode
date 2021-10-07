@@ -24,7 +24,7 @@ export async function initializeFlowModeState() {
   }
 }
 
-export async function isFlowModeEnabled() {
+export function isFlowModeEnabled() {
   return enabledFlow;
 }
 
