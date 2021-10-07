@@ -35,7 +35,7 @@
     "workspace"
   ],
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.61.0"
   },
   "main": "./dist/extension",
   "scripts": {
@@ -124,7 +124,7 @@
     "@types/copy-webpack-plugin": "^8.0.1",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.3",
-    "@types/vscode": "^1.60.0",
+    "@types/vscode": "^1.61.0",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "copy-webpack-plugin": "^9.0.1",
@@ -138,7 +138,7 @@
   },
   "dependencies": {
     "@slack/web-api": "^6.4.0",
-    "@swdotcom/editor-flow": "^1.0.3",
+    "@swdotcom/editor-flow": "^1.0.4",
     "@types/uuid": "^8.3.1",
     "@types/ws": "^8.2.0",
     "axios": "^0.22.0",
