@@ -147,7 +147,7 @@
     "moment-timezone": "^0.5.33",
     "node-cache": "^5.1.2",
     "open": "^8.3.0",
-    "swdc-tracker": "^1.4.8",
+    "swdc-tracker": "^1.4.9",
     "uuid": "^8.3.2",
     "ws": "^8.2.3"
   }
