@@ -106,6 +106,9 @@ export async function pauseFlow() {
         pauseFlowInitiate().catch((e) => {});
       }
     );
+  } else {
+    // update flow status in case this is a secondary window
+    updateFlowStatus();
   }
 }
 

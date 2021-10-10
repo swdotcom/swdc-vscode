@@ -58,9 +58,8 @@ export async function activate(ctx: ExtensionContext) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
     setLocalStorageValue('primary_window', getWorkspaceName());
   } else {
-    // 9 to 20 second delay
-    const secondDelay = getRandomArbitrary(9, 20);
-    // initialize in 5 seconds if this is the secondary window
+    // secondary window 9 to 20 second delay
+    const secondDelay = getRandomArbitrary(8, 20);
     setTimeout(() => {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
@@ -93,14 +92,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // INIT keystroke analysis tracker
   await tracker.init();
 
-  // INIT session summary sync manager
-  SyncManager.getInstance();
-
-  // INIT doc change events
-  ChangeStateManager.getInstance();
-
   // INIT preferences
-  await initializePreferences();
+  initializePreferences();
 
   // show the sidebar if this is the 1st
   const initializedVscodePlugin = getItem('vscode_CtInit');
@@ -131,6 +124,14 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // store the activate event
   tracker.trackEditorAction('editor', 'activate');
+
+  setTimeout(() => {
+    // INIT doc change events
+    ChangeStateManager.getInstance();
+
+    // INIT session summary sync manager
+    SyncManager.getInstance();
+  }, 1000);
 }
 
 export function getCurrentColorKind() {
