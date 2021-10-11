@@ -147,8 +147,6 @@ const handleIncomingMessage = (data: any) => {
       case 'current_day_stats_update':
         handleCurrentDayStatsUpdate(message.body);
         break;
-      default:
-        console.warn('[CodeTime] received unhandled websocket message type', data);
     }
   } catch (e) {
     console.error('[CodeTime] Unable to handle incoming message', data);
