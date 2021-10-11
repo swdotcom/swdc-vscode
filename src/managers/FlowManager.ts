@@ -19,11 +19,8 @@ import { getPreference } from '../DataController';
 let enabledFlow = false;
 
 export async function initializeFlowModeState() {
-  const initialFlag = enabledFlow;
   await determineFlowModeFromApi();
-  if (initialFlag !== enabledFlow) {
-    updateFlowStatus();
-  }
+  updateFlowStatus();
 }
 
 export function isFlowModeEnabled() {
@@ -32,25 +29,24 @@ export function isFlowModeEnabled() {
 
 export async function updateFlowModeStatus() {
   await initializeFlowModeState();
-  updateFlowStatus();
 }
 
-export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
+export async function enableFlow({ automated = false, skipSlackCheck = false, process_flow_session = true }) {
   if (enabledFlow) {
     // already enabled locally, but update the status bar just in case
     updateFlowStatus();
     return;
   }
-
   window.withProgress(
     {
       location: ProgressLocation.Notification,
       title: 'Enabling flow...',
       cancellable: false,
     },
+
     async (progress) => {
-      initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
-        console.error('[CodeTime] Unable to initiate flow. ', e.message);
+      await initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {
+        console.error("[CodeTime] Unable to initiate flow. ", e.message);
       });
     }
   );
@@ -76,7 +72,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   if (process_flow_session && isPrimaryWindow()) {
-    softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
+    softwarePost("/v1/flow_sessions", { automated }, getItem("jwt"));
   }
 
   // update screen mode
@@ -103,7 +99,7 @@ export async function pauseFlow() {
         cancellable: false,
       },
       async (progress) => {
-        pauseFlowInitiate().catch((e) => {});
+        await pauseFlowInitiate().catch((e) => {});
       }
     );
   } else {
@@ -114,8 +110,9 @@ export async function pauseFlow() {
 
 async function pauseFlowInitiate() {
   if (isPrimaryWindow()) {
-    await softwareDelete('/v1/flow_sessions', getItem('jwt'));
+    await softwareDelete("/v1/flow_sessions", getItem("jwt"));
   }
+
   showNormalScreenMode();
 
   enabledFlow = false;

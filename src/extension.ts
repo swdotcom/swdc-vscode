@@ -5,13 +5,13 @@
 import {window, ExtensionContext, commands} from 'vscode';
 import {initializePreferences} from './DataController';
 import {onboardInit} from './user/OnboardManager';
-import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName} from './Util';
+import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName, isPrimaryWindow} from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
 import {softwarePost} from './http/HttpClient';
-import {initializeStatusBar} from './managers/StatusBarManager';
+import {initializeStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {LocalStorageManager} from './managers/LocalStorageManager';
@@ -58,8 +58,8 @@ export async function activate(ctx: ExtensionContext) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
     setLocalStorageValue('primary_window', getWorkspaceName());
   } else {
-    // secondary window 9 to 20 second delay
-    const secondDelay = getRandomArbitrary(8, 20);
+    // 5 to 10 second delay
+    const secondDelay = getRandomArbitrary(5, 10);
     setTimeout(() => {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
@@ -111,16 +111,18 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // show the readme if it doesn't exist
   displayReadmeIfNotExists();
 
-  // show the status bar text info
-  setTimeout(async () => {
-    // INIT the status bar
-    await initializeStatusBar();
 
-    // INIT flow mode state
+  initializeStatusBar();
+
+  if (isPrimaryWindow()) {
+    // it's the primary window. initialize flow mode and session summary information
     initializeFlowModeState();
-
     SummaryManager.getInstance().updateSessionSummaryFromServer();
-  }, 0);
+  } else {
+    // it's a secondary window. update the statusbar
+    updateFlowModeStatusBar();
+    updateStatusBarWithSummaryData();
+  }
 
   // store the activate event
   tracker.trackEditorAction('editor', 'activate');
