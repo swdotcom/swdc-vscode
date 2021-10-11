@@ -1,11 +1,12 @@
 import { workspace, Disposable, RelativePattern, window, commands, Uri } from "vscode";
 import KeystrokeStats from "../model/KeystrokeStats";
 import { NO_PROJ_NAME, DEFAULT_DURATION_MILLIS } from "../Constants";
-import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt } from "../Util";
+import { getRootPathForFile, getNowTimes, logEvent, getFileAgeInDays, isFileActive, getFirstWorkspaceFolder, logIt, getWorkspaceName } from "../Util";
 import { FileChangeInfo } from "../model/models";
 import Project from "../model/Project";
 import { getPreference } from "../DataController";
 import { TrackerManager } from "./TrackerManager";
+import { setLocalStorageValue } from '../extension';
 
 const fs = require("fs");
 
@@ -90,6 +91,7 @@ export class KpmManager {
   private async _windowStateChanged(event) {
     if (event.focused) {
       this.tracker.trackEditorAction("editor", "focus");
+      setLocalStorageValue('primary_window', getWorkspaceName());
     } else {
       // Process this window's keystroke data since the window has become unfocused
       commands.executeCommand("codetime.processKeystrokeData");

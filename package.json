@@ -160,7 +160,7 @@
     "query-string": "^7.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "swdc-tracker": "^1.4.8",
+    "swdc-tracker": "^1.4.9",
     "uuid": "^8.3.2",
     "ws": "^8.0.0"
   }
