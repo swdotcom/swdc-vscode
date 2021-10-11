@@ -2,7 +2,7 @@ import { commands, Disposable, window, workspace } from "vscode";
 import { TrackerManager } from "./TrackerManager";
 import { EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface } from "@swdotcom/editor-flow";
 import { configureSettings, showingConfigureSettingsPanel } from './ConfigManager';
-import { getWorkspaceName, logIt } from '../Util';
+import { getWorkspaceName, isNewDay, logIt } from '../Util';
 import { setLocalStorageValue } from '../extension';
 
 export class ChangeStateManager {
@@ -83,6 +83,9 @@ export class ChangeStateManager {
     if (event.focused) {
       this.tracker.trackEditorAction("editor", "focus");
       setLocalStorageValue('primary_window', getWorkspaceName());
+      setTimeout(() => {
+        isNewDay()
+      }, 1000);
     } else {
       this.tracker.trackEditorAction("editor", "unfocus");
     }

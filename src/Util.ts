@@ -13,13 +13,13 @@ import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { getLocalStorageValue, setLocalStorageValue } from './extension';
+import { SummaryManager } from './managers/SummaryManager';
 
 const moment = require('moment-timezone');
 const open = require('open');
 
 const fs = require('fs');
 const os = require('os');
-const crypto = require('crypto');
 const path = require('path');
 const outputChannel = window.createOutputChannel('CodeTime');
 
@@ -31,7 +31,6 @@ export const DASHBOARD_LRG_COL_WIDTH = 38;
 export const TABLE_WIDTH = 80;
 export const MARKER_WIDTH = 4;
 
-const NUMBER_IN_EMAIL_REGEX = new RegExp('^\\d+\\+');
 const dayFormat = 'YYYY-MM-DD';
 const dayTimeFormat = 'LLLL';
 
@@ -73,75 +72,6 @@ export function isGitProject(projectDir: string) {
     return false;
   }
   return true;
-}
-
-/**
- * This method is sync, no need to await on it.
- * @param file
- */
-export function getFileAgeInDays(file: string) {
-  if (!fs.existsSync(file)) {
-    return 0;
-  }
-  const stat = fs.statSync(file);
-  let creationTimeSec = stat.birthtimeMs || stat.ctimeMs;
-  // convert to seconds
-  creationTimeSec /= 1000;
-
-  const daysDiff = moment.duration(moment().diff(moment.unix(creationTimeSec))).asDays();
-
-  // if days diff is 0 then use 200, otherwise 100 per day, which is equal to a 9000 limit for 90 days
-  return daysDiff > 1 ? parseInt(daysDiff, 10) : 1;
-}
-
-export function getActiveProjectWorkspace(): WorkspaceFolder | null {
-  const activeDocPath = findFirstActiveDirectoryOrWorkspaceDirectory();
-  if (activeDocPath) {
-    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-      for (let i = 0; i < workspace.workspaceFolders.length; i++) {
-        const workspaceFolder = workspace.workspaceFolders[i];
-        const folderPath = workspaceFolder.uri.fsPath;
-        if (activeDocPath.indexOf(folderPath) !== -1) {
-          return workspaceFolder;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-export function isFileActive(file: string, isCloseEvent: boolean = false): boolean {
-  if (isCloseEvent) return true;
-
-  if (workspace.textDocuments) {
-    for (let i = 0; i < workspace.textDocuments.length; i++) {
-      const doc: TextDocument = workspace.textDocuments[i];
-      if (doc && doc.fileName === file) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-export function findFirstActiveDirectoryOrWorkspaceDirectory(): string {
-  if (getNumberOfTextDocumentsOpen() > 0) {
-    // check if the .software/CodeTime has already been opened
-    for (let i = 0; i < workspace.textDocuments.length; i++) {
-      let docObj = workspace.textDocuments[i];
-      if (docObj.fileName) {
-        const dir = getRootPathForFile(docObj.fileName);
-        if (dir) {
-          return dir;
-        }
-      }
-    }
-  }
-  const folder: WorkspaceFolder | null = getFirstWorkspaceFolder();
-  if (folder) {
-    return folder.uri.fsPath;
-  }
-  return '';
 }
 
 /**
@@ -189,7 +119,7 @@ export function isFileOpen(fileName: string) {
 }
 
 export function getRootPathForFile(fileName: string) {
-  let folder = getProjectFolder(fileName);
+  const folder = getProjectFolder(fileName);
   if (folder) {
     return folder.uri.fsPath;
   }
@@ -492,14 +422,18 @@ export function getOffsetSeconds() {
   return d.getTimezoneOffset() * 60;
 }
 
-export function getFormattedDay(unixSeconds: number) {
-  return moment.unix(unixSeconds).format(dayFormat);
-}
-
 export function isNewDay() {
   const {day} = getNowTimes();
   const currentDay = getItem('currentDay');
-  return currentDay !== day ? true : false;
+  const dayChanged = !!(currentDay !== day);
+  if (!dayChanged) {
+    setItem('currentDay', day);
+    // refetch the current day stats
+    setTimeout(() => {
+      SummaryManager.getInstance().updateSessionSummaryFromServer();
+    }, 1000);
+  }
+  return dayChanged;
 }
 
 export function coalesceNumber(val: any, defaultVal = 0) {
@@ -541,30 +475,6 @@ export function getNowTimes() {
     day,
     localDayTime,
   };
-}
-
-export function randomCode() {
-  return crypto
-    .randomBytes(16)
-    .map((value: any) => alpha.charCodeAt(Math.floor((value * alpha.length) / 256)))
-    .toString();
-}
-
-export function normalizeGithubEmail(email: string, filterOutNonEmails = true) {
-  if (email) {
-    if (filterOutNonEmails && (email.endsWith('github.com') || email.includes('users.noreply'))) {
-      return null;
-    } else {
-      const found = email.match(NUMBER_IN_EMAIL_REGEX);
-      if (found && email.includes('users.noreply')) {
-        // filter out the ones that look like
-        // 2342353345+username@users.noreply.github.com"
-        return null;
-      }
-    }
-  }
-
-  return email;
 }
 
 export async function launchWebDashboard() {
@@ -637,16 +547,6 @@ export function showInformationMessage(message: string) {
 
 export function showWarningMessage(message: string) {
   return window.showWarningMessage(`${message}`);
-}
-
-export function getFileType(fileName: string) {
-  let fileType = '';
-  const lastDotIdx = fileName.lastIndexOf('.');
-  const len = fileName.length;
-  if (lastDotIdx !== -1 && lastDotIdx < len - 1) {
-    fileType = fileName.substring(lastDotIdx + 1);
-  }
-  return fileType;
 }
 
 export function noSpacesProjectDir(projectDir: string): string {
