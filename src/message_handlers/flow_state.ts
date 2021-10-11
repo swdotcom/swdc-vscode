@@ -1,4 +1,4 @@
-import { enableFlow, isFlowModeEnabled, pauseFlow } from "../managers/FlowManager";
+import { enableFlow, pauseFlow } from "../managers/FlowManager";
 
 export async function handleFlowStateMessage(body: any) {
   // body contains {enable_flow: true | false}

@@ -113,7 +113,9 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  await softwareDelete('/v1/flow_sessions', getItem('jwt'));
+  if (isPrimaryWindow()) {
+    await softwareDelete('/v1/flow_sessions', getItem('jwt'));
+  }
   showNormalScreenMode();
 
   enabledFlow = false;
