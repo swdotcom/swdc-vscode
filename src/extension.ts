@@ -5,7 +5,7 @@
 import { window, ExtensionContext, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
-import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem } from "./Util";
+import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
@@ -17,6 +17,7 @@ import { initializeStatusBar } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { SyncManager } from "./managers/SyncManger";
 import { LocalStorageManager } from "./managers/LocalStorageManager";
+import { initializeFlowModeState } from './managers/FlowManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number = undefined;
@@ -58,6 +59,7 @@ export async function activate(ctx: ExtensionContext) {
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
+    setLocalStorageValue('primary_window', getWorkspaceName());
   } else {
     // 9 to 20 second delay
     const secondDelay = getRandomArbitrary(9, 20);
@@ -124,6 +126,9 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // show the status bar text info
   setTimeout(() => {
     initializeStatusBar();
+
+    // INIT the flow mode state
+    initializeFlowModeState();
 
     SummaryManager.getInstance().updateSessionSummaryFromServer();
   }, 0);

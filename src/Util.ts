@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { showModalSignupPrompt } from "./managers/SlackManager";
 import { execCmd } from "./managers/ExecManager";
 import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from "./managers/FileManager";
+import { getLocalStorageValue, setLocalStorageValue } from './extension';
 
 const moment = require("moment-timezone");
 const open = require("open");
@@ -32,7 +33,7 @@ let osUsername = null;
 
 export function getWorkspaceName() {
   if (!workspace_name) {
-    workspace_name = randomCode();
+    workspace_name = uuidv4();
   }
   return workspace_name;
 }
@@ -665,4 +666,14 @@ export function checkRegistrationForReport(showSignup = true) {
     return false;
   }
   return true;
+}
+
+export function isPrimaryWindow() {
+  let workspaceWindow = getLocalStorageValue('primary_window');
+  if (!workspaceWindow) {
+    // its not set yet, update it to this window
+    workspaceWindow = getWorkspaceName();
+    setLocalStorageValue('primary_window', workspaceWindow);
+  }
+  return !!(workspaceWindow === getWorkspaceName())
 }

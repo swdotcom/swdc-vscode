@@ -1,36 +1,33 @@
 import { commands, ProgressLocation, window } from "vscode";
 import { softwarePost, softwareDelete } from "../http/HttpClient";
-import { getItem } from "../Util";
+import { getItem, isPrimaryWindow } from "../Util";
 import { softwareGet } from "../http/HttpClient";
 
 import { checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode } from "./SlackManager";
 import { FULL_SCREEN_MODE_ID, getConfiguredScreenMode, showFullScreenMode, showNormalScreenMode, showZenMode, ZEN_MODE_ID } from "./ScreenManager";
 import { updateFlowModeStatusBar } from "./StatusBarManager";
-import { getLocalStorageValue, setLocalStorageValue } from "../extension";
 
 let enabledFlow = false;
-let initialized = false;
+
+export async function initializeFlowModeState() {
+  await determineFlowModeFromApi();
+  updateFlowStatus();
+}
 
 export async function isFlowModeEnabled() {
-  if (!initialized && getItem("jwt")) {
-    enabledFlow = await determineFlowModeFromApi();
-    initialized = true;
-  }
-  setLocalStorageValue("enabledFlow", enabledFlow);
   return enabledFlow;
 }
 
 export async function updateFlowModeStatus() {
-  const state = getLocalStorageValue("enabledFlow");
-  if (state === null || state === undefined) {
-    await isFlowModeEnabled();
-  } else {
-    enabledFlow = state;
-  }
-  updateFlowModeStatusBar();
+  await initializeFlowModeState();
 }
 
 export async function enableFlow({ automated = false, skipSlackCheck = false, process_flow_session = true }) {
+  if (enabledFlow) {
+    // already enabled locally, but update the status bar just in case
+    updateFlowStatus();
+    return;
+  }
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -38,12 +35,9 @@ export async function enableFlow({ automated = false, skipSlackCheck = false, pr
       cancellable: false,
     },
 
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {
-          console.error("[CodeTime] Unable to initiate flow. ", e.message);
-        });
-        resolve(true);
+    async (progress) => {
+      await initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {
+        console.error("[CodeTime] Unable to initiate flow. ", e.message);
       });
     }
   );
@@ -68,7 +62,7 @@ async function initiateFlow({ automated = false, skipSlackCheck = false, process
   const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  if (process_flow_session) {
+  if (process_flow_session && isPrimaryWindow()) {
     softwarePost("/v1/flow_sessions", { automated }, getItem("jwt"));
   }
 
@@ -83,11 +77,7 @@ async function initiateFlow({ automated = false, skipSlackCheck = false, process
 
   enabledFlow = true;
 
-  commands.executeCommand("codetime.refreshCodeTimeView");
-
-  setLocalStorageValue("enabledFlow", enabledFlow);
-
-  updateFlowModeStatusBar();
+  updateFlowStatus();
 }
 
 export async function pauseFlow() {
@@ -98,24 +88,29 @@ export async function pauseFlow() {
         title: "Turning off flow...",
         cancellable: false,
       },
-      (progress) => {
-        return new Promise((resolve, reject) => {
-          pauseFlowInitiate().catch((e) => {});
-          resolve(true);
-        });
+      async (progress) => {
+        await pauseFlowInitiate().catch((e) => {});
       }
     );
   }
 }
 
 async function pauseFlowInitiate() {
-  await softwareDelete("/v1/flow_sessions", getItem("jwt"));
+  if (isPrimaryWindow()) {
+    await softwareDelete("/v1/flow_sessions", getItem("jwt"));
+  }
+
   showNormalScreenMode();
 
   enabledFlow = false;
-  commands.executeCommand("codetime.refreshCodeTimeView");
 
-  setLocalStorageValue("enabledFlow", enabledFlow);
+  updateFlowStatus();
+}
+
+function updateFlowStatus() {
+  setTimeout(() => {
+    commands.executeCommand('codetime.refreshCodeTimeView');
+  }, 2000)
 
   updateFlowModeStatusBar();
 }
@@ -125,6 +120,4 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
-
-  return enabledFlow;
 }
