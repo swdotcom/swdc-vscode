@@ -61,9 +61,8 @@ export async function activate(ctx: ExtensionContext) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
     setLocalStorageValue('primary_window', getWorkspaceName());
   } else {
-    // 9 to 20 second delay
-    const secondDelay = getRandomArbitrary(9, 20);
-    // initialize in 5 seconds if this is the secondary window
+    // 4 to 9 second delay
+    const secondDelay = getRandomArbitrary(4, 9);
     setTimeout(() => {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
