@@ -5,7 +5,7 @@
 import { window, ExtensionContext, commands } from "vscode";
 import { initializePreferences } from "./DataController";
 import { onboardInit } from "./user/OnboardManager";
-import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName } from "./Util";
+import { getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName, isPrimaryWindow } from "./Util";
 import { createCommands } from "./command-helper";
 import { KpmManager } from "./managers/KpmManager";
 import { PluginDataManager } from "./managers/PluginDataManager";
@@ -13,7 +13,7 @@ import { TrackerManager } from "./managers/TrackerManager";
 import { initializeWebsockets, clearWebsocketConnectionRetryTimeout } from "./websockets";
 import { softwarePost } from "./http/HttpClient";
 import { configureSettings, showingConfigureSettingsPanel } from "./managers/ConfigManager";
-import { initializeStatusBar } from "./managers/StatusBarManager";
+import { initializeStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData } from "./managers/StatusBarManager";
 import { SummaryManager } from "./managers/SummaryManager";
 import { SyncManager } from "./managers/SyncManger";
 import { LocalStorageManager } from "./managers/LocalStorageManager";
@@ -123,15 +123,17 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // show the readme if it doesn't exist
   displayReadmeIfNotExists();
 
-  // show the status bar text info
-  setTimeout(() => {
-    initializeStatusBar();
+  initializeStatusBar();
 
-    // INIT the flow mode state
+  if (isPrimaryWindow()) {
+    // it's the primary window. initialize flow mode and session summary information
     initializeFlowModeState();
-
     SummaryManager.getInstance().updateSessionSummaryFromServer();
-  }, 0);
+  } else {
+    // it's a secondary window. update the statusbar
+    updateFlowModeStatusBar();
+    updateStatusBarWithSummaryData();
+  }
 }
 
 export function getCurrentColorKind() {

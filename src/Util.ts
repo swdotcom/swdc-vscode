@@ -671,7 +671,7 @@ export function checkRegistrationForReport(showSignup = true) {
 export function isPrimaryWindow() {
   let workspaceWindow = getLocalStorageValue('primary_window');
   if (!workspaceWindow) {
-    // its not set yet, update it to this window
+    // it's not set yet, update it to this window
     workspaceWindow = getWorkspaceName();
     setLocalStorageValue('primary_window', workspaceWindow);
   }
