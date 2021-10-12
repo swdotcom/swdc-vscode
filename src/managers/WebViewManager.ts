@@ -1,5 +1,5 @@
 import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
-import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {softwareGet, isResponseOk, appGet} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
 import {checkRegistrationForReport, getItem} from '../Util';
 
@@ -14,6 +14,28 @@ export async function showReportGenerator() {
     currentPanel.webview.html = html;
     currentPanel.reveal(ViewColumn.One);
   }
+}
+
+export async function showReports() {
+  if (!checkRegistrationForReport(true)) {
+    return;
+  }
+
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: 'Loading reports...',
+      cancellable: false,
+    },
+    async () => {
+      initiatePanel('Reports', 'reports');
+      const html = await getReportsHtml();
+      if (currentPanel) {
+        currentPanel.webview.html = html;
+        currentPanel.reveal(ViewColumn.One);
+      }
+    }
+  );
 }
 
 export async function showDashboard() {
@@ -68,6 +90,19 @@ async function getDashboardHtml() {
     return resp.data.html;
   } else {
     window.showErrorMessage('Unable to generate dashboard. Please try again later.');
+    return await getConnectionErrorHtml();
+  }
+}
+
+async function getReportsHtml() {
+  const params = {
+    is_light_mode: !!(window.activeColorTheme.kind === 1),
+  };
+  const resp = await appGet('/plugin/reports', params);
+  if (isResponseOk(resp)) {
+    return resp.data.html;
+  } else {
+    window.showErrorMessage('Unable to generate reports. Please try again later.');
     return await getConnectionErrorHtml();
   }
 }

@@ -258,7 +258,6 @@ export function createCommands(
   // DISPLAY PROJECT METRICS REPORT
   cmds.push(
     commands.registerCommand('codetime.generateProjectSummary', (item: KpmItem) => {
-      console.log('generating project summary');
       if (!item) {
         // it's from the command palette, create a kpm item so
         // it can build the ui_element in the tracker manager
@@ -270,7 +269,7 @@ export function createCommands(
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      ProjectCommitManager.getInstance().launchViewProjectSummaryMenuFlow();
+      launchWebUrl(`${app_url}/reports`);
     })
   );
 
