@@ -54,8 +54,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "codetime.generateProjectSummary",
-        "title": "Code Time: View project summary"
+        "command": "codetime.viewProjectReports",
+        "title": "Code Time: Project reports"
       },
       {
         "command": "codetime.softwareKpmDashboard",

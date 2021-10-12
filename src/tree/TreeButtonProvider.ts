@@ -4,15 +4,8 @@ import {KpmItem, UIInteractionType} from '../model/models';
 import {getItem} from '../Util';
 
 export function getViewProjectSummaryButton(): KpmItem {
-  const commitSummitLabel = `Project summary`;
-  const item: KpmItem = getActionButton(
-    commitSummitLabel,
-    '',
-    'codetime.generateProjectSummary',
-    'folder.svg',
-    '',
-    'red'
-  );
+  const commitSummitLabel = `Project reports`;
+  const item: KpmItem = getActionButton(commitSummitLabel, '', 'codetime.viewProjectReports', 'folder.svg', '', 'red');
   item.location = 'ct_menu_tree';
   item.name = 'ct_project_summary_btn';
   item.interactionIcon = 'folder';
