@@ -12,8 +12,8 @@ import {v4 as uuidv4} from 'uuid';
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
-import { getLocalStorageValue, setLocalStorageValue } from './extension';
-import { SummaryManager } from './managers/SummaryManager';
+import {getLocalStorageValue, setLocalStorageValue} from './extension';
+import {SummaryManager} from './managers/SummaryManager';
 
 const moment = require('moment-timezone');
 const open = require('open');
@@ -130,7 +130,7 @@ export function getWorkspaceFolderByPath(path: string): WorkspaceFolder | null {
   if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
     for (let i = 0; i < workspace.workspaceFolders.length; i++) {
       let workspaceFolder: WorkspaceFolder = workspace.workspaceFolders[i];
-      if (path.includes(workspaceFolder.uri.fsPath)) {
+      if (path?.includes(workspaceFolder.uri.fsPath)) {
         return workspaceFolder;
       }
     }
@@ -149,7 +149,7 @@ export function getProjectFolder(fileName: string): WorkspaceFolder | null {
           liveshareFolder = workspaceFolder;
         }
         let folderUri = workspaceFolder.uri;
-        if (folderUri && folderUri.fsPath && !isVslsScheme && fileName.includes(folderUri.fsPath)) {
+        if (folderUri && folderUri.fsPath && !isVslsScheme && fileName?.includes(folderUri.fsPath)) {
           return workspaceFolder;
         }
       }
@@ -578,5 +578,5 @@ export function isPrimaryWindow() {
     workspaceWindow = getWorkspaceName();
     setLocalStorageValue('primary_window', workspaceWindow);
   }
-  return !!(workspaceWindow === getWorkspaceName())
+  return !!(workspaceWindow === getWorkspaceName());
 }

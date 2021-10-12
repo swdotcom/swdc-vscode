@@ -189,7 +189,7 @@ function getResponseStatus(resp: any) {
 
 function getAuthorization() {
   let token = getItem('jwt');
-  if (token.includes('JWT ')) {
+  if (token?.includes('JWT ')) {
     token = `Bearer ${token.substring('JWT '.length)}`;
   }
   return token;

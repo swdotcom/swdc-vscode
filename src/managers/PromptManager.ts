@@ -14,8 +14,12 @@ export async function showSlackManageOptions() {
 
   const slackIntegrations = await getCachedSlackIntegrations();
   slackIntegrations.forEach((integration: any) => {
+    let domain = integration.integration_type.name;
+    try {
+      domain = JSON.parse(integration.meta).domain;
+    } catch (e) {}
     items.push({
-      label: `Disconnect ${integration.integration_type.name} - ${integration.email}`,
+      label: `Disconnect ${domain} - ${integration.email}`,
       command: 'codetime.disconnectIntegration',
       commandArgs: [{id: integration.integration_type.id}],
     });

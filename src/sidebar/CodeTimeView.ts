@@ -59,15 +59,17 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
     this._disposable = Disposable.from(this._webview.onDidDispose(this.onWebviewDisposed, this));
 
     this._webview.webview.onDidReceiveMessage(async (message: any) => {
-      const cmd = message.action.includes('codetime.') ? message.action : `codetime.${message.action}`;
-      switch (message.command) {
-        case 'command_execute':
-          if (message.payload && Object.keys(message.payload).length) {
-            commands.executeCommand(cmd, message.payload);
-          } else {
-            commands.executeCommand(cmd);
-          }
-          break;
+      if (message?.action) {
+        const cmd = message.action.includes('codetime.') ? message.action : `codetime.${message.action}`;
+        switch (message.command) {
+          case 'command_execute':
+            if (message.payload && Object.keys(message.payload).length) {
+              commands.executeCommand(cmd, message.payload);
+            } else {
+              commands.executeCommand(cmd);
+            }
+            break;
+        }
       }
     });
 
