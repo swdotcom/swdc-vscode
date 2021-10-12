@@ -1,11 +1,20 @@
-import { commands, ProgressLocation, window } from "vscode";
-import { softwarePost, softwareDelete } from "../http/HttpClient";
-import { getItem, isPrimaryWindow } from "../Util";
-import { softwareGet } from "../http/HttpClient";
+import {commands, ProgressLocation, window} from 'vscode';
+import {softwarePost, softwareDelete} from '../http/HttpClient';
+import {getItem, isPrimaryWindow} from '../Util';
+import {softwareGet} from '../http/HttpClient';
 
-import { checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode } from "./SlackManager";
-import { FULL_SCREEN_MODE_ID, getConfiguredScreenMode, showFullScreenMode, showNormalScreenMode, showZenMode, ZEN_MODE_ID } from "./ScreenManager";
-import { updateFlowModeStatusBar } from "./StatusBarManager";
+import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
+import {
+  FULL_SCREEN_MODE_ID,
+  getConfiguredScreenMode,
+  showFullScreenMode,
+  showNormalScreenMode,
+  showZenMode,
+  ZEN_MODE_ID,
+} from './ScreenManager';
+import {updateFlowModeStatusBar} from './StatusBarManager';
+import { triggerChangeEvent } from '../storage/SessionSummaryData';
+import { getPreference } from '../DataController';
 
 let enabledFlow = false;
 
@@ -14,7 +23,7 @@ export async function initializeFlowModeState() {
   updateFlowStatus();
 }
 
-export async function isFlowModeEnabled() {
+export function isFlowModeEnabled() {
   return enabledFlow;
 }
 
@@ -31,7 +40,7 @@ export async function enableFlow({ automated = false, skipSlackCheck = false, pr
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Enabling flow...",
+      title: 'Enabling flow...',
       cancellable: false,
     },
 
@@ -43,11 +52,11 @@ export async function enableFlow({ automated = false, skipSlackCheck = false, pr
   );
 }
 
-async function initiateFlow({ automated = false, skipSlackCheck = false, process_flow_session = true }) {
+async function initiateFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
-    showModalSignupPrompt("To use Flow Mode, please first sign up or login.");
+    showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
     return;
   }
 
@@ -76,22 +85,26 @@ async function initiateFlow({ automated = false, skipSlackCheck = false, process
   }
 
   enabledFlow = true;
-
   updateFlowStatus();
 }
 
 export async function pauseFlow() {
   if (enabledFlow) {
+    // set it to false to ensure it doesn't try to update continually based on any other websocket event
+    enabledFlow = false;
     window.withProgress(
       {
         location: ProgressLocation.Notification,
-        title: "Turning off flow...",
+        title: 'Turning off flow...',
         cancellable: false,
       },
       async (progress) => {
         await pauseFlowInitiate().catch((e) => {});
       }
     );
+  } else {
+    // update flow status in case this is a secondary window
+    updateFlowStatus();
   }
 }
 
@@ -110,14 +123,25 @@ async function pauseFlowInitiate() {
 function updateFlowStatus() {
   setTimeout(() => {
     commands.executeCommand('codetime.refreshCodeTimeView');
+    triggerChangeEvent();
   }, 2000)
 
   updateFlowModeStatusBar();
 }
 
 export async function determineFlowModeFromApi() {
-  const flowSessionsReponse = getItem("jwt") ? await softwareGet("/v1/flow_sessions", getItem("jwt")) : { data: { flow_sessions: [] } };
+  const flowSessionsReponse = getItem('jwt')
+    ? await softwareGet('/v1/flow_sessions', getItem('jwt'))
+    : {data: {flow_sessions: []}};
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   enabledFlow = openFlowSessions?.length > 0;
+}
+
+export function isAutoFlowModeEnabled() {
+  const flowModeSettings: any = getPreference("flowMode");
+  if (flowModeSettings?.editor.autoEnterFlowMode !== undefined) {
+    return flowModeSettings.editor.autoEnterFlowMode;
+  }
+  return false;
 }

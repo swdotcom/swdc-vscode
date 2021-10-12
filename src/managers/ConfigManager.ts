@@ -1,7 +1,8 @@
-import { ViewColumn, WebviewPanel, window } from "vscode";
-import { initializePreferences } from "../DataController";
-import { softwareGet, isResponseOk } from "../http/HttpClient";
-import { getItem } from "../Util";
+import {ViewColumn, WebviewPanel, window} from 'vscode';
+import {initializePreferences} from '../DataController';
+import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {getConnectionErrorHtml} from '../local/404';
+import {getItem} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 
@@ -16,7 +17,9 @@ export async function configureSettings() {
   }
 
   if (!currentPanel) {
-    currentPanel = window.createWebviewPanel("edit_settings", "Code Time Settings", ViewColumn.One, { enableScripts: true });
+    currentPanel = window.createWebviewPanel('edit_settings', 'Code Time Settings', ViewColumn.One, {
+      enableScripts: true,
+    });
     currentPanel.onDidDispose(() => {
       currentPanel = undefined;
     });
@@ -34,14 +37,14 @@ export async function configureSettings() {
 }
 
 export async function getEditSettingsHtml(): Promise<string> {
-  const resp = await softwareGet(`/users/me/edit_preferences`, getItem("jwt"), {
+  const resp = await softwareGet(`/users/me/edit_preferences`, getItem('jwt'), {
     isLightMode: window.activeColorTheme.kind == 1,
-    editor: "vscode",
+    editor: 'vscode',
   });
 
   if (isResponseOk(resp)) {
     return resp.data.html;
-  } else {
-    window.showErrorMessage("Unable to generate view. Please try again later.");
   }
+  window.showErrorMessage('Unable to generate view. Please try again later.');
+  return await getConnectionErrorHtml();
 }

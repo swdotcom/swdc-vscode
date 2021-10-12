@@ -1,5 +1,5 @@
-import { commands, window } from "vscode";
-import { api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL } from "../Constants";
+import {commands, window} from 'vscode';
+import {api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL} from '../Constants';
 import {
   getAuthCallbackState,
   getIntegrations,
@@ -10,11 +10,10 @@ import {
   getVersion,
   launchWebUrl,
   syncSlackIntegrations,
-} from "../Util";
-import { showQuickPick } from "../menu/MenuManager";
-import { softwareDelete } from "../http/HttpClient";
-
-const queryString = require("query-string");
+} from '../Util';
+import {showQuickPick} from '../menu/MenuManager';
+import {softwareDelete} from '../http/HttpClient';
+import { URLSearchParams } from 'url';
 
 // -------------------------------------------
 // - public methods
@@ -22,7 +21,7 @@ const queryString = require("query-string");
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
-  return getIntegrations().filter((n) => n.name.toLowerCase() === "slack" && n.status.toLowerCase() === "active");
+  return getIntegrations().filter((n: any) => n.name.toLowerCase() === 'slack' && n.status.toLowerCase() === 'active');
 }
 
 export function hasSlackWorkspaces() {
@@ -46,18 +45,17 @@ export async function connectSlackWorkspace() {
     return;
   }
 
-  const qryStr = queryString.stringify({
-    plugin: getPluginType(),
-    plugin_uuid: getPluginUuid(),
-    pluginVersion: getVersion(),
-    plugin_id: getPluginId(),
-    auth_callback_state: getAuthCallbackState(),
-    integrate: "slack",
-    upgrade_features: "flow",
-    plugin_token: getItem("jwt"),
-  });
+  const params = new URLSearchParams();
+  params.append('plugin', getPluginType());
+  params.append('plugin_uuid', getPluginUuid());
+  params.append('pluginVersion', getVersion());
+  params.append('plugin_id', `${getPluginId()}`);
+  params.append('auth_callback_state', getAuthCallbackState());
+  params.append('integrate', 'slack');
+  params.append('upgrade_features', 'flow');
+  params.append('plugin_token', getItem('jwt'))
 
-  const url = `${api_endpoint}/auth/slack?${qryStr}`;
+  const url = `${api_endpoint}/auth/slack?${params.toString()}`;
 
   // authorize the user for slack
   launchWebUrl(url);
@@ -86,16 +84,16 @@ export async function disconnectSlackWorkspace() {
 }
 
 // disconnect slack flow
-export async function disconnectSlackAuth(authId, showPrompt = true) {
+export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   // get the domain
-  const integration = getSlackWorkspaces().find((n) => n.authId === authId);
+  const integration = getSlackWorkspaces().find((n: any) => n.authId === authId);
   if (!integration) {
-    window.showErrorMessage("Unable to find selected integration to disconnect");
-    commands.executeCommand("codetime.refreshCodeTimeView");
+    window.showErrorMessage('Unable to find selected integration to disconnect');
+    commands.executeCommand('codetime.refreshCodeTimeView');
     return;
   }
   // ask before disconnecting
-  let selection = DISCONNECT_LABEL;
+  let selection: any = DISCONNECT_LABEL;
   if (showPrompt) {
     selection = await window.showInformationMessage(
       `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
@@ -105,11 +103,11 @@ export async function disconnectSlackAuth(authId, showPrompt = true) {
 
   if (selection === DISCONNECT_LABEL) {
     // await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
-    await softwareDelete(`/integrations/${integration.id}`, getItem("jwt"));
+    await softwareDelete(`/integrations/${integration.id}`, getItem('jwt'));
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
 
-    commands.executeCommand("codetime.refreshCodeTimeView");
+    commands.executeCommand('codetime.refreshCodeTimeView');
   }
 }
 
@@ -118,13 +116,13 @@ export async function disconnectSlackAuth(authId, showPrompt = true) {
 // -------------------------------------------
 
 async function showSlackWorkspaceSelection() {
-  let menuOptions = {
+  let menuOptions: any = {
     items: [],
     placeholder: `Select a Slack workspace`,
   };
 
   const integrations = getSlackWorkspaces();
-  integrations.forEach((integration) => {
+  integrations.forEach((integration: any) => {
     menuOptions.items.push({
       label: integration.team_domain,
       value: integration.team_domain,
@@ -132,8 +130,8 @@ async function showSlackWorkspaceSelection() {
   });
 
   menuOptions.items.push({
-    label: "Connect a Slack workspace",
-    command: "musictime.connectSlack",
+    label: 'Connect a Slack workspace',
+    command: 'musictime.connectSlack',
   });
 
   const pick = await showQuickPick(menuOptions);
@@ -149,8 +147,8 @@ async function showSlackWorkspaceSelection() {
   return null;
 }
 
-function getWorkspaceAccessToken(team_domain) {
-  const integration = getSlackWorkspaces().find((n) => n.team_domain === team_domain);
+function getWorkspaceAccessToken(team_domain: string) {
+  const integration = getSlackWorkspaces().find((n: any) => n.team_domain === team_domain);
   if (integration) {
     return integration.access_token;
   }
@@ -161,17 +159,17 @@ function getWorkspaceAccessToken(team_domain) {
  * Remove an integration from the local copy
  * @param authId
  */
-function removeSlackIntegration(authId) {
+function removeSlackIntegration(authId: string) {
   const currentIntegrations = getIntegrations();
 
-  const newIntegrations = currentIntegrations.filter((n) => n.authId !== authId);
+  const newIntegrations = currentIntegrations.filter((n: any) => n.authId !== authId);
   syncSlackIntegrations(newIntegrations);
 }
 
 export function checkRegistration(showSignup = true) {
-  if (!getItem("name")) {
+  if (!getItem('name')) {
     if (showSignup) {
-      showModalSignupPrompt("Connecting Slack requires a registered account. Sign up or log in to continue.");
+      showModalSignupPrompt('Connecting Slack requires a registered account. Sign up or log in to continue.');
     }
     return false;
   }
@@ -189,7 +187,7 @@ export function showModalSignupPrompt(msg: string) {
     )
     .then(async (selection) => {
       if (selection === SIGN_UP_LABEL) {
-        commands.executeCommand("codetime.signUpAccount");
+        commands.executeCommand('codetime.registerAccount');
       }
     });
 }
@@ -199,15 +197,15 @@ export function checkSlackConnection(showConnect = true) {
     if (showConnect) {
       window
         .showInformationMessage(
-          "Connect a Slack workspace to continue.",
+          'Connect a Slack workspace to continue.',
           {
             modal: true,
           },
-          "Connect"
+          'Connect'
         )
         .then(async (selection) => {
-          if (selection === "Connect") {
-            commands.executeCommand("codetime.connectSlackWorkspace");
+          if (selection === 'Connect') {
+            commands.executeCommand('codetime.connectSlackWorkspace');
           }
         });
     }
@@ -218,19 +216,23 @@ export function checkSlackConnection(showConnect = true) {
 
 export async function checkSlackConnectionForFlowMode() {
   if (!hasSlackWorkspaces()) {
-    const selection = await window.showInformationMessage("Slack isn't connected", { modal: true }, ...["Continue anyway", "Connect Slack"]);
+    const selection = await window.showInformationMessage(
+      "Slack isn't connected",
+      {modal: true},
+      ...['Continue anyway', 'Connect Slack']
+    );
     if (!selection) {
       // the user selected "cancel"
-      return { continue: false, useSlackSettings: true };
-    } else if (selection === "Continue anyway") {
+      return {continue: false, useSlackSettings: true};
+    } else if (selection === 'Continue anyway') {
       // slack is not connected, but continue. set useSlackSettings to FALSE
       // set continue to TRUE
-      return { continue: true, useSlackSettings: false };
+      return {continue: true, useSlackSettings: false};
     } else {
       // connect was selected
-      commands.executeCommand("codetime.connectSlackWorkspace");
-      return { continue: false, useSlackSettings: true };
+      commands.executeCommand('codetime.manageSlackConnection');
+      return {continue: false, useSlackSettings: true};
     }
   }
-  return { continue: true, useSlackSettings: true };
+  return {continue: true, useSlackSettings: true};
 }

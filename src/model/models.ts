@@ -1,32 +1,32 @@
-import { getVersion, getPluginId, getOs } from "../Util";
-import { NO_PROJ_NAME } from "../Constants";
-import { TreeItemCollapsibleState } from "vscode";
+import {getVersion, getPluginId, getOs} from '../Util';
+import {NO_PROJ_NAME} from '../Constants';
+import {TreeItemCollapsibleState} from 'vscode';
 
 export enum UIInteractionType {
-  Keyboard = "keyboard",
-  Click = "click",
+  Keyboard = 'keyboard',
+  Click = 'click',
 }
 
 export class KpmItem {
-  id: string = "";
-  label: string = "";
-  description: string = "";
-  value: string = "";
-  tooltip: string = "";
-  command: string = "";
+  id: string = '';
+  label: string = '';
+  description: string | null = '';
+  value: string = '';
+  tooltip: string = '';
+  command: string = '';
   commandArgs: any[] = [];
-  type: string = "";
-  contextValue: string = "";
+  type: string = '';
+  contextValue: string = '';
   callback: any = null;
-  icon: string = null;
+  icon: string | null = null;
   children: KpmItem[] = [];
-  color: string = "";
-  location: string = "";
-  name: string = "";
-  eventDescription: string = null;
+  color: string | null = '';
+  location: string = '';
+  name: string = '';
+  eventDescription: string | null = null;
   initialCollapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed;
   interactionType: UIInteractionType = UIInteractionType.Click;
-  interactionIcon: string = "";
+  interactionIcon: string | null = '';
   hideCTAInTracker: boolean = false;
 }
 
@@ -56,9 +56,9 @@ export class DocumentChangeInfo {
 }
 
 export class FileChangeInfo {
-  name: string = "";
-  fsPath: string = "";
-  projectDir: string = "";
+  name: string = '';
+  fsPath: string = '';
+  projectDir: string = '';
   kpm: number = 0;
   keystrokes: number = 0;
   add: number = 0;
@@ -72,7 +72,7 @@ export class FileChangeInfo {
   lines: number = 0;
   linesAdded: number = 0;
   linesRemoved: number = 0;
-  syntax: string = "";
+  syntax: string = '';
   fileAgeDays: number = 0;
   repoFileContributorCount: number = 0;
   start: number = 0;
@@ -101,7 +101,7 @@ export class CommitChangeStats {
 }
 
 export class DiffNumStats {
-  file_name: string = "";
+  file_name: string = '';
   insertions: number = 0;
   deletions: number = 0;
 }
@@ -109,14 +109,14 @@ export class DiffNumStats {
 // example: {type: "window", name: "close", timestamp: 1234,
 // timestamp_local: 1233, description: "OnboardPrompt"}
 export class CodeTimeEvent {
-  type: string = "";
-  name: string = "";
+  type: string = '';
+  name: string = '';
   timestamp: number = 0;
   timestamp_local: number = 0;
-  description: string = "";
+  description: string = '';
   pluginId: number = getPluginId();
   os: string = getOs();
   version: string = getVersion();
-  hostname: string = ""; // this is gathered using an await
+  hostname: string = ''; // this is gathered using an await
   timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 }

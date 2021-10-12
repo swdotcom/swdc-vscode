@@ -1,19 +1,13 @@
-import { enableFlow, isFlowModeEnabled } from "../managers/FlowManager";
-import { getPreference } from "../DataController";
-import { commands } from 'vscode';
+import { enableFlow, isAutoFlowModeEnabled, isFlowModeEnabled } from "../managers/FlowManager";
+import { logIt } from '../Util';
 
 export async function handleFlowScoreMessage(message: any) {
-  const flowModeSettings = getPreference("flowMode");
-  const flowModeEnabled = await isFlowModeEnabled();
 
-  if (flowModeSettings.editor.autoEnterFlowMode && !flowModeEnabled) {
+  if (isAutoFlowModeEnabled() && !isFlowModeEnabled()) {
     try {
       enableFlow({ automated: true });
-    } catch (e) {
-      console.error("[CodeTime] handling flow score message", e);
+    } catch (e: any) {
+      logIt("Error handling flow score message: " + e.message);
     }
   }
-  setTimeout(() => {
-    commands.executeCommand('codetime.updateViewMetrics');
-  }, 1500);
 }

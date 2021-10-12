@@ -28,12 +28,10 @@ function showSuccessMessage(message: string) {
       title: message,
       cancellable: false,
     },
-    (progress) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve(true);
-        }, 1000);
-      });
+    async (progress) => {
+      setTimeout(() => {
+        return true;
+      }, 1000);
     }
   );
 }

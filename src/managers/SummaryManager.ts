@@ -32,7 +32,10 @@ export class SummaryManager {
     setItem("updatedTreeDate", nowDay);
     if (isResponseOk(result) && result.data) {
       const summary: SessionSummary = result.data;
-      this.updateCurrentDayStats(summary);
+      if (summary) {
+        saveSessionSummaryToDisk(summary);
+      }
+      updateStatusBarWithSummaryData();
     }
 
     // update the code time metrics tree views
@@ -40,10 +43,9 @@ export class SummaryManager {
   }
 
   updateCurrentDayStats(summary: SessionSummary) {
-    const existingSummary: SessionSummary = getSessionSummaryFileAsJson();
-    summary.currentDayMinutes = Math.max(summary.currentDayMinutes, existingSummary.currentDayMinutes);
-    saveSessionSummaryToDisk(summary);
-
+    if (summary) {
+      saveSessionSummaryToDisk(summary);
+    }
     updateStatusBarWithSummaryData();
   }
 }

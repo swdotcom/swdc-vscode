@@ -1,17 +1,41 @@
-import { ViewColumn, WebviewPanel, window, ProgressLocation } from "vscode";
-import { softwareGet, isResponseOk } from "../http/HttpClient";
-import { checkRegistrationForReport, getItem } from "../Util";
+import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
+import {softwareGet, isResponseOk, appGet} from '../http/HttpClient';
+import {getConnectionErrorHtml} from '../local/404';
+import {checkRegistrationForReport, getItem} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
-let currentTitle: string = "";
+let currentTitle: string = '';
 
 export async function showReportGenerator() {
-  initiatePanel("Report Generator", "report_generator");
+  initiatePanel('Report Generator', 'report_generator');
 
   const html = getReportGeneratorHtml();
+  if (currentPanel) {
+    currentPanel.webview.html = html;
+    currentPanel.reveal(ViewColumn.One);
+  }
+}
 
-  currentPanel.webview.html = html;
-  currentPanel.reveal(ViewColumn.One);
+export async function showReports() {
+  if (!checkRegistrationForReport(true)) {
+    return;
+  }
+
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: 'Loading reports...',
+      cancellable: false,
+    },
+    async () => {
+      initiatePanel('Reports', 'reports');
+      const html = await getReportsHtml();
+      if (currentPanel) {
+        currentPanel.webview.html = html;
+        currentPanel.reveal(ViewColumn.One);
+      }
+    }
+  );
 }
 
 export async function showDashboard() {
@@ -21,14 +45,16 @@ export async function showDashboard() {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
-      title: "Loading dashboard...",
+      title: 'Loading dashboard...',
       cancellable: false,
     },
     async () => {
-      initiatePanel("Dashboard", "dashboard");
+      initiatePanel('Dashboard', 'dashboard');
       const html = await getDashboardHtml();
-      currentPanel.webview.html = html;
-      currentPanel.reveal(ViewColumn.One);
+      if (currentPanel) {
+        currentPanel.webview.html = html;
+        currentPanel.reveal(ViewColumn.One);
+      }
     }
   );
 }
@@ -41,7 +67,7 @@ function initiatePanel(title: string, viewType: string) {
   currentTitle = title;
 
   if (!currentPanel) {
-    currentPanel = window.createWebviewPanel(viewType, title, ViewColumn.One, { enableScripts: true });
+    currentPanel = window.createWebviewPanel(viewType, title, ViewColumn.One, {enableScripts: true});
     currentPanel.onDidDispose(() => {
       currentPanel = undefined;
     });
@@ -55,14 +81,28 @@ function initiatePanel(title: string, viewType: string) {
 
 function getReportGeneratorHtml() {
   // fetch the html from the app
-  return "<html><body><div>html goes here</div></body></html>";
+  return '<html><body><div>html goes here</div></body></html>';
 }
 
 async function getDashboardHtml() {
-  const resp = await softwareGet("/v1/plugin_dashboard", getItem("jwt"));
+  const resp = await softwareGet('/v1/plugin_dashboard', getItem('jwt'));
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
-    window.showErrorMessage("Unable to generate dashboard. Please try again later.");
+    window.showErrorMessage('Unable to generate dashboard. Please try again later.');
+    return await getConnectionErrorHtml();
+  }
+}
+
+async function getReportsHtml() {
+  const params = {
+    is_light_mode: !!(window.activeColorTheme.kind === 1),
+  };
+  const resp = await appGet('/plugin/reports', params);
+  if (isResponseOk(resp)) {
+    return resp.data.html;
+  } else {
+    window.showErrorMessage('Unable to generate reports. Please try again later.');
+    return await getConnectionErrorHtml();
   }
 }
