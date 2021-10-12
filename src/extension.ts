@@ -5,18 +5,31 @@
 import {window, ExtensionContext, commands} from 'vscode';
 import {initializePreferences} from './DataController';
 import {onboardInit} from './user/OnboardManager';
-import {getVersion, logIt, getPluginName, getItem, displayReadmeIfNotExists, setItem, getWorkspaceName, isPrimaryWindow} from './Util';
+import {
+  getVersion,
+  logIt,
+  getPluginName,
+  getItem,
+  displayReadmeIfNotExists,
+  setItem,
+  getWorkspaceName,
+  isPrimaryWindow,
+} from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
 import {softwarePost} from './http/HttpClient';
-import {initializeStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
+import {
+  initializeStatusBar,
+  updateFlowModeStatusBar,
+  updateStatusBarWithSummaryData,
+} from './managers/StatusBarManager';
 import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {LocalStorageManager} from './managers/LocalStorageManager';
 import {ChangeStateManager} from './managers/ChangeStateManager';
-import { initializeFlowModeState } from './managers/FlowManager';
+import {initializeFlowModeState} from './managers/FlowManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -110,7 +123,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // show the readme if it doesn't exist
   displayReadmeIfNotExists();
-
 
   initializeStatusBar();
 

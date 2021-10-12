@@ -13,8 +13,7 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
-import { triggerChangeEvent } from '../storage/SessionSummaryData';
-import { getPreference } from '../DataController';
+import {getPreference} from '../DataController';
 
 let enabledFlow = false;
 
@@ -31,7 +30,7 @@ export async function updateFlowModeStatus() {
   await initializeFlowModeState();
 }
 
-export async function enableFlow({ automated = false, skipSlackCheck = false, process_flow_session = true }) {
+export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
   if (enabledFlow) {
     // already enabled locally, but update the status bar just in case
     updateFlowStatus();
@@ -45,8 +44,8 @@ export async function enableFlow({ automated = false, skipSlackCheck = false, pr
     },
 
     async (progress) => {
-      await initiateFlow({ automated, skipSlackCheck, process_flow_session }).catch((e) => {
-        console.error("[CodeTime] Unable to initiate flow. ", e.message);
+      await initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
+        console.error('[CodeTime] Unable to initiate flow. ', e.message);
       });
     }
   );
@@ -72,7 +71,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   if (process_flow_session && isPrimaryWindow()) {
-    softwarePost("/v1/flow_sessions", { automated }, getItem("jwt"));
+    softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
   }
 
   // update screen mode
@@ -110,7 +109,7 @@ export async function pauseFlow() {
 
 async function pauseFlowInitiate() {
   if (isPrimaryWindow()) {
-    await softwareDelete("/v1/flow_sessions", getItem("jwt"));
+    await softwareDelete('/v1/flow_sessions', getItem('jwt'));
   }
 
   showNormalScreenMode();
@@ -123,8 +122,7 @@ async function pauseFlowInitiate() {
 function updateFlowStatus() {
   setTimeout(() => {
     commands.executeCommand('codetime.refreshCodeTimeView');
-    triggerChangeEvent();
-  }, 2000)
+  }, 2000);
 
   updateFlowModeStatusBar();
 }
@@ -139,7 +137,7 @@ export async function determineFlowModeFromApi() {
 }
 
 export function isAutoFlowModeEnabled() {
-  const flowModeSettings: any = getPreference("flowMode");
+  const flowModeSettings: any = getPreference('flowMode');
   if (flowModeSettings?.editor.autoEnterFlowMode !== undefined) {
     return flowModeSettings.editor.autoEnterFlowMode;
   }

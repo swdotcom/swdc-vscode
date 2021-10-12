@@ -3,10 +3,6 @@ import {getNowTimes, getItem, coalesceNumber, getSessionSummaryFile} from '../Ut
 import {DEFAULT_SESSION_THRESHOLD_SECONDS} from '../Constants';
 import {getFileDataAsJson, storeJsonData} from '../managers/FileManager';
 
-export function triggerChangeEvent() {
-  saveSessionSummaryToDisk(getFileDataAsJson(getSessionSummaryFile()));
-}
-
 export function getSessionThresholdSeconds() {
   const thresholdSeconds = getItem('sessionThresholdInSec') || DEFAULT_SESSION_THRESHOLD_SECONDS;
   return thresholdSeconds;

@@ -426,7 +426,7 @@ export function isNewDay() {
   const {day} = getNowTimes();
   const currentDay = getItem('currentDay');
   const dayChanged = !!(currentDay !== day);
-  if (!dayChanged) {
+  if (dayChanged) {
     setItem('currentDay', day);
     // refetch the current day stats
     setTimeout(() => {
