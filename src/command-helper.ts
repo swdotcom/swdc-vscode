@@ -389,7 +389,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.showOrgDashboard', (org_name) => {
-      launchWebUrl(`${app_url}/dashboard/code_time?organization_slug=${org_name}`);
+      launchWebUrl(`${app_url}/dashboard/devops_performance?organization_slug=${org_name}`);
     })
   );
 
@@ -418,7 +418,7 @@ export function createCommands(
   // MANAGE SLACK CONNECTION
   cmds.push(
     commands.registerCommand('codetime.manageSlackConnection', () => {
-      showSlackManageOptions();
+      progressIt('Manage Slack connections...', showSlackManageOptions);
     })
   );
 
