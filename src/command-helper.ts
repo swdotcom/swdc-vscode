@@ -2,7 +2,6 @@ import {commands, Disposable, window, ExtensionContext} from 'vscode';
 import {launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashboard, setItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem, UIInteractionType} from './model/models';
-import {ProjectCommitManager} from './menu/ProjectCommitManager';
 import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} from './managers/SlackManager';
