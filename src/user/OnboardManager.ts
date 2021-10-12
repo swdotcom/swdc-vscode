@@ -14,7 +14,7 @@ import {isResponseOk, serverIsAvailable, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {authenticationCompleteHandler} from '../DataController';
 import {api_endpoint, app_url} from '../Constants';
-import { URLSearchParams } from 'url';
+import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
 let authAdded = false;
@@ -30,7 +30,6 @@ export async function onboardInit(ctx: ExtensionContext, callback: any) {
   const windowState = window.state;
 
   if (jwt) {
-    await handleIncompleteAuth();
     // we have the jwt, call the callback that anon was not created
     return callback(ctx, false /*anonCreated*/);
   }
@@ -110,14 +109,6 @@ export async function lazilyPollForAuth(tries: number = 20) {
     setTimeout(() => {
       lazilyPollForAuth(tries);
     }, 15000);
-  }
-}
-
-export async function handleIncompleteAuth() {
-  const name = getItem('name');
-  if (!name) {
-    // fetch the user
-    getUserRegistrationInfo();
   }
 }
 
