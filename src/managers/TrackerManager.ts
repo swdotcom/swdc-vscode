@@ -1,5 +1,6 @@
 import swdcTracker from 'swdc-tracker';
 import {api_endpoint} from '../Constants';
+import {version} from 'vscode';
 import {
   getPluginName,
   getItem,
@@ -8,6 +9,7 @@ import {
   getWorkspaceFolders,
   getGitEventFile,
   isGitProject,
+  getEditorName,
 } from '../Util';
 import {KpmItem} from '../model/models';
 import {getResourceInfo} from '../repo/KpmRepoManager';
@@ -287,6 +289,8 @@ export class TrackerManager {
       plugin_id: getPluginId(),
       plugin_name: getPluginName(),
       plugin_version: getVersion(),
+      editor_name: getEditorName(),
+      editor_version: version,
     };
   }
 

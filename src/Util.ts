@@ -62,6 +62,10 @@ export function getVersion() {
   return extension ? extension.packageJSON.version : '2.5.27';
 }
 
+export function getEditorName() {
+  return 'vscode';
+}
+
 export function isGitProject(projectDir: string) {
   if (!projectDir) {
     return false;

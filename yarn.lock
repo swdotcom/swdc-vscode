@@ -494,19 +494,19 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha1-x57Zf380y48robyXkLzDZkdLS3k=
 
-"axios@^ 0.22.0", axios@^0.22.0:
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.22.0.tgz#bf702c41fb50fbca4539589d839a077117b79b25"
-  integrity sha512-Z0U3uhqQeg1oNcihswf4ZD57O3NrR1+ZXhxaROaWpDmsDTx7T2HNBV2ulBtie2hwJptu8UvgnJoK+BIqdzh/1w==
-  dependencies:
-    follow-redirects "^1.14.4"
-
 axios@^0.21.1:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
   dependencies:
     follow-redirects "^1.14.0"
+
+axios@^0.22.0:
+  version "0.22.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.22.0.tgz#bf702c41fb50fbca4539589d839a077117b79b25"
+  integrity sha512-Z0U3uhqQeg1oNcihswf4ZD57O3NrR1+ZXhxaROaWpDmsDTx7T2HNBV2ulBtie2hwJptu8UvgnJoK+BIqdzh/1w==
+  dependencies:
+    follow-redirects "^1.14.4"
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -1707,14 +1707,14 @@ supports-color@^8.0.0:
   dependencies:
     has-flag "^4.0.0"
 
-swdc-tracker@^1.4.9:
-  version "1.4.9"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.4.9.tgz#c69a6f5d77ee29ad707fa6a41573eb1dbfef7a7d"
-  integrity sha512-TcJt9gs2nRncZPP18HkhLf3UFRWXoXRetwhIqQRLiS6hFTQRrv+CySKnOpM0C6KLEz56Yj5R6QbGQddXCO+ozA==
+swdc-tracker@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.5.0.tgz#01160a83399255753a101e9f7b020504848cbacb"
+  integrity sha512-PjeS381ke/fSmhL33hJqLxoSGMwnO6zkKLXKtwY+shs85326E7cB3yxWBMHdM+wnL9kG09PJUItbvBA1326DUg==
   dependencies:
     "@snowplow/node-tracker" "^3.1.5"
     "@types/node" "^16.10.3"
-    axios "^ 0.22.0"
+    axios "^0.22.0"
     file-it "^1.1.2"
     libsodium "^0.7.9"
     libsodium-wrappers "^0.7.9"
