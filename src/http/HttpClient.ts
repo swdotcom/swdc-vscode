@@ -181,7 +181,6 @@ function updateOutgoingHeader() {
   }
 
   appApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
-  beApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
 }
 
 function getResponseStatus(resp: any) {
