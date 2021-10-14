@@ -10,10 +10,10 @@ import {
   logIt,
   getPluginName,
   getItem,
-  displayReadmeIfNotExists,
   setItem,
   getWorkspaceName,
   isPrimaryWindow,
+  displayReadme,
 } from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
@@ -27,7 +27,6 @@ import {
 } from './managers/StatusBarManager';
 import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
-import {LocalStorageManager} from './managers/LocalStorageManager';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 
@@ -35,7 +34,6 @@ let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
-let localStorage: LocalStorageManager;
 
 //
 // Add the keystroke controller to the ext ctx, which
@@ -64,12 +62,10 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
 
-  localStorage = LocalStorageManager.getInstance(ctx);
-
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
-    setLocalStorageValue('primary_window', getWorkspaceName());
+    setItem('vscode_ct_primary_window', getWorkspaceName());
   } else {
     // 5 to 10 second delay
     const secondDelay = getRandomArbitrary(5, 10);
@@ -77,14 +73,6 @@ export async function activate(ctx: ExtensionContext) {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
   }
-}
-
-export function getLocalStorageValue(key: string) {
-  return localStorage.getValue(key);
-}
-
-export function setLocalStorageValue(key: string, value: any) {
-  localStorage.setValue(key, value);
 }
 
 function getRandomArbitrary(min: any, max: any) {
@@ -119,10 +107,9 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
     // activate the plugin
     softwarePost('/plugins/activate', {}, getItem('jwt'));
-  }
 
-  // show the readme if it doesn't exist
-  displayReadmeIfNotExists();
+    displayReadme();
+  }
 
   initializeStatusBar();
 
