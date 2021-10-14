@@ -85,7 +85,8 @@ function getReportGeneratorHtml() {
 }
 
 async function getDashboardHtml() {
-  const resp = await softwareGet('/v1/plugin_dashboard', getItem('jwt'));
+  const api = `/v1/plugin_dashboard?is_light_mode=${!!(window.activeColorTheme.kind === 1)}`;
+  const resp = await softwareGet(api, getItem('jwt'));
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
