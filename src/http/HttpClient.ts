@@ -2,7 +2,17 @@ import axios from 'axios';
 
 import {api_endpoint, app_url} from '../Constants';
 
-import {logIt, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, getItem} from '../Util';
+import {
+  logIt,
+  getPluginId,
+  getPluginName,
+  getVersion,
+  getOs,
+  getOffsetSeconds,
+  getPluginUuid,
+  getItem,
+  getEditorName,
+} from '../Util';
 
 // build the axios api base url
 const beApi: any = axios.create({
@@ -24,7 +34,7 @@ const headers = {
   'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
   'X-SWDC-Plugin-UUID': getPluginUuid(),
   'X-SWDC-Plugin-Type': 'codetime',
-  'X-SWDC-Plugin-Editor': 'vscode',
+  'X-SWDC-Plugin-Editor': getEditorName(),
 };
 
 beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
