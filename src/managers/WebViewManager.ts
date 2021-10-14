@@ -85,8 +85,7 @@ function getReportGeneratorHtml() {
 }
 
 async function getDashboardHtml() {
-  const api = `/v1/plugin_dashboard?is_light_mode=${!!(window.activeColorTheme.kind === 1)}`;
-  const resp = await softwareGet(api, getItem('jwt'));
+  const resp = await softwareGet('/v1/plugin_dashboard', getItem('jwt'));
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
@@ -96,10 +95,7 @@ async function getDashboardHtml() {
 }
 
 async function getReportsHtml() {
-  const params = {
-    is_light_mode: !!(window.activeColorTheme.kind === 1),
-  };
-  const resp = await appGet('/plugin/reports', params);
+  const resp = await appGet('/plugin/reports', {});
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
