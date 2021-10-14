@@ -15,9 +15,9 @@ export const HIDE_CODE_TIME_STATUS_LABEL = 'Hide Code Time status';
 export const SHOW_CODE_TIME_STATUS_LABEL = 'Show Code Time status';
 
 // Directory where software data is stored
-export const SOFTWARE_DIRECTORY = '.software';
-export const api_endpoint = 'https://api.software.com';
-export const app_url = 'https://app.software.com';
+export const SOFTWARE_DIRECTORY = '.software-staging';//'.software';
+export const api_endpoint = 'https://stagingapi.software.com';//'https://api.software.com';
+export const app_url = 'https://staging.software.com';//'https://app.software.com';
 
 export const vscode_issues_url = 'https://github.com/swdotcom/swdc-vscode/issues';
 export const create_org_url = 'https://app.software.com/github_onboard';
