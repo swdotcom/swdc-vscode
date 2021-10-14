@@ -16,7 +16,6 @@ export const SHOW_CODE_TIME_STATUS_LABEL = 'Show Code Time status';
 
 // Directory where software data is stored
 export const SOFTWARE_DIRECTORY = '.software';
-// Endpoints
 export const api_endpoint = 'https://api.software.com';
 export const app_url = 'https://app.software.com';
 
