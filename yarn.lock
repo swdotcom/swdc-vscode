@@ -897,6 +897,14 @@ file-it@^1.1.2:
     "@types/universalify" "^1.0.0"
     universalify "^2.0.0"
 
+file-it@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/file-it/-/file-it-1.1.5.tgz#8df20965deac400c6b073dd96de1fc5b5af42c5a"
+  integrity sha512-OynZKH7VXn7pSzK2tS7gGJ7i+eQ7326SfCtafbjmpVdza+j+wk4kJ6XZNOrdrYPnl9kgnAnbGX1AzwqPwymiDQ==
+  dependencies:
+    "@types/universalify" "^1.0.0"
+    universalify "^2.0.0"
+
 file-loader@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/file-loader/-/file-loader-6.2.0.tgz#baef7cf8e1840df325e4390b4484879480eebe4d"
