@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { window } from 'vscode';
+import {window} from 'vscode';
 
 import {api_endpoint, app_url} from '../Constants';
 
@@ -35,7 +35,7 @@ const headers = {
   'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
   'X-SWDC-Plugin-UUID': getPluginUuid(),
   'X-SWDC-Plugin-Type': 'codetime',
-  'X-SWDC-Plugin-Editor': getEditorName()
+  'X-SWDC-Plugin-Editor': getEditorName(),
 };
 
 beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
@@ -181,6 +181,7 @@ function updateOutgoingHeader() {
   }
 
   appApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
+  beApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
 }
 
 function getResponseStatus(resp: any) {
