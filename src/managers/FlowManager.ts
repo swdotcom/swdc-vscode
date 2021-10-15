@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getItem, isPrimaryWindow} from '../Util';
+import {getItem, isPrimaryWindow, logIt} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -71,6 +71,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   if (process_flow_session && isPrimaryWindow()) {
+    logIt('Entering Flow Mode');
     softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
   }
 
@@ -109,6 +110,7 @@ export async function pauseFlow() {
 
 async function pauseFlowInitiate() {
   if (isPrimaryWindow()) {
+    logIt('Exiting Flow Mode');
     await softwareDelete('/v1/flow_sessions', getItem('jwt'));
   }
 
