@@ -572,7 +572,6 @@ export function getImage(name: string) {
 
 export function isPrimaryWindow() {
   let workspaceWindow = getItem('vscode_ct_primary_window');
-  logIt(`primary window: ${workspaceWindow}`);
   if (!workspaceWindow) {
     // its not set yet, update it to this window
     workspaceWindow = getWorkspaceName();
