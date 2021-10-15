@@ -95,10 +95,7 @@ async function getDashboardHtml() {
 }
 
 async function getReportsHtml() {
-  const params = {
-    is_light_mode: !!(window.activeColorTheme.kind === 1),
-  };
-  const resp = await appGet('/plugin/reports', params);
+  const resp = await appGet('/plugin/reports', {});
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {

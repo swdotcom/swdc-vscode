@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {window} from 'vscode';
 
 import {api_endpoint, app_url} from '../Constants';
 
@@ -41,7 +42,7 @@ beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
 appApi.defaults.headers.common = {...appApi.defaults.headers.common, ...headers};
 
 export async function appGet(api: string, queryParams: any = {}) {
-  updateAppAPIAuthorization();
+  updateOutgoingHeader();
 
   return await appApi.get(api, {params: queryParams}).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);
@@ -50,7 +51,7 @@ export async function appGet(api: string, queryParams: any = {}) {
 }
 
 export async function appDelete(api: string, payload: any = {}) {
-  updateAppAPIAuthorization();
+  updateOutgoingHeader();
 
   return await appApi.delete(api, payload).catch((err: any) => {
     logIt(`error for DELETE ${api}, message: ${err.message}`);
@@ -77,9 +78,7 @@ export async function serverIsAvailable() {
  */
 
 export async function softwareGet(api: string, jwt: string | null, queryParams = {}) {
-  if (jwt) {
-    beApi.defaults.headers.common['Authorization'] = jwt;
-  }
+  updateOutgoingHeader();
 
   return await beApi.get(api, {params: queryParams}).catch((err: any) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
@@ -91,8 +90,7 @@ export async function softwareGet(api: string, jwt: string | null, queryParams =
  * perform a put request
  */
 export async function softwarePut(api: string, payload: any, jwt: string) {
-  // PUT the kpm to the PluginManager
-  beApi.defaults.headers.common['Authorization'] = jwt;
+  updateOutgoingHeader();
 
   return await beApi
     .put(api, payload)
@@ -109,10 +107,8 @@ export async function softwarePut(api: string, payload: any, jwt: string) {
  * perform a post request
  */
 export async function softwarePost(api: string, payload: any, jwt = null) {
-  // POST the kpm to the PluginManager
-  if (jwt) {
-    beApi.defaults.headers.common['Authorization'] = jwt;
-  }
+  updateOutgoingHeader();
+
   return beApi
     .post(api, payload)
     .then((resp: any) => {
@@ -128,7 +124,8 @@ export async function softwarePost(api: string, payload: any, jwt = null) {
  * perform a delete request
  */
 export async function softwareDelete(api: string, jwt: string) {
-  beApi.defaults.headers.common['Authorization'] = jwt;
+  updateOutgoingHeader();
+
   return beApi
     .delete(api)
     .then((resp: any) => {
@@ -176,11 +173,15 @@ export function isResponseOk(resp: any) {
   return false;
 }
 
-function updateAppAPIAuthorization() {
+function updateOutgoingHeader() {
   const token = getAuthorization();
   if (token) {
     appApi.defaults.headers.common['Authorization'] = token;
+    beApi.defaults.headers.common['Authorization'] = token;
   }
+
+  appApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
+  beApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);
 }
 
 function getResponseStatus(resp: any) {

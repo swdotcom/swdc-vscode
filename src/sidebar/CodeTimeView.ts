@@ -102,7 +102,6 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
 
   private async getHtml(): Promise<string> {
     const params = {
-      is_light_mode: !!(window.activeColorTheme.kind === 1),
       showing_statusbar: isStatusBarTextVisible(),
       skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
     };
