@@ -1,5 +1,5 @@
 import {commands, Disposable, window, ExtensionContext} from 'vscode';
-import {launchWebUrl, openFileInEditor, displayReadmeIfNotExists, launchWebDashboard, setItem} from './Util';
+import {launchWebUrl, openFileInEditor, displayReadme, launchWebDashboard, setItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem, UIInteractionType} from './model/models';
 import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
@@ -250,7 +250,7 @@ export function createCommands(
         item.color = null;
       }
       tracker.trackUIInteraction(item);
-      displayReadmeIfNotExists(true /*override*/);
+      displayReadme();
     })
   );
 

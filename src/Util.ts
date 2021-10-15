@@ -1,4 +1,4 @@
-import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, TextDocument} from 'vscode';
+import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder} from 'vscode';
 import {
   CODE_TIME_EXT_ID,
   app_url,
@@ -12,7 +12,6 @@ import {v4 as uuidv4} from 'uuid';
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
-import {getLocalStorageValue, setLocalStorageValue} from './extension';
 import {SummaryManager} from './managers/SummaryManager';
 
 const moment = require('moment-timezone');
@@ -364,15 +363,11 @@ export function getLocalREADMEFile() {
   return file;
 }
 
-export function displayReadmeIfNotExists(override = false) {
-  const initialized_readme = getItem('vscode_CtReadme');
+export function displayReadme() {
+  const readmeUri = Uri.file(getLocalREADMEFile());
 
-  if (!initialized_readme || override) {
-    const readmeUri = Uri.file(getLocalREADMEFile());
-
-    commands.executeCommand('markdown.showPreview', readmeUri, ViewColumn.One);
-    setItem('vscode_CtReadme', true);
-  }
+  commands.executeCommand('markdown.showPreview', readmeUri, ViewColumn.One);
+  setItem('vscode_CtReadme', true);
 }
 
 export function openFileInEditor(file: string) {
@@ -576,11 +571,12 @@ export function getImage(name: string) {
 }
 
 export function isPrimaryWindow() {
-  let workspaceWindow = getLocalStorageValue('primary_window');
+  let workspaceWindow = getItem('vscode_ct_primary_window');
+  logIt(`primary window: ${workspaceWindow}`);
   if (!workspaceWindow) {
     // its not set yet, update it to this window
     workspaceWindow = getWorkspaceName();
-    setLocalStorageValue('primary_window', workspaceWindow);
+    setItem('vscode_ct_primary_window', workspaceWindow);
   }
   return !!(workspaceWindow === getWorkspaceName());
 }
