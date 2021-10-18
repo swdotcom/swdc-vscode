@@ -1,3 +1,5 @@
+import { logIt } from '../Util';
+
 const {execSync} = require('child_process');
 
 export function execCmd(cmd: string = '', projectDir: string | null = null, returnLines: boolean = false): any {
@@ -18,7 +20,7 @@ export function execCmd(cmd: string = '', projectDir: string | null = null, retu
       }
     }
   } catch (e: any) {
-    console.log('Error processing command: ', e.message);
+    logIt(`${e.message}`);
   }
   return result;
 }

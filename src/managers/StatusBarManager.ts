@@ -1,4 +1,4 @@
-import {StatusBarAlignment, StatusBarItem, window} from 'vscode';
+import {commands, StatusBarAlignment, StatusBarItem, window} from 'vscode';
 import {SessionSummary} from '../model/models';
 import {getItem, getSessionSummaryFile, humanizeMinutes} from '../Util';
 import {getFileDataAsJson} from './FileManager';
@@ -25,6 +25,7 @@ export async function initializeStatusBar() {
 }
 
 export async function updateFlowModeStatusBar() {
+  const prevCmd: any | undefined = ctFlowModeStatusBarItem ? ctFlowModeStatusBarItem.command : undefined;
   const {flowModeCommand, flowModeText, flowModeTooltip} = await getFlowModeStatusBarInfo();
   if (ctFlowModeStatusBarItem) {
     ctFlowModeStatusBarItem.command = flowModeCommand;
@@ -34,6 +35,11 @@ export async function updateFlowModeStatusBar() {
       ctFlowModeStatusBarItem.show();
     } else {
       ctFlowModeStatusBarItem.hide();
+    }
+
+    if (prevCmd !== undefined && prevCmd !== flowModeCommand) {
+      // refresh the sidebar
+      commands.executeCommand('codetime.refreshCodeTimeView');
     }
   }
 }
