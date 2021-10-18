@@ -9,13 +9,13 @@ import {
   WebviewView,
   WebviewViewProvider,
   WebviewViewResolveContext,
-  window,
 } from 'vscode';
 import {appGet, isResponseOk} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
 import {getItem} from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {isStatusBarTextVisible} from '../managers/StatusBarManager';
+import { isFlowModeEnabled } from '../managers/FlowManager';
 
 export class CodeTimeView implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -31,6 +31,10 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       return;
     }
     this._webview.webview.html = await this.getHtml();
+  }
+
+  public isVisible(): boolean {
+    return !!(this._webview && this._webview.visible);
   }
 
   private _onDidClose = new EventEmitter<void>();
@@ -102,6 +106,7 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
 
   private async getHtml(): Promise<string> {
     const params = {
+      enabled_flow: isFlowModeEnabled(),
       showing_statusbar: isStatusBarTextVisible(),
       skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
     };
