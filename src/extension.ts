@@ -89,8 +89,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // INIT websockets
   try {
     initializeWebsockets();
-  } catch (e) {
-    console.error('Failed to initialize websockets', e);
+  } catch (e: any) {
+    logIt(`Failed to initialize websockets: ${e.message}`);
   }
 
   // INIT keystroke analysis tracker

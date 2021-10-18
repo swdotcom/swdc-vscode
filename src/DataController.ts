@@ -8,6 +8,7 @@ import {
   setAuthCallbackState,
   getIntegrations,
   syncSlackIntegrations,
+  logIt,
 } from './Util';
 import {DEFAULT_SESSION_THRESHOLD_SECONDS} from './Constants';
 import {clearSessionSummaryData} from './storage/SessionSummaryData';
@@ -143,8 +144,8 @@ export async function authenticationCompleteHandler(user: any) {
 
     try {
       initializeWebsockets();
-    } catch (e) {
-      console.error('Failed to initialize codetime websockets', e);
+    } catch (e: any) {
+      logIt(`Failed to initialize websockets: ${e.message}`);
     }
 
     // fetch any orgs for this user

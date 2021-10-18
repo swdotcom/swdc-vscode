@@ -149,6 +149,14 @@ const handleIncomingMessage = (data: any) => {
         break;
     }
   } catch (e) {
-    console.error('[CodeTime] Unable to handle incoming message', data);
+    if (data) {
+      let dataStr: string = '';
+      try {
+        dataStr = JSON.stringify(data);
+      } catch (e) {
+        dataStr = data.toString();
+      }
+      logIt(`Unable to handle incoming message: ${dataStr}`);
+    }
   }
 };
