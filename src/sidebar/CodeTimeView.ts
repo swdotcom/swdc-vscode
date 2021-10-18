@@ -15,22 +15,27 @@ import {getConnectionErrorHtml} from '../local/404';
 import {getItem} from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {isStatusBarTextVisible} from '../managers/StatusBarManager';
-import { isFlowModeEnabled } from '../managers/FlowManager';
 
 export class CodeTimeView implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
   private _disposable: Disposable | undefined;
+  private _updateView: boolean = false;
 
   constructor(private readonly _extensionUri: Uri) {
     //
   }
 
   public async refresh() {
-    if (!this._webview) {
+    if (!this._webview || !this.visible) {
+      this._updateView = true;
       // its not available to refresh yet
       return;
     }
     this._webview.webview.html = await this.getHtml();
+  }
+
+  public updateViewRequired(): boolean {
+    return this._updateView;
   }
 
   private _onDidClose = new EventEmitter<void>();
@@ -107,6 +112,7 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
     };
     const resp = await appGet('/plugin/sidebar', params);
     if (isResponseOk(resp)) {
+      this._updateView = false;
       return resp.data;
     }
 
