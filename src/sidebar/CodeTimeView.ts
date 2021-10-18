@@ -104,10 +104,10 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       showing_statusbar: isStatusBarTextVisible(),
       skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
     };
-    // const resp = await appGet('/plugin/sidebar', params);
-    // if (isResponseOk(resp)) {
-    //   return resp.data;
-    // }
+    const resp = await appGet('/plugin/sidebar', params);
+    if (isResponseOk(resp)) {
+      return resp.data;
+    }
 
     return await getConnectionErrorHtml();
   }
