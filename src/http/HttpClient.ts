@@ -18,7 +18,7 @@ import {
 // build the axios api base url
 const beApi: any = axios.create({
   baseURL: `${api_endpoint}`,
-  timeout: 15000,
+  timeout: 20000,
 });
 
 const appApi: any = axios.create({

@@ -401,7 +401,8 @@ export function getLogId() {
 }
 
 export function logIt(message: string) {
-  outputChannel.appendLine(`${getLogId()}: ${message}`);
+  const windowMsg: string = isPrimaryWindow() ? '(p)' : '';
+  outputChannel.appendLine(`${new Date().toISOString()} ${getLogId()}${windowMsg}: ${message}`);
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {

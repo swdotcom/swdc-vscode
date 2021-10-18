@@ -1,5 +1,5 @@
 import {api_endpoint} from './Constants';
-import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid} from './Util';
+import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt} from './Util';
 import {handleFlowScoreMessage} from './message_handlers/flow_score';
 import {handleAuthenticatedPluginUser} from './message_handlers/authenticated_plugin_user';
 import {handleIntegrationConnectionSocketEvent} from './message_handlers/integration_connection';
@@ -123,19 +123,18 @@ export function clearWebsocketConnectionRetryTimeout() {
   }
 }
 
-//.
+// handle incoming websocket messages
 const handleIncomingMessage = (data: any) => {
   try {
     const message = JSON.parse(data);
 
     switch (message.type) {
-      case 'info':
-        console.info(`[CodeTime] ${message.body}`);
-        break;
       case 'flow_score':
+        try { logIt(`Event received ${JSON.stringify(message.body.flowScore)}`) } catch (e) {}
         handleFlowScoreMessage(message);
         break;
       case 'flow_state':
+        try { logIt(`Event received ${JSON.stringify(message)}`) } catch (e) {}
         handleFlowStateMessage(message.body);
         break;
       case 'authenticated_plugin_user':
@@ -145,6 +144,7 @@ const handleIncomingMessage = (data: any) => {
         handleIntegrationConnectionSocketEvent(message.body);
         break;
       case 'current_day_stats_update':
+        try { logIt(`Event received ${JSON.stringify(message.body.data)}`) } catch (e) {}
         handleCurrentDayStatsUpdate(message.body);
         break;
     }

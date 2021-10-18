@@ -59,13 +59,16 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+  if (window.state.focused) {
+    setItem('vscode_ct_primary_window', getWorkspaceName());
+  }
+
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
 
   // onboard the user as anonymous if it's being installed
   if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
-    setItem('vscode_ct_primary_window', getWorkspaceName());
   } else {
     // 5 to 10 second delay
     const secondDelay = getRandomArbitrary(5, 10);
