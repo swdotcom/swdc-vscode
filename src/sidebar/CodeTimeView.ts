@@ -33,10 +33,6 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
     this._webview.webview.html = await this.getHtml();
   }
 
-  public isVisible(): boolean {
-    return !!(this._webview && this._webview.visible);
-  }
-
   private _onDidClose = new EventEmitter<void>();
   get onDidClose(): Event<void> {
     return this._onDidClose.event;
@@ -106,7 +102,6 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
 
   private async getHtml(): Promise<string> {
     const params = {
-      enabled_flow: isFlowModeEnabled(),
       showing_statusbar: isStatusBarTextVisible(),
       skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
     };

@@ -23,7 +23,7 @@ import {
   getWebViewDashboardButton,
 } from './tree/TreeButtonProvider';
 import {rebuildOrgs} from './managers/OrgManager';
-import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
+import {toggleStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import {showSlackManageOptions} from './managers/PromptManager';
@@ -65,9 +65,6 @@ export function createCommands(
     commands.registerCommand('codetime.displaySidebar', () => {
       // opens the sidebar manually from a the above command
       commands.executeCommand('workbench.view.extension.code-time-sidebar');
-      if (!sidebar.isVisible()) {
-        sidebar.refresh();
-      }
     })
   );
 
@@ -410,8 +407,7 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.updateViewMetrics', async () => {
-      updateFlowModeStatusBar();
+    commands.registerCommand('codetime.updateViewMetrics', () => {
       updateStatusBarWithSummaryData();
     })
   );
