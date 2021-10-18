@@ -48,7 +48,7 @@ export function createCommands(
   cmds.push(
     window.registerWebviewViewProvider('codetime.webView', sidebar, {
       webviewOptions: {
-        retainContextWhenHidden: true,
+        retainContextWhenHidden: false,
       },
     })
   );
@@ -407,7 +407,7 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.updateViewMetrics', async () => {
+    commands.registerCommand('codetime.updateViewMetrics', () => {
       updateFlowModeStatusBar();
       updateStatusBarWithSummaryData();
     })

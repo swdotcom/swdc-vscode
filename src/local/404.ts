@@ -88,7 +88,7 @@ export async function getConnectionErrorHtml() {
           <div class="dialog">
             <img src="${dancePartyImg}" alt="DJ-Cody">
             <p class="body-text" style="margin-top: 10px">
-              Please check your connection and try again later.
+              Our service for this view is temporarily unavailable. Please try again later.
             </p>
           </div>
           <div style="margin-bottom: 10px">

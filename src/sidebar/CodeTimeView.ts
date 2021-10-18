@@ -9,7 +9,6 @@ import {
   WebviewView,
   WebviewViewProvider,
   WebviewViewResolveContext,
-  window,
 } from 'vscode';
 import {appGet, isResponseOk} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
