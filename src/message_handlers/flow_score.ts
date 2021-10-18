@@ -3,7 +3,7 @@ import { logIt } from '../Util';
 
 export async function handleFlowScoreMessage(message: any) {
 
-  if (isAutoFlowModeEnabled() && !isFlowModeEnabled()) {
+  if (isAutoFlowModeEnabled()) {
     try {
       enableFlow({ automated: true });
     } catch (e: any) {
