@@ -130,11 +130,11 @@ const handleIncomingMessage = (data: any) => {
 
     switch (message.type) {
       case 'flow_score':
-        try { logIt(`Event received ${JSON.stringify(message.body.flowScore)}`) } catch (e) {}
+        try { logIt(`Flow score: ${JSON.stringify(message.body.flowScore)}`) } catch (e) {}
         handleFlowScoreMessage(message);
         break;
       case 'flow_state':
-        try { logIt(`Event received ${JSON.stringify(message)}`) } catch (e) {}
+        try { logIt(`Flow state update: ${JSON.stringify(message)}`) } catch (e) {}
         handleFlowStateMessage(message.body);
         break;
       case 'authenticated_plugin_user':
@@ -144,7 +144,7 @@ const handleIncomingMessage = (data: any) => {
         handleIntegrationConnectionSocketEvent(message.body);
         break;
       case 'current_day_stats_update':
-        try { logIt(`Event received ${JSON.stringify(message.body.data)}`) } catch (e) {}
+        try { logIt(`Current day stats: ${JSON.stringify(message.body.data)}`) } catch (e) {}
         handleCurrentDayStatsUpdate(message.body);
         break;
     }
