@@ -13,6 +13,7 @@ import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import {SummaryManager} from './managers/SummaryManager';
+import { formatISO } from 'date-fns';
 
 const moment = require('moment-timezone');
 const open = require('open');
@@ -315,7 +316,7 @@ export function getLogId() {
 
 export function logIt(message: string) {
   const windowMsg: string = isPrimaryWindow() ? '(p)' : '';
-  outputChannel.appendLine(`${new Date().toISOString()} ${getLogId()}${windowMsg}: ${message}`);
+  outputChannel.appendLine(`${formatISO(new Date())} ${getLogId()}${windowMsg}: ${message}`);
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {
