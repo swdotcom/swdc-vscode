@@ -50,7 +50,7 @@ export class SyncManager {
     fs.watch(getFlowChangeFile(), (curr: any, prev: any) => {
       // if there's a change and it's not the primary window, process
       if (curr === 'change' && !isPrimaryWindow()) {
-        // prevent rapid session summary change issues
+        // prevent rapid flow change issues
         const now_in_millis: number = new Date().valueOf();
         if (passedThreshold(now_in_millis, last_time_flow_synced)) {
           last_time_flow_synced = now_in_millis;
