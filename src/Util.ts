@@ -242,14 +242,6 @@ export function getGitEventFile() {
   return getFile('gitEvents.json');
 }
 
-export function getProjectCodeSummaryFile() {
-  return getFile('ProjectCodeSummary.txt');
-}
-
-export function getDailyReportSummaryFile() {
-  return getFile('DailyReportSummary.txt');
-}
-
 export function getIntegrationsFile() {
   return getFile('integrations.json');
 }
