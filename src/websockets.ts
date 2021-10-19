@@ -72,7 +72,7 @@ export function initializeWebsockets() {
   }
 
   ws.on('open', function open() {
-    console.debug('[CodeTime] websockets connection open');
+    logIt('websockets connection open');
   });
 
   ws.on('ping', heartbeat);
@@ -82,7 +82,7 @@ export function initializeWebsockets() {
   });
 
   ws.on('close', function close(code: any, reason: any) {
-    console.debug('[CodeTime] websockets connection closed');
+    logIt('websockets connection closed');
     // clear this client side timeout
     if (pingTimeout) {
       clearTimeout(pingTimeout);
@@ -91,25 +91,25 @@ export function initializeWebsockets() {
   });
 
   ws.on('unexpected-response', function unexpectedResponse(request: any, response: any) {
-    console.debug('[CodeTime] unexpected websockets response:', response.statusCode);
+    logIt(`unexpected websockets response: ${response.statusCode}`);
 
     if (response.statusCode === 426) {
-      console.error('[CodeTime] websockets request had invalid headers. Are you behind a proxy?');
+      logIt('websockets request had invalid headers. Are you behind a proxy?');
     } else {
       retryConnection();
     }
   });
 
   ws.on('error', function error(e: any) {
-    console.error('[CodeTime] error connecting to websockets', e);
+    logIt(`error connecting to websockets: ${e.message}`);
   });
 }
 
 function retryConnection() {
-  console.debug('[CodeTime] retrying websockets connecting in 10 seconds');
+  logIt('retrying websockets connecting in 10 seconds');
 
   retryTimeout = setTimeout(() => {
-    console.log('[CodeTime] attempting to reinitialize websockets connection');
+    logIt('attempting to reinitialize websockets connection');
     initializeWebsockets();
   }, 10000);
 }
@@ -134,7 +134,7 @@ const handleIncomingMessage = (data: any) => {
         handleFlowScoreMessage(message);
         break;
       case 'flow_state':
-        try { logIt(`Flow state update: ${JSON.stringify(message)}`) } catch (e) {}
+        try { logIt(`Flow state update: ${JSON.stringify(message.body)}`) } catch (e) {}
         handleFlowStateMessage(message.body);
         break;
       case 'authenticated_plugin_user':
