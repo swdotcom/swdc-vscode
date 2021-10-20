@@ -14,6 +14,7 @@ import {
   getWorkspaceName,
   isPrimaryWindow,
   displayReadme,
+  getRandomNumberWithinRange,
 } from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
@@ -71,16 +72,11 @@ export async function activate(ctx: ExtensionContext) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
   } else {
     // 5 to 10 second delay
-    const secondDelay = getRandomArbitrary(5, 10);
+    const secondDelay = getRandomNumberWithinRange(5, 10);
     setTimeout(() => {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);
   }
-}
-
-function getRandomArbitrary(min: any, max: any) {
-  max = max + 0.1;
-  return parseInt(Math.random() * (max - min) + min, 10);
 }
 
 export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: boolean) {
