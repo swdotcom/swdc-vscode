@@ -1,5 +1,5 @@
 import {api_endpoint} from './Constants';
-import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt} from './Util';
+import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomArbitrary} from './Util';
 import {handleFlowScoreMessage} from './message_handlers/flow_score';
 import {handleAuthenticatedPluginUser} from './message_handlers/authenticated_plugin_user';
 import {handleIntegrationConnectionSocketEvent} from './message_handlers/integration_connection';
@@ -15,16 +15,20 @@ const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
 let pingTimeout: NodeJS.Timer | undefined = undefined;
 let retryTimeout: NodeJS.Timer | undefined = undefined;
-const BASE_RETRY_MILLIS = 10000;
 
-let times: number = BASE_RETRY_MILLIS / 1000;
+const INITIAL_RECONNECT_DELAY: number = 1000;
+const MAX_RECONNECT_DELAY: number = 22000;
+// websocket reconnect delay
+let currentReconnectDelay: number = INITIAL_RECONNECT_DELAY;
 
 let ws: any | undefined = undefined;
 
 export function initializeWebsockets() {
+  logIt('initializing websocket connection');
   if (ws) {
+    // 1000 indicates a normal closure, meaning that the purpose for
+    // which the connection was established has been fulfilled
     ws.close(1000, 're-initializing websockets');
-    logIt('websocket connection terminated');
   }
 
   const options = {
@@ -82,8 +86,8 @@ export function initializeWebsockets() {
   }
 
   ws.on('open', function open() {
-    // reset "times"
-    times = BASE_RETRY_MILLIS / 1000;
+    // RESET reconnect delay
+    currentReconnectDelay = INITIAL_RECONNECT_DELAY;
     logIt('websockets connection open');
   });
 
@@ -119,15 +123,29 @@ export function initializeWebsockets() {
 }
 
 function retryConnection() {
+  const delay: number = getDelay();
 
-  let delay = Math.max(times * 1000, BASE_RETRY_MILLIS);
+  if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
+    // multiply until we've reached the max reconnect
+    currentReconnectDelay *= 2;
+  } else {
+    currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
+  }
 
   logIt(`retrying websockets connecting in ${delay / 1000} seconds`);
 
   retryTimeout = setTimeout(() => {
-    times++;
     initializeWebsockets();
   }, delay);
+}
+
+function getDelay() {
+  let rand: number = getRandomArbitrary(-5, 5);
+  if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
+    // if less than the max reconnect delay then increment the delay
+    rand = Math.random();
+  }
+  return currentReconnectDelay + Math.floor(rand * 1000);
 }
 
 export function clearWebsocketConnectionRetryTimeout() {
