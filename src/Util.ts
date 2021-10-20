@@ -32,7 +32,7 @@ let workspace_name: string | null = null;
 let hostname: string | null = null;
 let osUsername: string | null = null;
 
-export function getRandomArbitrary(min: number, max: number) {
+export function getRandomNumberWithinRange(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 

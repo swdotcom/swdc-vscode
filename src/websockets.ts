@@ -1,5 +1,5 @@
 import {api_endpoint} from './Constants';
-import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomArbitrary} from './Util';
+import {getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange} from './Util';
 import {handleFlowScoreMessage} from './message_handlers/flow_score';
 import {handleAuthenticatedPluginUser} from './message_handlers/authenticated_plugin_user';
 import {handleIntegrationConnectionSocketEvent} from './message_handlers/integration_connection';
@@ -140,7 +140,7 @@ function retryConnection() {
 }
 
 function getDelay() {
-  let rand: number = getRandomArbitrary(-5, 5);
+  let rand: number = getRandomNumberWithinRange(-5, 5);
   if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
     // if less than the max reconnect delay then increment the delay
     rand = Math.random();
