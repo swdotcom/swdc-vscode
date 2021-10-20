@@ -161,6 +161,8 @@ export async function authenticationCompleteHandler(user: any) {
 
   commands.executeCommand('codetime.refreshCodeTimeView');
 
+  logIt('Successfully logged on to Code Time');
+
   return updatedUserInfo;
 }
 

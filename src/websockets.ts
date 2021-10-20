@@ -16,7 +16,14 @@ let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
 let pingTimeout: NodeJS.Timer | undefined = undefined;
 let retryTimeout: NodeJS.Timer | undefined = undefined;
 
+let ws: any | undefined = undefined;
+
 export function initializeWebsockets() {
+  if (ws) {
+    ws.close(1000, 're-initializing websockets');
+    logIt('websocket connection terminated');
+  }
+
   const options = {
     headers: {
       Authorization: getItem('jwt'),
@@ -34,7 +41,7 @@ export function initializeWebsockets() {
   const host = api_endpoint.split('//')[1];
   const websockets_url = `${scheme}${host}/websockets`;
 
-  const ws = new WebSocket(websockets_url, options);
+  ws = new WebSocket(websockets_url, options);
 
   function heartbeat(buf: any) {
     try {
@@ -82,12 +89,13 @@ export function initializeWebsockets() {
   });
 
   ws.on('close', function close(code: any, reason: any) {
-    logIt('websockets connection closed');
-    // clear this client side timeout
-    if (pingTimeout) {
-      clearTimeout(pingTimeout);
+    if (code !== 1000) {
+      // clear this client side timeout
+      if (pingTimeout) {
+        clearTimeout(pingTimeout);
+      }
+      retryConnection();
     }
-    retryConnection();
   });
 
   ws.on('unexpected-response', function unexpectedResponse(request: any, response: any) {
