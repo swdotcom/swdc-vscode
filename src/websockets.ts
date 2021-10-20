@@ -15,6 +15,9 @@ const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
 let pingTimeout: NodeJS.Timer | undefined = undefined;
 let retryTimeout: NodeJS.Timer | undefined = undefined;
+const BASE_RETRY_MILLIS = 10000;
+
+let times: number = BASE_RETRY_MILLIS / 1000;
 
 let ws: any | undefined = undefined;
 
@@ -79,6 +82,8 @@ export function initializeWebsockets() {
   }
 
   ws.on('open', function open() {
+    // reset "times"
+    times = BASE_RETRY_MILLIS / 1000;
     logIt('websockets connection open');
   });
 
@@ -114,12 +119,15 @@ export function initializeWebsockets() {
 }
 
 function retryConnection() {
-  logIt('retrying websockets connecting in 10 seconds');
+
+  let delay = Math.max(times * 1000, BASE_RETRY_MILLIS);
+
+  logIt(`retrying websockets connecting in ${delay / 1000} seconds`);
 
   retryTimeout = setTimeout(() => {
-    logIt('attempting to reinitialize websockets connection');
+    times++;
     initializeWebsockets();
-  }, 10000);
+  }, delay);
 }
 
 export function clearWebsocketConnectionRetryTimeout() {
