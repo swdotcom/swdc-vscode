@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getItem, isPrimaryWindow, logIt} from '../Util';
+import {getFlowChangeState, getItem, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -15,15 +15,13 @@ import {
 import {updateFlowModeStatusBar} from './StatusBarManager';
 import {getPreference} from '../DataController';
 
-let enabledFlow = false;
-
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
   updateFlowStatus();
 }
 
 export function isFlowModeEnabled() {
-  return enabledFlow;
+  return getFlowChangeState();
 }
 
 export async function updateFlowModeStatus() {
@@ -31,7 +29,7 @@ export async function updateFlowModeStatus() {
 }
 
 export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
-  if (enabledFlow) {
+  if (isFlowModeEnabled()) {
     // already enabled locally, but update the status bar just in case
     updateFlowStatus();
     return;
@@ -71,6 +69,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   if (process_flow_session && isPrimaryWindow()) {
+    updateFlowChange(true);
     logIt('Entering Flow Mode');
     softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
   }
@@ -84,14 +83,14 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
     showNormalScreenMode();
   }
 
-  enabledFlow = true;
+  updateFlowChange(true);
   updateFlowStatus();
 }
 
 export async function pauseFlow() {
-  if (enabledFlow) {
+  if (isFlowModeEnabled()) {
     // set it to false to ensure it doesn't try to update continually based on any other websocket event
-    enabledFlow = false;
+    updateFlowChange(false);
     window.withProgress(
       {
         location: ProgressLocation.Notification,
@@ -110,13 +109,14 @@ export async function pauseFlow() {
 
 async function pauseFlowInitiate() {
   if (isPrimaryWindow()) {
+    updateFlowChange(false);
     logIt('Exiting Flow Mode');
     await softwareDelete('/v1/flow_sessions', getItem('jwt'));
   }
 
   showNormalScreenMode();
 
-  enabledFlow = false;
+  updateFlowChange(false);
 
   updateFlowStatus();
 }
@@ -135,7 +135,9 @@ export async function determineFlowModeFromApi() {
     : {data: {flow_sessions: []}};
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
-  enabledFlow = openFlowSessions?.length > 0;
+  const enabledFlow: boolean = !!(openFlowSessions?.length);
+
+  updateFlowChange(enabledFlow);
 }
 
 export function isAutoFlowModeEnabled() {

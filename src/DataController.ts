@@ -1,10 +1,8 @@
 import {window, commands} from 'vscode';
-import {softwareGet, isResponseOk, softwarePost, softwareDelete} from './http/HttpClient';
+import {softwareGet, isResponseOk, softwareDelete} from './http/HttpClient';
 import {
   getItem,
   setItem,
-  getProjectCodeSummaryFile,
-  getDailyReportSummaryFile,
   setAuthCallbackState,
   getIntegrations,
   syncSlackIntegrations,
@@ -16,7 +14,6 @@ import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import {userEventEmitter} from './events/userEventEmitter';
 import {getCachedOrgs} from './managers/OrgManager';
-import {storeContentData} from './managers/FileManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
 const {WebClient} = require('@slack/web-api');
 
@@ -165,44 +162,6 @@ export async function authenticationCompleteHandler(user: any) {
   commands.executeCommand('codetime.refreshCodeTimeView');
 
   return updatedUserInfo;
-}
-
-export function removeAllSlackIntegrations() {
-  const currentIntegrations = getIntegrations();
-
-  const newIntegrations = currentIntegrations.filter((n: any) => n.name.toLowerCase() !== 'slack');
-  syncSlackIntegrations(newIntegrations);
-}
-
-export async function writeDailyReportDashboard(type = 'yesterday', projectIds = []) {
-  let dashboardContent = '';
-  storeContentData(getDailyReportSummaryFile(), dashboardContent);
-}
-
-export async function writeProjectCommitDashboardByStartEnd(start: number, end: number, project_ids: any[]) {
-  const api = `/v1/user_metrics/project_summary`;
-  const result = await softwarePost(api, {project_ids, start, end}, getItem('jwt'));
-  await writeProjectCommitDashboard(result);
-}
-
-export async function writeProjectCommitDashboardByRangeType(type: string = 'lastWeek', project_ids: any[]) {
-  project_ids = project_ids.filter((n) => n);
-  const api = `/v1/user_metrics/project_summary`;
-  const result = await softwarePost(api, {project_ids, time_range: type}, getItem('jwt'));
-  await writeProjectCommitDashboard(result);
-}
-
-export async function writeProjectCommitDashboard(apiResult: any) {
-  let dashboardContent = '';
-  // [{projectId, name, identifier, commits, files_changed, insertions, deletions, hours,
-  //   keystrokes, characters_added, characters_deleted, lines_added, lines_removed},...]
-  if (isResponseOk(apiResult)) {
-    dashboardContent = apiResult.data;
-  } else {
-    dashboardContent += 'No data available\n';
-  }
-
-  storeContentData(getProjectCodeSummaryFile(), dashboardContent);
 }
 
 export async function getCachedSlackIntegrations() {

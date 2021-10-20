@@ -13,6 +13,7 @@ import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import {SummaryManager} from './managers/SummaryManager';
+import { formatISO } from 'date-fns';
 
 const moment = require('moment-timezone');
 const open = require('open');
@@ -23,12 +24,6 @@ const path = require('path');
 const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export const DASHBOARD_LABEL_WIDTH = 28;
-export const DASHBOARD_VALUE_WIDTH = 36;
-export const DASHBOARD_COL_WIDTH = 21;
-export const DASHBOARD_LRG_COL_WIDTH = 38;
-export const TABLE_WIDTH = 80;
-export const MARKER_WIDTH = 4;
 
 const dayFormat = 'YYYY-MM-DD';
 const dayTimeFormat = 'LLLL';
@@ -108,61 +103,12 @@ export function getNumberOfTextDocumentsOpen() {
   return workspace.textDocuments ? workspace.textDocuments.length : 0;
 }
 
-export function isFileOpen(fileName: string) {
-  if (getNumberOfTextDocumentsOpen() > 0) {
-    // check if the .software/CodeTime has already been opened
-    for (let i = 0; i < workspace.textDocuments.length; i++) {
-      let docObj = workspace.textDocuments[i];
-      if (docObj.fileName && docObj.fileName === fileName) {
-        return true;
-      }
-    }
-  }
-  return false;
+export function updateFlowChange(in_flow: boolean) {
+  setJsonItem(getFlowChangeFile(), "in_flow", in_flow);
 }
 
-export function getRootPathForFile(fileName: string) {
-  const folder = getProjectFolder(fileName);
-  if (folder) {
-    return folder.uri.fsPath;
-  }
-  return null;
-}
-
-export function getWorkspaceFolderByPath(path: string): WorkspaceFolder | null {
-  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-    for (let i = 0; i < workspace.workspaceFolders.length; i++) {
-      let workspaceFolder: WorkspaceFolder = workspace.workspaceFolders[i];
-      if (path?.includes(workspaceFolder.uri.fsPath)) {
-        return workspaceFolder;
-      }
-    }
-  }
-  return null;
-}
-
-export function getProjectFolder(fileName: string): WorkspaceFolder | null {
-  let liveshareFolder = null;
-  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-    for (let i = 0; i < workspace.workspaceFolders.length; i++) {
-      let workspaceFolder = workspace.workspaceFolders[i];
-      if (workspaceFolder.uri) {
-        let isVslsScheme = workspaceFolder.uri.scheme === 'vsls' ? true : false;
-        if (isVslsScheme) {
-          liveshareFolder = workspaceFolder;
-        }
-        let folderUri = workspaceFolder.uri;
-        if (folderUri && folderUri.fsPath && !isVslsScheme && fileName?.includes(folderUri.fsPath)) {
-          return workspaceFolder;
-        }
-      }
-    }
-  }
-  // wasn't found but if liveshareFolder was found, return that
-  if (liveshareFolder) {
-    return liveshareFolder;
-  }
-  return null;
+export function getFlowChangeState(): boolean {
+  return getJsonItem(getFlowChangeFile(), "in_flow") || false;
 }
 
 export function setItem(key: string, value: any) {
@@ -293,44 +239,8 @@ export function getSoftwareSessionFile() {
   return getFile('session.json');
 }
 
-export function getSoftwareDataStoreFile() {
-  return getFile('data.json');
-}
-
-export function getPluginEventsFile() {
-  return getFile('events.json');
-}
-
-export function getTimeCounterFile() {
-  return getFile('timeCounter.json');
-}
-
-export function getDashboardFile() {
-  return getFile('CodeTime.txt');
-}
-
-export function getCommitSummaryFile() {
-  return getFile('CommitSummary.txt');
-}
-
 export function getGitEventFile() {
   return getFile('gitEvents.json');
-}
-
-export function getSummaryInfoFile() {
-  return getFile('SummaryInfo.txt');
-}
-
-export function getProjectCodeSummaryFile() {
-  return getFile('ProjectCodeSummary.txt');
-}
-
-export function getProjectContributorCodeSummaryFile() {
-  return getFile('ProjectContributorCodeSummary.txt');
-}
-
-export function getDailyReportSummaryFile() {
-  return getFile('DailyReportSummary.txt');
 }
 
 export function getIntegrationsFile() {
@@ -339,6 +249,10 @@ export function getIntegrationsFile() {
 
 export function getSessionSummaryFile() {
   return getFile('sessionSummary.json');
+}
+
+export function getFlowChangeFile() {
+  return getFile('flowChange.json');
 }
 
 export function getSoftwareDir(autoCreate = true) {
@@ -402,7 +316,7 @@ export function getLogId() {
 
 export function logIt(message: string) {
   const windowMsg: string = isPrimaryWindow() ? '(p)' : '';
-  outputChannel.appendLine(`${new Date().toISOString()} ${getLogId()}${windowMsg}: ${message}`);
+  outputChannel.appendLine(`${formatISO(new Date())} ${getLogId()}${windowMsg}: ${message}`);
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {

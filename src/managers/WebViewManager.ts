@@ -6,16 +6,6 @@ import {checkRegistrationForReport, getItem} from '../Util';
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = '';
 
-export async function showReportGenerator() {
-  initiatePanel('Report Generator', 'report_generator');
-
-  const html = getReportGeneratorHtml();
-  if (currentPanel) {
-    currentPanel.webview.html = html;
-    currentPanel.reveal(ViewColumn.One);
-  }
-}
-
 export async function showDashboard() {
   if (!checkRegistrationForReport(true)) {
     return;
@@ -55,11 +45,6 @@ function initiatePanel(title: string, viewType: string) {
   currentPanel.webview.onDidReceiveMessage(async (commandMessage: any) => {
     //
   });
-}
-
-function getReportGeneratorHtml() {
-  // fetch the html from the app
-  return '<html><body><div>html goes here</div></body></html>';
 }
 
 async function getDashboardHtml() {
