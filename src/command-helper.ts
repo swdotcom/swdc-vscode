@@ -11,7 +11,7 @@ import {switchAverageComparison} from './menu/ContextMenuManager';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
 import {showDashboard} from './managers/WebViewManager';
-import {configureSettings} from './managers/ConfigManager';
+import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
 import {
   getCodeTimeDashboardButton,
   getSwitchAccountButtonItem,
@@ -415,6 +415,20 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.manageSlackConnection', () => {
       progressIt('Manage Slack connections...', showSlackManageOptions);
+    })
+  );
+
+  // Update the settings preferences
+  cmds.push(
+    commands.registerCommand('codetime.updateSettings', (payload: any) => {
+      progressIt('Updating settings...', updateSettings(payload.path, payload.json));
+    })
+  );
+
+  // Close the settings view
+  cmds.push(
+    commands.registerCommand('codetime.closeSettings', (payload: any) => {
+      closeSettings();
     })
   );
 
