@@ -29,18 +29,12 @@ export async function updateFlowModeStatus() {
 }
 
 export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
-  if (isFlowModeEnabled()) {
-    // already enabled locally, but update the status bar just in case
-    updateFlowStatus();
-    return;
-  }
   window.withProgress(
     {
       location: ProgressLocation.Notification,
       title: 'Enabling flow...',
       cancellable: false,
     },
-
     async (progress) => {
       await initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
         console.error('[CodeTime] Unable to initiate flow. ', e.message);
@@ -49,7 +43,7 @@ export async function enableFlow({automated = false, skipSlackCheck = false, pro
   );
 }
 
-async function initiateFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
+export async function initiateFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
@@ -69,9 +63,10 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
   if (process_flow_session && isPrimaryWindow() && !isFlowModeEnabled()) {
+    // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
-    softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
+    await softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
   }
 
   // update screen mode
@@ -87,34 +82,27 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
 }
 
 export async function pauseFlow() {
-  if (isFlowModeEnabled()) {
-    // set it to false to ensure it doesn't try to update continually based on any other websocket event
-    updateFlowChange(false);
-    window.withProgress(
-      {
-        location: ProgressLocation.Notification,
-        title: 'Turning off flow...',
-        cancellable: false,
-      },
-      async (progress) => {
-        await pauseFlowInitiate().catch((e) => {});
-      }
-    );
-  } else {
-    // update flow status in case this is a secondary window
-    updateFlowStatus();
-  }
+  window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      title: 'Turning off flow...',
+      cancellable: false,
+    },
+    async (progress) => {
+      await pauseFlowInitiate().catch((e) => {});
+    }
+  );
 }
 
-async function pauseFlowInitiate() {
+export async function pauseFlowInitiate() {
   if (isPrimaryWindow() && isFlowModeEnabled()) {
+    // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
     await softwareDelete('/v1/flow_sessions', getItem('jwt'));
   }
 
   showNormalScreenMode();
-
   updateFlowStatus();
 }
 
@@ -133,7 +121,7 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   const enabledFlow: boolean = !!(openFlowSessions?.length);
-
+  // initialize the file value
   updateFlowChange(enabledFlow);
 }
 

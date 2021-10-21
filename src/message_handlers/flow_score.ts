@@ -1,4 +1,4 @@
-import { enableFlow, isAutoFlowModeEnabled, isFlowModeEnabled } from "../managers/FlowManager";
+import { enableFlow, isAutoFlowModeEnabled } from "../managers/FlowManager";
 import { logIt } from '../Util';
 
 export async function handleFlowScoreMessage(message: any) {
