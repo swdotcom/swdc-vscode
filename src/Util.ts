@@ -112,7 +112,8 @@ export function updateFlowChange(in_flow: boolean) {
 }
 
 export function getFlowChangeState(): boolean {
-  return getJsonItem(getFlowChangeFile(), "in_flow") || false;
+  // nullish coalesce the "in_flow" flag if it doesn't exist
+  return getJsonItem(getFlowChangeFile(), "in_flow") ?? false;
 }
 
 export function setItem(key: string, value: any) {

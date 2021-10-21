@@ -1,8 +1,7 @@
 import axios from 'axios';
 import {window} from 'vscode';
-
 import {api_endpoint, app_url} from '../Constants';
-
+import {version} from 'vscode';
 import {
   logIt,
   getPluginId,
@@ -36,6 +35,7 @@ const headers = {
   'X-SWDC-Plugin-UUID': getPluginUuid(),
   'X-SWDC-Plugin-Type': 'codetime',
   'X-SWDC-Plugin-Editor': getEditorName(),
+  'X-SWDC-Plugin-Editor-Version': version
 };
 
 beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
