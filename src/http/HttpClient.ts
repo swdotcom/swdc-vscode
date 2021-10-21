@@ -1,7 +1,6 @@
 import axios from 'axios';
-import {window} from 'vscode';
+import {version, window} from 'vscode';
 import {api_endpoint, app_url} from '../Constants';
-import {version} from 'vscode';
 import {
   logIt,
   getPluginId,

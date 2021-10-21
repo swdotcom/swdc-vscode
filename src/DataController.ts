@@ -13,7 +13,6 @@ import {clearSessionSummaryData} from './storage/SessionSummaryData';
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import {userEventEmitter} from './events/userEventEmitter';
-import {getCachedOrgs} from './managers/OrgManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
 const {WebClient} = require('@slack/web-api');
 
@@ -144,9 +143,6 @@ export async function authenticationCompleteHandler(user: any) {
     } catch (e: any) {
       logIt(`Failed to initialize websockets: ${e.message}`);
     }
-
-    // fetch any orgs for this user
-    await getCachedOrgs();
 
     clearSessionSummaryData();
 
