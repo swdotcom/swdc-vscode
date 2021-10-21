@@ -68,7 +68,7 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
   const preferredScreenMode = getConfiguredScreenMode();
 
   // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  if (process_flow_session && isPrimaryWindow()) {
+  if (process_flow_session && isPrimaryWindow() && !isFlowModeEnabled()) {
     updateFlowChange(true);
     logIt('Entering Flow Mode');
     softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
@@ -83,7 +83,6 @@ async function initiateFlow({automated = false, skipSlackCheck = false, process_
     showNormalScreenMode();
   }
 
-  updateFlowChange(true);
   updateFlowStatus();
 }
 
@@ -108,15 +107,13 @@ export async function pauseFlow() {
 }
 
 async function pauseFlowInitiate() {
-  if (isPrimaryWindow()) {
+  if (isPrimaryWindow() && isFlowModeEnabled()) {
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
     await softwareDelete('/v1/flow_sessions', getItem('jwt'));
   }
 
   showNormalScreenMode();
-
-  updateFlowChange(false);
 
   updateFlowStatus();
 }

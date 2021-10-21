@@ -28,7 +28,7 @@ export function initializeWebsockets() {
   if (ws) {
     // 1000 indicates a normal closure, meaning that the purpose for
     // which the connection was established has been fulfilled
-    ws.close(1000, 're-initializing websockets');
+    ws.close(1000, 're-initializing websocket');
   }
 
   const options = {
@@ -88,7 +88,7 @@ export function initializeWebsockets() {
   ws.on('open', function open() {
     // RESET reconnect delay
     currentReconnectDelay = INITIAL_RECONNECT_DELAY;
-    logIt('websockets connection open');
+    logIt('websocket connection open');
   });
 
   ws.on('ping', heartbeat);
@@ -108,17 +108,17 @@ export function initializeWebsockets() {
   });
 
   ws.on('unexpected-response', function unexpectedResponse(request: any, response: any) {
-    logIt(`unexpected websockets response: ${response.statusCode}`);
+    logIt(`unexpected websocket response: ${response.statusCode}`);
 
     if (response.statusCode === 426) {
-      logIt('websockets request had invalid headers. Are you behind a proxy?');
+      logIt('websocket request had invalid headers. Are you behind a proxy?');
     } else {
       retryConnection();
     }
   });
 
   ws.on('error', function error(e: any) {
-    logIt(`error connecting to websockets: ${e.message}`);
+    logIt(`error connecting to websocket: ${e.message}`);
   });
 }
 
@@ -132,7 +132,7 @@ function retryConnection() {
     currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
   }
 
-  logIt(`retrying websockets connecting in ${delay / 1000} seconds`);
+  logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
 
   retryTimeout = setTimeout(() => {
     initializeWebsockets();
