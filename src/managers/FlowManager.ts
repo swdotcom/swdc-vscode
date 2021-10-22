@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getFlowChangeState, getItem, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
+import {getFlowChangeState, getItem, isEditorOpsInstalled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -14,6 +14,7 @@ import {
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
 import {getPreference} from '../DataController';
+import { getAutoFlowModeDisabledTrigger, getAutoFlowModeTrigger } from './LocalStorageManager';
 
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
@@ -28,7 +29,7 @@ export async function updateFlowModeStatus() {
   await initializeFlowModeState();
 }
 
-export async function enableFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
+export async function enableFlow({automated = false, skipSlackCheck = false}) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -36,14 +37,14 @@ export async function enableFlow({automated = false, skipSlackCheck = false, pro
       cancellable: false,
     },
     async (progress) => {
-      await initiateFlow({automated, skipSlackCheck, process_flow_session}).catch((e) => {
+      await initiateFlow({automated, skipSlackCheck}).catch((e) => {
         console.error('[CodeTime] Unable to initiate flow. ', e.message);
       });
     }
   );
 }
 
-export async function initiateFlow({automated = false, skipSlackCheck = false, process_flow_session = true}) {
+export async function initiateFlow({automated = false, skipSlackCheck = false}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     // show the flow mode prompt
@@ -61,8 +62,13 @@ export async function initiateFlow({automated = false, skipSlackCheck = false, p
 
   const preferredScreenMode = getConfiguredScreenMode();
 
-  // create a FlowSession on backend.  Also handles 3rd party automations (slack, cal, etc)
-  if (process_flow_session && isPrimaryWindow() && !isFlowModeEnabled()) {
+  // process if...
+  // 1) its not automated OR allowAutoFlowMode (means Editor Ops auto flow mode trigger isn't found)
+  //    - if its automated and Editor Ops exists with an auto flow mode trigger
+  //      then it will run its actions and perform the flow_session update
+  // 2) it's the primary window
+  // 3) flow mode is not current enabled via the flowChange.json state
+  if ((allowAutoFlowMode() || !automated) && isPrimaryWindow() && !isFlowModeEnabled()) {
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
@@ -95,7 +101,7 @@ export async function pauseFlow() {
 }
 
 export async function pauseFlowInitiate() {
-  if (isPrimaryWindow() && isFlowModeEnabled()) {
+  if (allowAutoFlowModeDisable() && isPrimaryWindow() && isFlowModeEnabled()) {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
@@ -131,4 +137,22 @@ export function isAutoFlowModeEnabled() {
     return flowModeSettings.editor.autoEnterFlowMode;
   }
   return false;
+}
+
+function allowAutoFlowMode() {
+  return !!( !isEditorOpsInstalled() || !hasEditorOpsAutoFlowModeTrigger() );
+}
+
+function allowAutoFlowModeDisable() {
+  return !!( !isEditorOpsInstalled() || !hasEditorOpsAutoFlowModeDisabledTrigger() );
+}
+
+function hasEditorOpsAutoFlowModeTrigger() {
+  const autoFlowModeTrigger: any = getAutoFlowModeTrigger();
+  return !!(autoFlowModeTrigger);
+}
+
+function hasEditorOpsAutoFlowModeDisabledTrigger() {
+  const autoFlowModeDisabledTrigger: any = getAutoFlowModeDisabledTrigger();
+  return !!(autoFlowModeDisabledTrigger);
 }
