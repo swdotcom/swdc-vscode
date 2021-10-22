@@ -11,14 +11,14 @@ export function showingConfigureSettingsPanel() {
 
 export function closeSettings() {
   if (currentPanel) {
-    // dipose the previous one. always use the same tab
+    // dispose the previous one. always use the same tab
     currentPanel.dispose();
   }
 }
 
 export async function configureSettings() {
   if (currentPanel) {
-    // dipose the previous one. always use the same tab
+    // dispose the previous one. always use the same tab
     currentPanel.dispose();
   }
 
