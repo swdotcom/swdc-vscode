@@ -95,23 +95,6 @@ export async function softwareGet(api: string, jwt: string | null, queryParams =
 }
 
 /**
- * perform a put request
- */
-export async function softwarePut(api: string, payload: any, jwt: string) {
-  updateOutgoingHeader();
-
-  return await beApi
-    .put(api, payload)
-    .then((resp: any) => {
-      return resp;
-    })
-    .catch((err: any) => {
-      logIt(`error updating data for ${api}, message: ${err.message}`);
-      return err;
-    });
-}
-
-/**
  * perform a post request
  */
 export async function softwarePost(api: string, payload: any, jwt = null) {
