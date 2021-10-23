@@ -1,8 +1,7 @@
-import {ViewColumn, WebviewPanel, window} from 'vscode';
+import {commands, ViewColumn, WebviewPanel, window} from 'vscode';
 import {initializePreferences} from '../DataController';
-import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {isResponseOk, appGet, appPut} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
-import {getItem} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 
@@ -10,9 +9,16 @@ export function showingConfigureSettingsPanel() {
   return !!currentPanel;
 }
 
+export function closeSettings() {
+  if (currentPanel) {
+    // dispose the previous one. always use the same tab
+    currentPanel.dispose();
+  }
+}
+
 export async function configureSettings() {
   if (currentPanel) {
-    // dipose the previous one. always use the same tab
+    // dispose the previous one. always use the same tab
     currentPanel.dispose();
   }
 
@@ -23,12 +29,19 @@ export async function configureSettings() {
     currentPanel.onDidDispose(() => {
       currentPanel = undefined;
     });
-    currentPanel.webview.onDidReceiveMessage(async (message) => {
-      await initializePreferences();
 
-      if (currentPanel) {
-        // dipose it
-        currentPanel.dispose();
+    currentPanel.webview.onDidReceiveMessage(async (message: any) => {
+      if (message?.action) {
+        const cmd = message.action.includes('codetime.') ? message.action : `codetime.${message.action}`;
+        switch (message.command) {
+          case 'command_execute':
+            if (message.payload && Object.keys(message.payload).length) {
+              commands.executeCommand(cmd, message.payload);
+            } else {
+              commands.executeCommand(cmd);
+            }
+            break;
+        }
       }
     });
   }
@@ -37,14 +50,15 @@ export async function configureSettings() {
 }
 
 export async function getEditSettingsHtml(): Promise<string> {
-  const resp = await softwareGet(`/users/me/edit_preferences`, getItem('jwt'), {
-    isLightMode: window.activeColorTheme.kind == 1,
-    editor: 'vscode',
-  });
+  const resp = await appGet(`/plugin/settings`, {editor: 'vscode'});
 
   if (isResponseOk(resp)) {
     return resp.data.html;
   }
-  window.showErrorMessage('Unable to generate view. Please try again later.');
   return await getConnectionErrorHtml();
+}
+
+export async function updateSettings(path: string, jsonData: any) {
+  await appPut(path, jsonData);
+  await initializePreferences();
 }

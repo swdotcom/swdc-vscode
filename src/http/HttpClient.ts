@@ -49,6 +49,15 @@ export async function appGet(api: string, queryParams: any = {}) {
   });
 }
 
+export async function appPut(api: string, payload: any) {
+  updateOutgoingHeader();
+
+  return await appApi.put(api, payload).catch((err: any) => {
+    logIt(`error for PUT ${api}, message: ${err.message}`);
+    return err;
+  });
+}
+
 export async function appDelete(api: string, payload: any = {}) {
   updateOutgoingHeader();
 
@@ -83,23 +92,6 @@ export async function softwareGet(api: string, jwt: string | null, queryParams =
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
-}
-
-/**
- * perform a put request
- */
-export async function softwarePut(api: string, payload: any, jwt: string) {
-  updateOutgoingHeader();
-
-  return await beApi
-    .put(api, payload)
-    .then((resp: any) => {
-      return resp;
-    })
-    .catch((err: any) => {
-      logIt(`error updating data for ${api}, message: ${err.message}`);
-      return err;
-    });
 }
 
 /**

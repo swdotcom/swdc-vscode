@@ -102,7 +102,6 @@ export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   }
 
   if (selection === DISCONNECT_LABEL) {
-    // await softwarePut(`/auth/slack/disconnect`, { authId }, getItem("jwt"));
     await softwareDelete(`/integrations/${integration.id}`, getItem('jwt'));
     // disconnected, remove it from the integrations
     removeSlackIntegration(authId);
