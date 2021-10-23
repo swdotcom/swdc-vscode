@@ -1,5 +1,5 @@
 import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
-import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {softwareGet, isResponseOk, appGet} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
 import {checkRegistrationForReport, getItem} from '../Util';
 
@@ -48,7 +48,7 @@ function initiatePanel(title: string, viewType: string) {
 }
 
 async function getDashboardHtml() {
-  const resp = await softwareGet('/v1/plugin_dashboard', getItem('jwt'));
+  const resp = await appGet('/plugin/dashboard');
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
