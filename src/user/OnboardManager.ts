@@ -62,9 +62,9 @@ async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
       // show the prompt that we're unable connect to our app 1 time only
       showOfflinePrompt(true);
     }
+    retry_counter++;
     // call activate again later
     setTimeout(() => {
-      retry_counter++;
       onboardInit(ctx, callback);
     }, one_min_millis * 2);
   }
