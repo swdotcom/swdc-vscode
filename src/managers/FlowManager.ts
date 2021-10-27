@@ -96,7 +96,7 @@ export async function pauseFlow() {
 }
 
 export async function pauseFlowInitiate() {
-  if (!hashEditorOpsAutoFlowModeDisableTrigger() && isFlowModeEnabled()) {
+  if (!hasEditorOpsAutoFlowModeDisableTrigger() && isFlowModeEnabled()) {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
@@ -141,7 +141,7 @@ function hasEditorOpsAutoFlowModeTrigger(): boolean {
   return false;
 }
 
-function hashEditorOpsAutoFlowModeDisableTrigger() {
+function hasEditorOpsAutoFlowModeDisableTrigger() {
   if (isEditorOpsInstalled() && hasFlowModeDisabledTrigger()) {
     return true;
   }
