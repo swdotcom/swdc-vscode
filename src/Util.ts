@@ -111,7 +111,7 @@ export function updateFlowChange(in_flow: boolean) {
   setJsonItem(getFlowChangeFile(), "in_flow", in_flow);
 }
 
-export function getFlowChangeState(): boolean {
+export function isFlowModeEnabled() {
   // nullish coalesce the "in_flow" flag if it doesn't exist
   return getJsonItem(getFlowChangeFile(), "in_flow") ?? false;
 }

@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getFlowChangeState, getItem, isEditorOpsInstalled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
+import {getItem, isEditorOpsInstalled, isFlowModeEnabled, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -19,10 +19,6 @@ import { getAutoFlowModeDisabledTrigger, getAutoFlowModeTrigger } from './LocalS
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
   updateFlowStatus();
-}
-
-export function isFlowModeEnabled() {
-  return getFlowChangeState();
 }
 
 export async function updateFlowModeStatus() {
@@ -66,9 +62,8 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
   // 1) its not automated OR allowAutoFlowMode (means Editor Ops auto flow mode trigger isn't found)
   //    - if its automated and Editor Ops exists with an auto flow mode trigger
   //      then it will run its actions and perform the flow_session update
-  // 2) it's the primary window
-  // 3) flow mode is not current enabled via the flowChange.json state
-  if ((allowAutoFlowMode() || !automated) && isPrimaryWindow() && !isFlowModeEnabled()) {
+  // 2) flow mode is not current enabled via the flowChange.json state
+  if ((!hasEditorOpsAutoFlowModeTrigger() || !automated) && !isFlowModeEnabled()) {
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
@@ -101,7 +96,7 @@ export async function pauseFlow() {
 }
 
 export async function pauseFlowInitiate() {
-  if (allowAutoFlowModeDisable() && isPrimaryWindow() && isFlowModeEnabled()) {
+  if (!hashEditorOpsAutoFlowModeDisableTrigger() && isFlowModeEnabled()) {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
@@ -139,20 +134,26 @@ export function isAutoFlowModeEnabled() {
   return false;
 }
 
-function allowAutoFlowMode() {
-  return !!( !isEditorOpsInstalled() || !hasEditorOpsAutoFlowModeTrigger() );
+function hasEditorOpsAutoFlowModeTrigger(): boolean {
+  if (isEditorOpsInstalled() && hasFlowModeTrigger()) {
+    return true;
+  }
+  return false;
 }
 
-function allowAutoFlowModeDisable() {
-  return !!( !isEditorOpsInstalled() || !hasEditorOpsAutoFlowModeDisabledTrigger() );
+function hashEditorOpsAutoFlowModeDisableTrigger() {
+  if (isEditorOpsInstalled() && hasFlowModeDisabledTrigger()) {
+    return true;
+  }
+  return false;
 }
 
-function hasEditorOpsAutoFlowModeTrigger() {
+function hasFlowModeTrigger() {
   const autoFlowModeTrigger: any = getAutoFlowModeTrigger();
   return !!(autoFlowModeTrigger);
 }
 
-function hasEditorOpsAutoFlowModeDisabledTrigger() {
+function hasFlowModeDisabledTrigger() {
   const autoFlowModeDisabledTrigger: any = getAutoFlowModeDisabledTrigger();
   return !!(autoFlowModeDisabledTrigger);
 }

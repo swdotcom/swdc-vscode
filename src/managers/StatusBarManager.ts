@@ -1,8 +1,7 @@
 import {commands, StatusBarAlignment, StatusBarItem, window} from 'vscode';
 import {SessionSummary} from '../model/models';
-import {getItem, getSessionSummaryFile, humanizeMinutes} from '../Util';
+import {getItem, getSessionSummaryFile, humanizeMinutes, isFlowModeEnabled} from '../Util';
 import {getFileDataAsJson} from './FileManager';
-import {isFlowModeEnabled} from './FlowManager';
 
 let showStatusBarText = true;
 let ctMetricStatusBarItem: StatusBarItem | undefined = undefined;
