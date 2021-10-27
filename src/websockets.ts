@@ -25,6 +25,7 @@ let ws: any | undefined = undefined;
 
 export function initializeWebsockets() {
   logIt('initializing websocket connection');
+  clearWebsocketRetryTimeout();
   if (ws) {
     // 1000 indicates a normal closure, meaning that the purpose for
     // which the connection was established has been fulfilled
@@ -123,20 +124,22 @@ export function initializeWebsockets() {
 }
 
 function retryConnection() {
-  const delay: number = getDelay();
+  if (!retryTimeout) {
+    const delay: number = getDelay();
 
-  if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
-    // multiply until we've reached the max reconnect
-    currentReconnectDelay *= 2;
-  } else {
-    currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
+    if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
+      // multiply until we've reached the max reconnect
+      currentReconnectDelay *= 2;
+    } else {
+      currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
+    }
+
+    logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
+
+    retryTimeout = setTimeout(() => {
+      initializeWebsockets();
+    }, delay);
   }
-
-  logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
-
-  retryTimeout = setTimeout(() => {
-    initializeWebsockets();
-  }, delay);
 }
 
 function getDelay() {
@@ -149,11 +152,17 @@ function getDelay() {
 }
 
 export function clearWebsocketConnectionRetryTimeout() {
-  if (retryTimeout) {
-    clearTimeout(retryTimeout);
-  }
+  clearWebsocketRetryTimeout();
   if (pingTimeout) {
     clearTimeout(pingTimeout);
+    pingTimeout = undefined;
+  }
+}
+
+function clearWebsocketRetryTimeout() {
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = undefined;
   }
 }
 

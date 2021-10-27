@@ -113,6 +113,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   initializeStatusBar();
 
   if (isPrimaryWindow()) {
+    // store the activate event
+    tracker.trackEditorAction('editor', 'activate');
     // it's the primary window. initialize flow mode and session summary information
     initializeFlowModeState();
     SummaryManager.getInstance().updateSessionSummaryFromServer();
@@ -121,9 +123,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     updateFlowModeStatusBar();
     updateStatusBarWithSummaryData();
   }
-
-  // store the activate event
-  tracker.trackEditorAction('editor', 'activate');
 
   setTimeout(() => {
     // INIT doc change events
