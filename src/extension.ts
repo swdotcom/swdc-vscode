@@ -19,7 +19,7 @@ import {
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
-import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
+import {initializeWebsockets, disposeWebsocketTimeouts} from './websockets';
 import {softwarePost} from './http/HttpClient';
 import {
   initializeStatusBar,
@@ -30,7 +30,6 @@ import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
-import { initializeLocalStorage } from './managers/LocalStorageManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -57,7 +56,7 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the file watchers
   kpmController.dispose();
 
-  clearWebsocketConnectionRetryTimeout();
+  disposeWebsocketTimeouts();
 }
 
 export async function activate(ctx: ExtensionContext) {
@@ -93,8 +92,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // INIT keystroke analysis tracker
   await tracker.init();
 
-  initializeLocalStorage(ctx);
-
   // INIT preferences
   initializePreferences();
 
@@ -116,6 +113,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   initializeStatusBar();
 
   if (isPrimaryWindow()) {
+    // store the activate event
+    tracker.trackEditorAction('editor', 'activate');
     // it's the primary window. initialize flow mode and session summary information
     initializeFlowModeState();
     SummaryManager.getInstance().updateSessionSummaryFromServer();
@@ -124,9 +123,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
     updateFlowModeStatusBar();
     updateStatusBarWithSummaryData();
   }
-
-  // store the activate event
-  tracker.trackEditorAction('editor', 'activate');
 
   setTimeout(() => {
     // INIT doc change events

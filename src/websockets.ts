@@ -13,18 +13,22 @@ const ONE_MIN_MILLIS = 1000 * 60;
 // Default of 30 minutes
 const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
-let pingTimeout: NodeJS.Timer | undefined = undefined;
+let livenessPingTimeout: NodeJS.Timer | undefined = undefined;
 let retryTimeout: NodeJS.Timer | undefined = undefined;
 
-const INITIAL_RECONNECT_DELAY: number = 10000;
+// Reconnect constants
+const INITIAL_RECONNECT_DELAY: number = 12000;
 const MAX_RECONNECT_DELAY: number = 25000;
-// websocket reconnect delay
+const LONG_RECONNECT_DELAY: number = ONE_MIN_MILLIS * 5;
+// Reconnect vars
+let useLongReconnectDelay: boolean = false;
 let currentReconnectDelay: number = INITIAL_RECONNECT_DELAY;
 
 let ws: any | undefined = undefined;
 
 export function initializeWebsockets() {
   logIt('initializing websocket connection');
+  clearWebsocketRetryTimeout();
   if (ws) {
     // 1000 indicates a normal closure, meaning that the purpose for
     // which the connection was established has been fulfilled
@@ -68,17 +72,15 @@ export function initializeWebsockets() {
       SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
     }
 
-    if (pingTimeout) {
-      // Received a ping from the server. Clear the timeout so
-      // our client doesn't terminate the connection
-      clearTimeout(pingTimeout);
-    }
+    // Received a ping from the server. Clear the timeout so
+    // our client doesn't terminate the connection
+    clearLivenessPingTimeout();
 
     // Use `WebSocket#terminate()`, which immediately destroys the connection,
     // instead of `WebSocket#close()`, which waits for the close timer.
     // Delay should be equal to the interval at which your server
     // sends out pings plus a conservative assumption of the latency.
-    pingTimeout = setTimeout(() => {
+    livenessPingTimeout = setTimeout(() => {
       if (ws) {
         ws.terminate();
       }
@@ -86,6 +88,12 @@ export function initializeWebsockets() {
   }
 
   ws.on('open', function open() {
+    // clear out the retry timeout
+    clearWebsocketRetryTimeout();
+
+    // reset long reconnect flag
+    useLongReconnectDelay = false;
+
     // RESET reconnect delay
     currentReconnectDelay = INITIAL_RECONNECT_DELAY;
     logIt('websocket connection open');
@@ -99,10 +107,7 @@ export function initializeWebsockets() {
 
   ws.on('close', function close(code: any, reason: any) {
     if (code !== 1000) {
-      // clear this client side timeout
-      if (pingTimeout) {
-        clearTimeout(pingTimeout);
-      }
+      useLongReconnectDelay = false;
       retryConnection();
     }
   });
@@ -112,7 +117,8 @@ export function initializeWebsockets() {
 
     if (response.statusCode === 426) {
       logIt('websocket request had invalid headers. Are you behind a proxy?');
-    } else {
+    } else if (response.statusCode >= 500) {
+      useLongReconnectDelay = true;
       retryConnection();
     }
   });
@@ -123,20 +129,31 @@ export function initializeWebsockets() {
 }
 
 function retryConnection() {
-  const delay: number = getDelay();
+  if (!retryTimeout) {
 
-  if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
-    // multiply until we've reached the max reconnect
-    currentReconnectDelay *= 2;
-  } else {
-    currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
+    // clear this client side liveness timeout
+    clearLivenessPingTimeout();
+
+    let delay: number = getDelay();
+    if (useLongReconnectDelay) {
+      // long reconnect (5 minutes)
+      delay = LONG_RECONNECT_DELAY;
+    } else {
+      // shorter reconnect: 10 to 50 seconds
+      if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
+        // multiply until we've reached the max reconnect
+        currentReconnectDelay *= 2;
+      } else {
+        currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
+      }
+    }
+
+    logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
+
+    retryTimeout = setTimeout(() => {
+      initializeWebsockets();
+    }, delay);
   }
-
-  logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
-
-  retryTimeout = setTimeout(() => {
-    initializeWebsockets();
-  }, delay);
 }
 
 function getDelay() {
@@ -148,19 +165,36 @@ function getDelay() {
   return currentReconnectDelay + Math.floor(rand * 1000);
 }
 
-export function clearWebsocketConnectionRetryTimeout() {
+export function disposeWebsocketTimeouts() {
+  clearWebsocketRetryTimeout();
+  clearLivenessPingTimeout();
+}
+
+function clearLivenessPingTimeout() {
+  if (livenessPingTimeout) {
+    clearTimeout(livenessPingTimeout);
+    livenessPingTimeout = undefined;
+  }
+}
+
+function clearWebsocketRetryTimeout() {
   if (retryTimeout) {
     clearTimeout(retryTimeout);
-  }
-  if (pingTimeout) {
-    clearTimeout(pingTimeout);
+    retryTimeout = undefined;
   }
 }
 
 // handle incoming websocket messages
 const handleIncomingMessage = (data: any) => {
   try {
-    const message = JSON.parse(data);
+    let message: any = {
+      type: 'none'
+    }
+    try {
+      message = JSON.parse(data);
+    } catch (e: any) {
+      logIt(`Unable to handle incoming message: ${e.message}`);
+    }
 
     switch (message.type) {
       case 'flow_score':
