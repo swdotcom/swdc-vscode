@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {softwarePost, softwareDelete} from '../http/HttpClient';
-import {getItem, isEditorOpsInstalled, isFlowModeEnabled, logIt, updateFlowChange} from '../Util';
+import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
@@ -13,8 +13,6 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
-import {getPreference} from '../DataController';
-import { getAutoFlowModeDisabledTrigger, getAutoFlowModeTrigger } from './LocalStorageManager';
 
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
@@ -63,7 +61,7 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
   //    - if its automated and Editor Ops exists with an auto flow mode trigger
   //      then it will run its actions and perform the flow_session update
   // 2) flow mode is not current enabled via the flowChange.json state
-  if ((!hasEditorOpsAutoFlowModeTrigger() || !automated) && !isFlowModeEnabled()) {
+  if (isPrimaryWindow() && !isFlowModeEnabled()) {
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
@@ -96,7 +94,7 @@ export async function pauseFlow() {
 }
 
 export async function pauseFlowInitiate() {
-  if (!hasEditorOpsAutoFlowModeDisableTrigger() && isFlowModeEnabled()) {
+  if (isFlowModeEnabled()) {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
@@ -124,36 +122,4 @@ export async function determineFlowModeFromApi() {
   const enabledFlow: boolean = !!(openFlowSessions?.length);
   // initialize the file value
   updateFlowChange(enabledFlow);
-}
-
-export function isAutoFlowModeEnabled() {
-  const flowModeSettings: any = getPreference('flowMode');
-  if (flowModeSettings?.editor.autoEnterFlowMode !== undefined) {
-    return flowModeSettings.editor.autoEnterFlowMode;
-  }
-  return false;
-}
-
-function hasEditorOpsAutoFlowModeTrigger(): boolean {
-  if (isEditorOpsInstalled() && hasFlowModeTrigger()) {
-    return true;
-  }
-  return false;
-}
-
-function hasEditorOpsAutoFlowModeDisableTrigger() {
-  if (isEditorOpsInstalled() && hasFlowModeDisabledTrigger()) {
-    return true;
-  }
-  return false;
-}
-
-function hasFlowModeTrigger() {
-  const autoFlowModeTrigger: any = getAutoFlowModeTrigger();
-  return !!(autoFlowModeTrigger);
-}
-
-function hasFlowModeDisabledTrigger() {
-  const autoFlowModeDisabledTrigger: any = getAutoFlowModeDisabledTrigger();
-  return !!(autoFlowModeDisabledTrigger);
 }

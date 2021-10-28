@@ -169,7 +169,14 @@ function clearWebsocketRetryTimeout() {
 // handle incoming websocket messages
 const handleIncomingMessage = (data: any) => {
   try {
-    const message = JSON.parse(data);
+    let message: any = {
+      type: 'none'
+    }
+    try {
+      message = JSON.parse(data);
+    } catch (e: any) {
+      logIt(`Unable to handle incoming message: ${e.message}`);
+    }
 
     switch (message.type) {
       case 'flow_score':
