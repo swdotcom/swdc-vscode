@@ -19,7 +19,7 @@ import {
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
-import {initializeWebsockets, clearWebsocketConnectionRetryTimeout} from './websockets';
+import {initializeWebsockets, disposeWebsocketTimeouts} from './websockets';
 import {softwarePost} from './http/HttpClient';
 import {
   initializeStatusBar,
@@ -56,7 +56,7 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the file watchers
   kpmController.dispose();
 
-  clearWebsocketConnectionRetryTimeout();
+  disposeWebsocketTimeouts();
 }
 
 export async function activate(ctx: ExtensionContext) {
