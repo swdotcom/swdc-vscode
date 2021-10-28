@@ -21,7 +21,7 @@ const INITIAL_RECONNECT_DELAY: number = 12000;
 const MAX_RECONNECT_DELAY: number = 25000;
 const LONG_RECONNECT_DELAY: number = ONE_MIN_MILLIS * 5;
 // Reconnect vars
-let use_long_reconnect_delay: boolean = false;
+let useLongReconnectDelay: boolean = false;
 let currentReconnectDelay: number = INITIAL_RECONNECT_DELAY;
 
 let ws: any | undefined = undefined;
@@ -92,7 +92,7 @@ export function initializeWebsockets() {
     clearWebsocketRetryTimeout();
 
     // reset long reconnect flag
-    use_long_reconnect_delay = false;
+    useLongReconnectDelay = false;
 
     // RESET reconnect delay
     currentReconnectDelay = INITIAL_RECONNECT_DELAY;
@@ -107,8 +107,7 @@ export function initializeWebsockets() {
 
   ws.on('close', function close(code: any, reason: any) {
     if (code !== 1000) {
-      // TODO: bump the timeout back to the default
-      use_long_reconnect_delay = false;
+      useLongReconnectDelay = false;
       retryConnection();
     }
   });
@@ -119,8 +118,7 @@ export function initializeWebsockets() {
     if (response.statusCode === 426) {
       logIt('websocket request had invalid headers. Are you behind a proxy?');
     } else if (response.statusCode >= 500) {
-      // TODO: bump the timeout up
-      use_long_reconnect_delay = true;
+      useLongReconnectDelay = true;
       retryConnection();
     }
   });
@@ -137,7 +135,10 @@ function retryConnection() {
     clearLivenessPingTimeout();
 
     let delay: number = getDelay();
-    if (!use_long_reconnect_delay) {
+    if (useLongReconnectDelay) {
+      // long reconnect (5 minutes)
+      delay = LONG_RECONNECT_DELAY;
+    } else {
       // shorter reconnect: 10 to 50 seconds
       if (currentReconnectDelay < MAX_RECONNECT_DELAY) {
         // multiply until we've reached the max reconnect
@@ -145,9 +146,6 @@ function retryConnection() {
       } else {
         currentReconnectDelay = Math.min(currentReconnectDelay, MAX_RECONNECT_DELAY);
       }
-    } else {
-      // long reconnect (5 minutes)
-      delay = LONG_RECONNECT_DELAY;
     }
 
     logIt(`retrying websocket connection in ${delay / 1000} second(s)`);
