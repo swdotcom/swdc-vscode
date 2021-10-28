@@ -57,11 +57,11 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
   const preferredScreenMode = getConfiguredScreenMode();
 
   // process if...
-  // 1) its not automated OR allowAutoFlowMode (means Editor Ops auto flow mode trigger isn't found)
-  //    - if its automated and Editor Ops exists with an auto flow mode trigger
-  //      then it will run its actions and perform the flow_session update
+  // 1) its the primary window
   // 2) flow mode is not current enabled via the flowChange.json state
-  if (isPrimaryWindow() && !isFlowModeEnabled()) {
+  const primary = isPrimaryWindow();
+  const flowEnabled = isFlowModeEnabled();
+  if (primary && !flowEnabled) {
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
@@ -94,7 +94,8 @@ export async function pauseFlow() {
 }
 
 export async function pauseFlowInitiate() {
-  if (isFlowModeEnabled()) {
+  const flowEnabled = isFlowModeEnabled();
+  if (flowEnabled) {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
