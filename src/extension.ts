@@ -30,6 +30,7 @@ import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
+import { initializeLocalStorage } from './managers/LocalStorageManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -91,6 +92,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
   // INIT keystroke analysis tracker
   await tracker.init();
+
+  initializeLocalStorage(ctx);
 
   // INIT preferences
   initializePreferences();
