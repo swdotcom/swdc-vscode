@@ -39,7 +39,7 @@ export async function enableFlow({automated = false, skipSlackCheck = false}) {
 }
 
 function showFlowModeRequiredMessage() {
-  window.showInformationMessage('To use Flow Mode, please first sign up or login.', ...['Open Code Time'])
+  window.showInformationMessage('You triggered Auto Flow Mode, a feature designed to automatically protect your flow state. To turn on and customize Auto Flow Mode, please sign up or log in.', ...['Open Code Time'])
   .then(selection => {
     if (selection === 'Open Code Time') {
       commands.executeCommand('codetime.displaySidebar');
@@ -51,10 +51,10 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     if (!automated) {
-      // show the flow mode prompt
+      // manually initiated, show the flow mode prompt
       showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
     } else {
-      // auto flow mode, show the notification
+      // auto flow mode initiated, show the bottom notification
       showFlowModeRequiredMessage();
     }
     return;
