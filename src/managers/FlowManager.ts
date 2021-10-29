@@ -38,6 +38,15 @@ export async function enableFlow({automated = false, skipSlackCheck = false}) {
   );
 }
 
+function showFlowModeRequiredMessage() {
+  window.showInformationMessage('To use Flow Mode, please first sign up or login.', ...['Open Code Time'])
+  .then(selection => {
+    if (selection === 'Open Code Time') {
+      commands.executeCommand('codetime.displaySidebar');
+    }
+  });
+}
+
 export async function initiateFlow({automated = false, skipSlackCheck = false}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
@@ -45,7 +54,8 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
       // show the flow mode prompt
       showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
     } else {
-      window.showInformationMessage('To use Flow Mode, please first sign up or login.');
+      // auto flow mode, show the notification
+      showFlowModeRequiredMessage();
     }
     return;
   }
