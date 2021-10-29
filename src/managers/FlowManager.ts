@@ -40,9 +40,13 @@ export async function enableFlow({automated = false, skipSlackCheck = false}) {
 
 export async function initiateFlow({automated = false, skipSlackCheck = false}) {
   const isRegistered = checkRegistration(false);
-  if (!automated && !isRegistered) {
-    // show the flow mode prompt
-    showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
+  if (!isRegistered) {
+    if (!automated) {
+      // show the flow mode prompt
+      showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
+    } else {
+      window.showInformationMessage('To use Flow Mode, please first sign up or login.');
+    }
     return;
   }
 
