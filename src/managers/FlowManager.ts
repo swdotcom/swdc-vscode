@@ -40,14 +40,14 @@ export async function enableFlow({automated = false, skipSlackCheck = false}) {
 
 export async function initiateFlow({automated = false, skipSlackCheck = false}) {
   const isRegistered = checkRegistration(false);
-  if (!isRegistered) {
+  if (!automated && !isRegistered) {
     // show the flow mode prompt
     showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
     return;
   }
 
   // { connected, usingAllSettingsForFlow }
-  if (!skipSlackCheck) {
+  if (!automated && !skipSlackCheck) {
     const connectInfo = await checkSlackConnectionForFlowMode();
     if (!connectInfo.continue) {
       return;
