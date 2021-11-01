@@ -79,7 +79,7 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
-    await appPost('/v1/flow_sessions', {automated});
+    await appPost('/plugin/flow_session', {automated});
   }
 
   // update screen mode
@@ -113,7 +113,7 @@ export async function pauseFlowInitiate() {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
-    await appDelete('/v1/flow_sessions');
+    await appDelete('/plugin/flow_session');
   }
 
   showNormalScreenMode();
