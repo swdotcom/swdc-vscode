@@ -78,13 +78,3 @@ export function getTimeBetweenLastPayload() {
 
   return {sessionSeconds, elapsedSeconds};
 }
-
-export function getStatusBarKpmItem(): KpmItem {
-  const item: KpmItem = new KpmItem();
-  item.name = 'ct_status_bar_metrics_btn';
-  item.description = 'status bar metrics';
-  item.location = 'ct_status_bar';
-  item.color = null;
-  item.interactionIcon = 'clock';
-  return item;
-}

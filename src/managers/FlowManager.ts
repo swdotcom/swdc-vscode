@@ -1,5 +1,5 @@
 import {commands, ProgressLocation, window} from 'vscode';
-import {softwarePost, softwareDelete} from '../http/HttpClient';
+import {appPost, appDelete} from '../http/HttpClient';
 import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
@@ -79,7 +79,7 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
-    await softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
+    await appPost('/v1/flow_sessions', {automated});
   }
 
   // update screen mode
@@ -113,7 +113,7 @@ export async function pauseFlowInitiate() {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
-    await softwareDelete('/v1/flow_sessions', getItem('jwt'));
+    await appDelete('/v1/flow_sessions');
   }
 
   showNormalScreenMode();
