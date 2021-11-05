@@ -14,6 +14,16 @@
 
 <p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
 
+---
+
+<p align="center"> 🚨 <b>NEW: AUTOMATIC FLOW MODE</b> 🚨 </p>
+
+<p align="center">
+  <a href="https://www.software.com/src/auto-flow-mode">Automatic Flow Mode</a> detects when you're in flow and automatically silences distractions and prevents interruptions. Learn more about how to <a href="https://github.com/swdotcom/swdc-vscode#protect-code-time">enable or disable it</a>. 
+</p>
+
+---
+
 [Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 200,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
 
 ![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.5.0.png)
