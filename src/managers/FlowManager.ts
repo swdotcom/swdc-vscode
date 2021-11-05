@@ -1,7 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
-import {appPost, appDelete} from '../http/HttpClient';
+import {appPost, appDelete, appGet} from '../http/HttpClient';
 import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
-import {softwareGet} from '../http/HttpClient';
 
 import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
 import {
@@ -130,9 +129,10 @@ function updateFlowStatus() {
 
 export async function determineFlowModeFromApi() {
   const flowSessionsReponse = getItem('jwt')
-    ? await softwareGet('/v1/flow_sessions', getItem('jwt'))
+    ? await appGet('/plugin/flow_session')
     : {data: {flow_sessions: []}};
-  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
+
+  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions ?? [];
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   const enabledFlow: boolean = !!(openFlowSessions?.length);
   // initialize the file value
