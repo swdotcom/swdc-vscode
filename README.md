@@ -14,7 +14,7 @@
 
 <p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
 
-[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 150,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
+[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 200,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
 
 ![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.5.0.png)
 
@@ -30,11 +30,11 @@ Open Code Time in the sidebar and follow the **Getting Started** prompts to crea
 
 ![Code Time for VS Code Flow Mode](https://assets.software.com/readme/code-time/vscode/stay-in-flow-2.5.0.png)
 
-Flow Mode makes it easy to eliminate distractions, mute notifications, and stay focused when you are in flow.
+[Automatic Flow Mode](https://www.software.com/src/auto-flow-mode) makes it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. It detects when you are in a high velocity coding session and automatically silences distractions and prevents interruptions. 
 
-You can quickly toggle Zen mode or enter full screen. If you connect a Slack workspace, you can pause notifications, update your profile status, and set your presence to *away*. You can customize Flow Mode by clicking the gear icon at the the top of the Code Time sidebar. 
+With Automatic Flow Mode, you can quickly toggle Zen mode or enter full screen. If you connect a Slack workspace, you can pause notifications, update your profile status, and set your presence to *away*. If you connect Google Calendar or Microsoft Outlook, you can also block time on your calendar. You can customize Flow Mode by clicking the gear icon at the the top of the Code Time sidebar. 
 
-Click *Enter Flow Mode* to toggle your flow automations. Once you are in Flow Mode, click *Exit Flow Mode* to resume receiving notifications and reset your Slack status. 
+If you'd prefer to turn on Flow Mode manually during each coding session, you can enable or disable Automatic Flow Mode from the Code Time settings view. Make sure to hit the save button after you're done updating your settings. To then turn on Flow Mode manually, click *Enter Flow Mode* in the sidebar to toggle your flow automations. Once you are in Flow Mode, click *Exit Flow Mode* to resume receiving notifications and reset your Slack status. 
 
 ## Track Development Metrics
 
@@ -54,7 +54,7 @@ Your _time in editor_ is the total time you have spent in your editor today. You
 
 Click **More data at software.com** in the Code Time sidebar or visit [app.software.com](https://app.software.com) to see more advanced data visualizations. You will need to create a free Software account to use the web app. In the Code Time dashboard, you will be able to track: 
 
-**Active code time.** Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.
+**Active code time.** Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 200,000 developers.
 
 **Top projects.** See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
 
