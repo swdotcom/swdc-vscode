@@ -23,7 +23,7 @@ export async function updateFlowModeStatus() {
   await initializeFlowModeState();
 }
 
-export async function enableFlow({automated = false, skipSlackCheck = false}) {
+export async function enableFlow({automated = false}) {
   window.withProgress(
     {
       location: ProgressLocation.Notification,
@@ -31,7 +31,7 @@ export async function enableFlow({automated = false, skipSlackCheck = false}) {
       cancellable: false,
     },
     async (progress) => {
-      await initiateFlow({automated, skipSlackCheck}).catch((e) => {
+      await initiateFlow({automated}).catch((e) => {
         console.error('[CodeTime] Unable to initiate flow. ', e.message);
       });
     }
@@ -47,7 +47,7 @@ function showFlowModeRequiredMessage() {
   });
 }
 
-export async function initiateFlow({automated = false, skipSlackCheck = false}) {
+export async function initiateFlow({automated = false}) {
   const isRegistered = checkRegistration(false);
   if (!isRegistered) {
     if (!automated) {
@@ -59,6 +59,8 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
     }
     return;
   }
+
+  const skipSlackCheck = !!getItem('vscode_CtskipSlackConnect')
 
   if (!skipSlackCheck) {
     const connectInfo = await checkSlackConnectionForFlowMode();
