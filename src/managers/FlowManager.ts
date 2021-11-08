@@ -60,8 +60,7 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
     return;
   }
 
-  // { connected, usingAllSettingsForFlow }
-  if (!automated && !skipSlackCheck) {
+  if (!skipSlackCheck) {
     const connectInfo = await checkSlackConnectionForFlowMode();
     if (!connectInfo.continue) {
       return;
