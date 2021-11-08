@@ -78,7 +78,7 @@ export async function initiateFlow({automated = false, skipSlackCheck = false}) 
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
-    await appPost('/plugin/flow_session', {automated});
+    await appPost('/plugin/flow_sessions', {automated});
   }
 
   // update screen mode
@@ -112,7 +112,7 @@ export async function pauseFlowInitiate() {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
-    await appDelete('/plugin/flow_session');
+    await appDelete('/plugin/flow_sessions');
   }
 
   showNormalScreenMode();
@@ -129,7 +129,7 @@ function updateFlowStatus() {
 
 export async function determineFlowModeFromApi() {
   const flowSessionsReponse = getItem('jwt')
-    ? await appGet('/plugin/flow_session')
+    ? await appGet('/plugin/flow_sessions')
     : {data: {flow_sessions: []}};
 
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions ?? [];
