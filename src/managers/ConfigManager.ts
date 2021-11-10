@@ -61,4 +61,6 @@ export async function getEditSettingsHtml(): Promise<string> {
 export async function updateSettings(path: string, jsonData: any) {
   await appPut(path, jsonData);
   await initializePreferences();
+  // update the sidebar
+  commands.executeCommand('codetime.refreshCodeTimeView');
 }
