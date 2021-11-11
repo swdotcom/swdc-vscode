@@ -45,10 +45,14 @@ export function progressIt(msg: string, asyncFunc: any, args: any[] = []) {
       cancellable: false,
     },
     async (progress) => {
-      if (args?.length) {
-        await asyncFunc(...args).catch((e: any) => {});
+      if (typeof asyncFunc === 'function') {
+        if (args?.length) {
+          await asyncFunc(...args).catch((e: any) => {});
+        } else {
+          await asyncFunc().catch((e: any) => {});
+        }
       } else {
-        await asyncFunc().catch((e: any) => {});
+        await asyncFunc;
       }
     }
   );
