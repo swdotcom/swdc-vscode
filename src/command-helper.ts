@@ -420,7 +420,7 @@ export function createCommands(
   // Update the settings preferences
   cmds.push(
     commands.registerCommand('codetime.updateSettings', (payload: any) => {
-      progressIt('Updating settings...', updateSettings(payload.path, payload.json));
+      progressIt('Updating settings...', updateSettings, [payload.path, payload.json]);
     })
   );
 
