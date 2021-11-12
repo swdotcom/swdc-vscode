@@ -125,19 +125,8 @@ export function getItem(key: string) {
 }
 
 export function getIntegrations() {
-  let integrations = getFileDataAsJson(getIntegrationsFile());
-  if (!integrations) {
-    integrations = [];
-    storeJsonData(getIntegrationsFile(), integrations);
-  }
-  const integrationsLen = integrations.length;
-  // check to see if there are any [] values and remove them
-  integrations = integrations.filter((n: any) => n && n.authId);
-  if (integrations.length !== integrationsLen) {
-    // update the file with the latest
-    storeJsonData(getIntegrationsFile(), integrations);
-  }
-  return integrations;
+  const integrations = getFileDataAsJson(getIntegrationsFile());
+  return integrations?.length ? integrations : [];
 }
 
 export function syncSlackIntegrations(integrations: any[]) {
