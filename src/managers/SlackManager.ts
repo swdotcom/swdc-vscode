@@ -31,8 +31,8 @@ export function hasSlackWorkspaces() {
 
 // connect slack flow
 export async function connectSlackWorkspace() {
-  const registered = await checkRegistration();
-  if (!registered) {
+  if (!getItem('name')) {
+    showModalSignupPrompt('Connecting Slack requires a registered account. Sign up or log in to continue.');
     return;
   }
 
@@ -62,10 +62,6 @@ export async function disconectAllSlackIntegrations(showPrompt = true) {
 }
 
 export async function disconnectSlackWorkspace() {
-  const registered = await checkRegistration();
-  if (!registered) {
-    return;
-  }
   // pick the workspace to disconnect
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
@@ -146,16 +142,6 @@ function removeSlackIntegration(authId: string) {
 
   const newIntegrations = currentIntegrations.filter((n: any) => n.authId !== authId);
   syncSlackIntegrations(newIntegrations);
-}
-
-export function checkRegistration(showSignup = true) {
-  if (!getItem('name')) {
-    if (showSignup) {
-      showModalSignupPrompt('Connecting Slack requires a registered account. Sign up or log in to continue.');
-    }
-    return false;
-  }
-  return true;
 }
 
 export function showModalSignupPrompt(msg: string) {
