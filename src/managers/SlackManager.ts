@@ -8,6 +8,7 @@ import {
   getPluginType,
   getPluginUuid,
   getVersion,
+  isActiveIntegration,
   launchWebUrl,
   syncSlackIntegrations,
 } from '../Util';
@@ -21,7 +22,7 @@ import { URLSearchParams } from 'url';
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
-  return getIntegrations().filter((n: any) => n.name.toLowerCase() === 'slack' && n.status.toLowerCase() === 'active');
+  return getIntegrations().filter((n: any) => isActiveIntegration('slack', n));
 }
 
 export function hasSlackWorkspaces() {

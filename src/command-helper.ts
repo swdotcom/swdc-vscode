@@ -7,7 +7,6 @@ import {TrackerManager} from './managers/TrackerManager';
 import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} from './managers/SlackManager';
 import {app_url, create_org_url, vscode_issues_url} from './Constants';
 import {toggleDarkMode, toggleDock} from './managers/OsaScriptManager';
-import {switchAverageComparison} from './menu/ContextMenuManager';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
 import {showDashboard} from './managers/WebViewManager';
@@ -355,13 +354,6 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.toggleDocPosition', () => {
       toggleDock();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.switchAverageComparison', () => {
-      // launch the options command palette
-      switchAverageComparison();
     })
   );
 
