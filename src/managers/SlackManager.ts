@@ -29,16 +29,6 @@ export function hasSlackWorkspaces() {
   return !!getSlackWorkspaces().length;
 }
 
-// get the access token of a selected slack workspace
-export async function getSlackAccessToken() {
-  const selectedTeamDomain = await showSlackWorkspaceSelection();
-
-  if (selectedTeamDomain) {
-    return getWorkspaceAccessToken(selectedTeamDomain);
-  }
-  return null;
-}
-
 // connect slack flow
 export async function connectSlackWorkspace() {
   const registered = await checkRegistration();
@@ -144,14 +134,6 @@ async function showSlackWorkspaceSelection() {
     }
   }
 
-  return null;
-}
-
-function getWorkspaceAccessToken(team_domain: string) {
-  const integration = getSlackWorkspaces().find((n: any) => n.team_domain === team_domain);
-  if (integration) {
-    return integration.access_token;
-  }
   return null;
 }
 
