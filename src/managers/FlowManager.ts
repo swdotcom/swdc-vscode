@@ -3,7 +3,7 @@ import {softwarePost, softwareDelete} from '../http/HttpClient';
 import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 import {softwareGet} from '../http/HttpClient';
 
-import {checkRegistration, showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
+import {showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
 import {
   FULL_SCREEN_MODE_ID,
   getConfiguredScreenMode,
@@ -48,8 +48,7 @@ function showFlowModeRequiredMessage() {
 }
 
 export async function initiateFlow({automated = false}) {
-  const isRegistered = checkRegistration(false);
-  if (!isRegistered) {
+  if (!getItem("name")) {
     if (!automated) {
       // manually initiated, show the flow mode prompt
       showModalSignupPrompt('To use Flow Mode, please first sign up or login.');

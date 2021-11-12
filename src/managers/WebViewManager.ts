@@ -1,7 +1,7 @@
 import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
-import {softwareGet, isResponseOk, appGet} from '../http/HttpClient';
+import {isResponseOk, appGet} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
-import {checkRegistrationForReport, getItem} from '../Util';
+import {checkRegistrationForReport} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = '';
