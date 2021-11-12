@@ -402,10 +402,6 @@ export function getNowTimes() {
 }
 
 export async function launchWebDashboard() {
-  if (!checkRegistration()) {
-    return;
-  }
-
   // add the token=jwt
   const jwt = getItem('jwt');
   const encodedJwt = encodeURIComponent(jwt);
@@ -416,26 +412,6 @@ export async function launchWebDashboard() {
 
 export function launchWebUrl(url: string) {
   open(url);
-}
-
-function checkRegistration() {
-  if (!getItem('name')) {
-    window
-      .showInformationMessage(
-        'Sign up or log in to see more data visualizations.',
-        {
-          modal: true,
-        },
-        SIGN_UP_LABEL
-      )
-      .then(async (selection) => {
-        if (selection === SIGN_UP_LABEL) {
-          commands.executeCommand('codetime.registerAccount');
-        }
-      });
-    return false;
-  }
-  return true;
 }
 
 /**
