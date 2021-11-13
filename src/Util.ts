@@ -131,7 +131,7 @@ export function getIntegrations() {
 
 export function syncSlackIntegrations(integrations: any[]) {
   const nonSlackIntegrations = getIntegrations().filter(
-    (integration: any) => isActiveIntegration('slack', integration)
+    (integration: any) => !isActiveIntegration('slack', integration)
   );
   integrations = integrations?.length ? [...integrations, ...nonSlackIntegrations] : nonSlackIntegrations;
   storeJsonData(getIntegrationsFile(), integrations);
