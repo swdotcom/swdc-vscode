@@ -8,6 +8,7 @@ import {
   getPluginType,
   getPluginUuid,
   getVersion,
+  isActiveIntegration,
   launchWebUrl,
   syncSlackIntegrations,
 } from '../Util';
@@ -21,21 +22,11 @@ import { URLSearchParams } from 'url';
 
 // get saved slack integrations
 export function getSlackWorkspaces() {
-  return getIntegrations().filter((n: any) => n.name.toLowerCase() === 'slack' && n.status.toLowerCase() === 'active');
+  return getIntegrations().filter((n: any) => isActiveIntegration('slack', n));
 }
 
 export function hasSlackWorkspaces() {
   return !!getSlackWorkspaces().length;
-}
-
-// get the access token of a selected slack workspace
-export async function getSlackAccessToken() {
-  const selectedTeamDomain = await showSlackWorkspaceSelection();
-
-  if (selectedTeamDomain) {
-    return getWorkspaceAccessToken(selectedTeamDomain);
-  }
-  return null;
 }
 
 // connect slack flow
@@ -139,14 +130,6 @@ async function showSlackWorkspaceSelection() {
     }
   }
 
-  return null;
-}
-
-function getWorkspaceAccessToken(team_domain: string) {
-  const integration = getSlackWorkspaces().find((n: any) => n.team_domain === team_domain);
-  if (integration) {
-    return integration.access_token;
-  }
   return null;
 }
 

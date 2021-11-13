@@ -7,6 +7,7 @@ import {
   getIntegrations,
   syncSlackIntegrations,
   logIt,
+  isActiveIntegration,
 } from './Util';
 import {DEFAULT_SESSION_THRESHOLD_SECONDS} from './Constants';
 import {clearSessionSummaryData} from './storage/SessionSummaryData';
@@ -24,11 +25,7 @@ export async function reconcileSlackIntegrations(user: any) {
     // find the slack auth
     for (const integration of user.integrations) {
       // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
-      const isSlackIntegration = !!(
-        integration.name.toLowerCase() === 'slack' &&
-        integration.status.toLowerCase() === 'active' &&
-        integration.access_token
-      );
+      const isSlackIntegration = isActiveIntegration('slack', integration);
 
       if (isSlackIntegration) {
         const currentIntegration = currentIntegrations.find((n: any) => n.authId === integration.authId);

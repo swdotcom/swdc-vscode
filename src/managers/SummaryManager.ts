@@ -1,10 +1,9 @@
-import {getItem, setItem} from '../Util';
+import {getItem} from '../Util';
 import {saveSessionSummaryToDisk} from '../storage/SessionSummaryData';
 import {updateStatusBarWithSummaryData} from './StatusBarManager';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
 import {SessionSummary} from '../model/models';
 import {commands} from 'vscode';
-import {format} from 'date-fns';
 
 export class SummaryManager {
   private static instance: SummaryManager;
@@ -28,8 +27,6 @@ export class SummaryManager {
     const jwt = getItem('jwt');
 
     const result = await softwareGet(`/sessions/summary`, jwt);
-    const nowDay = format(new Date(), 'MM/dd/yyyy');
-    setItem('updatedTreeDate', nowDay);
     if (isResponseOk(result) && result.data) {
       const summary: SessionSummary = result.data;
       if (summary) {

@@ -125,27 +125,28 @@ export function getItem(key: string) {
 }
 
 export function getIntegrations() {
-  let integrations = getFileDataAsJson(getIntegrationsFile());
-  if (!integrations) {
-    integrations = [];
-    storeJsonData(getIntegrationsFile(), integrations);
-  }
-  const integrationsLen = integrations.length;
-  // check to see if there are any [] values and remove them
-  integrations = integrations.filter((n: any) => n && n.authId);
-  if (integrations.length !== integrationsLen) {
-    // update the file with the latest
-    storeJsonData(getIntegrationsFile(), integrations);
-  }
-  return integrations;
+  const integrations = getFileDataAsJson(getIntegrationsFile());
+  return integrations?.length ? integrations : [];
 }
 
 export function syncSlackIntegrations(integrations: any[]) {
   const nonSlackIntegrations = getIntegrations().filter(
-    (integration: any) => integration.name.toLowerCase() != 'slack'
+    (integration: any) => !isActiveIntegration('slack', integration)
   );
   integrations = integrations?.length ? [...integrations, ...nonSlackIntegrations] : nonSlackIntegrations;
   storeJsonData(getIntegrationsFile(), integrations);
+}
+
+export function isActiveIntegration(type: string, integration: any) {
+  if (integration && integration.status.toLowerCase() === "active" && integration.access_token) {
+    // handle integration_connection attribute
+    if (integration.integration_type) {
+      return !!(integration.integration_type.type.toLowerCase() === type.toLowerCase())
+    }
+    // still hasn't updated to use that in within the file, check the older version attribute
+    return !!(integration.name.toLowerCase() === type.toLowerCase())
+  }
+  return false;
 }
 
 export function getPluginUuid() {
