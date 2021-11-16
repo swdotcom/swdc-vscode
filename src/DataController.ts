@@ -159,17 +159,6 @@ export async function authenticationCompleteHandler(user: any) {
   return updatedUserInfo;
 }
 
-export async function getCachedSlackIntegrations() {
-  const user = await getUser();
-
-  if (user?.integration_connections?.length) {
-    return user?.integration_connections?.filter(
-      (integration: any) => integration.status === 'ACTIVE' && integration.integration_type_id === 14
-    );
-  }
-  return [];
-}
-
 export async function getCachedIntegrations(integration_type_id: number | undefined = undefined) {
   const user = await getUser();
   if (user?.integration_connections?.length) {
