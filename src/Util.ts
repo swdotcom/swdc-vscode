@@ -229,11 +229,6 @@ export async function getOsUsername() {
   return osUsername;
 }
 
-export function isEditorOpsInstalled(): boolean {
-  const editorOpsExt = extensions.getExtension('softwaredotcom.editor-ops');
-  return !!(editorOpsExt);
-}
-
 function getFile(name: string) {
   let file_path = getSoftwareDir();
   if (isWindows()) {
