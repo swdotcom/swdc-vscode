@@ -67,12 +67,13 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
 
-  // onboard the user as anonymous if it's being installed
-  if (window.state.focused) {
+  if (getItem("jwt")) {
+    intializePlugin(ctx, false);
+  } else if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
   } else {
     // 5 to 10 second delay
-    const secondDelay = getRandomNumberWithinRange(5, 10);
+    const secondDelay = getRandomNumberWithinRange(6, 10);
     setTimeout(() => {
       onboardInit(ctx, intializePlugin /*successFunction*/);
     }, 1000 * secondDelay);

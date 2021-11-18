@@ -137,7 +137,7 @@
     "webpack-cli": "^4.9.0"
   },
   "dependencies": {
-    "@slack/web-api": "^6.4.0",
+    "@slack/web-api": "^6.5.0",
     "@swdotcom/editor-flow": "^1.0.5",
     "@types/uuid": "^8.3.1",
     "@types/ws": "^8.2.0",

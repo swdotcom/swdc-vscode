@@ -109,10 +109,10 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(ignoreJwt: boolean = false): Promise<string | null> {
+export async function createAnonymousUser(): Promise<string | null> {
   const jwt = getItem('jwt');
   // check one more time before creating the anon user
-  if (!jwt || ignoreJwt) {
+  if (!jwt) {
     // this should not be undefined if its an account reset
     let plugin_uuid = getPluginUuid();
     let auth_callback_state = getAuthCallbackState();

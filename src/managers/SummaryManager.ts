@@ -1,6 +1,6 @@
 import {saveSessionSummaryToDisk} from '../storage/SessionSummaryData';
 import {updateStatusBarWithSummaryData} from './StatusBarManager';
-import {softwareGet, isResponseOk} from '../http/HttpClient';
+import {isResponseOk, appGet} from '../http/HttpClient';
 import {SessionSummary} from '../model/models';
 import {commands} from 'vscode';
 
@@ -23,7 +23,7 @@ export class SummaryManager {
    * This is only called from the new day checker
    */
   async updateSessionSummaryFromServer() {
-    const result = await softwareGet(`/sessions/summary`);
+    const result = await appGet(`/api/v1/user/session_summary`);
     if (isResponseOk(result) && result.data) {
       const summary: SessionSummary = result.data;
       if (summary) {

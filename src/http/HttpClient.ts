@@ -76,17 +76,6 @@ export async function appDelete(api: string, payload: any = {}) {
   });
 }
 
-export async function serverIsAvailable() {
-  const isAvail = await softwareGet('/ping')
-    .then((result) => {
-      return isResponseOk(result);
-    })
-    .catch((e) => {
-      return false;
-    });
-  return isAvail;
-}
-
 /**
  * Response returns a paylod with the following...
  * data: <payload>, status: 200, statusText: "OK", config: Object
