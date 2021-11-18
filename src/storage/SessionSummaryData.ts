@@ -1,5 +1,5 @@
-import {SessionSummary, KpmItem} from '../model/models';
-import {getNowTimes, getItem, coalesceNumber, getSessionSummaryFile} from '../Util';
+import {SessionSummary} from '../model/models';
+import {getItem, getSessionSummaryFile} from '../Util';
 import {DEFAULT_SESSION_THRESHOLD_SECONDS} from '../Constants';
 import {getFileDataAsJson, storeJsonData} from '../managers/FileManager';
 

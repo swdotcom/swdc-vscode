@@ -24,7 +24,6 @@ import {
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
-import {showSlackManageOptions} from './managers/PromptManager';
 import {appDelete} from './http/HttpClient';
 import {progressIt} from './managers/ProgressManager';
 import {diconnectIntegration} from './DataController';
@@ -399,13 +398,6 @@ export function createCommands(
     commands.registerCommand('codetime.updateViewMetrics', () => {
       updateFlowModeStatusBar();
       updateStatusBarWithSummaryData();
-    })
-  );
-
-  // MANAGE SLACK CONNECTION
-  cmds.push(
-    commands.registerCommand('codetime.manageSlackConnection', () => {
-      progressIt('Manage Slack connections...', showSlackManageOptions);
     })
   );
 
