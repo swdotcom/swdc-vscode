@@ -1,4 +1,3 @@
-import {getItem} from '../Util';
 import {saveSessionSummaryToDisk} from '../storage/SessionSummaryData';
 import {updateStatusBarWithSummaryData} from './StatusBarManager';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
@@ -24,9 +23,7 @@ export class SummaryManager {
    * This is only called from the new day checker
    */
   async updateSessionSummaryFromServer() {
-    const jwt = getItem('jwt');
-
-    const result = await softwareGet(`/sessions/summary`, jwt);
+    const result = await softwareGet(`/sessions/summary`);
     if (isResponseOk(result) && result.data) {
       const summary: SessionSummary = result.data;
       if (summary) {

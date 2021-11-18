@@ -58,6 +58,15 @@ export async function appPut(api: string, payload: any) {
   });
 }
 
+export async function appPost(api: string, payload: any) {
+  updateOutgoingHeader();
+
+  return await appApi.post(api, payload).catch((err: any) => {
+    logIt(`error for POST ${api}, message: ${err.message}`);
+    return err;
+  });
+}
+
 export async function appDelete(api: string, payload: any = {}) {
   updateOutgoingHeader();
 
@@ -68,7 +77,7 @@ export async function appDelete(api: string, payload: any = {}) {
 }
 
 export async function serverIsAvailable() {
-  const isAvail = await softwareGet('/ping', null)
+  const isAvail = await softwareGet('/ping')
     .then((result) => {
       return isResponseOk(result);
     })
@@ -85,10 +94,10 @@ export async function serverIsAvailable() {
  * @param jwt
  */
 
-export async function softwareGet(api: string, jwt: string | null, queryParams = {}) {
-  updateOutgoingHeader();
+export async function softwareGet(api: string, override_token: any = null) {
+  updateOutgoingHeader(override_token);
 
-  return await beApi.get(api, {params: queryParams}).catch((err: any) => {
+  return await beApi.get(api).catch((err: any) => {
     logIt(`error fetching data for ${api}, message: ${err.message}`);
     return err;
   });
@@ -164,11 +173,16 @@ export function isResponseOk(resp: any) {
   return false;
 }
 
-function updateOutgoingHeader() {
+function updateOutgoingHeader(override_token: any = null) {
   const token = getAuthorization();
-  if (token) {
-    appApi.defaults.headers.common['Authorization'] = token;
-    beApi.defaults.headers.common['Authorization'] = token;
+  if (token || override_token) {
+    if (override_token) {
+      appApi.defaults.headers.common['Authorization'] = override_token;
+      beApi.defaults.headers.common['Authorization'] = override_token;
+    } else {
+      appApi.defaults.headers.common['Authorization'] = token;
+      beApi.defaults.headers.common['Authorization'] = token;
+    }
   }
 
   appApi.defaults.headers.common['X-SWDC-Is-Light-Mode'] = !!(window.activeColorTheme.kind === 1);

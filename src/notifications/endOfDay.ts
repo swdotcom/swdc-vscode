@@ -32,7 +32,7 @@ export const setEndOfDayNotification = async (user: any) => {
       msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, HOUR_IN_MILLIS * 17);
     }
 
-    const response = await softwareGet('/users/profile', jwt);
+    const response = await softwareGet('/users/profile');
     if (isResponseOk(response)) {
       // get the day of the week that matches today
       const work_hours_today = response.data.work_hours[day] || undefined;

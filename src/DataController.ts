@@ -62,7 +62,7 @@ export async function reconcileSlackIntegrations(user: any) {
 
 export async function getUser() {
   let api = `/users/me`;
-  let resp = await softwareGet(api, getItem('jwt'));
+  let resp = await softwareGet(api);
   if (isResponseOk(resp)) {
     if (resp && resp.data && resp.data.data) {
       const user = resp.data.data;

@@ -1,7 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
-import {softwarePost, softwareDelete} from '../http/HttpClient';
+import {appPost, appDelete, appGet} from '../http/HttpClient';
 import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
-import {softwareGet} from '../http/HttpClient';
 
 import {showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
 import {
@@ -79,7 +78,7 @@ export async function initiateFlow({automated = false}) {
     // only update flow change here
     updateFlowChange(true);
     logIt('Entering Flow Mode');
-    await softwarePost('/v1/flow_sessions', {automated}, getItem('jwt'));
+    await appPost('/plugin/flow_sessions', {automated});
   }
 
   // update screen mode
@@ -113,7 +112,7 @@ export async function pauseFlowInitiate() {
     // only update flow change in here
     updateFlowChange(false);
     logIt('Exiting Flow Mode');
-    await softwareDelete('/v1/flow_sessions', getItem('jwt'));
+    await appDelete('/plugin/flow_sessions');
   }
 
   showNormalScreenMode();
@@ -130,9 +129,10 @@ function updateFlowStatus() {
 
 export async function determineFlowModeFromApi() {
   const flowSessionsReponse = getItem('jwt')
-    ? await softwareGet('/v1/flow_sessions', getItem('jwt'))
+    ? await appGet('/plugin/flow_sessions')
     : {data: {flow_sessions: []}};
-  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions;
+
+  const openFlowSessions = flowSessionsReponse?.data?.flow_sessions ?? [];
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   const enabledFlow: boolean = !!(openFlowSessions?.length);
   // initialize the file value
