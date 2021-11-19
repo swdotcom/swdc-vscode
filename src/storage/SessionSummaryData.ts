@@ -50,31 +50,3 @@ export function saveSessionSummaryToDisk(sessionSummaryData: any) {
   const file = getSessionSummaryFile();
   storeJsonData(file, sessionSummaryData);
 }
-
-/**
- * Return {elapsedSeconds, sessionSeconds}
- * The session minutes is based on a threshold of 15 minutes
- */
-export function getTimeBetweenLastPayload() {
-  // default to 1 minute
-  let sessionSeconds = 0;
-  let elapsedSeconds = 60;
-
-  // will be zero if its a new day
-  const lastPayloadEnd = getItem('latestPayloadTimestampEndUtc');
-
-  // the last payload end time is reset within the new day checker
-  if (lastPayloadEnd && lastPayloadEnd > 0) {
-    // diff from the previous end time
-    elapsedSeconds = coalesceNumber(getNowTimes().now_in_sec - lastPayloadEnd);
-
-    // if it's less than the threshold then add the minutes to the session time
-    if (elapsedSeconds > 0 && elapsedSeconds <= getSessionThresholdSeconds()) {
-      // it's still the same session, add the gap time in minutes
-      sessionSeconds = elapsedSeconds;
-    }
-    sessionSeconds = coalesceNumber(sessionSeconds);
-  }
-
-  return {sessionSeconds, elapsedSeconds};
-}
