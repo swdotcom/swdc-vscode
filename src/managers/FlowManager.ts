@@ -58,9 +58,9 @@ export async function initiateFlow({automated = false}) {
     return;
   }
 
-  const skipSlackCheck = !!getItem('vscode_CtskipSlackConnect')
+  const skipSlackCheck = !!getItem('vscode_CtskipSlackConnect');
 
-  if (!skipSlackCheck) {
+  if (!skipSlackCheck && !automated) {
     const connectInfo = await checkSlackConnectionForFlowMode();
     if (!connectInfo.continue) {
       return;
