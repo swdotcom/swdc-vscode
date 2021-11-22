@@ -10,6 +10,7 @@ import {
   getVersion,
   isActiveIntegration,
   launchWebUrl,
+  setItem,
   syncSlackIntegrations,
 } from '../Util';
 import {showQuickPick} from '../menu/MenuManager';
@@ -195,6 +196,7 @@ export async function checkSlackConnectionForFlowMode() {
     } else if (selection === 'Continue anyway') {
       // slack is not connected, but continue. set useSlackSettings to FALSE
       // set continue to TRUE
+      setItem('vscode_CtskipSlackConnect', true);
       return {continue: true, useSlackSettings: false};
     } else {
       // connect was selected
