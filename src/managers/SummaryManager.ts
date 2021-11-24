@@ -23,7 +23,7 @@ export class SummaryManager {
    * This is only called from the new day checker
    */
   async updateSessionSummaryFromServer() {
-    const result = await appGet(`/api/v1/user/session_summary`);
+    const result = await appGet('/api/v1/user/session_summary');
     if (isResponseOk(result) && result.data) {
       const summary: SessionSummary = result.data;
       if (summary) {

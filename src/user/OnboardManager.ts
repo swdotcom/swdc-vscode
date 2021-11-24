@@ -13,7 +13,7 @@ import {
 import {isResponseOk, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {authenticationCompleteHandler} from '../DataController';
-import {api_endpoint, app_url} from '../Constants';
+import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
 import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
@@ -53,9 +53,10 @@ async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   }
   retry_counter++;
   // call activate again later
+  const retryMillis = retry_counter > 4 ? one_min_millis : 1000 * 15;
   setTimeout(() => {
     onboardInit(ctx, callback);
-  }, one_min_millis * 2);
+  }, retryMillis);
 }
 
 /**
@@ -165,7 +166,7 @@ export async function buildLoginUrl(loginType: string) {
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
-  }, 20000);
+  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${url}?${params.toString()}`;
 }
 
@@ -184,7 +185,7 @@ export async function buildEmailSignup() {
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
-  }, 20000);
+  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${loginUrl}?${params.toString()}`;
 }
 

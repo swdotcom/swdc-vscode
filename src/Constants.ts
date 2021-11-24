@@ -22,4 +22,6 @@ export const app_url = 'https://app.software.com';
 export const vscode_issues_url = 'https://github.com/swdotcom/swdc-vscode/issues';
 export const create_org_url = 'https://app.software.com/github_onboard';
 
+export const TWENTY_SEC_TIMEOUT_MILLIS = 20000;
+
 export const LOG_FILE_EVENTS = false;

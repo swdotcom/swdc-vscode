@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {version, window} from 'vscode';
-import {api_endpoint, app_url} from '../Constants';
+import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
 import {
   logIt,
   getPluginId,
@@ -16,7 +16,7 @@ import {
 // build the axios api base url
 const beApi: any = axios.create({
   baseURL: `${api_endpoint}`,
-  timeout: 20000,
+  timeout: TWENTY_SEC_TIMEOUT_MILLIS,
 });
 
 const appApi: any = axios.create({

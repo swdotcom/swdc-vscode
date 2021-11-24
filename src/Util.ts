@@ -320,9 +320,12 @@ export function getLogId() {
   return 'CodeTime';
 }
 
-export function logIt(message: string) {
+export function logIt(message: string, isError: boolean = false) {
   const windowMsg: string = isPrimaryWindow() ? '(p)' : '';
   outputChannel.appendLine(`${formatISO(new Date())} ${getLogId()}${windowMsg}: ${message}`);
+  if (isError) {
+    console.error(message)
+  }
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {
