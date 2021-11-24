@@ -61,7 +61,7 @@ export function deactivate(ctx: ExtensionContext) {
 
 export async function activate(ctx: ExtensionContext) {
   if (window.state.focused) {
-    setItem('vscode_ct_primary_window', getWorkspaceName());
+    setItem('vscode_primary_window', getWorkspaceName());
   }
 
   // add the code time commands

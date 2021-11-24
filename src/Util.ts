@@ -468,11 +468,11 @@ export function getImage(name: string) {
 }
 
 export function isPrimaryWindow() {
-  let workspaceWindow = getItem('vscode_ct_primary_window');
+  let workspaceWindow = getItem('vscode_primary_window');
   if (!workspaceWindow) {
     // its not set yet, update it to this window
     workspaceWindow = getWorkspaceName();
-    setItem('vscode_ct_primary_window', workspaceWindow);
+    setItem('vscode_primary_window', workspaceWindow);
   }
   return !!(workspaceWindow === getWorkspaceName());
 }

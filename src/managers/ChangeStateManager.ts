@@ -80,7 +80,7 @@ export class ChangeStateManager {
   private windowStateChangeHandler(event: any) {
     if (event.focused) {
       this.tracker.trackEditorAction('editor', 'focus');
-      setItem('vscode_ct_primary_window', getWorkspaceName());
+      setItem('vscode_primary_window', getWorkspaceName());
       setTimeout(() => {
         isNewDay();
       }, 1000);
