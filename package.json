@@ -143,7 +143,6 @@
     "@types/ws": "^8.2.0",
     "axios": "^0.24.0",
     "date-fns": "^2.25.0",
-    "file-it": "^1.1.5",
     "moment-timezone": "^0.5.33",
     "node-cache": "^5.1.2",
     "open": "^8.4.0",

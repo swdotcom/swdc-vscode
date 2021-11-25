@@ -889,7 +889,7 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
-file-it@^1.1.2, file-it@^1.1.5:
+file-it@^1.1.2:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/file-it/-/file-it-1.1.5.tgz#8df20965deac400c6b073dd96de1fc5b5af42c5a"
   integrity sha512-OynZKH7VXn7pSzK2tS7gGJ7i+eQ7326SfCtafbjmpVdza+j+wk4kJ6XZNOrdrYPnl9kgnAnbGX1AzwqPwymiDQ==
