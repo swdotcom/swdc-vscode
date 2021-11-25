@@ -1,5 +1,3 @@
-import { logIt } from '../Util';
-
 const fs = require('fs');
 
 export function getJsonItem(file: string, key: string) {
@@ -16,21 +14,32 @@ export function setJsonItem(file: string, key: string, value: any) {
   storeJsonData(file, json);
 }
 
-export function getFileDataAsJson(filePath: string): any {
-  const content: string = fs.readFileSync(filePath, { encoding: 'utf8' });
+export function getFileDataAsJson(filePath: string, default_value: any = {}): any {
+  let content: string = fs.readFileSync(filePath, { encoding: 'utf8' });
   try {
     return JSON.parse(content);
   } catch (e: any) {
-    logIt(`Unable to read session info: ${e.message}`, true);
+    console.error(`Unable to read file info: ${e.message}`, true);
+    storeJsonData(filePath, default_value);
+    try {
+      return JSON.parse(content);
+    } catch (e: any) {
+      console.error(`Unable to read file info: ${e.message}`, true);
+    }
   }
   return null;
 }
 
+/**
+ * Single place to write json data (json obj or json array)
+ * @param filePath
+ * @param json
+ */
 export function storeJsonData(filePath: string, json: any) {
   try {
     const content: string = JSON.stringify(json);
     fs.writeFileSync(filePath, content, { encoding: 'utf8' });
   } catch (e: any) {
-    logIt(`Unable to write session info: ${e.message}`, true);
+    console.error(`Unable to write session info: ${e.message}`, true);
   }
 }

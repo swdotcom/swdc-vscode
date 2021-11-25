@@ -123,7 +123,7 @@ export function getItem(key: string) {
 }
 
 export function getIntegrations() {
-  const integrations = getFileDataAsJson(getIntegrationsFile());
+  const integrations = getFileDataAsJson(getIntegrationsFile(), []);
   return integrations?.length ? integrations : [];
 }
 
@@ -227,11 +227,11 @@ export async function getOsUsername() {
   return osUsername;
 }
 
-function getFile(name: string) {
+function getFile(name: string, default_data: any = {}) {
   const file_path = getSoftwareDir();
   const file = isWindows() ? `${file_path}\\${name}` : `${file_path}/${name}`;
   if (!fs.existsSync(file)) {
-    storeJsonData(file, {});
+    storeJsonData(file, default_data);
   }
   return file;
 }
@@ -249,7 +249,7 @@ export function getGitEventFile() {
 }
 
 export function getIntegrationsFile() {
-  return getFile('integrations.json');
+  return getFile('integrations.json', []);
 }
 
 export function getSessionSummaryFile() {
