@@ -97,7 +97,7 @@ export function initializeWebsockets() {
 
     // RESET reconnect delay
     currentReconnectDelay = INITIAL_RECONNECT_DELAY;
-    logIt('websocket connection open');
+    logIt('Websocket connection open');
   });
 
   ws.on('ping', heartbeat);
@@ -203,7 +203,7 @@ const handleIncomingMessage = (data: any) => {
         handleFlowScoreMessage(message);
         break;
       case 'flow_state':
-        try { logIt(`Flow state update: ${JSON.stringify(message.body)}`) } catch (e) { }
+        try { logIt(`Flow state: ${JSON.stringify(message.body)}`) } catch (e) { }
         handleFlowStateMessage(message.body);
         break;
       case 'authenticated_plugin_user':

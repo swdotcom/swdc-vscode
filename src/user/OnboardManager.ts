@@ -10,10 +10,10 @@ import {
   getPluginUuid,
   launchWebUrl,
 } from '../Util';
-import {isResponseOk, serverIsAvailable, softwareGet} from '../http/HttpClient';
+import {isResponseOk, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {authenticationCompleteHandler} from '../DataController';
-import {api_endpoint, app_url} from '../Constants';
+import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
 import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
@@ -25,16 +25,12 @@ export function updatedAuthAdded(val: boolean) {
 }
 
 export async function onboardInit(ctx: ExtensionContext, callback: any) {
-  let jwt = getItem('jwt');
-
-  const windowState = window.state;
-
-  if (jwt) {
+  if (getItem('jwt')) {
     // we have the jwt, call the callback that anon was not created
     return callback(ctx, false /*anonCreated*/);
   }
 
-  if (windowState.focused) {
+  if (window.state.focused) {
     // perform primary window related work
     primaryWindowOnboarding(ctx, callback);
   } else {
@@ -44,30 +40,23 @@ export async function onboardInit(ctx: ExtensionContext, callback: any) {
 }
 
 async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
-  let serverIsOnline = await serverIsAvailable();
-  if (serverIsOnline) {
-    // great, it's online, create the anon user
-    const jwt = await createAnonymousUser();
-    if (jwt) {
-      // great, it worked. call the callback
-      return callback(ctx, true /*anonCreated*/);
-    }
-    // else its some kind of server issue, try again in a minute
-    serverIsOnline = false;
+  const jwt = await createAnonymousUser();
+  if (jwt) {
+    // great, it worked. call the callback
+    return callback(ctx, true /*anonCreated*/);
   }
 
-  if (!serverIsOnline) {
-    // not online, try again in a minute
-    if (retry_counter === 0) {
-      // show the prompt that we're unable connect to our app 1 time only
-      showOfflinePrompt(true);
-    }
-    retry_counter++;
-    // call activate again later
-    setTimeout(() => {
-      onboardInit(ctx, callback);
-    }, one_min_millis * 2);
+  // failed to get the jwt, try again in a minute
+  if (retry_counter === 0) {
+    // show the prompt that we're unable connect to our app 1 time only
+    showOfflinePrompt(true);
   }
+  retry_counter++;
+  // call activate again later
+  const retryMillis = retry_counter > 4 ? one_min_millis : 1000 * 15;
+  setTimeout(() => {
+    onboardInit(ctx, callback);
+  }, retryMillis);
 }
 
 /**
@@ -77,17 +66,12 @@ async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
  * @param callback
  */
 async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
-  const serverIsOnline = await serverIsAvailable();
-  if (!serverIsOnline) {
-    // not online, try again later
-    setTimeout(() => {
-      onboardInit(ctx, callback);
-    }, one_min_millis);
+  if (getItem("jwt")) {
     return;
-  } else if (retry_counter < 5) {
-    if (serverIsOnline) {
-      retry_counter++;
-    }
+  }
+
+  if (retry_counter < 5) {
+    retry_counter++;
     // call activate again in about 15 seconds
     setTimeout(() => {
       onboardInit(ctx, callback);
@@ -102,8 +86,11 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
 }
 
 export async function lazilyPollForAuth(tries: number = 20) {
-  authAdded = !authAdded ? await getUserRegistrationInfo() : authAdded;
-  if (!authAdded && tries > 0) {
+  if (authAdded) {
+    return;
+  }
+  const registered =  await getUserRegistrationInfo();
+  if (!registered && tries > 0) {
     // try again
     tries--;
     setTimeout(() => {
@@ -179,7 +166,7 @@ export async function buildLoginUrl(loginType: string) {
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
-  }, 16000);
+  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${url}?${params.toString()}`;
 }
 
@@ -198,7 +185,7 @@ export async function buildEmailSignup() {
   updatedAuthAdded(false);
   setTimeout(() => {
     lazilyPollForAuth();
-  }, 16000);
+  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${loginUrl}?${params.toString()}`;
 }
 

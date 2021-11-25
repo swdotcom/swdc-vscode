@@ -4,8 +4,7 @@ import {
   app_url,
   CODE_TIME_PLUGIN_ID,
   CODE_TIME_TYPE,
-  SOFTWARE_DIRECTORY,
-  SIGN_UP_LABEL,
+  SOFTWARE_DIRECTORY
 } from './Constants';
 import {v4 as uuidv4} from 'uuid';
 
@@ -17,7 +16,6 @@ import { formatISO } from 'date-fns';
 
 const moment = require('moment-timezone');
 const open = require('open');
-
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -230,11 +228,12 @@ export async function getOsUsername() {
 }
 
 function getFile(name: string) {
-  let file_path = getSoftwareDir();
-  if (isWindows()) {
-    return `${file_path}\\${name}`;
+  const file_path = getSoftwareDir();
+  const file = isWindows() ? `${file_path}\\${name}` : `${file_path}/${name}`;
+  if (!fs.existsSync(file)) {
+    storeJsonData(file, {});
   }
-  return `${file_path}/${name}`;
+  return file;
 }
 
 export function getDeviceFile() {
@@ -261,19 +260,13 @@ export function getFlowChangeFile() {
   return getFile('flowChange.json');
 }
 
-export function getSoftwareDir(autoCreate = true) {
+export function getSoftwareDir() {
   const homedir = os.homedir();
-  let softwareDataDir = homedir;
-  if (isWindows()) {
-    softwareDataDir += `\\${SOFTWARE_DIRECTORY}`;
-  } else {
-    softwareDataDir += `/${SOFTWARE_DIRECTORY}`;
-  }
+  const softwareDataDir = isWindows() ? `${homedir}\\${SOFTWARE_DIRECTORY}` : `${homedir}/${SOFTWARE_DIRECTORY}`;
 
-  if (autoCreate && !fs.existsSync(softwareDataDir)) {
+  if (!fs.existsSync(softwareDataDir)) {
     fs.mkdirSync(softwareDataDir);
   }
-
   return softwareDataDir;
 }
 
@@ -320,9 +313,12 @@ export function getLogId() {
   return 'CodeTime';
 }
 
-export function logIt(message: string) {
+export function logIt(message: string, isError: boolean = false) {
   const windowMsg: string = isPrimaryWindow() ? '(p)' : '';
   outputChannel.appendLine(`${formatISO(new Date())} ${getLogId()}${windowMsg}: ${message}`);
+  if (isError) {
+    console.error(message)
+  }
 }
 
 export async function showOfflinePrompt(addReconnectMsg = false) {
@@ -468,11 +464,11 @@ export function getImage(name: string) {
 }
 
 export function isPrimaryWindow() {
-  let workspaceWindow = getItem('vscode_ct_primary_window');
+  let workspaceWindow = getItem('vscode_primary_window');
   if (!workspaceWindow) {
     // its not set yet, update it to this window
     workspaceWindow = getWorkspaceName();
-    setItem('vscode_ct_primary_window', workspaceWindow);
+    setItem('vscode_primary_window', workspaceWindow);
   }
   return !!(workspaceWindow === getWorkspaceName());
 }
