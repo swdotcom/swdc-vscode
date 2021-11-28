@@ -66,6 +66,10 @@
         "title": "Code Time: Learn more"
       },
       {
+        "command": "codetime.manageSlackConnection",
+        "title": "Code Time: Manage Slack connection"
+      },
+      {
         "command": "codetime.disconnectSlackWorkspace",
         "title": "Code Time: Disconnect Slack workspace",
         "icon": {
@@ -142,12 +146,12 @@
     "@types/uuid": "^8.3.1",
     "@types/ws": "^8.2.0",
     "axios": "^0.24.0",
-    "date-fns": "^2.25.0",
+    "date-fns": "^2.26.0",
     "moment-timezone": "^0.5.33",
     "node-cache": "^5.1.2",
     "open": "^8.4.0",
     "swdc-tracker": "^1.5.0",
     "uuid": "^8.3.2",
-    "ws": "^8.2.3"
+    "ws": "^8.3.0"
   }
 }

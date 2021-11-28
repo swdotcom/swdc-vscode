@@ -381,6 +381,18 @@ export function createCommands(
   );
 
   cmds.push(
+    commands.registerCommand('codetime.manageSlackConnection', () => {
+      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand('codetime.manageCalendarConnection', () => {
+      launchWebUrl(`${app_url}/data_sources/integration_types/calendar`);
+    })
+  );
+
+  cmds.push(
     commands.registerCommand('codetime.skipSlackConnect', () => {
       setItem('vscode_CtskipSlackConnect', true);
       // refresh the view
