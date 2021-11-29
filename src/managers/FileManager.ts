@@ -16,19 +16,12 @@ export function setJsonItem(file: string, key: string, value: any) {
   storeJsonData(file, json);
 }
 
-export function getFileDataAsJson(filePath: string, default_value: any = {}): any {
+export function getFileDataAsJson(filePath: string): any {
   let content: string = getFileContent(filePath);
   try {
     return JSON.parse(content);
   } catch (e: any) {
     logIt(`Unable to read file info: ${e.message}`, true);
-    storeJsonData(filePath, default_value);
-    content = getFileContent(filePath);
-    try {
-      return JSON.parse(content);
-    } catch (e: any) {
-      logIt(`Unable to read file info: ${e.message}`, true);
-    }
   }
   return null;
 }
