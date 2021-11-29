@@ -17,17 +17,13 @@ export function setJsonItem(file: string, key: string, value: any) {
 }
 
 export function getFileDataAsJson(filePath: string): any {
-  let content: string = getFileContent(filePath);
+  let content: string = fs.readFileSync(filePath, { encoding: 'utf8' });
   try {
     return JSON.parse(content);
   } catch (e: any) {
     logIt(`Unable to read file info: ${e.message}`, true);
   }
   return null;
-}
-
-function getFileContent(filePath: string) {
-  return fs.readFileSync(filePath, { encoding: 'utf8' });
 }
 
 /**
