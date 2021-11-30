@@ -338,20 +338,6 @@ export function getOffsetSeconds() {
   return d.getTimezoneOffset() * 60;
 }
 
-export function isNewDay() {
-  const day = getDay(new Date());
-  const currentDay = getItem('currentDay');
-  const dayChanged = !!(currentDay !== day);
-  if (dayChanged) {
-    setItem('currentDay', day);
-    // refetch the current day stats
-    setTimeout(() => {
-      SummaryManager.getInstance().updateSessionSummaryFromServer();
-    }, 1000);
-  }
-  return dayChanged;
-}
-
 export function coalesceNumber(val: any, defaultVal = 0) {
   if (val === null || val === undefined || isNaN(val)) {
     return defaultVal;
