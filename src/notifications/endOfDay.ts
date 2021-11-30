@@ -4,7 +4,6 @@ import {getItem} from '../Util';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
 import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
-import {configureSettingsKpmItem, showMeTheDataKpmItem} from '../tree/TreeButtonProvider';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';
 
 const MIN_IN_MILLIS = 60 * 1000;
@@ -67,12 +66,8 @@ export const showEndOfDayNotification = async () => {
   );
 
   if (selection === 'Show me the data') {
-    let item = showMeTheDataKpmItem();
-    tracker.trackUIInteraction(item);
     showDashboard();
   } else if (selection === 'Settings') {
-    let item = configureSettingsKpmItem();
-    tracker.trackUIInteraction(item);
     configureSettings();
   }
 };
