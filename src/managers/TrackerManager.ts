@@ -11,6 +11,7 @@ import {
   isGitProject,
   getEditorName,
 } from '../Util';
+import {KpmItem} from '../model/models';
 import {getResourceInfo} from '../repo/KpmRepoManager';
 import {
   getDefaultBranchFromRemoteBranch,
@@ -114,6 +115,34 @@ export class TrackerManager {
 
       swdcTracker.trackCodeTimeEvent(codetime_event);
     }
+  }
+
+  public async trackUIInteraction(item: KpmItem) {
+    // ui interaction doesn't require a jwt, no need to check for that here
+    if (!this.trackerReady || !item) {
+      return;
+    }
+
+    const ui_interaction = {
+      interaction_type: item.interactionType,
+    };
+
+    const ui_element = {
+      element_name: item.name,
+      element_location: item.location,
+      color: item.color ? item.color : null,
+      icon_name: item.interactionIcon ? item.interactionIcon : null,
+      cta_text: !item.hideCTAInTracker ? item.label || item.description || item.tooltip : 'redacted',
+    };
+
+    const ui_event = {
+      ...ui_interaction,
+      ...ui_element,
+      ...this.pluginParams,
+      ...this.getJwtParams(),
+    };
+
+    swdcTracker.trackUIInteraction(ui_event);
   }
 
   public async trackGitLocalEvent(gitEventName: string, branch?: string, commit?: string) {

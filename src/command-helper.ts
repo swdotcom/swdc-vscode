@@ -17,6 +17,7 @@ import {CodeTimeView} from './sidebar/CodeTimeView';
 import {appDelete} from './http/HttpClient';
 import {progressIt} from './managers/ProgressManager';
 import {diconnectIntegration} from './DataController';
+import { getHideStatusBarMetricsButton } from './events/KpmItems';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -85,6 +86,7 @@ export function createCommands(
   // TOGGLE STATUS BAR METRIC VISIBILITY
   cmds.push(
     commands.registerCommand('codetime.toggleStatusBar', () => {
+      tracker.trackUIInteraction(getHideStatusBarMetricsButton());
       toggleStatusBar();
       commands.executeCommand('codetime.refreshCodeTimeView');
     })
