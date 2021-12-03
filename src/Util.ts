@@ -123,7 +123,7 @@ export function getItem(key: string) {
 }
 
 export function getIntegrations() {
-  const integrations = getFileDataAsJson(getIntegrationsFile(), []);
+  const integrations = getFileDataAsJson(getIntegrationsFile());
   return integrations?.length ? integrations : [];
 }
 
