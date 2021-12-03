@@ -7,6 +7,7 @@ import {
   SOFTWARE_DIRECTORY
 } from './Constants';
 import {v4 as uuidv4} from 'uuid';
+import getDay from 'date-fns/getDay'
 
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
@@ -14,7 +15,6 @@ import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './mana
 import {SummaryManager} from './managers/SummaryManager';
 import { formatISO } from 'date-fns';
 
-const moment = require('moment-timezone');
 const open = require('open');
 const fs = require('fs');
 const os = require('os');
@@ -338,59 +338,11 @@ export function getOffsetSeconds() {
   return d.getTimezoneOffset() * 60;
 }
 
-export function isNewDay() {
-  const {day} = getNowTimes();
-  const currentDay = getItem('currentDay');
-  const dayChanged = !!(currentDay !== day);
-  if (dayChanged) {
-    setItem('currentDay', day);
-    // refetch the current day stats
-    setTimeout(() => {
-      SummaryManager.getInstance().updateSessionSummaryFromServer();
-    }, 1000);
-  }
-  return dayChanged;
-}
-
 export function coalesceNumber(val: any, defaultVal = 0) {
   if (val === null || val === undefined || isNaN(val)) {
     return defaultVal;
   }
   return val;
-}
-
-/**
- * now - current time in UTC (Moment object)
- * now_in_sec - current time in UTC, unix seconds
- * offset_in_sec - timezone offset from UTC (sign = -420 for Pacific Time)
- * local_now_in_sec - current time in UTC plus the timezone offset
- * utcDay - current day in UTC
- * day - current day in local TZ
- * localDayTime - current day in local TZ
- *
- * Example:
- * { day: "2020-04-07", localDayTime: "Tuesday, April 7, 2020 9:48 PM",
- * local_now_in_sec: 1586296107, now: "2020-04-08T04:48:27.120Z", now_in_sec: 1586321307,
- * offset_in_sec: -25200, utcDay: "2020-04-08" }
- */
-export function getNowTimes() {
-  const now = moment.utc();
-  const now_in_sec = now.unix();
-  const offset_in_sec = moment().utcOffset() * 60;
-  const local_now_in_sec = now_in_sec + offset_in_sec;
-  const utcDay = now.format(dayFormat);
-  const day = moment().format(dayFormat);
-  const localDayTime = moment().format(dayTimeFormat);
-
-  return {
-    now,
-    now_in_sec,
-    offset_in_sec,
-    local_now_in_sec,
-    utcDay,
-    day,
-    localDayTime,
-  };
 }
 
 export async function launchWebDashboard() {

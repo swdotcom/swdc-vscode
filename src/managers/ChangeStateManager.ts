@@ -2,7 +2,7 @@ import {commands, Disposable, window, workspace} from 'vscode';
 import {TrackerManager} from './TrackerManager';
 import {EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface} from '@swdotcom/editor-flow';
 import {configureSettings, showingConfigureSettingsPanel} from './ConfigManager';
-import {getWorkspaceName, isNewDay, setItem} from '../Util';
+import {getWorkspaceName, setItem} from '../Util';
 
 export class ChangeStateManager {
   private static instance: ChangeStateManager;
@@ -81,9 +81,6 @@ export class ChangeStateManager {
     if (event.focused) {
       this.tracker.trackEditorAction('editor', 'focus');
       setItem('vscode_primary_window', getWorkspaceName());
-      setTimeout(() => {
-        isNewDay();
-      }, 1000);
     } else {
       this.tracker.trackEditorAction('editor', 'unfocus');
     }

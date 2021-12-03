@@ -29,8 +29,6 @@ import {getPreference} from '../DataController';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
 import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
 
-const moment = require('moment-timezone');
-
 export class TrackerManager {
   private static instance: TrackerManager;
 
