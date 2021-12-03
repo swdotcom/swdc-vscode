@@ -1,5 +1,5 @@
 import {window, commands} from 'vscode';
-import {softwareGet, isResponseOk, softwareDelete} from './http/HttpClient';
+import {isResponseOk, softwareDelete, appGet} from './http/HttpClient';
 import {
   getItem,
   setItem,
@@ -15,38 +15,23 @@ import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import {userEventEmitter} from './events/userEventEmitter';
 import { updateFlowModeStatus } from './managers/FlowManager';
-const {WebClient} = require('@slack/web-api');
+
+let currentUser: any | null = null;
+let lastUserFetch: number = 0;
 
 export async function reconcileSlackIntegrations(user: any) {
   let foundNewIntegration = false;
   const slackIntegrations = [];
-  if (user && user.integrations) {
+  if (user && user.integration_connections) {
     const currentIntegrations = getIntegrations();
     // find the slack auth
-    for (const integration of user.integrations) {
-      // {access_token, name, plugin_uuid, scopes, pluginId, authId, refresh_token, scopes}
+    for (const integration of user.integration_connections) {
       const isSlackIntegration = isActiveIntegration('slack', integration);
 
       if (isSlackIntegration) {
-        const currentIntegration = currentIntegrations.find((n: any) => n.authId === integration.authId);
-        if (!currentIntegration || !currentIntegration.team_domain) {
-          // get the workspace domain using the authId
-          const web = new WebClient(integration.access_token);
-          const usersIdentify = await web.users.identity().catch((e: any) => {
-            console.log('Error fetching slack team info: ', e.message);
-            return null;
-          });
-          if (usersIdentify) {
-            // usersIdentity returns
-            // {team: {id, name, domain, image_102, image_132, ....}...}
-            // set the domain
-            integration['team_domain'] = usersIdentify.team?.domain;
-            integration['team_name'] = usersIdentify.team?.name;
-            integration['integration_id'] = usersIdentify.user?.id;
-
-            foundNewIntegration = true;
-            slackIntegrations.push(integration);
-          }
+        const currentIntegration = currentIntegrations.find((n: any) => n.auth_id === integration.auth_id);
+        if (!currentIntegration) {
+          slackIntegrations.push(integration);
         } else {
           // add the existing one back
           slackIntegrations.push(currentIntegration);
@@ -61,18 +46,23 @@ export async function reconcileSlackIntegrations(user: any) {
 }
 
 export async function getUser() {
-  let api = `/users/me`;
-  let resp = await softwareGet(api);
-  if (isResponseOk(resp)) {
-    if (resp && resp.data && resp.data.data) {
-      const user = resp.data.data;
-      if (user.registered === 1) {
-        // update jwt to what the jwt is for this spotify user
-        setItem('name', user.email);
+  const nowMillis: number = new Date().getTime();
+  if (currentUser && nowMillis - lastUserFetch < 2000) {
+    return currentUser;
+  }
 
-        await reconcileSlackIntegrations(user);
+  const resp = await appGet('/api/v1/user');
+  if (isResponseOk(resp)) {
+    if (resp && resp.data) {
+      currentUser = resp.data;
+      lastUserFetch = nowMillis;
+      if (currentUser.registered === 1) {
+        // update jwt to what the jwt is for this spotify user
+        setItem('name', currentUser.email);
+
+        await reconcileSlackIntegrations(currentUser);
       }
-      return user;
+      return currentUser;
     }
   }
   return null;

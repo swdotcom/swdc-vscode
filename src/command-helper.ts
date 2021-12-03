@@ -177,9 +177,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.disconnectSlackWorkspace', (authId: any) => {
-      if (authId) {
-        disconnectSlackAuth(authId);
+    commands.registerCommand('codetime.disconnectSlackWorkspace', (auth_id: any) => {
+      if (auth_id) {
+        disconnectSlackAuth(auth_id);
       } else {
         disconnectSlackWorkspace();
       }

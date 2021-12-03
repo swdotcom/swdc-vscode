@@ -136,7 +136,7 @@ export function syncSlackIntegrations(integrations: any[]) {
 }
 
 export function isActiveIntegration(type: string, integration: any) {
-  if (integration && integration.status.toLowerCase() === "active" && integration.access_token) {
+  if (integration && integration.status.toLowerCase() === "active") {
     // handle integration_connection attribute
     if (integration.integration_type) {
       return !!(integration.integration_type.type.toLowerCase() === type.toLowerCase())

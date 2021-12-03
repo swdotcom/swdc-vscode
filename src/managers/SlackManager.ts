@@ -57,7 +57,7 @@ export async function disconectAllSlackIntegrations(showPrompt = true) {
   const workspaces = getSlackWorkspaces();
   if (workspaces?.length) {
     for await (const workspace of workspaces) {
-      await disconnectSlackAuth(workspace.authId, showPrompt);
+      await disconnectSlackAuth(workspace.auth_id, showPrompt);
     }
   }
 }
@@ -67,14 +67,14 @@ export async function disconnectSlackWorkspace() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
   if (selectedTeamDomain) {
-    disconnectSlackAuth(selectedTeamDomain.authId);
+    disconnectSlackAuth(selectedTeamDomain.auth_id);
   }
 }
 
 // disconnect slack flow
-export async function disconnectSlackAuth(authId: string, showPrompt = true) {
+export async function disconnectSlackAuth(auth_id: string, showPrompt = true) {
   // get the domain
-  const integration = getSlackWorkspaces().find((n: any) => n.authId === authId);
+  const integration = getSlackWorkspaces().find((n: any) => n.auth_id === auth_id);
   if (!integration) {
     window.showErrorMessage('Unable to find selected integration to disconnect');
     commands.executeCommand('codetime.refreshCodeTimeView');
@@ -83,8 +83,9 @@ export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   // ask before disconnecting
   let selection: any = DISCONNECT_LABEL;
   if (showPrompt) {
+    const team_domain = integration.meta?.domain ?? '';
     selection = await window.showInformationMessage(
-      `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
+      `Are you sure you would like to disconnect the '${team_domain}' Slack workspace?`,
       ...[DISCONNECT_LABEL]
     );
   }
@@ -92,7 +93,7 @@ export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   if (selection === DISCONNECT_LABEL) {
     await softwareDelete(`/integrations/${integration.id}`, getItem('jwt'));
     // disconnected, remove it from the integrations
-    removeSlackIntegration(authId);
+    removeSlackIntegration(auth_id);
 
     commands.executeCommand('codetime.refreshCodeTimeView');
   }
@@ -136,12 +137,12 @@ async function showSlackWorkspaceSelection() {
 
 /**
  * Remove an integration from the local copy
- * @param authId
+ * @param auth_id
  */
-function removeSlackIntegration(authId: string) {
+function removeSlackIntegration(auth_id: string) {
   const currentIntegrations = getIntegrations();
 
-  const newIntegrations = currentIntegrations.filter((n: any) => n.authId !== authId);
+  const newIntegrations = currentIntegrations.filter((n: any) => n.auth_id !== auth_id);
   syncSlackIntegrations(newIntegrations);
 }
 
