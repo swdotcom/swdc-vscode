@@ -4,10 +4,7 @@ import {
   getItem,
   setItem,
   setAuthCallbackState,
-  getIntegrations,
-  syncSlackIntegrations,
   logIt,
-  isActiveIntegration,
 } from './Util';
 import {DEFAULT_SESSION_THRESHOLD_SECONDS} from './Constants';
 import {clearSessionSummaryData} from './storage/SessionSummaryData';
@@ -19,30 +16,26 @@ import { updateFlowModeStatus } from './managers/FlowManager';
 let currentUser: any | null = null;
 let lastUserFetch: number = 0;
 
-export async function reconcileSlackIntegrations(user: any) {
-  let foundNewIntegration = false;
-  const slackIntegrations = [];
-  if (user && user.integration_connections) {
-    const currentIntegrations = getIntegrations();
-    // find the slack auth
-    for (const integration of user.integration_connections) {
-      const isSlackIntegration = isActiveIntegration('slack', integration);
-
-      if (isSlackIntegration) {
-        const currentIntegration = currentIntegrations.find((n: any) => n.auth_id === integration.auth_id);
-        if (!currentIntegration) {
-          slackIntegrations.push(integration);
-        } else {
-          // add the existing one back
-          slackIntegrations.push(currentIntegration);
-        }
-      }
-    }
+export async function getCachedCalendarIntegrations() {
+  if (!currentUser) {
+    currentUser = await getUser();
   }
+  if (currentUser?.integration_connections?.length) {
+    return currentUser.integration_connections.filter(
+      (integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === 8 || integration.integration_type_id === 19));
+  }
+  return [];
+}
 
-  syncSlackIntegrations(slackIntegrations);
-
-  return foundNewIntegration;
+export async function getCachedSlackIntegrations() {
+  if (!currentUser) {
+    currentUser = await getUser();
+  }
+  if (currentUser?.integration_connections?.length) {
+    return currentUser?.integration_connections?.filter(
+      (integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === 14));
+  }
+  return [];
 }
 
 export async function getUser() {
@@ -52,18 +45,10 @@ export async function getUser() {
   }
 
   const resp = await appGet('/api/v1/user');
-  if (isResponseOk(resp)) {
-    if (resp && resp.data) {
-      currentUser = resp.data;
-      lastUserFetch = nowMillis;
-      if (currentUser.registered === 1) {
-        // update jwt to what the jwt is for this spotify user
-        setItem('name', currentUser.email);
-
-        await reconcileSlackIntegrations(currentUser);
-      }
-      return currentUser;
-    }
+  if (isResponseOk(resp) && resp.data) {
+    currentUser = resp.data;
+    lastUserFetch = nowMillis;
+    return currentUser;
   }
   return null;
 }
@@ -108,6 +93,7 @@ export async function authenticationCompleteHandler(user: any) {
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {
+    currentUser = user;
     updatedUserInfo = true;
     // new user
     if (user.plugin_jwt) {
@@ -138,9 +124,6 @@ export async function authenticationCompleteHandler(user: any) {
 
     initializePreferences();
   }
-
-  // update this users integrations
-  await reconcileSlackIntegrations(user);
 
   commands.executeCommand('codetime.refreshCodeTimeView');
 

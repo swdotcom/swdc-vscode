@@ -7,12 +7,10 @@ import {
   SOFTWARE_DIRECTORY
 } from './Constants';
 import {v4 as uuidv4} from 'uuid';
-import getDay from 'date-fns/getDay'
 
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
-import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
-import {SummaryManager} from './managers/SummaryManager';
+import {getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
 
 const open = require('open');
@@ -22,9 +20,6 @@ const path = require('path');
 const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-const dayFormat = 'YYYY-MM-DD';
-const dayTimeFormat = 'LLLL';
 
 let workspace_name: string | null = null;
 let hostname: string | null = null;
@@ -120,19 +115,6 @@ export function setItem(key: string, value: any) {
 
 export function getItem(key: string) {
   return getJsonItem(getSoftwareSessionFile(), key);
-}
-
-export function getIntegrations() {
-  const integrations = getFileDataAsJson(getIntegrationsFile());
-  return integrations?.length ? integrations : [];
-}
-
-export function syncSlackIntegrations(integrations: any[]) {
-  const nonSlackIntegrations = getIntegrations().filter(
-    (integration: any) => !isActiveIntegration('slack', integration)
-  );
-  integrations = integrations?.length ? [...integrations, ...nonSlackIntegrations] : nonSlackIntegrations;
-  storeJsonData(getIntegrationsFile(), integrations);
 }
 
 export function isActiveIntegration(type: string, integration: any) {
@@ -246,10 +228,6 @@ export function getSoftwareSessionFile() {
 
 export function getGitEventFile() {
   return getFile('gitEvents.json');
-}
-
-export function getIntegrationsFile() {
-  return getFile('integrations.json', []);
 }
 
 export function getSessionSummaryFile() {
