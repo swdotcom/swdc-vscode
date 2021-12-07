@@ -3,7 +3,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {window, ExtensionContext, commands} from 'vscode';
-import {getUser, initializePreferences} from './DataController';
+import {initializePreferences} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
   getVersion,
@@ -82,8 +82,6 @@ export async function activate(ctx: ExtensionContext) {
 
 export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: boolean) {
   logIt(`Loaded ${getPluginName()} v${getVersion()}`);
-
-  await getUser();
 
   // INIT websockets
   try {
