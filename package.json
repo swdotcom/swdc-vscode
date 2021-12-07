@@ -142,7 +142,7 @@
   },
   "dependencies": {
     "@slack/web-api": "^6.5.0",
-    "@swdotcom/editor-flow": "^1.0.6",
+    "@swdotcom/editor-flow": "1.0.6",
     "@types/uuid": "^8.3.1",
     "@types/ws": "^8.2.1",
     "axios": "^0.24.0",
