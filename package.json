@@ -8,7 +8,7 @@
     "name": "Software.com"
   },
   "license": "SEE LICENSE IN LICENSE",
-  "icon": "images/app-icon-blue.png",
+  "icon": "images/codetime-c-128.png",
   "galleryBanner": {
     "color": "#384356",
     "theme": "dark"
@@ -109,7 +109,7 @@
         {
           "id": "code-time-sidebar",
           "title": "Code Time",
-          "icon": "resources/dark/paw-outlined.svg"
+          "icon": "images/codetime-g-30.svg"
         }
       ]
     },
@@ -119,7 +119,7 @@
           "id": "codetime.webView",
           "type": "webview",
           "name": "",
-          "icon": "resources/dark/paw-outlined.svg"
+          "icon": "images/codetime-g-30.svg"
         }
       ]
     }
