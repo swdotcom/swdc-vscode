@@ -6,6 +6,7 @@ import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';
 import { configureSettingsKpmItem, showMeTheDataKpmItem } from '../events/KpmItems';
+import { getUserPreferences } from '../DataController';
 
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
@@ -18,8 +19,10 @@ export const setEndOfDayNotification = async (user: any) => {
     clearTimeout(timer);
   }
 
+  const preferences: any = await getUserPreferences();
+
   // If the end of day notification setting is turned on (if undefined or null, will default to true)
-  if (user?.preferences?.notifications?.endOfDayNotification !== false) {
+  if (preferences.notifications?.endOfDayNotification !== false) {
     const jwt = getItem('jwt');
 
     const d = new Date();

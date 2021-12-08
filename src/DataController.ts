@@ -38,6 +38,24 @@ export async function getCachedSlackIntegrations() {
   return [];
 }
 
+export async function getUserPreferences() {
+  if (!currentUser) {
+    currentUser = await getUser();
+  }
+
+  if (currentUser) {
+    let prefs = currentUser.preferences;
+    if (prefs && typeof prefs === 'string') {
+      try {
+        return JSON.parse(prefs);
+      } catch (e: any) {
+        logIt(`Error parsing preferences: ${e.message}`, true);
+      }
+    }
+  }
+  return {}
+}
+
 export async function getUser() {
   const nowMillis: number = new Date().getTime();
   if (currentUser && nowMillis - lastUserFetch < 2000) {
@@ -66,10 +84,12 @@ export async function initializePreferences() {
   if (jwt) {
     let user = await getUser();
     userEventEmitter.emit('user_object_updated', user);
+
+    const preferences: any = await getUserPreferences();
     // obtain the session threshold in seconds "sessionThresholdInSec"
-    sessionThresholdInSec = user?.preferences?.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
-    disableGitData = !!user?.preferences?.disableGitData;
-    flowMode = user?.preferences?.flowMode;
+    sessionThresholdInSec = preferences.sessionThresholdInSec || DEFAULT_SESSION_THRESHOLD_SECONDS;
+    disableGitData = !!preferences.disableGitData;
+    flowMode = preferences.flowMode;
   }
 
   // update values config
