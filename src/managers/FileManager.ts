@@ -18,8 +18,8 @@ export function setJsonItem(file: string, key: string, value: any) {
 }
 
 export function getFileDataAsJson(filePath: string): any {
-  let content: string = fs.readFileSync(filePath, { encoding: 'utf8' });
   try {
+    const content: string = fs.readFileSync(filePath, 'utf8').trimEnd();
     return JSON.parse(content);
   } catch (e: any) {
     logIt(`Unable to read ${getBaseName(filePath)} info: ${e.message}`, true);
@@ -35,7 +35,7 @@ export function getFileDataAsJson(filePath: string): any {
 export function storeJsonData(filePath: string, json: any) {
   try {
     const content: string = JSON.stringify(json);
-    fs.writeFileSync(filePath, content, { encoding: 'utf8' });
+    fs.writeFileSync(filePath, content, 'utf8');
   } catch (e: any) {
     logIt(`Unable to write ${getBaseName(filePath)} info: ${e.message}`, true);
   }
