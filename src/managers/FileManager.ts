@@ -1,6 +1,7 @@
 import { logIt } from '../Util';
 
 const fs = require('fs');
+const path = require('path');
 
 export function getJsonItem(file: string, key: string) {
   const data: any = getFileDataAsJson(file);
@@ -21,7 +22,7 @@ export function getFileDataAsJson(filePath: string): any {
   try {
     return JSON.parse(content);
   } catch (e: any) {
-    logIt(`Unable to read file info: ${e.message}`, true);
+    logIt(`Unable to read ${getBaseName(filePath)} info: ${e.message}`, true);
   }
   return null;
 }
@@ -36,6 +37,12 @@ export function storeJsonData(filePath: string, json: any) {
     const content: string = JSON.stringify(json);
     fs.writeFileSync(filePath, content, { encoding: 'utf8' });
   } catch (e: any) {
-    logIt(`Unable to write session info: ${e.message}`, true);
+    logIt(`Unable to write ${getBaseName(filePath)} info: ${e.message}`, true);
   }
+}
+
+function getBaseName(filePath: string) {
+  let baseName = filePath;
+  try { baseName = path.basename(filePath); } catch (e: any) {}
+  return baseName;
 }
