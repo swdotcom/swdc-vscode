@@ -67,7 +67,7 @@ export async function initiateFlow({automated = false}) {
     }
   }
 
-  const preferredScreenMode = getConfiguredScreenMode();
+  const preferredScreenMode = await getConfiguredScreenMode();
 
   // process if...
   // 1) its the primary window
