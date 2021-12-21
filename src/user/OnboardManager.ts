@@ -137,7 +137,6 @@ export async function launchLogin(loginType: string = 'software', switching_acco
  * @param loginType "software" | "existing" | "google" | "github"
  */
 export async function buildLoginUrl(loginType: string) {
-  const auth_callback_state = getAuthCallbackState(true);
   const name = getItem('name');
   let url = app_url;
 
@@ -195,7 +194,7 @@ function getAuthQueryObject() {
   params.append('plugin_uuid', getPluginUuid());
   params.append('pluginVersion', getVersion());
   params.append('plugin_id', `${getPluginId()}`);
-  params.append('auth_callback_state', getAuthCallbackState());
+  params.append('auth_callback_state', getAuthCallbackState(true));
   params.append('login', 'true');
   return params;
 }

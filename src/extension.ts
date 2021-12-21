@@ -3,7 +3,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {window, ExtensionContext, commands} from 'vscode';
-import {initializePreferences} from './DataController';
+import {getUser} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
   getVersion,
@@ -93,8 +93,8 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
   // INIT keystroke analysis tracker
   await tracker.init();
 
-  // INIT preferences
-  initializePreferences();
+  // initialize user and preferences
+  await getUser();
 
   // show the sidebar if this is the 1st
   const initializedVscodePlugin = getItem('vscode_CtInit');

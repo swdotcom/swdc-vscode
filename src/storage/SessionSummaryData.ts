@@ -1,12 +1,6 @@
 import {SessionSummary} from '../model/models';
-import {getItem, getSessionSummaryFile} from '../Util';
-import {DEFAULT_SESSION_THRESHOLD_SECONDS} from '../Constants';
+import {getSessionSummaryFile} from '../Util';
 import {getFileDataAsJson, storeJsonData} from '../managers/FileManager';
-
-export function getSessionThresholdSeconds() {
-  const thresholdSeconds = getItem('sessionThresholdInSec') || DEFAULT_SESSION_THRESHOLD_SECONDS;
-  return thresholdSeconds;
-}
 
 export function clearSessionSummaryData() {
   const sessionSummaryData = new SessionSummary();

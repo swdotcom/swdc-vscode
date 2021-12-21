@@ -100,7 +100,7 @@
     tslib "^2.3.0"
     uuid "^3.4.0"
 
-"@swdotcom/editor-flow@^1.0.6":
+"@swdotcom/editor-flow@1.0.6":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@swdotcom/editor-flow/-/editor-flow-1.0.6.tgz#1e3ece0d7405c3f2915e8664311c7d568b3ba0fc"
   integrity sha512-h2g3WTODyeXEKXkrWgAZrIax5BFCseDpkV+p1KE1EU/vFiVcuIGuc3a/X9srG1FVROYVL4QxpvDa30uxNO2Kcg==

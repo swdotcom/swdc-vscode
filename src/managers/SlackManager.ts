@@ -2,7 +2,6 @@ import {commands, window} from 'vscode';
 import {api_endpoint, DISCONNECT_LABEL, SIGN_UP_LABEL} from '../Constants';
 import {
   getAuthCallbackState,
-  getIntegrations,
   getItem,
   getPluginId,
   getPluginType,
@@ -10,24 +9,24 @@ import {
   getVersion,
   isActiveIntegration,
   launchWebUrl,
-  setItem,
-  syncSlackIntegrations,
+  setItem
 } from '../Util';
 import {showQuickPick} from '../menu/MenuManager';
 import {softwareDelete} from '../http/HttpClient';
 import { URLSearchParams } from 'url';
+import { getCachedSlackIntegrations, getUser } from '../DataController';
 
 // -------------------------------------------
 // - public methods
 // -------------------------------------------
 
 // get saved slack integrations
-export function getSlackWorkspaces() {
-  return getIntegrations().filter((n: any) => isActiveIntegration('slack', n));
+export async function getSlackWorkspaces() {
+  return (await getCachedSlackIntegrations()).filter((n: any) => isActiveIntegration('slack', n));
 }
 
-export function hasSlackWorkspaces() {
-  return !!getSlackWorkspaces().length;
+export async function hasSlackWorkspaces() {
+  return !!(await getCachedSlackIntegrations()).length;
 }
 
 // connect slack flow
@@ -54,10 +53,10 @@ export async function connectSlackWorkspace() {
 }
 
 export async function disconectAllSlackIntegrations(showPrompt = true) {
-  const workspaces = getSlackWorkspaces();
+  const workspaces = await getSlackWorkspaces();
   if (workspaces?.length) {
     for await (const workspace of workspaces) {
-      await disconnectSlackAuth(workspace.authId, showPrompt);
+      await disconnectSlackAuth(workspace.auth_id, showPrompt);
     }
   }
 }
@@ -67,14 +66,14 @@ export async function disconnectSlackWorkspace() {
   const selectedTeamDomain = await showSlackWorkspaceSelection();
 
   if (selectedTeamDomain) {
-    disconnectSlackAuth(selectedTeamDomain.authId);
+    disconnectSlackAuth(selectedTeamDomain.auth_id);
   }
 }
 
 // disconnect slack flow
-export async function disconnectSlackAuth(authId: string, showPrompt = true) {
+export async function disconnectSlackAuth(auth_id: string, showPrompt = true) {
   // get the domain
-  const integration = getSlackWorkspaces().find((n: any) => n.authId === authId);
+  const integration = (await getSlackWorkspaces()).find((n: any) => n.auth_id === auth_id);
   if (!integration) {
     window.showErrorMessage('Unable to find selected integration to disconnect');
     commands.executeCommand('codetime.refreshCodeTimeView');
@@ -83,8 +82,9 @@ export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   // ask before disconnecting
   let selection: any = DISCONNECT_LABEL;
   if (showPrompt) {
+    const team_domain = integration.meta?.domain ?? '';
     selection = await window.showInformationMessage(
-      `Are you sure you would like to disconnect the '${integration.team_domain}' Slack workspace?`,
+      `Are you sure you would like to disconnect the '${team_domain}' Slack workspace?`,
       ...[DISCONNECT_LABEL]
     );
   }
@@ -92,7 +92,7 @@ export async function disconnectSlackAuth(authId: string, showPrompt = true) {
   if (selection === DISCONNECT_LABEL) {
     await softwareDelete(`/integrations/${integration.id}`, getItem('jwt'));
     // disconnected, remove it from the integrations
-    removeSlackIntegration(authId);
+    removeSlackIntegration(auth_id);
 
     commands.executeCommand('codetime.refreshCodeTimeView');
   }
@@ -108,8 +108,7 @@ async function showSlackWorkspaceSelection() {
     placeholder: `Select a Slack workspace`,
   };
 
-  const integrations = getSlackWorkspaces();
-  integrations.forEach((integration: any) => {
+  (await getSlackWorkspaces()).forEach((integration: any) => {
     menuOptions.items.push({
       label: integration.team_domain,
       value: integration.team_domain,
@@ -136,13 +135,10 @@ async function showSlackWorkspaceSelection() {
 
 /**
  * Remove an integration from the local copy
- * @param authId
+ * @param auth_id
  */
-function removeSlackIntegration(authId: string) {
-  const currentIntegrations = getIntegrations();
-
-  const newIntegrations = currentIntegrations.filter((n: any) => n.authId !== authId);
-  syncSlackIntegrations(newIntegrations);
+function removeSlackIntegration(auth_id: string) {
+  getUser();
 }
 
 export function showModalSignupPrompt(msg: string) {
@@ -161,8 +157,8 @@ export function showModalSignupPrompt(msg: string) {
     });
 }
 
-export function checkSlackConnection(showConnect = true) {
-  if (!hasSlackWorkspaces()) {
+export async function checkSlackConnection(showConnect = true) {
+  if (!(await hasSlackWorkspaces())) {
     if (showConnect) {
       window
         .showInformationMessage(
@@ -184,7 +180,7 @@ export function checkSlackConnection(showConnect = true) {
 }
 
 export async function checkSlackConnectionForFlowMode() {
-  if (!hasSlackWorkspaces()) {
+  if (!(await hasSlackWorkspaces())) {
     const selection = await window.showInformationMessage(
       "Slack isn't connected",
       {modal: true},

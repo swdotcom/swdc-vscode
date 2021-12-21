@@ -1,5 +1,5 @@
 import {commands, ViewColumn, WebviewPanel, window} from 'vscode';
-import {initializePreferences} from '../DataController';
+import {getUser} from '../DataController';
 import {isResponseOk, appGet, appPut} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
 
@@ -60,7 +60,7 @@ export async function getEditSettingsHtml(): Promise<string> {
 
 export async function updateSettings(path: string, jsonData: any) {
   await appPut(path, jsonData);
-  await initializePreferences();
+  await getUser();
   // update the sidebar
   commands.executeCommand('codetime.refreshCodeTimeView');
 }
