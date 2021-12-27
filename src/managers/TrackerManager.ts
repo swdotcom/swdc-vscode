@@ -80,6 +80,8 @@ export class TrackerManager {
       let endDate = new Date(docChangeInfo.end);
       if (!endDate || endDate.getTime() < startDate.getTime()) {
         endDate = new Date(startDate.getTime() + ONE_MINUTE_MILLIS)
+      } else if (startDate.getTime() === endDate.getTime()) {
+        endDate = new Date();
       }
 
       const codetime_entity = {
@@ -94,7 +96,7 @@ export class TrackerManager {
         multi_adds: docChangeInfo.multiAdds,
         auto_indents: docChangeInfo.autoIndents,
         replacements: docChangeInfo.replacements,
-        start_time: endDate.toISOString(),
+        start_time: startDate.toISOString(),
         end_time: endDate.toISOString(),
       };
 
