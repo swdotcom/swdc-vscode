@@ -29,8 +29,6 @@ import {getPreference} from '../DataController';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
 import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
 
-const ONE_MINUTE_MILLIS = 60000;
-
 export class TrackerManager {
   private static instance: TrackerManager;
 
@@ -77,12 +75,7 @@ export class TrackerManager {
       const docChangeInfo: DocChangeInfo = projectChangeInfo.docs_changed[file];
 
       const startDate = new Date(docChangeInfo.start);
-      let endDate = new Date(docChangeInfo.end);
-      if (!endDate || endDate.getTime() < startDate.getTime()) {
-        endDate = new Date(startDate.getTime() + ONE_MINUTE_MILLIS)
-      } else if (startDate.getTime() === endDate.getTime()) {
-        endDate = new Date();
-      }
+      const endDate = new Date(docChangeInfo.end);
 
       const codetime_entity = {
         keystrokes: docChangeInfo.keystrokes,
