@@ -74,9 +74,8 @@ export class TrackerManager {
     for await (const file of fileKeys) {
       const docChangeInfo: DocChangeInfo = projectChangeInfo.docs_changed[file];
 
-      // start and end are UTC seconds
-      const fileStartDate: Date = new Date(docChangeInfo.start * 1000);
-      const fileEndDate: Date = new Date(docChangeInfo.end * 1000);
+      const startDate = new Date(docChangeInfo.start);
+      const endDate = new Date(docChangeInfo.end);
 
       const codetime_entity = {
         keystrokes: docChangeInfo.keystrokes,
@@ -90,8 +89,8 @@ export class TrackerManager {
         multi_adds: docChangeInfo.multiAdds,
         auto_indents: docChangeInfo.autoIndents,
         replacements: docChangeInfo.replacements,
-        start_time: fileStartDate.toISOString(),
-        end_time: fileEndDate.toISOString(),
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
       };
 
       const file_entity = {
