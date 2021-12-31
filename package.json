@@ -37,7 +37,7 @@
   "engines": {
     "vscode": "^1.52.0"
   },
-  "main": "./dist/extension",
+  "main": "./dist/extension.js",
   "scripts": {
     "lint": "tslint -p ./",
     "build": "vsce package --yarn",
