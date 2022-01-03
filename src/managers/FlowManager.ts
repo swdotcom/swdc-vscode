@@ -23,18 +23,24 @@ export async function updateFlowModeStatus() {
 }
 
 export async function enableFlow({automated = false}) {
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: 'Enabling flow...',
-      cancellable: false,
-    },
-    async (progress) => {
-      await initiateFlow({automated}).catch((e) => {
-        console.error('[CodeTime] Unable to initiate flow. ', e.message);
-      });
-    }
-  );
+  if (!automated) {
+    window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: 'Enabling flow...',
+        cancellable: false,
+      },
+      async (progress) => {
+        await initiateFlow({automated}).catch((e) => {
+          console.error('[CodeTime] Unable to initiate flow. ', e.message);
+        });
+      }
+    );
+  } else {
+    await initiateFlow({automated}).catch((e) => {
+      console.error('[CodeTime] Unable to initiate flow. ', e.message);
+    });
+  }
 }
 
 function showFlowModeRequiredMessage() {
@@ -61,8 +67,8 @@ export async function initiateFlow({automated = false}) {
   const skipSlackCheck = !!getItem('vscode_CtskipSlackConnect');
 
   if (!skipSlackCheck && !automated) {
-    const connectInfo = await checkSlackConnectionForFlowMode();
-    if (!connectInfo.continue) {
+    const continueFlowMode = await checkSlackConnectionForFlowMode();
+    if (!continueFlowMode) {
       return;
     }
   }

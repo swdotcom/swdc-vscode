@@ -184,21 +184,21 @@ export async function checkSlackConnectionForFlowMode() {
     const selection = await window.showInformationMessage(
       "Slack isn't connected",
       {modal: true},
-      ...['Continue anyway', 'Connect Slack']
+      ...['Skip this step', 'Connect a Slack workspace']
     );
     if (!selection) {
       // the user selected "cancel"
-      return {continue: false, useSlackSettings: true};
-    } else if (selection === 'Continue anyway') {
+      return false;
+    } else if (selection === 'Skip this step') {
       // slack is not connected, but continue. set useSlackSettings to FALSE
       // set continue to TRUE
       setItem('vscode_CtskipSlackConnect', true);
-      return {continue: true, useSlackSettings: false};
+      return true;
     } else {
       // connect was selected
       commands.executeCommand('codetime.manageSlackConnection');
-      return {continue: false, useSlackSettings: true};
+      return false;
     }
   }
-  return {continue: true, useSlackSettings: true};
+  return true;
 }
