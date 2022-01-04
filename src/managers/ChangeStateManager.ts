@@ -3,6 +3,7 @@ import {TrackerManager} from './TrackerManager';
 import {EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface} from '@swdotcom/editor-flow';
 import {configureSettings, showingConfigureSettingsPanel} from './ConfigManager';
 import {getWorkspaceName, setItem} from '../Util';
+import { checkWebsocketConnection } from '../websockets';
 
 export class ChangeStateManager {
   private static instance: ChangeStateManager;
@@ -81,6 +82,8 @@ export class ChangeStateManager {
     if (event.focused) {
       this.tracker.trackEditorAction('editor', 'focus');
       setItem('vscode_primary_window', getWorkspaceName());
+      // check if the websocket connection is stale
+      checkWebsocketConnection();
     } else {
       this.tracker.trackEditorAction('editor', 'unfocus');
     }

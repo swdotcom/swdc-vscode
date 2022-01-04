@@ -14,6 +14,7 @@ const ONE_MIN_MILLIS = 1000 * 60;
 const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
 let livenessPingTimeout: NodeJS.Timer | undefined = undefined;
+let lastPingResetMillis: number = 0;
 let retryTimeout: NodeJS.Timer | undefined = undefined;
 
 // Reconnect constants
@@ -175,6 +176,16 @@ function clearLivenessPingTimeout() {
   if (livenessPingTimeout) {
     clearTimeout(livenessPingTimeout);
     livenessPingTimeout = undefined;
+  }
+  lastPingResetMillis = new Date().getTime();
+}
+
+export function checkWebsocketConnection() {
+  const nowMillis = new Date().getTime();
+  const threshold = SERVER_PING_INTERVAL_MILLIS * 2;
+  if (lastPingResetMillis && nowMillis - lastPingResetMillis > threshold) {
+    logIt('Resetting websocket connection');
+    initializeWebsockets();
   }
 }
 
