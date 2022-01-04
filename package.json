@@ -88,14 +88,6 @@
       {
         "command": "codetime.viewDashboard",
         "title": "Code Time: View Dashboard"
-      },
-      {
-        "command": "codetime.enableFlowMode",
-        "title": "Code Time: Enable Flow Mode"
-      },
-      {
-        "command": "codetime.exitFlowMode",
-        "title": "Code Time: Exit Flow Mode"
       }
     ],
     "configuration": [
