@@ -113,8 +113,11 @@ function showStatus(msg: string, tooltip: string | null) {
     return;
   }
   ctMetricStatusBarItem.tooltip = `${tooltip}${userInfo}`;
+
   if (!showStatusBarText) {
     ctMetricStatusBarItem.text = '$(clock)';
+  } else if (!isRegistered()) {
+    ctMetricStatusBarItem.text = 'Code Time';
   } else {
     ctMetricStatusBarItem.text = msg;
   }
