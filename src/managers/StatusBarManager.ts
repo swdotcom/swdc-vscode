@@ -99,10 +99,10 @@ function showStatus(msg: string, tooltip: string | null) {
     tooltip = 'Active code time today. Click to see more from Code Time.';
   }
 
-  let loggedInName = getItem('name');
+  const email = getItem('name');
   let userInfo = '';
-  if (loggedInName && loggedInName !== '') {
-    userInfo = ` Connected as ${loggedInName}`;
+  if (email) {
+    userInfo = ` Connected as ${email}`;
   }
 
   if (!showStatusBarText) {
