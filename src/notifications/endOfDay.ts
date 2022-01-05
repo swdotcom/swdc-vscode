@@ -6,7 +6,7 @@ import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';
 import { configureSettingsKpmItem, showMeTheDataKpmItem } from '../events/KpmItems';
-import { getUserPreferences } from '../DataController';
+import { getUserPreferences, isRegistered } from '../DataController';
 
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
@@ -64,7 +64,7 @@ export const setEndOfDayNotification = async (user: any) => {
 
 export const showEndOfDayNotification = async () => {
   const tracker: TrackerManager = TrackerManager.getInstance();
-  if (!getItem("name")) {
+  if (!isRegistered()) {
     const selection = await window.showInformationMessage(
       "It's the end of the day. Sign up to see your stats.",
       ...['Sign up']

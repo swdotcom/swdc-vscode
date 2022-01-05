@@ -12,6 +12,7 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
+import { isRegistered } from '../DataController';
 
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
@@ -38,7 +39,7 @@ export async function enableFlow({automated = false}) {
 }
 
 export async function initiateFlow({automated = false}) {
-  if (!getItem("name") && !automated) {
+  if (!isRegistered() && !automated) {
     // manually initiated, show the flow mode prompt
     showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
     return;

@@ -1,10 +1,11 @@
+import { isRegistered } from '../DataController';
 import { enableFlow } from "../managers/FlowManager";
-import { getItem, logIt } from '../Util';
+import { logIt } from '../Util';
 
 export async function handleFlowScoreMessage(message: any) {
 
   try {
-    if (!getItem("name")) {
+    if (!isRegistered()) {
       enableFlow({ automated: true });
     }
   } catch (e: any) {

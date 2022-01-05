@@ -1,4 +1,5 @@
 import {commands, StatusBarAlignment, StatusBarItem, window} from 'vscode';
+import { isRegistered } from '../DataController';
 import {SessionSummary} from '../model/models';
 import {getItem, getSessionSummaryFile, humanizeMinutes, isFlowModeEnabled} from '../Util';
 import {getFileDataAsJson} from './FileManager';
@@ -73,10 +74,6 @@ export function toggleStatusBar() {
 
 export function isStatusBarTextVisible() {
   return showStatusBarText;
-}
-
-function isRegistered() {
-  return !!getItem('name');
 }
 
 /**

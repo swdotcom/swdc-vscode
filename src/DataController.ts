@@ -25,6 +25,10 @@ export async function getCachedSlackIntegrations() {
   return [];
 }
 
+export function isRegistered() {
+  return !!getItem('name');
+}
+
 export async function getUserPreferences() {
   if (!currentUser) {
     currentUser = await getUser();
