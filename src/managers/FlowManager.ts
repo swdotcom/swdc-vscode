@@ -41,7 +41,7 @@ export async function enableFlow({automated = false}) {
 export async function initiateFlow({automated = false}) {
   if (!isRegistered() && !automated) {
     // manually initiated, show the flow mode prompt
-    showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
+    showModalSignupPrompt('To enable Flow Mode, please sign up or log in.');
     return;
   }
 
