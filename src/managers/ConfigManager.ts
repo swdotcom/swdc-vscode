@@ -58,9 +58,13 @@ export async function getEditSettingsHtml(): Promise<string> {
   return await getConnectionErrorHtml();
 }
 
-export async function updateSettings(path: string, jsonData: any) {
+export async function updateSettings(path: string, jsonData: any, reloadSettings: false) {
   await appPut(path, jsonData);
   await getUser();
   // update the sidebar
   commands.executeCommand('codetime.refreshCodeTimeView');
+
+  if (reloadSettings && currentPanel) {
+    configureSettings();
+  }
 }

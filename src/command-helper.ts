@@ -262,6 +262,12 @@ export function createCommands(
   );
 
   cmds.push(
+    commands.registerCommand('codetime.displayFlowModeInfo', () => {
+      launchWebUrl('https://www.software.com/src/auto-flow-mode');
+    })
+  );
+
+  cmds.push(
     commands.registerCommand('codetime.skipSlackConnect', () => {
       setItem('vscode_CtskipSlackConnect', true);
       // refresh the view
@@ -279,6 +285,12 @@ export function createCommands(
     commands.registerCommand('codetime.updateViewMetrics', () => {
       updateFlowModeStatusBar();
       updateStatusBarWithSummaryData();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand('codetime.updateSidebarSettings', (payload: any) => {
+      progressIt('Updating settings...', updateSettings, [payload.path, payload.json, true]);
     })
   );
 
