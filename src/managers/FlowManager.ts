@@ -12,6 +12,7 @@ import {
   ZEN_MODE_ID,
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
+import { isRegistered } from '../DataController';
 
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
@@ -37,24 +38,10 @@ export async function enableFlow({automated = false}) {
   );
 }
 
-function showFlowModeRequiredMessage() {
-  window.showInformationMessage('You triggered Auto Flow Mode, a feature designed to automatically protect your flow state. To turn on and customize Auto Flow Mode, please sign up or log in.', ...['Open Code Time'])
-  .then(selection => {
-    if (selection === 'Open Code Time') {
-      commands.executeCommand('codetime.displaySidebar');
-    }
-  });
-}
-
 export async function initiateFlow({automated = false}) {
-  if (!getItem("name")) {
-    if (!automated) {
-      // manually initiated, show the flow mode prompt
-      showModalSignupPrompt('To use Flow Mode, please first sign up or login.');
-    } else {
-      // auto flow mode initiated, show the bottom notification
-      showFlowModeRequiredMessage();
-    }
+  if (!isRegistered() && !automated) {
+    // manually initiated, show the flow mode prompt
+    showModalSignupPrompt('To enable Flow Mode, please sign up or log in.');
     return;
   }
 

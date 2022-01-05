@@ -1,4 +1,4 @@
-import {window} from 'vscode';
+import {commands, window} from 'vscode';
 import {showDashboard} from '../managers/WebViewManager';
 import {getItem} from '../Util';
 import {softwareGet, isResponseOk} from '../http/HttpClient';
@@ -6,7 +6,7 @@ import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';
 import { configureSettingsKpmItem, showMeTheDataKpmItem } from '../events/KpmItems';
-import { getUserPreferences } from '../DataController';
+import { getUserPreferences, isRegistered } from '../DataController';
 
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
@@ -64,17 +64,28 @@ export const setEndOfDayNotification = async (user: any) => {
 
 export const showEndOfDayNotification = async () => {
   const tracker: TrackerManager = TrackerManager.getInstance();
-  const selection = await window.showInformationMessage(
-    "It's the end of your work day! Would you like to see your code time stats for today?",
-    ...['Settings', 'Show me the data']
-  );
+  if (!isRegistered()) {
+    const selection = await window.showInformationMessage(
+      "It's the end of the day. Sign up to see your stats.",
+      ...['Sign up']
+    );
 
-  if (selection === 'Show me the data') {
-    tracker.trackUIInteraction(showMeTheDataKpmItem());
-    showDashboard();
-  } else if (selection === 'Settings') {
-    tracker.trackUIInteraction(configureSettingsKpmItem());
-    configureSettings();
+    if (selection === 'Sign up') {
+      commands.executeCommand('codetime.registerAccount');
+    }
+  } else {
+    const selection = await window.showInformationMessage(
+      "It's the end of your work day! Would you like to see your code time stats for today?",
+      ...['Settings', 'Show me the data']
+    );
+
+    if (selection === 'Show me the data') {
+      tracker.trackUIInteraction(showMeTheDataKpmItem());
+      showDashboard();
+    } else if (selection === 'Settings') {
+      tracker.trackUIInteraction(configureSettingsKpmItem());
+      configureSettings();
+    }
   }
 };
 

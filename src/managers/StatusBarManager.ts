@@ -1,4 +1,5 @@
 import {commands, StatusBarAlignment, StatusBarItem, window} from 'vscode';
+import { isRegistered } from '../DataController';
 import {SessionSummary} from '../model/models';
 import {getItem, getSessionSummaryFile, humanizeMinutes, isFlowModeEnabled} from '../Util';
 import {getFileDataAsJson} from './FileManager';
@@ -75,10 +76,6 @@ export function isStatusBarTextVisible() {
   return showStatusBarText;
 }
 
-function isRegistered() {
-  return !!getItem('name');
-}
-
 /**
  * Updates the status bar text with the current day minutes (session minutes)
  */
@@ -99,10 +96,10 @@ function showStatus(msg: string, tooltip: string | null) {
     tooltip = 'Active code time today. Click to see more from Code Time.';
   }
 
-  let loggedInName = getItem('name');
+  const email = getItem('name');
   let userInfo = '';
-  if (loggedInName && loggedInName !== '') {
-    userInfo = ` Connected as ${loggedInName}`;
+  if (email) {
+    userInfo = ` Connected as ${email}`;
   }
 
   if (!showStatusBarText) {
@@ -113,6 +110,7 @@ function showStatus(msg: string, tooltip: string | null) {
     return;
   }
   ctMetricStatusBarItem.tooltip = `${tooltip}${userInfo}`;
+
   if (!showStatusBarText) {
     ctMetricStatusBarItem.text = '$(clock)';
   } else {
