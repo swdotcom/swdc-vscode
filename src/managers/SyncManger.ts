@@ -1,12 +1,13 @@
-import {getFlowChangeFile, getSessionSummaryFile, isPrimaryWindow} from '../Util';
+import {getFlowChangeFile, getSessionSummaryFile, isFlowModeEnabled, isPrimaryWindow} from '../Util';
 import {updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './StatusBarManager';
 import {getSessionSummaryFileAsJson} from '../storage/SessionSummaryData';
+import { isInFlowLocally, updateInFlowLocally } from './FlowManager';
+import { commands } from 'vscode';
 
 const fs = require('fs');
 
 const thirty_seconds: number = 1000 * 30;
 let last_time_stats_synced: number = 0;
-let last_time_flow_synced: number = 0;
 
 export function passedThreshold(now_in_millis: number, synced_val: number) {
   if (!synced_val || now_in_millis - synced_val > thirty_seconds) {
@@ -48,14 +49,13 @@ export class SyncManager {
 
     // flowChange.json watch
     fs.watch(getFlowChangeFile(), (curr: any, prev: any) => {
-      // if there's a change and it's not the primary window, process
-      if (curr === 'change' && !isPrimaryWindow()) {
-        // prevent rapid flow change issues
-        const now_in_millis: number = new Date().valueOf();
-        if (passedThreshold(now_in_millis, last_time_flow_synced)) {
-          last_time_flow_synced = now_in_millis;
-          updateFlowModeStatusBar();
-        }
+      const currFlowState = isFlowModeEnabled();
+      if (curr === 'change' && isInFlowLocally() !== currFlowState) {
+        updateInFlowLocally(currFlowState);
+        // update the status bar
+        updateFlowModeStatusBar();
+        // update the sidebar
+        commands.executeCommand('codetime.refreshCodeTimeView');
       }
     });
   }
