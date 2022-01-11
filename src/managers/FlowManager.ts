@@ -14,6 +14,16 @@ import {
 import {updateFlowModeStatusBar} from './StatusBarManager';
 import { isRegistered } from '../DataController';
 
+let inFlowLocally: boolean = false;
+
+export function isInFlowLocally() {
+  return inFlowLocally;
+}
+
+export function updateInFlowLocally(inFlow: boolean) {
+  inFlowLocally = inFlow;
+}
+
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
   updateFlowStatus();
@@ -62,10 +72,11 @@ export async function initiateFlow({automated = false}) {
   const primary = isPrimaryWindow();
   const flowEnabled = isFlowModeEnabled();
   if (primary && !flowEnabled) {
-    // only update flow change here
-    updateFlowChange(true);
     logIt('Entering Flow Mode');
     await appPost('/plugin/flow_sessions', {automated});
+    // only update flow change here
+    inFlowLocally = true;
+    updateFlowChange(true);
   }
 
   // update screen mode
@@ -96,10 +107,11 @@ export async function pauseFlow() {
 export async function pauseFlowInitiate() {
   const flowEnabled = isFlowModeEnabled();
   if (flowEnabled) {
-    // only update flow change in here
-    updateFlowChange(false);
     logIt('Exiting Flow Mode');
     await appDelete('/plugin/flow_sessions');
+    // only update flow change in here
+    inFlowLocally = false;
+    updateFlowChange(false);
   }
 
   showNormalScreenMode();
@@ -122,6 +134,8 @@ export async function determineFlowModeFromApi() {
   const openFlowSessions = flowSessionsReponse?.data?.flow_sessions ?? [];
   // make sure "enabledFlow" is set as it's used as a getter outside this export
   const enabledFlow: boolean = !!(openFlowSessions?.length);
+  // update the local inFlow state
+  inFlowLocally = enabledFlow;
   // initialize the file value
   updateFlowChange(enabledFlow);
 }
