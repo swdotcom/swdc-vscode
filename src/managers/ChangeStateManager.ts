@@ -26,12 +26,6 @@ export class ChangeStateManager {
 
     emitter.on('editor_flow_data', (data: any) => {
       switch (data.flow_event_type) {
-        case FlowEventType.CLOSE:
-          this.fileCloseHandler(data.event);
-          break;
-        case FlowEventType.OPEN:
-          this.fileOpenHandler(data.event);
-          break;
         case FlowEventType.SAVE:
           this.fileSaveHandler(data.event);
           break;
@@ -64,14 +58,6 @@ export class ChangeStateManager {
 
   private kpmHandler(projectChangeInfo: ProjectChangeInfo) {
     this.tracker.trackCodeTimeEvent(projectChangeInfo);
-  }
-
-  private fileCloseHandler(event: any) {
-    this.tracker.trackEditorAction('file', 'close', event);
-  }
-
-  private fileOpenHandler(event: any) {
-    this.tracker.trackEditorAction('file', 'open', event);
   }
 
   private fileSaveHandler(event: any) {
