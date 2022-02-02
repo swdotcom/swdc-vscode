@@ -6,7 +6,7 @@ import {
   CODE_TIME_TYPE,
   SOFTWARE_DIRECTORY
 } from './Constants';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4, v5 as uuidv5 } from 'uuid';
 
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
@@ -18,6 +18,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const outputChannel = window.createOutputChannel('CodeTime');
+// https://www.rfc-editor.org/rfc/rfc4122.html#appendix-C
+const OID_UUID = "6ba7b812-9dad-11d1-80b4-00c04fd430c8";
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -133,7 +135,8 @@ export function getPluginUuid() {
   let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
   if (!plugin_uuid) {
     // set it for the 1st and only time
-    plugin_uuid = uuidv4();
+    const name = `${getHostname()}${getOsUsername()}`;
+    plugin_uuid = uuidv5(name.replace(/^\s+/g, ''), OID_UUID);
     setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
@@ -193,7 +196,7 @@ export function getOs() {
   return '';
 }
 
-export async function getOsUsername() {
+export function getOsUsername() {
   if (!osUsername) {
     try {
       // Throws a SystemError if a user has no username or homedir

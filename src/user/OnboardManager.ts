@@ -4,8 +4,6 @@ import {
   getItem,
   setItem,
   getAuthCallbackState,
-  getPluginType,
-  getVersion,
   getPluginId,
   getPluginUuid,
   launchWebUrl,
@@ -13,7 +11,7 @@ import {
 import {isResponseOk, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {authenticationCompleteHandler} from '../DataController';
-import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
+import {app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
 import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
@@ -149,12 +147,10 @@ export async function buildLoginUrl(loginType: string) {
 
   if (loginType === 'github') {
     // github signup/login flow
-    params.append('redirect', app_url);
-    url = `${api_endpoint}/auth/github`;
+    url = `${app_url}/auth/github`;
   } else if (loginType === 'google') {
     // google signup/login flow
-    params.append('redirect', app_url);
-    url = `${api_endpoint}/auth/google`;
+    url = `${app_url}/auth/google`;
   } else {
     // email login
     params.append('token', getItem('jwt'));
@@ -190,11 +186,8 @@ export async function buildEmailSignup() {
 
 function getAuthQueryObject() {
   const params = new URLSearchParams();
-  params.append('plugin', getPluginType());
   params.append('plugin_uuid', getPluginUuid());
-  params.append('pluginVersion', getVersion());
   params.append('plugin_id', `${getPluginId()}`);
   params.append('auth_callback_state', getAuthCallbackState(true));
-  params.append('login', 'true');
   return params;
 }
