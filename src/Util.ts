@@ -132,8 +132,18 @@ export function isActiveIntegration(type: string, integration: any) {
 export function getPluginUuid() {
   let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
   if (!plugin_uuid) {
+    let name = `${getOsUsername()}${getHostname()}`;
+    if (!name) {
+      // for some reason we're not getting the username and hostname, use the os info
+      name = getOs();
+    }
+    name = name.trim();
+    const hashName = require('crypto')
+      .createHash('sha1')
+      .update(name)
+      .digest('hex');
     // set it for the 1st and only time
-    plugin_uuid = uuidv4();
+    plugin_uuid = `${hashName}:${uuidv4()}`;
     setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
