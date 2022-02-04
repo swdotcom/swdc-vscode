@@ -134,16 +134,14 @@ export function getPluginUuid() {
   if (!plugin_uuid) {
     let name = `${getOsUsername()}${getHostname()}`;
     if (!name) {
-      // for some reason we're not getting the username and hostname, use the os info
       name = getOs();
     }
-    name = name.trim();
     const hashName = require('crypto')
       .createHash('sha1')
       .update(name)
       .digest('hex');
+    plugin_uuid = `${hashName.trim()}:${uuidv4()}`;
     // set it for the 1st and only time
-    plugin_uuid = `${hashName}:${uuidv4()}`;
     setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
