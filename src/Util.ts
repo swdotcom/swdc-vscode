@@ -6,7 +6,7 @@ import {
   CODE_TIME_TYPE,
   SOFTWARE_DIRECTORY
 } from './Constants';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
@@ -132,8 +132,16 @@ export function isActiveIntegration(type: string, integration: any) {
 export function getPluginUuid() {
   let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
   if (!plugin_uuid) {
+    let name = `${getOsUsername()}${getHostname()}`;
+    if (!name) {
+      name = getOs();
+    }
+    const hashName = require('crypto')
+      .createHash('sha1')
+      .update(name)
+      .digest('hex');
+    plugin_uuid = `${hashName.trim()}:${uuidv4()}`;
     // set it for the 1st and only time
-    plugin_uuid = uuidv4();
     setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
@@ -193,7 +201,7 @@ export function getOs() {
   return '';
 }
 
-export async function getOsUsername() {
+export function getOsUsername() {
   if (!osUsername) {
     try {
       // Throws a SystemError if a user has no username or homedir

@@ -116,9 +116,9 @@ export async function createAnonymousUser(): Promise<string | null> {
     // this should not be undefined if its an account reset
     let plugin_uuid = getPluginUuid();
     let auth_callback_state = getAuthCallbackState();
-    const username = await getOsUsername();
+    const username = getOsUsername();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const hostname = await getHostname();
+    const hostname = getHostname();
 
     const resp = await softwarePost('/plugins/onboard', {
       timezone,
