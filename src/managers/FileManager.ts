@@ -19,7 +19,7 @@ export function setJsonItem(file: string, key: string, value: any) {
 
 export function getFileDataAsJson(filePath: string): any {
   try {
-    const content: string = fs.readFileSync(filePath, 'utf8').trimEnd();
+    const content: string = fs.readFileSync(filePath, 'utf8')?.trim();
     return JSON.parse(content);
   } catch (e: any) {
     logIt(`Unable to read ${getBaseName(filePath)} info: ${e.message}`, true);
