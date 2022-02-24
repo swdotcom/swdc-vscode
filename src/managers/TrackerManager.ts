@@ -294,7 +294,7 @@ export class TrackerManager {
   // Dynamic attributes
 
   getJwtParams(): any {
-    return {jwt: getItem('jwt')?.split('JWT ')[1]};
+    return {jwt: getItem('jwt')?.split(/\s+/)[1]};
   }
 
   getProjectParams() {
