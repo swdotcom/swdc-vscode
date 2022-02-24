@@ -294,7 +294,11 @@ export class TrackerManager {
   // Dynamic attributes
 
   getJwtParams(): any {
-    return {jwt: getItem('jwt')?.split(/\s+/)[1]};
+    let token: string = getItem('jwt');
+    if (token?.match(/\s/)) {
+      return {jwt: token?.split(/\s/)[1]};
+    }
+    return {jwt: token};
   }
 
   getProjectParams() {
