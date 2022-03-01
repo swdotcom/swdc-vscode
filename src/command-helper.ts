@@ -4,7 +4,6 @@ import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
 import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
-import {connectSlackWorkspace, disconnectSlackAuth, disconnectSlackWorkspace} from './managers/SlackManager';
 import {app_url, create_org_url, vscode_issues_url} from './Constants';
 import {toggleDarkMode, toggleDock} from './managers/OsaScriptManager';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
@@ -14,9 +13,7 @@ import {closeSettings, configureSettings, updateSettings} from './managers/Confi
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
-import {appDelete} from './http/HttpClient';
 import {progressIt} from './managers/ProgressManager';
-import {diconnectIntegration} from './DataController';
 import { getHideStatusBarMetricsButton } from './events/KpmItems';
 
 export function createCommands(
@@ -172,26 +169,13 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.connectSlack', () => {
-      connectSlackWorkspace();
+      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
     })
   );
 
   cmds.push(
     commands.registerCommand('codetime.disconnectSlackWorkspace', (auth_id: any) => {
-      if (auth_id) {
-        disconnectSlackAuth(auth_id);
-      } else {
-        disconnectSlackWorkspace();
-      }
-    })
-  );
-
-  // INTEGRATION DISCONECT
-  cmds.push(
-    commands.registerCommand('codetime.disconnectIntegration', (payload) => {
-      appDelete(`/data_sources/integration_connections/${payload.id}`).then((resp: any) => {
-        progressIt('Disconnecting integration...', diconnectIntegration, [payload.id]);
-      });
+      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
     })
   );
 

@@ -7,7 +7,7 @@ import {
   getAuthCallbackState,
   setAuthCallbackState,
 } from '../Util';
-import {softwarePost, isResponseOk} from '../http/HttpClient';
+import {isResponseOk, appPost} from '../http/HttpClient';
 import {showQuickPick} from './MenuManager';
 import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
 
@@ -120,21 +120,22 @@ export async function createAnonymousUser(): Promise<string | null> {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const hostname = getHostname();
 
-    const resp = await softwarePost('/plugins/onboard', {
+    const resp = await appPost('/plugin/onboard', {
       timezone,
       username,
       plugin_uuid,
       hostname,
       auth_callback_state,
     });
-    if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-      setItem('jwt', resp.data.jwt);
+    if (isResponseOk(resp) && resp.data?.user) {
+
+      setItem('jwt', resp.data.user.plugin_jwt);
       if (!resp.data.user.registered) {
         setItem('name', null);
       }
       setItem('switching_account', false);
-      setAuthCallbackState(null);
-      return resp.data.jwt;
+      setAuthCallbackState('');
+      return resp.data.user.plugin_jwt
     }
   }
 
