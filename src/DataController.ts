@@ -1,5 +1,5 @@
 import {window, commands} from 'vscode';
-import {isResponseOk, softwareDelete, appGet} from './http/HttpClient';
+import {isResponseOk, appGet} from './http/HttpClient';
 import {
   getItem,
   setItem,
@@ -129,21 +129,4 @@ export async function getCachedIntegrations(integration_type_id: number | undefi
     }
   }
   return [];
-}
-
-export async function diconnectIntegration(integration_type_id: number) {
-  const integrations = await getCachedIntegrations(integration_type_id);
-  let refreshView = false;
-  if (integrations?.length) {
-    for await (const integration of integrations) {
-      const resp = await softwareDelete(`/integrations/${integration.id}`, getItem('jwt'));
-      if (isResponseOk(resp)) {
-        refreshView = true;
-      }
-    }
-  }
-  if (refreshView) {
-    // refresh the view
-    commands.executeCommand('codetime.refreshCodeTimeView');
-  }
 }

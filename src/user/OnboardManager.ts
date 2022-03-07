@@ -1,6 +1,5 @@
 import {window, ExtensionContext} from 'vscode';
 import {
-  showOfflinePrompt,
   getItem,
   setItem,
   getAuthCallbackState,
@@ -16,7 +15,6 @@ import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
 let authAdded = false;
-const one_min_millis = 1000 * 60;
 
 export function updatedAuthAdded(val: boolean) {
   authAdded = val;
@@ -38,23 +36,8 @@ export async function onboardInit(ctx: ExtensionContext, callback: any) {
 }
 
 async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
-  const jwt = await createAnonymousUser();
-  if (jwt) {
-    // great, it worked. call the callback
-    return callback(ctx, true /*anonCreated*/);
-  }
-
-  // failed to get the jwt, try again in a minute
-  if (retry_counter === 0) {
-    // show the prompt that we're unable connect to our app 1 time only
-    showOfflinePrompt(true);
-  }
-  retry_counter++;
-  // call activate again later
-  const retryMillis = retry_counter > 4 ? one_min_millis : 1000 * 15;
-  setTimeout(() => {
-    onboardInit(ctx, callback);
-  }, retryMillis);
+  await createAnonymousUser();
+  callback(ctx, true /*anonCreated*/);
 }
 
 /**

@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {window, ExtensionContext, commands} from 'vscode';
+import {window, ExtensionContext, commands, extensions} from 'vscode';
 import {getUser} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
@@ -20,7 +20,6 @@ import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {initializeWebsockets, disposeWebsocketTimeouts} from './websockets';
-import {softwarePost} from './http/HttpClient';
 import {
   initializeStatusBar,
   updateFlowModeStatusBar,
@@ -105,9 +104,6 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
       commands.executeCommand('codetime.displaySidebar');
     }, 1000);
 
-    // activate the plugin
-    softwarePost('/plugins/activate', {}, getItem('jwt'));
-
     displayReadme();
   }
 
@@ -139,4 +135,23 @@ export function getCurrentColorKind() {
     currentColorKind = window.activeColorTheme.kind;
   }
   return currentColorKind;
+}
+
+function listExtensions() {
+  const allExtensions = extensions.all;
+  allExtensions.forEach(extension => {
+    if (extension.isActive) {
+      const info = {
+        id: extension.id,
+        author: extension.packageJSON.author?.name,
+        description: extension.packageJSON.description,
+        displayName: extension.packageJSON.displayName,
+        name: extension.packageJSON.name,
+        publisher: extension.packageJSON.publisher,
+        version: extension.packageJSON.version,
+        keywords: extension.packageJSON.keywords,
+        extensionKind: extension.packageJSON.extensionKind
+      };
+    }
+  })
 }

@@ -7,11 +7,12 @@ import {
   getAuthCallbackState,
   setAuthCallbackState,
 } from '../Util';
-import {softwarePost, isResponseOk} from '../http/HttpClient';
+import {isResponseOk, appPost} from '../http/HttpClient';
 import {showQuickPick} from './MenuManager';
 import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
 
 let switching_account = false;
+let creating_anon = false;
 
 const switchAccountItem = {
   label: 'Switch to a different account?',
@@ -109,10 +110,14 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
 /**
  * create an anonymous user based on github email or mac addr
  */
-export async function createAnonymousUser(): Promise<string | null> {
+export async function createAnonymousUser() {
+  if (creating_anon) {
+    return;
+  }
   const jwt = getItem('jwt');
   // check one more time before creating the anon user
   if (!jwt) {
+    creating_anon = true;
     // this should not be undefined if its an account reset
     let plugin_uuid = getPluginUuid();
     let auth_callback_state = getAuthCallbackState();
@@ -120,23 +125,22 @@ export async function createAnonymousUser(): Promise<string | null> {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const hostname = getHostname();
 
-    const resp = await softwarePost('/plugins/onboard', {
+    const resp = await appPost('/api/v1/anonymous_user', {
       timezone,
       username,
       plugin_uuid,
       hostname,
       auth_callback_state,
     });
-    if (isResponseOk(resp) && resp.data && resp.data.jwt) {
-      setItem('jwt', resp.data.jwt);
-      if (!resp.data.user.registered) {
+    if (isResponseOk(resp) && resp.data) {
+
+      setItem('jwt', resp.data.plugin_jwt);
+      if (!resp.data.registered) {
         setItem('name', null);
       }
       setItem('switching_account', false);
-      setAuthCallbackState(null);
-      return resp.data.jwt;
+      setAuthCallbackState('');
     }
   }
-
-  return null;
+  creating_anon = false;
 }

@@ -93,40 +93,6 @@ export async function softwareGet(api: string, override_token: any = null) {
 }
 
 /**
- * perform a post request
- */
-export async function softwarePost(api: string, payload: any, jwt = null) {
-  updateOutgoingHeader();
-
-  return beApi
-    .post(api, payload)
-    .then((resp: any) => {
-      return resp;
-    })
-    .catch((err: any) => {
-      logIt(`error posting data for ${api}, message: ${err.message}`);
-      return err;
-    });
-}
-
-/**
- * perform a delete request
- */
-export async function softwareDelete(api: string, jwt: string) {
-  updateOutgoingHeader();
-
-  return beApi
-    .delete(api)
-    .then((resp: any) => {
-      return resp;
-    })
-    .catch((err: any) => {
-      logIt(`error with delete request for ${api}, message: ${err.message}`);
-      return err;
-    });
-}
-
-/**
  * Check if the spotify response has an expired token
  * {"error": {"status": 401, "message": "The access token expired"}}
  */
