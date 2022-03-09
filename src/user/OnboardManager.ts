@@ -6,6 +6,7 @@ import {
   getPluginId,
   getPluginUuid,
   launchWebUrl,
+  getVersion,
 } from '../Util';
 import {isResponseOk, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
@@ -171,6 +172,7 @@ function getAuthQueryObject() {
   const params = new URLSearchParams();
   params.append('plugin_uuid', getPluginUuid());
   params.append('plugin_id', `${getPluginId()}`);
+  params.append('plugin_version', getVersion());
   params.append('auth_callback_state', getAuthCallbackState(true));
   return params;
 }
