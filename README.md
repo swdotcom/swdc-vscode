@@ -14,17 +14,13 @@
 
 <p><a href="https://www.software.com"><img alt="Software.com" src="https://assets.software.com/readme/software-logo-light.png" width="100px"></a></p>
 
----
-
-<p align="center"> 🚨 <b>NEW: AUTOMATIC FLOW MODE</b> 🚨 </p>
-
-<p align="center">
-  <a href="https://www.software.com/src/auto-flow-mode">Automatic Flow Mode</a> detects when you're in flow and automatically silences distractions and prevents interruptions. Learn more about how to <a href="https://github.com/swdotcom/swdc-vscode#protect-code-time">enable or disable it</a>. 
-</p>
+[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 250,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
 
 ---
 
-[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of over 200,000 developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
+✨ Want more out of *Software*? When you connect our [GitHub App](https://bit.ly/software-github), you can measure your team’s key DevOps metrics, including lead time and delivery velocity. You can identify bottlenecks in your release process — like slow code reviews — and take immediate action, so you can ship faster and more efficiently.
+
+---
 
 ![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.5.0.png)
 
@@ -54,9 +50,9 @@ Your coding stats can help you understand how you are improving over time.
 
 Your status bar shows you in real-time how many hours and minutes you code each day. A rocket will appear if your active code time exceeds your daily average on this day of the week.
 
-To see an overview of your coding activity and project metrics, open the **Code Time panel** by clicking on the Code Time icon in your sidebar. Click **Dashboard** to open your personalized Code Time dashboard in a new editor tab. Your dashboard summarizes your coding data—such as your code time by project, lines of code, and keystrokes—today, yesterday, last week, and over the last 90 days. Click **Project summary** to see a breakdown of your stats by project. 
+To see an overview of your coding activity and project metrics, open the **Code Time panel** by clicking on the Code Time icon in your sidebar. Click **Dashboard** to open your personalized Code Time dashboard in a new editor tab. Your dashboard summarizes your coding data — such as your code time, code time outside work hours, and meeting time — yesterday, last week, and over the last 90 days. 
 
-Your _time in editor_ is the total time you have spent in your editor today. Your _active code time_ is the time you spend actively writing and editing code in your editor or IDE. It captures periods of intense focus and flow. Each metric shows how you compare today to your personal averages. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
+Your _code time_ is the total time you have spent in your editor today. Your _active code time_ is the time you spend actively writing and editing code in your editor or IDE. It captures periods of intense focus and flow. Each metric shows how you compare today to your personal averages. Each average is calculated by day of week over the last 90 days (e.g. a Friday average is an average of all previous Fridays).
 
 ## Explore Data Visualizations
 
@@ -64,27 +60,31 @@ Your _time in editor_ is the total time you have spent in your editor today. You
 
 Click **More data at software.com** in the Code Time sidebar or visit [app.software.com](https://app.software.com) to see more advanced data visualizations. You will need to create a free Software account to use the web app. In the Code Time dashboard, you will be able to track: 
 
-**Active code time.** Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 200,000 developers.
+**Active code time.** Visualize your daily active code time. See productivity trends compared to 90-day averages. See how you stack up against the Software community of over 250,000 developers.
 
-**Top projects.** See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
+**Meeting time.** Connect your [Google Calendar](https://www.software.com/integrations/google-calendar) or [Outlook Calendar](https://www.software.com/integrations/microsoft-outlook) to visualize meeting time versus code time.
 
-**Work-life balance.** Connect your Google or Outlook Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
+**Work-life balance.** See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
 
-## Invite Your Team
+## Measure Key DevOps Metrics
 
-![Software.com Teams](https://assets.software.com/readme/code-time/vscode/lead-your-team-2.5.3.png)
+![Software.com DevOps Metrics](https://assets.software.com/readme/code-time/vscode/bottlenecks-take-action.png)
 
-With Teams, you can defend code time, see the impact of meetings, and improve work-life balance across your entire team.
+*Software* makes it easy to measure your team's key DevOps metrics, including [lead time](https://www.software.com/devops-guides/lead-time) and [delivery velocity](https://www.software.com/devops-guides/delivery-velocity-score). With better visibility, you can quickly find and fix bottlenecks in your delivery pipeline. 
 
-Remember, your data is for you, no one else. Your team data is for your team. When you create a team, you will only see aggregated and anonymized summary data at the team level—available to everyone on that team. In addition, to protect individual privacy, the minimum team size is five members. 
+**Diagnose bottlenecks with alerts.** Monitors automatically notify you when metrics cross a certain threshold (like when [code reviews take longer](https://www.software.com/src/code-reviews-bottleneck-in-your-delivery-pipeline) to review, approve, or merge), so you can take action and prevent delays.
 
-To create a team, open the Code Time sidebar and select **Create a team** at the bottom of the panel. You can also visit the [web app](https://app.software.com/organizations) to get started. It's free to create a team, but you can upgrade to a premium plan to unlock additional features. 
+**Customize dashboards to track DevOps efficiency.** Organize, visualize, and monitor the engineering metrics you care about most — like lead time, delivery frequency, and pull request review time. 
+
+**Benchmark your DevOps performance.** According to research from DORA, Google Cloud's DevOps Research and Assessment team, elite engineering teams have 973x more frequent code deployments and 6570x faster lead time. With Software, you can compare your delivery speed and efficiency with other high-performing engineering organizations in our global community.
+
+To see your team's DevOps metrics, visit the [web app](https://app.software.com) and connect the [*Software* GitHub App](https://bit.ly/software-github) to your Software account. It's free and takes just a few minutes.
 
 ## It’s Safe, Secure, and Free
 
-**We never access your code:** We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.
+**We never access your code:** We do not read, transmit, or store source code. We only provide metrics about programming, and we make it easy to see the data we collect. You can learn more about how we secure your data on our [security page](https://www.software.com/security).
 
-**Your data is private:** We will never share your individually identifiable data with your boss. When you join a team, we only show aggregated and anonymized data. We encourage you to read [Data Privacy Matters](https://www.software.com/data-privacy), an overview of the steps we take to protect your privacy and security.
+**Your data is private:** We will never share your individually identifiable data with your boss. When you create or join a team, we only show system-level metrics for your GitHub organization.
 
 **Free for you, forever:** We provide 90 days of data history for free, forever. We provide [premium plans](https://www.software.com/pricing) for advanced features and historical data access.
 
