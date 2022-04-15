@@ -1,11 +1,10 @@
 import {commands, Disposable, window, ExtensionContext} from 'vscode';
-import {launchWebUrl, openFileInEditor, displayReadme, launchWebDashboard, setItem} from './Util';
+import {launchWebUrl, openFileInEditor, displayReadme, setItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
 import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {app_url, create_org_url, vscode_issues_url} from './Constants';
-import {toggleDarkMode, toggleDock} from './managers/OsaScriptManager';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
 import {showDashboard} from './managers/WebViewManager';
@@ -57,13 +56,6 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.switchAccount', () => {
       showExistingAccountMenu();
-    })
-  );
-
-  // SHOW WEB ANALYTICS
-  cmds.push(
-    commands.registerCommand('codetime.softwareKpmDashboard', (item: KpmItem) => {
-      launchWebDashboard();
     })
   );
 
@@ -194,18 +186,6 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.exitFullScreen', () => {
       showNormalScreenMode();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.toggleDarkMode', () => {
-      toggleDarkMode();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.toggleDocPosition', () => {
-      toggleDock();
     })
   );
 
