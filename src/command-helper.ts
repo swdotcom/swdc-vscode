@@ -146,6 +146,12 @@ export function createCommands(
     })
   );
 
+  cmds.push(
+    commands.registerCommand('codetime.softwareKpmDashboard', () => {
+      launchWebUrl(`${app_url}/dashboard/code_time`)
+    })
+  )
+
   // DISPLAY CODETIME DASHBOARD WEBVIEW
   cmds.push(
     commands.registerCommand('codetime.viewDashboard', () => {
