@@ -3,6 +3,6 @@ export const userEventEmitter = new EventEmitter();
 
 import { setEndOfDayNotification } from "../notifications/endOfDay";
 
-userEventEmitter.on('user_object_updated', (user: any) => {
-	setEndOfDayNotification(user);
+userEventEmitter.on('user_object_updated', () => {
+	setEndOfDayNotification();
 });

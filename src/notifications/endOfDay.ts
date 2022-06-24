@@ -1,25 +1,26 @@
 import {commands, window} from 'vscode';
 import {showDashboard} from '../managers/WebViewManager';
 import {getItem} from '../Util';
-import {softwareGet, isResponseOk} from '../http/HttpClient';
 import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';
 import { configureSettingsKpmItem, showMeTheDataKpmItem } from '../events/KpmItems';
-import { getUserPreferences, isRegistered } from '../DataController';
+import { getCachedUser, isRegistered } from '../DataController';
 
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
 
 let timer: NodeJS.Timeout | undefined = undefined;
 
-export const setEndOfDayNotification = async (user: any) => {
+export const setEndOfDayNotification = async () => {
   // clear any existing timer
   if (timer) {
     clearTimeout(timer);
   }
 
-  const preferences: any = await getUserPreferences();
+  const cachedUser: any = await getCachedUser();
+  const preferences: any = cachedUser.preferences_parsed;
+  const workHours: any = JSON.parse(cachedUser.profile.work_hours)
 
   // If the end of day notification setting is turned on (if undefined or null, will default to true)
   if (preferences.notifications?.endOfDayNotification !== false) {
@@ -35,24 +36,21 @@ export const setEndOfDayNotification = async (user: any) => {
       msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, HOUR_IN_MILLIS * 17);
     }
 
-    const response = await softwareGet('/users/profile');
-    if (isResponseOk(response)) {
-      // get the day of the week that matches today
-      const work_hours_today = response.data.work_hours[day] || undefined;
-      if (work_hours_today?.active) {
-        // it's active, get the largest end range
-        const endTimes = work_hours_today.ranges.map((n: any) => {
-          // convert "end" to total seconds in a day
-          return getEndTimeSeconds(n.end);
-        });
+    // get the day of the week that matches today
+    const work_hours_today = workHours[day] || undefined;
+    if (work_hours_today?.active) {
+      // it's active, get the largest end range
+      const endTimes = work_hours_today.ranges.map((n: any) => {
+        // convert "end" to total seconds in a day
+        return getEndTimeSeconds(n.end);
+      });
 
-        // sort milliseconds in descending order
-        endTimes.sort(function (a: any, b: any) {
-          return b - a;
-        });
+      // sort milliseconds in descending order
+      endTimes.sort(function (a: any, b: any) {
+        return b - a;
+      });
 
-        msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, endTimes[0]);
-      }
+      msUntilEndOfTheDay = getMillisUntilEndOfTheDay(d, endTimes[0]);
     }
 
     if (msUntilEndOfTheDay > 0) {
