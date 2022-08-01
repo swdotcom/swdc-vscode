@@ -4,7 +4,9 @@ import {
   app_url,
   CODE_TIME_PLUGIN_ID,
   CODE_TIME_TYPE,
-  SOFTWARE_DIRECTORY
+  SOFTWARE_DIRECTORY,
+  MUSIC_TIME_EXT_ID,
+  EDITOR_OPS_EXT_ID
 } from './Constants';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,6 +14,7 @@ import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
+import { initializeWebsockets, websocketAlive } from './websockets';
 
 const open = require('open');
 const fs = require('fs');
@@ -341,6 +344,13 @@ export async function launchWebDashboard() {
 }
 
 export function launchWebUrl(url: string) {
+  if (!websocketAlive()) {
+    try {
+      initializeWebsockets();
+    } catch (e) {
+      console.error('Failed to initialize websockets', e);
+    }
+  }
   open(url);
 }
 
@@ -409,4 +419,12 @@ export function isPrimaryWindow() {
     setItem('vscode_primary_window', workspaceWindow);
   }
   return !!(workspaceWindow === getWorkspaceName());
+}
+
+export function musicTimeExtInstalled() {
+  return !!extensions.getExtension(MUSIC_TIME_EXT_ID);
+}
+
+export function editorOpsExtInstalled() {
+  return !!extensions.getExtension(EDITOR_OPS_EXT_ID)
 }

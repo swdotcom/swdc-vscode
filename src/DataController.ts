@@ -5,6 +5,8 @@ import {
   setItem,
   setAuthCallbackState,
   logIt,
+  musicTimeExtInstalled,
+  editorOpsExtInstalled,
 } from './Util';
 import {clearSessionSummaryData} from './storage/SessionSummaryData';
 import {initializeWebsockets} from './websockets';
@@ -115,6 +117,18 @@ export async function authenticationCompleteHandler(user: any) {
 
     // fetch after logging on
     SummaryManager.getInstance().updateSessionSummaryFromServer();
+  }
+
+  if (musicTimeExtInstalled()) {
+    setTimeout(() => {
+      commands.executeCommand("musictime.refreshMusicTimeView")
+    }, 1000);
+  }
+
+  if (editorOpsExtInstalled()) {
+    setTimeout(() => {
+      commands.executeCommand("editorOps.refreshEditorOpsView")
+    }, 1000);
   }
 
   commands.executeCommand('codetime.refreshCodeTimeView');

@@ -26,6 +26,11 @@ let useLongReconnectDelay: boolean = false;
 let currentReconnectDelay: number = INITIAL_RECONNECT_DELAY;
 
 let ws: any | undefined = undefined;
+let alive: boolean = false;
+
+export function websocketAlive() {
+  return alive;
+}
 
 export function initializeWebsockets() {
   logIt('initializing websocket connection');
@@ -98,6 +103,7 @@ export function initializeWebsockets() {
 
     // RESET reconnect delay
     currentReconnectDelay = INITIAL_RECONNECT_DELAY;
+    alive = true;
     logIt('Websocket connection open');
   });
 
@@ -131,6 +137,7 @@ export function initializeWebsockets() {
 }
 
 function retryConnection() {
+  alive = false;
   if (!retryTimeout) {
 
     // clear this client side liveness timeout
