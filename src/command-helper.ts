@@ -1,18 +1,16 @@
 import {commands, Disposable, window, ExtensionContext} from 'vscode';
-import {launchWebUrl, openFileInEditor, displayReadme, setItem} from './Util';
+import {launchWebUrl, displayReadme, setItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
+import {showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
-import {app_url, create_org_url, vscode_issues_url} from './Constants';
+import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
-import {showFullScreenMode, showNormalScreenMode, showZenMode} from './managers/ScreenManager';
 import {showDashboard} from './managers/WebViewManager';
-import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
+import {closeSettings} from './managers/ConfigManager';
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
-import {progressIt} from './managers/ProgressManager';
 import { getHideStatusBarMetricsButton } from './events/KpmItems';
 
 export function createCommands(
@@ -52,26 +50,6 @@ export function createCommands(
     })
   );
 
-  // SWITCH ACCOUNT
-  cmds.push(
-    commands.registerCommand('codetime.switchAccount', () => {
-      showExistingAccountMenu();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.createOrg', () => {
-      launchWebUrl(create_org_url);
-    })
-  );
-
-  // OPEN SPECIFIED FILE IN EDITOR
-  cmds.push(
-    commands.registerCommand('codetime.openFileInEditor', (file) => {
-      openFileInEditor(file);
-    })
-  );
-
   // TOGGLE STATUS BAR METRIC VISIBILITY
   cmds.push(
     commands.registerCommand('codetime.toggleStatusBar', () => {
@@ -92,14 +70,6 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem, switching_account: boolean) => {
       launchEmailSignup(switching_account);
-    })
-  );
-
-  // LAUNCH EXISTING ACCOUNT LOGIN
-  cmds.push(
-    commands.registerCommand('codetime.login', () => {
-      // launch the auth selection flow
-      showExistingAccountMenu();
     })
   );
 
@@ -146,22 +116,10 @@ export function createCommands(
     })
   );
 
-  cmds.push(
-    commands.registerCommand('codetime.softwareKpmDashboard', () => {
-      launchWebUrl(`${app_url}/dashboard/code_time`)
-    })
-  )
-
   // DISPLAY CODETIME DASHBOARD WEBVIEW
   cmds.push(
     commands.registerCommand('codetime.viewDashboard', () => {
       showDashboard();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.sendFeedback', () => {
-      launchWebUrl('mailto:cody@software.com');
     })
   );
 
@@ -178,24 +136,6 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.showZenMode', () => {
-      showZenMode();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.showFullScreen', () => {
-      showFullScreenMode();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.exitFullScreen', () => {
-      showNormalScreenMode();
-    })
-  );
-
-  cmds.push(
     commands.registerCommand('codetime.enableFlowMode', () => {
       enableFlow({automated: false});
     })
@@ -208,32 +148,8 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.configureSettings', () => {
-      configureSettings();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.showOrgDashboard', (org_name) => {
-      launchWebUrl(`${app_url}/dashboard/devops_performance?organization_slug=${org_name}`);
-    })
-  );
-
-  cmds.push(
     commands.registerCommand('codetime.manageSlackConnection', () => {
       launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.manageCalendarConnection', () => {
-      launchWebUrl(`${app_url}/data_sources/integration_types/calendar`);
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.displayFlowModeInfo', () => {
-      launchWebUrl('https://www.software.com/src/auto-flow-mode');
     })
   );
 
@@ -246,28 +162,9 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.reloadOrgs', async () => {
-      commands.executeCommand('codetime.refreshCodeTimeView');
-    })
-  );
-
-  cmds.push(
     commands.registerCommand('codetime.updateViewMetrics', () => {
       updateFlowModeStatusBar();
       updateStatusBarWithSummaryData();
-    })
-  );
-
-  cmds.push(
-    commands.registerCommand('codetime.updateSidebarSettings', (payload: any) => {
-      progressIt('Updating settings...', updateSettings, [payload.path, payload.json, true]);
-    })
-  );
-
-  // Update the settings preferences
-  cmds.push(
-    commands.registerCommand('codetime.updateSettings', (payload: any) => {
-      progressIt('Updating settings...', updateSettings, [payload.path, payload.json]);
     })
   );
 

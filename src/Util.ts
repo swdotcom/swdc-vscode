@@ -272,28 +272,6 @@ export function displayReadme() {
   setItem('vscode_CtReadme', true);
 }
 
-export function openFileInEditor(file: string) {
-  workspace.openTextDocument(file).then(
-    (doc) => {
-      // Show open document and set focus
-      window.showTextDocument(doc, 1, false).then(undefined, (error: any) => {
-        if (error.message) {
-          window.showErrorMessage(error.message);
-        } else {
-          logIt(`Error opening document: ${error}`);
-        }
-      });
-    },
-    (error: any) => {
-      if (error.message && error.message.toLowerCase().includes('file not found')) {
-        window.showErrorMessage(`Cannot open ${file}.  File not found.`);
-      } else {
-        logIt(`Cannot open ${file}: ${error}`);
-      }
-    }
-  );
-}
-
 export function getExtensionName() {
   return 'swdc-vscode';
 }

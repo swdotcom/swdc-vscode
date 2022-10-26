@@ -1,9 +1,6 @@
 import {window, QuickPickOptions, commands} from 'vscode';
-import {launchWebUrl, getItem} from '../Util';
-import {app_url, HIDE_CODE_TIME_STATUS_LABEL, LOGIN_LABEL, SHOW_CODE_TIME_STATUS_LABEL} from '../Constants';
-import {showDashboard} from '../managers/WebViewManager';
-import {isStatusBarTextVisible} from '../managers/StatusBarManager';
-import {launchLogin} from '../user/OnboardManager';
+import {launchWebUrl} from '../Util';
+import {app_url} from '../Constants';
 
 /**
  * Pass in the following array of objects
@@ -36,72 +33,6 @@ export function showQuickPick(pickOptions: any): any {
     }
     return item;
   });
-}
-
-export async function showMenuOptions() {
-  const email = getItem('name');
-
-  // {placeholder, items: [{label, description, url, details, tooltip},...]}
-  let kpmMenuOptions: any = {
-    items: [],
-  };
-
-  kpmMenuOptions.items.push({
-    label: 'Generate dashboard',
-    detail: 'View your latest coding metrics right here in your editor',
-    url: null,
-    cb: showDashboard,
-    eventDescription: 'PaletteMenuLaunchDashboard',
-  });
-
-  let loginMsgDetail = 'Finish creating your account and see rich data visualizations.';
-  if (!email) {
-    kpmMenuOptions.items.push({
-      label: LOGIN_LABEL,
-      detail: loginMsgDetail,
-      url: null,
-      cb: launchLogin,
-      eventDescription: 'PaletteMenuLogin',
-    });
-  }
-
-  let toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
-  if (isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
-  }
-  kpmMenuOptions.items.push({
-    label: toggleStatusBarTextLabel,
-    detail: 'Toggle the Code Time status',
-    url: null,
-    cb: null,
-    command: 'codetime.toggleStatusBar',
-  });
-
-  kpmMenuOptions.items.push({
-    label: 'Submit an issue on GitHub',
-    detail: 'Encounter a bug? Submit an issue on our GitHub page',
-    url: 'https://github.com/swdotcom/swdc-vscode/issues',
-    cb: null,
-  });
-
-  kpmMenuOptions.items.push({
-    label: 'Submit feedback',
-    detail: 'Send us an email at cody@software.com',
-    cb: null,
-    command: 'codetime.sendFeedback',
-  });
-
-  if (email) {
-    kpmMenuOptions.items.push({
-      label: 'Web dashboard',
-      detail: 'See rich data visualizations in the web app',
-      url: null,
-      cb: launchWebDashboardView,
-      eventDescription: 'PaletteMenuLaunchWebDashboard',
-    });
-  }
-
-  showQuickPick(kpmMenuOptions);
 }
 
 export async function launchWebDashboardView() {

@@ -24,11 +24,6 @@ export async function showSwitchAccountsMenu() {
   accountMenuSelection(switchAccountItem);
 }
 
-export async function showExistingAccountMenu() {
-  switching_account = true;
-  showLogInMenuOptions();
-}
-
 export async function showSignUpAccountMenu() {
   switching_account = false;
   showSignUpMenuOptions();

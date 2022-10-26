@@ -1,4 +1,4 @@
-import axios from 'axios';
+const axios = require('axios');
 import {version, window} from 'vscode';
 import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
 import {

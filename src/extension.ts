@@ -67,7 +67,7 @@ export async function activate(ctx: ExtensionContext) {
   ctx.subscriptions.push(createCommands(ctx, kpmController));
 
   if (getItem("jwt")) {
-    intializePlugin(ctx, false);
+    intializePlugin();
   } else if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
   } else {
@@ -79,7 +79,7 @@ export async function activate(ctx: ExtensionContext) {
   }
 }
 
-export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: boolean) {
+export async function intializePlugin() {
   logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
   // INIT websockets
@@ -127,7 +127,7 @@ export async function intializePlugin(ctx: ExtensionContext, createdAnonUser: bo
 
     // INIT session summary sync manager
     SyncManager.getInstance();
-  }, 1000);
+  }, 3000);
 }
 
 export function getCurrentColorKind() {
