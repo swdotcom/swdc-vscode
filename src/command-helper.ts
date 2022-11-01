@@ -2,16 +2,17 @@ import {commands, Disposable, window, ExtensionContext} from 'vscode';
 import {launchWebUrl, displayReadme, setItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {showSignUpAccountMenu} from './menu/AccountManager';
+import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
-import {closeSettings} from './managers/ConfigManager';
+import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import { getHideStatusBarMetricsButton } from './events/KpmItems';
+import { progressIt } from './managers/ProgressManager';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -78,6 +79,14 @@ export function createCommands(
     commands.registerCommand('codetime.registerAccount', () => {
       // launch the auth selection flow
       showSignUpAccountMenu();
+    })
+  );
+
+  // LAUNCH EXISTING ACCOUNT LOGIN
+  cmds.push(
+    commands.registerCommand('codetime.login', () => {
+      // launch the auth selection flow
+      showExistingAccountMenu();
     })
   );
 
@@ -172,6 +181,25 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.closeSettings', (payload: any) => {
       closeSettings();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand('codetime.configureSettings', () => {
+      configureSettings();
+    })
+  );
+
+  cmds.push(
+    commands.registerCommand('codetime.updateSidebarSettings', (payload: any) => {
+      progressIt('Updating settings...', updateSettings, [payload.path, payload.json, true]);
+    })
+  );
+
+  // Update the settings preferences
+  cmds.push(
+    commands.registerCommand('codetime.updateSettings', (payload: any) => {
+      progressIt('Updating settings...', updateSettings, [payload.path, payload.json]);
     })
   );
 
