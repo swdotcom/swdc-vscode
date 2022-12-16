@@ -1,7 +1,7 @@
 {
   "name": "swdc-vscode",
   "displayName": "Code Time",
-  "version": "2.6.35",
+  "version": "2.6.36",
   "publisher": "softwaredotcom",
   "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
   "author": {
@@ -64,6 +64,10 @@
       {
         "command": "codetime.manageSlackConnection",
         "title": "Code Time: Manage Slack connection"
+      },
+      {
+        "command": "codetime.switchAccount",
+        "title": "Code Time: Switch account"
       },
       {
         "command": "codetime.disconnectSlackWorkspace",
@@ -146,6 +150,6 @@
     "open": "^8.4.0",
     "swdc-tracker": "1.5.2",
     "uuid": "^9.0.0",
-    "ws": "^8.10.0"
+    "ws": "^8.11.0"
   }
 }

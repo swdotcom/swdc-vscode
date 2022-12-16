@@ -60,6 +60,13 @@ export function createCommands(
     })
   );
 
+  // LAUNCH SWITCH ACCOUNT
+  cmds.push(
+    commands.registerCommand('codetime.switchAccount', () => {
+      launchLogin('software', true);
+    })
+  );
+
   // LAUNCH EMAIL LOGIN
   cmds.push(
     commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem, switching_account: boolean) => {
