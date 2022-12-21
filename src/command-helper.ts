@@ -11,7 +11,6 @@ import {closeSettings, configureSettings, updateSettings} from './managers/Confi
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
-import { getHideStatusBarMetricsButton } from './events/KpmItems';
 import { progressIt } from './managers/ProgressManager';
 
 export function createCommands(
@@ -54,7 +53,6 @@ export function createCommands(
   // TOGGLE STATUS BAR METRIC VISIBILITY
   cmds.push(
     commands.registerCommand('codetime.toggleStatusBar', () => {
-      tracker.trackUIInteraction(getHideStatusBarMetricsButton());
       toggleStatusBar();
       commands.executeCommand('codetime.refreshCodeTimeView');
     })
