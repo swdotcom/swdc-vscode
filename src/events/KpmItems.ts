@@ -1,25 +1,4 @@
-import {HIDE_CODE_TIME_STATUS_LABEL, SHOW_CODE_TIME_STATUS_LABEL} from '../Constants';
-import {isStatusBarTextVisible} from '../managers/StatusBarManager';
 import {KpmItem, UIInteractionType} from '../model/models';
-
-export function getHideStatusBarMetricsButton(): KpmItem {
-  let toggleStatusBarTextLabel = SHOW_CODE_TIME_STATUS_LABEL;
-  if (isStatusBarTextVisible()) {
-    toggleStatusBarTextLabel = HIDE_CODE_TIME_STATUS_LABEL;
-  }
-
-  const item: KpmItem = getActionButton(
-    toggleStatusBarTextLabel,
-    'Toggle the Code Time status',
-    'codetime.toggleStatusBar',
-    'visible.svg'
-  );
-  item.location = 'ct_menu_tree';
-  item.name = 'ct_toggle_status_bar_metrics_btn';
-  item.color = 'blue';
-  item.interactionIcon = 'slash-eye';
-  return item;
-}
 
 export function configureSettingsKpmItem(): KpmItem {
   const item: KpmItem = new KpmItem();
