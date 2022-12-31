@@ -215,5 +215,12 @@ export function createCommands(
     })
   );
 
+  // show the connect org view
+  cmds.push(
+    commands.registerCommand('codetime.createOrg', () => {
+      launchWebUrl(`${app_url}/organizations/new?`);
+    })
+  );
+
   return Disposable.from(...cmds);
 }
