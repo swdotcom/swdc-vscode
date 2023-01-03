@@ -61,7 +61,7 @@ export function createCommands(
   // LAUNCH SWITCH ACCOUNT
   cmds.push(
     commands.registerCommand('codetime.switchAccount', () => {
-      launchLogin('software', true);
+      showExistingAccountMenu();
     })
   );
 
