@@ -65,10 +65,23 @@ export async function getUser() {
   const resp = await appGet('/api/v1/user');
   if (isResponseOk(resp) && resp.data) {
     currentUser = resp.data;
+
+    if (hasIntegrationConnection(8, currentUser?.integration_connections)) {
+      setItem('authType', 'google');
+    } else if (hasIntegrationConnection(9, currentUser?.integration_connections)) {
+      setItem('authType', 'github');
+    } else {
+      setItem('authType', 'software');
+    }
+
     lastUserFetch = nowMillis;
     return currentUser;
   }
   return null;
+}
+
+function hasIntegrationConnection(type_id: number, connections = []):boolean {
+  return !!(connections?.find((integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === type_id)));
 }
 
 export function setPreference(preference: string, value: any) {
