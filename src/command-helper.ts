@@ -208,5 +208,19 @@ export function createCommands(
     })
   );
 
+  // show the org overview
+  cmds.push(
+    commands.registerCommand('codetime.showOrgDashboard', (slug: string) => {
+      launchWebUrl(`${app_url}/organizations/${slug}/overview`);
+    })
+  );
+
+  // show the connect org view
+  cmds.push(
+    commands.registerCommand('codetime.createOrg', () => {
+      launchWebUrl(`${app_url}/organizations/new`);
+    })
+  );
+
   return Disposable.from(...cmds);
 }
