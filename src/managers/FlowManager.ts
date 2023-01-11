@@ -42,7 +42,7 @@ export async function enableFlow({automated = false}) {
     },
     async (progress) => {
       await initiateFlow({automated}).catch((e) => {
-        console.error('[CodeTime] Unable to initiate flow. ', e.message);
+        console.error('[Code Time] Unable to initiate flow. ', e.message);
       });
     }
   );

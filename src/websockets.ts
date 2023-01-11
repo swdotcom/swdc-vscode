@@ -5,7 +5,7 @@ import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_
 import { handleIntegrationConnectionSocketEvent } from './message_handlers/integration_connection';
 import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stats_update';
 import { handleFlowStateMessage } from './message_handlers/flow_state';
-import { handleAccountDeleted } from './message_handlers/account_deleted';
+import { userDeletedCompletionHandler } from './DataController';
 
 const WebSocket = require('ws');
 
@@ -236,7 +236,7 @@ const handleIncomingMessage = (data: any) => {
         handleCurrentDayStatsUpdate(message.body);
         break;
       case 'account_deleted':
-        handleAccountDeleted();
+        userDeletedCompletionHandler();
         break;
     }
   } catch (e) {

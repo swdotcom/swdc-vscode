@@ -154,7 +154,7 @@ export async function authenticationCompleteHandler(user: any) {
 
 export async function userDeletedCompletionHandler() {
   const user = await getUser();
-  if (!user || !user.registered) {
+  if (!user?.registered) {
     // reset the user session
     createAnonymousUser();
 
