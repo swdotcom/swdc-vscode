@@ -31,9 +31,6 @@ export class SummaryManager {
         this.updateCurrentDayStats(summary);
       }
     }
-
-    // update the code time metrics tree views
-    commands.executeCommand('codetime.refreshCodeTimeView');
   }
 
   updateCurrentDayStats(summary: SessionSummary) {

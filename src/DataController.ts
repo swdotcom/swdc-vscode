@@ -12,6 +12,7 @@ import {clearSessionSummaryData} from './storage/SessionSummaryData';
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
+import { createAnonymousUser } from './menu/AccountManager';
 
 let currentUser: any | null = null;
 let lastUserFetch: number = 0;
@@ -149,6 +150,47 @@ export async function authenticationCompleteHandler(user: any) {
   logIt('Successfully logged on to Code Time');
 
   return updatedUserInfo;
+}
+
+export async function userDeletedCompletionHandler() {
+  const user = await getUser();
+  if (!user?.registered) {
+    // reset the user session
+    createAnonymousUser();
+
+    // update the login status
+    window.showInformationMessage(`Successfully deleted your Code Time account`);
+
+    try {
+      initializeWebsockets();
+    } catch (e: any) {
+      logIt(`Failed to initialize websockets: ${e.message}`);
+    }
+
+    clearSessionSummaryData();
+
+    // re-initialize user and preferences
+    await getUser();
+
+    // fetch after logging on
+    SummaryManager.getInstance().updateSessionSummaryFromServer();
+
+    if (musicTimeExtInstalled()) {
+      setTimeout(() => {
+        commands.executeCommand("musictime.refreshMusicTimeView")
+      }, 1000);
+    }
+
+    if (editorOpsExtInstalled()) {
+      setTimeout(() => {
+        commands.executeCommand("editorOps.refreshEditorOpsView")
+      }, 1000);
+    }
+
+    commands.executeCommand('codetime.refreshCodeTimeView');
+
+    logIt('Successfully deleted your Code Time account');
+  }
 }
 
 export async function getCachedIntegrations(integration_type_id: number | undefined = undefined) {

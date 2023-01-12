@@ -288,28 +288,9 @@ export function logIt(message: string, isError: boolean = false) {
   }
 }
 
-export async function showOfflinePrompt(addReconnectMsg = false) {
-  // shows a prompt that we're not able to communicate with the app server
-  let infoMsg = 'Our service is temporarily unavailable. ';
-  if (addReconnectMsg) {
-    infoMsg += 'We will try to reconnect again in a minute. Your status bar will not update at this time.';
-  } else {
-    infoMsg += 'Please try again later.';
-  }
-  // set the last update time so we don't try to ask too frequently
-  window.showInformationMessage(infoMsg, ...['OK']);
-}
-
 export function getOffsetSeconds() {
   let d = new Date();
   return d.getTimezoneOffset() * 60;
-}
-
-export function coalesceNumber(val: any, defaultVal = 0) {
-  if (val === null || val === undefined || isNaN(val)) {
-    return defaultVal;
-  }
-  return val;
 }
 
 export async function launchWebDashboard() {
