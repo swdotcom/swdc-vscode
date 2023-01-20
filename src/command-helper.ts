@@ -222,5 +222,12 @@ export function createCommands(
     })
   );
 
+  // show the Software.com flow mode info
+  cmds.push(
+    commands.registerCommand('codetime.displayFlowModeInfo', () => {
+      launchWebUrl("https://www.software.com/src/auto-flow-mode");
+    })
+  )
+
   return Disposable.from(...cmds);
 }
