@@ -251,7 +251,7 @@ export function getFlowChangeFile() {
 
 export function getSoftwareDir() {
   const homedir = os.homedir();
-  const softwareDataDir = isWindows() ? `${homedir}\\${SOFTWARE_DIRECTORY}` : `${homedir}/${SOFTWARE_DIRECTORY}`;
+  const softwareDataDir = isWindows() ? `${homedir}\\${SOFTWARE_DIRECTORY}` : (process.env.XDG_CONFIG_HOME ? `${process.env.XDG_CONFIG_HOME}/${SOFTWARE_DIRECTORY.substring(1)}` : `${homedir}/${SOFTWARE_DIRECTORY}`);
 
   if (!fs.existsSync(softwareDataDir)) {
     fs.mkdirSync(softwareDataDir);
