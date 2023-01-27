@@ -29,7 +29,7 @@ export function createCommands(
   const sidebar: CodeTimeView = new CodeTimeView(ctx.extensionUri);
   cmds.push(
     commands.registerCommand('codetime.softwareKpmDashboard', () => {
-      launchWebUrl(app_url)
+      launchWebUrl(`${app_url}/dashboard/code_time`)
     })
   )
 
