@@ -28,6 +28,12 @@ export function createCommands(
   // INITALIZE SIDEBAR WEB VIEW PROVIDER
   const sidebar: CodeTimeView = new CodeTimeView(ctx.extensionUri);
   cmds.push(
+    commands.registerCommand('codetime.softwareKpmDashboard', () => {
+      launchWebUrl(`${app_url}/dashboard/code_time`)
+    })
+  )
+
+  cmds.push(
     window.registerWebviewViewProvider('codetime.webView', sidebar, {
       webviewOptions: {
         retainContextWhenHidden: false,
@@ -132,8 +138,8 @@ export function createCommands(
 
   // DISPLAY CODETIME DASHBOARD WEBVIEW
   cmds.push(
-    commands.registerCommand('codetime.viewDashboard', () => {
-      showDashboard();
+    commands.registerCommand('codetime.viewDashboard', (params: any) => {
+      showDashboard(params);
     })
   );
 

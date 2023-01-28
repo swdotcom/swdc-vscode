@@ -1,4 +1,4 @@
-import {ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
+import {commands, ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
 import {isResponseOk, appGet} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
 import {checkRegistrationForReport} from '../Util';
@@ -6,7 +6,7 @@ import {checkRegistrationForReport} from '../Util';
 let currentPanel: WebviewPanel | undefined = undefined;
 let currentTitle: string = '';
 
-export async function showDashboard() {
+export async function showDashboard(params: any = {}) {
   if (!checkRegistrationForReport(true)) {
     return;
   }
@@ -18,7 +18,7 @@ export async function showDashboard() {
     },
     async () => {
       initiatePanel('Dashboard', 'dashboard');
-      const html = await getDashboardHtml();
+      const html = await getDashboardHtml(params);
       if (currentPanel) {
         currentPanel.webview.html = html;
         currentPanel.reveal(ViewColumn.One);
@@ -45,10 +45,25 @@ function initiatePanel(title: string, viewType: string) {
   currentPanel.webview.onDidReceiveMessage(async (commandMessage: any) => {
     //
   });
+  currentPanel.webview.onDidReceiveMessage(async (message: any) => {
+    if (message?.action) {
+      const cmd = message.action.includes('codetime.') ? message.action : `codetime.${message.action}`;
+      switch (message.command) {
+        case 'command_execute':
+          if (message.payload && Object.keys(message.payload).length) {
+            commands.executeCommand(cmd, message.payload);
+          } else {
+            commands.executeCommand(cmd);
+          }
+          break;
+      }
+    }
+  });
 }
 
-async function getDashboardHtml() {
-  const resp = await appGet('/plugin/dashboard');
+async function getDashboardHtml(params: any) {
+  const qryString = new URLSearchParams(params).toString()
+  const resp = await appGet(`/plugin/dashboard?${qryString}`);
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
