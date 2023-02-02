@@ -1,38 +1,45 @@
 import {commands, ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
 import {isResponseOk, appGet} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
-import {checkRegistrationForReport} from '../Util';
+import {checkRegistrationForReport, isPrimaryWindow} from '../Util';
 
 let currentPanel: WebviewPanel | undefined = undefined;
-let currentTitle: string = '';
 
 export async function showDashboard(params: any = {}) {
   if (!checkRegistrationForReport(true)) {
     return;
   }
-  window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      title: 'Loading dashboard...',
-      cancellable: false,
-    },
-    async () => {
-      initiatePanel('Dashboard', 'dashboard');
-      const html = await getDashboardHtml(params);
-      if (currentPanel) {
-        currentPanel.webview.html = html;
-        currentPanel.reveal(ViewColumn.One);
+  initiatePanel('Dashboard', 'dashboard');
+  if (isPrimaryWindow()) {
+    window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: 'Loading dashboard...',
+        cancellable: false,
+      },
+      async () => {
+        loadDashboard(params);
       }
-    }
-  );
+    );
+  } else {
+    // no need to show the loading notification for secondary windows
+    loadDashboard(params);
+  }
+}
+
+async function loadDashboard(params: any) {
+  const html = await getDashboardHtml(params);
+  if (currentPanel) {
+    currentPanel.webview.html = html;
+    currentPanel.reveal(ViewColumn.One);
+  }
 }
 
 function initiatePanel(title: string, viewType: string) {
-  if (currentPanel && title !== currentTitle) {
+  if (currentPanel) {
     // dipose the previous one
     currentPanel.dispose();
   }
-  currentTitle = title;
 
   if (!currentPanel) {
     currentPanel = window.createWebviewPanel(viewType, title, ViewColumn.One, {enableScripts: true});
@@ -45,6 +52,7 @@ function initiatePanel(title: string, viewType: string) {
   currentPanel.webview.onDidReceiveMessage(async (commandMessage: any) => {
     //
   });
+
   currentPanel.webview.onDidReceiveMessage(async (message: any) => {
     if (message?.action) {
       const cmd = message.action.includes('codetime.') ? message.action : `codetime.${message.action}`;
