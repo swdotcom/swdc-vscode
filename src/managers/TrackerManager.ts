@@ -280,6 +280,21 @@ export class TrackerManager {
     swdcTracker.trackEditorAction(editor_event);
   }
 
+  // action: installed | uninstalled | enabled | disabled
+  public async trackVSCodeExtension(eventData: any) {
+    if (!this.trackerReady) {
+      return;
+    }
+
+    const vscode_extension_event = {
+      ...eventData,
+      ...this.pluginParams,
+      ...this.getJwtParams(),
+    }
+
+    swdcTracker.trackVSCodeExtension(vscode_extension_event)
+  }
+
   // Static attributes
   getPluginParams(): any {
     return {

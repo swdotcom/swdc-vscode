@@ -29,6 +29,7 @@ import {SummaryManager} from './managers/SummaryManager';
 import {SyncManager} from './managers/SyncManger';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
+import { ExtensionManager } from './managers/ExtensionManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -51,6 +52,7 @@ export function deactivate(ctx: ExtensionContext) {
 
   TrackerManager.getInstance().dispose();
   ChangeStateManager.getInstance().dispose();
+  ExtensionManager.getInstance().dispose();
 
   // dispose the file watchers
   kpmController.dispose();
@@ -124,6 +126,9 @@ export async function intializePlugin() {
   setTimeout(() => {
     // INIT doc change events
     ChangeStateManager.getInstance();
+
+    // INIT extension manager change listener
+    ExtensionManager.getInstance().initialize();
 
     // INIT session summary sync manager
     SyncManager.getInstance();

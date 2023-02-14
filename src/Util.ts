@@ -1,4 +1,4 @@
-import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder} from 'vscode';
+import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, env} from 'vscode';
 import {
   CODE_TIME_EXT_ID,
   app_url,
@@ -27,6 +27,8 @@ export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 let workspace_name: string | null = null;
 let hostname: string | null = null;
 let osUsername: string | null = null;
+let editorName: string = '';
+let osName: string = '';
 
 export function getRandomNumberWithinRange(min: number, max: number) {
   return Math.floor(Math.random() * (max - min) + min);
@@ -57,7 +59,14 @@ export function getVersion() {
 }
 
 export function getEditorName() {
-  return 'vscode';
+  if (!editorName) {
+    try {
+      editorName = env.appName
+    } catch (e) {
+      editorName = 'vscode'
+    }
+  }
+  return editorName;
 }
 
 export function isGitProject(projectDir: string) {
@@ -185,23 +194,25 @@ export function getHostname(): any {
 }
 
 export function getOs() {
-  let parts = [];
-  let osType = os.type();
-  if (osType) {
-    parts.push(osType);
+  if (!osName) {
+    let parts = [];
+    let osType = os.type();
+    if (osType) {
+      parts.push(osType);
+    }
+    let osRelease = os.release();
+    if (osRelease) {
+      parts.push(osRelease);
+    }
+    let platform = os.platform();
+    if (platform) {
+      parts.push(platform);
+    }
+    if (parts.length > 0) {
+      osName = parts.join('_');
+    }
   }
-  let osRelease = os.release();
-  if (osRelease) {
-    parts.push(osRelease);
-  }
-  let platform = os.platform();
-  if (platform) {
-    parts.push(platform);
-  }
-  if (parts.length > 0) {
-    return parts.join('_');
-  }
-  return '';
+  return osName;
 }
 
 export function getOsUsername() {
@@ -247,6 +258,10 @@ export function getSessionSummaryFile() {
 
 export function getFlowChangeFile() {
   return getFile('flowChange.json');
+}
+
+export function getExtensionsFile() {
+  return getFile('extensions.json');
 }
 
 export function getSoftwareDir() {
