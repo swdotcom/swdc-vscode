@@ -94,17 +94,17 @@ export class ExtensionManager {
       (extension: any) => extension.packageJSON.publisher != 'vscode' && !extension.packageJSON.isBuiltin
     ).map((extension: any) => {
       const pkg: any = extension.packageJSON;
-      const plugin: any = this.buildExtensionInfo(pkg, now, os);
       const existingExtension: any = extensionData[pkg.id];
 
       // set the plugin info into the extensions file if it doesn't exist
       if (!existingExtension) {
+        const plugin: any = this.buildInstalledExtensionInfo(pkg, now, os);
         extensionData[pkg.id] = plugin;
         // Track the newly installed extension
         this.tracker.trackVSCodeExtension(plugin);
       }
 
-      return plugin;
+      return extensionData[pkg.id];
     });
     // write the data back to the file
     setJsonItem(extensionsFile, 'data', extensionData);
@@ -112,7 +112,7 @@ export class ExtensionManager {
     return plugins;
   }
 
-  private buildExtensionInfo(pkg: any, eventDate: string, os: string) {
+  private buildInstalledExtensionInfo(pkg: any, eventDate: string, os: string) {
     return {
       action: this.INSTALLED_ACTION,
       event_at: eventDate,
