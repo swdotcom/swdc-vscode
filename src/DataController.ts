@@ -13,6 +13,7 @@ import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
 import { createAnonymousUser } from './menu/AccountManager';
+import { ExtensionManager } from './managers/ExtensionManager';
 
 let currentUser: any | null = null;
 let lastUserFetch: number = 0;
@@ -144,6 +145,11 @@ export async function authenticationCompleteHandler(user: any) {
       commands.executeCommand("editorOps.refreshEditorOpsView")
     }, 1000);
   }
+
+  // update the extensions if its a new user
+  setTimeout(() => {
+    ExtensionManager.getInstance().initialize();
+  }, 1000);
 
   commands.executeCommand('codetime.refreshCodeTimeView');
 
