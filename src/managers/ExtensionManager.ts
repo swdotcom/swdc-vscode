@@ -131,7 +131,7 @@ export class ExtensionManager {
 
   private truncateString(str: string, maxLen: number) {
     if (str && str.length > maxLen) {
-      return str.slice(0, maxLen) + "...";
+      return str.slice(0, maxLen - 3) + "...";
     } else {
       return str;
     }
