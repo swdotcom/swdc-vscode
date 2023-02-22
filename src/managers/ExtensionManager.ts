@@ -125,7 +125,7 @@ export class ExtensionManager {
       version: pkg.version,
       description: this.truncateString(pkg.description, 2048),
       categories: pkg.categories,
-      extension_kind: pkg.extensionKind
+      extension_kind: pkg.extensionKind ? [].concat(pkg.extensionKind) : null
     }
   }
 
