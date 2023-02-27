@@ -9,8 +9,7 @@ import {
   getOs,
   getOffsetSeconds,
   getPluginUuid,
-  getItem,
-  getEditorName,
+  getItem
 } from '../Util';
 
 // build the axios api base url
@@ -33,7 +32,7 @@ const headers = {
   'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
   'X-SWDC-Plugin-UUID': getPluginUuid(),
   'X-SWDC-Plugin-Type': 'codetime',
-  'X-SWDC-Plugin-Editor': getEditorName(),
+  'X-SWDC-Plugin-Editor': 'vscode',
   'X-SWDC-Plugin-Editor-Version': version
 };
 
