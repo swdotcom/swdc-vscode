@@ -28,6 +28,7 @@ import {
 import {getPreference} from '../DataController';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
 import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
+import { LocalStorageManager } from './LocalStorageManager';
 
 export class TrackerManager {
   private static instance: TrackerManager;
@@ -35,6 +36,7 @@ export class TrackerManager {
   private trackerReady: boolean = false;
   private pluginParams: any = this.getPluginParams();
   private eventVersions: Map<string, number> = new Map();
+  public static storageMgr: LocalStorageManager | undefined = undefined;
 
   private constructor() {}
 
@@ -74,8 +76,11 @@ export class TrackerManager {
     for await (const file of fileKeys) {
       const docChangeInfo: DocChangeInfo = projectChangeInfo.docs_changed[file];
 
-      const startDate = new Date(docChangeInfo.start);
-      const endDate = new Date(docChangeInfo.end);
+      const startDate = new Date(docChangeInfo.start).toISOString();
+      const endDate = new Date(docChangeInfo.end).toISOString();
+
+      // check if this is a dup (i.e. secondary workspace or window sending the same event)
+      if (this.isDupCodeTimeEvent(startDate, endDate)) return;
 
       const codetime_entity = {
         keystrokes: docChangeInfo.keystrokes,
@@ -89,8 +94,8 @@ export class TrackerManager {
         multi_adds: docChangeInfo.multiAdds,
         auto_indents: docChangeInfo.autoIndents,
         replacements: docChangeInfo.replacements,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
+        start_time: startDate,
+        end_time: endDate,
       };
 
       const file_entity = {
@@ -416,5 +421,23 @@ export class TrackerManager {
 
     delete data[dotGitFilePath];
     storeJsonData(getGitEventFile(), data);
+  }
+
+  isDupCodeTimeEvent(startDate: string, endDate: string) {
+    // check if this is a dup (i.e. secondary workspace or window sending the same event)
+    const key = `$ct_event_${startDate}`
+    if (TrackerManager.storageMgr) {
+      const dupEvent = TrackerManager.storageMgr.getValue(key);
+      if (dupEvent) {
+        return true;
+      } else {
+        TrackerManager.storageMgr.setValue(key, endDate);
+        // delete the key/value after 10 seconds
+        setTimeout(() => {
+          TrackerManager.storageMgr?.deleteValue(key);
+        }, 1000 * 10);
+      }
+    }
+    return false;
   }
 }

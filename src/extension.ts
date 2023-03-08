@@ -30,6 +30,7 @@ import {SyncManager} from './managers/SyncManger';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
+import { LocalStorageManager } from './managers/LocalStorageManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -67,6 +68,7 @@ export async function activate(ctx: ExtensionContext) {
 
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
+  TrackerManager.storageMgr = LocalStorageManager.getInstance(ctx);
 
   if (getItem("jwt")) {
     intializePlugin();
