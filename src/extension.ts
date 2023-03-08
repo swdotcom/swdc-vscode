@@ -59,7 +59,7 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the file watchers
   kpmController.dispose();
 
-  if (window.state.focused) {
+  if (isPrimaryWindow()) {
     if (storageManager) storageManager.clearStorage();
   }
 
