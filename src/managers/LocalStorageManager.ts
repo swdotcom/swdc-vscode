@@ -27,4 +27,11 @@ export class LocalStorageManager {
   public deleteValue(key: string) {
     this.storage.update(key, undefined);
   }
+
+  public clearStorage() {
+    const keys = this.storage.keys();
+    if (keys?.length) {
+      keys.forEach(key => this.deleteValue(key));
+    }
+  }
 }

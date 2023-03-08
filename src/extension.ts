@@ -34,6 +34,7 @@ import { LocalStorageManager } from './managers/LocalStorageManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
+let storageManager: LocalStorageManager | undefined = undefined;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -58,17 +59,24 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the file watchers
   kpmController.dispose();
 
+  if (window.state.focused) {
+    if (storageManager) storageManager.clearStorage();
+  }
+
   disposeWebsocketTimeouts();
 }
 
 export async function activate(ctx: ExtensionContext) {
+  const storageManager = LocalStorageManager.getInstance(ctx);
   if (window.state.focused) {
     setItem('vscode_primary_window', getWorkspaceName());
+    if (storageManager) storageManager.clearStorage();
   }
 
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
-  TrackerManager.storageMgr = LocalStorageManager.getInstance(ctx);
+  TrackerManager.storageMgr = storageManager;
+
 
   if (getItem("jwt")) {
     intializePlugin();
