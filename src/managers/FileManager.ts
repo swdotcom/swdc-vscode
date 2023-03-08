@@ -19,7 +19,13 @@ export function setJsonItem(file: string, key: string, value: any) {
 
 export function getFileDataAsJson(filePath: string): any {
   try {
-    const content: string = fs.readFileSync(filePath, 'utf8')?.trim();
+    let content: string = fs.readFileSync(filePath, 'utf8')?.trim();
+    // clean json that may have been modified by intellij gson library
+    if (content.includes('\\')) {
+      content = content.replace(/\\/g, '')
+                       .replace(/"{/g, '{')
+                       .replace(/}"/g, '}');
+    }
     return JSON.parse(content);
   } catch (e: any) {
     logIt(`Unable to read ${getBaseName(filePath)} info: ${e.message}`, true);
