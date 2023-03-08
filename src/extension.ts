@@ -30,9 +30,11 @@ import {SyncManager} from './managers/SyncManger';
 import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
+import { LocalStorageManager } from './managers/LocalStorageManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
+let storageManager: LocalStorageManager | undefined = undefined;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -57,16 +59,24 @@ export function deactivate(ctx: ExtensionContext) {
   // dispose the file watchers
   kpmController.dispose();
 
+  if (isPrimaryWindow()) {
+    if (storageManager) storageManager.clearStorage();
+  }
+
   disposeWebsocketTimeouts();
 }
 
 export async function activate(ctx: ExtensionContext) {
+  const storageManager = LocalStorageManager.getInstance(ctx);
   if (window.state.focused) {
     setItem('vscode_primary_window', getWorkspaceName());
+    if (storageManager) storageManager.clearStorage();
   }
 
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
+  TrackerManager.storageMgr = storageManager;
+
 
   if (getItem("jwt")) {
     intializePlugin();
