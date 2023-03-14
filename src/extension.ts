@@ -15,6 +15,7 @@ import {
   isPrimaryWindow,
   displayReadme,
   getRandomNumberWithinRange,
+  getSoftwareSessionFile,
 } from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
@@ -31,6 +32,7 @@ import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
+import { getFileDataAsJson, storeJsonData } from './managers/FileManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -68,10 +70,7 @@ export function deactivate(ctx: ExtensionContext) {
 
 export async function activate(ctx: ExtensionContext) {
   const storageManager = LocalStorageManager.getInstance(ctx);
-  if (window.state.focused) {
-    setItem('vscode_primary_window', getWorkspaceName());
-    if (storageManager) storageManager.clearStorage();
-  }
+  initializeSession(storageManager);
 
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
@@ -152,21 +151,14 @@ export function getCurrentColorKind() {
   return currentColorKind;
 }
 
-function listExtensions() {
-  const allExtensions = extensions.all;
-  allExtensions.forEach(extension => {
-    if (extension.isActive) {
-      const info = {
-        id: extension.id,
-        author: extension.packageJSON.author?.name,
-        description: extension.packageJSON.description,
-        displayName: extension.packageJSON.displayName,
-        name: extension.packageJSON.name,
-        publisher: extension.packageJSON.publisher,
-        version: extension.packageJSON.version,
-        keywords: extension.packageJSON.keywords,
-        extensionKind: extension.packageJSON.extensionKind
-      };
+function initializeSession(storageManager: LocalStorageManager) {
+  if (window.state.focused) {
+    // validate the session.json file
+    const sessionFile = getSoftwareSessionFile();
+    if (!getFileDataAsJson(sessionFile)) {
+      storeJsonData(sessionFile, {});
     }
-  })
+    setItem('vscode_primary_window', getWorkspaceName());
+    if (storageManager) storageManager.clearStorage();
+  }
 }
