@@ -75,7 +75,6 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
   TrackerManager.storageMgr = storageManager;
-  setSessionStorageManager(storageManager);
 
   if (getItem("jwt")) {
     intializePlugin();
@@ -153,11 +152,7 @@ export function getCurrentColorKind() {
 
 function initializeSession(storageManager: LocalStorageManager) {
   if (window.state.focused) {
-    // validate the session.json file
-    const sessionFile = getSoftwareSessionFile();
-    if (!getFileDataAsJson(sessionFile)) {
-      storeJsonData(sessionFile, {});
-    }
+    setSessionStorageManager(storageManager);
     setItem('vscode_primary_window', getWorkspaceName());
     if (storageManager) storageManager.clearDupStorageKeys();
   }
