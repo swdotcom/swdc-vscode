@@ -1,7 +1,7 @@
 import {workspace, Disposable, RelativePattern, Uri} from 'vscode';
-import {getFirstWorkspaceFolder, logIt} from '../Util';
-import {getPreference} from '../DataController';
-import {TrackerManager} from './TrackerManager';
+import { getUserPreferences } from '../DataController';
+import { getFirstWorkspaceFolder, logIt } from '../Util';
+import { TrackerManager } from './TrackerManager';
 
 const fs = require('fs');
 export class KpmManager {
@@ -45,7 +45,8 @@ export class KpmManager {
   }
 
   private async _onCommitHandler(event: Uri) {
-    if (getPreference('disableGitData') === true) return;
+    const preferences: any = await getUserPreferences();
+    if (preferences?.disableGitData) return;
 
     // Branches with naming style of "feature/fix_the_thing" will fire an
     // event when the /feature directory is created. Check if file.

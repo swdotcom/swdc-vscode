@@ -27,6 +27,9 @@
     "time",
     "productivity"
   ],
+  "capabilities": {
+    "supported": true
+  },
   "activationEvents": [
     "onStartupFinished"
   ],

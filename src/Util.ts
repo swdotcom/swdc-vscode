@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
-import {getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
+import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
 import { initializeWebsockets, websocketAlive } from './websockets';
 
@@ -118,7 +118,7 @@ export function updateFlowChange(in_flow: boolean) {
 
 export function isFlowModeEnabled() {
   // nullish coalesce the "in_flow" flag if it doesn't exist
-  return getJsonItem(getFlowChangeFile(), "in_flow") ?? false;
+  return getBooleanJsonItem(getFlowChangeFile(), "in_flow") ?? false;
 }
 
 export function setItem(key: string, value: any) {
@@ -127,6 +127,10 @@ export function setItem(key: string, value: any) {
 
 export function getItem(key: string) {
   return getJsonItem(getSoftwareSessionFile(), key);
+}
+
+export function getBooleanItem(key: string) {
+  return getBooleanJsonItem(getSoftwareSessionFile(), key);
 }
 
 export function isActiveIntegration(type: string, integration: any) {

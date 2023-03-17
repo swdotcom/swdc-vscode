@@ -14,7 +14,8 @@ import {
   getWorkspaceName,
   isPrimaryWindow,
   displayReadme,
-  getRandomNumberWithinRange
+  getRandomNumberWithinRange,
+  getBooleanItem
 } from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
@@ -105,8 +106,7 @@ export async function intializePlugin() {
   await getUser();
 
   // show the sidebar if this is the 1st
-  const initializedVscodePlugin = getItem('vscode_CtInit');
-  if (!initializedVscodePlugin) {
+  if (!getBooleanItem('vscode_CtInit')) {
     setItem('vscode_CtInit', true);
 
     setTimeout(() => {

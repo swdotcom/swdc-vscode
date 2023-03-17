@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import {appGet, isResponseOk} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
-import {getItem} from '../Util';
+import {getBooleanItem, getItem} from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {isStatusBarTextVisible} from '../managers/StatusBarManager';
 
@@ -102,7 +102,7 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
   private async getHtml(): Promise<string> {
     const params = {
       showing_statusbar: isStatusBarTextVisible(),
-      skip_slack_connect: !!getItem('vscode_CtskipSlackConnect'),
+      skip_slack_connect: !!getBooleanItem('vscode_CtskipSlackConnect'),
     };
     const resp = await appGet('/plugin/sidebar', params);
     if (isResponseOk(resp)) {

@@ -10,55 +10,34 @@ export function setSessionStorageManager(storageManager: LocalStorageManager) {
   storageMgr = storageManager;
 
   // convert old storage to new storage if needed
-  if (storageMgr && !storageManager.getValue('session_jwt')) {
+  if (!storageMgr?.getValue('session_jwt')) {
     const sessionJson = getFileDataAsJson(getSoftwareSessionFile());
     // set a closure storage var
     const storage = storageMgr;
     if (sessionJson) {
       Object.keys(sessionJson).forEach((key: string) => {
-        storage.setValue(`session_${key}`, sessionJson[key]);
+        storage?.setValue(`session_${key}`, sessionJson[key]);
       });
     }
   }
 }
 
-export function getJsonItem(file: string, key: string) {
-  if (storageMgr) {
-    try {
-      return storageMgr.getValue(`${getFileNameFromPath(file)}_${key}`);
-    } catch (e) {
-      return getJsonItemForFile(file, key);
-    }
-  } else {
-    return getJsonItemForFile(file, key);
+export function getBooleanJsonItem(file: string, key: string) {
+  const value = getJsonItem(file, key);
+  try {
+    return !!JSON.parse(value);
+  } catch (e) {
+    return false;
   }
+}
+
+export function getJsonItem(file: string, key: string) {
+  return storageMgr?.getValue(`${getFileNameFromPath(file)}_${key}`) || '';
 }
 
 export function setJsonItem(file: string, key: string, value: any) {
-  if (storageMgr) {
-    try {
-      const new_key = `${getFileNameFromPath(file)}_${key}`;
-      storageMgr.setValue(new_key, value);
-    } catch (e) {
-      setJsonItemForFile(file, key, value);
-    }
-  } else {
-    setJsonItemForFile(file, key, value);
-  }
-}
-
-function getJsonItemForFile(file: string, key: string) {
-  const data: any = getFileDataAsJson(file);
-  return data ? data[key] : null;
-}
-
-function setJsonItemForFile(file: string, key: string, value: any) {
-  let json: any = getFileDataAsJson(file);
-    if (!json) {
-      json = {};
-    }
-    json[key] = value;
-    storeJsonData(file, json);
+  const new_key = `${getFileNameFromPath(file)}_${key}`;
+  storageMgr?.setValue(new_key, value);
 }
 
 export function getFileDataAsJson(filePath: string): any {
