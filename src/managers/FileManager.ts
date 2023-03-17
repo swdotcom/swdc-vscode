@@ -1,4 +1,4 @@
-import { getFileNameFromPath, getSoftwareSessionFile, isWindows, logIt } from '../Util';
+import { getFileNameFromPath, getSoftwareSessionFile, logIt } from '../Util';
 import { LocalStorageManager } from './LocalStorageManager';
 
 const fs = require('fs');

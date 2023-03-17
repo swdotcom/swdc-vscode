@@ -14,8 +14,7 @@ import {
   getWorkspaceName,
   isPrimaryWindow,
   displayReadme,
-  getRandomNumberWithinRange,
-  getSoftwareSessionFile,
+  getRandomNumberWithinRange
 } from './Util';
 import {createCommands} from './command-helper';
 import {KpmManager} from './managers/KpmManager';
@@ -32,7 +31,7 @@ import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
-import { getFileDataAsJson, setSessionStorageManager, storeJsonData } from './managers/FileManager';
+import { setSessionStorageManager } from './managers/FileManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
