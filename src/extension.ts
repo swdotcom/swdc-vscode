@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {window, ExtensionContext, commands, extensions} from 'vscode';
+import {window, ExtensionContext, commands} from 'vscode';
 import {getUser} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
@@ -32,7 +32,7 @@ import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
-import { getFileDataAsJson, storeJsonData } from './managers/FileManager';
+import { getFileDataAsJson, setSessionStorageManager, storeJsonData } from './managers/FileManager';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -62,7 +62,7 @@ export function deactivate(ctx: ExtensionContext) {
   kpmController.dispose();
 
   if (isPrimaryWindow()) {
-    if (storageManager) storageManager.clearStorage();
+    if (storageManager) storageManager.clearDupStorageKeys();
   }
 
   disposeWebsocketTimeouts();
@@ -75,7 +75,7 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController));
   TrackerManager.storageMgr = storageManager;
-
+  setSessionStorageManager(storageManager);
 
   if (getItem("jwt")) {
     intializePlugin();
@@ -159,6 +159,6 @@ function initializeSession(storageManager: LocalStorageManager) {
       storeJsonData(sessionFile, {});
     }
     setItem('vscode_primary_window', getWorkspaceName());
-    if (storageManager) storageManager.clearStorage();
+    if (storageManager) storageManager.clearDupStorageKeys();
   }
 }

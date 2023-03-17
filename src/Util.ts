@@ -402,3 +402,8 @@ export function musicTimeExtInstalled() {
 export function editorOpsExtInstalled() {
   return !!extensions.getExtension(EDITOR_OPS_EXT_ID)
 }
+
+export function getFileNameFromPath(filePath: string) {
+  const parts = isWindows() ? filePath.split('\\') : filePath.split('/');
+  return parts[parts.length - 1].split('.')[0];
+}
