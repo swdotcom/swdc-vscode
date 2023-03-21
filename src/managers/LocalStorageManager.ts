@@ -28,10 +28,14 @@ export class LocalStorageManager {
     this.storage.update(key, undefined);
   }
 
-  public clearStorage() {
+  public clearDupStorageKeys() {
     const keys = this.storage.keys();
     if (keys?.length) {
-      keys.forEach(key => this.deleteValue(key));
+      keys.forEach(key => {
+        if (key?.includes('$ct_event_')) {
+          this.deleteValue(key)
+        }
+      });
     }
   }
 }

@@ -86,14 +86,6 @@ function hasIntegrationConnection(type_id: number, connections = []):boolean {
   return !!(connections?.find((integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === type_id)));
 }
 
-export function setPreference(preference: string, value: any) {
-  return setItem(preference, value);
-}
-
-export function getPreference(preference: string) {
-  return getItem(preference);
-}
-
 export async function authenticationCompleteHandler(user: any) {
   let updatedUserInfo = false;
   // clear the auth callback state

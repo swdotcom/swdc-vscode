@@ -9,7 +9,7 @@ import {
   getWorkspaceFolders,
   getGitEventFile,
   isGitProject,
-  getEditorName,
+  getEditorName
 } from '../Util';
 import {KpmItem} from '../model/models';
 import {getResourceInfo} from '../repo/KpmRepoManager';
@@ -25,10 +25,10 @@ import {
   commitAlreadyOnRemote,
   isMergeCommit,
 } from '../repo/GitUtil';
-import {getPreference} from '../DataController';
 import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
 import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
 import { LocalStorageManager } from './LocalStorageManager';
+import { getUserPreferences } from '../DataController';
 
 export class TrackerManager {
   private static instance: TrackerManager;
@@ -241,7 +241,8 @@ export class TrackerManager {
   }
 
   private async sendGitEvent(gitEventName: string, projectParams: any, eventData?: any) {
-    if (getPreference('disableGitData') === true) return;
+    const preferences: any = await getUserPreferences();
+    if (preferences?.disableGitData) return;
 
     const repoParams = await this.getRepoParams(projectParams.project_directory);
     const gitEvent = {
@@ -412,8 +413,15 @@ export class TrackerManager {
   getLatestTrackedCommit(dotGitFilePath: string): string {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
     const data = getJsonItem(getGitEventFile(), dotGitFilePath);
-
-    return data?.latestTrackedCommit || '';
+    if (data) {
+      try {
+        const jsonData = JSON.parse(data)
+        return jsonData.latestTrackedCommit || '';
+      } catch (e) {
+        // ignore
+      }
+    }
+    return '';
   }
 
   removeBranchFromTrackingHistory(dotGitFilePath: string) {

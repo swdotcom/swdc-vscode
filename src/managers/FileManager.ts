@@ -1,20 +1,43 @@
-import { logIt } from '../Util';
+import { getFileNameFromPath, getSoftwareSessionFile, logIt } from '../Util';
+import { LocalStorageManager } from './LocalStorageManager';
 
 const fs = require('fs');
 const path = require('path');
 
+let storageMgr: LocalStorageManager | undefined = undefined;
+
+export function setSessionStorageManager(storageManager: LocalStorageManager) {
+  storageMgr = storageManager;
+
+  // convert old storage to new storage if needed
+  if (!storageMgr?.getValue('session_jwt')) {
+    const sessionJson = getFileDataAsJson(getSoftwareSessionFile());
+    // set a closure storage var
+    const storage = storageMgr;
+    if (sessionJson) {
+      Object.keys(sessionJson).forEach((key: string) => {
+        storage?.setValue(`session_${key}`, sessionJson[key]);
+      });
+    }
+  }
+}
+
+export function getBooleanJsonItem(file: string, key: string) {
+  const value = getJsonItem(file, key);
+  try {
+    return !!JSON.parse(value);
+  } catch (e) {
+    return false;
+  }
+}
+
 export function getJsonItem(file: string, key: string) {
-  const data: any = getFileDataAsJson(file);
-  return data ? data[key] : null;
+  return storageMgr?.getValue(`${getFileNameFromPath(file)}_${key}`) || '';
 }
 
 export function setJsonItem(file: string, key: string, value: any) {
-  let json: any = getFileDataAsJson(file);
-  if (!json) {
-    json = {};
-  }
-  json[key] = value;
-  storeJsonData(file, json);
+  const new_key = `${getFileNameFromPath(file)}_${key}`;
+  storageMgr?.setValue(new_key, value);
 }
 
 export function getFileDataAsJson(filePath: string): any {

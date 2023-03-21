@@ -1,6 +1,6 @@
 import {commands, ProgressLocation, window} from 'vscode';
 import {appPost, appDelete, appGet} from '../http/HttpClient';
-import {getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
+import {getBooleanItem, getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 
 import {showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
 import {
@@ -55,7 +55,7 @@ export async function initiateFlow({automated = false}) {
     return;
   }
 
-  const skipSlackCheck = !!getItem('vscode_CtskipSlackConnect');
+  const skipSlackCheck = !!getBooleanItem('vscode_CtskipSlackConnect');
 
   if (!skipSlackCheck && !automated) {
     const connectInfo = await checkSlackConnectionForFlowMode();

@@ -1,5 +1,5 @@
 import { commands } from "vscode";
-import { getPreference, getUserPreferences } from "../DataController";
+import { getUserPreferences } from "../DataController";
 
 export const NORMAL_SCREEN_MODE = 0;
 export const ZEN_MODE_ID = 1;
@@ -12,7 +12,6 @@ export async function getConfiguredScreenMode() {
   const preferences: any = await getUserPreferences();
 
   const flowModeSettings = preferences?.flowMode || {};
-  // const flowModeSettings = getPreference("flowMode");
   const screenMode = flowModeSettings?.editor?.vscode?.screenMode;
   if (screenMode?.includes("Full Screen")) {
     preferredScreenMode = FULL_SCREEN_MODE_ID;
