@@ -1,8 +1,7 @@
 import {commands, StatusBarAlignment, StatusBarItem, window} from 'vscode';
 import { isRegistered } from '../DataController';
-import {SessionSummary} from '../model/models';
 import {getItem, getSessionSummaryFile, humanizeMinutes, isFlowModeEnabled} from '../Util';
-import {getFileDataAsJson} from './FileManager';
+import {getJsonItem} from './FileManager';
 
 let showStatusBarText = true;
 let ctMetricStatusBarItem: StatusBarItem | undefined = undefined;
@@ -80,12 +79,11 @@ export function isStatusBarTextVisible() {
  * Updates the status bar text with the current day minutes (session minutes)
  */
 export function updateStatusBarWithSummaryData() {
-  let sessionSummary = getFileDataAsJson(getSessionSummaryFile());
-  if (!sessionSummary) {
-    sessionSummary = new SessionSummary();
-  }
-  const inFlowIcon = sessionSummary.currentDayMinutes > sessionSummary.averageDailyMinutes ? '$(rocket)' : '$(clock)';
-  const minutesStr = humanizeMinutes(sessionSummary.currentDayMinutes);
+  // Number will convert undefined/null to 0
+  let averageDailyMinutes = Number(getJsonItem(getSessionSummaryFile(), 'averageDailyMinutes'));
+  let currentDayMinutes = Number(getJsonItem(getSessionSummaryFile(), 'currentDayMinutes'));
+  const inFlowIcon = currentDayMinutes > averageDailyMinutes ? '$(rocket)' : '$(clock)';
+  const minutesStr = humanizeMinutes(currentDayMinutes);
 
   const msg = `${inFlowIcon} ${minutesStr}`;
   showStatus(msg, null);
