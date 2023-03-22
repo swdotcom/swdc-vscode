@@ -150,8 +150,8 @@ export function getCurrentColorKind() {
 }
 
 function initializeSession(storageManager: LocalStorageManager) {
+  setSessionStorageManager(storageManager);
   if (window.state.focused) {
-    setSessionStorageManager(storageManager);
     setItem('vscode_primary_window', getWorkspaceName());
     if (storageManager) storageManager.clearDupStorageKeys();
   }
