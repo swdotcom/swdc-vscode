@@ -412,7 +412,7 @@ export class TrackerManager {
 
   getLatestTrackedCommit(dotGitFilePath: string): string {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    const data = getJsonItem(getGitEventFile(), dotGitFilePath);
+    const data = getJsonItem(getGitEventFile(), dotGitFilePath, null);
     if (data) {
       try {
         const jsonData = JSON.parse(data)

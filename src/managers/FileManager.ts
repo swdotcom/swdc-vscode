@@ -30,8 +30,8 @@ export function getBooleanJsonItem(file: string, key: string) {
   }
 }
 
-export function getJsonItem(file: string, key: string) {
-  return storageMgr?.getValue(`${getFileNameFromPath(file)}_${key}`) || '';
+export function getJsonItem(file: string, key: string, defaultValue: any = '') {
+  return storageMgr?.getValue(`${getFileNameFromPath(file)}_${key}`) || defaultValue;
 }
 
 export function setJsonItem(file: string, key: string, value: any) {
