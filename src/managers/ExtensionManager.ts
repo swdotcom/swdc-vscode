@@ -62,7 +62,7 @@ export class ExtensionManager {
   private reconcileInstalledAndUninstalledPlugins(): void {
     const now = new Date().toISOString();
     const extensionsFile: string = getExtensionsFile();
-    const extensionData: any = getJsonItem(extensionsFile, 'data');
+    const extensionData: any = getJsonItem(extensionsFile, 'data', {});
     const installedPlugins: any[] = this.getInstalledPlugins(now);
     const missingPlugins: any[] = Object.keys(extensionData).map(
       (key: string) => {
@@ -88,7 +88,7 @@ export class ExtensionManager {
 
   private getInstalledPlugins(now: string): any[] {
     const extensionsFile: string = getExtensionsFile();
-    const extensionData: any = getJsonItem(extensionsFile, 'data');
+    const extensionData: any = getJsonItem(extensionsFile, 'data', {})
     const os = getOs();
     const plugins = extensions.all.filter(
       (extension: any) => extension.packageJSON.publisher != 'vscode' && !extension.packageJSON.isBuiltin
