@@ -8,7 +8,6 @@ import {
   musicTimeExtInstalled,
   editorOpsExtInstalled,
 } from './Util';
-import {clearSessionSummaryData} from './storage/SessionSummaryData';
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
@@ -117,8 +116,6 @@ export async function authenticationCompleteHandler(user: any) {
       logIt(`Failed to initialize websockets: ${e.message}`);
     }
 
-    clearSessionSummaryData();
-
     // re-initialize user and preferences
     await getUser();
 
@@ -164,8 +161,6 @@ export async function userDeletedCompletionHandler() {
     } catch (e: any) {
       logIt(`Failed to initialize websockets: ${e.message}`);
     }
-
-    clearSessionSummaryData();
 
     // re-initialize user and preferences
     await getUser();

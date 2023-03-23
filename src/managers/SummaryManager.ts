@@ -1,8 +1,7 @@
-import {saveSessionSummaryToDisk} from '../storage/SessionSummaryData';
 import {updateStatusBarWithSummaryData} from './StatusBarManager';
 import {isResponseOk, appGet} from '../http/HttpClient';
-import {SessionSummary} from '../model/models';
-import {commands} from 'vscode';
+import { getSessionSummaryFile } from '../Util';
+import { setJsonItem } from './FileManager';
 
 export class SummaryManager {
   private static instance: SummaryManager;
@@ -25,17 +24,15 @@ export class SummaryManager {
   async updateSessionSummaryFromServer() {
     const result = await appGet('/api/v1/user/session_summary');
     if (isResponseOk(result) && result.data) {
-      const summary: SessionSummary = result.data;
-      if (summary) {
-        saveSessionSummaryToDisk(summary);
-        this.updateCurrentDayStats(summary);
-      }
+      this.updateCurrentDayStats(result.data);
     }
   }
 
-  updateCurrentDayStats(summary: SessionSummary) {
+  updateCurrentDayStats(summary: any) {
     if (summary) {
-      saveSessionSummaryToDisk(summary);
+      Object.keys(summary).forEach((key: string) => {
+        setJsonItem(getSessionSummaryFile(), key, summary[key])
+      });
     }
     updateStatusBarWithSummaryData();
   }

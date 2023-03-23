@@ -10,15 +10,14 @@ export function setSessionStorageManager(storageManager: LocalStorageManager) {
   storageMgr = storageManager;
 
   // convert old storage to new storage if needed
-  if (!storageMgr?.getValue('session_jwt')) {
+  if (!storageMgr?.getValue('session_converion_complete')) {
     const sessionJson = getFileDataAsJson(getSoftwareSessionFile());
-    // set a closure storage var
-    const storage = storageMgr;
     if (sessionJson) {
-      Object.keys(sessionJson).forEach((key: string) => {
-        storage?.setValue(`session_${key}`, sessionJson[key]);
-      });
+      for (const key in sessionJson) {
+        storageMgr?.setValue(`session_${key}`, sessionJson[key]);
+      }
     }
+    storageManager?.setValue('session_converion_complete', 'true')
   }
 }
 
