@@ -6,6 +6,7 @@ import { handleIntegrationConnectionSocketEvent } from './message_handlers/integ
 import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stats_update';
 import { handleFlowStateMessage } from './message_handlers/flow_state';
 import { userDeletedCompletionHandler } from './DataController';
+import { setEndOfDayNotification } from './notifications/endOfDay';
 
 const WebSocket = require('ws');
 
@@ -237,6 +238,9 @@ const handleIncomingMessage = (data: any) => {
         break;
       case 'account_deleted':
         userDeletedCompletionHandler();
+        break;
+      case 'preferences_update':
+        setEndOfDayNotification();
         break;
     }
   } catch (e) {

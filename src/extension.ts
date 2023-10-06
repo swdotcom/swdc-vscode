@@ -33,6 +33,7 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setSessionStorageManager } from './managers/FileManager';
+import { setEndOfDayNotification } from './notifications/endOfDay';
 
 let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
@@ -140,6 +141,11 @@ export async function intializePlugin() {
     // INIT session summary sync manager
     SyncManager.getInstance();
   }, 3000);
+
+  setTimeout(() => {
+    // Set the end of the day notification trigger if it's enabled
+    setEndOfDayNotification();
+  }, 5000);
 }
 
 export function getCurrentColorKind() {
