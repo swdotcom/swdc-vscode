@@ -2,6 +2,7 @@ import {commands, ViewColumn, WebviewPanel, window} from 'vscode';
 import {getUser} from '../DataController';
 import {isResponseOk, appGet, appPut} from '../http/HttpClient';
 import {getConnectionErrorHtml} from '../local/404';
+import { setEndOfDayNotification } from '../notifications/endOfDay';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 
@@ -61,6 +62,8 @@ export async function getEditSettingsHtml(): Promise<string> {
 export async function updateSettings(path: string, jsonData: any, reloadSettings: false) {
   await appPut(path, jsonData);
   await getUser();
+  // update the end of the day notification trigger
+  setEndOfDayNotification();
   // update the sidebar
   commands.executeCommand('codetime.refreshCodeTimeView');
 
