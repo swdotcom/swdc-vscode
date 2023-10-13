@@ -1,6 +1,5 @@
 import {commands, window} from 'vscode';
 import {showDashboard} from '../managers/WebViewManager';
-import {getItem} from '../Util';
 import {configureSettings} from '../managers/ConfigManager';
 import {TrackerManager} from '../managers/TrackerManager';
 import {format, startOfDay, differenceInMilliseconds} from 'date-fns';

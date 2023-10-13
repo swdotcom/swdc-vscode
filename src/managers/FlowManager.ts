@@ -73,7 +73,7 @@ export async function initiateFlow({automated = false}) {
   const flowEnabled = isFlowModeEnabled();
   if (primary && !flowEnabled) {
     logIt('Entering Flow Mode');
-    await appPost('/plugin/flow_sessions', {automated});
+    await appPost('/plugin/flow_sessions', { automated: automated });
     // only update flow change here
     inFlowLocally = true;
     updateFlowChange(true);

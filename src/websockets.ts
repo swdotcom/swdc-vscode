@@ -1,5 +1,5 @@
 import { api_endpoint } from './Constants';
-import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange } from './Util';
+import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow } from './Util';
 import { handleFlowScoreMessage } from './message_handlers/flow_score';
 import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
 import { handleIntegrationConnectionSocketEvent } from './message_handlers/integration_connection';
@@ -219,8 +219,10 @@ const handleIncomingMessage = (data: any) => {
 
     switch (message.type) {
       case 'flow_score':
-        try { logIt(`Flow score: ${JSON.stringify(message.body.flowScore)}`) } catch (e) { }
-        handleFlowScoreMessage(message);
+        if (isPrimaryWindow()) {
+          try { logIt(`Flow score: ${JSON.stringify(message.body.flowScore)}`) } catch (e) { }
+          handleFlowScoreMessage(message);
+        }
         break;
       case 'flow_state':
         try { logIt(`Flow state: ${JSON.stringify(message.body)}`) } catch (e) { }
