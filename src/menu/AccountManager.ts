@@ -12,7 +12,7 @@ import {showQuickPick} from './MenuManager';
 import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
 
 let switching_account = false;
-let creating_anon = false;
+let creatingAnonUser = false;
 
 const switchAccountItem = {
   label: 'Switch to a different account?',
@@ -111,13 +111,13 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
  * create an anonymous user based on github email or mac addr
  */
 export async function createAnonymousUser() {
-  if (creating_anon) {
+  if (creatingAnonUser) {
     return;
   }
   const jwt = getItem('jwt');
   // check one more time before creating the anon user
   if (!jwt) {
-    creating_anon = true;
+    creatingAnonUser = true;
     // this should not be undefined if its an account reset
     let plugin_uuid = getPluginUuid();
     let auth_callback_state = getAuthCallbackState();
@@ -142,5 +142,5 @@ export async function createAnonymousUser() {
       setAuthCallbackState('');
     }
   }
-  creating_anon = false;
+  creatingAnonUser = false;
 }
