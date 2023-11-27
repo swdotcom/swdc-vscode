@@ -1,6 +1,6 @@
 import { logIt } from '../Util';
 
-const {execSync} = require('child_process');
+const { execSync } = require('child_process');
 
 export function execCmd(cmd: string = '', projectDir: string | null = null, returnLines: boolean = false): any {
   let result = returnLines ? [] : null;
@@ -10,7 +10,7 @@ export function execCmd(cmd: string = '', projectDir: string | null = null, retu
   }
 
   try {
-    const opts = projectDir ? {cwd: projectDir, encoding: 'utf8'} : {encoding: 'utf8'};
+    const opts = projectDir ? { cwd: projectDir, encoding: 'utf8' } : { encoding: 'utf8' };
 
     const cmdResult = execSync(cmd, opts);
     if (cmdResult && cmdResult.length) {

@@ -1,6 +1,6 @@
-import {isGitProject} from '../Util';
-import {CacheManager} from '../cache/CacheManager';
-import {execCmd} from '../managers/ExecManager';
+import { isGitProject } from '../Util';
+import { CacheManager } from '../cache/CacheManager';
+import { execCmd } from '../managers/ExecManager';
 
 const cacheMgr: CacheManager = CacheManager.getInstance();
 const cacheTimeoutSeconds = 60 * 15;
@@ -25,13 +25,15 @@ export async function getResourceInfo(projectDir: string) {
   resourceInfo = {};
 
   const branch = execCmd('git symbolic-ref --short HEAD', projectDir);
-  const identifier = execCmd('git config --get remote.origin.url', projectDir);
+  const first_remote = execCmd('git remote -v', projectDir);
+  // returns something like: origin\thttps://github.com/swdotcom/swdc-vscode.git (fetch)'
+  const identifier = first_remote.split('\t')[1].split(' ')[0];
   let email = execCmd('git config user.email', projectDir);
   const tag = execCmd('git describe --all', projectDir);
 
   // both should be valid to return the resource info
   if (branch && identifier) {
-    resourceInfo = {branch, identifier, email, tag};
+    resourceInfo = { branch, identifier, email, tag };
     cacheMgr.set(cacheId, resourceInfo, cacheTimeoutSeconds);
   }
   return resourceInfo;
