@@ -85,7 +85,10 @@ Code Time also collects basic usage metrics to help us make informed decisions a
 | Editor focus / unfocus | These events are used to capture general activity within the editor and extend code time sessions |
 | Document change events | These events are used to characterize what types of changes are being made to a document.  CONTENT OF A DOCUMENT IS NEVER STORED OR TRANSMITTED |
 | Project directory | Used to segment activity and Code Time across projects |
+| Git Repo Name | Used to segment activity and Code Time across git repos (Can be turned off in settings) |
+| File name | Used to segment activity and Code Time across file names (File names are one-way hashed before use) |
 
+[More details here](https://docs.software.com/article/43-code-time-data)
 
 ## Join the Community
 
