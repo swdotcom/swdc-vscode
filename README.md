@@ -76,6 +76,17 @@ To see your team's engineering KPIs, visit the [web app](https://app.software.co
 
 Code Time also collects basic usage metrics to help us make informed decisions about our roadmap.
 
+**Data collected and purpose**
+| Data Collected | Purpose of Data |
+| -------------- | --------------- |
+| Local Timezone | Applying time zones to aggregate metrics so that daily values are accurate |
+| Hostname | Used for de-duplicating accounts and linking multiple installations together under same login.  Hostname is hashed before usage |
+| File open, save, close events | These events are used to capture general activity within the editor and extend code time sessions |
+| Editor focus / unfocus | These events are used to capture general activity within the editor and extend code time sessions |
+| Document change events | These events are used to characterize what types of changes are being made to a document.  CONTENT OF A DOCUMENT IS NEVER STORED OR TRANSMITTED |
+| Project directory | Used to segment activity and Code Time across projects |
+
+
 ## Join the Community
 
 Enjoying Code Time? Let us know how it’s going by tweeting or following us at [@software_hq](https://twitter.com/software_hq).
