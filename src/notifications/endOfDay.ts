@@ -9,13 +9,13 @@ import { getCachedUser, isRegistered } from '../DataController';
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
 const DEFAULT_WORK_HOURS = {
-  mon: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
-  tue: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
-  wed: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
-  thu: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
-  fri: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
-  sat: { ranges: [ { start: "09:00", "end": "17:00" } ], active: false },
-  sun: { ranges: [ { start: "09:00", "end": "17:00" } ], active: false }
+  mon: { ranges: [ { start: "09:00", end: "17:00" } ], active: true },
+  tue: { ranges: [ { start: "09:00", end: "17:00" } ], active: true },
+  wed: { ranges: [ { start: "09:00", end: "17:00" } ], active: true },
+  thu: { ranges: [ { start: "09:00", end: "17:00" } ], active: true },
+  fri: { ranges: [ { start: "09:00", end: "17:00" } ], active: true },
+  sat: { ranges: [ { start: "09:00", end: "17:00" } ], active: false },
+  sun: { ranges: [ { start: "09:00", end: "17:00" } ], active: false }
 }
 
 let timer: NodeJS.Timeout | undefined = undefined;
@@ -48,7 +48,7 @@ export const setEndOfDayNotification = async () => {
     if (work_hours_today?.active) {
       // it's active, get the largest end range
       const endTimes = work_hours_today.ranges.map((n: any) => {
-        // convert "end" to total seconds in a day
+        // convert end to total seconds in a day
         return getEndTimeSeconds(n.end);
       });
 
