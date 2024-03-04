@@ -8,6 +8,15 @@ import { getCachedUser, isRegistered } from '../DataController';
 
 const MIN_IN_MILLIS = 60 * 1000;
 const HOUR_IN_MILLIS = 60 * 60 * 1000;
+const DEFAULT_WORK_HOURS = {
+  mon: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
+  tue: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
+  wed: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
+  thu: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
+  fri: { ranges: [ { start: "09:00", "end": "17:00" } ], active: true },
+  sat: { ranges: [ { start: "09:00", "end": "17:00" } ], active: false },
+  sun: { ranges: [ { start: "09:00", "end": "17:00" } ], active: false }
+}
 
 let timer: NodeJS.Timeout | undefined = undefined;
 
@@ -19,7 +28,8 @@ export const setEndOfDayNotification = async () => {
 
   const cachedUser: any = await getCachedUser();
   const preferences: any = cachedUser.preferences_parsed;
-  const workHours: any = JSON.parse(cachedUser.profile.work_hours)
+
+  const workHours: any = cachedUser.profile?.work_hours ? JSON.parse(cachedUser.profile.work_hours) : DEFAULT_WORK_HOURS
 
   // If the end of day notification setting is turned on (if undefined or null, will default to true)
   if (preferences.notifications?.endOfDayNotification) {
