@@ -1,6 +1,6 @@
 const axios = require('axios');
-import {version, window} from 'vscode';
-import {api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
+import { version, window } from 'vscode';
+import { api_endpoint, app_url, TWENTY_SEC_TIMEOUT_MILLIS } from '../Constants';
 import {
   logIt,
   getPluginId,
@@ -9,7 +9,8 @@ import {
   getOs,
   getOffsetSeconds,
   getPluginUuid,
-  getItem
+  getItem,
+  setItem
 } from '../Util';
 
 // build the axios api base url
@@ -36,14 +37,18 @@ const headers = {
   'X-SWDC-Plugin-Editor-Version': version
 };
 
-beApi.defaults.headers.common = {...beApi.defaults.headers.common, ...headers};
-appApi.defaults.headers.common = {...appApi.defaults.headers.common, ...headers};
+beApi.defaults.headers.common = { ...beApi.defaults.headers.common, ...headers };
+appApi.defaults.headers.common = { ...appApi.defaults.headers.common, ...headers };
 
 export async function appGet(api: string, queryParams: any = {}) {
   updateOutgoingHeader();
 
-  return await appApi.get(api, {params: queryParams}).catch((err: any) => {
+  return await appApi.get(api, { params: queryParams }).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);
+    if (getResponseStatus(err?.response) === 401) {
+      // clear the JWT because it is invalid
+      setItem('jwt', null)
+    }
     return err;
   });
 }
