@@ -10,11 +10,11 @@ import {
   WebviewViewProvider,
   WebviewViewResolveContext,
 } from 'vscode';
-import {appGet, isResponseOk} from '../http/HttpClient';
-import {getConnectionErrorHtml} from '../local/404';
-import {getBooleanItem, getItem} from '../Util';
-import {createAnonymousUser} from '../menu/AccountManager';
-import {isStatusBarTextVisible} from '../managers/StatusBarManager';
+import { appGet, isResponseOk } from '../http/HttpClient';
+import { getConnectionErrorHtml } from '../local/404';
+import { getBooleanItem, getItem } from '../Util';
+import { createAnonymousUser } from '../menu/AccountManager';
+import { isStatusBarTextVisible } from '../managers/StatusBarManager';
 
 export class CodeTimeView implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -29,6 +29,10 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       // its not available to refresh yet
       return;
     }
+    if (!getItem('jwt')) {
+      await createAnonymousUser();
+    }
+
     this._webview.webview.html = await this.getHtml();
   }
 
