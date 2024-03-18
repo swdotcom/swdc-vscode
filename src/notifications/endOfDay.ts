@@ -27,12 +27,13 @@ export const setEndOfDayNotification = async () => {
   }
 
   const cachedUser: any = await getCachedUser();
-  const preferences: any = cachedUser.preferences_parsed;
-
-  const workHours: any = cachedUser.profile?.work_hours ? JSON.parse(cachedUser.profile.work_hours) : DEFAULT_WORK_HOURS
+  if (!cachedUser) {
+    return;
+  }
+  const workHours: any = cachedUser?.profile.work_hours ? JSON.parse(cachedUser.profile.work_hours) : DEFAULT_WORK_HOURS
 
   // If the end of day notification setting is turned on (if undefined or null, will default to true)
-  if (preferences.notifications?.endOfDayNotification) {
+  if (cachedUser?.preferences_parsed?.notifications?.endOfDayNotification) {
     const d = new Date();
     const day = format(d, 'EEE').toLowerCase();
     let msUntilEndOfTheDay = 0;
