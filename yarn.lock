@@ -118,10 +118,10 @@
     tslib "^2.3.1"
     uuid "^3.4.0"
 
-"@swdotcom/editor-flow@1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@swdotcom/editor-flow/-/editor-flow-1.1.1.tgz#dbbbf961954d1fe5b62bec0f04e0263c5f6d4db0"
-  integrity sha512-r+IlQkqHNtxmfaCLo64bvi/hDYL198n9gwctV/+BJY3wPJZBKGEO4ybEJeCNavwr87guJ7tZe8txjV7efQR+tQ==
+"@swdotcom/editor-flow@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@swdotcom/editor-flow/-/editor-flow-1.1.2.tgz#9abb80d59140a3c6c10d1a8a631540396fe3d05f"
+  integrity sha512-QS8YMMzgmYM/6JRDRPmYzQeSS+ILZxDvl2lDyw85iR8ydiIGwPBa0nN5PhxBQY5DTAyy+R5SjZ10SXzmx+M2Aw==
 
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
