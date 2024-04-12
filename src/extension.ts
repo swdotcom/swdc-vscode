@@ -35,7 +35,6 @@ import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setSessionStorageManager } from './managers/FileManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
 
-let TELEMETRY_ON = true;
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
 
@@ -46,10 +45,6 @@ const tracker: TrackerManager = TrackerManager.getInstance();
 // will then listen for text document changes.
 //
 const kpmController: KpmManager = KpmManager.getInstance();
-
-export function isTelemetryOn() {
-  return TELEMETRY_ON;
-}
 
 export function deactivate(ctx: ExtensionContext) {
   // store the deactivate event
@@ -70,7 +65,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-  const storageManager = LocalStorageManager.getInstance(ctx);
+  storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
 
   // add the code time commands
