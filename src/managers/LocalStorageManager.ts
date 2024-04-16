@@ -1,4 +1,7 @@
 import { ExtensionContext, Memento } from "vscode";
+import { getSoftwareSessionFile } from "../Util";
+import { getJsonItem } from "./FileManager";
+import { json } from "stream/consumers";
 
 export class LocalStorageManager {
 
@@ -13,6 +16,10 @@ export class LocalStorageManager {
     if (!LocalStorageManager.instance) {
       LocalStorageManager.instance = new LocalStorageManager(ctx);
     }
+    return LocalStorageManager.instance;
+  }
+
+  static getCachedStorageManager(): LocalStorageManager {
     return LocalStorageManager.instance;
   }
 
@@ -36,6 +43,15 @@ export class LocalStorageManager {
           this.deleteValue(key)
         }
       });
+    }
+  }
+
+  public clearStorage() {
+    const keys = this.storage.keys();
+    if (keys?.length) {
+      for (let i = 0; i < keys.length; i++) {
+        this.deleteValue(keys[i])
+      }
     }
   }
 }

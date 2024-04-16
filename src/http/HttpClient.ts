@@ -24,21 +24,30 @@ const appApi: any = axios.create({
   timeout: 15000,
 });
 
-const headers = {
-  'X-SWDC-Plugin-Id': getPluginId(),
-  'X-SWDC-Plugin-Name': getPluginName(),
-  'X-SWDC-Plugin-Version': getVersion(),
-  'X-SWDC-Plugin-OS': getOs(),
-  'X-SWDC-Plugin-TZ': Intl.DateTimeFormat().resolvedOptions().timeZone,
-  'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
-  'X-SWDC-Plugin-UUID': getPluginUuid(),
-  'X-SWDC-Plugin-Type': 'codetime',
-  'X-SWDC-Plugin-Editor': 'vscode',
-  'X-SWDC-Plugin-Editor-Version': version
-};
+function initializeHeaders() {
+  if (appApi.defaults.headers.common['X-SWDC-Plugin-Id']) {
+    return
+  }
 
-beApi.defaults.headers.common = { ...beApi.defaults.headers.common, ...headers };
-appApi.defaults.headers.common = { ...appApi.defaults.headers.common, ...headers };
+  const headers = {
+    'X-SWDC-Plugin-Id': getPluginId(),
+    'X-SWDC-Plugin-Name': getPluginName(),
+    'X-SWDC-Plugin-Version': getVersion(),
+    'X-SWDC-Plugin-OS': getOs(),
+    'X-SWDC-Plugin-TZ': Intl.DateTimeFormat().resolvedOptions().timeZone,
+    'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
+    'X-SWDC-Plugin-UUID': getPluginUuid(),
+    'X-SWDC-Plugin-Type': 'codetime',
+    'X-SWDC-Plugin-Editor': 'vscode',
+    'X-SWDC-Plugin-Editor-Version': version
+  };
+  
+  beApi.defaults.headers.common = { ...beApi.defaults.headers.common, ...headers };
+  appApi.defaults.headers.common = { ...appApi.defaults.headers.common, ...headers };
+
+  beApi.defaults.headers.common = { ...beApi.defaults.headers.common, ...headers };
+  appApi.defaults.headers.common = { ...appApi.defaults.headers.common, ...headers };
+}
 
 export async function appGet(api: string, queryParams: any = {}) {
   updateOutgoingHeader();
@@ -133,6 +142,7 @@ export function isResponseOk(resp: any) {
 }
 
 function updateOutgoingHeader(override_token: any = null) {
+  initializeHeaders()
   const token = getAuthorization();
   if (token || override_token) {
     if (override_token) {
