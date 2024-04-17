@@ -101,7 +101,7 @@ export async function authenticationCompleteHandler(user: any) {
 }
 
 export async function userDeletedCompletionHandler() {
-  commands.executeCommand('codetime.deleteAccount');
+  commands.executeCommand('codetime.reinitializeAccount');
 }
 
 export async function reload() {

@@ -97,8 +97,8 @@
         "title": "Code Time: Exit Flow Mode"
       },
       {
-        "command": "codetime.deleteAccount",
-        "title": "Code Time: Delete Account"
+        "command": "codetime.reinitializeAccount",
+        "title": "Code Time: Reinitialize Account"
       }
     ],
     "configuration": [
