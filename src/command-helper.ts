@@ -239,7 +239,7 @@ export function createCommands(
   )
 
   cmds.push(
-    commands.registerCommand('codetime.reinitializeAccount', async () => {
+    commands.registerCommand('codetime.logout', async () => {
       const user = await getCachedUser()
       if (user?.registered) {
         // clear the storage and recreate an anon user
@@ -249,7 +249,7 @@ export function createCommands(
         await createAnonymousUser();
 
         // update the login status
-        showInformationMessage(`Successfully reinitialized your Code Time account`);
+        showInformationMessage(`Successfully logged out of your Code Time account`);
         await reload()
       }
     })
