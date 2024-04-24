@@ -32,7 +32,6 @@ import {ChangeStateManager} from './managers/ChangeStateManager';
 import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
-import { setSessionStorageManager } from './managers/FileManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
 
 let currentColorKind: number | undefined = undefined;
@@ -69,10 +68,12 @@ export async function activate(ctx: ExtensionContext) {
   initializeSession(storageManager);
 
   // add the code time commands
-  ctx.subscriptions.push(createCommands(ctx, kpmController));
+  ctx.subscriptions.push(createCommands(ctx, kpmController, storageManager));
   TrackerManager.storageMgr = storageManager;
 
-  if (getItem("jwt")) {
+  const jwt = getItem('jwt');
+
+  if (jwt) {
     intializePlugin();
   } else if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
@@ -151,7 +152,6 @@ export function getCurrentColorKind() {
 }
 
 function initializeSession(storageManager: LocalStorageManager) {
-  setSessionStorageManager(storageManager);
   if (window.state.focused) {
     setItem('vscode_primary_window', getWorkspaceName());
     if (storageManager) storageManager.clearDupStorageKeys();

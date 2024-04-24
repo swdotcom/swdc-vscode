@@ -1,4 +1,4 @@
-import {window, commands} from 'vscode';
+import {commands} from 'vscode';
 import {isResponseOk, appGet} from './http/HttpClient';
 import {
   getItem,
@@ -7,20 +7,16 @@ import {
   logIt,
   musicTimeExtInstalled,
   editorOpsExtInstalled,
+  showInformationMessage,
 } from './Util';
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
-import { createAnonymousUser } from './menu/AccountManager';
-import { ExtensionManager } from './managers/ExtensionManager';
 
 let currentUser: any | null = null;
-let lastUserFetch: number = 0;
 
 export async function getCachedSlackIntegrations() {
-  if (!currentUser) {
-    currentUser = await getUser();
-  }
+  currentUser = await getCachedUser();
   if (currentUser?.integration_connections?.length) {
     return currentUser?.integration_connections?.filter(
       (integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === 14));
@@ -40,10 +36,7 @@ export function isRegistered() {
 }
 
 export async function getUserPreferences() {
-  if (!currentUser) {
-    currentUser = await getUser();
-  }
-
+  currentUser = await getCachedUser()
   if (currentUser) {
     let prefs = currentUser.preferences;
     if (prefs && typeof prefs === 'string') {
@@ -58,11 +51,6 @@ export async function getUserPreferences() {
 }
 
 export async function getUser() {
-  const nowMillis: number = new Date().getTime();
-  if (currentUser && nowMillis - lastUserFetch < 2000) {
-    return currentUser;
-  }
-
   const resp = await appGet('/api/v1/user');
   if (isResponseOk(resp) && resp.data) {
     currentUser = resp.data;
@@ -74,8 +62,6 @@ export async function getUser() {
     } else {
       setItem('authType', 'software');
     }
-
-    lastUserFetch = nowMillis;
     return currentUser;
   }
   return null;
@@ -106,22 +92,32 @@ export async function authenticationCompleteHandler(user: any) {
     }
 
     // update the login status
-    window.showInformationMessage(`Successfully logged on to Code Time`);
+    showInformationMessage(`Successfully logged on to Code Time`);
 
-    updateFlowModeStatus();
-
-    try {
-      initializeWebsockets();
-    } catch (e: any) {
-      logIt(`Failed to initialize websockets: ${e.message}`);
-    }
-
-    // re-initialize user and preferences
-    await getUser();
-
-    // fetch after logging on
-    SummaryManager.getInstance().updateSessionSummaryFromServer();
+    await reload()
   }
+
+  return updatedUserInfo;
+}
+
+export async function userDeletedCompletionHandler() {
+  commands.executeCommand('codetime.logout');
+}
+
+export async function reload() {
+  updateFlowModeStatus();
+
+  try {
+    initializeWebsockets();
+  } catch (e: any) {
+    logIt(`Failed to initialize websockets: ${e.message}`);
+  }
+
+  // re-initialize user and preferences
+  await getUser();
+
+  // fetch after logging on
+  SummaryManager.getInstance().updateSessionSummaryFromServer();
 
   if (musicTimeExtInstalled()) {
     setTimeout(() => {
@@ -135,67 +131,5 @@ export async function authenticationCompleteHandler(user: any) {
     }, 1000);
   }
 
-  // update the extensions if its a new user
-  setTimeout(() => {
-    ExtensionManager.getInstance().initialize();
-  }, 1000);
-
   commands.executeCommand('codetime.refreshCodeTimeView');
-
-  logIt('Successfully logged on to Code Time');
-
-  return updatedUserInfo;
-}
-
-export async function userDeletedCompletionHandler() {
-  const user = await getUser();
-  if (!user?.registered) {
-    // reset the user session
-    createAnonymousUser();
-
-    // update the login status
-    window.showInformationMessage(`Successfully deleted your Code Time account`);
-
-    try {
-      initializeWebsockets();
-    } catch (e: any) {
-      logIt(`Failed to initialize websockets: ${e.message}`);
-    }
-
-    // re-initialize user and preferences
-    await getUser();
-
-    // fetch after logging on
-    SummaryManager.getInstance().updateSessionSummaryFromServer();
-
-    if (musicTimeExtInstalled()) {
-      setTimeout(() => {
-        commands.executeCommand("musictime.refreshMusicTimeView")
-      }, 1000);
-    }
-
-    if (editorOpsExtInstalled()) {
-      setTimeout(() => {
-        commands.executeCommand("editorOps.refreshEditorOpsView")
-      }, 1000);
-    }
-
-    commands.executeCommand('codetime.refreshCodeTimeView');
-
-    logIt('Successfully deleted your Code Time account');
-  }
-}
-
-export async function getCachedIntegrations(integration_type_id: number | undefined = undefined) {
-  const user = await getUser();
-  if (user?.integration_connections?.length) {
-    if (integration_type_id) {
-      return user.integration_connections.filter(
-        (integration: any) => integration.status === 'ACTIVE' && integration_type_id === integration.integration_type_id
-      );
-    } else {
-      return user.integration_connections;
-    }
-  }
-  return [];
 }

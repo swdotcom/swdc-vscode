@@ -1,8 +1,8 @@
 import {commands, Disposable, window, ExtensionContext} from 'vscode';
-import {launchWebUrl, displayReadme, setItem} from './Util';
+import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
+import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
 import {TrackerManager} from './managers/TrackerManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
@@ -12,10 +12,13 @@ import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData
 import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
+import { LocalStorageManager } from './managers/LocalStorageManager';
+import { getCachedUser, reload } from './DataController';
 
 export function createCommands(
   ctx: ExtensionContext,
-  kpmController: KpmManager
+  kpmController: KpmManager,
+  storageManager: LocalStorageManager
 ): {
   dispose: () => void;
 } {
@@ -232,6 +235,23 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.displayFlowModeInfo', () => {
       launchWebUrl("https://www.software.com/src/auto-flow-mode");
+    })
+  )
+
+  cmds.push(
+    commands.registerCommand('codetime.logout', async () => {
+      const user = await getCachedUser()
+      if (user?.registered) {
+        // clear the storage and recreate an anon user
+        storageManager.clearStorage();
+
+        // reset the user session
+        await createAnonymousUser();
+
+        // update the login status
+        showInformationMessage(`Successfully logged out of your Code Time account`);
+        await reload()
+      }
     })
   )
 

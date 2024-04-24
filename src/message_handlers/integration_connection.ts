@@ -1,14 +1,14 @@
 import { commands, ProgressLocation, window } from "vscode";
-import { getUser } from "../DataController";
+import { getCachedUser } from "../DataController";
 import { setAuthCallbackState } from "../Util";
 
 export async function handleIntegrationConnectionSocketEvent(body: any) {
   // integration_type_id = 14 (slack)
   // action = add, update, remove
-  const { integration_type_id, integration_type, action } = body;
+  const { integration_type_id, action } = body;
 
   if (integration_type_id === 14) {
-    await getUser();
+    await getCachedUser()
 
     if (action === "add") {
       // refresh the slack integrations

@@ -1,7 +1,7 @@
 {
   "name": "swdc-vscode",
   "displayName": "Code Time",
-  "version": "2.7.10",
+  "version": "2.7.11",
   "publisher": "softwaredotcom",
   "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
   "author": {
@@ -95,6 +95,10 @@
       {
         "command": "codetime.exitFlowMode",
         "title": "Code Time: Exit Flow Mode"
+      },
+      {
+        "command": "codetime.logout",
+        "title": "Code Time: Log out"
       }
     ],
     "configuration": [

@@ -360,6 +360,7 @@ export function humanizeMinutes(min: any) {
 }
 
 export function showInformationMessage(message: string) {
+  logIt(message);
   return window.showInformationMessage(`${message}`);
 }
 

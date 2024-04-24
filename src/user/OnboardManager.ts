@@ -8,10 +8,8 @@ import {
   launchWebUrl,
   getVersion,
 } from '../Util';
-import {isResponseOk, softwareGet} from '../http/HttpClient';
 import {createAnonymousUser} from '../menu/AccountManager';
-import {authenticationCompleteHandler} from '../DataController';
-import {app_url, TWENTY_SEC_TIMEOUT_MILLIS} from '../Constants';
+import {app_url} from '../Constants';
 import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
@@ -67,34 +65,6 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   return callback(ctx, true /*anonCreated*/);
 }
 
-export async function lazilyPollForAuth(tries: number = 20) {
-  if (authAdded) {
-    return;
-  }
-  const registered =  await getUserRegistrationInfo();
-  if (!registered && tries > 0) {
-    // try again
-    tries--;
-    setTimeout(() => {
-      lazilyPollForAuth(tries);
-    }, 15000);
-  }
-}
-
-async function getUserRegistrationInfo() {
-  const token = getAuthCallbackState(false) || getItem('jwt');
-  // fetch the user
-  let resp = await softwareGet('/users/plugin/state', token);
-  let user = isResponseOk(resp) && resp.data ? resp.data.user : null;
-
-  // only update if its a registered, not anon user
-  if (user && user.registered === 1) {
-    await authenticationCompleteHandler(user);
-    return true;
-  }
-  return false;
-}
-
 export async function launchEmailSignup(switching_account: boolean = false) {
   setItem('authType', 'software');
   setItem('switching_account', switching_account);
@@ -143,9 +113,6 @@ export async function buildLoginUrl(loginType: string) {
   }
 
   updatedAuthAdded(false);
-  setTimeout(() => {
-    lazilyPollForAuth();
-  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${url}?${params.toString()}`;
 }
 
@@ -162,9 +129,6 @@ export async function buildEmailSignup() {
   loginUrl = `${app_url}/email-signup`;
 
   updatedAuthAdded(false);
-  setTimeout(() => {
-    lazilyPollForAuth();
-  }, TWENTY_SEC_TIMEOUT_MILLIS);
   return `${loginUrl}?${params.toString()}`;
 }
 
