@@ -38,14 +38,7 @@ export function isRegistered() {
 export async function getUserPreferences() {
   currentUser = await getCachedUser()
   if (currentUser) {
-    let prefs = currentUser.preferences;
-    if (prefs && typeof prefs === 'string') {
-      try {
-        return JSON.parse(prefs);
-      } catch (e: any) {
-        logIt(`Error parsing preferences: ${e.message}`, true);
-      }
-    }
+    return currentUser.preferences_parsed;
   }
   return {}
 }
