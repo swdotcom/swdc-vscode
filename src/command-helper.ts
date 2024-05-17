@@ -153,12 +153,6 @@ export function createCommands(
   );
 
   cmds.push(
-    commands.registerCommand('codetime.disconnectSlackWorkspace', (auth_id: any) => {
-      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
-    })
-  );
-
-  cmds.push(
     commands.registerCommand('codetime.enableFlowMode', () => {
       enableFlow({automated: false});
     })

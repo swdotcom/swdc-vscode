@@ -16,25 +16,6 @@ export class ProgressManager {
 
     return ProgressManager.instance;
   }
-
-  reportProgress(progress: any, increment: number): void {
-    if (this.doneWriting) {
-      return;
-    }
-
-    if (increment < 80) {
-      increment += 10;
-    } else if (increment < 90) {
-      increment += 1;
-    }
-
-    increment = Math.min(90, increment);
-
-    setTimeout(() => {
-      progress.report({increment});
-      this.reportProgress(progress, increment);
-    }, 450);
-  }
 }
 
 export function progressIt(msg: string, asyncFunc: any, args: any[] = []) {

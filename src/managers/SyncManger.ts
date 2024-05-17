@@ -5,15 +5,6 @@ import { commands } from 'vscode';
 
 const fs = require('fs');
 
-const thirty_seconds: number = 1000 * 30;
-
-export function passedThreshold(now_in_millis: number, synced_val: number) {
-  if (!synced_val || now_in_millis - synced_val > thirty_seconds) {
-    return true;
-  }
-  return false;
-}
-
 export class SyncManager {
   private static _instance: SyncManager;
 
