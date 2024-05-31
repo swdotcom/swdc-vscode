@@ -135,7 +135,7 @@ export function createCommands(
   // DISPLAY PROJECT METRICS REPORT
   cmds.push(
     commands.registerCommand('codetime.viewProjectReports', () => {
-      launchWebUrl(`${app_url}/reports`);
+      launchWebUrl(`${app_url}/code_time/reports`);
     })
   );
 

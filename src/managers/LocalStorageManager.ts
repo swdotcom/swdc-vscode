@@ -1,7 +1,4 @@
 import { ExtensionContext, Memento } from "vscode";
-import { getSoftwareSessionFile } from "../Util";
-import { getJsonItem } from "./FileManager";
-import { json } from "stream/consumers";
 
 export class LocalStorageManager {
 
