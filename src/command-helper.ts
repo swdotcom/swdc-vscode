@@ -1,4 +1,4 @@
-import {commands, Disposable, window, ExtensionContext, authentication, AuthenticationProvider} from 'vscode';
+import {commands, Disposable, window, ExtensionContext, authentication} from 'vscode';
 import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
@@ -275,10 +275,7 @@ export function createCommands(
 
   cmds.push(
     authentication.onDidChangeSessions(async e => {
-      const session = await authentication.getSession(AUTH_TYPE, ['profile'], { createIfNone: false });
-      if (session) {
-        showInformationMessage('Successfully logged on to Code Time')
-      }
+      await authentication.getSession(AUTH_TYPE, ['profile'], { createIfNone: false });
     })
   )
 

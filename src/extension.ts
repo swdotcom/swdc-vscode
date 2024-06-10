@@ -33,10 +33,11 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
-import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE } from './auth/Auth0AuthenticationProvider';
 
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
+let user: any = null;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -74,11 +75,17 @@ export async function activate(ctx: ExtensionContext) {
 
   // session: {id: <String>, accessToken: <String>, account: {label: <String>, id: <Number>}, scopes: [<String>,...]}
   const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
+  let jwt = getItem('jwt');
   if (session) {
-    window.showInformationMessage(`Welcome back ${session.account.label}`)
+    user = await getUser();
+    if (!user || user.email != session.account.label) {
+      jwt = session.accessToken;
+      // update the local storage with the new user
+      setItem('name', session.account.label);
+      setItem('jwt', jwt);
+      user = await getUser(jwt);
+    }
   }
-
-  const jwt = getItem('jwt');
 
   if (jwt) {
     intializePlugin();
@@ -107,7 +114,7 @@ export async function intializePlugin() {
   await tracker.init();
 
   // initialize user and preferences
-  await getUser();
+  if (!user) user = await getUser();
 
   // show the sidebar if this is the 1st
   if (!getBooleanItem('vscode_CtInit')) {

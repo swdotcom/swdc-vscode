@@ -1,9 +1,12 @@
-import { authentication, AuthenticationProvider, AuthenticationProviderAuthenticationSessionsChangeEvent, AuthenticationSession, Disposable, env, EventEmitter, ExtensionContext, ProgressLocation, Uri, UriHandler, window } from "vscode";
+import {
+  authentication, AuthenticationProvider, AuthenticationProviderAuthenticationSessionsChangeEvent,
+  AuthenticationSession, Disposable, Event, env, EventEmitter, ExtensionContext, ProgressLocation,
+  Uri, UriHandler, window
+} from "vscode";
 import { v4 as uuid } from 'uuid';
-import { PromiseAdapter, promiseFromEvent } from './util';
 import { app_url } from "../Constants";
 import { getAuthQueryObject } from "../Util";
-import { getUser } from "../DataController";
+import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth0';
 const AUTH_NAME = 'Software.com';
@@ -61,17 +64,18 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
    */
   public async createSession(scopes: string[]): Promise<AuthenticationSession> {
     try {
-      const token = await this.login(scopes);
-      if (!token) {
+      const jwtToken = await this.login(scopes);
+      if (!jwtToken) {
         throw new Error(`Software.com login failure`);
       }
 
       // const userinfo: { name: string, email: string } = await this.getUserInfo(token);
-      const user = await getUser(token);
+      const user = await getUser(jwtToken);
+      await authenticationCompleteHandler(user, jwtToken);
 
       const session: AuthenticationSession = {
         id: uuid(),
-        accessToken: token,
+        accessToken: jwtToken,
         account: {
           label: user.email,
           id: user.id
@@ -188,3 +192,59 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       resolve(access_token);
     }
 }
+
+export interface PromiseAdapter<T, U> {
+  (
+    value: T,
+    resolve:
+      (value: U | PromiseLike<U>) => void,
+    reject:
+      (reason: any) => void
+  ): any;
+}
+
+const passthrough = (value: any, resolve: (value?: any) => void) => resolve(value);
+
+/**
+ * Return a promise that resolves with the next emitted event, or with some future
+ * event as decided by an adapter.
+ *
+ * If specified, the adapter is a function that will be called with
+ * `(event, resolve, reject)`. It will be called once per event until it resolves or
+ * rejects.
+ *
+ * The default adapter is the passthrough function `(value, resolve) => resolve(value)`.
+ *
+ * @param event the event
+ * @param adapter controls resolution of the returned promise
+ * @returns a promise that resolves or rejects as specified by the adapter
+ */
+export function promiseFromEvent<T, U>(event: Event<T>, adapter: PromiseAdapter<T, U> = passthrough): { promise: Promise<U>; cancel: EventEmitter<void> } {
+  let subscription: Disposable;
+  let cancel = new EventEmitter<void>();
+
+  return {
+    promise: new Promise<U>((resolve, reject) => {
+      cancel.event(_ => reject('Cancelled'));
+      subscription = event((value: T) => {
+        try {
+          Promise.resolve(adapter(value, resolve, reject))
+            .catch(reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }).then(
+      (result: U) => {
+        subscription.dispose();
+        return result;
+      },
+      error => {
+        subscription.dispose();
+        throw error;
+      }
+    ),
+    cancel
+  };
+}
+

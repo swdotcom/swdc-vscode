@@ -64,17 +64,17 @@ function hasIntegrationConnection(type_id: number, connections = []):boolean {
   return !!(connections?.find((integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === type_id)));
 }
 
-export async function authenticationCompleteHandler(user: any) {
-  let updatedUserInfo = false;
+export async function authenticationCompleteHandler(user: any, override_jwt: any = '') {
   // clear the auth callback state
   setItem('switching_account', false);
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {
     currentUser = user;
-    updatedUserInfo = true;
     // new user
-    if (user.plugin_jwt) {
+    if (override_jwt) {
+      setItem('jwt', override_jwt);
+    } else if (user.plugin_jwt) {
       setItem('jwt', user.plugin_jwt);
     }
     setItem('name', user.email);
@@ -85,12 +85,10 @@ export async function authenticationCompleteHandler(user: any) {
     }
 
     // update the login status
-    showInformationMessage(`Successfully logged on to Code Time`);
+    showInformationMessage('Successfully logged on to Code Time');
 
-    await reload()
+    await reload();
   }
-
-  return updatedUserInfo;
 }
 
 export async function userDeletedCompletionHandler() {
