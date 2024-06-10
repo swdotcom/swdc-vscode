@@ -77,6 +77,7 @@ export async function activate(ctx: ExtensionContext) {
   const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
   let jwt = getItem('jwt');
   if (session) {
+    // fetch the user with the non-session jwt to compare
     user = await getUser();
     if (!user || user.email != session.account.label) {
       jwt = session.accessToken;

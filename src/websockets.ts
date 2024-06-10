@@ -1,7 +1,6 @@
 import { ONE_MIN_MILLIS, api_endpoint } from './Constants';
 import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow, editorOpsExtInstalled } from './Util';
 import { handleFlowScoreMessage } from './message_handlers/flow_score';
-import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
 import { handleIntegrationConnectionSocketEvent } from './message_handlers/integration_connection';
 import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stats_update';
 import { handleFlowStateMessage } from './message_handlers/flow_state';
@@ -226,9 +225,6 @@ const handleIncomingMessage = (data: any) => {
       case 'flow_state':
         try { logIt(`Flow state: ${JSON.stringify(message.body)}`) } catch (e) { }
         handleFlowStateMessage(message.body);
-        break;
-      case 'authenticated_plugin_user':
-        handleAuthenticatedPluginUser(message.body);
         break;
       case 'user_integration_connection':
         handleIntegrationConnectionSocketEvent(message.body);

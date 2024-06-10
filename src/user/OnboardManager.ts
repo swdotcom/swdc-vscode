@@ -9,11 +9,6 @@ import {createAnonymousUser} from '../menu/AccountManager';
 import {app_url} from '../Constants';
 
 let retry_counter = 0;
-let authAdded = false;
-
-export function updatedAuthAdded(val: boolean) {
-  authAdded = val;
-}
 
 export async function onboardInit(ctx: ExtensionContext, callback: any) {
   if (getItem('jwt')) {
@@ -108,7 +103,6 @@ export async function buildLoginUrl(loginType: string) {
     url = `${app_url}/onboarding`;
   }
 
-  updatedAuthAdded(false);
   return `${url}?${params.toString()}`;
 }
 
@@ -124,6 +118,5 @@ export async function buildEmailSignup() {
 
   loginUrl = `${app_url}/email-signup`;
 
-  updatedAuthAdded(false);
   return `${loginUrl}?${params.toString()}`;
 }

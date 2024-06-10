@@ -89,7 +89,6 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
 
       return session;
     } catch (e) {
-      window.showErrorMessage(`Software.com sign in failed: ${e}`);
       throw e;
     }
   }
@@ -153,7 +152,7 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
         return await Promise.race([
           codeExchangePromise.promise,
           new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 120000)),
-          promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => { reject('User Cancelled'); }).promise
+          promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => { reject('Login Cancelled'); }).promise
         ]);
       } finally {
         this._pendingStates = this._pendingStates.filter(n => n !== stateId);
@@ -175,17 +174,17 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       const state = query.get('state');
 
       if (!access_token) {
-        reject(new Error('No token'));
+        reject(new Error('Authentication token not found'));
         return;
       }
       if (!state) {
-        reject(new Error('No state'));
+        reject(new Error('Authentication state not found'));
         return;
       }
 
       // Check if it is a valid auth request started by the extension
       if (!this._pendingStates.some(n => n === state)) {
-        reject(new Error('State not found'));
+        reject(new Error('Authentication state not found'));
         return;
       }
 
