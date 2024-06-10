@@ -78,6 +78,7 @@ export async function authenticationCompleteHandler(user: any, override_jwt: any
       setItem('jwt', user.plugin_jwt);
     }
     setItem('name', user.email);
+    setItem('updatedAt', new Date().getTime());
 
     const currentAuthType = getItem('authType');
     if (!currentAuthType) {

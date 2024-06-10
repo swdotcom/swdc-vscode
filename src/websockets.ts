@@ -1,4 +1,4 @@
-import { api_endpoint } from './Constants';
+import { ONE_MIN_MILLIS, api_endpoint } from './Constants';
 import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow, editorOpsExtInstalled } from './Util';
 import { handleFlowScoreMessage } from './message_handlers/flow_score';
 import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
@@ -11,7 +11,6 @@ import { setEndOfDayNotification } from './notifications/endOfDay';
 const WebSocket = require('ws');
 
 // The server should send its timeout to allow the client to adjust.
-const ONE_MIN_MILLIS = 1000 * 60;
 // Default of 30 minutes
 const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;

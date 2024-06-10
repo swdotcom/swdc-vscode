@@ -1,9 +1,9 @@
 import {commands, Disposable, window, ExtensionContext, authentication} from 'vscode';
-import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
+import {launchWebUrl, displayReadme, setItem, showInformationMessage, getItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
 import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
-import {app_url, vscode_issues_url} from './Constants';
+import {FIVE_SECONDS_IN_MILLIS, app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
 import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
@@ -254,21 +254,24 @@ export function createCommands(
     commands.registerCommand('codetime.authSignIn', async () => {
       const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
       if (session) {
-        window
-          .showInformationMessage(
-            'You are already signed in. Would you like to switch accounts?',
-            {
-              modal: true,
-            },
-            'Switch Account'
-          )
-          .then(async (selection) => {
-            if (selection === "Switch Account") {
-              await auth0Provider.removeSession(session.account.id);
-              await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
-            }
-          });
-        return;
+        const latestUpdate = getItem('updatedAt');
+        if (!latestUpdate || new Date().getTime() - latestUpdate > FIVE_SECONDS_IN_MILLIS) {
+          window
+            .showInformationMessage(
+              'You are already signed in. Would you like to switch accounts?',
+              {
+                modal: true,
+              },
+              'Switch Account'
+            )
+            .then(async (selection) => {
+              if (selection === "Switch Account") {
+                await auth0Provider.removeSession(session.account.id);
+                await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+              }
+            });
+          return;
+        }
       }
     })
   )

@@ -152,7 +152,7 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       try {
         return await Promise.race([
           codeExchangePromise.promise,
-          new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 60000)),
+          new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 120000)),
           promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => { reject('User Cancelled'); }).promise
         ]);
       } finally {
