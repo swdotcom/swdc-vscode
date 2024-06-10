@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {window, ExtensionContext, commands} from 'vscode';
+import {window, ExtensionContext, commands, authentication} from 'vscode';
 import {getUser} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
@@ -33,6 +33,7 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
+import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
 
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
@@ -70,6 +71,12 @@ export async function activate(ctx: ExtensionContext) {
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController, storageManager));
   TrackerManager.storageMgr = storageManager;
+
+  // session: {id: <String>, accessToken: <String>, account: {label: <String>, id: <Number>}, scopes: [<String>,...]}
+  const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
+  if (session) {
+    window.showInformationMessage(`Welcome back ${session.account.label}`)
+  }
 
   const jwt = getItem('jwt');
 

@@ -1,9 +1,8 @@
-import {commands, Disposable, window, ExtensionContext} from 'vscode';
+import {commands, Disposable, window, ExtensionContext, authentication, AuthenticationProvider} from 'vscode';
 import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
 import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
-import {TrackerManager} from './managers/TrackerManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
@@ -14,6 +13,7 @@ import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { getCachedUser, reload } from './DataController';
+import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -24,7 +24,8 @@ export function createCommands(
 } {
   let cmds = [];
 
-  const tracker: TrackerManager = TrackerManager.getInstance();
+  const auth0Provider = new Auth0AuthenticationProvider(ctx);
+  ctx.subscriptions.push(auth0Provider);
 
   cmds.push(kpmController);
 
@@ -245,6 +246,38 @@ export function createCommands(
         // update the login status
         showInformationMessage(`Successfully logged out of your Code Time account`);
         await reload()
+      }
+    })
+  )
+
+  cmds.push(
+    commands.registerCommand('codetime.authSignIn', async () => {
+      const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+      if (session) {
+        window
+          .showInformationMessage(
+            'You are already signed in. Would you like to switch accounts?',
+            {
+              modal: true,
+            },
+            'Switch Account'
+          )
+          .then(async (selection) => {
+            if (selection === "Switch Account") {
+              await auth0Provider.removeSession(session.account.id);
+              await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+            }
+          });
+        return;
+      }
+    })
+  )
+
+  cmds.push(
+    authentication.onDidChangeSessions(async e => {
+      const session = await authentication.getSession(AUTH_TYPE, ['profile'], { createIfNone: false });
+      if (session) {
+        showInformationMessage('Successfully logged on to Code Time')
       }
     })
   )

@@ -2,15 +2,11 @@ import {window, ExtensionContext} from 'vscode';
 import {
   getItem,
   setItem,
-  getAuthCallbackState,
-  getPluginId,
-  getPluginUuid,
   launchWebUrl,
-  getVersion,
+  getAuthQueryObject
 } from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {app_url} from '../Constants';
-import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
 let authAdded = false;
@@ -130,13 +126,4 @@ export async function buildEmailSignup() {
 
   updatedAuthAdded(false);
   return `${loginUrl}?${params.toString()}`;
-}
-
-function getAuthQueryObject() {
-  const params = new URLSearchParams();
-  params.append('plugin_uuid', getPluginUuid());
-  params.append('plugin_id', `${getPluginId()}`);
-  params.append('plugin_version', getVersion());
-  params.append('auth_callback_state', getAuthCallbackState(true));
-  return params;
 }

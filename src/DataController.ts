@@ -43,8 +43,8 @@ export async function getUserPreferences() {
   return {}
 }
 
-export async function getUser() {
-  const resp = await appGet('/api/v1/user');
+export async function getUser(token_override: any = '') {
+  const resp = await appGet('/api/v1/user', {}, token_override);
   if (isResponseOk(resp) && resp.data) {
     currentUser = resp.data;
 
