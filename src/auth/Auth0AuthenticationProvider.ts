@@ -139,7 +139,7 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       params.append('redirect_uri', this.redirectUri);
       params.append('state', stateId);
       params.append('prompt', 'login');
-      const uri = Uri.parse(`${app_url}/authorize?${params.toString()}`);
+      const uri = Uri.parse(`${app_url}/plugin/authorize?${params.toString()}`);
       await env.openExternal(uri);
 
       let codeExchangePromise = this._codeExchangePromises.get(scopeString);
