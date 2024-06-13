@@ -56,9 +56,8 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   return callback(ctx, true /*anonCreated*/);
 }
 
-export async function launchEmailSignup(switching_account: boolean = false) {
+export async function launchEmailSignup() {
   setItem('authType', 'software');
-  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildEmailSignup();
@@ -66,9 +65,8 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   launchWebUrl(url);
 }
 
-export async function launchLogin(loginType: string = 'software', switching_account: boolean = false) {
+export async function launchLogin(loginType: string = 'software') {
   setItem('authType', loginType);
-  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildLoginUrl(loginType);

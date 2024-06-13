@@ -33,7 +33,7 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
-import { AUTH_TYPE } from './auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
 
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
@@ -66,6 +66,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+  new Auth0AuthenticationProvider(ctx);
   storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
 

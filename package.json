@@ -98,7 +98,7 @@
       },
       {
         "command": "codetime.authSignIn",
-        "title": "Code Time: Software.com Sign in",
+        "title": "Code Time: Software.com Oauth0",
         "icon": "$(sign-in)"
       }
     ],

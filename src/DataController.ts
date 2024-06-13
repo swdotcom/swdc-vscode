@@ -65,8 +65,6 @@ function hasIntegrationConnection(type_id: number, connections = []):boolean {
 }
 
 export async function authenticationCompleteHandler(user: any, override_jwt: any = '') {
-  // clear the auth callback state
-  setItem('switching_account', false);
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {

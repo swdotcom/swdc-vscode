@@ -13,7 +13,7 @@ import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { getCachedUser, reload } from './DataController';
-import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE, getAuth0Instance } from './auth/Auth0AuthenticationProvider';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -23,9 +23,7 @@ export function createCommands(
   dispose: () => void;
 } {
   let cmds = [];
-
-  const auth0Provider = new Auth0AuthenticationProvider(ctx);
-  ctx.subscriptions.push(auth0Provider);
+  ctx.subscriptions.push(getAuth0Instance());
 
   cmds.push(kpmController);
 
@@ -77,15 +75,15 @@ export function createCommands(
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('software', switching_account);
+    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem) => {
+      launchLogin('software');
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem, switching_account: boolean) => {
-      launchEmailSignup(switching_account);
+    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem) => {
+      launchEmailSignup();
     })
   );
 
@@ -107,15 +105,15 @@ export function createCommands(
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
-    commands.registerCommand('codetime.googleLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('google', switching_account);
+    commands.registerCommand('codetime.googleLogin', (item: KpmItem) => {
+      launchLogin('google');
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
-    commands.registerCommand('codetime.githubLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('github', switching_account);
+    commands.registerCommand('codetime.githubLogin', (item: KpmItem) => {
+      launchLogin('github');
     })
   );
 
@@ -266,7 +264,7 @@ export function createCommands(
             )
             .then(async (selection) => {
               if (selection === "Switch Account") {
-                await auth0Provider.removeSession(session.account.id);
+                await getAuth0Instance().removeSession(session.account.id);
                 await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
               }
             });

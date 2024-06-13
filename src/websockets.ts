@@ -6,6 +6,8 @@ import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stat
 import { handleFlowStateMessage } from './message_handlers/flow_state';
 import { userDeletedCompletionHandler } from './DataController';
 import { setEndOfDayNotification } from './notifications/endOfDay';
+import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
+import { Auth0AuthenticationProvider, getAuth0Instance } from './auth/Auth0AuthenticationProvider';
 
 const WebSocket = require('ws');
 
@@ -220,6 +222,11 @@ const handleIncomingMessage = (data: any) => {
         if (isPrimaryWindow() && !(editorOpsExtInstalled())) {
           try { logIt(`Flow score: ${JSON.stringify(message.body.flowScore)}`) } catch (e) { }
           handleFlowScoreMessage(message);
+        }
+        break;
+      case 'authenticated_plugin_user':
+        if (!getAuth0Instance() || !getAuth0Instance().isAuthenticating()) {
+          handleAuthenticatedPluginUser(message.body);
         }
         break;
       case 'flow_state':

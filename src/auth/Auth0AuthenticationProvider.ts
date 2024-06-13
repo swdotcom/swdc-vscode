@@ -5,12 +5,18 @@ import {
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
-import { getAuthQueryObject } from "../Util";
+import { getAuthQueryObject, logIt } from "../Util";
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth0';
 const AUTH_NAME = 'Software.com';
 const SESSIONS_KEY = `${AUTH_TYPE}.sessions`
+
+let instance: Auth0AuthenticationProvider;
+
+export function getAuth0Instance(): Auth0AuthenticationProvider {
+  return instance;
+}
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   public handleUri(uri: Uri) {
@@ -24,12 +30,18 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
   private _pendingStates: string[] = [];
   private _codeExchangePromises = new Map<string, { promise: Promise<string>; cancel: EventEmitter<void> }>();
   private _uriHandler = new UriEventHandler();
+  private _authenticating = false;
 
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(AUTH_TYPE, AUTH_NAME, this, { supportsMultipleAccounts: false }),
       window.registerUriHandler(this._uriHandler)
     )
+    instance = this;
+  }
+
+  public isAuthenticating(): boolean {
+    return this._authenticating;
   }
 
   get onDidChangeSessions() {
@@ -63,6 +75,7 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
    * @returns 
    */
   public async createSession(scopes: string[]): Promise<AuthenticationSession> {
+    this._authenticating = true;
     try {
       const jwtToken = await this.login(scopes);
       if (!jwtToken) {
@@ -88,8 +101,13 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] });
 
       return session;
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message) {
+        logIt(`Error creating session: ${e?.message}`);
+      }
       throw e;
+    } finally {
+      this._authenticating = false;
     }
   }
 
