@@ -152,7 +152,7 @@
     "date-fns": "^3.6.0",
     "node-cache": "^5.1.2",
     "open": "^8.4.0",
-    "swdc-tracker": "1.5.5",
+    "swdc-tracker": "1.5.7",
     "uuid": "^9.0.1",
     "ws": "^8.17.0"
   }
