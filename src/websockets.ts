@@ -7,7 +7,7 @@ import { handleFlowStateMessage } from './message_handlers/flow_state';
 import { userDeletedCompletionHandler } from './DataController';
 import { setEndOfDayNotification } from './notifications/endOfDay';
 import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
-import { Auth0AuthenticationProvider, getAuth0Instance } from './auth/Auth0AuthenticationProvider';
+import { getAuth0Instance } from './auth/Auth0AuthenticationProvider';
 
 const WebSocket = require('ws');
 
@@ -225,7 +225,7 @@ const handleIncomingMessage = (data: any) => {
         }
         break;
       case 'authenticated_plugin_user':
-        if (!getAuth0Instance() || !getAuth0Instance().isAuthenticating()) {
+        if (!getAuth0Instance()) {
           handleAuthenticatedPluginUser(message.body);
         }
         break;

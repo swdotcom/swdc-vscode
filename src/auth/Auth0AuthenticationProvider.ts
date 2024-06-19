@@ -15,6 +15,9 @@ const SESSIONS_KEY = `${AUTH_TYPE}.sessions`
 let instance: Auth0AuthenticationProvider;
 
 export function getAuth0Instance(): Auth0AuthenticationProvider {
+  if (!instance) {
+    logIt('Auth0AuthenticationProvider not initialized');
+  }
   return instance;
 }
 
