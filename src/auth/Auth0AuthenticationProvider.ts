@@ -43,10 +43,6 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
     instance = this;
   }
 
-  public isAuthenticating(): boolean {
-    return this._authenticating;
-  }
-
   get onDidChangeSessions() {
     return this._sessionChangeEmitter.event;
   }
@@ -72,24 +68,22 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
     return [];
   }
 
-  /**
-   * Create a new auth session
-   * @param scopes 
-   * @returns 
-   */
-  public async createSession(scopes: string[]): Promise<AuthenticationSession> {
-    this._authenticating = true;
+  public async updateSession(jwtToken: string): Promise<AuthenticationSession> {
+    let session: AuthenticationSession = {
+      id: uuid(),
+      accessToken: jwtToken,
+      account: {
+        label: '',
+        id: ''
+      },
+      scopes: []
+    }
     try {
-      const jwtToken = await this.login(scopes);
-      if (!jwtToken) {
-        throw new Error(`Software.com login failure`);
-      }
-
       // const userinfo: { name: string, email: string } = await this.getUserInfo(token);
       const user = await getUser(jwtToken);
       await authenticationCompleteHandler(user, jwtToken);
 
-      const session: AuthenticationSession = {
+      session = {
         id: uuid(),
         accessToken: jwtToken,
         account: {
@@ -102,16 +96,25 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
       await this.context.secrets.store(SESSIONS_KEY, JSON.stringify([session]))
 
       this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] });
-
-      return session;
     } catch (e: any) {
       if (e.message) {
         logIt(`Error creating session: ${e?.message}`);
       }
-      throw e;
-    } finally {
-      this._authenticating = false;
     }
+    return session;
+  }
+
+  /**
+   * Create a new auth session
+   * @param scopes 
+   * @returns 
+   */
+  public async createSession(scopes: string[]): Promise<AuthenticationSession> {
+    const jwtToken = await this.login(scopes);
+    if (!jwtToken) {
+      throw new Error(`Software.com login failure`);
+    }
+    return this.updateSession(jwtToken);
   }
 
   /**

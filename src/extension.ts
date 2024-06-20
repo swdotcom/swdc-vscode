@@ -66,7 +66,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-  new Auth0AuthenticationProvider(ctx);
+  const auth0Provider:Auth0AuthenticationProvider = new Auth0AuthenticationProvider(ctx);
   storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
 
@@ -77,9 +77,9 @@ export async function activate(ctx: ExtensionContext) {
   // session: {id: <String>, accessToken: <String>, account: {label: <String>, id: <Number>}, scopes: [<String>,...]}
   const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
   let jwt = getItem('jwt');
+  user = await getUser();
   if (session) {
     // fetch the user with the non-session jwt to compare
-    user = await getUser();
     if (!user || user.email != session.account.label) {
       jwt = session.accessToken;
       // update the local storage with the new user
@@ -87,6 +87,9 @@ export async function activate(ctx: ExtensionContext) {
       setItem('jwt', jwt);
       user = await getUser(jwt);
     }
+  } else if (jwt && user?.registered) {
+    // update the session with the existing jwt
+    auth0Provider.updateSession(jwt);
   }
 
   if (jwt) {
