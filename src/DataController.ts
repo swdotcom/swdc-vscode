@@ -43,8 +43,8 @@ export async function getUserPreferences() {
   return {}
 }
 
-export async function getUser() {
-  const resp = await appGet('/api/v1/user');
+export async function getUser(token_override: any = '') {
+  const resp = await appGet('/api/v1/user', {}, token_override);
   if (isResponseOk(resp) && resp.data) {
     currentUser = resp.data;
 
@@ -64,20 +64,19 @@ function hasIntegrationConnection(type_id: number, connections = []):boolean {
   return !!(connections?.find((integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === type_id)));
 }
 
-export async function authenticationCompleteHandler(user: any) {
-  let updatedUserInfo = false;
-  // clear the auth callback state
-  setItem('switching_account', false);
+export async function authenticationCompleteHandler(user: any, override_jwt: any = '') {
   setAuthCallbackState(null);
 
   if (user?.registered === 1) {
     currentUser = user;
-    updatedUserInfo = true;
     // new user
-    if (user.plugin_jwt) {
+    if (override_jwt) {
+      setItem('jwt', override_jwt);
+    } else if (user.plugin_jwt) {
       setItem('jwt', user.plugin_jwt);
     }
     setItem('name', user.email);
+    setItem('updatedAt', new Date().getTime());
 
     const currentAuthType = getItem('authType');
     if (!currentAuthType) {
@@ -85,12 +84,10 @@ export async function authenticationCompleteHandler(user: any) {
     }
 
     // update the login status
-    showInformationMessage(`Successfully logged on to Code Time`);
+    showInformationMessage('Successfully logged on to Code Time');
 
-    await reload()
+    await reload();
   }
-
-  return updatedUserInfo;
 }
 
 export async function userDeletedCompletionHandler() {

@@ -49,8 +49,8 @@ function initializeHeaders() {
   appApi.defaults.headers.common = { ...appApi.defaults.headers.common, ...headers };
 }
 
-export async function appGet(api: string, queryParams: any = {}) {
-  updateOutgoingHeader();
+export async function appGet(api: string, queryParams: any = {}, token_override: any = '') {
+  updateOutgoingHeader(token_override);
 
   return await appApi.get(api, { params: queryParams }).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);

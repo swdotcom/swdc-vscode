@@ -11,7 +11,6 @@ import {isResponseOk, appPost} from '../http/HttpClient';
 import {showQuickPick} from './MenuManager';
 import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
 
-let switching_account = false;
 let creatingAnonUser = false;
 
 const switchAccountItem = {
@@ -20,17 +19,14 @@ const switchAccountItem = {
 };
 
 export async function showSwitchAccountsMenu() {
-  switching_account = true;
   accountMenuSelection(switchAccountItem);
 }
 
 export async function showExistingAccountMenu() {
-  switching_account = true;
   showLogInMenuOptions();
 }
 
 export async function showSignUpAccountMenu() {
-  switching_account = false;
   showSignUpMenuOptions();
 }
 
@@ -80,26 +76,31 @@ function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
   items.push({
     label: `${authText} with Google`,
     command: 'codetime.googleLogin',
-    commandArgs: [null /*KpmItem*/, switching_account],
+    commandArgs: [null /*KpmItem*/],
   });
   items.push({
     label: `${authText} with GitHub`,
     command: 'codetime.githubLogin',
-    commandArgs: [null /*KpmItem*/, switching_account],
+    commandArgs: [null /*KpmItem*/],
   });
   if (isSignup) {
     items.push({
       label: `${authText} with Email`,
       command: 'codetime.codeTimeSignup',
-      commandArgs: [null /*KpmItem*/, false /*switching_account*/],
+      commandArgs: [null /*KpmItem*/],
     });
   } else {
     items.push({
       label: `${authText} with Email`,
       command: 'codetime.codeTimeLogin',
-      commandArgs: [null /*KpmItem*/, switching_account],
+      commandArgs: [null /*KpmItem*/],
     });
   }
+  items.push({
+    label: 'Software.com Oauth0',
+    command: 'codetime.authSignIn',
+    commandArgs: [],
+  })
   const menuOptions = {
     items,
     placeholder,
@@ -138,7 +139,6 @@ export async function createAnonymousUser() {
       if (!resp.data.registered) {
         setItem('name', null);
       }
-      setItem('switching_account', false);
       setAuthCallbackState('');
     }
   }

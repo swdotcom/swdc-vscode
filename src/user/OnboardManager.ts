@@ -2,22 +2,13 @@ import {window, ExtensionContext} from 'vscode';
 import {
   getItem,
   setItem,
-  getAuthCallbackState,
-  getPluginId,
-  getPluginUuid,
   launchWebUrl,
-  getVersion,
+  getAuthQueryObject
 } from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
 import {app_url} from '../Constants';
-import {URLSearchParams} from 'url';
 
 let retry_counter = 0;
-let authAdded = false;
-
-export function updatedAuthAdded(val: boolean) {
-  authAdded = val;
-}
 
 export async function onboardInit(ctx: ExtensionContext, callback: any) {
   if (getItem('jwt')) {
@@ -65,9 +56,8 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   return callback(ctx, true /*anonCreated*/);
 }
 
-export async function launchEmailSignup(switching_account: boolean = false) {
+export async function launchEmailSignup() {
   setItem('authType', 'software');
-  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildEmailSignup();
@@ -75,9 +65,8 @@ export async function launchEmailSignup(switching_account: boolean = false) {
   launchWebUrl(url);
 }
 
-export async function launchLogin(loginType: string = 'software', switching_account: boolean = false) {
+export async function launchLogin(loginType: string = 'software') {
   setItem('authType', loginType);
-  setItem('switching_account', switching_account);
 
   // continue with onboaring
   const url = await buildLoginUrl(loginType);
@@ -112,7 +101,6 @@ export async function buildLoginUrl(loginType: string) {
     url = `${app_url}/onboarding`;
   }
 
-  updatedAuthAdded(false);
   return `${url}?${params.toString()}`;
 }
 
@@ -128,15 +116,5 @@ export async function buildEmailSignup() {
 
   loginUrl = `${app_url}/email-signup`;
 
-  updatedAuthAdded(false);
   return `${loginUrl}?${params.toString()}`;
-}
-
-function getAuthQueryObject() {
-  const params = new URLSearchParams();
-  params.append('plugin_uuid', getPluginUuid());
-  params.append('plugin_id', `${getPluginId()}`);
-  params.append('plugin_version', getVersion());
-  params.append('auth_callback_state', getAuthCallbackState(true));
-  return params;
 }

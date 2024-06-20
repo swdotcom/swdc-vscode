@@ -1,10 +1,9 @@
-import {commands, Disposable, window, ExtensionContext} from 'vscode';
-import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
+import {commands, Disposable, window, ExtensionContext, authentication} from 'vscode';
+import {launchWebUrl, displayReadme, setItem, showInformationMessage, getItem} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
 import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
-import {TrackerManager} from './managers/TrackerManager';
-import {app_url, vscode_issues_url} from './Constants';
+import {FIVE_SECONDS_IN_MILLIS, app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
 import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
@@ -14,6 +13,7 @@ import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { getCachedUser, reload } from './DataController';
+import { AUTH_TYPE, getAuth0Instance } from './auth/Auth0AuthenticationProvider';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -23,8 +23,7 @@ export function createCommands(
   dispose: () => void;
 } {
   let cmds = [];
-
-  const tracker: TrackerManager = TrackerManager.getInstance();
+  ctx.subscriptions.push(getAuth0Instance());
 
   cmds.push(kpmController);
 
@@ -76,15 +75,15 @@ export function createCommands(
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('software', switching_account);
+    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem) => {
+      launchLogin('software');
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem, switching_account: boolean) => {
-      launchEmailSignup(switching_account);
+    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem) => {
+      launchEmailSignup();
     })
   );
 
@@ -106,15 +105,15 @@ export function createCommands(
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
-    commands.registerCommand('codetime.googleLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('google', switching_account);
+    commands.registerCommand('codetime.googleLogin', (item: KpmItem) => {
+      launchLogin('google');
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
-    commands.registerCommand('codetime.githubLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('github', switching_account);
+    commands.registerCommand('codetime.githubLogin', (item: KpmItem) => {
+      launchLogin('github');
     })
   );
 
@@ -246,6 +245,38 @@ export function createCommands(
         showInformationMessage(`Successfully logged out of your Code Time account`);
         await reload()
       }
+    })
+  )
+
+  cmds.push(
+    commands.registerCommand('codetime.authSignIn', async () => {
+      const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+      if (session) {
+        const latestUpdate = getItem('updatedAt');
+        if (!latestUpdate || new Date().getTime() - latestUpdate > FIVE_SECONDS_IN_MILLIS) {
+          window
+            .showInformationMessage(
+              'You are already signed in. Would you like to switch accounts?',
+              {
+                modal: true,
+              },
+              'Switch Account'
+            )
+            .then(async (selection) => {
+              if (selection === "Switch Account") {
+                await getAuth0Instance().removeSession(session.account.id);
+                await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+              }
+            });
+          return;
+        }
+      }
+    })
+  )
+
+  cmds.push(
+    authentication.onDidChangeSessions(async e => {
+      await authentication.getSession(AUTH_TYPE, ['profile'], { createIfNone: false });
     })
   )
 

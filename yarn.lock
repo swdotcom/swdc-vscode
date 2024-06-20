@@ -527,15 +527,6 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==
 
-axios@^1.3.2:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.0.tgz#f1e5292f26b2fd5c2e66876adc5b06cdbd7d2102"
-  integrity sha512-EZ1DYihju9pwVB+jg67ogm+Tmqc6JmhamRN6I4Zt8DfZu5lbcQGw3ozH9lFejSJgs/ibaef3A9PMXPLeefFGJg==
-  dependencies:
-    follow-redirects "^1.15.0"
-    form-data "^4.0.0"
-    proxy-from-env "^1.1.0"
-
 axios@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.2.tgz#b625db8a7051fbea61c35a3cbb3a1daa7b9c7621"
@@ -922,7 +913,7 @@ find-up@^4.0.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
-follow-redirects@^1.15.0, follow-redirects@^1.15.6:
+follow-redirects@^1.15.6:
   version "1.15.6"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.6.tgz#7f815c0cda4249c74ff09e95ef97c23b5fd0399b"
   integrity sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==
@@ -1643,14 +1634,14 @@ supports-preserve-symlinks-flag@^1.0.0:
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
-swdc-tracker@1.5.5:
-  version "1.5.5"
-  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.5.5.tgz#d719e3b737fa4bf9f14cc5e736f7cc55bc637d8b"
-  integrity sha512-uzsfFFyF9uIo131CJlBuTRub1Ran7N+iIx6I8tJ2WGkWYT/kaUC3rm2QRmLNJABrmedO2MjmocisL14xdh0HqA==
+swdc-tracker@1.5.7:
+  version "1.5.7"
+  resolved "https://registry.yarnpkg.com/swdc-tracker/-/swdc-tracker-1.5.7.tgz#49850adb49b3780378c0828e7fbf55a0afb44111"
+  integrity sha512-WfsK3UWdj4GQGVWX1DnavDL3P6zpHeoQTfh7YUhUySbOuWeimOcqpHVcdZrSHdFtCSmDzqrA6poWmg5yNKORfw==
   dependencies:
     "@snowplow/node-tracker" "^3.8.0"
     "@types/node" "^17.0.21"
-    axios "^1.3.2"
+    axios "^1.7.2"
     libsodium "^0.7.9"
     libsodium-wrappers "^0.7.9"
     object-hash "^3.0.0"
