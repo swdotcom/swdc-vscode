@@ -70,8 +70,6 @@ export class ChangeStateManager {
       setItem('vscode_primary_window', getWorkspaceName());
       // check if the websocket connection is stale
       checkWebsocketConnection();
-    } else {
-      this.tracker.trackEditorAction('editor', 'unfocus');
     }
   }
 
