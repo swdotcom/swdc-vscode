@@ -2,7 +2,7 @@ import {commands, Disposable, window, workspace} from 'vscode';
 import {TrackerManager} from './TrackerManager';
 import {EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface} from '@swdotcom/editor-flow';
 import {configureSettings, showingConfigureSettingsPanel} from './ConfigManager';
-import {getWorkspaceName, setItem} from '../Util';
+import {getWorkspaceName, isPrimaryWindow, setItem} from '../Util';
 import { checkWebsocketConnection } from '../websockets';
 
 export class ChangeStateManager {
@@ -70,6 +70,9 @@ export class ChangeStateManager {
       setItem('vscode_primary_window', getWorkspaceName());
       // check if the websocket connection is stale
       checkWebsocketConnection();
+    } else if (isPrimaryWindow()) {
+      // primary editor window is unfocused
+      this.tracker.trackEditorAction('editor', 'unfocus');
     }
   }
 
