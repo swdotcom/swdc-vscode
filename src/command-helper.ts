@@ -1,14 +1,13 @@
 import {commands, Disposable, window, ExtensionContext, authentication} from 'vscode';
-import {launchWebUrl, displayReadme, setItem, showInformationMessage, getItem} from './Util';
+import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
-import {FIVE_SECONDS_IN_MILLIS, app_url, vscode_issues_url} from './Constants';
+import {createAnonymousUser, oauthLogin} from './menu/AccountManager';
+import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
 import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
-import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
@@ -69,51 +68,49 @@ export function createCommands(
   // LAUNCH SWITCH ACCOUNT
   cmds.push(
     commands.registerCommand('codetime.switchAccount', () => {
-      showExistingAccountMenu();
+      oauthLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
     commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem) => {
-      launchLogin('software');
+      oauthLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
     commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem) => {
-      launchEmailSignup();
+      oauthLogin();
     })
   );
 
   // LAUNCH SIGN UP FLOW
   cmds.push(
     commands.registerCommand('codetime.registerAccount', () => {
-      // launch the auth selection flow
-      showSignUpAccountMenu();
+      oauthLogin();
     })
   );
 
   // LAUNCH EXISTING ACCOUNT LOGIN
   cmds.push(
     commands.registerCommand('codetime.login', () => {
-      // launch the auth selection flow
-      showExistingAccountMenu();
+      oauthLogin();
     })
   );
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
     commands.registerCommand('codetime.googleLogin', (item: KpmItem) => {
-      launchLogin('google');
+      oauthLogin();
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
     commands.registerCommand('codetime.githubLogin', (item: KpmItem) => {
-      launchLogin('github');
+      oauthLogin();
     })
   );
 
@@ -250,27 +247,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.authSignIn', async () => {
-      const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
-      if (session) {
-        const latestUpdate = getItem('updatedAt');
-        if (!latestUpdate || new Date().getTime() - latestUpdate > FIVE_SECONDS_IN_MILLIS) {
-          window
-            .showInformationMessage(
-              'You are already signed in. Would you like to switch accounts?',
-              {
-                modal: true,
-              },
-              'Switch Account'
-            )
-            .then(async (selection) => {
-              if (selection === "Switch Account") {
-                await getAuth0Instance().removeSession(session.account.id);
-                await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
-              }
-            });
-          return;
-        }
-      }
+      oauthLogin();
     })
   )
 

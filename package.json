@@ -69,14 +69,6 @@
         "title": "Code Time: Manage Slack connection"
       },
       {
-        "command": "codetime.switchAccount",
-        "title": "Code Time: Log in or Switch accounts"
-      },
-      {
-        "command": "codetime.registerAccount",
-        "title": "Code Time: Sign up"
-      },
-      {
         "command": "codetime.connectSlack",
         "title": "Code Time: Connect Slack workspace"
       },
@@ -98,7 +90,7 @@
       },
       {
         "command": "codetime.authSignIn",
-        "title": "Code Time: Software.com Oauth0",
+        "title": "Code Time: Software.com Sign In",
         "icon": "$(sign-in)"
       }
     ],

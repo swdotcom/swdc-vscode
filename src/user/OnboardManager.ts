@@ -1,12 +1,6 @@
 import {window, ExtensionContext} from 'vscode';
-import {
-  getItem,
-  setItem,
-  launchWebUrl,
-  getAuthQueryObject
-} from '../Util';
+import {getItem} from '../Util';
 import {createAnonymousUser} from '../menu/AccountManager';
-import {app_url} from '../Constants';
 
 let retry_counter = 0;
 
@@ -54,67 +48,4 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   await createAnonymousUser();
   // call the callback
   return callback(ctx, true /*anonCreated*/);
-}
-
-export async function launchEmailSignup() {
-  setItem('authType', 'software');
-
-  // continue with onboaring
-  const url = await buildEmailSignup();
-
-  launchWebUrl(url);
-}
-
-export async function launchLogin(loginType: string = 'software') {
-  setItem('authType', loginType);
-
-  // continue with onboaring
-  const url = await buildLoginUrl(loginType);
-
-  launchWebUrl(url);
-}
-
-/**
- * @param loginType "software" | "existing" | "google" | "github"
- */
-export async function buildLoginUrl(loginType: string) {
-  const name = getItem('name');
-  let url = app_url;
-
-  let params: any = getAuthQueryObject();
-
-  // only send the plugin_token when registering for the 1st time
-  if (!name) {
-    params.append('plugin_token', getItem('jwt'));
-  }
-
-  if (loginType === 'github') {
-    // github signup/login flow
-    url = `${app_url}/auth/github`;
-  } else if (loginType === 'google') {
-    // google signup/login flow
-    url = `${app_url}/auth/google`;
-  } else {
-    // email login
-    params.append('token', getItem('jwt'));
-    params.append('auth', 'software');
-    url = `${app_url}/onboarding`;
-  }
-
-  return `${url}?${params.toString()}`;
-}
-
-/**
- * @param loginType "software" | "existing" | "google" | "github"
- */
-export async function buildEmailSignup() {
-  let loginUrl = app_url;
-
-  let params: any = getAuthQueryObject();
-  params.append('auth', 'software');
-  params.append('token', getItem('jwt'));
-
-  loginUrl = `${app_url}/email-signup`;
-
-  return `${loginUrl}?${params.toString()}`;
 }

@@ -47,14 +47,6 @@ export async function getUser(token_override: any = '') {
   const resp = await appGet('/api/v1/user', {}, token_override);
   if (isResponseOk(resp) && resp.data) {
     currentUser = resp.data;
-
-    if (hasIntegrationConnection(8, currentUser?.integration_connections)) {
-      setItem('authType', 'google');
-    } else if (hasIntegrationConnection(9, currentUser?.integration_connections)) {
-      setItem('authType', 'github');
-    } else {
-      setItem('authType', 'software');
-    }
     return currentUser;
   }
   return null;
@@ -77,11 +69,6 @@ export async function authenticationCompleteHandler(user: any, override_jwt: any
     }
     setItem('name', user.email);
     setItem('updatedAt', new Date().getTime());
-
-    const currentAuthType = getItem('authType');
-    if (!currentAuthType) {
-      setItem('authType', 'software');
-    }
 
     // update the login status
     showInformationMessage('Successfully logged on to Code Time');
