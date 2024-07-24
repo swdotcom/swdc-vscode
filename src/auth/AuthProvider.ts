@@ -8,15 +8,15 @@ import { app_url } from "../Constants";
 import { getAuthQueryObject, logIt } from "../Util";
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
-export const AUTH_TYPE = 'codetime_auth0';
+export const AUTH_TYPE = 'codetime_auth';
 const AUTH_NAME = 'Software.com';
 const SESSIONS_KEY = `${AUTH_TYPE}.sessions`
 
-let instance: Auth0AuthenticationProvider;
+let instance: AuthProvider;
 
-export function getAuth0Instance(): Auth0AuthenticationProvider {
+export function getAuthInstance(): AuthProvider {
   if (!instance) {
-    logIt('Auth0AuthenticationProvider not initialized');
+    logIt('AuthenticationProvider not initialized');
   }
   return instance;
 }
@@ -27,7 +27,7 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
-export class Auth0AuthenticationProvider implements AuthenticationProvider, Disposable {
+export class AuthProvider implements AuthenticationProvider, Disposable {
   private _sessionChangeEmitter = new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>();
   private _disposable: Disposable;
   private _pendingStates: string[] = [];
@@ -145,7 +145,7 @@ export class Auth0AuthenticationProvider implements AuthenticationProvider, Disp
   }
 
   /**
-   * Log in to Auth0
+   * Auth Log
    */
   private async login(scopes: string[] = []) {
     return await window.withProgress<string>({

@@ -12,7 +12,7 @@ import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { getCachedUser, reload } from './DataController';
-import { AUTH_TYPE, getAuth0Instance } from './auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE, getAuthInstance } from './auth/AuthProvider';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -22,7 +22,7 @@ export function createCommands(
   dispose: () => void;
 } {
   let cmds = [];
-  ctx.subscriptions.push(getAuth0Instance());
+  ctx.subscriptions.push(getAuthInstance());
 
   cmds.push(kpmController);
 

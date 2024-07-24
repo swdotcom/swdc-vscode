@@ -9,7 +9,7 @@ import {
 } from '../Util';
 import {isResponseOk, appPost} from '../http/HttpClient';
 import { authentication } from 'vscode';
-import { AUTH_TYPE, getAuth0Instance } from '../auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE, getAuthInstance } from '../auth/AuthProvider';
 
 let creatingAnonUser = false;
 
@@ -18,7 +18,7 @@ export async function oauthLogin() {
   if (session) {
     const latestUpdate = getItem('updatedAt');
     if (!latestUpdate || new Date().getTime() - latestUpdate > (1000 * 3)) {
-      await getAuth0Instance().removeSession(session.account.id);
+      await getAuthInstance().removeSession(session.account.id);
       await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
     }
   }

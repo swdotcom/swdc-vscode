@@ -52,10 +52,6 @@ export async function getUser(token_override: any = '') {
   return null;
 }
 
-function hasIntegrationConnection(type_id: number, connections = []):boolean {
-  return !!(connections?.find((integration: any) => integration.status === 'ACTIVE' && (integration.integration_type_id === type_id)));
-}
-
 export async function authenticationCompleteHandler(user: any, override_jwt: any = '') {
   setAuthCallbackState(null);
 

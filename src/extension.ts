@@ -33,7 +33,7 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
-import { AUTH_TYPE, Auth0AuthenticationProvider } from './auth/Auth0AuthenticationProvider';
+import { AUTH_TYPE, AuthProvider } from './auth/AuthProvider';
 
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
@@ -66,7 +66,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
-  const auth0Provider:Auth0AuthenticationProvider = new Auth0AuthenticationProvider(ctx);
+  const authProvider:AuthProvider = new AuthProvider(ctx);
   storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
 
@@ -89,7 +89,7 @@ export async function activate(ctx: ExtensionContext) {
     }
   } else if (jwt && user?.registered) {
     // update the session with the existing jwt
-    auth0Provider.updateSession(jwt);
+    authProvider.updateSession(jwt);
   }
 
   if (jwt) {
