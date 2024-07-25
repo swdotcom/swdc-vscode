@@ -21,3 +21,4 @@ export const app_url = 'https://app.software.com';
 export const vscode_issues_url = 'https://github.com/swdotcom/swdc-vscode/issues';
 
 export const TWENTY_SEC_TIMEOUT_MILLIS = 20000;
+export const ONE_MIN_MILLIS = 1000 * 60;

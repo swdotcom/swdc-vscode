@@ -8,103 +8,20 @@ import {
   setAuthCallbackState,
 } from '../Util';
 import {isResponseOk, appPost} from '../http/HttpClient';
-import {showQuickPick} from './MenuManager';
-import {LOGIN_LABEL, SIGN_UP_LABEL} from '../Constants';
+import { authentication } from 'vscode';
+import { AUTH_TYPE, getAuthInstance } from '../auth/AuthProvider';
 
-let switching_account = false;
 let creatingAnonUser = false;
 
-const switchAccountItem = {
-  label: 'Switch to a different account?',
-  detail: 'Click to link to a different account.',
-};
-
-export async function showSwitchAccountsMenu() {
-  switching_account = true;
-  accountMenuSelection(switchAccountItem);
-}
-
-export async function showExistingAccountMenu() {
-  switching_account = true;
-  showLogInMenuOptions();
-}
-
-export async function showSignUpAccountMenu() {
-  switching_account = false;
-  showSignUpMenuOptions();
-}
-
-async function accountMenuSelection(placeholderItem: any) {
-  const items = [];
-
-  let placeholder = '';
-  const name = getItem('name');
-  if (name) {
-    const authType = getItem('authType');
-    let type = 'email';
-    if (authType === 'google') {
-      type = 'Google';
-    } else if (authType === 'github') {
-      type = 'GitHub';
+export async function authLogin() {
+  const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
+  if (session) {
+    const latestUpdate = getItem('updatedAt');
+    if (!latestUpdate || new Date().getTime() - latestUpdate > (1000 * 3)) {
+      await getAuthInstance().removeSession(session.account.id);
+      await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
     }
-    placeholder = `Connected using ${type} (${name})`;
-  } else {
-    placeholder = 'Connect using one of the following';
   }
-
-  if (placeholderItem) {
-    items.push(placeholderItem);
-  }
-  const menuOptions = {
-    items,
-    placeholder,
-  };
-  const selection = await showQuickPick(menuOptions);
-  if (selection) {
-    // show the google, github, email menu options
-    showLogInMenuOptions();
-  }
-}
-
-function showLogInMenuOptions() {
-  showAuthMenuOptions(LOGIN_LABEL, false /*isSignup*/);
-}
-
-function showSignUpMenuOptions() {
-  showAuthMenuOptions(SIGN_UP_LABEL, true /*isSignup*/);
-}
-
-function showAuthMenuOptions(authText: string, isSignup: boolean = true) {
-  const items = [];
-  const placeholder = `${authText} using...`;
-  items.push({
-    label: `${authText} with Google`,
-    command: 'codetime.googleLogin',
-    commandArgs: [null /*KpmItem*/, switching_account],
-  });
-  items.push({
-    label: `${authText} with GitHub`,
-    command: 'codetime.githubLogin',
-    commandArgs: [null /*KpmItem*/, switching_account],
-  });
-  if (isSignup) {
-    items.push({
-      label: `${authText} with Email`,
-      command: 'codetime.codeTimeSignup',
-      commandArgs: [null /*KpmItem*/, false /*switching_account*/],
-    });
-  } else {
-    items.push({
-      label: `${authText} with Email`,
-      command: 'codetime.codeTimeLogin',
-      commandArgs: [null /*KpmItem*/, switching_account],
-    });
-  }
-  const menuOptions = {
-    items,
-    placeholder,
-  };
-  showQuickPick(menuOptions);
 }
 
 /**
@@ -138,7 +55,6 @@ export async function createAnonymousUser() {
       if (!resp.data.registered) {
         setItem('name', null);
       }
-      setItem('switching_account', false);
       setAuthCallbackState('');
     }
   }

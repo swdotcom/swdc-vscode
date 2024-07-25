@@ -1,17 +1,16 @@
-import { api_endpoint } from './Constants';
+import { ONE_MIN_MILLIS, api_endpoint } from './Constants';
 import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow, editorOpsExtInstalled } from './Util';
 import { handleFlowScoreMessage } from './message_handlers/flow_score';
-import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
 import { handleIntegrationConnectionSocketEvent } from './message_handlers/integration_connection';
 import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stats_update';
 import { handleFlowStateMessage } from './message_handlers/flow_state';
 import { userDeletedCompletionHandler } from './DataController';
 import { setEndOfDayNotification } from './notifications/endOfDay';
+import { handleAuthenticatedPluginUser } from './message_handlers/authenticated_plugin_user';
 
 const WebSocket = require('ws');
 
 // The server should send its timeout to allow the client to adjust.
-const ONE_MIN_MILLIS = 1000 * 60;
 // Default of 30 minutes
 const DEFAULT_PING_INTERVAL_MILLIS = ONE_MIN_MILLIS * 30;
 let SERVER_PING_INTERVAL_MILLIS = DEFAULT_PING_INTERVAL_MILLIS + ONE_MIN_MILLIS;
@@ -224,12 +223,16 @@ const handleIncomingMessage = (data: any) => {
           handleFlowScoreMessage(message);
         }
         break;
+      case 'authenticated_plugin_user':
+        const user = message.body;
+        const currentEmail = getItem('name');
+        if (user.email !== currentEmail) {
+          handleAuthenticatedPluginUser(user);
+        }
+        break;
       case 'flow_state':
         try { logIt(`Flow state: ${JSON.stringify(message.body)}`) } catch (e) { }
         handleFlowStateMessage(message.body);
-        break;
-      case 'authenticated_plugin_user':
-        handleAuthenticatedPluginUser(message.body);
         break;
       case 'user_integration_connection':
         handleIntegrationConnectionSocketEvent(message.body);
