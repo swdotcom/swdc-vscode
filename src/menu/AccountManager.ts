@@ -13,7 +13,7 @@ import { AUTH_TYPE, getAuthInstance } from '../auth/AuthProvider';
 
 let creatingAnonUser = false;
 
-export async function oauthLogin() {
+export async function authLogin() {
   const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: true });
   if (session) {
     const latestUpdate = getItem('updatedAt');

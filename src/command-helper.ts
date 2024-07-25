@@ -2,7 +2,7 @@ import {commands, Disposable, window, ExtensionContext, authentication} from 'vs
 import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {createAnonymousUser, oauthLogin} from './menu/AccountManager';
+import {createAnonymousUser, authLogin} from './menu/AccountManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
@@ -68,49 +68,49 @@ export function createCommands(
   // LAUNCH SWITCH ACCOUNT
   cmds.push(
     commands.registerCommand('codetime.switchAccount', () => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
     commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem) => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
     commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem) => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH SIGN UP FLOW
   cmds.push(
     commands.registerCommand('codetime.registerAccount', () => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH EXISTING ACCOUNT LOGIN
   cmds.push(
     commands.registerCommand('codetime.login', () => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
     commands.registerCommand('codetime.googleLogin', (item: KpmItem) => {
-      oauthLogin();
+      authLogin();
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
     commands.registerCommand('codetime.githubLogin', (item: KpmItem) => {
-      oauthLogin();
+      authLogin();
     })
   );
 
@@ -247,7 +247,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.authSignIn', async () => {
-      oauthLogin();
+      authLogin();
     })
   )
 
