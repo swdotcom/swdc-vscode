@@ -312,6 +312,15 @@ export function getOffsetSeconds() {
   return d.getTimezoneOffset() * 60;
 }
 
+export function getAuthQueryObject(): URLSearchParams {
+  const params = new URLSearchParams();
+  params.append('plugin_uuid', getPluginUuid());
+  params.append('plugin_id', `${getPluginId()}`);
+  params.append('plugin_version', getVersion());
+  params.append('auth_callback_state', getAuthCallbackState(true));
+  return params;
+}
+
 export async function launchWebDashboard() {
   // add the token=jwt
   const jwt = getItem('jwt');

@@ -1,19 +1,18 @@
-import {commands, Disposable, window, ExtensionContext} from 'vscode';
+import {commands, Disposable, window, ExtensionContext, authentication} from 'vscode';
 import {launchWebUrl, displayReadme, setItem, showInformationMessage} from './Util';
 import {KpmManager} from './managers/KpmManager';
 import {KpmItem} from './model/models';
-import {createAnonymousUser, showExistingAccountMenu, showSignUpAccountMenu} from './menu/AccountManager';
-import {TrackerManager} from './managers/TrackerManager';
+import {createAnonymousUser, authLogin} from './menu/AccountManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
 import {showDashboard} from './managers/WebViewManager';
 import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
-import {launchEmailSignup, launchLogin} from './user/OnboardManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
 import { progressIt } from './managers/ProgressManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { getCachedUser, reload } from './DataController';
+import { AUTH_TYPE, getAuthInstance } from './auth/AuthProvider';
 
 export function createCommands(
   ctx: ExtensionContext,
@@ -23,8 +22,7 @@ export function createCommands(
   dispose: () => void;
 } {
   let cmds = [];
-
-  const tracker: TrackerManager = TrackerManager.getInstance();
+  ctx.subscriptions.push(getAuthInstance());
 
   cmds.push(kpmController);
 
@@ -70,51 +68,49 @@ export function createCommands(
   // LAUNCH SWITCH ACCOUNT
   cmds.push(
     commands.registerCommand('codetime.switchAccount', () => {
-      showExistingAccountMenu();
+      authLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('software', switching_account);
+    commands.registerCommand('codetime.codeTimeLogin', (item: KpmItem) => {
+      authLogin();
     })
   );
 
   // LAUNCH EMAIL LOGIN
   cmds.push(
-    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem, switching_account: boolean) => {
-      launchEmailSignup(switching_account);
+    commands.registerCommand('codetime.codeTimeSignup', (item: KpmItem) => {
+      authLogin();
     })
   );
 
   // LAUNCH SIGN UP FLOW
   cmds.push(
     commands.registerCommand('codetime.registerAccount', () => {
-      // launch the auth selection flow
-      showSignUpAccountMenu();
+      authLogin();
     })
   );
 
   // LAUNCH EXISTING ACCOUNT LOGIN
   cmds.push(
     commands.registerCommand('codetime.login', () => {
-      // launch the auth selection flow
-      showExistingAccountMenu();
+      authLogin();
     })
   );
 
   // LAUNCH GOOGLE LOGIN
   cmds.push(
-    commands.registerCommand('codetime.googleLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('google', switching_account);
+    commands.registerCommand('codetime.googleLogin', (item: KpmItem) => {
+      authLogin();
     })
   );
 
   // LAUNCH GITHUB LOGIN
   cmds.push(
-    commands.registerCommand('codetime.githubLogin', (item: KpmItem, switching_account: boolean) => {
-      launchLogin('github', switching_account);
+    commands.registerCommand('codetime.githubLogin', (item: KpmItem) => {
+      authLogin();
     })
   );
 
@@ -246,6 +242,18 @@ export function createCommands(
         showInformationMessage(`Successfully logged out of your Code Time account`);
         await reload()
       }
+    })
+  )
+
+  cmds.push(
+    commands.registerCommand('codetime.authSignIn', async () => {
+      authLogin();
+    })
+  )
+
+  cmds.push(
+    authentication.onDidChangeSessions(async e => {
+      await authentication.getSession(AUTH_TYPE, ['profile'], { createIfNone: false });
     })
   )
 

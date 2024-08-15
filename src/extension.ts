@@ -2,7 +2,7 @@
 
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {window, ExtensionContext, commands} from 'vscode';
+import {window, ExtensionContext, commands, authentication} from 'vscode';
 import {getUser} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
@@ -33,9 +33,11 @@ import {initializeFlowModeState} from './managers/FlowManager';
 import { ExtensionManager } from './managers/ExtensionManager';
 import { LocalStorageManager } from './managers/LocalStorageManager';
 import { setEndOfDayNotification } from './notifications/endOfDay';
+import { AUTH_TYPE, AuthProvider } from './auth/AuthProvider';
 
 let currentColorKind: number | undefined = undefined;
 let storageManager: LocalStorageManager | undefined = undefined;
+let user: any = null;
 
 const tracker: TrackerManager = TrackerManager.getInstance();
 
@@ -64,6 +66,7 @@ export function deactivate(ctx: ExtensionContext) {
 }
 
 export async function activate(ctx: ExtensionContext) {
+  const authProvider:AuthProvider = new AuthProvider(ctx);
   storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
 
@@ -71,7 +74,23 @@ export async function activate(ctx: ExtensionContext) {
   ctx.subscriptions.push(createCommands(ctx, kpmController, storageManager));
   TrackerManager.storageMgr = storageManager;
 
-  const jwt = getItem('jwt');
+  // session: {id: <String>, accessToken: <String>, account: {label: <String>, id: <Number>}, scopes: [<String>,...]}
+  const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
+  let jwt = getItem('jwt');
+  user = await getUser();
+  if (session) {
+    // fetch the user with the non-session jwt to compare
+    if (!user || user.email != session.account.label) {
+      jwt = session.accessToken;
+      // update the local storage with the new user
+      setItem('name', session.account.label);
+      setItem('jwt', jwt);
+      user = await getUser(jwt);
+    }
+  } else if (jwt && user?.registered) {
+    // update the session with the existing jwt
+    authProvider.updateSession(jwt);
+  }
 
   if (jwt) {
     intializePlugin();
@@ -100,7 +119,7 @@ export async function intializePlugin() {
   await tracker.init();
 
   // initialize user and preferences
-  await getUser();
+  if (!user) user = await getUser();
 
   // show the sidebar if this is the 1st
   if (!getBooleanItem('vscode_CtInit')) {
