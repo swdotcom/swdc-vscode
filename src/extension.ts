@@ -3,7 +3,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {window, ExtensionContext, commands, authentication} from 'vscode';
-import {getUser} from './DataController';
+import {getUser, initializeAuthProvider} from './DataController';
 import {onboardInit} from './user/OnboardManager';
 import {
   getVersion,
@@ -69,6 +69,7 @@ export async function activate(ctx: ExtensionContext) {
   const authProvider:AuthProvider = new AuthProvider(ctx);
   storageManager = LocalStorageManager.getInstance(ctx);
   initializeSession(storageManager);
+  initializeAuthProvider(authProvider);
 
   // add the code time commands
   ctx.subscriptions.push(createCommands(ctx, kpmController, storageManager));

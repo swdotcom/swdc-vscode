@@ -12,8 +12,14 @@ import {
 import {initializeWebsockets} from './websockets';
 import {SummaryManager} from './managers/SummaryManager';
 import { updateFlowModeStatus } from './managers/FlowManager';
+import { AuthProvider } from './auth/AuthProvider';
 
 let currentUser: any | null = null;
+let authProvider: AuthProvider | null = null;
+
+export function initializeAuthProvider(provider: AuthProvider) {
+  authProvider = provider;
+}
 
 export async function getCachedSlackIntegrations() {
   currentUser = await getCachedUser();
@@ -66,6 +72,11 @@ export async function authenticationCompleteHandler(user: any, override_jwt: any
     setItem('name', user.email);
     setItem('updatedAt', new Date().getTime());
 
+    setItem('logging_in', false);
+    // ensure the session is updated
+    if (authProvider) {
+      authProvider.updateSession(getItem('jwt'), user);
+    }
     // update the login status
     showInformationMessage('Successfully logged on to Code Time');
 

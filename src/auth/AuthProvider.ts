@@ -5,7 +5,7 @@ import {
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
-import { getAuthQueryObject, logIt } from "../Util";
+import { getAuthQueryObject, getBooleanItem, logIt, setItem } from "../Util";
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth';
@@ -33,7 +33,6 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
   private _pendingStates: string[] = [];
   private _codeExchangePromises = new Map<string, { promise: Promise<string>; cancel: EventEmitter<void> }>();
   private _uriHandler = new UriEventHandler();
-  private _authenticating = false;
 
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
@@ -68,7 +67,7 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
     return [];
   }
 
-  public async updateSession(jwtToken: string): Promise<AuthenticationSession> {
+  public async updateSession(jwtToken: string, user: any = null): Promise<AuthenticationSession> {
     let session: AuthenticationSession = {
       id: uuid(),
       accessToken: jwtToken,
@@ -79,9 +78,11 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
       scopes: []
     }
     try {
-      // const userinfo: { name: string, email: string } = await this.getUserInfo(token);
-      const user = await getUser(jwtToken);
-      await authenticationCompleteHandler(user, jwtToken);
+      const sessionUpdate = !!user
+      if (!user) {
+        user = await getUser(jwtToken);
+        await authenticationCompleteHandler(user, jwtToken);
+      }
 
       session = {
         id: uuid(),
@@ -95,7 +96,11 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
 
       await this.context.secrets.store(SESSIONS_KEY, JSON.stringify([session]))
 
-      this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] });
+      if (sessionUpdate) {
+        this._sessionChangeEmitter.fire({ added: [], removed: [], changed: [session] });
+      } else {
+        this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] });
+      }
     } catch (e: any) {
       if (e.message) {
         logIt(`Error creating session: ${e?.message}`);
@@ -153,6 +158,7 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
       title: "Signing in to Software.com...",
       cancellable: true
     }, async (_, token) => {
+      setItem('logging_in', true);
       const stateId = uuid();
 
       this._pendingStates.push(stateId);
@@ -175,13 +181,26 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
       try {
         return await Promise.race([
           codeExchangePromise.promise,
+          // 2 minute timeout
           new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 120000)),
+          // websocket login check
+          new Promise<string>((_, reject) => {
+            const interval = setInterval(async () => {
+              if (getBooleanItem('logging_in') === false) {
+                clearInterval(interval);
+                reject('Cancelled');
+              }
+            }, 1500);
+          }),
+          // cancel button
           promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => { reject('Login Cancelled'); }).promise
         ]);
       } finally {
         this._pendingStates = this._pendingStates.filter(n => n !== stateId);
         codeExchangePromise?.cancel.fire();
         this._codeExchangePromises.delete(scopeString);
+        // reset logging_in flag
+        setItem('logging_in', false);
       }
     });
   }
