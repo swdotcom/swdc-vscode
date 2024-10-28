@@ -3,7 +3,8 @@ import {updateFlowModeStatusBar} from './StatusBarManager';
 import { isInFlowLocally, updateInFlowLocally } from './FlowManager';
 import { commands } from 'vscode';
 
-const fs = require('fs');
+import * as fs from 'fs';
+
 
 export class SyncManager {
   private static _instance: SyncManager;

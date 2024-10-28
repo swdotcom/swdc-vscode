@@ -16,10 +16,10 @@ import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './man
 import { formatISO } from 'date-fns';
 import { initializeWebsockets, websocketAlive } from './websockets';
 
-const open = require('open');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+import open from 'open';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
