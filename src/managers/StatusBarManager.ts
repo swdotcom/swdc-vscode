@@ -91,7 +91,7 @@ export function updateStatusBarWithSummaryData() {
 
 function showStatus(msg: string, tooltip: string | null) {
   if (!tooltip) {
-    tooltip = 'Active code time today. Click to see more from Code Time.';
+    tooltip = 'Code time today. Click to see more from Code Time.';
   }
 
   const email = getItem('name');
