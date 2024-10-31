@@ -370,7 +370,14 @@ export class TrackerManager {
       this.eventVersions.set(event.fileName, event.version);
       if (this.eventVersions.size > 5) {
         // remove oldest entry in map to stay small
-        this.eventVersions.delete(this.eventVersions.keys().next().value);
+        try {
+          const key = this.eventVersions.keys().next().value;
+          if (key !== undefined) {
+            this.eventVersions.delete(key);
+          }
+        } catch (e) {
+          // ignore
+        }
       }
       return false;
     }

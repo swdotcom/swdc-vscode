@@ -1,8 +1,8 @@
 import { getFileNameFromPath, logIt } from '../Util';
 import { LocalStorageManager } from './LocalStorageManager';
 
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
 let storageMgr: LocalStorageManager | undefined = undefined;
 

@@ -3,7 +3,8 @@ import { getUserPreferences } from '../DataController';
 import { getFirstWorkspaceFolder, logIt } from '../Util';
 import { TrackerManager } from './TrackerManager';
 
-const fs = require('fs');
+import * as fs from 'fs';
+
 export class KpmManager {
   private static instance: KpmManager;
 

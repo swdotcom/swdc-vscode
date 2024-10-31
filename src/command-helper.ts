@@ -144,7 +144,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.connectSlack', () => {
-      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
+      launchWebUrl(`${app_url}/code_time/integration_type/slack`);
     })
   );
 
@@ -162,7 +162,7 @@ export function createCommands(
 
   cmds.push(
     commands.registerCommand('codetime.manageSlackConnection', () => {
-      launchWebUrl(`${app_url}/data_sources/integration_types/slack`);
+      launchWebUrl(`${app_url}/code_time/integration_type/slack`);
     })
   );
 
