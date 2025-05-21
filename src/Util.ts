@@ -15,8 +15,8 @@ import {execCmd} from './managers/ExecManager';
 import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
 import { initializeWebsockets, websocketAlive } from './websockets';
+import open from 'open';
 
-const open = require('open');
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
