@@ -210,7 +210,7 @@ export function createCommands(
   // show the org overview
   cmds.push(
     commands.registerCommand('codetime.showOrgDashboard', (slug: string) => {
-      launchWebUrl(`${app_url}/organizations/${slug}/overview`);
+      launchWebUrl(`${app_url}/organizations/${slug}`);
     })
   );
 
