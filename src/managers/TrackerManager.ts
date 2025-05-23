@@ -61,7 +61,7 @@ export class TrackerManager {
   }
 
   public async trackCodeTimeEvent(projectChangeInfo: ProjectChangeInfo) {
-    if (!this.trackerReady) {
+    if (!this.trackerReadyWithJwt()) {
       return;
     }
 
@@ -123,7 +123,7 @@ export class TrackerManager {
 
   public async trackUIInteraction(item: KpmItem) {
     // ui interaction doesn't require a jwt, no need to check for that here
-    if (!this.trackerReady || !item) {
+    if (!this.trackerReadyWithJwt() || !item) {
       return;
     }
 
@@ -150,7 +150,7 @@ export class TrackerManager {
   }
 
   public async trackGitLocalEvent(gitEventName: string, branch?: string, commit?: string) {
-    if (!this.trackerReady) {
+    if (!this.trackerReadyWithJwt()) {
       return;
     }
     const projectParams = this.getProjectParams();
@@ -165,7 +165,7 @@ export class TrackerManager {
   }
 
   public async trackGitRemoteEvent(event: any) {
-    if (!this.trackerReady) {
+    if (!this.trackerReadyWithJwt()) {
       return;
     }
     const projectParams = this.getProjectParams();
@@ -258,7 +258,7 @@ export class TrackerManager {
   }
 
   public async trackEditorAction(entity: string, type: string, event?: any) {
-    if (!this.trackerReady) {
+    if (!this.trackerReadyWithJwt()) {
       return;
     }
 
@@ -288,7 +288,7 @@ export class TrackerManager {
 
   // action: installed | uninstalled | enabled | disabled
   public async trackVSCodeExtension(eventData: any) {
-    if (!this.trackerReady) {
+    if (!this.trackerReadyWithJwt()) {
       return;
     }
 
@@ -454,5 +454,9 @@ export class TrackerManager {
       }
     }
     return false;
+  }
+
+  trackerReadyWithJwt(): boolean {
+    return this.trackerReady && !!getItem('jwt')?.trim();
   }
 }
