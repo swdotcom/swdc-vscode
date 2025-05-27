@@ -1,7 +1,6 @@
 import {workspace, extensions, window, Uri, commands, ViewColumn, WorkspaceFolder, env} from 'vscode';
 import {
   CODE_TIME_EXT_ID,
-  app_url,
   CODE_TIME_PLUGIN_ID,
   CODE_TIME_TYPE,
   SOFTWARE_DIRECTORY,
@@ -16,11 +15,10 @@ import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './man
 import { formatISO } from 'date-fns';
 import { initializeWebsockets, websocketAlive } from './websockets';
 
-const open = require('open');
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+const open = require('open');
 const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -320,15 +318,6 @@ export function getAuthQueryObject(): URLSearchParams {
   params.append('plugin_version', getVersion());
   params.append('auth_callback_state', getAuthCallbackState(true));
   return params;
-}
-
-export async function launchWebDashboard() {
-  // add the token=jwt
-  const jwt = getItem('jwt');
-  const encodedJwt = encodeURIComponent(jwt);
-  const webUrl = `${app_url}?token=${encodedJwt}`;
-
-  launchWebUrl(webUrl);
 }
 
 export function launchWebUrl(url: string) {

@@ -4,7 +4,10 @@ test/**
 **/*.ts
 **/*.map
 .gitignore
+.github/**
+*.vsix
 tsconfig.json
+eslint.config.mjs
 node_modules
 out/
 lib/
