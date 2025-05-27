@@ -18,7 +18,7 @@ import { initializeWebsockets, websocketAlive } from './websockets';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-const open = require('open');
+
 const outputChannel = window.createOutputChannel('CodeTime');
 
 export const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -328,7 +328,7 @@ export function launchWebUrl(url: string) {
       console.error('Failed to initialize websockets', e);
     }
   }
-  open(url);
+  env.openExternal(Uri.parse(url));
 }
 
 /**
@@ -381,12 +381,6 @@ export function checkRegistrationForReport(showSignup = true) {
     return false;
   }
   return true;
-}
-
-export function getImage(name: string) {
-  const resourcePath: string = path.join(__dirname, 'images');
-  const file = path.join(resourcePath, name);
-  return file;
 }
 
 export function isPrimaryWindow() {
