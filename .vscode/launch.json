@@ -6,13 +6,13 @@
             "request": "launch",
             "name": "Launch Extension",
             "runtimeExecutable": "${execPath}",
-            "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "env": {
-                "NODE_ENV": "test"
+                "NODE_ENV": "test",
+                "APP_ENV": "development"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"

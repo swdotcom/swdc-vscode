@@ -48,7 +48,7 @@ export class ExtensionManager {
     // initialize or re-send the installed plugins
     const now = new Date().toISOString();
     if (!eventDate || (new Date().getTime() - new Date(eventDate).getTime() > this.ONE_WEEK_MILLIS) || jwt !== extensionsJwt) {
-      storeJsonData(extensionsFile, {eventDate: now, jwt: jwt, data: {}});
+      storeJsonData(extensionsFile, { eventDate: now, jwt: jwt, data: {} });
       this.getInstalledPlugins(now);
     }
   }
@@ -117,15 +117,17 @@ export class ExtensionManager {
       action: this.INSTALLED_ACTION,
       event_at: eventDate,
       os: os,
-      id: pkg.id,
-      publisher: pkg.publisher,
-      name: pkg.name,
-      display_name: pkg.displayName,
-      author: pkg.author?.name || pkg.publisher,
-      version: pkg.version,
-      description: this.truncateString(pkg.description, 2048),
-      categories: pkg.categories,
-      extension_kind: pkg.extensionKind ? [].concat(pkg.extensionKind) : null
+      vscode_extension: {
+        id: pkg.id,
+        publisher: pkg.publisher,
+        name: pkg.name,
+        display_name: pkg.displayName,
+        author: pkg.author?.name || pkg.publisher,
+        version: pkg.version,
+        description: this.truncateString(pkg.description, 2048),
+        categories: pkg.categories,
+        extension_kind: pkg.extensionKind ? [].concat(pkg.extensionKind) : null
+      }
     }
   }
 

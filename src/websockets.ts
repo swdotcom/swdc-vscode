@@ -1,5 +1,5 @@
-import { ONE_MIN_MILLIS, api_endpoint } from './Constants';
-import { getItem, getPluginId, getPluginName, getVersion, getOs, getOffsetSeconds, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow, editorOpsExtInstalled } from './Util';
+import { ONE_MIN_MILLIS, websockets_url } from './Constants';
+import { getItem, getPluginId, getPluginName, getVersion, getOs, getPluginUuid, logIt, getRandomNumberWithinRange, isPrimaryWindow, editorOpsExtInstalled } from './Util';
 import { handleFlowScoreMessage } from './message_handlers/flow_score';
 import { handleIntegrationConnectionSocketEvent } from './message_handlers/integration_connection';
 import { handleCurrentDayStatsUpdate } from './message_handlers/current_day_stats_update';
@@ -50,15 +50,11 @@ export function initializeWebsockets() {
       'X-SWDC-Plugin-Version': getVersion(),
       'X-SWDC-Plugin-OS': getOs(),
       'X-SWDC-Plugin-TZ': Intl.DateTimeFormat().resolvedOptions().timeZone,
-      'X-SWDC-Plugin-Offset': getOffsetSeconds() / 60,
+      'X-SWDC-Plugin-Offset': new Date().getTimezoneOffset(),
       'X-SWDC-Plugin-UUID': getPluginUuid(),
     },
     perMessageDeflate: false
   };
-
-  const scheme = api_endpoint.includes('https') ? 'wss://' : 'ws://';
-  const host = api_endpoint.split('//')[1];
-  const websockets_url = `${scheme}${host}/websockets`;
 
   ws = new WebSocket(websockets_url, options);
 

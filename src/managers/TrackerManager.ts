@@ -1,6 +1,6 @@
 import swdcTracker from 'swdc-tracker';
-import {api_endpoint} from '../Constants';
-import {version} from 'vscode';
+import { app_url } from '../Constants';
+import { version } from 'vscode';
 import {
   getPluginName,
   getItem,
@@ -9,10 +9,11 @@ import {
   getWorkspaceFolders,
   getGitEventFile,
   isGitProject,
-  getEditorName
+  getEditorName,
+  logIt
 } from '../Util';
-import {KpmItem} from '../model/models';
-import {getResourceInfo} from '../repo/KpmRepoManager';
+import { KpmItem } from '../model/models';
+import { getResourceInfo } from '../repo/KpmRepoManager';
 import {
   getDefaultBranchFromRemoteBranch,
   getRepoIdentifierInfo,
@@ -25,8 +26,8 @@ import {
   commitAlreadyOnRemote,
   isMergeCommit,
 } from '../repo/GitUtil';
-import {getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData} from './FileManager';
-import {DocChangeInfo, ProjectChangeInfo} from '@swdotcom/editor-flow';
+import { getFileDataAsJson, getJsonItem, setJsonItem, storeJsonData } from './FileManager';
+import { DocChangeInfo, ProjectChangeInfo } from '@swdotcom/editor-flow';
 import { LocalStorageManager } from './LocalStorageManager';
 import { getUserPreferences } from '../DataController';
 
@@ -38,7 +39,7 @@ export class TrackerManager {
   private eventVersions: Map<string, number> = new Map();
   public static storageMgr: LocalStorageManager | undefined = undefined;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): TrackerManager {
     if (!TrackerManager.instance) {
@@ -54,9 +55,11 @@ export class TrackerManager {
 
   public async init() {
     // initialize tracker with swdc api host, namespace, and appId
-    const result = await swdcTracker.initialize(api_endpoint, 'CodeTime', 'swdc-vscode');
+    const result = await swdcTracker.initialize(app_url, 'CodeTime', 'swdc-vscode');
     if (result.status === 200) {
       this.trackerReady = true;
+    } else {
+      logIt(`swdc-tracker failed to initialize - ${JSON.stringify(result)}`)
     }
   }
 
@@ -196,7 +199,7 @@ export class TrackerManager {
     }
     const commitInfo = await getInfoForCommit(projectParams.project_directory, commit);
     const file_changes = await getChangesForCommit(projectParams.project_directory, commit);
-    const eventData = {commit_id: commit, git_event_timestamp: commitInfo.authoredTimestamp, file_changes};
+    const eventData = { commit_id: commit, git_event_timestamp: commitInfo.authoredTimestamp, file_changes };
 
     this.sendGitEvent('local_commit', projectParams, eventData);
   }
@@ -229,7 +232,7 @@ export class TrackerManager {
 
     for (const commit of commits) {
       const file_changes = await getChangesForCommit(projectParams.project_directory, commit.commit);
-      const eventData = {commit_id: commit.commit, git_event_timestamp: commit.authoredTimestamp, file_changes};
+      const eventData = { commit_id: commit.commit, git_event_timestamp: commit.authoredTimestamp, file_changes };
 
       this.sendGitEvent(gitEventName, projectParams, eventData);
     }
@@ -316,10 +319,8 @@ export class TrackerManager {
 
   getJwtParams(): any {
     let token: string = getItem('jwt');
-    if (token?.match(/\s/)) {
-      return {jwt: token?.split(/\s/)[1]};
-    }
-    return {jwt: token};
+
+    return { jwt: token?.trim().split(' ').at(-1) };
   }
 
   getProjectParams() {
@@ -327,7 +328,7 @@ export class TrackerManager {
     const project_directory = workspaceFolders.length ? workspaceFolders[0].uri.fsPath : '';
     const project_name = workspaceFolders.length ? workspaceFolders[0].name : '';
 
-    return {project_directory, project_name};
+    return { project_directory, project_name };
   }
 
   async getRepoParams(projectRootPath: string) {
@@ -358,7 +359,7 @@ export class TrackerManager {
   async getUncommittedChangesParams(projectRootPath: string) {
     const stats = await getLocalChanges(projectRootPath);
 
-    return {file_changes: stats};
+    return { file_changes: stats };
   }
 
   eventVersionIsTheSame(event: any) {
@@ -414,7 +415,7 @@ export class TrackerManager {
 
   setLatestTrackedCommit(dotGitFilePath: string, commit: string) {
     // dotGitFilePath: /Users/somebody/code/repo_name/.git/refs/remotes/origin/main
-    setJsonItem(getGitEventFile(), dotGitFilePath, {latestTrackedCommit: commit});
+    setJsonItem(getGitEventFile(), dotGitFilePath, { latestTrackedCommit: commit });
   }
 
   getLatestTrackedCommit(dotGitFilePath: string): string {
