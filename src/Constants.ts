@@ -13,12 +13,11 @@ export const DISCONNECT_LABEL = 'Disconnect';
 export const HIDE_CODE_TIME_STATUS_LABEL = 'Hide Code Time status';
 export const SHOW_CODE_TIME_STATUS_LABEL = 'Show Code Time status';
 
-// Directory where software data is stored
-export const SOFTWARE_DIRECTORY = '.software';
-export const api_endpoint = 'https://api.software.com';
-export const app_url = 'https://app.software.com';
+const isDev = process.env.APP_ENV === 'development'
+export const SOFTWARE_DIRECTORY = isDev ? '.software-dev' : '.software';
+export const websockets_url = isDev ? 'ws://localhost:5001/websockets' : 'wss://api.software.com/websockets';
+export const app_url = isDev ? 'http://localhost:3000' : 'https://app.software.com';
 
 export const vscode_issues_url = 'https://github.com/swdotcom/swdc-vscode/issues';
 
-export const TWENTY_SEC_TIMEOUT_MILLIS = 20000;
 export const ONE_MIN_MILLIS = 1000 * 60;
