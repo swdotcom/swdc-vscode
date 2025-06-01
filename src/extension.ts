@@ -90,7 +90,7 @@ export async function activate(ctx: ExtensionContext) {
     }
   } else if (jwt && user?.registered) {
     // update the session with the existing jwt
-    authProvider.updateSession(jwt);
+    authProvider.updateSession(jwt, user);
   }
 
   if (jwt) {

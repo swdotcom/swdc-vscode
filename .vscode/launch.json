@@ -12,7 +12,7 @@
             ],
             "env": {
                 "NODE_ENV": "test",
-                "APP_ENV": "development"
+                "APP_ENV": "prod"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"
