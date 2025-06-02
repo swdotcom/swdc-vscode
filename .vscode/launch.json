@@ -4,7 +4,7 @@
         {
             "type": "extensionHost",
             "request": "launch",
-            "name": "Launch Extension",
+            "name": "Launch Extension Prod",
             "runtimeExecutable": "${execPath}",
             "sourceMaps": true,
             "args": [
@@ -13,6 +13,24 @@
             "env": {
                 "NODE_ENV": "test",
                 "APP_ENV": "prod"
+            },
+            "outFiles": [
+                "${workspaceFolder}/dist/extension.js"
+            ],
+            "preLaunchTask": "npm: watch"
+        },
+        {
+            "type": "extensionHost",
+            "request": "launch",
+            "name": "Launch Extension Dev",
+            "runtimeExecutable": "${execPath}",
+            "sourceMaps": true,
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "env": {
+                "NODE_ENV": "test",
+                "APP_ENV": "development"
             },
             "outFiles": [
                 "${workspaceFolder}/dist/extension.js"
