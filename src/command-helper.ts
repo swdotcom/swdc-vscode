@@ -246,6 +246,18 @@ export function createCommands(
   )
 
   cmds.push(
+    commands.registerCommand('codetime.apiSessionErrorReset', async () => {
+      // clear the storage and recreate an anon user
+      storageManager.clearStorage();
+
+      // reset the user session
+      await createAnonymousUser();
+
+      await reload()
+    })
+  )
+
+  cmds.push(
     commands.registerCommand('codetime.authSignIn', async () => {
       authLogin();
     })
