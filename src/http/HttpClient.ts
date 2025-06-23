@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { version, window } from 'vscode';
+import { commands, version, window } from 'vscode';
 import { app_url } from '../Constants';
 import {
   logIt,
@@ -8,8 +8,7 @@ import {
   getVersion,
   getOs,
   getPluginUuid,
-  getItem,
-  setItem
+  getItem
 } from '../Util';
 
 // build the axios client
@@ -54,7 +53,7 @@ export async function appGet(api: string, queryParams: any = {}, token_override:
     logIt(`error for GET ${api}, message: ${err.message}`);
     if (getResponseStatus(err?.response) === 401) {
       // clear the JWT because it is invalid
-      setItem('jwt', null)
+      commands.executeCommand('codetime.apiSessionErrorReset');
     }
     return err;
   });
