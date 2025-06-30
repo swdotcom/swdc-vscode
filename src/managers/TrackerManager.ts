@@ -1,6 +1,6 @@
 import swdcTracker from 'swdc-tracker';
 import { app_url } from '../Constants';
-import { version } from 'vscode';
+import { commands, version } from 'vscode';
 import {
   getPluginName,
   getItem,
@@ -458,6 +458,15 @@ export class TrackerManager {
   }
 
   trackerReadyWithJwt(): boolean {
-    return this.trackerReady && !!getItem('jwt')?.trim();
+    return this.trackerReady && this.hasValidJwt();
+  }
+
+  hasValidJwt(): boolean {
+    const validJwt = !!getItem('jwt')?.trim();
+    if (!validJwt) {
+      commands.executeCommand('codetime.sessionReset');
+      logIt('swdc-tracker: No valid access token found, tracker will not send events.');
+    }
+    return validJwt;
   }
 }

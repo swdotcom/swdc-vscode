@@ -53,7 +53,7 @@ export async function appGet(api: string, queryParams: any = {}, token_override:
     logIt(`error for GET ${api}, message: ${err.message}`);
     if (getResponseStatus(err?.response) === 401) {
       // clear the JWT because it is invalid
-      commands.executeCommand('codetime.apiSessionErrorReset');
+      commands.executeCommand('codetime.sessionReset');
     }
     return err;
   });

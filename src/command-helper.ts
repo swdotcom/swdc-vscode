@@ -232,28 +232,21 @@ export function createCommands(
     commands.registerCommand('codetime.logout', async () => {
       const user = await getCachedUser()
       if (user?.registered) {
-        // clear the storage and recreate an anon user
-        storageManager.clearStorage();
-
-        // reset the user session
-        await createAnonymousUser();
-
-        // update the login status
+        await commands.executeCommand('codetime.sessionReset');
         showInformationMessage(`Successfully logged out of your Code Time account`);
-        await reload()
       }
     })
   )
 
   cmds.push(
-    commands.registerCommand('codetime.apiSessionErrorReset', async () => {
+    commands.registerCommand('codetime.sessionReset', async () => {
       // clear the storage and recreate an anon user
       storageManager.clearStorage();
 
       // reset the user session
       await createAnonymousUser();
 
-      await reload()
+      await reload();
     })
   )
 
