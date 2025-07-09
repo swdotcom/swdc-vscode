@@ -78,19 +78,18 @@ export async function activate(ctx: ExtensionContext) {
   // session: {id: <String>, accessToken: <String>, account: {label: <String>, id: <Number>}, scopes: [<String>,...]}
   const session = await authentication.getSession(AUTH_TYPE, [], { createIfNone: false });
   let jwt = getItem('jwt');
-  user = await getUser();
-  if (session) {
-    // fetch the user with the non-session jwt to compare
-    if (!user || user.email != session.account.label) {
-      jwt = session.accessToken;
-      // update the local storage with the new user
-      setItem('name', session.account.label);
-      setItem('jwt', jwt);
-      user = await getUser(jwt);
+  if (session?.accessToken) {
+    jwt = session.accessToken;
+    // update local storage with the session information
+    setItem('name', session.account.label);
+    setItem('jwt', jwt);
+    // cache the user based on the session jwt
+    await getUser(jwt);
+  } else if (jwt) {
+    const user = await getUser(jwt);
+    if (user?.registered) {
+      authProvider.updateSession(jwt, user);
     }
-  } else if (jwt && user?.registered) {
-    // update the session with the existing jwt
-    authProvider.updateSession(jwt, user);
   }
 
   if (jwt) {
