@@ -44,10 +44,10 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/dist/test"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/test/**/*.js"
+                "${workspaceFolder}/dist/test/**/*.js"
             ],
             "preLaunchTask": "npm: test-compile"
         }
@@ -57,8 +57,8 @@
             "name": "Multiple Extensions",
             // Launch 2 debugger extensions at once
             "configurations": [
-                "Launch Extension",
-                "Launch Extension"
+                "Launch Extension Prod",
+                "Launch Extension Dev"
             ]
         }
     ]

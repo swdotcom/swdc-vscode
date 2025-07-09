@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { version, window } from 'vscode';
+import { commands, version, window } from 'vscode';
 import { app_url } from '../Constants';
 import {
   logIt,
@@ -9,7 +9,8 @@ import {
   getOs,
   getPluginUuid,
   getItem,
-  setItem
+  setItem,
+  isPrimaryWindow
 } from '../Util';
 
 // build the axios client
@@ -27,6 +28,8 @@ const appApi: any = axios.create({
     'X-SWDC-Plugin-Editor-Version': version
   }
 });
+
+let invalidSessionNotified: boolean = false;
 
 // Evaluate these headers on every request since these values can change
 async function dynamicHeaders(override_token?: string) {
@@ -50,11 +53,26 @@ async function dynamicHeaders(override_token?: string) {
 }
 
 export async function appGet(api: string, queryParams: any = {}, token_override: any = '') {
-  return await appApi.get(api, { params: queryParams, headers: await dynamicHeaders(token_override) }).catch((err: any) => {
+  const headers = await dynamicHeaders(token_override);
+  if (!headers['Authorization'] && isPrimaryWindow()) {
+    if (!invalidSessionNotified) {
+      logIt(`No Authorization token found for GET ${api}. Please ensure you are logged in.`);
+      invalidSessionNotified = true;
+      await invalidSessionPrompt();
+    }
+    return;
+  }
+  return await appApi.get(api, { params: queryParams, headers: headers }).then((resp: any) => {
+    invalidSessionNotified = false; // reset the flag if we get a response
+    return resp;
+  }).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);
     if (getResponseStatus(err?.response) === 401) {
       // clear the JWT because it is invalid
-      setItem('jwt', null)
+      setItem('jwt', null);
+      if (isPrimaryWindow() && !invalidSessionNotified) {
+        invalidSessionNotified = true; // set the flag to notify user
+      }
     }
     return err;
   });
@@ -115,6 +133,17 @@ function getResponseStatus(resp: any) {
     status = 503;
   }
   return status;
+}
+
+async function invalidSessionPrompt() {
+  const selection = await window.showInformationMessage(
+    "Invalid Code Time session. Please log in again to continue using Code Time features",
+    { modal: true },
+    ...['Login']
+  );
+  if (selection === 'Login') {
+    commands.executeCommand('codetime.login');
+  }
 }
 
 async function getAuthorization() {

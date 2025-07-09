@@ -15,6 +15,7 @@ import { getConnectionErrorHtml } from '../local/404';
 import { getBooleanItem, getItem } from '../Util';
 import { createAnonymousUser } from '../menu/AccountManager';
 import { isStatusBarTextVisible } from '../managers/StatusBarManager';
+import { getLoadingHtml } from '../local/loading';
 
 export class CodeTimeView implements Disposable, WebviewViewProvider {
   private _webview: WebviewView | undefined;
@@ -29,11 +30,12 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       // its not available to refresh yet
       return;
     }
-    if (!getItem('jwt')) {
-      await createAnonymousUser();
-    }
+    this._webview.webview.html = await getLoadingHtml();
 
-    this._webview.webview.html = await this.getHtml();
+    const webviewScope = this._webview.webview;
+    setTimeout(async () => {
+      webviewScope.html = await this.getHtml();
+    }, 2000);
   }
 
   private _onDidClose = new EventEmitter<void>();

@@ -26,7 +26,7 @@ export function updateInFlowLocally(inFlow: boolean) {
 
 export async function initializeFlowModeState() {
   await determineFlowModeFromApi();
-  updateFlowStatus();
+  updateFlowStatus(false);
 }
 
 export async function updateFlowModeStatus() {
@@ -118,10 +118,12 @@ export async function pauseFlowInitiate() {
   updateFlowStatus();
 }
 
-function updateFlowStatus() {
-  setTimeout(() => {
-    commands.executeCommand('codetime.refreshCodeTimeView');
-  }, 2000);
+function updateFlowStatus(refreshSidebar = true) {
+  if (refreshSidebar){
+    setTimeout(() => {
+      commands.executeCommand('codetime.refreshCodeTimeView');
+    }, 2000);
+  }
 
   updateFlowModeStatusBar();
 }

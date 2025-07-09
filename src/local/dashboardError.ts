@@ -1,4 +1,4 @@
-export async function getConnectionErrorHtml() {
+export async function getDashboardErrorHtml() {
   return `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -112,10 +112,6 @@ export async function getConnectionErrorHtml() {
             <p>
               Keep an eye on our <a href="https://status.software.com/">status page</a> or reach out to us at <a href="mailto:support@software.com">support@software.com</a> if you need help.
             </p>
-          </div>
-          <div style="margin-bottom: 10px;">
-            <a href="#" style="margin-right: 0.75rem;" onclick="onCmdClick('refreshCodeTimeView'); disableLink(this)">Refresh</a>
-            <button class="btn-primary" onclick="onCmdClick('login')">Login</button>
           </div>
         </div>
       </body>

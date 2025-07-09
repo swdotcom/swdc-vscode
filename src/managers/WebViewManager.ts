@@ -1,7 +1,7 @@
 import {commands, ViewColumn, WebviewPanel, window, ProgressLocation} from 'vscode';
-import {isResponseOk, appGet} from '../http/HttpClient';
-import {getConnectionErrorHtml} from '../local/404';
+import {appGet, isResponseOk} from '../http/HttpClient';
 import {checkRegistrationForReport, isPrimaryWindow} from '../Util';
+import { getDashboardErrorHtml } from '../local/dashboardError';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 
@@ -75,7 +75,7 @@ async function getDashboardHtml(params: any) {
   if (isResponseOk(resp)) {
     return resp.data.html;
   } else {
-    window.showErrorMessage('Unable to generate dashboard. Please try again later.');
-    return await getConnectionErrorHtml();
+    window.showErrorMessage('Unable to generate Code Time dashboard. Please try again later.');
+    return await getDashboardErrorHtml();
   }
 }
