@@ -61,7 +61,6 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.toggleStatusBar', () => {
       toggleStatusBar();
-      commands.executeCommand('codetime.refreshCodeTimeView');
     })
   );
 
