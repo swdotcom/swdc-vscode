@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { version, window } from 'vscode';
-import { app_url } from '../Constants';
+import { commands, version, window } from 'vscode';
+import { app_url, ONE_MIN_MILLIS } from '../Constants';
 import {
   logIt,
   getPluginId,
@@ -9,7 +9,8 @@ import {
   getOs,
   getPluginUuid,
   getItem,
-  setItem
+  setItem,
+  isPrimaryWindow
 } from '../Util';
 
 // build the axios client
@@ -27,6 +28,8 @@ const appApi: any = axios.create({
     'X-SWDC-Plugin-Editor-Version': version
   }
 });
+
+let invalidSessionNotified: boolean = false;
 
 // Evaluate these headers on every request since these values can change
 async function dynamicHeaders(override_token?: string) {
@@ -50,11 +53,25 @@ async function dynamicHeaders(override_token?: string) {
 }
 
 export async function appGet(api: string, queryParams: any = {}, token_override: any = '') {
-  return await appApi.get(api, { params: queryParams, headers: await dynamicHeaders(token_override) }).catch((err: any) => {
+  const headers = await dynamicHeaders(token_override);
+  if (!headers['Authorization'] && isPrimaryWindow()) {
+    const currentTime = Date.now();
+    const lastTimeInvalidSessionNotified = Number(getItem('lastTimeInvalidSessionNotified') || 0);
+    if (!invalidSessionNotified && (currentTime - lastTimeInvalidSessionNotified > ONE_MIN_MILLIS * 60 * 24)) {
+      logIt(`No authorization token found for GET ${api}. Please ensure you are logged in.`);
+      invalidSessionNotified = true;
+      setItem('lastTimeInvalidSessionNotified', currentTime);
+      await invalidSessionPrompt();
+    }
+    return;
+  }
+  return await appApi.get(api, { params: queryParams, headers: headers }).then((resp: any) => {
+    return resp;
+  }).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);
     if (getResponseStatus(err?.response) === 401) {
       // clear the JWT because it is invalid
-      setItem('jwt', null)
+      setItem('jwt', null);
     }
     return err;
   });
@@ -103,7 +120,7 @@ export function isResponseOk(resp: any) {
   return false;
 }
 
-function getResponseStatus(resp: any) {
+export function getResponseStatus(resp: any) {
   let status = null;
   if (resp?.status) {
     status = resp.status;
@@ -113,8 +130,21 @@ function getResponseStatus(resp: any) {
     status = 500;
   } else if (resp?.code === 'ECONNREFUSED') {
     status = 503;
+  } else if (resp?.code === 'ENOTFOUND') {
+    status = 404;
   }
   return status;
+}
+
+async function invalidSessionPrompt() {
+  const selection = await window.showInformationMessage(
+    "We couldn't verify your session. Please log in again to continue using Code Time features",
+    { modal: true },
+    ...['Login']
+  );
+  if (selection === 'Login') {
+    commands.executeCommand('codetime.login');
+  }
 }
 
 async function getAuthorization() {

@@ -1,7 +1,8 @@
 import {
   authentication, AuthenticationProvider, AuthenticationProviderAuthenticationSessionsChangeEvent,
-  AuthenticationSession, Disposable, Event, env, EventEmitter, ExtensionContext, ProgressLocation,
-  Uri, UriHandler, window
+  Disposable, Event, env, EventEmitter, ExtensionContext, ProgressLocation,
+  Uri, UriHandler, window,
+  AuthenticationSession
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
