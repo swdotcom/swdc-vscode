@@ -117,9 +117,9 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
     }
 
     let status = getResponseStatus(resp);
-    if ((status && resp && status === 401) || (!status && !getItem('jwt'))) {
+    if (status === 401 || (!status && !getItem('jwt'))) {
       return await getAuthenticationErrorHtml();
-    } else if (status && resp && status === 404) {
+    } else if (status === 404) {
       // this means the user is does not have a valid internet connection
       return await getOfflineHtml();
     } else {

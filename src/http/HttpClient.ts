@@ -66,7 +66,6 @@ export async function appGet(api: string, queryParams: any = {}, token_override:
     return;
   }
   return await appApi.get(api, { params: queryParams, headers: headers }).then((resp: any) => {
-    setItem('lastTimeInvalidSessionNotified', 0); // reset the flag if we get a response
     return resp;
   }).catch((err: any) => {
     logIt(`error for GET ${api}, message: ${err.message}`);
