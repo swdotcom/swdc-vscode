@@ -1,8 +1,8 @@
 import {commands, ViewColumn, WebviewPanel, window} from 'vscode';
 import {getUser} from '../DataController';
 import {isResponseOk, appGet, appPut} from '../http/HttpClient';
-import {getConnectionErrorHtml} from '../local/404';
 import { setEndOfDayNotification } from '../notifications/endOfDay';
+import { getDashboardErrorHtml } from '../local/dashboardError';
 
 let currentPanel: WebviewPanel | undefined = undefined;
 
@@ -56,7 +56,7 @@ export async function getEditSettingsHtml(): Promise<string> {
   if (isResponseOk(resp)) {
     return resp.data.html;
   }
-  return await getConnectionErrorHtml();
+  return await getDashboardErrorHtml();
 }
 
 export async function updateSettings(path: string, jsonData: any, reloadSettings: false) {

@@ -3,3 +3,5 @@ node_modules
 .DS_Store
 lib/Constants.ts.local
 dist/
+.env.local
+.vscode-test/**

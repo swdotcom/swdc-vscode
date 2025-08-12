@@ -77,6 +77,7 @@ export async function authenticationCompleteHandler(user: any, override_jwt: any
     if (authProvider) {
       authProvider.updateSession(getItem('jwt'), user);
     }
+    setItem('lastTimeInvalidSessionNotified', 0);
     // update the login status
     showInformationMessage('Successfully logged on to Code Time');
 

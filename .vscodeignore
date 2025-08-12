@@ -3,6 +3,7 @@ typings/**
 test/**
 **/*.ts
 **/*.map
+**/*.js.map
 .gitignore
 .github/**
 *.vsix

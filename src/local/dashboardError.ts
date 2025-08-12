@@ -1,4 +1,4 @@
-export async function getConnectionErrorHtml() {
+export async function getDashboardErrorHtml() {
   return `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -74,6 +74,11 @@ export async function getConnectionErrorHtml() {
                   payload
               });
             }
+            function disableLink(link) {
+              link.onclick = function(event) {
+                event.preventDefault(); // Prevents the default link behavior
+              };
+            }
           </script>
       </head>
       <body>
@@ -86,9 +91,6 @@ export async function getConnectionErrorHtml() {
             <p>
               Keep an eye on our <a href="https://status.software.com/">status page</a> or reach out to us at <a href="mailto:support@software.com">support@software.com</a> if you need help.
             </p>
-          </div>
-          <div style="margin-bottom: 10px;">
-            <a href="#" style="text-decoration-line: none; font-size: 1.125rem;" onclick="onCmdClick('refreshCodeTimeView')">Refresh</a>
           </div>
         </div>
       </body>
