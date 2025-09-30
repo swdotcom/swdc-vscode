@@ -1,4 +1,4 @@
-import {commands, Disposable, window, workspace} from 'vscode';
+import {commands, Disposable, env, window, workspace} from 'vscode';
 import {TrackerManager} from './TrackerManager';
 import {EditorFlow, EditorType, FlowEventType, ProjectChangeInfo, VSCodeInterface} from '@swdotcom/editor-flow';
 import {configureSettings, showingConfigureSettingsPanel} from './ConfigManager';
@@ -9,6 +9,7 @@ export class ChangeStateManager {
   private static instance: ChangeStateManager;
   private disposable: Disposable;
   private tracker: TrackerManager;
+  private editorFlow: EditorFlow;
 
   constructor() {
     let subscriptions: Disposable[] = [];
@@ -19,10 +20,11 @@ export class ChangeStateManager {
       disposable: Disposable,
       window: window,
       workspace: workspace,
+      env: env
     };
 
-    const editorFlow: EditorFlow = EditorFlow.getInstance(EditorType.VSCODE, iface);
-    const emitter: any = editorFlow.getEmitter();
+    this.editorFlow = EditorFlow.getInstance(EditorType.VSCODE, iface);
+    const emitter: any = this.editorFlow.getEmitter();
 
     emitter.on('editor_flow_data', (data: any) => {
       switch (data.flow_event_type) {

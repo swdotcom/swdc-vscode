@@ -7,7 +7,7 @@ let retry_counter = 0;
 export async function onboardInit(ctx: ExtensionContext, callback: any) {
   if (getItem('jwt')) {
     // we have the jwt, call the callback that anon was not created
-    return callback(ctx, false /*anonCreated*/);
+    return callback(ctx);
   }
 
   if (window.state.focused) {
@@ -21,7 +21,7 @@ export async function onboardInit(ctx: ExtensionContext, callback: any) {
 
 async function primaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   await createAnonymousUser();
-  callback(ctx, true /*anonCreated*/);
+  callback(ctx);
 }
 
 /**
@@ -47,5 +47,5 @@ async function secondaryWindowOnboarding(ctx: ExtensionContext, callback: any) {
   // tried enough times, create an anon user
   await createAnonymousUser();
   // call the callback
-  return callback(ctx, true /*anonCreated*/);
+  return callback(ctx);
 }

@@ -2,7 +2,8 @@ import {
   authentication, AuthenticationProvider, AuthenticationProviderAuthenticationSessionsChangeEvent,
   Disposable, Event, env, EventEmitter, ExtensionContext, ProgressLocation,
   Uri, UriHandler, window,
-  AuthenticationSession
+  AuthenticationSession,
+  AuthenticationProviderSessionOptions
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
@@ -58,7 +59,7 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
    * @param scopes 
    * @returns 
    */
-  public async getSessions(scopes?: string[]): Promise<readonly AuthenticationSession[]> {
+  public async getSessions(scopes: readonly string[] | undefined, options: AuthenticationProviderSessionOptions): Promise<AuthenticationSession[]> {
     const allSessions = await this.context.secrets.get(SESSIONS_KEY);
 
     if (allSessions) {

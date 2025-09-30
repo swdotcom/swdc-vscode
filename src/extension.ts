@@ -93,7 +93,7 @@ export async function activate(ctx: ExtensionContext) {
   }
 
   if (jwt) {
-    intializePlugin();
+    intializePlugin(ctx);
   } else if (window.state.focused) {
     onboardInit(ctx, intializePlugin /*successFunction*/);
   } else {
@@ -105,7 +105,7 @@ export async function activate(ctx: ExtensionContext) {
   }
 }
 
-export async function intializePlugin() {
+export async function intializePlugin(ctx: ExtensionContext) {
   logIt(`Loaded ${getPluginName()} v${getVersion()}`);
 
   // INIT websockets
