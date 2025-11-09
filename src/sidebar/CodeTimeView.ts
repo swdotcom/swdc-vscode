@@ -32,8 +32,6 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       return;
     }
 
-    console.log('Refreshing Code Time Sidebar');
-
     const webviewScope = this._webview.webview;
     setTimeout(async () => {
       webviewScope.html = await this.getHtml();
