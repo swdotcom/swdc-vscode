@@ -15,7 +15,6 @@ import { getAuthenticationErrorHtml } from '../local/invalidSessionError';
 import { getBooleanItem, getItem } from '../Util';
 import { createAnonymousUser } from '../menu/AccountManager';
 import { isStatusBarTextVisible } from '../managers/StatusBarManager';
-import { getLoadingHtml } from '../local/loading';
 import { getDashboardErrorHtml } from '../local/dashboardError';
 import { getOfflineHtml } from '../local/offline';
 
@@ -32,12 +31,11 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
       // its not available to refresh yet
       return;
     }
-    this._webview.webview.html = await getLoadingHtml();
 
     const webviewScope = this._webview.webview;
     setTimeout(async () => {
       webviewScope.html = await this.getHtml();
-    }, 2000);
+    }, 1500);
   }
 
   private _onDidClose = new EventEmitter<void>();
