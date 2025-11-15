@@ -29,6 +29,7 @@ export class KpmManager {
       subscriptions.push(localGitWatcher);
       subscriptions.push(remoteGitWatcher);
       subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
+      subscriptions.push(localGitWatcher.onDidCreate(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
