@@ -95,6 +95,12 @@ export function getWorkspaceFolders(): WorkspaceFolder[] {
         folders.push(workspaceFolder);
       }
     }
+  } else {
+    // fall back to the active file workspace folder
+    const activeFileWorkspaceFolder = getActiveFileWorkspaceFolder()
+    if (activeFileWorkspaceFolder) {
+      folders.push(activeFileWorkspaceFolder)
+    }
   }
   return folders;
 }
@@ -105,6 +111,14 @@ export function getFirstWorkspaceFolder(): WorkspaceFolder | null {
     return workspaceFolders[0];
   }
   return null;
+}
+
+export function getActiveFileWorkspaceFolder(): WorkspaceFolder | undefined {
+  const editor = window.activeTextEditor;
+  if (editor) {
+    return workspace.getWorkspaceFolder(editor.document.uri);
+  }
+  return undefined;
 }
 
 export function getNumberOfTextDocumentsOpen() {

@@ -149,7 +149,7 @@ export async function isMergeCommit(projectDir: string, commit: string): Promise
 }
 
 export async function getInfoForCommit(projectDir: string, commit: string) {
-  const resultList = execCmd(`git show ${commit} --pretty=format:"%aI" -s`, projectDir, true);
+  const resultList = execCmd(`git show -s --pretty=format:%aI ${commit}`, projectDir, true);
 
   return {authoredTimestamp: resultList?.length ? resultList[0] : ''};
 }
