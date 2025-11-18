@@ -18,6 +18,7 @@ import { initializeWebsockets, websocketAlive } from './websockets';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { execSync } from 'child_process';
 
 const outputChannel = window.createOutputChannel('CodeTime');
 
@@ -334,7 +335,7 @@ export function getAuthQueryObject(): URLSearchParams {
   return params;
 }
 
-export function launchWebUrl(url: string) {
+export async function launchWebUrl(url: string) {
   if (!websocketAlive()) {
     try {
       initializeWebsockets();
@@ -342,7 +343,33 @@ export function launchWebUrl(url: string) {
       console.error('Failed to initialize websockets', e);
     }
   }
-  env.openExternal(Uri.parse(url));
+ 
+  // Fallback to system command
+  try {
+    const platform = os.platform();
+    let command: string;
+    
+    if (platform === 'darwin') {
+      // macOS
+      command = `open "${url}"`;
+    } else if (platform === 'win32') {
+      // Windows
+      command = `start "" "${url}"`;
+    } else {
+      // Linux and others
+      command = `xdg-open "${url}"`;
+    }
+    
+    execSync(command, { stdio: 'ignore' });
+    logIt(`Opened URL using system command: ${command}`);
+  } catch (_: any) {
+    try {
+      await env.openExternal(Uri.parse(url));
+    } catch (envError: any) {
+      logIt(`Failed to open external URL via env.openExternal: ${envError?.message || envError}`);
+      throw envError;
+    }
+  }
 }
 
 /**

@@ -7,7 +7,7 @@ import {
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
-import { getAuthQueryObject, getBooleanItem, logIt, setItem } from "../Util";
+import { getAuthQueryObject, getBooleanItem, launchWebUrl, logIt, setItem } from "../Util";
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth';
@@ -171,8 +171,8 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
       params.append('redirect_uri', this.redirectUri);
       params.append('state', stateId);
       params.append('prompt', 'login');
-      const uri = Uri.parse(`${app_url}/plugin/authorize?${params.toString()}`);
-      await env.openExternal(uri);
+      const fullUrl = `${app_url}/plugin/authorize?${params.toString()}`;
+      await launchWebUrl(fullUrl);
 
       let codeExchangePromise = this._codeExchangePromises.get(scopeString);
       if (!codeExchangePromise) {
