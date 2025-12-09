@@ -1,5 +1,4 @@
 import { commands, window } from 'vscode';
-import { SIGN_UP_LABEL } from '../Constants';
 import {
   isActiveIntegration,
   setItem
@@ -12,22 +11,6 @@ export async function getSlackWorkspaces() {
 
 export async function hasSlackWorkspaces() {
   return !!(await getCachedSlackIntegrations()).length;
-}
-
-export function showModalSignupPrompt(msg: string) {
-  window
-    .showInformationMessage(
-      msg,
-      {
-        modal: true,
-      },
-      SIGN_UP_LABEL
-    )
-    .then(async (selection) => {
-      if (selection === SIGN_UP_LABEL) {
-        commands.executeCommand('codetime.registerAccount');
-      }
-    });
 }
 
 export async function checkSlackConnection(showConnect = true) {

@@ -60,7 +60,6 @@ export async function getUser(token_override: any = '') {
 
 export async function authenticationCompleteHandler(user: any, override_jwt: any = '') {
   setAuthCallbackState(null);
-
   if (user?.registered === 1) {
     currentUser = user;
     // new user

@@ -2,7 +2,7 @@ import {commands, ProgressLocation, window} from 'vscode';
 import {appPost, appDelete, appGet} from '../http/HttpClient';
 import {getBooleanItem, getItem, isFlowModeEnabled, isPrimaryWindow, logIt, updateFlowChange} from '../Util';
 
-import {showModalSignupPrompt, checkSlackConnectionForFlowMode} from './SlackManager';
+import {checkSlackConnectionForFlowMode} from './SlackManager';
 import {
   FULL_SCREEN_MODE_ID,
   getConfiguredScreenMode,
@@ -13,6 +13,7 @@ import {
 } from './ScreenManager';
 import {updateFlowModeStatusBar} from './StatusBarManager';
 import { isRegistered } from '../DataController';
+import { showModalSignupPrompt } from './PromptManager';
 
 let inFlowLocally: boolean = false;
 

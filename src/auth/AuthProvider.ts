@@ -7,7 +7,7 @@ import {
 } from "vscode";
 import { v4 as uuid } from 'uuid';
 import { app_url } from "../Constants";
-import { getAuthQueryObject, getBooleanItem, launchWebUrl, logIt, setItem } from "../Util";
+import { getAuthQueryObject, getBooleanItem, getItem, launchWebUrl, logIt, setItem } from "../Util";
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth';

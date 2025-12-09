@@ -139,7 +139,6 @@ export function getResponseStatus(resp: any) {
 async function invalidSessionPrompt() {
   const selection = await window.showInformationMessage(
     "We couldn't verify your session. Please log in again to continue using Code Time features",
-    { modal: true },
     ...['Login']
   );
   if (selection === 'Login') {

@@ -9,7 +9,6 @@ import {
 } from './Constants';
 import { v4 as uuidv4 } from 'uuid';
 
-import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
@@ -18,7 +17,7 @@ import { initializeWebsockets, websocketAlive } from './websockets';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { execSync } from 'child_process';
+import { showModalSignupPrompt } from './managers/PromptManager';
 
 const outputChannel = window.createOutputChannel('CodeTime');
 
@@ -67,6 +66,11 @@ export function getEditorName() {
     }
   }
   return editorName;
+}
+
+
+export function isVSCode(): boolean {
+  return getEditorName().toLowerCase().includes('code');
 }
 
 export function isGitProject(projectDir: string) {
@@ -160,7 +164,11 @@ export function isActiveIntegration(type: string, integration: any) {
 }
 
 export function getPluginUuid() {
-  let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
+  let pluginUuidPath = getDeviceFile();
+  if (!isVSCode()) {
+    pluginUuidPath = getEditorName();
+  }
+  let plugin_uuid = getJsonItem(pluginUuidPath, 'plugin_uuid');
   if (!plugin_uuid) {
     let name = `${getOsUsername()}${getHostname()}`;
     if (!name) {
@@ -172,7 +180,7 @@ export function getPluginUuid() {
       .digest('hex');
     plugin_uuid = `${hashName.trim()}:${uuidv4()}`;
     // set it for the 1st and only time
-    setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
+    setJsonItem(pluginUuidPath, 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
 }
@@ -343,33 +351,7 @@ export async function launchWebUrl(url: string) {
       console.error('Failed to initialize websockets', e);
     }
   }
- 
-  // Fallback to system command
-  try {
-    const platform = os.platform();
-    let command: string;
-    
-    if (platform === 'darwin') {
-      // macOS
-      command = `open "${url}"`;
-    } else if (platform === 'win32') {
-      // Windows
-      command = `start "" "${url}"`;
-    } else {
-      // Linux and others
-      command = `xdg-open "${url}"`;
-    }
-    
-    execSync(command, { stdio: 'ignore' });
-    logIt(`Opened URL using system command: ${command}`);
-  } catch (_: any) {
-    try {
-      await env.openExternal(Uri.parse(url));
-    } catch (envError: any) {
-      logIt(`Failed to open external URL via env.openExternal: ${envError?.message || envError}`);
-      throw envError;
-    }
-  }
+  await env.openExternal(Uri.parse(url));
 }
 
 /**

@@ -6,6 +6,14 @@
 
 Looking for more ways to help your team improve their productivity? When you connect our [GitHub App](https://bit.ly/software-github) or [Bitbucket App](https://bit.ly/software-bitbucket), you can measure your team’s performance against engineering KPIs and benchmarks, including velocity, quality, and scale. You can identify bottlenecks in your release process — like slow code reviews — and take immediate action, so you can ship faster and more efficiently.
 
+## It’s Safe, Secure, and Free
+
+**Free for you, forever:** We provide 90 days of data history for free, forever. We provide [premium plans](https://app.software.com/code_time/billing) for advanced features and historical data access.
+
+**We never access your code:** We do not read, transmit, or store source code. We only provide metrics about programming, and we make it easy to see the data we collect. You can learn more about how we secure your data on our [security page](https://www.software.com/security).
+
+**Your data is private:** We will never share your individually identifiable data with your boss. When you create or join a team, we only show KPIs at the team and company level.
+
 ![Code Time features for VS Code](https://assets.software.com/readme/code-time/vscode/features-2.7.3.png)
 
 ## Getting Started
@@ -66,17 +74,10 @@ Take your team to the next level. Software.com makes it easy to automatically tr
 
 To see your team's engineering KPIs, visit the [web app](https://app.software.com) and connect our [GitHub](https://bit.ly/software-github) or [Bitbucket](https://bit.ly/software-bitbucket) app to your Software.com account. It's free and takes just a few minutes.
 
-## It’s Safe, Secure, and Free
-
-**We never access your code:** We do not read, transmit, or store source code. We only provide metrics about programming, and we make it easy to see the data we collect. You can learn more about how we secure your data on our [security page](https://www.software.com/security).
-
-**Your data is private:** We will never share your individually identifiable data with your boss. When you create or join a team, we only show KPIs at the team and company level.
-
-**Free for you, forever:** We provide 90 days of data history for free, forever. We provide [premium plans](https://app.software.com/billing) for advanced features and historical data access.
-
 Code Time also collects basic usage metrics to help us make informed decisions about our roadmap.
 
 **Data collected and purpose**
+
 | Data Collected | Purpose of Data |
 | -------------- | --------------- |
 | Local Timezone | Applying time zones to aggregate metrics so that daily values are accurate |
