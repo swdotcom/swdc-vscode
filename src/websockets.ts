@@ -55,7 +55,6 @@ export function initializeWebsockets() {
     },
     perMessageDeflate: false
   };
-
   ws = new WebSocket(websockets_url, options);
 
   function heartbeat(buf: any) {
@@ -211,7 +210,6 @@ const handleIncomingMessage = (data: any) => {
     } catch (e: any) {
       logIt(`Unable to handle incoming message: ${e.message}`);
     }
-
     switch (message.type) {
       case 'flow_score':
         if (isPrimaryWindow() && !(editorOpsExtInstalled())) {
@@ -221,10 +219,7 @@ const handleIncomingMessage = (data: any) => {
         break;
       case 'authenticated_plugin_user':
         const user = message.body;
-        const currentEmail = getItem('name');
-        if (user.email !== currentEmail) {
-          handleAuthenticatedPluginUser(user);
-        }
+        handleAuthenticatedPluginUser(user);
         break;
       case 'flow_state':
         try { logIt(`Flow state: ${JSON.stringify(message.body)}`) } catch (e) { }

@@ -10,7 +10,8 @@ import {
   getGitEventFile,
   isGitProject,
   getEditorName,
-  logIt
+  logIt,
+  getFirstWorkspaceFolder
 } from '../Util';
 import { KpmItem } from '../model/models';
 import { getResourceInfo } from '../repo/KpmRepoManager';
@@ -156,12 +157,11 @@ export class TrackerManager {
     swdcTracker.trackUIInteraction(ui_event);
   }
 
-  public async trackGitLocalEvent(gitEventName: string, branch?: string, commit?: string) {
+  public async trackGitLocalEvent(gitEventName: string, branch?: string, commit?: string, folder?: any) {
     if (!this.trackerReadyWithJwt()) {
       return;
     }
-    const projectParams = this.getProjectParams();
-
+    const projectParams = this.getProjectParams(folder);
     if (gitEventName === 'uncommitted_change') {
       this.trackUncommittedChangeGitEvent(projectParams);
     } else if (gitEventName === 'local_commit' && branch) {
@@ -171,14 +171,14 @@ export class TrackerManager {
     }
   }
 
-  public async trackGitRemoteEvent(event: any) {
+  public async trackGitRemoteEvent(fileEvent: any, folder: any) {
     if (!this.trackerReadyWithJwt()) {
       return;
     }
-    const projectParams = this.getProjectParams();
-    const remoteBranch = event.path.split('.git/')[1];
+    const projectParams = this.getProjectParams(folder);
+    const remoteBranch = fileEvent.path.split('.git/')[1];
 
-    this.trackBranchCommitGitEvent(projectParams, remoteBranch, event.path);
+    this.trackBranchCommitGitEvent(projectParams, remoteBranch, fileEvent.path);
   }
 
   public async trackGitDeleteEvent(event: any) {
@@ -269,7 +269,7 @@ export class TrackerManager {
       return;
     }
 
-    const projectParams = this.getProjectParams();
+    const projectParams = this.getProjectParams(getFirstWorkspaceFolder());
 
     if (type == 'save') {
       if (this.eventVersionIsTheSame(event)) return;
@@ -327,10 +327,12 @@ export class TrackerManager {
     return { jwt: token?.trim().split(' ').at(-1) };
   }
 
-  getProjectParams() {
-    const workspaceFolders = getWorkspaceFolders();
-    const project_directory = workspaceFolders.length ? workspaceFolders[0].uri.fsPath : '';
-    const project_name = workspaceFolders.length ? workspaceFolders[0].name : '';
+  getProjectParams(folder: any) {
+    if (!folder || !folder?.uri?.fsPath) {
+      folder = getFirstWorkspaceFolder();
+    }
+    const project_directory = folder ? folder.uri.fsPath : '';
+    const project_name = folder ? folder.name : '';
 
     return { project_directory, project_name };
   }

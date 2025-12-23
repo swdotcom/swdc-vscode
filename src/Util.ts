@@ -9,7 +9,6 @@ import {
 } from './Constants';
 import { v4 as uuidv4 } from 'uuid';
 
-import {showModalSignupPrompt} from './managers/SlackManager';
 import {execCmd} from './managers/ExecManager';
 import {getBooleanJsonItem, getJsonItem, setJsonItem, storeJsonData} from './managers/FileManager';
 import { formatISO } from 'date-fns';
@@ -18,6 +17,7 @@ import { initializeWebsockets, websocketAlive } from './websockets';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { showModalSignupPrompt } from './managers/PromptManager';
 
 const outputChannel = window.createOutputChannel('CodeTime');
 
@@ -68,6 +68,11 @@ export function getEditorName() {
   return editorName;
 }
 
+
+export function isVSCode(): boolean {
+  return getEditorName().toLowerCase().includes('code');
+}
+
 export function isGitProject(projectDir: string) {
   if (!projectDir) {
     return false;
@@ -95,6 +100,12 @@ export function getWorkspaceFolders(): WorkspaceFolder[] {
         folders.push(workspaceFolder);
       }
     }
+  } else {
+    // fall back to the active file workspace folder
+    const activeFileWorkspaceFolder = getActiveFileWorkspaceFolder()
+    if (activeFileWorkspaceFolder) {
+      folders.push(activeFileWorkspaceFolder)
+    }
   }
   return folders;
 }
@@ -105,6 +116,14 @@ export function getFirstWorkspaceFolder(): WorkspaceFolder | null {
     return workspaceFolders[0];
   }
   return null;
+}
+
+export function getActiveFileWorkspaceFolder(): WorkspaceFolder | undefined {
+  const editor = window.activeTextEditor;
+  if (editor) {
+    return workspace.getWorkspaceFolder(editor.document.uri);
+  }
+  return undefined;
 }
 
 export function getNumberOfTextDocumentsOpen() {
@@ -145,7 +164,11 @@ export function isActiveIntegration(type: string, integration: any) {
 }
 
 export function getPluginUuid() {
-  let plugin_uuid = getJsonItem(getDeviceFile(), 'plugin_uuid');
+  let pluginUuidPath = getDeviceFile();
+  if (!isVSCode()) {
+    pluginUuidPath = getEditorName();
+  }
+  let plugin_uuid = getJsonItem(pluginUuidPath, 'plugin_uuid');
   if (!plugin_uuid) {
     let name = `${getOsUsername()}${getHostname()}`;
     if (!name) {
@@ -157,7 +180,7 @@ export function getPluginUuid() {
       .digest('hex');
     plugin_uuid = `${hashName.trim()}:${uuidv4()}`;
     // set it for the 1st and only time
-    setJsonItem(getDeviceFile(), 'plugin_uuid', plugin_uuid);
+    setJsonItem(pluginUuidPath, 'plugin_uuid', plugin_uuid);
   }
   return plugin_uuid;
 }
@@ -320,7 +343,7 @@ export function getAuthQueryObject(): URLSearchParams {
   return params;
 }
 
-export function launchWebUrl(url: string) {
+export async function launchWebUrl(url: string) {
   if (!websocketAlive()) {
     try {
       initializeWebsockets();
@@ -328,7 +351,7 @@ export function launchWebUrl(url: string) {
       console.error('Failed to initialize websockets', e);
     }
   }
-  env.openExternal(Uri.parse(url));
+  await env.openExternal(Uri.parse(url));
 }
 
 /**

@@ -29,6 +29,7 @@ export class KpmManager {
       subscriptions.push(localGitWatcher);
       subscriptions.push(remoteGitWatcher);
       subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
+      subscriptions.push(localGitWatcher.onDidCreate(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
       subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
@@ -54,6 +55,14 @@ export class KpmManager {
     const stat = fs.statSync(event.path);
     if (!stat?.isFile()) return;
 
+    const fsPath = event.path.split('/.git/')[0].trim()
+    if (!fsPath) return;
+
+    const folder = {
+      uri: { fsPath },
+      name: fsPath.split('/').pop()
+    }
+
     if (event.path.includes('/.git/refs/heads/')) {
       // /.git/refs/heads/<branch_name>
       const branch = event.path.split('.git/')[1];
@@ -63,10 +72,10 @@ export class KpmManager {
       } catch (err: any) {
         logIt(`Error reading ${event.path}: ${err.message}`);
       }
-      this.tracker.trackGitLocalEvent('local_commit', branch, commit);
+      this.tracker.trackGitLocalEvent('local_commit', branch, commit, folder);
     } else if (event.path.includes('/.git/refs/remotes/')) {
       // /.git/refs/remotes/<branch_name>
-      this.tracker.trackGitRemoteEvent(event);
+      this.tracker.trackGitRemoteEvent(event, folder);
     }
   }
 
