@@ -2,8 +2,13 @@ import {commands, ViewColumn, WebviewPanel, window, ProgressLocation} from 'vsco
 import {appGet, isResponseOk} from '../http/HttpClient';
 import {checkRegistrationForReport, isPrimaryWindow} from '../Util';
 import { getDashboardErrorHtml } from '../local/dashboardError';
+import { getLoadingDashboardHtml } from '../local/loadingDashboard';
 
 let currentPanel: WebviewPanel | undefined = undefined;
+
+export function hasActiveDashboardPanel(): boolean {
+  return currentPanel !== undefined;
+}
 
 export async function showDashboard(params: any = {}) {
   if (!checkRegistrationForReport(true)) {
@@ -18,6 +23,7 @@ export async function showDashboard(params: any = {}) {
         cancellable: false,
       },
       async () => {
+        await loadLoadingDashboard();
         loadDashboard(params);
       }
     );
@@ -27,8 +33,23 @@ export async function showDashboard(params: any = {}) {
   }
 }
 
+export async function refreshDashboard(params: any = {}) {
+  if (hasActiveDashboardPanel()) {
+    // no need to show the loading notification for secondary windows
+    loadDashboard(params);
+  }
+}
+
 async function loadDashboard(params: any) {
   const html = await getDashboardHtml(params);
+  if (currentPanel) {
+    currentPanel.webview.html = html;
+    currentPanel.reveal(ViewColumn.One);
+  }
+}
+
+async function loadLoadingDashboard() {
+  const html = await getLoadingDashboardHtml();
   if (currentPanel) {
     currentPanel.webview.html = html;
     currentPanel.reveal(ViewColumn.One);

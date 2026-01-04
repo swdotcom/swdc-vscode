@@ -5,7 +5,7 @@ import {KpmItem} from './model/models';
 import {createAnonymousUser, authLogin} from './menu/AccountManager';
 import {app_url, vscode_issues_url} from './Constants';
 import {enableFlow, pauseFlow} from './managers/FlowManager';
-import {showDashboard} from './managers/WebViewManager';
+import {refreshDashboard, showDashboard} from './managers/WebViewManager';
 import {closeSettings, configureSettings, updateSettings} from './managers/ConfigManager';
 import {toggleStatusBar, updateFlowModeStatusBar, updateStatusBarWithSummaryData} from './managers/StatusBarManager';
 import {CodeTimeView} from './sidebar/CodeTimeView';
@@ -46,6 +46,7 @@ export function createCommands(
   cmds.push(
     commands.registerCommand('codetime.refreshCodeTimeView', () => {
       sidebar.refresh();
+      refreshDashboard();
     })
   );
 

@@ -35,7 +35,7 @@ export class CodeTimeView implements Disposable, WebviewViewProvider {
     const webviewScope = this._webview.webview;
     setTimeout(async () => {
       webviewScope.html = await this.getHtml();
-    }, 1500);
+    }, 250);
   }
 
   private _onDidClose = new EventEmitter<void>();
