@@ -28,14 +28,12 @@ export async function showDashboard(params: any = {}) {
       }
     );
   } else {
-    // no need to show the loading notification for secondary windows
     loadDashboard(params);
   }
 }
 
 export async function refreshDashboard(params: any = {}) {
   if (hasActiveDashboardPanel()) {
-    // no need to show the loading notification for secondary windows
     loadDashboard(params);
   }
 }

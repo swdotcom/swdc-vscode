@@ -3,7 +3,7 @@ export async function getLoadingDashboardHtml() {
       <html lang="en">
       <head>
           <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit=no">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
           <title>Code Time</title>
           <style>
             * {
@@ -81,26 +81,10 @@ export async function getLoadingDashboardHtml() {
               100% { transform: rotate(360deg); }
             }
           </style>
-          <script language="javascript">
-            const vscode = acquireVsCodeApi();
-
-            function onCmdClick(action, payload = {}) {
-              vscode.postMessage({
-                  command: 'command_execute',
-                  action,
-                  payload
-              });
-            }
-            function disableLink(link) {
-              link.onclick = function(event) {
-                event.preventDefault(); // Prevents the default link behavior
-              };
-            }
-          </script>
       </head>
       <body>
         <div class="wrapper">
-          <div class="spinner"></div>
+          <div class="spinner" role="status" aria-live="polite" aria-label="Loading dashboard"></div>
           <div class="dialog">
             <p class="body-text">
               Please wait while we load your dashboard.

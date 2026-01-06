@@ -3,7 +3,7 @@ export async function getAuthenticationErrorHtml() {
       <html lang="en">
       <head>
           <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit=no">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
           <title>Code Time</title>
           <style>
             * {
@@ -79,7 +79,7 @@ export async function getAuthenticationErrorHtml() {
               background-color: rgb(14 165 233 / 0.8);
             }
           </style>
-          <script language="javascript">
+          <script>
             const vscode = acquireVsCodeApi();
 
             function onCmdClick(action, payload = {}) {
