@@ -3,7 +3,7 @@ export async function getLoadingDashboardHtml() {
       <html lang="en">
       <head>
           <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
           <title>Code Time</title>
           <style>
             * {
@@ -87,7 +87,7 @@ export async function getLoadingDashboardHtml() {
           <div class="spinner" role="status" aria-live="polite" aria-label="Loading dashboard"></div>
           <div class="dialog">
             <p class="body-text">
-              Please wait while we load your dashboard.
+              Loading your dashboard...
             </p>
           </div>
         </div>

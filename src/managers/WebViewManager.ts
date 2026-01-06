@@ -28,6 +28,7 @@ export async function showDashboard(params: any = {}) {
       }
     );
   } else {
+    await loadLoadingDashboard();
     loadDashboard(params);
   }
 }
@@ -56,7 +57,7 @@ async function loadLoadingDashboard() {
 
 function initiatePanel(title: string, viewType: string) {
   if (currentPanel) {
-    // dipose the previous one
+    // dispose the previous one
     currentPanel.dispose();
   }
 
