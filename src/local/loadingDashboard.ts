@@ -1,4 +1,4 @@
-export async function getAuthenticationErrorHtml() {
+export async function getLoadingDashboardHtml() {
   return `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -55,6 +55,7 @@ export async function getAuthenticationErrorHtml() {
             }
 
             .dialog {
+              margin-top: 2rem;
               margin-bottom: 2rem;
             }
 
@@ -64,46 +65,30 @@ export async function getAuthenticationErrorHtml() {
               font-size: 1.125rem;
             }
 
-            .btn-primary {
-              padding-left: 0.5rem;
-              padding-right: 0.5rem;
-              padding-bottom: 0.25rem;
-              padding-top: 0.25rem;
-              font-size: 1.125rem;
-              cursor: pointer;
-              border-radius: 0.25rem;
-              background-color: rgb(14 165 233 / var(--tw-bg-opacity, 1));
-              color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+            .spinner {
+              border: 3px solid rgba(156, 156, 156, 0.2);
+              border-top: 3px solid #9c9c9c;
+              border-radius: 50%;
+              width: 40px;
+              height: 40px;
+              animation: spin 1s linear infinite;
+              margin-top: 1.5rem;
+              margin-bottom: 1.5rem;
             }
-            .btn-primary:hover {
-              background-color: rgb(14 165 233 / 0.8);
+
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
             }
           </style>
-          <script>
-            const vscode = acquireVsCodeApi();
-
-            function onCmdClick(action, payload = {}) {
-              vscode.postMessage({
-                  command: 'command_execute',
-                  action,
-                  payload
-              });
-            }
-          </script>
       </head>
       <body>
         <div class="wrapper">
-          <h4 class="header">Oops! Something went wrong.</h4>
+          <div class="spinner" role="status" aria-live="polite" aria-label="Loading dashboard"></div>
           <div class="dialog">
             <p class="body-text">
-              We couldn't verify your session. Please try logging in again.
+              Loading your dashboard...
             </p>
-            <p>
-              Keep an eye on our <a href="https://status.software.com/">status page</a> or reach out to us at <a href="mailto:support@software.com">support@software.com</a> if you need help.
-            </p>
-          </div>
-          <div style="margin-bottom: 10px;">
-            <button class="btn-primary" onclick="onCmdClick('login')">Login</button>
           </div>
         </div>
       </body>
