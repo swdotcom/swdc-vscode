@@ -11,7 +11,7 @@ import { getAuthQueryObject, getBooleanItem, getItem, launchWebUrl, logIt, setIt
 import { authenticationCompleteHandler, getUser } from "../DataController";
 
 export const AUTH_TYPE = 'codetime_auth';
-const AUTH_NAME = 'Software.com';
+const AUTH_NAME = 'antenna.dev';
 const SESSIONS_KEY = `${AUTH_TYPE}.sessions`
 
 let instance: AuthProvider;
@@ -119,7 +119,7 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
   public async createSession(scopes: string[]): Promise<AuthenticationSession> {
     const jwtToken = await this.login(scopes);
     if (!jwtToken) {
-      throw new Error(`Software.com login failure`);
+      throw new Error(`antenna.dev login failure`);
     }
     return this.updateSession(jwtToken);
   }
@@ -157,7 +157,7 @@ export class AuthProvider implements AuthenticationProvider, Disposable {
   private async login(scopes: string[] = []) {
     return await window.withProgress<string>({
       location: ProgressLocation.Notification,
-      title: "Signing in to Software.com...",
+      title: "Signing in to antenna.dev...",
       cancellable: true
     }, async (_, token) => {
       setItem('logging_in', true);

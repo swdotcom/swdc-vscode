@@ -99,7 +99,7 @@ export async function getAuthenticationErrorHtml() {
               We couldn't verify your session. Please try logging in again.
             </p>
             <p>
-              Keep an eye on our <a href="https://status.software.com/">status page</a> or reach out to us at <a href="mailto:support@software.com">support@software.com</a> if you need help.
+              Keep an eye on our <a href="https://status.antenna.dev/">status page</a> or reach out to us at <a href="mailto:support@antenna.dev">support@antenna.dev</a> if you need help.
             </p>
           </div>
           <div style="margin-bottom: 10px;">

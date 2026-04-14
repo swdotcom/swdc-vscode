@@ -1,11 +1,11 @@
 {
   "name": "swdc-vscode",
   "displayName": "Code Time",
-  "version": "2.8.15",
+  "version": "2.8.16",
   "publisher": "softwaredotcom",
   "description": "Code Time is an open source plugin that provides programming metrics right in Visual Studio Code.",
   "author": {
-    "name": "Software.com"
+    "name": "Antenna.dev"
   },
   "license": "SEE LICENSE IN LICENSE",
   "icon": "images/codetime-c-128.png",
@@ -93,7 +93,7 @@
       },
       {
         "command": "codetime.authSignIn",
-        "title": "Code Time: Software.com Sign In",
+        "title": "Code Time: Antenna.dev Sign In",
         "icon": "$(sign-in)"
       }
     ],

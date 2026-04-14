@@ -15,8 +15,8 @@ export const SHOW_CODE_TIME_STATUS_LABEL = 'Show Code Time status';
 
 const isDev = process.env.APP_ENV === 'development'
 export const SOFTWARE_DIRECTORY = isDev ? '.software-dev' : '.software';
-export const websockets_url = isDev ? 'ws://localhost:5001/websockets' : 'wss://api.software.com/websockets';
-export const app_url = isDev ? 'http://localhost:3000' : 'https://app.software.com';
+export const websockets_url = isDev ? 'ws://localhost:5001/websockets' : 'wss://api.antenna.dev/websockets';
+export const app_url = isDev ? 'http://localhost:3000' : 'https://app.antenna.dev';
 
 export const vscode_issues_url = 'https://github.com/swdotcom/swdc-vscode/issues';
 

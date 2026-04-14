@@ -89,7 +89,7 @@ export async function getDashboardErrorHtml() {
               It looks like this view is temporarily unavailable, but we're working to fix the problem.
             </p>
             <p>
-              Keep an eye on our <a href="https://status.software.com/">status page</a> or reach out to us at <a href="mailto:support@software.com">support@software.com</a> if you need help.
+              Keep an eye on our <a href="https://status.antenna.dev/">status page</a> or reach out to us at <a href="mailto:support@antenna.dev">support@antenna.dev</a> if you need help.
             </p>
           </div>
         </div>
