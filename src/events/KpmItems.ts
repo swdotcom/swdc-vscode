@@ -23,25 +23,3 @@ export function showMeTheDataKpmItem(): KpmItem {
   item.color = null;
   return item;
 }
-
-export function getActionButton(
-  label: string,
-  tooltip: string,
-  command: string,
-  icon: any | null = null,
-  eventDescription: string = '',
-  color: any | null = null,
-  description: string | null = ''
-): KpmItem {
-  const item: KpmItem = new KpmItem();
-  item.tooltip = tooltip ?? '';
-  item.label = label;
-  item.id = label;
-  item.command = command;
-  item.icon = icon;
-  item.contextValue = 'action_button';
-  item.eventDescription = eventDescription;
-  item.color = color;
-  item.description = description;
-  return item;
-}

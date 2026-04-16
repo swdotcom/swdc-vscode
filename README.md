@@ -2,9 +2,9 @@
 
 <p><a href="https://www.antenna.dev"><img alt="antenna.dev" src="https://assets.antenna.dev/readme/software-logo-light.png" width="100px"></a></p>
 
-[Code Time](https://www.antenna.dev/code-time) is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of nearly half a million developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
+Code Time is an open source plugin for automatic programming metrics and time tracking in Visual Studio Code. Join our community of nearly half a million developers who use Code Time to reclaim time for focused, uninterrupted coding. Protect valuable code time and stay in flow.
 
-Looking for more ways to help your team improve their productivity? When you connect our [GitHub App](https://bit.ly/software-github) or [Bitbucket App](https://bit.ly/software-bitbucket), you can measure your team’s performance against engineering KPIs and benchmarks, including velocity, quality, and scale. You can identify bottlenecks in your release process — like slow code reviews — and take immediate action, so you can ship faster and more efficiently.
+Looking for more ways to help your team improve their productivity? When you connect your Git provider, you can measure your team’s performance against engineering KPIs and benchmarks, including velocity, quality, and scale. You can identify bottlenecks in your release process — like slow code reviews — and take immediate action, so you can ship faster and more efficiently.
 
 ## It’s Safe, Secure, and Free
 
@@ -28,11 +28,9 @@ Open Code Time in the sidebar and follow the **Getting Started** prompts to crea
 
 ![Code Time for VS Code Flow Mode](https://assets.antenna.dev/readme/code-time/vscode/stay-in-flow-2.7.3.png)
 
-[Automatic Flow Mode](https://www.antenna.dev/src/auto-flow-mode) makes it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. It detects when you are in a high velocity coding session and automatically silences distractions and prevents interruptions.
+Flow Mode makes it easy to eliminate distractions, mute notifications, and stay focused when you are in flow. It detects when you are in a high velocity coding session and automatically silences distractions and prevents interruptions.
 
-With Automatic Flow Mode, you can quickly toggle Zen mode or enter full screen. If you connect a Slack workspace, you can pause notifications, update your profile status, and set your presence to *away*. If you connect Google Calendar or Microsoft Outlook, you can also block time on your calendar. You can customize Flow Mode by clicking *Configure settings* in the Code Time sidebar.
-
-If you'd prefer to turn on Flow Mode manually during each coding session, you can enable or disable Automatic Flow Mode from the Code Time settings view. Make sure to hit the save button after you're done updating your settings. To then turn on Flow Mode manually, click *Enter Flow Mode* in the sidebar to toggle your flow automations. Once you are in Flow Mode, click *Exit Flow Mode* to resume receiving notifications and reset your Slack status.
+With Flow Mode, you can quickly toggle Zen mode or enter full screen. If you connect a Slack workspace, you can pause notifications, update your profile status, and set your presence to *away*. If you connect Google Calendar or Microsoft Outlook, you can also block time on your calendar. You can customize Flow Mode by clicking *Configure settings* in the Code Time sidebar.
 
 ## Track Development Metrics
 
@@ -54,7 +52,7 @@ Click **More data at antenna.dev** in the Code Time sidebar or visit [app.antenn
 
 **Active code time.** Visualize your daily active code time. See productivity trends compared to 90-day averages. See how you stack up against the antenna.dev community.
 
-**Meeting time.** Connect your [Google Calendar](https://www.antenna.dev/integrations/google-calendar) or [Outlook Calendar](https://www.antenna.dev/integrations/microsoft-outlook) to visualize meeting time versus code time.
+**Meeting time.** Connect your Google Calendar or Outlook Calendar to visualize meeting time versus code time.
 
 **Work-life balance.** See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
 
@@ -72,7 +70,7 @@ Take your team to the next level. antenna.dev makes it easy to automatically tra
 
 **Code Time for your entire team.** When you [upgrade your organization](https://www.antenna.dev/pricing) to the Pro plan, you’ll unlock advanced Code Time features for every developer on your team, including custom reports and data exports.
 
-To see your team's engineering KPIs, visit the [web app](https://app.antenna.dev) and connect our [GitHub](https://bit.ly/software-github) or [Bitbucket](https://bit.ly/software-bitbucket) app to your antenna.dev account. It's free and takes just a few minutes.
+To see your team's engineering KPIs, visit the [web app](https://app.antenna.dev) and connect your Git provider app to your antenna.dev account. It's free and takes just a few minutes.
 
 Code Time also collects basic usage metrics to help us make informed decisions about our roadmap.
 
