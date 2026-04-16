@@ -52,7 +52,7 @@ We provide 90 days of data history for free, forever. In the future, we will pro
 
 2. After installing Code Time, an alert will appear prompting you to login (you can also click on "Code Time" in the status bar of Visual Studio Code.
 
-3. You can visit the web app any time at [https://app.software.com/](https://app.software.com/).
+3. You can visit the web app any time at [https://app.antenna.dev/](https://app.antenna.dev/).
 
 <!--- End: setup --->
 
@@ -72,4 +72,4 @@ The timer starts when you start typing. It stops after 15 minutes without typing
 
 Definitely let us know if you have more questions!
 
-Contact [cody@software.com](mailto:cody@software.com) with any additional questions or comments.
+Contact [cody@antenna.dev](mailto:cody@antenna.dev) with any additional questions or comments.
