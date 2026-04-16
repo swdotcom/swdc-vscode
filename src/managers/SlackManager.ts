@@ -1,13 +1,8 @@
 import { commands, window } from 'vscode';
 import {
-  isActiveIntegration,
   setItem
 } from '../Util';
 import { getCachedSlackIntegrations } from '../DataController';
-
-export async function getSlackWorkspaces() {
-  return (await getCachedSlackIntegrations()).filter((n: any) => isActiveIntegration('slack', n));
-}
 
 export async function hasSlackWorkspaces() {
   return !!(await getCachedSlackIntegrations()).length;
