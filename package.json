@@ -148,7 +148,7 @@
     "@swdotcom/editor-flow": "1.2.2",
     "@types/uuid": "10.0.0",
     "@types/ws": "^8.18.1",
-    "axios": "1.15.2",
+    "axios": "1.16.0",
     "date-fns": "4.1.0",
     "node-cache": "5.1.2",
     "swdc-tracker": "1.6.1",
